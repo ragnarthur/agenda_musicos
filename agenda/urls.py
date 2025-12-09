@@ -1,0 +1,42 @@
+﻿# agenda/urls.py
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import MusicianViewSet, EventViewSet, AvailabilityViewSet
+
+# Router do DRF gera automaticamente as URLs
+router = DefaultRouter()
+router.register('musicians', MusicianViewSet, basename='musician')
+router.register('events', EventViewSet, basename='event')
+router.register('availabilities', AvailabilityViewSet, basename='availability')
+
+urlpatterns = [
+    path('', include(router.urls)),
+]
+
+"""
+URLs geradas automaticamente:
+
+MUSICIANS:
+- GET    /api/musicians/           - Lista todos os músicos
+- GET    /api/musicians/{id}/      - Detalhe de um músico
+- GET    /api/musicians/me/        - Perfil do músico logado
+
+EVENTS:
+- GET    /api/events/              - Lista eventos
+- POST   /api/events/              - Cria proposta de evento
+- GET    /api/events/{id}/         - Detalhe de um evento
+- PUT    /api/events/{id}/         - Atualiza evento
+- DELETE /api/events/{id}/         - Deleta evento
+- POST   /api/events/{id}/approve/ - Aprova evento (apenas líderes)
+- POST   /api/events/{id}/reject/  - Rejeita evento (apenas líderes)
+- POST   /api/events/{id}/set_availability/ - Marca disponibilidade
+- GET    /api/events/my_events/    - Eventos do usuário
+- GET    /api/events/pending_my_response/ - Eventos aguardando resposta
+
+AVAILABILITIES:
+- GET    /api/availabilities/      - Lista suas disponibilidades
+- POST   /api/availabilities/      - Cria disponibilidade
+- GET    /api/availabilities/{id}/ - Detalhe
+- PUT    /api/availabilities/{id}/ - Atualiza
+- DELETE /api/availabilities/{id}/ - Deleta
+"""
