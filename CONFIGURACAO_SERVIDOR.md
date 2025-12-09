@@ -5,7 +5,7 @@
 | Configuração | Valor |
 |--------------|-------|
 | **IP do Servidor** | 45.237.131.177 |
-| **Porta Externa (Nginx)** | 2029 |
+| **Porta Externa (Nginx)** | 2030 |
 | **Porta Interna (Django)** | 8005 |
 | **Diretório do Projeto** | /var/www/agenda-musicos |
 | **Banco de Dados** | PostgreSQL (agenda_musicos) |
@@ -31,7 +31,7 @@ O script `setup.sh` faz TUDO automaticamente:
 - Migra banco de dados
 - Popula com músicos de teste
 - Faz build do frontend
-- Configura Nginx na porta 2029
+- Configura Nginx na porta 2030
 - Configura Supervisor
 - Configura permissões
 - Configura firewall
@@ -55,7 +55,7 @@ O script `update.sh` faz:
 
 ### 1. `nginx.conf`
 Configuração completa do Nginx:
-- Porta externa: 2029
+- Porta externa: 2030
 - Proxy reverso para Django (porta 8005)
 - Servir arquivos estáticos
 - Servir frontend React
@@ -81,10 +81,10 @@ SECRET_KEY=<gerado-automaticamente>
 DEBUG=False
 ALLOWED_HOSTS=45.237.131.177
 SERVER_IP=45.237.131.177
-SERVER_PORT=2029
+SERVER_PORT=2030
 INTERNAL_PORT=8005
 DATABASE_URL=postgresql://agenda_user:senha@localhost/agenda_musicos
-CORS_ORIGINS=http://45.237.131.177:2029
+CORS_ORIGINS=http://45.237.131.177:2030
 ```
 
 **Localização no servidor:** `/var/www/agenda-musicos/.env`
@@ -92,7 +92,7 @@ CORS_ORIGINS=http://45.237.131.177:2029
 ### 4. `frontend/.env.example`
 Template de variáveis do frontend:
 ```env
-VITE_API_URL=http://45.237.131.177:2029/api
+VITE_API_URL=http://45.237.131.177:2030/api
 ```
 
 **Localização no servidor:** `/var/www/agenda-musicos/frontend/.env`
@@ -102,13 +102,13 @@ VITE_API_URL=http://45.237.131.177:2029/api
 ```
 ┌─────────────────────────────────────────────────┐
 │              Usuário Externo                    │
-│           http://45.237.131.177:2029              │
+│           http://45.237.131.177:2030              │
 └────────────────────┬────────────────────────────┘
                      │
                      ▼
 ┌─────────────────────────────────────────────────┐
 │                  Nginx                          │
-│              (Porta 2029)                       │
+│              (Porta 2030)                       │
 │                                                 │
 │  ┌──────────────────┬──────────────────────┐   │
 │  │  /api/*          │  /*                  │   │
@@ -170,7 +170,7 @@ VITE_API_URL=http://45.237.131.177:2029/api
 ## 🔐 Credenciais e Acessos
 
 ### Aplicação Web
-**URL:** http://45.237.131.177:2029
+**URL:** http://45.237.131.177:2030
 
 **Músicos:**
 - `sara / senha123` - Vocalista e Violonista
@@ -178,7 +178,7 @@ VITE_API_URL=http://45.237.131.177:2029/api
 - `roberto / senha123` - Baterista e Líder 👑
 
 ### Admin Django
-**URL:** http://45.237.131.177:2029/admin/
+**URL:** http://45.237.131.177:2030/admin/
 
 **Credenciais:**
 - User: `admin`
@@ -251,9 +251,9 @@ python manage.py test
 
 ## 🔄 Fluxo de Requisição
 
-1. **Usuário acessa:** `http://45.237.131.177:2029`
+1. **Usuário acessa:** `http://45.237.131.177:2030`
 
-2. **Nginx recebe** na porta 2029
+2. **Nginx recebe** na porta 2030
 
 3. **Nginx decide o destino:**
    - `/api/*` → Proxy para Django (127.0.0.1:8005)
@@ -272,8 +272,8 @@ python manage.py test
 
 ### Verificar se tudo está rodando
 ```bash
-# Verificar porta 2029 (Nginx)
-sudo lsof -i :2029
+# Verificar porta 2030 (Nginx)
+sudo lsof -i :2030
 
 # Verificar porta 8005 (Django)
 sudo lsof -i :8005
@@ -345,13 +345,13 @@ sudo ./update.sh
 
 ## 📋 Checklist Pós-Instalação
 
-- [ ] Nginx respondendo na porta 2029
+- [ ] Nginx respondendo na porta 2030
 - [ ] Django rodando na porta 8005 (interno)
 - [ ] PostgreSQL ativo
-- [ ] Frontend carregando (http://45.237.131.177:2029)
+- [ ] Frontend carregando (http://45.237.131.177:2030)
 - [ ] Login funcionando
-- [ ] API respondendo (http://45.237.131.177:2029/api/)
-- [ ] Admin Django acessível (http://45.237.131.177:2029/admin/)
+- [ ] API respondendo (http://45.237.131.177:2030/api/)
+- [ ] Admin Django acessível (http://45.237.131.177:2030/admin/)
 - [ ] Logs sendo gerados
 - [ ] Firewall configurado
 - [ ] Auto-restart do Django funcionando
@@ -364,7 +364,7 @@ sudo ./update.sh
 sudo ufw status
 
 # Regras configuradas pelo setup.sh:
-# - Porta 2029 (aplicação)
+# - Porta 2030 (aplicação)
 # - Porta 22 (SSH)
 ```
 

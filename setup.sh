@@ -20,7 +20,7 @@ NC='\033[0m' # No Color
 # Configuration
 PROJECT_DIR="/var/www/agenda-musicos"
 SERVER_IP="45.237.131.177"
-SERVER_PORT="2029"
+SERVER_PORT="2030"
 INTERNAL_PORT="8005"
 
 # =============================================================================

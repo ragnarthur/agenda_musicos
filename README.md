@@ -9,7 +9,7 @@ Aplicação web para gerenciar eventos, disponibilidade de músicos e aprovaçõ
 ## 🚀 Configuração do Servidor
 
 - **IP:** 45.237.131.177
-- **Porta Externa:** 2029
+- **Porta Externa:** 2030
 - **Porta Interna:** 8005 (Django/Gunicorn)
 
 ## ⚡ Deploy Rápido (Automático)
@@ -37,13 +37,13 @@ O script `setup.sh` irá automaticamente:
 - ✅ Executar migrações do Django
 - ✅ Popular banco com músicos de teste
 - ✅ Fazer build do frontend React
-- ✅ Configurar Nginx na porta 2029
+- ✅ Configurar Nginx na porta 2030
 - ✅ Configurar Supervisor para manter Django rodando
 - ✅ Configurar permissões e firewall
 
 ### Após a Instalação
 
-Acesse: **http://45.237.131.177:2029**
+Acesse: **http://45.237.131.177:2030**
 
 **Credenciais de Login:**
 - Sara (Vocalista): `sara / senha123`
@@ -51,7 +51,7 @@ Acesse: **http://45.237.131.177:2029**
 - Roberto (Baterista/Líder): `roberto / senha123`
 
 **Admin Django:**
-- URL: http://45.237.131.177:2029/admin/
+- URL: http://45.237.131.177:2030/admin/
 - User: `admin`
 - Pass: `admin123`
 
@@ -230,7 +230,7 @@ sudo systemctl restart nginx
 
 ### CORS Error
 - Verificar `CORS_ORIGINS` em `/var/www/agenda-musicos/.env`
-- Deve incluir: `http://45.237.131.177:2029`
+- Deve incluir: `http://45.237.131.177:2030`
 - Reiniciar após mudanças
 
 ## 🎨 Tecnologias
