@@ -4,7 +4,7 @@
 
 | Configuração | Valor |
 |--------------|-------|
-| **IP do Servidor** | 192.168.1.11 |
+| **IP do Servidor** | 45.237.131.177 |
 | **Porta Externa (Nginx)** | 2029 |
 | **Porta Interna (Django)** | 8005 |
 | **Diretório do Projeto** | /var/www/agenda-musicos |
@@ -79,12 +79,12 @@ Template de variáveis de ambiente:
 ```env
 SECRET_KEY=<gerado-automaticamente>
 DEBUG=False
-ALLOWED_HOSTS=192.168.1.11
-SERVER_IP=192.168.1.11
+ALLOWED_HOSTS=45.237.131.177
+SERVER_IP=45.237.131.177
 SERVER_PORT=2029
 INTERNAL_PORT=8005
 DATABASE_URL=postgresql://agenda_user:senha@localhost/agenda_musicos
-CORS_ORIGINS=http://192.168.1.11:2029
+CORS_ORIGINS=http://45.237.131.177:2029
 ```
 
 **Localização no servidor:** `/var/www/agenda-musicos/.env`
@@ -92,7 +92,7 @@ CORS_ORIGINS=http://192.168.1.11:2029
 ### 4. `frontend/.env.example`
 Template de variáveis do frontend:
 ```env
-VITE_API_URL=http://192.168.1.11:2029/api
+VITE_API_URL=http://45.237.131.177:2029/api
 ```
 
 **Localização no servidor:** `/var/www/agenda-musicos/frontend/.env`
@@ -102,7 +102,7 @@ VITE_API_URL=http://192.168.1.11:2029/api
 ```
 ┌─────────────────────────────────────────────────┐
 │              Usuário Externo                    │
-│           http://192.168.1.11:2029              │
+│           http://45.237.131.177:2029              │
 └────────────────────┬────────────────────────────┘
                      │
                      ▼
@@ -170,7 +170,7 @@ VITE_API_URL=http://192.168.1.11:2029/api
 ## 🔐 Credenciais e Acessos
 
 ### Aplicação Web
-**URL:** http://192.168.1.11:2029
+**URL:** http://45.237.131.177:2029
 
 **Músicos:**
 - `sara / senha123` - Vocalista e Violonista
@@ -178,7 +178,7 @@ VITE_API_URL=http://192.168.1.11:2029/api
 - `roberto / senha123` - Baterista e Líder 👑
 
 ### Admin Django
-**URL:** http://192.168.1.11:2029/admin/
+**URL:** http://45.237.131.177:2029/admin/
 
 **Credenciais:**
 - User: `admin`
@@ -251,7 +251,7 @@ python manage.py test
 
 ## 🔄 Fluxo de Requisição
 
-1. **Usuário acessa:** `http://192.168.1.11:2029`
+1. **Usuário acessa:** `http://45.237.131.177:2029`
 
 2. **Nginx recebe** na porta 2029
 
@@ -348,10 +348,10 @@ sudo ./update.sh
 - [ ] Nginx respondendo na porta 2029
 - [ ] Django rodando na porta 8005 (interno)
 - [ ] PostgreSQL ativo
-- [ ] Frontend carregando (http://192.168.1.11:2029)
+- [ ] Frontend carregando (http://45.237.131.177:2029)
 - [ ] Login funcionando
-- [ ] API respondendo (http://192.168.1.11:2029/api/)
-- [ ] Admin Django acessível (http://192.168.1.11:2029/admin/)
+- [ ] API respondendo (http://45.237.131.177:2029/api/)
+- [ ] Admin Django acessível (http://45.237.131.177:2029/admin/)
 - [ ] Logs sendo gerados
 - [ ] Firewall configurado
 - [ ] Auto-restart do Django funcionando
