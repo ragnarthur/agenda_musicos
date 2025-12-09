@@ -1,0 +1,181 @@
+﻿# agenda/serializers.py
+from rest_framework import serializers
+from django.contrib.auth.models import User
+from django.utils import timezone
+from .models import Musician, Event, Availability
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """Serializer básico de usuário para uso nested"""
+    full_name = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'full_name']
+        read_only_fields = ['id']
+    
+    def get_full_name(self, obj):
+        return obj.get_full_name() or obj.username
+
+
+class MusicianSerializer(serializers.ModelSerializer):
+    """Serializer de músico com dados do usuário"""
+    user = UserSerializer(read_only=True)
+    full_name = serializers.SerializerMethodField()
+    is_leader = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Musician
+        fields = [
+            'id', 'user', 'full_name', 'instrument', 'role', 
+            'is_leader', 'bio', 'phone', 'is_active', 'created_at'
+        ]
+        read_only_fields = ['id', 'created_at']
+    
+    def get_full_name(self, obj):
+        return obj.user.get_full_name() or obj.user.username
+    
+    def get_is_leader(self, obj):
+        return obj.is_leader()
+
+
+class AvailabilitySerializer(serializers.ModelSerializer):
+    """Serializer de disponibilidade com dados do músico"""
+    musician = MusicianSerializer(read_only=True)
+    musician_id = serializers.PrimaryKeyRelatedField(
+        queryset=Musician.objects.all(),
+        source='musician',
+        write_only=True,
+        required=False  # Será setado automaticamente na view
+    )
+    
+    class Meta:
+        model = Availability
+        fields = [
+            'id', 'musician', 'musician_id', 'event', 'response', 
+            'notes', 'responded_at', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'responded_at', 'created_at', 'updated_at']
+
+
+class EventListSerializer(serializers.ModelSerializer):
+    """Serializer simplificado para listagem de eventos"""
+    created_by_name = serializers.SerializerMethodField()
+    approved_by_name = serializers.SerializerMethodField()
+    availability_summary = serializers.SerializerMethodField()
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    
+    class Meta:
+        model = Event
+        fields = [
+            'id', 'title', 'location', 'event_date', 'start_time', 'end_time',
+            'status', 'status_display', 'created_by_name', 'approved_by_name',
+            'availability_summary', 'payment_amount', 'created_at'
+        ]
+    
+    def get_created_by_name(self, obj):
+        return obj.created_by.get_full_name() if obj.created_by else 'Sistema'
+    
+    def get_approved_by_name(self, obj):
+        return obj.approved_by.get_full_name() if obj.approved_by else None
+    
+    def get_availability_summary(self, obj):
+        """Retorna resumo das disponibilidades"""
+        availabilities = obj.availabilities.all()
+        return {
+            'pending': availabilities.filter(response='pending').count(),
+            'available': availabilities.filter(response='available').count(),
+            'unavailable': availabilities.filter(response='unavailable').count(),
+            'maybe': availabilities.filter(response='maybe').count(),
+            'total': availabilities.count(),
+        }
+
+
+class EventDetailSerializer(serializers.ModelSerializer):
+    """Serializer completo de evento com todas as disponibilidades"""
+    availabilities = AvailabilitySerializer(many=True, read_only=True)
+    created_by_name = serializers.SerializerMethodField()
+    approved_by_name = serializers.SerializerMethodField()
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    can_approve = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Event
+        fields = [
+            'id', 'title', 'description', 'location', 'venue_contact',
+            'event_date', 'start_time', 'end_time', 'start_datetime', 'end_datetime',
+            'payment_amount', 'status', 'status_display', 'can_approve',
+            'created_by', 'created_by_name', 'approved_by', 'approved_by_name',
+            'approved_at', 'rejection_reason', 'availabilities',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = [
+            'id', 'start_datetime', 'end_datetime', 'created_by', 
+            'approved_by', 'approved_at', 'created_at', 'updated_at'
+        ]
+    
+    def get_created_by_name(self, obj):
+        return obj.created_by.get_full_name() if obj.created_by else 'Sistema'
+    
+    def get_approved_by_name(self, obj):
+        return obj.approved_by.get_full_name() if obj.approved_by else None
+    
+    def get_can_approve(self, obj):
+        """Verifica se o usuário atual pode aprovar"""
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        
+        try:
+            musician = request.user.musician_profile
+            return musician.is_leader() and obj.can_be_approved()
+        except Musician.DoesNotExist:
+            return False
+    
+    def validate(self, data):
+        """Validações customizadas"""
+        errors = {}
+        
+        # Valida horários
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
+        
+        if start_time and end_time:
+            if end_time <= start_time:
+                errors['end_time'] = 'Horário de término deve ser posterior ao início.'
+        
+        # Valida data (não pode ser no passado)
+        event_date = data.get('event_date')
+        if event_date and event_date < timezone.now().date():
+            errors['event_date'] = 'Não é possível criar eventos com datas passadas.'
+        
+        if errors:
+            raise serializers.ValidationError(errors)
+        
+        return data
+
+
+class EventCreateSerializer(serializers.ModelSerializer):
+    """Serializer para criação de eventos (campos simplificados)"""
+    
+    class Meta:
+        model = Event
+        fields = [
+            'title', 'description', 'location', 'venue_contact',
+            'event_date', 'start_time', 'end_time', 'payment_amount'
+        ]
+    
+    def validate(self, data):
+        """Validações"""
+        errors = {}
+        
+        if data['end_time'] <= data['start_time']:
+            errors['end_time'] = 'Horário de término deve ser posterior ao início.'
+        
+        if data['event_date'] < timezone.now().date():
+            errors['event_date'] = 'Não é possível criar eventos com datas passadas.'
+        
+        if errors:
+            raise serializers.ValidationError(errors)
+        
+        return data
