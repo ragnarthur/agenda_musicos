@@ -4,7 +4,7 @@
 # Setup Script - Agenda de Músicos
 # =============================================================================
 # Configuração automática do servidor
-# IP: 192.168.1.11
+# IP: 45.237.131.177
 # Porta Externa: 2029
 # Porta Interna: 8005
 # =============================================================================
@@ -19,7 +19,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 PROJECT_DIR="/var/www/agenda-musicos"
-SERVER_IP="192.168.1.11"
+SERVER_IP="45.237.131.177"
 SERVER_PORT="2029"
 INTERNAL_PORT="8005"
 

@@ -8,7 +8,7 @@ Aplicação web para gerenciar eventos, disponibilidade de músicos e aprovaçõ
 
 ## 🚀 Configuração do Servidor
 
-- **IP:** 192.168.1.11
+- **IP:** 45.237.131.177
 - **Porta Externa:** 2029
 - **Porta Interna:** 8005 (Django/Gunicorn)
 
@@ -43,7 +43,7 @@ O script `setup.sh` irá automaticamente:
 
 ### Após a Instalação
 
-Acesse: **http://192.168.1.11:2029**
+Acesse: **http://45.237.131.177:2029**
 
 **Credenciais de Login:**
 - Sara (Vocalista): `sara / senha123`
@@ -51,7 +51,7 @@ Acesse: **http://192.168.1.11:2029**
 - Roberto (Baterista/Líder): `roberto / senha123`
 
 **Admin Django:**
-- URL: http://192.168.1.11:2029/admin/
+- URL: http://45.237.131.177:2029/admin/
 - User: `admin`
 - Pass: `admin123`
 
@@ -230,7 +230,7 @@ sudo systemctl restart nginx
 
 ### CORS Error
 - Verificar `CORS_ORIGINS` em `/var/www/agenda-musicos/.env`
-- Deve incluir: `http://192.168.1.11:2029`
+- Deve incluir: `http://45.237.131.177:2029`
 - Reiniciar após mudanças
 
 ## 🎨 Tecnologias
