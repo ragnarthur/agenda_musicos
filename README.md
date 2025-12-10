@@ -6,13 +6,6 @@ Sistema completo de gerenciamento de agenda para bandas e músicos.
 
 Aplicação web para gerenciar eventos, disponibilidade de músicos e aprovações de shows. Sara e Arthur (vocalistas e violonistas) criam propostas de eventos que são aprovadas ou rejeitadas por Roberto (baterista e líder da banda).
 
-## 🚀 Configuração do Servidor
-
-- **IP:** 45.237.131.177
-- **Porta Externa:** 2030
-- **Porta Interna:** 8005 (Django/Gunicorn)
-
-## ⚡ Deploy Rápido (Automático)
 
 ### Pré-requisitos
 - Ubuntu 20.04+ ou Debian 11+
@@ -259,5 +252,3 @@ sudo systemctl restart nginx
 Este projeto é propriedade privada.
 
 ---
-
-**Desenvolvido com ❤️ para gerenciamento de bandas**
