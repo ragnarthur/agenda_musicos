@@ -1,7 +1,7 @@
 // pages/EventsList.tsx
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, Search, X } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { eventService } from '../services/api';
@@ -12,15 +12,41 @@ const EventsList: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [timeFilter, setTimeFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming');
 
   useEffect(() => {
     loadEvents();
-  }, [filter]);
+  }, [filter, timeFilter]);
+
+  // Debounce para busca
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadEvents();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const loadEvents = async () => {
     try {
       setLoading(true);
-      const params = filter === 'all' ? {} : { status: filter };
+      const params: Record<string, string | boolean> = {};
+
+      if (filter !== 'all') {
+        params.status = filter;
+      }
+
+      if (searchTerm.trim()) {
+        params.search = searchTerm.trim();
+      }
+
+      if (timeFilter === 'upcoming') {
+        params.upcoming = true;
+      } else if (timeFilter === 'past') {
+        params.past = true;
+      }
+
       const data = await eventService.getAll(params);
       setEvents(data);
     } catch (error) {
@@ -41,7 +67,50 @@ const EventsList: React.FC = () => {
           </Link>
         </div>
 
-        {/* Filtros */}
+        {/* Busca */}
+        <div className="card">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="input-field pl-10 pr-10"
+              placeholder="Buscar eventos por título ou local..."
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Filtro de Tempo */}
+        <div className="flex space-x-2 overflow-x-auto pb-2">
+          {[
+            { value: 'upcoming', label: 'Próximos' },
+            { value: 'all', label: 'Todos' },
+            { value: 'past', label: 'Histórico' },
+          ].map((item) => (
+            <button
+              key={item.value}
+              onClick={() => setTimeFilter(item.value as 'upcoming' | 'past' | 'all')}
+              className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+                timeFilter === item.value
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Filtros de Status */}
         <div className="flex space-x-2 overflow-x-auto pb-2">
           {[
             { value: 'all', label: 'Todos' },
