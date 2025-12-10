@@ -583,12 +583,18 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         for slot_start, slot_end in new_slots:
             if slot_end <= slot_start:
                 continue
+            # Garantir campos completos para não depender do save() (bulk_create não chama save)
+            date_value = slot_start.astimezone(tz).date()
+            start_time = slot_start.astimezone(tz).time()
+            end_time = slot_end.astimezone(tz).time()
             objs.append(
                 LeaderAvailability(
                     leader=availability.leader,
-                    date=availability.date,
-                    start_time=slot_start.astimezone(tz).time(),
-                    end_time=slot_end.astimezone(tz).time(),
+                    date=date_value,
+                    start_time=start_time,
+                    end_time=end_time,
+                    start_datetime=slot_start,
+                    end_datetime=slot_end,
                     notes=availability.notes,
                 )
             )
