@@ -97,21 +97,52 @@ class EventViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         """
-        Salva evento e cria availabilities para todos os músicos.
+        Salva evento e cria availabilities apenas para o criador e Roberto.
+        Lógica: Arthur/Sara (contratantes) criam eventos e contratam Roberto (baterista)
         Status inicial: 'proposed'
         """
         event = serializer.save(
             created_by=self.request.user,
             status='proposed'
         )
-        
-        # Criar availabilities para todos os músicos ativos
-        musicians = Musician.objects.filter(is_active=True)
-        availabilities = [
-            Availability(musician=musician, event=event, response='pending')
-            for musician in musicians
-        ]
-        Availability.objects.bulk_create(availabilities)
+
+        # Criar availabilities apenas para:
+        # 1. O criador (Arthur ou Sara) - automaticamente disponível
+        # 2. Roberto (líder/baterista) - pendente de confirmação
+
+        availabilities = []
+
+        # 1. Criador do evento (automaticamente disponível)
+        try:
+            creator_musician = self.request.user.musician_profile
+            availabilities.append(
+                Availability(
+                    musician=creator_musician,
+                    event=event,
+                    response='available',
+                    notes='Evento criado por mim'
+                )
+            )
+        except Musician.DoesNotExist:
+            pass
+
+        # 2. Roberto (baterista/líder) - pendente
+        try:
+            roberto = Musician.objects.get(user__username='roberto')
+            # Só criar se Roberto não for o criador
+            if roberto.user != self.request.user:
+                availabilities.append(
+                    Availability(
+                        musician=roberto,
+                        event=event,
+                        response='pending'
+                    )
+                )
+        except Musician.DoesNotExist:
+            pass
+
+        if availabilities:
+            Availability.objects.bulk_create(availabilities)
     
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def approve(self, request, pk=None):
