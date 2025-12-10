@@ -13,7 +13,7 @@ from .serializers import (
     EventCreateSerializer,
     AvailabilitySerializer
 )
-from .permissions import IsLeaderOrReadOnly
+from .permissions import IsLeaderOrReadOnly, IsOwnerOrReadOnly
 
 
 class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
@@ -56,7 +56,17 @@ class EventViewSet(viewsets.ModelViewSet):
         'availabilities__musician__user'
     ).select_related('created_by', 'approved_by').all()
     permission_classes = [IsAuthenticated]
-    
+
+    def get_permissions(self):
+        """
+        Permissões customizadas por action:
+        - update/delete: apenas criador
+        - outras: apenas autenticado
+        """
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return [IsAuthenticated(), IsOwnerOrReadOnly()]
+        return [IsAuthenticated()]
+
     def get_serializer_class(self):
         """Escolhe serializer baseado na action"""
         if self.action == 'list':
@@ -71,19 +81,22 @@ class EventViewSet(viewsets.ModelViewSet):
         - ?status=proposed,approved
         - ?my_proposals=true (eventos que eu criei)
         - ?pending_approval=true (eventos aguardando aprovação - apenas líderes)
+        - ?search=termo (busca em título e local)
+        - ?past=true (eventos passados)
+        - ?upcoming=true (eventos futuros)
         """
         queryset = super().get_queryset()
-        
+
         # Filtro por status
         status_filter = self.request.query_params.get('status')
         if status_filter:
             statuses = status_filter.split(',')
             queryset = queryset.filter(status__in=statuses)
-        
+
         # Minhas propostas
         if self.request.query_params.get('my_proposals') == 'true':
             queryset = queryset.filter(created_by=self.request.user)
-        
+
         # Pendentes de aprovação (apenas para líderes)
         if self.request.query_params.get('pending_approval') == 'true':
             try:
@@ -92,7 +105,24 @@ class EventViewSet(viewsets.ModelViewSet):
                     queryset = queryset.filter(status='proposed')
             except Musician.DoesNotExist:
                 queryset = queryset.none()
-        
+
+        # Busca por título ou local
+        search = self.request.query_params.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search) | Q(location__icontains=search)
+            )
+
+        # Eventos passados
+        if self.request.query_params.get('past') == 'true':
+            from django.utils import timezone
+            queryset = queryset.filter(event_date__lt=timezone.now().date())
+
+        # Eventos futuros (padrão)
+        if self.request.query_params.get('upcoming') == 'true':
+            from django.utils import timezone
+            queryset = queryset.filter(event_date__gte=timezone.now().date())
+
         return queryset
     
     def perform_create(self, serializer):
@@ -211,7 +241,30 @@ class EventViewSet(viewsets.ModelViewSet):
                 {'detail': 'Evento não pode ser rejeitado. Status atual: ' + event.get_status_display()},
                 status=status.HTTP_400_BAD_REQUEST
             )
-    
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsOwnerOrReadOnly])
+    def cancel(self, request, pk=None):
+        """
+        POST /events/{id}/cancel/
+        Cancela um evento (apenas o criador pode cancelar).
+        Muda o status para 'cancelled'.
+        """
+        event = self.get_object()
+
+        # Verifica se o evento pode ser cancelado
+        if event.status == 'cancelled':
+            return Response(
+                {'detail': 'Evento já está cancelado.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Cancela o evento
+        event.status = 'cancelled'
+        event.save()
+
+        serializer = EventDetailSerializer(event, context={'request': request})
+        return Response(serializer.data)
+
     @action(detail=True, methods=['post'])
     def set_availability(self, request, pk=None):
         """
