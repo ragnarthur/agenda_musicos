@@ -5,7 +5,7 @@ import { Calendar, MapPin, Clock, Phone, FileText, Save, X, CheckCircle, Info } 
 import Layout from '../components/Layout/Layout';
 import { eventService, leaderAvailabilityService } from '../services/api';
 import type { EventCreate, LeaderAvailability } from '../types';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 const EventForm: React.FC = () => {
   const navigate = useNavigate();
@@ -342,7 +342,7 @@ const EventForm: React.FC = () => {
                     <div className="flex items-center space-x-2 mb-1">
                       <Calendar className="h-4 w-4 text-gray-500" />
                       <span className="font-medium text-gray-900">
-                        {format(new Date(availability.date), 'dd/MM/yyyy')}
+                        {format(parseISO(availability.date), 'dd/MM/yyyy')}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
