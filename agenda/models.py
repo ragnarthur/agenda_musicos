@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from datetime import datetime
 
 
 class Musician(models.Model):
@@ -296,13 +297,29 @@ class LeaderAvailability(models.Model):
 
     def save(self, *args, **kwargs):
         """Combina date + time em datetime antes de salvar"""
+        # Garantir que date é um objeto date, não string
+        if isinstance(self.date, str):
+            from datetime import date as date_cls
+            self.date = date_cls.fromisoformat(self.date)
+
+        # Garantir que times são objetos time, não strings
+        if isinstance(self.start_time, str):
+            from datetime import time as time_cls
+            parts = self.start_time.split(':')
+            self.start_time = time_cls(int(parts[0]), int(parts[1]))
+
+        if isinstance(self.end_time, str):
+            from datetime import time as time_cls
+            parts = self.end_time.split(':')
+            self.end_time = time_cls(int(parts[0]), int(parts[1]))
+
         if self.date and self.start_time:
             self.start_datetime = timezone.make_aware(
-                timezone.datetime.combine(self.date, self.start_time)
+                datetime.combine(self.date, self.start_time)
             )
         if self.date and self.end_time:
             self.end_datetime = timezone.make_aware(
-                timezone.datetime.combine(self.date, self.end_time)
+                datetime.combine(self.date, self.end_time)
             )
         super().save(*args, **kwargs)
 
