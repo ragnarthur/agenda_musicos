@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
+from django.utils import timezone
+from datetime import timedelta
 import logging
 from .models import Musician, Event, Availability, LeaderAvailability
 from .serializers import (
@@ -179,6 +181,72 @@ class EventViewSet(viewsets.ModelViewSet):
 
         if availabilities:
             Availability.objects.bulk_create(availabilities)
+
+        # Ajustar janelas de disponibilidade do líder consumindo o horário do evento (somente eventos com banda)
+        if not is_solo:
+            self._consume_leader_availability(event)
+
+    def _consume_leader_availability(self, event):
+        """
+        Subtrai o intervalo do evento das disponibilidades ativas do líder:
+        - desativa a disponibilidade original
+        - recria sobras antes/depois, se existirem
+        """
+        try:
+            leader = Musician.objects.filter(role='leader').first()
+            if not leader:
+                return
+        except Musician.DoesNotExist:
+            return
+
+        overlaps = LeaderAvailability.objects.filter(
+            leader=leader,
+            is_active=True,
+            date=event.event_date,
+            start_datetime__lt=event.end_datetime,
+            end_datetime__gt=event.start_datetime
+        )
+
+        tz = timezone.get_current_timezone()
+
+        for avail in overlaps:
+            pre_start = avail.start_datetime
+            pre_end = event.start_datetime
+            post_start = event.end_datetime
+            post_end = avail.end_datetime
+
+            # Desativar a disponibilidade original
+            avail.is_active = False
+            avail.save(update_fields=['is_active'])
+
+            new_slots = []
+
+            # Janela antes do evento
+            if pre_end > pre_start:
+                new_slots.append(
+                    LeaderAvailability(
+                        leader=leader,
+                        date=avail.date,
+                        start_time=pre_start.astimezone(tz).time(),
+                        end_time=pre_end.astimezone(tz).time(),
+                        notes=avail.notes
+                    )
+                )
+
+            # Janela depois do evento
+            if post_end > post_start:
+                new_slots.append(
+                    LeaderAvailability(
+                        leader=leader,
+                        date=avail.date,
+                        start_time=post_start.astimezone(tz).time(),
+                        end_time=post_end.astimezone(tz).time(),
+                        notes=avail.notes
+                    )
+                )
+
+            if new_slots:
+                LeaderAvailability.objects.bulk_create(new_slots)
     
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def approve(self, request, pk=None):
