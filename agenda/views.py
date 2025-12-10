@@ -64,7 +64,7 @@ class EventViewSet(viewsets.ModelViewSet):
         - update/delete: apenas criador
         - outras: apenas autenticado
         """
-        if self.action in ['update', 'partial_update', 'destroy']:
+        if self.action in ['update', 'partial_update', 'destroy', 'cancel']:
             return [IsAuthenticated(), IsOwnerOrReadOnly()]
         return [IsAuthenticated()]
 
@@ -255,6 +255,13 @@ class EventViewSet(viewsets.ModelViewSet):
         Muda o status para 'cancelled'.
         """
         event = self.get_object()
+
+        # Apenas o criador pode cancelar
+        if event.created_by != request.user:
+            return Response(
+                {'detail': 'Apenas o criador pode cancelar este evento.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
         # Verifica se o evento pode ser cancelado
         if event.status == 'cancelled':
