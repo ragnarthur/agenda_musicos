@@ -157,13 +157,14 @@ class EventDetailSerializer(serializers.ModelSerializer):
 
 class EventCreateSerializer(serializers.ModelSerializer):
     """Serializer para criação de eventos (campos simplificados)"""
-    
+
     class Meta:
         model = Event
         fields = [
-            'title', 'description', 'location', 'venue_contact',
+            'id', 'title', 'description', 'location', 'venue_contact',
             'event_date', 'start_time', 'end_time', 'payment_amount'
         ]
+        read_only_fields = ['id']
     
     def validate(self, data):
         """Validações"""
