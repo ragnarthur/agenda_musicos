@@ -6,7 +6,7 @@ import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { leaderAvailabilityService } from '../services/api';
 import type { LeaderAvailability, LeaderAvailabilityCreate } from '../types';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 
 const LeaderAvailabilityPage: React.FC = () => {
@@ -251,7 +251,7 @@ const LeaderAvailabilityPage: React.FC = () => {
                     <div className="flex items-center space-x-3 mb-2">
                       <CalendarIcon className="h-5 w-5 text-gray-500" />
                       <span className="text-lg font-semibold text-gray-900">
-                        {format(new Date(availability.date), 'dd/MM/yyyy')}
+                        {format(parseISO(availability.date), 'dd/MM/yyyy')}
                       </span>
                     </div>
                     <div className="flex items-center space-x-3 mb-2">
