@@ -22,6 +22,7 @@ const EventEditForm: React.FC = () => {
     event_date: '',
     start_time: '',
     end_time: '',
+    is_solo: false,
   });
 
   useEffect(() => {
@@ -45,7 +46,7 @@ const EventEditForm: React.FC = () => {
         start_time: event.start_time,
         end_time: event.end_time,
         payment_amount: event.payment_amount,
-        is_solo: event.is_solo,
+        is_solo: event.is_solo ?? false,
       });
     } catch (err) {
       console.error('Erro ao carregar evento:', err);
