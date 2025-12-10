@@ -10,6 +10,7 @@ import EventEditForm from './pages/EventEditForm';
 import EventDetail from './pages/EventDetail';
 import Approvals from './pages/Approvals';
 import Musicians from './pages/Musicians';
+import LeaderAvailability from './pages/LeaderAvailability';
 import Loading from './components/common/Loading';
 
 // Componente para rotas protegidas
@@ -80,6 +81,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Approvals />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/disponibilidades"
+        element={
+          <ProtectedRoute>
+            <LeaderAvailability />
           </ProtectedRoute>
         }
       />
