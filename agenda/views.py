@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
+import logging
 from .models import Musician, Event, Availability, LeaderAvailability
 from .serializers import (
     MusicianSerializer,
@@ -477,6 +478,25 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         except Musician.DoesNotExist:
             from rest_framework.exceptions import ValidationError
             raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
+
+    def create(self, request, *args, **kwargs):
+        """
+        Cria disponibilidade do líder com tratamento explícito de erros para evitar 500.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            self.perform_create(serializer)
+        except Exception as exc:
+            logging.exception("Erro ao criar disponibilidade do líder")
+            from rest_framework.exceptions import ValidationError
+            if isinstance(exc, ValidationError):
+                raise
+            return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_update(self, serializer):
         """
