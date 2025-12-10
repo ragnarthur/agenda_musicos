@@ -135,6 +135,11 @@ export const eventService = {
     return response.data;
   },
 
+  cancel: async (id: number): Promise<Event> => {
+    const response = await api.post(`/events/${id}/cancel/`);
+    return response.data;
+  },
+
   setAvailability: async (
     id: number,
     response: AvailabilityResponse,

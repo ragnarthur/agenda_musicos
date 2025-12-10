@@ -14,6 +14,9 @@ import {
   ThumbsDown,
   ArrowLeft,
   Crown,
+  Edit,
+  Trash2,
+  Ban,
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
@@ -35,6 +38,8 @@ const EventDetail: React.FC = () => {
   const [notes, setNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   useEffect(() => {
     loadEvent();
@@ -92,6 +97,38 @@ const EventDetail: React.FC = () => {
     }
   };
 
+  const handleDelete = async () => {
+    if (!id) return;
+
+    try {
+      setActionLoading(true);
+      await eventService.delete(parseInt(id));
+      navigate('/eventos');
+    } catch (error) {
+      console.error('Erro ao deletar evento:', error);
+      alert('Erro ao deletar evento. Tente novamente.');
+    } finally {
+      setActionLoading(false);
+      setShowDeleteModal(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!id) return;
+
+    try {
+      setActionLoading(true);
+      await eventService.cancel(parseInt(id));
+      await loadEvent();
+    } catch (error) {
+      console.error('Erro ao cancelar evento:', error);
+      alert('Erro ao cancelar evento. Tente novamente.');
+    } finally {
+      setActionLoading(false);
+      setShowCancelModal(false);
+    }
+  };
+
   const handleReject = async () => {
     if (!id || !rejectionReason.trim()) return;
 
@@ -136,11 +173,42 @@ const EventDetail: React.FC = () => {
           </button>
 
           <div className="flex items-start justify-between">
-            <div>
+            <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900">{event.title}</h1>
               <p className="mt-2 text-gray-600">{event.description}</p>
             </div>
-            <span className={`badge badge-${event.status}`}>{event.status_display}</span>
+            <div className="flex items-center space-x-3">
+              <span className={`badge badge-${event.status}`}>{event.status_display}</span>
+
+              {/* Ações do Criador */}
+              {event.created_by === user?.user.id && event.status !== 'cancelled' && (
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => navigate(`/eventos/${event.id}/editar`)}
+                    className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Editar evento"
+                  >
+                    <Edit className="h-5 w-5" />
+                  </button>
+
+                  <button
+                    onClick={() => setShowCancelModal(true)}
+                    className="p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                    title="Cancelar evento"
+                  >
+                    <Ban className="h-5 w-5" />
+                  </button>
+
+                  <button
+                    onClick={() => setShowDeleteModal(true)}
+                    className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Excluir evento"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -412,6 +480,73 @@ const EventDetail: React.FC = () => {
                   className="btn-danger disabled:opacity-50"
                 >
                   {actionLoading ? 'Rejeitando...' : 'Confirmar Rejeição'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Cancelamento */}
+        {showCancelModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Cancelar Evento</h3>
+
+              <p className="text-gray-600 mb-6">
+                Tem certeza que deseja cancelar este evento? Esta ação marcará o evento como cancelado,
+                mas ele permanecerá no histórico.
+              </p>
+
+              <div className="flex items-center justify-end space-x-3">
+                <button
+                  onClick={() => setShowCancelModal(false)}
+                  disabled={actionLoading}
+                  className="btn-secondary disabled:opacity-50"
+                >
+                  Voltar
+                </button>
+                <button
+                  onClick={handleCancel}
+                  disabled={actionLoading}
+                  className="btn-danger disabled:opacity-50 flex items-center space-x-2"
+                >
+                  <Ban className="h-5 w-5" />
+                  <span>{actionLoading ? 'Cancelando...' : 'Confirmar Cancelamento'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Exclusão */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+              <h3 className="text-xl font-bold text-red-600 mb-4 flex items-center space-x-2">
+                <Trash2 className="h-6 w-6" />
+                <span>Excluir Evento</span>
+              </h3>
+
+              <p className="text-gray-600 mb-6">
+                <strong>Atenção:</strong> Esta ação é irreversível! O evento será excluído permanentemente
+                do sistema e não poderá ser recuperado.
+              </p>
+
+              <div className="flex items-center justify-end space-x-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={actionLoading}
+                  className="btn-secondary disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={actionLoading}
+                  className="btn-danger disabled:opacity-50 flex items-center space-x-2"
+                >
+                  <Trash2 className="h-5 w-5" />
+                  <span>{actionLoading ? 'Excluindo...' : 'Excluir Permanentemente'}</span>
                 </button>
               </div>
             </div>
