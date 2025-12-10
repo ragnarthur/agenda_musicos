@@ -188,9 +188,8 @@ class EventViewSet(viewsets.ModelViewSet):
 
     def _consume_leader_availability(self, event):
         """
-        Subtrai o intervalo do evento das disponibilidades ativas do líder:
-        - desativa a disponibilidade original
-        - recria sobras antes/depois, se existirem
+        Subtrai o intervalo do evento das disponibilidades ativas do líder,
+        recriando as sobras antes/depois.
         """
         try:
             leader = Musician.objects.filter(role='leader').first()
@@ -207,46 +206,65 @@ class EventViewSet(viewsets.ModelViewSet):
             end_datetime__gt=event.start_datetime
         )
 
-        tz = timezone.get_current_timezone()
-
         for avail in overlaps:
-            pre_start = avail.start_datetime
-            pre_end = event.start_datetime
-            post_start = event.end_datetime
-            post_end = avail.end_datetime
+            events = [event]
+            self._split_availability_with_events(avail, events)
 
-            # Desativar a disponibilidade original
-            avail.is_active = False
-            avail.save(update_fields=['is_active'])
+    def _split_availability_with_events(self, availability, events):
+        """
+        Divide uma disponibilidade removendo os intervalos ocupados por eventos.
+        Cria novos slots com as sobras, desativando a disponibilidade original.
+        """
+        if not events:
+            return
 
-            new_slots = []
+        tz = timezone.get_current_timezone()
+        start = availability.start_datetime
+        end = availability.end_datetime
 
-            # Janela antes do evento
-            if pre_end > pre_start:
+        # ordena eventos por início
+        events = sorted(events, key=lambda e: e.start_datetime)
+
+        new_slots = []
+        cursor = start
+
+        for ev in events:
+            ev_start = ev.start_datetime
+            ev_end = ev.end_datetime
+
+            # Se há espaço antes do evento, cria slot
+            if ev_start > cursor:
                 new_slots.append(
-                    LeaderAvailability(
-                        leader=leader,
-                        date=avail.date,
-                        start_time=pre_start.astimezone(tz).time(),
-                        end_time=pre_end.astimezone(tz).time(),
-                        notes=avail.notes
-                    )
+                    (cursor, min(ev_start, end))
                 )
+            # move cursor após o evento
+            if ev_end > cursor:
+                cursor = max(cursor, ev_end)
 
-            # Janela depois do evento
-            if post_end > post_start:
-                new_slots.append(
-                    LeaderAvailability(
-                        leader=leader,
-                        date=avail.date,
-                        start_time=post_start.astimezone(tz).time(),
-                        end_time=post_end.astimezone(tz).time(),
-                        notes=avail.notes
-                    )
+        # Sobra final
+        if cursor < end:
+            new_slots.append((cursor, end))
+
+        # Desativa disponibilidade original
+        availability.is_active = False
+        availability.save(update_fields=['is_active'])
+
+        # Cria novas disponibilidades com as sobras
+        objs = []
+        for slot_start, slot_end in new_slots:
+            if slot_end <= slot_start:
+                continue
+            objs.append(
+                LeaderAvailability(
+                    leader=availability.leader,
+                    date=availability.date,
+                    start_time=slot_start.astimezone(tz).time(),
+                    end_time=slot_end.astimezone(tz).time(),
+                    notes=availability.notes,
                 )
-
-            if new_slots:
-                LeaderAvailability.objects.bulk_create(new_slots)
+            )
+        if objs:
+            LeaderAvailability.objects.bulk_create(objs)
     
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def approve(self, request, pk=None):
@@ -530,6 +548,53 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated(), IsLeaderOrReadOnly()]
         return [IsAuthenticated()]
 
+    def _split_availability_with_events(self, availability, events):
+        """
+        Divide uma disponibilidade removendo intervalos ocupados por eventos,
+        criando novas sobras e desativando a disponibilidade original.
+        """
+        if not events:
+            return
+
+        tz = timezone.get_current_timezone()
+        start = availability.start_datetime
+        end = availability.end_datetime
+
+        events = sorted(events, key=lambda e: e.start_datetime)
+        new_slots = []
+        cursor = start
+
+        for ev in events:
+            ev_start = ev.start_datetime
+            ev_end = ev.end_datetime
+
+            if ev_start > cursor:
+                new_slots.append((cursor, min(ev_start, end)))
+            if ev_end > cursor:
+                cursor = max(cursor, ev_end)
+
+        if cursor < end:
+            new_slots.append((cursor, end))
+
+        availability.is_active = False
+        availability.save(update_fields=['is_active'])
+
+        objs = []
+        for slot_start, slot_end in new_slots:
+            if slot_end <= slot_start:
+                continue
+            objs.append(
+                LeaderAvailability(
+                    leader=availability.leader,
+                    date=availability.date,
+                    start_time=slot_start.astimezone(tz).time(),
+                    end_time=slot_end.astimezone(tz).time(),
+                    notes=availability.notes,
+                )
+            )
+        if objs:
+            LeaderAvailability.objects.bulk_create(objs)
+
     def perform_create(self, serializer):
         """
         Salva disponibilidade atribuindo o líder logado.
@@ -543,6 +608,16 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
                 raise PermissionDenied('Apenas líderes podem cadastrar disponibilidades.')
 
             serializer.save(leader=musician)
+            created = serializer.instance
+            conflicting_events = Event.objects.filter(
+                event_date=created.date,
+                status__in=['proposed', 'approved', 'confirmed'],
+                start_datetime__lt=created.end_datetime,
+                end_datetime__gt=created.start_datetime
+            )
+            if conflicting_events.exists():
+                # Ajusta disponibilidade recém-criada consumindo eventos já existentes
+                self._split_availability_with_events(created, list(conflicting_events))
         except Musician.DoesNotExist:
             from rest_framework.exceptions import ValidationError
             raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
@@ -582,7 +657,15 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
                 from rest_framework.exceptions import PermissionDenied
                 raise PermissionDenied('Você não pode editar disponibilidades de outros líderes.')
 
-            serializer.save()
+            instance = serializer.save()
+            conflicting_events = Event.objects.filter(
+                event_date=instance.date,
+                status__in=['proposed', 'approved', 'confirmed'],
+                start_datetime__lt=instance.end_datetime,
+                end_datetime__gt=instance.start_datetime
+            )
+            if conflicting_events.exists():
+                self._split_availability_with_events(instance, list(conflicting_events))
         except Musician.DoesNotExist:
             from rest_framework.exceptions import ValidationError
             raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
