@@ -1,5 +1,6 @@
 // pages/LeaderAvailability.tsx
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Calendar as CalendarIcon, Clock, Plus, Edit, Trash2, AlertCircle, Info } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
@@ -10,6 +11,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const LeaderAvailabilityPage: React.FC = () => {
   const { isLeader } = useAuth();
+  const navigate = useNavigate();
   const [availabilities, setAvailabilities] = useState<LeaderAvailability[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -161,43 +163,42 @@ const LeaderAvailabilityPage: React.FC = () => {
     resetForm();
   };
 
-  if (!isLeader) {
-    return (
-      <Layout>
-        <div className="card text-center py-12">
-          <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
-          <p className="text-gray-600">Apenas líderes podem acessar esta página.</p>
-        </div>
-      </Layout>
-    );
-  }
-
   return (
     <Layout>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Minhas Disponibilidades</h1>
-            <p className="mt-2 text-gray-600">Cadastre datas e horários disponíveis para shows</p>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {isLeader ? 'Minhas Disponibilidades' : 'Datas Disponíveis do Líder'}
+            </h1>
+            <p className="mt-2 text-gray-600">
+              {isLeader
+                ? 'Cadastre datas e horários disponíveis para shows'
+                : 'Veja quando o líder está disponível para shows'
+              }
+            </p>
           </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="btn-primary flex items-center space-x-2"
-          >
-            <Plus className="h-5 w-5" />
-            <span>Nova Disponibilidade</span>
-          </button>
+          {isLeader && (
+            <button
+              onClick={() => setShowModal(true)}
+              className="btn-primary flex items-center space-x-2"
+            >
+              <Plus className="h-5 w-5" />
+              <span>Nova Disponibilidade</span>
+            </button>
+          )}
         </div>
 
         {/* Info sobre buffer de 40 minutos */}
         <div className="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
           <div className="flex-1 text-sm text-blue-800">
-            <p className="font-medium mb-1">Atenção: Buffer de 40 minutos</p>
+            <p className="font-medium mb-1">Intervalo de Segurança de 40 Minutos</p>
             <p>
-              O sistema considera automaticamente um intervalo de 40 minutos entre eventos.
-              Se houver conflitos com eventos já cadastrados, você será avisado.
+              O sistema mantém automaticamente um intervalo de 40 minutos antes e depois de cada evento.
+              Este tempo é reservado para deslocamento, montagem e desmontagem de equipamentos,
+              garantindo que você chegue preparado e tenha tempo suficiente entre apresentações.
             </p>
           </div>
         </div>
@@ -273,21 +274,39 @@ const LeaderAvailabilityPage: React.FC = () => {
                     )}
                   </div>
                   <div className="flex items-center space-x-2 ml-4">
-                    <button
-                      onClick={() => handleEdit(availability)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Editar"
-                    >
-                      <Edit className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(availability.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Deletar"
-                      disabled={actionLoading}
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
+                    {isLeader ? (
+                      <>
+                        <button
+                          onClick={() => handleEdit(availability)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Editar"
+                        >
+                          <Edit className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(availability.id)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Deletar"
+                          disabled={actionLoading}
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => navigate('/eventos/novo', {
+                          state: {
+                            date: availability.date,
+                            start_time: availability.start_time,
+                            end_time: availability.end_time
+                          }
+                        })}
+                        className="btn-primary flex items-center space-x-2"
+                      >
+                        <Plus className="h-5 w-5" />
+                        <span>Criar Evento</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
