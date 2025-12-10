@@ -1,6 +1,6 @@
 // services/api.ts
 import axios from 'axios';
-import type { AuthTokens, LoginCredentials, Musician, Event, EventCreate, Availability, AvailabilityResponse } from '../types';
+import type { AuthTokens, LoginCredentials, Musician, Event, EventCreate, Availability, AvailabilityResponse, LeaderAvailability, LeaderAvailabilityCreate } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -184,6 +184,43 @@ export const availabilityService = {
     notes?: string;
   }): Promise<Availability> => {
     const response = await api.put(`/availabilities/${id}/`, data);
+    return response.data;
+  },
+};
+
+// Leader Availability Service
+export const leaderAvailabilityService = {
+  getAll: async (params?: {
+    upcoming?: boolean;
+    past?: boolean;
+    date?: string;
+    leader?: number;
+  }): Promise<LeaderAvailability[]> => {
+    const response = await api.get('/leader-availabilities/', { params });
+    return response.data.results || response.data;
+  },
+
+  getById: async (id: number): Promise<LeaderAvailability> => {
+    const response = await api.get(`/leader-availabilities/${id}/`);
+    return response.data;
+  },
+
+  create: async (data: LeaderAvailabilityCreate): Promise<LeaderAvailability> => {
+    const response = await api.post('/leader-availabilities/', data);
+    return response.data;
+  },
+
+  update: async (id: number, data: Partial<LeaderAvailabilityCreate>): Promise<LeaderAvailability> => {
+    const response = await api.put(`/leader-availabilities/${id}/`, data);
+    return response.data;
+  },
+
+  delete: async (id: number): Promise<void> => {
+    await api.delete(`/leader-availabilities/${id}/`);
+  },
+
+  getConflictingEvents: async (id: number): Promise<Event[]> => {
+    const response = await api.get(`/leader-availabilities/${id}/conflicting_events/`);
     return response.data;
   },
 };

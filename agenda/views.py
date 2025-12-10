@@ -5,13 +5,14 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
-from .models import Musician, Event, Availability
+from .models import Musician, Event, Availability, LeaderAvailability
 from .serializers import (
-    MusicianSerializer, 
-    EventListSerializer, 
+    MusicianSerializer,
+    EventListSerializer,
     EventDetailSerializer,
     EventCreateSerializer,
-    AvailabilitySerializer
+    AvailabilitySerializer,
+    LeaderAvailabilitySerializer
 )
 from .permissions import IsLeaderOrReadOnly, IsOwnerOrReadOnly
 
@@ -129,16 +130,19 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         Salva evento e cria availabilities apenas para o criador e Roberto.
         Lógica: Arthur/Sara (contratantes) criam eventos e contratam Roberto (baterista)
-        Status inicial: 'proposed'
+        Status inicial: 'proposed' (exceto se is_solo=True, então 'approved')
         """
+        is_solo = serializer.validated_data.get('is_solo', False)
+
+        # Se é evento solo, vai direto para 'approved', caso contrário 'proposed'
         event = serializer.save(
             created_by=self.request.user,
-            status='proposed'
+            status='approved' if is_solo else 'proposed'
         )
 
-        # Criar availabilities apenas para:
-        # 1. O criador (Arthur ou Sara) - automaticamente disponível
-        # 2. Roberto (líder/baterista) - pendente de confirmação
+        # Criar availabilities:
+        # - Para eventos solo: apenas o criador
+        # - Para eventos com banda: criador + Roberto (líder)
 
         availabilities = []
 
@@ -150,26 +154,27 @@ class EventViewSet(viewsets.ModelViewSet):
                     musician=creator_musician,
                     event=event,
                     response='available',
-                    notes='Evento criado por mim'
+                    notes='Evento criado por mim' if not is_solo else 'Show solo'
                 )
             )
         except Musician.DoesNotExist:
             pass
 
-        # 2. Roberto (baterista/líder) - pendente
-        try:
-            roberto = Musician.objects.get(user__username='roberto')
-            # Só criar se Roberto não for o criador
-            if roberto.user != self.request.user:
-                availabilities.append(
-                    Availability(
-                        musician=roberto,
-                        event=event,
-                        response='pending'
+        # 2. Roberto (baterista/líder) - apenas se NÃO for evento solo
+        if not is_solo:
+            try:
+                roberto = Musician.objects.get(user__username='roberto')
+                # Só criar se Roberto não for o criador
+                if roberto.user != self.request.user:
+                    availabilities.append(
+                        Availability(
+                            musician=roberto,
+                            event=event,
+                            response='pending'
+                        )
                     )
-                )
-        except Musician.DoesNotExist:
-            pass
+            except Musician.DoesNotExist:
+                pass
 
         if availabilities:
             Availability.objects.bulk_create(availabilities)
@@ -393,3 +398,109 @@ class AvailabilityViewSet(viewsets.ModelViewSet):
         except Musician.DoesNotExist:
             from rest_framework.exceptions import ValidationError
             raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
+
+
+class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para disponibilidades cadastradas pelo líder.
+
+    - Líderes podem CRUD suas próprias disponibilidades
+    - Outros músicos podem apenas visualizar (read-only)
+    - Filtragem por data (upcoming, past, specific date)
+    """
+    serializer_class = LeaderAvailabilitySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Retorna disponibilidades ativas.
+        Filtra por query params:
+        - ?upcoming=true (datas futuras)
+        - ?past=true (datas passadas)
+        - ?date=YYYY-MM-DD (data específica)
+        - ?leader=<id> (filtrar por líder específico)
+        """
+        from django.utils import timezone
+        queryset = LeaderAvailability.objects.filter(is_active=True).select_related('leader__user')
+
+        # Filtro por data futura
+        if self.request.query_params.get('upcoming') == 'true':
+            queryset = queryset.filter(date__gte=timezone.now().date())
+
+        # Filtro por data passada
+        if self.request.query_params.get('past') == 'true':
+            queryset = queryset.filter(date__lt=timezone.now().date())
+
+        # Filtro por data específica
+        specific_date = self.request.query_params.get('date')
+        if specific_date:
+            queryset = queryset.filter(date=specific_date)
+
+        # Filtro por líder específico
+        leader_id = self.request.query_params.get('leader')
+        if leader_id:
+            queryset = queryset.filter(leader_id=leader_id)
+
+        return queryset
+
+    def get_permissions(self):
+        """
+        Permissões customizadas:
+        - create/update/delete: apenas líderes
+        - list/retrieve: todos os músicos autenticados
+        """
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            # Apenas líderes podem modificar
+            return [IsAuthenticated(), IsLeaderOrReadOnly()]
+        return [IsAuthenticated()]
+
+    def perform_create(self, serializer):
+        """
+        Salva disponibilidade atribuindo o líder logado.
+        Apenas líderes podem criar disponibilidades.
+        """
+        try:
+            musician = self.request.user.musician_profile
+
+            if not musician.is_leader():
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied('Apenas líderes podem cadastrar disponibilidades.')
+
+            serializer.save(leader=musician)
+        except Musician.DoesNotExist:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
+
+    def perform_update(self, serializer):
+        """
+        Permite apenas que o líder atualize suas próprias disponibilidades.
+        """
+        try:
+            musician = self.request.user.musician_profile
+
+            if not musician.is_leader():
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied('Apenas líderes podem atualizar disponibilidades.')
+
+            # Verifica se a disponibilidade pertence ao líder
+            if serializer.instance.leader != musician:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied('Você não pode editar disponibilidades de outros líderes.')
+
+            serializer.save()
+        except Musician.DoesNotExist:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
+
+    @action(detail=True, methods=['get'])
+    def conflicting_events(self, request, pk=None):
+        """
+        GET /leader-availabilities/{id}/conflicting_events/
+        Retorna lista de eventos que conflitam com esta disponibilidade (incluindo buffer de 40 min).
+        """
+        availability = self.get_object()
+        conflicting = availability.get_conflicting_events()
+
+        from .serializers import EventListSerializer
+        serializer = EventListSerializer(conflicting, many=True, context={'request': request})
+        return Response(serializer.data)
