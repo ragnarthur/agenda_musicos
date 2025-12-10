@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import EventsList from './pages/EventsList';
 import EventForm from './pages/EventForm';
+import EventEditForm from './pages/EventEditForm';
 import EventDetail from './pages/EventDetail';
 import Approvals from './pages/Approvals';
 import Musicians from './pages/Musicians';
@@ -97,6 +98,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <EventForm />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/eventos/:id/editar"
+        element={
+          <ProtectedRoute>
+            <EventEditForm />
           </ProtectedRoute>
         }
       />
