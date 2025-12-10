@@ -84,12 +84,30 @@ const LeaderAvailabilityPage: React.FC = () => {
       await loadAvailabilities();
     } catch (err) {
       console.error('Erro ao salvar disponibilidade:', err);
-      const error = err as { response?: { data?: Record<string, unknown> } };
+      const error = err as { response?: { data?: any } };
       if (error.response?.data) {
-        const errors = error.response.data;
-        const errorMessage = Object.entries(errors)
-          .map(([key, value]) => `${key}: ${value}`)
-          .join(', ');
+        const data = error.response.data;
+        let errorMessage = 'Erro ao salvar disponibilidade. Tente novamente.';
+
+        // Se data é uma string, use diretamente
+        if (typeof data === 'string') {
+          errorMessage = data;
+        }
+        // Se data é um objeto, tente extrair as mensagens
+        else if (typeof data === 'object' && data !== null) {
+          const messages: string[] = [];
+          for (const [key, value] of Object.entries(data)) {
+            if (Array.isArray(value)) {
+              messages.push(`${key}: ${value.join(', ')}`);
+            } else {
+              messages.push(`${key}: ${value}`);
+            }
+          }
+          if (messages.length > 0) {
+            errorMessage = messages.join('; ');
+          }
+        }
+
         setError(errorMessage);
       } else {
         setError('Erro ao salvar disponibilidade. Tente novamente.');

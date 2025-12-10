@@ -110,12 +110,27 @@ const EventForm: React.FC = () => {
       navigate(`/eventos/${event.id}`);
     } catch (err) {
       console.error('Erro ao criar evento:', err);
-      const error = err as { response?: { data?: Record<string, unknown> } };
+      const error = err as { response?: { data?: any } };
       if (error.response?.data) {
-        const errors = error.response.data;
-        const errorMessage = Object.entries(errors)
-          .map(([key, value]) => `${key}: ${value}`)
-          .join(', ');
+        const data = error.response.data;
+        let errorMessage = 'Erro ao criar evento. Tente novamente.';
+
+        if (typeof data === 'string') {
+          errorMessage = data;
+        } else if (typeof data === 'object' && data !== null) {
+          const messages: string[] = [];
+          for (const [key, value] of Object.entries(data)) {
+            if (Array.isArray(value)) {
+              messages.push(`${key}: ${value.join(', ')}`);
+            } else {
+              messages.push(`${key}: ${value}`);
+            }
+          }
+          if (messages.length > 0) {
+            errorMessage = messages.join('; ');
+          }
+        }
+
         setError(errorMessage);
       } else {
         setError('Erro ao criar evento. Tente novamente.');
