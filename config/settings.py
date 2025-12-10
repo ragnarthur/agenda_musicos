@@ -8,7 +8,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
+# Hosts
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
+# Inclui testserver para permitir chamadas via APIClient/DRF tests
+if 'testserver' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('testserver')
 
 # APPS
 INSTALLED_APPS = [
