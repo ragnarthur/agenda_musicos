@@ -1,15 +1,18 @@
 // pages/EventForm.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, Clock, Phone, FileText, Save, X } from 'lucide-react';
+import { Calendar, MapPin, Clock, Phone, FileText, Save, X, CheckCircle, Info } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
-import { eventService } from '../services/api';
-import type { EventCreate } from '../types';
+import { eventService, leaderAvailabilityService } from '../services/api';
+import type { EventCreate, LeaderAvailability } from '../types';
+import { format } from 'date-fns';
 
 const EventForm: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [leaderAvailabilities, setLeaderAvailabilities] = useState<LeaderAvailability[]>([]);
+  const [matchingAvailability, setMatchingAvailability] = useState<LeaderAvailability | null>(null);
 
   const [formData, setFormData] = useState<EventCreate>({
     title: '',
@@ -21,6 +24,32 @@ const EventForm: React.FC = () => {
     end_time: '',
     is_solo: false,
   });
+
+  // Carregar disponibilidades do líder ao montar o componente
+  useEffect(() => {
+    loadLeaderAvailabilities();
+  }, []);
+
+  // Verificar se a data escolhida coincide com uma disponibilidade do líder
+  useEffect(() => {
+    if (formData.event_date) {
+      const matching = leaderAvailabilities.find(
+        avail => avail.date === formData.event_date
+      );
+      setMatchingAvailability(matching || null);
+    } else {
+      setMatchingAvailability(null);
+    }
+  }, [formData.event_date, leaderAvailabilities]);
+
+  const loadLeaderAvailabilities = async () => {
+    try {
+      const data = await leaderAvailabilityService.getAll({ upcoming: true });
+      setLeaderAvailabilities(data.slice(0, 10)); // Mostrar apenas as próximas 10
+    } catch (error) {
+      console.error('Erro ao carregar disponibilidades:', error);
+    }
+  };
 
   // Função para formatar telefone brasileiro
   const formatPhone = (value: string): string => {
@@ -173,7 +202,7 @@ const EventForm: React.FC = () => {
 
           {/* Data e Horários */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
+            <div className="md:col-span-3">
               <label htmlFor="event_date" className="block text-sm font-medium text-gray-700 mb-2">
                 Data *
               </label>
@@ -189,6 +218,23 @@ const EventForm: React.FC = () => {
                   required
                 />
               </div>
+
+              {/* Aviso se data coincide com disponibilidade do líder */}
+              {matchingAvailability && !formData.is_solo && (
+                <div className="flex items-start space-x-2 mt-2 p-3 bg-green-50 rounded-lg border border-green-200">
+                  <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 text-sm text-green-800">
+                    <p className="font-medium">Líder disponível nesta data!</p>
+                    <p className="mt-1">
+                      Horário disponível: {matchingAvailability.start_time.slice(0, 5)} -{' '}
+                      {matchingAvailability.end_time.slice(0, 5)}
+                    </p>
+                    {matchingAvailability.notes && (
+                      <p className="mt-1 text-green-700">{matchingAvailability.notes}</p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>
@@ -243,6 +289,48 @@ const EventForm: React.FC = () => {
               placeholder="Adicione detalhes sobre o evento, repertório, etc..."
             />
           </div>
+
+          {/* Disponibilidades do Líder */}
+          {!formData.is_solo && leaderAvailabilities.length > 0 && (
+            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex items-center space-x-2 mb-3">
+                <Info className="h-5 w-5 text-gray-600" />
+                <h3 className="font-medium text-gray-900">Próximas Disponibilidades do Líder</h3>
+              </div>
+              <p className="text-sm text-gray-600 mb-3">
+                Escolha uma destas datas para facilitar a aprovação do evento:
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {leaderAvailabilities.slice(0, 6).map((availability) => (
+                  <button
+                    key={availability.id}
+                    type="button"
+                    onClick={() => {
+                      setFormData(prev => ({ ...prev, event_date: availability.date }));
+                    }}
+                    className={`text-left p-3 rounded-lg border transition-colors ${
+                      formData.event_date === availability.date
+                        ? 'border-primary-500 bg-primary-50'
+                        : 'border-gray-200 bg-white hover:border-primary-300 hover:bg-primary-50'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2 mb-1">
+                      <Calendar className="h-4 w-4 text-gray-500" />
+                      <span className="font-medium text-gray-900">
+                        {format(new Date(availability.date), 'dd/MM/yyyy')}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Clock className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm text-gray-600">
+                        {availability.start_time.slice(0, 5)} - {availability.end_time.slice(0, 5)}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Show Solo */}
           <div className="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">

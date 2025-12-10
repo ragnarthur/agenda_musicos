@@ -1,7 +1,7 @@
 // components/Layout/Navbar.tsx
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Music, Calendar, Users, LogOut, Crown } from 'lucide-react';
+import { Music, Calendar, Users, LogOut, Crown, Clock } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { eventService } from '../../services/api';
 
@@ -73,18 +73,28 @@ const Navbar: React.FC = () => {
             </Link>
 
             {isLeader && (
-              <Link
-                to="/aprovacoes"
-                className="flex items-center space-x-1 text-yellow-600 hover:text-yellow-700 transition-colors relative"
-              >
-                <Crown className="h-5 w-5" />
-                <span>Aprovações</span>
-                {pendingApproval > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                    {pendingApproval}
-                  </span>
-                )}
-              </Link>
+              <>
+                <Link
+                  to="/aprovacoes"
+                  className="flex items-center space-x-1 text-yellow-600 hover:text-yellow-700 transition-colors relative"
+                >
+                  <Crown className="h-5 w-5" />
+                  <span>Aprovações</span>
+                  {pendingApproval > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {pendingApproval}
+                    </span>
+                  )}
+                </Link>
+
+                <Link
+                  to="/disponibilidades"
+                  className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 transition-colors"
+                >
+                  <Clock className="h-5 w-5" />
+                  <span>Disponibilidades</span>
+                </Link>
+              </>
             )}
           </div>
 
@@ -134,18 +144,28 @@ const Navbar: React.FC = () => {
           </Link>
 
           {isLeader && (
-            <Link
-              to="/aprovacoes"
-              className="flex flex-col items-center text-yellow-600 hover:text-yellow-700 p-2 relative"
-            >
-              <Crown className="h-6 w-6" />
-              <span className="text-xs mt-1">Aprovações</span>
-              {pendingApproval > 0 && (
-                <span className="absolute top-0 right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {pendingApproval}
-                </span>
-              )}
-            </Link>
+            <>
+              <Link
+                to="/aprovacoes"
+                className="flex flex-col items-center text-yellow-600 hover:text-yellow-700 p-2 relative"
+              >
+                <Crown className="h-6 w-6" />
+                <span className="text-xs mt-1">Aprovações</span>
+                {pendingApproval > 0 && (
+                  <span className="absolute top-0 right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {pendingApproval}
+                  </span>
+                )}
+              </Link>
+
+              <Link
+                to="/disponibilidades"
+                className="flex flex-col items-center text-gray-700 hover:text-primary-600 p-2"
+              >
+                <Clock className="h-6 w-6" />
+                <span className="text-xs mt-1">Horários</span>
+              </Link>
+            </>
           )}
         </div>
       </div>
