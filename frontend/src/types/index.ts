@@ -46,6 +46,7 @@ export interface Event {
   start_datetime: string;
   end_datetime: string;
   payment_amount?: string;
+  is_solo: boolean;
   status: 'proposed' | 'approved' | 'rejected' | 'confirmed' | 'cancelled';
   status_display: string;
   can_approve?: boolean;
@@ -76,6 +77,31 @@ export interface EventCreate {
   start_time: string;
   end_time: string;
   payment_amount?: string;
+  is_solo?: boolean;
+}
+
+export interface LeaderAvailability {
+  id: number;
+  leader: number;
+  leader_name: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  start_datetime: string;
+  end_datetime: string;
+  notes?: string;
+  is_active: boolean;
+  has_conflicts: boolean;
+  conflicting_events_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LeaderAvailabilityCreate {
+  date: string;
+  start_time: string;
+  end_time: string;
+  notes?: string;
 }
 
 export interface AuthTokens {

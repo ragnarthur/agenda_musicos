@@ -19,6 +19,7 @@ const EventForm: React.FC = () => {
     event_date: '',
     start_time: '',
     end_time: '',
+    is_solo: false,
   });
 
   // Função para formatar telefone brasileiro
@@ -241,6 +242,26 @@ const EventForm: React.FC = () => {
               className="input-field"
               placeholder="Adicione detalhes sobre o evento, repertório, etc..."
             />
+          </div>
+
+          {/* Show Solo */}
+          <div className="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <input
+              type="checkbox"
+              id="is_solo"
+              name="is_solo"
+              checked={formData.is_solo}
+              onChange={(e) => setFormData(prev => ({ ...prev, is_solo: e.target.checked }))}
+              className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+            />
+            <div className="flex-1">
+              <label htmlFor="is_solo" className="block text-sm font-medium text-gray-900 cursor-pointer">
+                Show Solo
+              </label>
+              <p className="text-sm text-gray-600 mt-1">
+                Marque esta opção se for um show solo. Shows solo não requerem aprovação do líder e são automaticamente aprovados.
+              </p>
+            </div>
           </div>
 
           {/* Botões */}

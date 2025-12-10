@@ -2,7 +2,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.utils import timezone
-from .models import Musician, Event, Availability
+from .models import Musician, Event, Availability, LeaderAvailability
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -64,13 +64,13 @@ class EventListSerializer(serializers.ModelSerializer):
     approved_by_name = serializers.SerializerMethodField()
     availability_summary = serializers.SerializerMethodField()
     status_display = serializers.CharField(source='get_status_display', read_only=True)
-    
+
     class Meta:
         model = Event
         fields = [
             'id', 'title', 'location', 'event_date', 'start_time', 'end_time',
             'status', 'status_display', 'created_by_name', 'approved_by_name',
-            'availability_summary', 'payment_amount', 'created_at'
+            'availability_summary', 'payment_amount', 'is_solo', 'created_at', 'created_by'
         ]
     
     def get_created_by_name(self, obj):
@@ -98,13 +98,13 @@ class EventDetailSerializer(serializers.ModelSerializer):
     approved_by_name = serializers.SerializerMethodField()
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     can_approve = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Event
         fields = [
             'id', 'title', 'description', 'location', 'venue_contact',
             'event_date', 'start_time', 'end_time', 'start_datetime', 'end_datetime',
-            'payment_amount', 'status', 'status_display', 'can_approve',
+            'payment_amount', 'is_solo', 'status', 'status_display', 'can_approve',
             'created_by', 'created_by_name', 'approved_by', 'approved_by_name',
             'approved_at', 'rejection_reason', 'availabilities',
             'created_at', 'updated_at'
@@ -162,21 +162,74 @@ class EventCreateSerializer(serializers.ModelSerializer):
         model = Event
         fields = [
             'id', 'title', 'description', 'location', 'venue_contact',
-            'event_date', 'start_time', 'end_time', 'payment_amount'
+            'event_date', 'start_time', 'end_time', 'payment_amount', 'is_solo'
         ]
         read_only_fields = ['id']
     
     def validate(self, data):
         """Validações"""
         errors = {}
-        
+
         if data['end_time'] <= data['start_time']:
             errors['end_time'] = 'Horário de término deve ser posterior ao início.'
-        
+
         if data['event_date'] < timezone.now().date():
             errors['event_date'] = 'Não é possível criar eventos com datas passadas.'
-        
+
         if errors:
             raise serializers.ValidationError(errors)
-        
+
+        return data
+
+
+class LeaderAvailabilitySerializer(serializers.ModelSerializer):
+    """Serializer para disponibilidades cadastradas pelo líder"""
+    leader_name = serializers.SerializerMethodField()
+    has_conflicts = serializers.SerializerMethodField()
+    conflicting_events_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LeaderAvailability
+        fields = [
+            'id', 'leader', 'leader_name', 'date', 'start_time', 'end_time',
+            'start_datetime', 'end_datetime', 'notes', 'is_active',
+            'has_conflicts', 'conflicting_events_count',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = [
+            'id', 'start_datetime', 'end_datetime', 'leader',
+            'created_at', 'updated_at'
+        ]
+
+    def get_leader_name(self, obj):
+        return obj.leader.user.get_full_name() if obj.leader else 'Sistema'
+
+    def get_has_conflicts(self, obj):
+        """Verifica se há conflitos com eventos existentes"""
+        return obj.has_conflicts()
+
+    def get_conflicting_events_count(self, obj):
+        """Conta eventos conflitantes"""
+        return obj.get_conflicting_events().count()
+
+    def validate(self, data):
+        """Validações customizadas"""
+        errors = {}
+
+        # Valida horários
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
+
+        if start_time and end_time:
+            if end_time <= start_time:
+                errors['end_time'] = 'Horário de término deve ser posterior ao início.'
+
+        # Valida data (não pode ser no passado)
+        date = data.get('date')
+        if date and date < timezone.now().date():
+            errors['date'] = 'Não é possível cadastrar disponibilidades em datas passadas.'
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
         return data

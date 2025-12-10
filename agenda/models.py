@@ -78,13 +78,19 @@ class Event(models.Model):
     
     # Informações financeiras (opcional)
     payment_amount = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
-        blank=True, 
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
         null=True,
         help_text='Valor do cachê'
     )
-    
+
+    # Show solo (não requer aprovação do líder)
+    is_solo = models.BooleanField(
+        default=False,
+        help_text='Indica se é um show solo (sem necessidade de aprovação do líder)'
+    )
+
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='proposed')
     
     # Quem criou a proposta
@@ -228,3 +234,104 @@ class Availability(models.Model):
         if self.response != 'pending' and not self.responded_at:
             self.responded_at = timezone.now()
         super().save(*args, **kwargs)
+
+
+class LeaderAvailability(models.Model):
+    """
+    Datas e horários disponíveis cadastrados pelo líder (baterista).
+    Outros músicos visualizam essas disponibilidades ao criar eventos.
+    Regra: mínimo 40 minutos entre eventos.
+    """
+    leader = models.ForeignKey(
+        Musician,
+        on_delete=models.CASCADE,
+        related_name='leader_availabilities',
+        limit_choices_to={'role': 'leader'},
+        help_text='Líder que cadastrou a disponibilidade'
+    )
+    date = models.DateField(help_text='Data disponível')
+    start_time = models.TimeField(help_text='Hora de início da disponibilidade')
+    end_time = models.TimeField(help_text='Hora de término da disponibilidade')
+    notes = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Observações sobre a disponibilidade'
+    )
+
+    # Para facilitar queries
+    start_datetime = models.DateTimeField(help_text='Data/hora início completa')
+    end_datetime = models.DateTimeField(help_text='Data/hora fim completa')
+
+    is_active = models.BooleanField(
+        default=True,
+        help_text='Se False, a disponibilidade foi removida/cancelada'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['date', 'start_time']
+        verbose_name = 'Disponibilidade do Líder'
+        verbose_name_plural = 'Disponibilidades do Líder'
+        indexes = [
+            models.Index(fields=['date', 'is_active']),
+            models.Index(fields=['leader', 'date']),
+        ]
+
+    def clean(self):
+        """Validações customizadas"""
+        errors = {}
+
+        # Valida horários
+        if self.start_time and self.end_time:
+            if self.end_time <= self.start_time:
+                errors['end_time'] = 'Horário de término deve ser posterior ao início.'
+
+        # Valida data (não pode ser no passado)
+        if self.date and self.date < timezone.now().date():
+            errors['date'] = 'Não é possível cadastrar disponibilidades em datas passadas.'
+
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs):
+        """Combina date + time em datetime antes de salvar"""
+        if self.date and self.start_time:
+            self.start_datetime = timezone.make_aware(
+                timezone.datetime.combine(self.date, self.start_time)
+            )
+        if self.date and self.end_time:
+            self.end_datetime = timezone.make_aware(
+                timezone.datetime.combine(self.date, self.end_time)
+            )
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.leader.user.get_full_name()} - {self.date.strftime('%d/%m/%Y')} {self.start_time.strftime('%H:%M')}-{self.end_time.strftime('%H:%M')}"
+
+    def get_conflicting_events(self):
+        """
+        Retorna eventos que conflitam com esta disponibilidade.
+        Considera buffer de 40 minutos entre eventos.
+        """
+        from datetime import timedelta
+
+        # Adiciona buffer de 40 minutos antes e depois
+        buffer = timedelta(minutes=40)
+        buffer_start = self.start_datetime - buffer
+        buffer_end = self.end_datetime + buffer
+
+        # Busca eventos que sobrepõem com o período (incluindo buffer)
+        conflicting_events = Event.objects.filter(
+            event_date=self.date,
+            status__in=['proposed', 'approved', 'confirmed']
+        ).filter(
+            models.Q(start_datetime__lt=buffer_end) &
+            models.Q(end_datetime__gt=buffer_start)
+        )
+
+        return conflicting_events
+
+    def has_conflicts(self):
+        """Verifica se há eventos conflitantes"""
+        return self.get_conflicting_events().exists()
