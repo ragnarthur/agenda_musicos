@@ -297,21 +297,35 @@ class LeaderAvailability(models.Model):
 
     def save(self, *args, **kwargs):
         """Combina date + time em datetime antes de salvar"""
+        errors = {}
+
         # Garantir que date é um objeto date, não string
         if isinstance(self.date, str):
             from datetime import date as date_cls
-            self.date = date_cls.fromisoformat(self.date)
+            try:
+                self.date = date_cls.fromisoformat(self.date)
+            except ValueError:
+                errors['date'] = 'Formato inválido. Use YYYY-MM-DD.'
 
         # Garantir que times são objetos time, não strings
         if isinstance(self.start_time, str):
             from datetime import time as time_cls
-            parts = self.start_time.split(':')
-            self.start_time = time_cls(int(parts[0]), int(parts[1]))
+            try:
+                parts = self.start_time.split(':')
+                self.start_time = time_cls(int(parts[0]), int(parts[1]))
+            except Exception:
+                errors['start_time'] = 'Formato inválido. Use HH:MM.'
 
         if isinstance(self.end_time, str):
             from datetime import time as time_cls
-            parts = self.end_time.split(':')
-            self.end_time = time_cls(int(parts[0]), int(parts[1]))
+            try:
+                parts = self.end_time.split(':')
+                self.end_time = time_cls(int(parts[0]), int(parts[1]))
+            except Exception:
+                errors['end_time'] = 'Formato inválido. Use HH:MM.'
+
+        if errors:
+            raise ValidationError(errors)
 
         if self.date and self.start_time:
             self.start_datetime = timezone.make_aware(
