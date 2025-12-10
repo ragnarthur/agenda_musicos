@@ -11,6 +11,20 @@ const Navbar: React.FC = () => {
   const [pendingMyResponse, setPendingMyResponse] = useState(0);
   const [pendingApproval, setPendingApproval] = useState(0);
 
+  const formatInstrument = () => {
+    if (!user) return '';
+    if (user.bio) return user.bio; // exibe bio quando existir (vocal/violão/guitarra)
+    const displayMap: Record<string, string> = {
+      vocal: 'Vocal',
+      guitar: 'Guitarra',
+      bass: 'Baixo',
+      drums: 'Bateria',
+      keyboard: 'Teclado',
+      other: 'Outro',
+    };
+    return displayMap[user.instrument] || user.instrument;
+  };
+
   useEffect(() => {
     loadNotifications();
     // Recarregar a cada 30 segundos
@@ -101,7 +115,7 @@ const Navbar: React.FC = () => {
             <div className="text-right">
               <p className="text-sm font-medium text-gray-900">{user?.full_name}</p>
               <p className="text-xs text-gray-500">
-                {user?.instrument && `${user.instrument.charAt(0).toUpperCase()}${user.instrument.slice(1)}`}
+                {formatInstrument()}
                 {isLeader && <span className="ml-1 text-yellow-600">👑 Líder</span>}
               </p>
             </div>
