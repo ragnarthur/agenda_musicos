@@ -100,6 +100,9 @@ export const eventService = {
     status?: string;
     my_proposals?: boolean;
     pending_approval?: boolean;
+    search?: string;
+    past?: boolean;
+    upcoming?: boolean;
   }): Promise<Event[]> => {
     const response = await api.get('/events/', { params });
     // Backend retorna objeto paginado: { count, next, previous, results }

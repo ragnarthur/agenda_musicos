@@ -1,12 +1,38 @@
 // components/Layout/Navbar.tsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Music, Calendar, Users, LogOut, Crown } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { eventService } from '../../services/api';
 
 const Navbar: React.FC = () => {
   const { user, logout, isLeader } = useAuth();
   const navigate = useNavigate();
+  const [pendingMyResponse, setPendingMyResponse] = useState(0);
+  const [pendingApproval, setPendingApproval] = useState(0);
+
+  useEffect(() => {
+    loadNotifications();
+    // Recarregar a cada 30 segundos
+    const interval = setInterval(loadNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  const loadNotifications = async () => {
+    try {
+      // Eventos pendentes de minha resposta
+      const myPending = await eventService.getPendingMyResponse();
+      setPendingMyResponse(myPending.length);
+
+      // Eventos pendentes de aprovação (apenas para líderes)
+      if (isLeader) {
+        const approvals = await eventService.getAll({ pending_approval: true });
+        setPendingApproval(approvals.length);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar notificações:', error);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -27,10 +53,15 @@ const Navbar: React.FC = () => {
           <div className="hidden md:flex items-center space-x-6">
             <Link
               to="/eventos"
-              className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 transition-colors"
+              className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 transition-colors relative"
             >
               <Calendar className="h-5 w-5" />
               <span>Eventos</span>
+              {pendingMyResponse > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {pendingMyResponse}
+                </span>
+              )}
             </Link>
 
             <Link
@@ -44,10 +75,15 @@ const Navbar: React.FC = () => {
             {isLeader && (
               <Link
                 to="/aprovacoes"
-                className="flex items-center space-x-1 text-yellow-600 hover:text-yellow-700 transition-colors"
+                className="flex items-center space-x-1 text-yellow-600 hover:text-yellow-700 transition-colors relative"
               >
                 <Crown className="h-5 w-5" />
                 <span>Aprovações</span>
+                {pendingApproval > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {pendingApproval}
+                  </span>
+                )}
               </Link>
             )}
           </div>
@@ -78,10 +114,15 @@ const Navbar: React.FC = () => {
         <div className="flex justify-around p-2">
           <Link
             to="/eventos"
-            className="flex flex-col items-center text-gray-700 hover:text-primary-600 p-2"
+            className="flex flex-col items-center text-gray-700 hover:text-primary-600 p-2 relative"
           >
             <Calendar className="h-6 w-6" />
             <span className="text-xs mt-1">Eventos</span>
+            {pendingMyResponse > 0 && (
+              <span className="absolute top-0 right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {pendingMyResponse}
+              </span>
+            )}
           </Link>
 
           <Link
@@ -95,10 +136,15 @@ const Navbar: React.FC = () => {
           {isLeader && (
             <Link
               to="/aprovacoes"
-              className="flex flex-col items-center text-yellow-600 hover:text-yellow-700 p-2"
+              className="flex flex-col items-center text-yellow-600 hover:text-yellow-700 p-2 relative"
             >
               <Crown className="h-6 w-6" />
               <span className="text-xs mt-1">Aprovações</span>
+              {pendingApproval > 0 && (
+                <span className="absolute top-0 right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {pendingApproval}
+                </span>
+              )}
             </Link>
           )}
         </div>
