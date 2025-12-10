@@ -108,9 +108,12 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
 }
 
-# CORS (apenas em desenvolvimento - ajustar em produção)
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Vite default port
+# CORS
+# Usa .env (CORS_ALLOWED_ORIGINS ou CORS_ORIGINS) e mantém localhost para desenvolvimento
+_cors_from_env = config('CORS_ALLOWED_ORIGINS', default=config('CORS_ORIGINS', default='')).split(',')
+_cors_from_env = [origin for origin in _cors_from_env if origin]  # remove strings vazias
+CORS_ALLOWED_ORIGINS = _cors_from_env + [
+    "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
 CORS_ALLOW_CREDENTIALS = True
