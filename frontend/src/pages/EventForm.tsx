@@ -1,6 +1,6 @@
 // pages/EventForm.tsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Calendar, MapPin, Clock, Phone, FileText, Save, X, CheckCircle, Info } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import { eventService, leaderAvailabilityService } from '../services/api';
@@ -9,6 +9,9 @@ import { format } from 'date-fns';
 
 const EventForm: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const prefilledData = location.state as { date?: string; start_time?: string; end_time?: string } | null;
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [leaderAvailabilities, setLeaderAvailabilities] = useState<LeaderAvailability[]>([]);
@@ -19,9 +22,9 @@ const EventForm: React.FC = () => {
     description: '',
     location: '',
     venue_contact: '',
-    event_date: '',
-    start_time: '',
-    end_time: '',
+    event_date: prefilledData?.date || '',
+    start_time: prefilledData?.start_time || '',
+    end_time: prefilledData?.end_time || '',
     is_solo: false,
   });
 
@@ -152,6 +155,13 @@ const EventForm: React.FC = () => {
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
               {error}
+            </div>
+          )}
+
+          {prefilledData && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center space-x-2">
+              <Info className="h-5 w-5" />
+              <span>Data e horários preenchidos automaticamente a partir da disponibilidade do líder.</span>
             </div>
           )}
 
