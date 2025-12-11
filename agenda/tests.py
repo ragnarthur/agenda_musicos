@@ -107,6 +107,22 @@ class EventModelTest(TestCase):
         self.assertEqual(event.status, 'rejected')
         self.assertEqual(event.rejection_reason, 'Conflito de agenda')
 
+    def test_event_crossing_midnight_sets_end_next_day(self):
+        """Garante que eventos que cruzam meia-noite ajustam end_datetime para o dia seguinte"""
+        event = Event.objects.create(
+            title='Virada',
+            location='Praça',
+            event_date=date(2025, 12, 24),
+            start_time=time(23, 0),
+            end_time=time(2, 0),  # cruza meia-noite para 25/12
+            created_by=self.user,
+            status='proposed'
+        )
+
+        self.assertEqual(event.start_datetime.date(), date(2025, 12, 24))
+        self.assertEqual(event.end_datetime.date(), date(2025, 12, 25))
+        self.assertLess(event.start_datetime, event.end_datetime)
+
 
 class EventAPITest(APITestCase):
     """Testes da API de eventos"""
