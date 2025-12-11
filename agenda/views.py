@@ -236,10 +236,16 @@ class EventViewSet(viewsets.ModelViewSet):
         except Musician.DoesNotExist:
             return
 
+        # Considera disponibilidades no dia inicial e, se o evento cruzar meia-noite, no dia seguinte
+        end_date = event.end_datetime.date()
+        date_filter = [event.event_date]
+        if end_date != event.event_date:
+            date_filter.append(end_date)
+
         overlaps = LeaderAvailability.objects.filter(
             leader=leader,
             is_active=True,
-            date=event.event_date,
+            date__in=date_filter,
             start_datetime__lt=event.end_datetime,
             end_datetime__gt=event.start_datetime
         )
@@ -340,10 +346,15 @@ class EventViewSet(viewsets.ModelViewSet):
         except Musician.DoesNotExist:
             return
 
-        # Busca outros eventos no mesmo dia (excluindo o evento atual)
-        # Considera apenas eventos que ainda estão ativos (não rejeitados/cancelados)
+        # Considera eventos ativos no dia inicial e, se cruzar meia-noite, no dia seguinte
+        start_date = event.start_datetime.date()
+        end_date = event.end_datetime.date()
+        date_filter = [start_date]
+        if end_date != start_date:
+            date_filter.append(end_date)
+
         other_events = Event.objects.filter(
-            event_date=event.event_date,
+            event_date__in=date_filter,
             status__in=['proposed', 'approved', 'confirmed']
         ).exclude(id=event.id)
 
@@ -369,20 +380,55 @@ class EventViewSet(viewsets.ModelViewSet):
             # (considerando o buffer de 40min)
             return
 
-        # Não há conflitos - cria nova disponibilidade cobrindo o período do evento
+        # Não há conflitos - cria disponibilidades cobrindo o período do evento.
+        # Se cruzar meia-noite, divide em dois dias.
         now = timezone.now()
-        LeaderAvailability.objects.create(
-            leader=leader,
-            date=event.event_date,
-            start_time=event.start_time,
-            end_time=event.end_time,
-            start_datetime=event_start,
-            end_datetime=event_end,
-            notes=f'Restaurada após remoção: {event.title}',
-            is_active=True,
-            created_at=now,
-            updated_at=now
-        )
+        if end_date != start_date:
+            # Parte 1: do início até 23:59 do dia inicial
+            end_dt1 = timezone.make_aware(
+                timezone.datetime.combine(start_date, timezone.datetime.min.time()).replace(hour=23, minute=59)
+            )
+            LeaderAvailability.objects.create(
+                leader=leader,
+                date=start_date,
+                start_time=event.start_time,
+                end_time=end_dt1.time(),
+                start_datetime=event_start,
+                end_datetime=end_dt1,
+                notes=f'Restaurada após remoção: {event.title}',
+                is_active=True,
+                created_at=now,
+                updated_at=now
+            )
+            # Parte 2: do início do dia seguinte até end_time
+            start_dt2 = timezone.make_aware(
+                timezone.datetime.combine(end_date, timezone.datetime.min.time())
+            )
+            LeaderAvailability.objects.create(
+                leader=leader,
+                date=end_date,
+                start_time=start_dt2.time(),
+                end_time=event.end_time,
+                start_datetime=start_dt2,
+                end_datetime=event_end,
+                notes=f'Restaurada após remoção: {event.title}',
+                is_active=True,
+                created_at=now,
+                updated_at=now
+            )
+        else:
+            LeaderAvailability.objects.create(
+                leader=leader,
+                date=start_date,
+                start_time=event.start_time,
+                end_time=event.end_time,
+                start_datetime=event_start,
+                end_datetime=event_end,
+                notes=f'Restaurada após remoção: {event.title}',
+                is_active=True,
+                created_at=now,
+                updated_at=now
+            )
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def approve(self, request, pk=None):
