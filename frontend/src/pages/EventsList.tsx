@@ -133,16 +133,32 @@ const EventsList: React.FC = () => {
 
     return Array.from(byDate.entries())
       .sort(([a], [b]) => (a < b ? -1 : 1))
-      .map(([dateKey, list]) => ({
-        dateKey,
-        label: format(parseISO(dateKey), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR }),
-        sara: list
-          .filter((ev) => belongsTo(ev, 'sara'))
-          .sort((a, b) => getStartDateTime(a) - getStartDateTime(b)),
-        arthur: list
-          .filter((ev) => belongsTo(ev, 'arthur'))
-          .sort((a, b) => getStartDateTime(a) - getStartDateTime(b)),
-      }));
+      .map(([dateKey, list]) => {
+        const dateObj = parseISO(dateKey);
+        const today = new Date();
+        const diffDays = Math.floor((dateObj.getTime() - today.setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24));
+
+        const tone =
+          diffDays < 0
+            ? 'bg-gray-50 border-gray-200'
+            : diffDays <= 7
+              ? 'bg-emerald-50 border-emerald-200'
+              : diffDays <= 30
+                ? 'bg-blue-50 border-blue-200'
+                : 'bg-indigo-50 border-indigo-200';
+
+        return {
+          dateKey,
+          label: format(dateObj, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR }),
+          tone,
+          sara: list
+            .filter((ev) => belongsTo(ev, 'sara'))
+            .sort((a, b) => getStartDateTime(a) - getStartDateTime(b)),
+          arthur: list
+            .filter((ev) => belongsTo(ev, 'arthur'))
+            .sort((a, b) => getStartDateTime(a) - getStartDateTime(b)),
+        };
+      });
   }, [events]);
 
   const renderEventCard = (event: Event) => {
@@ -282,12 +298,15 @@ const EventsList: React.FC = () => {
             {groups.map((group) => {
               if (group.sara.length === 0 && group.arthur.length === 0) return null;
               return (
-                <div key={group.dateKey} className="card">
+                <div
+                  key={group.dateKey}
+                  className={`rounded-xl border p-4 shadow-sm ${group.tone}`}
+                >
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <p className="text-xs uppercase tracking-wide text-primary-600">Data</p>
                       <h2 className="text-lg font-bold text-gray-900">
-                        {format(parseISO(group.dateKey), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                        {group.label}
                       </h2>
                     </div>
                   </div>
@@ -295,10 +314,10 @@ const EventsList: React.FC = () => {
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="text-base font-semibold text-gray-900">Sara (Voz/Violão)</h3>
-                        <span className="text-xs text-gray-500">{group.sara.length} evento(s)</span>
+                        <span className="text-xs text-gray-600">{group.sara.length} evento(s)</span>
                       </div>
                       {group.sara.length === 0 ? (
-                        <p className="text-sm text-gray-500">Nenhum evento para Sara.</p>
+                        <p className="text-sm text-gray-500 italic">Sem eventos nesta data.</p>
                       ) : (
                         <div className="space-y-3">{group.sara.map(renderEventCard)}</div>
                       )}
@@ -306,10 +325,10 @@ const EventsList: React.FC = () => {
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="text-base font-semibold text-gray-900">Arthur (Voz/Violão/Guitarra)</h3>
-                        <span className="text-xs text-gray-500">{group.arthur.length} evento(s)</span>
+                        <span className="text-xs text-gray-600">{group.arthur.length} evento(s)</span>
                       </div>
                       {group.arthur.length === 0 ? (
-                        <p className="text-sm text-gray-500">Nenhum evento para Arthur.</p>
+                        <p className="text-sm text-gray-500 italic">Sem eventos nesta data.</p>
                       ) : (
                         <div className="space-y-3">{group.arthur.map(renderEventCard)}</div>
                       )}
