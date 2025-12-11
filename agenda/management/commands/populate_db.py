@@ -9,6 +9,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.stdout.write(self.style.WARNING('Iniciando população do banco de dados...'))
+        self.stdout.write(self.style.NOTICE('Senhas padrão configuradas (2025@).'))
+        self.stdout.write(self.style.NOTICE('Crie/atualize o admin via "createsuperuser" se necessário.\n'))
 
         # Lista de músicos a serem criados
         musicians_data = [
@@ -20,7 +22,7 @@ class Command(BaseCommand):
                 'password': 'sara2025@',
                 'instrument': 'vocal',
                 'role': 'member',
-                'bio': 'Vocalista e violonista - Contrata músicos para apresentações',
+                'bio': 'Vocal e violão - Contrata músicos para apresentações',
                 'phone': '(11) 98888-1111'
             },
             {
@@ -31,7 +33,7 @@ class Command(BaseCommand):
                 'password': 'arthur2025@',
                 'instrument': 'guitar',
                 'role': 'member',
-                'bio': 'Vocalista e violonista - Contrata músicos para apresentações',
+                'bio': 'Vocal, violão e guitarra - Contrata músicos para apresentações',
                 'phone': '(11) 98888-2222'
             },
             {
@@ -42,7 +44,7 @@ class Command(BaseCommand):
                 'password': 'roberto2025@',
                 'instrument': 'drums',
                 'role': 'leader',
-                'bio': 'Baterista profissional - Contratado para shows',
+                'bio': 'Baterista e líder da banda',
                 'phone': '(11) 98888-3333'
             }
         ]
@@ -123,15 +125,15 @@ class Command(BaseCommand):
         self.stdout.write('')
         self.stdout.write(self.style.NOTICE('Credenciais de acesso:'))
         self.stdout.write(self.style.NOTICE('-' * 60))
-        self.stdout.write('Sara Carmo (Vocalista/Violonista - Contratante):')
+        self.stdout.write('Sara Carmo (Vocal e violão - Membro):')
         self.stdout.write('  username: sara')
         self.stdout.write('  password: sara2025@')
         self.stdout.write('')
-        self.stdout.write('Arthur Araújo (Vocalista/Violonista - Contratante):')
+        self.stdout.write('Arthur Araújo (Vocal, violão e guitarra - Membro):')
         self.stdout.write('  username: arthur')
         self.stdout.write('  password: arthur2025@')
         self.stdout.write('')
-        self.stdout.write('Roberto Guimarães (Baterista - Contratado):')
+        self.stdout.write('Roberto Guimarães (Baterista e líder):')
         self.stdout.write('  username: roberto')
         self.stdout.write('  password: roberto2025@')
         self.stdout.write(self.style.NOTICE('-' * 60))

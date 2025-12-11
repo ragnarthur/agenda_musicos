@@ -1,37 +1,26 @@
 # Repository Guidelines
 
-## Project Structure & Module Organization
-- `manage.py` and `config/` hold the Django entrypoint and settings (REST, JWT, CORS, DB). Keep environment-specific values in `.env`.
-- `agenda/` is the main app with models, serializers, permissions, viewsets, and Django tests; add new APIs here following DRF patterns.
-- `frontend/` contains the Vite + React + TypeScript client (`src/pages`, `components`, `contexts`, `services`). Build artifacts live in `frontend/dist`.
-- Deployment and ops scripts: `setup.sh`, `update.sh`, `nginx.conf`, `supervisor.conf`. Do not edit without coordinating with infra.
+## Estrutura do Projeto
+- Backend Django/DRF em `agenda/` (models, serializers, views, permissions, management command `populate_db`). Configurações em `config/settings.py` usam `.env` para `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS` e CORS.
+- Frontend Vite + React + TypeScript em `frontend/src` (páginas, componentes, contextos, serviços). Build vai para `frontend/dist` e é servido pelo nginx configurado em `nginx.conf`.
+- Automação e deploy: `setup.sh` (bootstrap), `update.sh` (migrar, coletar estáticos, build frontend, restart supervisor/nginx), `supervisor.conf` (gunicorn) e arquivos de teste rápido (`test_auth.py`, `test_complete_workflow.py`).
 
-## Build, Test, and Development Commands
-- Backend env: `python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`.
-- Run server: `python manage.py migrate && python manage.py populate_db && python manage.py runserver 0.0.0.0:8000`.
-- Backend tests: `python manage.py test`. Use `python test_auth.py` for quick JWT sanity checks.
-- Frontend setup: `cd frontend && npm install`.
-- Frontend dev server: `npm run dev` (default http://localhost:5173).
-- Frontend quality gates: `npm run lint` and `npm run build`; `npm run preview` to spot-check production build.
+## Configuração e Ambiente
+- Crie `.venv` e instale deps: `python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`.
+- Defina `.env` com `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS` (inclua domínio do ngrok) e `CORS_ALLOWED_ORIGINS`/`CORS_ORIGINS`. O frontend lê `VITE_API_URL` em `.env` do `frontend` para apontar para o mesmo host.
+- Banco padrão é SQLite (`db.sqlite3`). Para reset local: remova o arquivo, rode `python manage.py migrate && python manage.py populate_db`.
 
-## Coding Style & Naming Conventions
-- Python: follow PEP8 (4-space indent, `snake_case` functions/fields, `PascalCase` models/serializers). Prefer DRF viewsets and serializers per resource; keep permissions explicit.
-- React/TypeScript: `PascalCase` components and file names in `pages`/`components`; `camelCase` hooks and helpers; co-locate API clients under `src/services`.
-- Keep strings and URLs centralized in services; avoid inline config drift between frontend and backend.
-- Run `npm run lint` before opening a PR; format TSX consistently (ESLint + TypeScript defaults).
+## Comandos de Build, Teste e Desenvolvimento
+- Backend: `python manage.py migrate`, `python manage.py populate_db`, `python manage.py runserver 0.0.0.0:8000`.
+- Testes backend: `python manage.py test`; fumo JWT: `python test_auth.py`; fluxo completo: `python test_complete_workflow.py`.
+- Frontend: `cd frontend && npm install`; dev server `npm run dev`; qualidade `npm run lint`; build de produção `npm run build`; validação do build `npm run preview`.
+- Deploy no servidor: `./update.sh` (executa migrações, coleta estáticos, builda frontend e reinicia serviços via supervisor/nginx).
 
-## Testing Guidelines
-- Primary suite: `python manage.py test` (Django test runner under `agenda/`). Add new tests near the code they cover.
-- Smoke scripts: `test_auth.py` and `test_complete_workflow.py` validate JWT auth and happy paths; update expected users/roles when seed data changes.
-- For frontend changes, at minimum run `npm run build` and exercise the affected page in dev/preview. Add integration tests via React Testing Library if you introduce complex logic.
+## Estilo de Código e Nomes
+- Python: PEP8 (4 espaços, `snake_case` para funções/campos, `PascalCase` para models/serializers). Views DRF com permissões explícitas; evite lógica de negócio duplicada.
+- React/TS: componentes e arquivos em `PascalCase`, hooks/utilidades em `camelCase`. Centralize chamadas HTTP em `src/services/api.ts` e derive strings constantes lá.
+- Antes de abrir PR, rode `npm run lint` e garanta que migrations/seed refletem as mudanças.
 
-## Commit & Pull Request Guidelines
-- Commits are short, imperative summaries (e.g., “Corrigir erro ao cadastrar disponibilidades do líder”, “Add comprehensive testing”). Prefix with `fix:`/`chore:`/`feat:` when useful; Portuguese or English is fine—stay consistent inside a PR.
-- Keep commits scoped and revert-free; include relevant migrations and seed updates.
-- PRs should describe the change, link issues/tasks, list commands run, and include screenshots or GIFs for UI tweaks. Call out breaking changes or required env var updates.
-- Ensure backend tests and `npm run build`/`lint` pass before requesting review; mention any skipped checks explicitly.
-
-## Security & Configuration Tips
-- Never commit secrets; rely on `.env` for `SECRET_KEY`, DB credentials, and `CORS_ORIGINS`.
-- When changing CORS/hosts, update both Django settings and any frontend base URLs in `src/services/api.ts` (or equivalent) to stay aligned.
-- For production updates, prefer `./update.sh` on the server to keep services, migrations, and frontend builds in sync.
+## Diretrizes de Commits e PRs
+- Commits curtos e imperativos (ex.: `fix: ajustar divisão de disponibilidade`, `chore: atualizar seeds`). Inclua migrations e dados seeds relevantes.
+- PRs devem descrever o problema/solução, comandos executados, checklist de testes e screenshots/GIFs para alterações de UI. Indique updates obrigatórios de `.env` ou scripts.

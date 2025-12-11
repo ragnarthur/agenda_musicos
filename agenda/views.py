@@ -95,7 +95,11 @@ class EventViewSet(viewsets.ModelViewSet):
         status_filter = self.request.query_params.get('status')
         if status_filter:
             statuses = status_filter.split(',')
-            queryset = queryset.filter(status__in=statuses)
+            # Valida que status está em choices válidos
+            valid_statuses = [choice[0] for choice in Event.STATUS_CHOICES]
+            statuses = [s for s in statuses if s in valid_statuses]
+            if statuses:
+                queryset = queryset.filter(status__in=statuses)
 
         # Minhas propostas
         if self.request.query_params.get('my_proposals') == 'true':
@@ -113,6 +117,10 @@ class EventViewSet(viewsets.ModelViewSet):
         # Busca por título ou local
         search = self.request.query_params.get('search')
         if search:
+            # Limita tamanho da query para prevenir DoS
+            if len(search) > 100:
+                from rest_framework.exceptions import ValidationError
+                raise ValidationError({'search': 'Busca não pode ter mais de 100 caracteres.'})
             queryset = queryset.filter(
                 Q(title__icontains=search) | Q(location__icontains=search)
             )
@@ -530,6 +538,19 @@ class AvailabilityViewSet(viewsets.ModelViewSet):
             from rest_framework.exceptions import ValidationError
             raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
 
+    def perform_destroy(self, instance):
+        """Permite apenas deletar a própria availability"""
+        try:
+            musician = self.request.user.musician_profile
+            # Verifica se a availability pertence ao músico
+            if instance.musician != musician:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied('Você não pode deletar disponibilidades de outros músicos.')
+            super().perform_destroy(instance)
+        except Musician.DoesNotExist:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
+
 
 class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
     """
@@ -645,7 +666,7 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """
         Salva disponibilidade atribuindo o líder logado.
-        Apenas líderes podem criar disponibilidades.
+        Apenas líderes ativos podem criar disponibilidades.
         """
         try:
             musician = self.request.user.musician_profile
@@ -653,6 +674,10 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
             if not musician.is_leader():
                 from rest_framework.exceptions import PermissionDenied
                 raise PermissionDenied('Apenas líderes podem cadastrar disponibilidades.')
+
+            if not musician.is_active:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied('Músico inativo não pode cadastrar disponibilidades.')
 
             serializer.save(leader=musician)
             created = serializer.instance
