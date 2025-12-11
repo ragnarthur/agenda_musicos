@@ -261,13 +261,12 @@ class LeaderAvailabilitySerializer(serializers.ModelSerializer):
         """Validações customizadas"""
         errors = {}
 
-        # Valida horários - LeaderAvailability não cruza meia-noite
+        # Valida horários - permite cruzar meia-noite; apenas bloqueia duração zero
         start_time = data.get('start_time')
         end_time = data.get('end_time')
 
         if start_time and end_time:
-            if end_time <= start_time:
-                # Para disponibilidades do líder, sempre requer end_time > start_time
+            if end_time == start_time:
                 errors['end_time'] = 'Horário de término deve ser posterior ao início.'
 
         # Valida data (não pode ser no passado)

@@ -5,7 +5,7 @@ from django.utils import timezone
 from datetime import date, time, timedelta
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
-from .models import Musician, Event, Availability
+from .models import Musician, Event, Availability, LeaderAvailability
 
 
 class MusicianModelTest(TestCase):
@@ -122,6 +122,52 @@ class EventModelTest(TestCase):
         self.assertEqual(event.start_datetime.date(), date(2025, 12, 24))
         self.assertEqual(event.end_datetime.date(), date(2025, 12, 25))
         self.assertLess(event.start_datetime, event.end_datetime)
+
+
+class LeaderAvailabilityModelTest(TestCase):
+    """Testes de disponibilidade do baterista cruzando meia-noite"""
+
+    def setUp(self):
+        user = User.objects.create_user(username='roberto', password='senha123')
+        self.leader = Musician.objects.create(user=user, instrument='drums', role='leader')
+
+    def test_leader_availability_crossing_midnight(self):
+        """Disponibilidade que cruza a meia-noite deve levar end_datetime para o dia seguinte"""
+        base_date = timezone.now().date() + timedelta(days=10)
+        avail = LeaderAvailability(
+            leader=self.leader,
+            date=base_date,
+            start_time=time(23, 0),
+            end_time=time(1, 0),
+        )
+        avail.save()
+
+        self.assertEqual(avail.start_datetime.date(), base_date)
+        self.assertEqual(avail.end_datetime.date(), base_date + timedelta(days=1))
+        self.assertLess(avail.start_datetime, avail.end_datetime)
+
+    def test_conflict_detects_events_after_midnight(self):
+        """Confere conflito com evento que acontece já no dia seguinte dentro da janela"""
+        base_date = timezone.now().date() + timedelta(days=12)
+        avail = LeaderAvailability.objects.create(
+            leader=self.leader,
+            date=base_date,
+            start_time=time(23, 0),
+            end_time=time(1, 0),
+        )
+
+        event = Event.objects.create(
+            title='Show virada',
+            location='Praça',
+            event_date=base_date,  # start no mesmo dia, cruza para o próximo
+            start_time=time(23, 30),
+            end_time=time(0, 30),
+            created_by=self.leader.user,
+            status='proposed'
+        )
+
+        conflicts = avail.get_conflicting_events()
+        self.assertIn(event, conflicts)
 
 
 class EventAPITest(APITestCase):
