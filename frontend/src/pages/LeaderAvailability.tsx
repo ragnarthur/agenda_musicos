@@ -57,8 +57,18 @@ const LeaderAvailabilityPage: React.FC = () => {
     setActionLoading(true);
 
     try {
-      // Validações
-      if (formData.end_time <= formData.start_time) {
+      // Validações: permite cruzar meia-noite, bloqueia duração zero
+      const toMinutes = (time: string) => {
+        const [h, m] = time.split(':').map(Number);
+        return h * 60 + m;
+      };
+      const startMinutes = toMinutes(formData.start_time);
+      const endMinutes = toMinutes(formData.end_time);
+      let duration = endMinutes - startMinutes;
+      if (duration <= 0) {
+        duration += 24 * 60;
+      }
+      if (duration <= 0) {
         setError('O horário de término deve ser posterior ao horário de início');
         setActionLoading(false);
         return;
