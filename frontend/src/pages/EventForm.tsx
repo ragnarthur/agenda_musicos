@@ -249,7 +249,7 @@ const EventForm: React.FC = () => {
                 <div className="flex items-start space-x-2 mt-2 p-3 bg-green-50 rounded-lg border border-green-200">
                   <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                   <div className="flex-1 text-sm text-green-800">
-                    <p className="font-medium">Líder disponível nesta data!</p>
+                    <p className="font-medium">Baterista disponível nesta data!</p>
                     <p className="mt-1">
                       Horário disponível: {matchingAvailability.start_time.slice(0, 5)} -{' '}
                       {matchingAvailability.end_time.slice(0, 5)}
@@ -315,12 +315,12 @@ const EventForm: React.FC = () => {
             />
           </div>
 
-          {/* Disponibilidades do Líder */}
+          {/* Agenda do Baterista */}
           {!formData.is_solo && leaderAvailabilities.length > 0 && (
             <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
               <div className="flex items-center space-x-2 mb-3">
                 <Info className="h-5 w-5 text-gray-600" />
-                <h3 className="font-medium text-gray-900">Próximas Disponibilidades do Líder</h3>
+                <h3 className="font-medium text-gray-900">Próximas disponibilidades do baterista</h3>
               </div>
               <p className="text-sm text-gray-600 mb-3">
                 Escolha uma destas datas para facilitar a aprovação do evento:

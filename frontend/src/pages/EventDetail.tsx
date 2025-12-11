@@ -371,10 +371,10 @@ const EventDetail: React.FC = () => {
           </div>
         </div>
 
-        {/* Ações do Líder */}
+        {/* Ações do Baterista */}
         {isLeader && event.status === 'proposed' && (
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Ações do Líder</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Ações do Baterista</h2>
             <div className="flex items-center space-x-4">
               <button
                 onClick={handleApprove}

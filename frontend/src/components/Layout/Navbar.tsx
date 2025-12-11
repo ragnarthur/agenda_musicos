@@ -116,7 +116,7 @@ const Navbar: React.FC = () => {
               <p className="text-sm font-medium text-gray-900">{user?.full_name}</p>
               <p className="text-xs text-gray-500">
                 {formatInstrument()}
-                {isLeader && <span className="ml-1 text-yellow-600">👑 Líder</span>}
+                {isLeader && <span className="ml-1 text-yellow-600">🥁 Agenda do Baterista</span>}
               </p>
             </div>
 

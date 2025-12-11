@@ -88,7 +88,7 @@ const Dashboard: React.FC = () => {
             <div className="card">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Modo Líder</p>
+                  <p className="text-sm text-gray-600">Modo Baterista (agenda)</p>
                   <p className="text-lg font-semibold text-yellow-600">Ativo</p>
                 </div>
                 <div className="bg-yellow-100 p-3 rounded-lg">

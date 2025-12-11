@@ -154,7 +154,7 @@ const Approvals: React.FC = () => {
             <div className="flex items-start space-x-3">
               <Crown className="h-5 w-5 text-yellow-600 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-yellow-800">Modo Líder Ativo</p>
+                <p className="text-sm font-medium text-yellow-800">Modo Baterista (agenda) ativo</p>
                 <p className="text-sm text-yellow-700 mt-1">
                   Você pode aprovar ou rejeitar esses eventos. Clique em "Ver Detalhes" para
                   analisar cada proposta e tomar uma decisão.
