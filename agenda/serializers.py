@@ -3,19 +3,30 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.utils import timezone
 from .models import Musician, Event, Availability, LeaderAvailability
+from .validators import validate_not_empty_string
 
 
 class UserSerializer(serializers.ModelSerializer):
     """Serializer básico de usuário para uso nested"""
     full_name = serializers.SerializerMethodField()
-    
+    email = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name', 'email', 'full_name']
         read_only_fields = ['id']
-    
+
     def get_full_name(self, obj):
         return obj.get_full_name() or obj.username
+
+    def get_email(self, obj):
+        """Retorna email apenas para o próprio usuário"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            # Mostra email apenas para o próprio usuário
+            if request.user.id == obj.id:
+                return obj.email
+        return None
 
 
 class MusicianSerializer(serializers.ModelSerializer):
@@ -110,8 +121,9 @@ class EventDetailSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = [
-            'id', 'start_datetime', 'end_datetime', 'created_by', 
-            'approved_by', 'approved_at', 'created_at', 'updated_at'
+            'id', 'start_datetime', 'end_datetime', 'created_by',
+            'approved_by', 'approved_at', 'status', 'rejection_reason',
+            'created_at', 'updated_at'
         ]
     
     def get_created_by_name(self, obj):
@@ -135,6 +147,15 @@ class EventDetailSerializer(serializers.ModelSerializer):
     def validate(self, data):
         """Validações customizadas"""
         errors = {}
+
+        # Valida strings vazias em campos obrigatórios
+        string_fields = ['title', 'location']
+        for field in string_fields:
+            if field in data:
+                try:
+                    data[field] = validate_not_empty_string(data[field])
+                except serializers.ValidationError as e:
+                    errors[field] = str(e.detail[0])
 
         # Valida horários
         # Nota: end_time < start_time é permitido (eventos noturnos que cruzam meia-noite)
@@ -182,6 +203,15 @@ class EventCreateSerializer(serializers.ModelSerializer):
     def validate(self, data):
         """Validações"""
         errors = {}
+
+        # Valida strings vazias em campos obrigatórios
+        string_fields = ['title', 'location']
+        for field in string_fields:
+            if field in data:
+                try:
+                    data[field] = validate_not_empty_string(data[field])
+                except serializers.ValidationError as e:
+                    errors[field] = str(e.detail[0])
 
         # Permite end_time < start_time (eventos noturnos), mas não duração zero
         if data.get('end_time') and data.get('start_time'):

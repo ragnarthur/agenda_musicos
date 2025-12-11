@@ -2,6 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.utils import timezone
 from datetime import datetime
 
@@ -83,6 +84,7 @@ class Event(models.Model):
         decimal_places=2,
         blank=True,
         null=True,
+        validators=[MinValueValidator(0, message='Valor do cachê não pode ser negativo.')],
         help_text='Valor do cachê'
     )
 
@@ -96,9 +98,10 @@ class Event(models.Model):
     
     # Quem criou a proposta
     created_by = models.ForeignKey(
-        User, 
-        on_delete=models.SET_NULL, 
+        User,
+        on_delete=models.SET_NULL,
         null=True,
+        db_index=True,
         related_name='created_events'
     )
     
@@ -222,9 +225,10 @@ class Availability(models.Model):
         related_name='availabilities'
     )
     response = models.CharField(
-        max_length=20, 
-        choices=RESPONSE_CHOICES, 
-        default='pending'
+        max_length=20,
+        choices=RESPONSE_CHOICES,
+        default='pending',
+        db_index=True
     )
     notes = models.TextField(
         blank=True, 
