@@ -267,8 +267,13 @@ const LeaderAvailabilityPage: React.FC = () => {
                       <div className="flex items-start space-x-2 mt-3 p-2 bg-red-100 rounded">
                         <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
                         <p className="text-sm text-red-700">
-                          <strong>Conflito detectado:</strong> {availability.conflicting_events_count}{' '}
-                          evento(s) conflitam com esta disponibilidade (considerando buffer de 40 min)
+                          <strong>
+                            {availability.conflicting_events_count === 1
+                              ? 'Existe 1 conflito'
+                              : `${availability.conflicting_events_count} conflitos encontrados`}
+                          </strong>
+                          {' '}para este intervalo. Ajuste o horário ou libere o evento conflitante.
+                          (Cálculo inclui buffer de 40 min antes/depois)
                         </p>
                       </div>
                     )}

@@ -256,6 +256,7 @@ class EventViewSet(viewsets.ModelViewSet):
         tz = timezone.get_current_timezone()
         start = availability.start_datetime
         end = availability.end_datetime
+        buffer = timedelta(minutes=40)
 
         # ordena eventos por início
         events = sorted(events, key=lambda e: e.start_datetime)
@@ -264,8 +265,8 @@ class EventViewSet(viewsets.ModelViewSet):
         cursor = start
 
         for ev in events:
-            ev_start = ev.start_datetime
-            ev_end = ev.end_datetime
+            ev_start = ev.start_datetime - buffer
+            ev_end = ev.end_datetime + buffer
 
             # Se há espaço antes do evento, cria slot
             if ev_start > cursor:
@@ -617,14 +618,15 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         tz = timezone.get_current_timezone()
         start = availability.start_datetime
         end = availability.end_datetime
+        buffer = timedelta(minutes=40)
 
         events = sorted(events, key=lambda e: e.start_datetime)
         new_slots = []
         cursor = start
 
         for ev in events:
-            ev_start = ev.start_datetime
-            ev_end = ev.end_datetime
+            ev_start = ev.start_datetime - buffer
+            ev_end = ev.end_datetime + buffer
 
             if ev_start > cursor:
                 new_slots.append((cursor, min(ev_start, end)))
