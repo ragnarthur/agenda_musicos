@@ -6,7 +6,7 @@ import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { eventService } from '../services/api';
 import type { Availability, Event, EventStatus } from '../types';
-import { format, isAfter, isBefore, parseISO } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 type TimeFilter = 'upcoming' | 'past' | 'all';
