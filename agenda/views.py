@@ -196,8 +196,9 @@ class EventViewSet(viewsets.ModelViewSet):
                     }
                 )
 
-        # Nota: O consumo de disponibilidade do líder agora acontece APÓS aprovação
-        # (ver método approve() abaixo)
+        # Consome disponibilidade do líder imediatamente (eventos com banda) para reservar o slot enquanto aguarda aprovação
+        if not event.is_solo:
+            self._consume_leader_availability(event)
 
     def perform_destroy(self, instance):
         """
@@ -326,10 +327,6 @@ class EventViewSet(viewsets.ModelViewSet):
         
         # Tenta aprovar
         if event.approve(request.user):
-            # APÓS aprovação, consume disponibilidade do líder (apenas eventos com banda)
-            if not event.is_solo:
-                self._consume_leader_availability(event)
-
             serializer = EventDetailSerializer(event, context={'request': request})
             return Response(serializer.data)
         else:
