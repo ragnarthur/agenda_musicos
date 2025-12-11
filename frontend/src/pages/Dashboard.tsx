@@ -1,7 +1,7 @@
 // pages/Dashboard.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, Crown, Plus, Users } from 'lucide-react';
+import { Calendar, Clock, Crown, Plus, Users, ChevronRight, Zap, Star } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { useAuth } from '../contexts/AuthContext';
@@ -75,6 +75,9 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const nextEvent = useMemo(() => events[0], [events]);
+  const agendaCount = events.length;
+
   if (loading) {
     return (
       <Layout>
@@ -86,73 +89,139 @@ const Dashboard: React.FC = () => {
   return (
     <Layout>
       <div className="space-y-8">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Bem-vindo, {user?.user.first_name}! 👋
-          </h1>
-          <p className="mt-2 text-gray-600">
-            Aqui está um resumo da sua agenda musical
-          </p>
-          <div className="mt-3 flex gap-3">
-            <Link
-              to="/eventos/agenda"
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              <Calendar className="h-4 w-4" />
-              Grade por músico
-            </Link>
-            <Link
-              to="/eventos"
-              className="inline-flex items-center gap-2 rounded-lg bg-primary-50 text-primary-700 px-4 py-2 text-sm font-medium hover:bg-primary-100"
-            >
-              Ver lista completa
-            </Link>
+        {/* Hero */}
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-r from-indigo-50 via-white to-blue-50 p-6 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-primary-700">Agenda de Shows</p>
+              <h1 className="mt-1 text-3xl font-bold text-gray-900">
+                Olá, {user?.user.first_name}! Pronto para o próximo palco?
+              </h1>
+              <p className="mt-2 text-gray-700">
+                Acompanhe os eventos, aprovações e disponibilidade do baterista em um só lugar.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <Link
+                  to="/eventos/novo"
+                  className="inline-flex items-center gap-2 rounded-full bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-primary-700"
+                >
+                  <Plus className="h-4 w-4" />
+                  Novo evento
+                </Link>
+                <Link
+                  to="/eventos/agenda"
+                  className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"
+                >
+                  <Calendar className="h-4 w-4" />
+                  Grade por músico
+                </Link>
+                <Link
+                  to="/disponibilidades"
+                  className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"
+                >
+                  <Clock className="h-4 w-4" />
+                  Agenda do baterista
+                </Link>
+              </div>
+            </div>
+            {nextEvent && (
+              <div className="w-full md:w-80 rounded-xl border border-white/60 bg-white/70 backdrop-blur px-4 py-3 shadow-inner">
+                <div className="flex items-center gap-2 text-xs font-semibold text-primary-700 uppercase">
+                  <Zap className="h-4 w-4" />
+                  Próximo evento
+                </div>
+                <h3 className="mt-1 text-lg font-bold text-gray-900">{nextEvent.title}</h3>
+                <p className="text-sm text-gray-600">{nextEvent.location}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {format(parseISO(nextEvent.event_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                  {' • '}
+                  {nextEvent.start_time.slice(0, 5)} - {nextEvent.end_time.slice(0, 5)}
+                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-700">
+                  <Users className="h-4 w-4 text-gray-500" />
+                  {buildLineup(nextEvent).map((name) => (
+                    <span
+                      key={name}
+                      className="inline-flex items-center gap-1 rounded-full bg-gray-50 border border-gray-200 px-3 py-1 font-medium text-gray-700"
+                    >
+                      {name}
+                    </span>
+                  ))}
+                </div>
+                <div className="mt-3 text-xs text-gray-500">
+                  Status: <span className={`badge badge-${nextEvent.status}`}>{nextEvent.status_display}</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="card">
+          <div className="rounded-xl border border-primary-100 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Eventos Pendentes</p>
+                <p className="text-sm font-medium text-gray-600">Eventos pendentes</p>
                 <p className="text-3xl font-bold text-primary-600">{pendingEvents.length}</p>
               </div>
               <div className="bg-primary-100 p-3 rounded-lg">
                 <Clock className="h-8 w-8 text-primary-600" />
               </div>
             </div>
+            <Link to="/aprovacoes" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary-700">
+              Ver aprovações <ChevronRight className="h-4 w-4" />
+            </Link>
           </div>
 
-          <div className="card">
+          <div className="rounded-xl border border-green-100 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Próximos Eventos</p>
-                <p className="text-3xl font-bold text-green-600">{events.length}</p>
+                <p className="text-sm font-medium text-gray-600">Próximos eventos</p>
+                <p className="text-3xl font-bold text-green-600">{agendaCount}</p>
               </div>
               <div className="bg-green-100 p-3 rounded-lg">
                 <Calendar className="h-8 w-8 text-green-600" />
               </div>
             </div>
+            <Link to="/eventos" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-green-700">
+              Ver agenda <ChevronRight className="h-4 w-4" />
+            </Link>
           </div>
 
-          {isLeader && (
-            <div className="card">
+          {isLeader ? (
+            <div className="rounded-xl border border-amber-100 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Modo Baterista (agenda)</p>
-                  <p className="text-lg font-semibold text-yellow-600">Ativo</p>
+                  <p className="text-sm font-medium text-gray-600">Agenda do baterista</p>
+                  <p className="text-lg font-semibold text-amber-700">Modo ativo</p>
                 </div>
-                <div className="bg-yellow-100 p-3 rounded-lg">
-                  <Crown className="h-8 w-8 text-yellow-600" />
+                <div className="bg-amber-100 p-3 rounded-lg">
+                  <Crown className="h-8 w-8 text-amber-700" />
                 </div>
               </div>
               <Link
-                to="/aprovacoes"
-                className="mt-4 text-sm text-yellow-700 hover:text-yellow-800 font-medium"
+                to="/disponibilidades"
+                className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-amber-700"
               >
-                Ver pendências →
+                Gerenciar agenda <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-blue-100 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Equipe</p>
+                  <p className="text-lg font-semibold text-blue-700">Acesso rápido</p>
+                </div>
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <Star className="h-8 w-8 text-blue-700" />
+                </div>
+              </div>
+              <Link
+                to="/eventos/agenda"
+                className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-blue-700"
+              >
+                Ver grade por músico <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
           )}
