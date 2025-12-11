@@ -135,23 +135,25 @@ class EventDetailSerializer(serializers.ModelSerializer):
     def validate(self, data):
         """Validações customizadas"""
         errors = {}
-        
+
         # Valida horários
+        # Nota: end_time < start_time é permitido (eventos noturnos que cruzam meia-noite)
         start_time = data.get('start_time')
         end_time = data.get('end_time')
-        
+
         if start_time and end_time:
-            if end_time <= start_time:
-                errors['end_time'] = 'Horário de término deve ser posterior ao início.'
-        
+            if end_time == start_time:
+                # Duração zero não é permitida
+                errors['end_time'] = 'Evento deve ter duração mínima. Horário de término não pode ser igual ao início.'
+
         # Valida data (não pode ser no passado)
         event_date = data.get('event_date')
         if event_date and event_date < timezone.now().date():
             errors['event_date'] = 'Não é possível criar eventos com datas passadas.'
-        
+
         if errors:
             raise serializers.ValidationError(errors)
-        
+
         return data
 
 
@@ -172,10 +174,12 @@ class EventCreateSerializer(serializers.ModelSerializer):
         """Validações"""
         errors = {}
 
-        if data['end_time'] <= data['start_time']:
-            errors['end_time'] = 'Horário de término deve ser posterior ao início.'
+        # Permite end_time < start_time (eventos noturnos), mas não duração zero
+        if data.get('end_time') and data.get('start_time'):
+            if data['end_time'] == data['start_time']:
+                errors['end_time'] = 'Evento deve ter duração mínima. Horário de término não pode ser igual ao início.'
 
-        if data['event_date'] < timezone.now().date():
+        if data.get('event_date') and data['event_date'] < timezone.now().date():
             errors['event_date'] = 'Não é possível criar eventos com datas passadas.'
 
         if errors:
@@ -218,12 +222,13 @@ class LeaderAvailabilitySerializer(serializers.ModelSerializer):
         """Validações customizadas"""
         errors = {}
 
-        # Valida horários
+        # Valida horários - LeaderAvailability não cruza meia-noite
         start_time = data.get('start_time')
         end_time = data.get('end_time')
 
         if start_time and end_time:
             if end_time <= start_time:
+                # Para disponibilidades do líder, sempre requer end_time > start_time
                 errors['end_time'] = 'Horário de término deve ser posterior ao início.'
 
         # Valida data (não pode ser no passado)
