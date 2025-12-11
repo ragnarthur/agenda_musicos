@@ -34,8 +34,9 @@ const toName = (availability: Availability): string => {
 
 const extractLineup = (event: Event): string[] => {
   const names = new Set<string>();
-  if (event.availabilities?.length) {
-    event.availabilities.forEach((a) => {
+  const availList = event.availabilities || [];
+  if (availList.length) {
+    availList.forEach((a) => {
       const label = toName(a);
       if (label) names.add(label);
     });
@@ -56,8 +57,9 @@ const belongsTo = (event: Event, target: 'sara' | 'arthur'): boolean => {
 
   const checkString = (text?: string | null) => targets.some((t) => normalize(text).includes(t));
 
-  if (event.availabilities?.length) {
-    for (const avail of event.availabilities) {
+  const availList = event.availabilities || [];
+  if (availList.length) {
+    for (const avail of availList) {
       const fullName =
         avail.musician?.full_name ||
         avail.musician?.user?.full_name ||
@@ -136,15 +138,17 @@ const EventsList: React.FC = () => {
         label: format(parseISO(dateKey), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR }),
         sara: list
           .filter((ev) => belongsTo(ev, 'sara'))
-          .sort((a, b) => parseISO(a.start_datetime).getTime() - parseISO(b.start_datetime).getTime()),
+          .sort((a, b) => getStartDateTime(a) - getStartDateTime(b)),
         arthur: list
           .filter((ev) => belongsTo(ev, 'arthur'))
-          .sort((a, b) => parseISO(a.start_datetime).getTime() - parseISO(b.start_datetime).getTime()),
+          .sort((a, b) => getStartDateTime(a) - getStartDateTime(b)),
       }));
   }, [events]);
 
   const renderEventCard = (event: Event) => {
     const lineup = extractLineup(event);
+    const startLabel = event.start_time ? event.start_time.slice(0, 5) : '--:--';
+    const endLabel = event.end_time ? event.end_time.slice(0, 5) : '--:--';
     return (
       <Link
         key={event.id}
@@ -164,7 +168,7 @@ const EventsList: React.FC = () => {
             <div className="mt-2 flex items-center gap-3 text-sm text-gray-700">
               <Clock className="h-4 w-4 text-gray-500" />
               <span>
-                {event.start_time.slice(0, 5)} - {event.end_time.slice(0, 5)}
+                {startLabel} - {endLabel}
               </span>
               {event.payment_amount && <span>R$ {event.payment_amount}</span>}
             </div>
@@ -322,3 +326,16 @@ const EventsList: React.FC = () => {
 };
 
 export default EventsList;
+const getStartDateTime = (event: Event): number => {
+  try {
+    if (event.start_datetime) {
+      return parseISO(event.start_datetime).getTime();
+    }
+    if (event.event_date && event.start_time) {
+      return parseISO(`${event.event_date}T${event.start_time}`).getTime();
+    }
+  } catch (e) {
+    // ignore parse errors
+  }
+  return 0;
+};
