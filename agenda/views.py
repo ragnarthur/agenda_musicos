@@ -163,15 +163,16 @@ class EventViewSet(viewsets.ModelViewSet):
         except Musician.DoesNotExist:
             pass
 
-        # 2. Roberto (baterista/líder) - apenas se NÃO for evento solo
+        # 2. Líder da banda - apenas se NÃO for evento solo
         if not is_solo:
             try:
-                roberto = Musician.objects.get(user__username='roberto')
-                # Só criar se Roberto não for o criador
-                if roberto.user != self.request.user:
+                # Busca líder ativo dinamicamente (não hardcoded)
+                leader = Musician.objects.filter(role='leader', is_active=True).first()
+                # Só criar se líder existir e não for o criador
+                if leader and leader.user != self.request.user:
                     availabilities.append(
                         Availability(
-                            musician=roberto,
+                            musician=leader,
                             event=event,
                             response='pending'
                         )
@@ -179,8 +180,21 @@ class EventViewSet(viewsets.ModelViewSet):
             except Musician.DoesNotExist:
                 pass
 
+        # Criar availabilities usando update_or_create para evitar race conditions
+        # Também preenche timestamps corretamente (bulk_create não preenche auto_now/auto_now_add)
         if availabilities:
-            Availability.objects.bulk_create(availabilities)
+            now = timezone.now()
+            for availability in availabilities:
+                # update_or_create é atômico e evita violação de unique_together
+                Availability.objects.update_or_create(
+                    musician=availability.musician,
+                    event=availability.event,
+                    defaults={
+                        'response': availability.response,
+                        'notes': availability.notes if hasattr(availability, 'notes') else '',
+                        'responded_at': now if availability.response != 'pending' else None,
+                    }
+                )
 
         # Ajustar janelas de disponibilidade do líder consumindo o horário do evento (somente eventos com banda)
         if not is_solo:
@@ -254,12 +268,18 @@ class EventViewSet(viewsets.ModelViewSet):
         for slot_start, slot_end in new_slots:
             if slot_end <= slot_start:
                 continue
+            # Preenche todos os campos para evitar problemas com bulk_create
+            date_value = slot_start.astimezone(tz).date()
+            start_time = slot_start.astimezone(tz).time()
+            end_time = slot_end.astimezone(tz).time()
             objs.append(
                 LeaderAvailability(
                     leader=availability.leader,
-                    date=availability.date,
-                    start_time=slot_start.astimezone(tz).time(),
-                    end_time=slot_end.astimezone(tz).time(),
+                    date=date_value,
+                    start_time=start_time,
+                    end_time=end_time,
+                    start_datetime=slot_start,
+                    end_datetime=slot_end,
                     notes=availability.notes,
                 )
             )

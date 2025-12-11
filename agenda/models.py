@@ -130,30 +130,44 @@ class Event(models.Model):
     def clean(self):
         """Validações customizadas"""
         errors = {}
-        
+
         # Valida horários
+        # Nota: end_time <= start_time é permitido para eventos noturnos que cruzam meia-noite
+        # Exemplo: 23:00 - 02:00 (evento termina no dia seguinte)
         if self.start_time and self.end_time:
-            if self.end_time <= self.start_time:
-                errors['end_time'] = 'Horário de término deve ser posterior ao início.'
-        
+            if self.end_time == self.start_time:
+                # Evento com duração zero não é permitido
+                errors['end_time'] = 'Evento deve ter duração mínima. Horário de término não pode ser igual ao início.'
+
         # Valida data (não pode ser no passado para novas propostas)
         if self.event_date and not self.pk:  # Apenas na criação
             if self.event_date < timezone.now().date():
                 errors['event_date'] = 'Não é possível criar eventos com datas passadas.'
-        
+
         if errors:
             raise ValidationError(errors)
     
     def save(self, *args, **kwargs):
         """Combina date + time em datetime antes de salvar"""
+        from datetime import timedelta
+
         if self.event_date and self.start_time:
             self.start_datetime = timezone.make_aware(
-                timezone.datetime.combine(self.event_date, self.start_time)
+                datetime.combine(self.event_date, self.start_time)
             )
+
         if self.event_date and self.end_time:
+            # Detecta se evento cruza meia-noite (end_time <= start_time)
+            if self.end_time <= self.start_time:
+                # Evento cruza meia-noite - adiciona 1 dia ao end_datetime
+                end_date = self.event_date + timedelta(days=1)
+            else:
+                end_date = self.event_date
+
             self.end_datetime = timezone.make_aware(
-                timezone.datetime.combine(self.event_date, self.end_time)
+                datetime.combine(end_date, self.end_time)
             )
+
         super().save(*args, **kwargs)
     
     def __str__(self):

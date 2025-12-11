@@ -10,8 +10,8 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
 # Hosts
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
-# Inclui testserver para permitir chamadas via APIClient/DRF tests
-if 'testserver' not in ALLOWED_HOSTS:
+# Inclui testserver apenas em desenvolvimento/testes
+if DEBUG and 'testserver' not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append('testserver')
 
 # APPS
@@ -99,6 +99,14 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour',
+    },
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 50,
     'DATETIME_FORMAT': '%Y-%m-%d %H:%M:%S',
@@ -113,11 +121,33 @@ SIMPLE_JWT = {
 }
 
 # CORS
-# Usa .env (CORS_ALLOWED_ORIGINS ou CORS_ORIGINS) e mantém localhost para desenvolvimento
+# Usa .env (CORS_ALLOWED_ORIGINS ou CORS_ORIGINS) para produção
 _cors_from_env = config('CORS_ALLOWED_ORIGINS', default=config('CORS_ORIGINS', default='')).split(',')
 _cors_from_env = [origin for origin in _cors_from_env if origin]  # remove strings vazias
-CORS_ALLOWED_ORIGINS = _cors_from_env + [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+
+# Adiciona localhost apenas em desenvolvimento (DEBUG=True)
+if DEBUG:
+    CORS_ALLOWED_ORIGINS = _cors_from_env + [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
+else:
+    # Em produção, usa apenas domínios configurados no .env
+    CORS_ALLOWED_ORIGINS = _cors_from_env
+
 CORS_ALLOW_CREDENTIALS = True
+
+# SECURITY HEADERS
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+# Configurações adicionais de segurança para produção com HTTPS
+# Descomente quando estiver usando HTTPS em produção
+# if not DEBUG:
+#     SECURE_SSL_REDIRECT = True
+#     SESSION_COOKIE_SECURE = True
+#     CSRF_COOKIE_SECURE = True
+#     SECURE_HSTS_SECONDS = 31536000
+#     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+#     SECURE_HSTS_PRELOAD = True
