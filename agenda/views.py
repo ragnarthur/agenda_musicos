@@ -210,9 +210,14 @@ class EventViewSet(viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         """
-        Proíbe deleção de eventos aprovados/confirmados que já consumiram disponibilidade do líder.
-        Usuário deve usar a action 'cancel' em vez de deletar.
+        Apenas o criador pode deletar. Proíbe deleção de eventos aprovados/confirmados
+        (não-solo) que já consumiram disponibilidade do líder.
         """
+        request_user = getattr(self, 'request', None).user if hasattr(self, 'request') else None
+        if request_user and instance.created_by and instance.created_by != request_user:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied('Apenas o criador pode deletar este evento.')
+
         if instance.status in ['approved', 'confirmed'] and not instance.is_solo:
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied(
