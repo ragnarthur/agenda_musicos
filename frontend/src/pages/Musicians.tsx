@@ -131,7 +131,7 @@ const Musicians: React.FC = () => {
                   {musician.is_leader ? (
                     <span className="inline-flex items-center space-x-1 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
                       <Crown className="h-3 w-3" />
-                      <span>Líder da Banda</span>
+                      <span>Baterista (agenda compartilhada)</span>
                     </span>
                   ) : (
                     <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
