@@ -1,14 +1,52 @@
 // pages/Dashboard.tsx
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, Crown, Plus } from 'lucide-react';
+import { Calendar, Clock, Crown, Plus, Users } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { useAuth } from '../contexts/AuthContext';
 import { eventService } from '../services/api';
-import type { Event } from '../types';
+import type { Availability, Event } from '../types';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+const instrumentLabels: Record<string, string> = {
+  vocal: 'Voz',
+  guitar: 'Violão/Guitarra',
+  bass: 'Baixo',
+  drums: 'Bateria',
+  keyboard: 'Teclado',
+  other: 'Músico',
+};
+
+const formatMusicianLabel = (availability: Availability) => {
+  const musician = availability.musician;
+  const name =
+    musician.full_name ||
+    musician.user?.full_name ||
+    `${musician.user?.first_name || ''} ${musician.user?.last_name || ''}`.trim() ||
+    musician.user?.username;
+  const instrument = musician.instrument ? instrumentLabels[musician.instrument] || musician.instrument : '';
+  return instrument ? `${name} (${instrument})` : name;
+};
+
+const buildLineup = (event: Event): string[] => {
+  const availabilities = event.availabilities || [];
+
+  if (event.is_solo || availabilities.length === 0) {
+    return [event.is_solo ? `${event.created_by_name} (Solo)` : event.created_by_name];
+  }
+
+  const uniqueByMusician = new Map<number, string>();
+  availabilities.forEach((availability) => {
+    if (availability.musician?.id && !uniqueByMusician.has(availability.musician.id)) {
+      uniqueByMusician.set(availability.musician.id, formatMusicianLabel(availability));
+    }
+  });
+
+  const lineup = Array.from(uniqueByMusician.values());
+  return lineup.length ? lineup : [event.created_by_name];
+};
 
 const Dashboard: React.FC = () => {
   const { user, isLeader } = useAuth();
@@ -125,6 +163,17 @@ const Dashboard: React.FC = () => {
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900">{event.title}</h3>
                       <p className="text-sm text-gray-600 mt-1">{event.location}</p>
+                      <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-gray-700">
+                        <Users className="h-4 w-4 text-gray-500" />
+                        {buildLineup(event).map((name) => (
+                          <span
+                            key={name}
+                            className="inline-flex items-center gap-1 rounded-full bg-white border border-gray-200 px-3 py-1 font-medium text-gray-700"
+                          >
+                            {name}
+                          </span>
+                        ))}
+                      </div>
                       <p className="text-sm text-gray-500 mt-1">
                         {format(parseISO(event.event_date), "dd 'de' MMMM 'de' yyyy", {
                           locale: ptBR,
@@ -181,6 +230,17 @@ const Dashboard: React.FC = () => {
                         <span>
                           {event.start_time.slice(0, 5)} - {event.end_time.slice(0, 5)}
                         </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-gray-700">
+                        <Users className="h-4 w-4 text-gray-500" />
+                        {buildLineup(event).map((name) => (
+                          <span
+                            key={name}
+                            className="inline-flex items-center gap-1 rounded-full bg-white border border-gray-200 px-3 py-1 font-medium text-gray-700"
+                          >
+                            {name}
+                          </span>
+                        ))}
                       </div>
                     </div>
                     <span className={`badge badge-${event.status}`}>
