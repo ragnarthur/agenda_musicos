@@ -10,7 +10,8 @@ import os
 from datetime import datetime, timedelta
 
 # Configuração: use BASE_URL do ambiente (ex.: https://unamazedly-percussional-chandra.ngrok-free.dev/api)
-BASE_URL = os.getenv("BASE_URL", "http://localhost:8000/api").rstrip("/")
+# Default ajustado para o domínio ngrok; sobrescreva via env se necessário.
+BASE_URL = os.getenv("BASE_URL", "https://unamazedly-percussional-chandra.ngrok-free.dev/api").rstrip("/")
 CREDENTIALS = {
     "arthur": {"username": "arthur", "password": "arthur2025@"},
     "roberto": {"username": "roberto", "password": "roberto2025@"},
@@ -279,13 +280,13 @@ def test_cross_midnight_event(token_creator, token_approver):
     print(f"✓ Evento criado (cruza meia-noite): ID {event['id']}, status {event['status']}")
 
     # Aprovar com o baterista
-    resp_appr = requests.post(f\"{BASE_URL}/events/{event['id']}/approve/\", headers=get_headers(token_approver))
+    resp_appr = requests.post(f"{BASE_URL}/events/{event['id']}/approve/", headers=get_headers(token_approver))
     if resp_appr.status_code != 200:
-        print(f\"✗ Falha ao aprovar evento cruzando meia-noite: {resp_appr.status_code}\")
+        print(f"✗ Falha ao aprovar evento cruzando meia-noite: {resp_appr.status_code}")
         print(resp_appr.text)
         return False
 
-    print(\"✓ Evento cruzando meia-noite aprovado com sucesso\")
+    print("✓ Evento cruzando meia-noite aprovado com sucesso")
     return True
 
 def main():
