@@ -211,11 +211,16 @@ class EventViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         """
         Apenas o criador pode deletar o evento de forma definitiva.
+        Restaura a disponibilidade do líder quando evento é deletado.
         """
         request_user = getattr(self, 'request', None).user if hasattr(self, 'request') else None
         if request_user and instance.created_by and instance.created_by != request_user:
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied('Apenas o criador pode deletar este evento.')
+
+        # Restaura disponibilidade do líder antes de deletar
+        if not instance.is_solo:
+            self._restore_leader_availability(instance)
 
         super().perform_destroy(instance)
 
@@ -309,7 +314,76 @@ class EventViewSet(viewsets.ModelViewSet):
             )
         if objs:
             LeaderAvailability.objects.bulk_create(objs)
-    
+
+    def _restore_leader_availability(self, event):
+        """
+        Restaura disponibilidade do líder quando evento é deletado, rejeitado ou cancelado.
+
+        Estratégia:
+        1. Verifica se há outros eventos ativos no mesmo dia que conflitariam
+        2. Se não há conflitos, cria nova disponibilidade cobrindo o período do evento removido
+        3. Considera buffer de 40min ao redor de outros eventos ao verificar conflitos
+
+        Nota: Não tenta mesclar automaticamente com fragmentos existentes.
+        O líder pode manualmente mesclar disponibilidades adjacentes depois, se desejar.
+        """
+        if event.is_solo:
+            return
+
+        buffer = timedelta(minutes=40)
+
+        # Busca líder
+        try:
+            leader = Musician.objects.filter(role='leader', is_active=True).first()
+            if not leader:
+                return
+        except Musician.DoesNotExist:
+            return
+
+        # Busca outros eventos no mesmo dia (excluindo o evento atual)
+        # Considera apenas eventos que ainda estão ativos (não rejeitados/cancelados)
+        other_events = Event.objects.filter(
+            event_date=event.event_date,
+            status__in=['proposed', 'approved', 'confirmed']
+        ).exclude(id=event.id)
+
+        # Verifica se o período do evento está livre de conflitos com outros eventos
+        event_start = event.start_datetime
+        event_end = event.end_datetime
+
+        # Verifica conflitos considerando buffer de 40min ao redor dos eventos
+        has_conflict = False
+        for other in other_events:
+            # Aplica buffer ao redor do outro evento
+            other_start_with_buffer = other.start_datetime - buffer
+            other_end_with_buffer = other.end_datetime + buffer
+
+            # Verifica sobreposição entre o evento restaurado e o outro evento (com buffer)
+            # Há sobreposição se: NOT (evento termina antes do outro começar OU evento começa depois do outro terminar)
+            if not (event_end <= other_start_with_buffer or event_start >= other_end_with_buffer):
+                has_conflict = True
+                break
+
+        if has_conflict:
+            # Há conflito - não pode restaurar disponibilidade pois outro evento ocupa o espaço
+            # (considerando o buffer de 40min)
+            return
+
+        # Não há conflitos - cria nova disponibilidade cobrindo o período do evento
+        now = timezone.now()
+        LeaderAvailability.objects.create(
+            leader=leader,
+            date=event.event_date,
+            start_time=event.start_time,
+            end_time=event.end_time,
+            start_datetime=event_start,
+            end_datetime=event_end,
+            notes=f'Restaurada após remoção: {event.title}',
+            is_active=True,
+            created_at=now,
+            updated_at=now
+        )
+
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def approve(self, request, pk=None):
         """
@@ -367,9 +441,13 @@ class EventViewSet(viewsets.ModelViewSet):
         
         # Pega o motivo
         reason = request.data.get('reason', '')
-        
+
         # Tenta rejeitar
         if event.reject(request.user, reason):
+            # Restaura disponibilidade do líder quando evento é rejeitado
+            if not event.is_solo:
+                self._restore_leader_availability(event)
+
             serializer = EventDetailSerializer(event, context={'request': request})
             return Response(serializer.data)
         else:
@@ -404,6 +482,10 @@ class EventViewSet(viewsets.ModelViewSet):
         # Cancela o evento
         event.status = 'cancelled'
         event.save()
+
+        # Restaura disponibilidade do líder quando evento é cancelado
+        if not event.is_solo:
+            self._restore_leader_availability(event)
 
         serializer = EventDetailSerializer(event, context={'request': request})
         return Response(serializer.data)
