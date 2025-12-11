@@ -6,7 +6,7 @@ import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { eventService } from '../services/api';
 import type { Event } from '../types';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 const EventsList: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -156,7 +156,7 @@ const EventsList: React.FC = () => {
                     <h3 className="text-lg font-semibold text-gray-900">{event.title}</h3>
                     <p className="text-gray-600 mt-1">{event.location}</p>
                     <div className="flex items-center space-x-4 mt-3 text-sm text-gray-500">
-                      <span>{format(new Date(event.event_date), 'dd/MM/yyyy')}</span>
+                        <span>{format(parseISO(event.event_date), 'dd/MM/yyyy')}</span>
                       <span>
                         {event.start_time.slice(0, 5)} - {event.end_time.slice(0, 5)}
                       </span>

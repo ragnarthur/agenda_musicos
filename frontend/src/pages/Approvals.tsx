@@ -6,7 +6,7 @@ import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { eventService } from '../services/api';
 import type { Event } from '../types';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const Approvals: React.FC = () => {
@@ -77,7 +77,7 @@ const Approvals: React.FC = () => {
                   <div className="flex items-center space-x-2 text-gray-600">
                     <Calendar className="h-5 w-5" />
                     <span>
-                      {format(new Date(event.event_date), "dd 'de' MMMM 'de' yyyy", {
+                      {format(parseISO(event.event_date), "dd 'de' MMMM 'de' yyyy", {
                         locale: ptBR,
                       })}
                     </span>

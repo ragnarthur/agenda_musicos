@@ -23,7 +23,7 @@ import Loading from '../components/common/Loading';
 import { useAuth } from '../contexts/AuthContext';
 import { eventService } from '../services/api';
 import type { Event, AvailabilityResponse } from '../types';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const EventDetail: React.FC = () => {
@@ -223,7 +223,7 @@ const EventDetail: React.FC = () => {
                 <div>
                   <p className="text-sm text-gray-500">Data</p>
                   <p className="font-medium">
-                    {format(new Date(event.event_date), "EEEE, dd 'de' MMMM 'de' yyyy", {
+                    {format(parseISO(event.event_date), "EEEE, dd 'de' MMMM 'de' yyyy", {
                       locale: ptBR,
                     })}
                   </p>

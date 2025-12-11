@@ -7,7 +7,7 @@ import Loading from '../components/common/Loading';
 import { useAuth } from '../contexts/AuthContext';
 import { eventService } from '../services/api';
 import type { Event } from '../types';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const Dashboard: React.FC = () => {
@@ -126,7 +126,7 @@ const Dashboard: React.FC = () => {
                       <h3 className="font-semibold text-gray-900">{event.title}</h3>
                       <p className="text-sm text-gray-600 mt-1">{event.location}</p>
                       <p className="text-sm text-gray-500 mt-1">
-                        {format(new Date(event.event_date), "dd 'de' MMMM 'de' yyyy", {
+                        {format(parseISO(event.event_date), "dd 'de' MMMM 'de' yyyy", {
                           locale: ptBR,
                         })}
                       </p>
@@ -176,7 +176,7 @@ const Dashboard: React.FC = () => {
                       <p className="text-sm text-gray-600 mt-1">{event.location}</p>
                       <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
                         <span>
-                          {format(new Date(event.event_date), "dd/MM/yyyy")}
+                          {format(parseISO(event.event_date), "dd/MM/yyyy")}
                         </span>
                         <span>
                           {event.start_time.slice(0, 5)} - {event.end_time.slice(0, 5)}
