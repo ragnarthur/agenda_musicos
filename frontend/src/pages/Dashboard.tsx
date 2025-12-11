@@ -169,7 +169,10 @@ const Dashboard: React.FC = () => {
                   ))}
                 </div>
                 <div className="mt-3 text-xs text-gray-500">
-                  Status: <span className={`badge badge-${nextEvent.status}`}>{nextEvent.status_display}</span>
+                  Status:{' '}
+                  <span className={`badge badge-${nextEvent.status}`}>
+                    {nextEvent.status_display} · Aprovado pelo Batera!
+                  </span>
                 </div>
               </div>
             )}
@@ -243,56 +246,6 @@ const Dashboard: React.FC = () => {
               >
                 Ver grade por músico <ChevronRight className="h-4 w-4" />
               </Link>
-            </div>
-          )}
-        </div>
-
-        {/* Linha do tempo rápida */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-primary-600">Próximos eventos</p>
-              <h2 className="text-lg font-bold text-gray-900">Ordem cronológica</h2>
-            </div>
-            <Link to="/eventos" className="text-sm font-semibold text-primary-700 inline-flex items-center gap-1">
-              Ver tudo <ChevronRight className="h-4 w-4" />
-            </Link>
-          </div>
-          {events.length === 0 ? (
-            <p className="text-sm text-gray-500">Nenhum evento futuro.</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {events.map((event) => (
-                <Link
-                  key={event.id}
-                  to={`/eventos/${event.id}`}
-                  className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <p className="text-xs font-semibold text-primary-600 uppercase">{event.status_display}</p>
-                      <h3 className="mt-1 text-base font-semibold text-gray-900">{event.title}</h3>
-                      <p className="text-sm text-gray-600">{event.location}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {format(parseISO(event.event_date), "dd 'de' MMMM", { locale: ptBR })} •{' '}
-                        {event.start_time.slice(0, 5)} - {event.end_time.slice(0, 5)}
-                      </p>
-                      <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-gray-700">
-                        <Users className="h-4 w-4 text-gray-500" />
-                        {buildLineup(event).map((name) => (
-                          <span
-                            key={name}
-                            className="inline-flex items-center gap-1 rounded-full bg-gray-50 border border-gray-200 px-3 py-1 font-medium text-gray-700"
-                          >
-                            {name}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-gray-400" />
-                  </div>
-                </Link>
-              ))}
             </div>
           )}
         </div>
