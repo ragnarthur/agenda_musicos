@@ -303,7 +303,7 @@ class LeaderAvailability(models.Model):
 
         # Valida horários
         if self.start_time and self.end_time:
-            if self.end_time <= self.start_time:
+            if self.end_time == self.start_time:
                 errors['end_time'] = 'Horário de término deve ser posterior ao início.'
 
         # Valida data (não pode ser no passado)
@@ -350,8 +350,11 @@ class LeaderAvailability(models.Model):
                 datetime.combine(self.date, self.start_time)
             )
         if self.date and self.end_time:
+            from datetime import timedelta as td
+            # Se end_time <= start_time, disponibilidade cruza meia-noite e vai para o dia seguinte
+            end_date = self.date + td(days=1) if self.start_time and self.end_time <= self.start_time else self.date
             self.end_datetime = timezone.make_aware(
-                datetime.combine(self.date, self.end_time)
+                datetime.combine(end_date, self.end_time)
             )
         super().save(*args, **kwargs)
 
@@ -370,9 +373,8 @@ class LeaderAvailability(models.Model):
         buffer_start = self.start_datetime - buffer
         buffer_end = self.end_datetime + buffer
 
-        # Busca eventos que sobrepõem com o período (incluindo buffer)
+        # Busca eventos que sobrepõem com o período (incluindo buffer), mesmo que cruzem datas
         conflicting_events = Event.objects.filter(
-            event_date=self.date,
             status__in=['proposed', 'approved', 'confirmed']
         ).filter(
             models.Q(start_datetime__lt=buffer_end) &

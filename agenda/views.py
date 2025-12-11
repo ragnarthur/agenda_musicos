@@ -810,7 +810,6 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
             serializer.save(leader=musician)
             created = serializer.instance
             conflicting_events = Event.objects.filter(
-                event_date=created.date,
                 status__in=['proposed', 'approved', 'confirmed'],
                 start_datetime__lt=created.end_datetime,
                 end_datetime__gt=created.start_datetime
