@@ -94,6 +94,21 @@ const Dashboard: React.FC = () => {
           <p className="mt-2 text-gray-600">
             Aqui está um resumo da sua agenda musical
           </p>
+          <div className="mt-3 flex gap-3">
+            <Link
+              to="/eventos/agenda"
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              <Calendar className="h-4 w-4" />
+              Grade por músico
+            </Link>
+            <Link
+              to="/eventos"
+              className="inline-flex items-center gap-2 rounded-lg bg-primary-50 text-primary-700 px-4 py-2 text-sm font-medium hover:bg-primary-100"
+            >
+              Ver lista completa
+            </Link>
+          </div>
         </div>
 
         {/* Cards de Estatísticas */}

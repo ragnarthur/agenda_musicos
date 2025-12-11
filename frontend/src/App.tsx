@@ -8,6 +8,7 @@ import EventsList from './pages/EventsList';
 import EventForm from './pages/EventForm';
 import EventEditForm from './pages/EventEditForm';
 import EventDetail from './pages/EventDetail';
+import EventBoard from './pages/EventBoard';
 import Approvals from './pages/Approvals';
 import Musicians from './pages/Musicians';
 import LeaderAvailability from './pages/LeaderAvailability';
@@ -53,6 +54,15 @@ function AppRoutes() {
           <PublicRoute>
             <Login />
           </PublicRoute>
+        }
+      />
+
+      <Route
+        path="/eventos/agenda"
+        element={
+          <ProtectedRoute>
+            <EventBoard />
+          </ProtectedRoute>
         }
       />
 
