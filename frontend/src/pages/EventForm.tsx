@@ -91,8 +91,18 @@ const EventForm: React.FC = () => {
     setLoading(true);
 
     try {
-      // Validar horários
-      if (formData.end_time <= formData.start_time) {
+      // Validar horários (permite cruzar meia-noite, mas não duração zero)
+      const toMinutes = (time: string) => {
+        const [h, m] = time.split(':').map(Number);
+        return h * 60 + m;
+      };
+      const startMinutes = toMinutes(formData.start_time);
+      const endMinutes = toMinutes(formData.end_time);
+      let duration = endMinutes - startMinutes;
+      if (duration <= 0) {
+        duration += 24 * 60; // cruza meia-noite
+      }
+      if (duration <= 0) {
         setError('O horário de término deve ser posterior ao horário de início');
         setLoading(false);
         return;
