@@ -151,6 +151,15 @@ class EventDetailSerializer(serializers.ModelSerializer):
         if event_date and event_date < timezone.now().date():
             errors['event_date'] = 'Não é possível criar eventos com datas passadas.'
 
+        # Proíbe edição de horários em eventos aprovados/confirmados (UPDATE)
+        if self.instance:  # É um update
+            if self.instance.status in ['approved', 'confirmed']:
+                # Verifica se tentou mudar horários
+                fields_changed = ['event_date', 'start_time', 'end_time']
+                for field in fields_changed:
+                    if field in data and data[field] != getattr(self.instance, field):
+                        errors[field] = f'Não é possível alterar {field} de eventos aprovados/confirmados. Cancele e crie novo evento.'
+
         if errors:
             raise serializers.ValidationError(errors)
 

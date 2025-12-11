@@ -196,9 +196,21 @@ class EventViewSet(viewsets.ModelViewSet):
                     }
                 )
 
-        # Ajustar janelas de disponibilidade do líder consumindo o horário do evento (somente eventos com banda)
-        if not is_solo:
-            self._consume_leader_availability(event)
+        # Nota: O consumo de disponibilidade do líder agora acontece APÓS aprovação
+        # (ver método approve() abaixo)
+
+    def perform_destroy(self, instance):
+        """
+        Proíbe deleção de eventos aprovados/confirmados que já consumiram disponibilidade do líder.
+        Usuário deve usar a action 'cancel' em vez de deletar.
+        """
+        if instance.status in ['approved', 'confirmed'] and not instance.is_solo:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied(
+                'Eventos aprovados/confirmados não podem ser deletados. '
+                'Use a ação "cancelar" para cancelar o evento.'
+            )
+        super().perform_destroy(instance)
 
     def _consume_leader_availability(self, event):
         """
@@ -265,10 +277,12 @@ class EventViewSet(viewsets.ModelViewSet):
 
         # Cria novas disponibilidades com as sobras
         objs = []
+        now = timezone.now()
         for slot_start, slot_end in new_slots:
             if slot_end <= slot_start:
                 continue
             # Preenche todos os campos para evitar problemas com bulk_create
+            # bulk_create não preenche auto_now/auto_now_add automaticamente
             date_value = slot_start.astimezone(tz).date()
             start_time = slot_start.astimezone(tz).time()
             end_time = slot_end.astimezone(tz).time()
@@ -281,6 +295,8 @@ class EventViewSet(viewsets.ModelViewSet):
                     start_datetime=slot_start,
                     end_datetime=slot_end,
                     notes=availability.notes,
+                    created_at=now,
+                    updated_at=now,
                 )
             )
         if objs:
@@ -310,6 +326,10 @@ class EventViewSet(viewsets.ModelViewSet):
         
         # Tenta aprovar
         if event.approve(request.user):
+            # APÓS aprovação, consume disponibilidade do líder (apenas eventos com banda)
+            if not event.is_solo:
+                self._consume_leader_availability(event)
+
             serializer = EventDetailSerializer(event, context={'request': request})
             return Response(serializer.data)
         else:
@@ -600,10 +620,12 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         availability.save(update_fields=['is_active'])
 
         objs = []
+        now = timezone.now()
         for slot_start, slot_end in new_slots:
             if slot_end <= slot_start:
                 continue
             # Garantir campos completos para não depender do save() (bulk_create não chama save)
+            # bulk_create não preenche auto_now/auto_now_add automaticamente
             date_value = slot_start.astimezone(tz).date()
             start_time = slot_start.astimezone(tz).time()
             end_time = slot_end.astimezone(tz).time()
@@ -616,6 +638,8 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
                     start_datetime=slot_start,
                     end_datetime=slot_end,
                     notes=availability.notes,
+                    created_at=now,
+                    updated_at=now,
                 )
             )
         if objs:
