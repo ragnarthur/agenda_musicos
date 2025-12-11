@@ -6,14 +6,15 @@ Testa todas as funcionalidades principais incluindo shows solo e disponibilidade
 
 import requests
 import json
+import os
 from datetime import datetime, timedelta
 
-# Configuração
-BASE_URL = "http://localhost:8000/api"
+# Configuração: use BASE_URL do ambiente (ex.: https://unamazedly-percussional-chandra.ngrok-free.dev/api)
+BASE_URL = os.getenv("BASE_URL", "http://localhost:8000/api").rstrip("/")
 CREDENTIALS = {
-    "arthur": {"username": "arthur", "password": "arthur123"},
-    "roberto": {"username": "roberto", "password": "roberto123"},
-    "sara": {"username": "sara", "password": "sara123"},
+    "arthur": {"username": "arthur", "password": "arthur2025@"},
+    "roberto": {"username": "roberto", "password": "roberto2025@"},
+    "sara": {"username": "sara", "password": "sara2025@"},
 }
 
 def print_section(title):
@@ -176,8 +177,8 @@ def test_edit_event(token, event_id):
         return False
 
 def test_create_leader_availability(token):
-    """Testa cadastro de disponibilidade do líder"""
-    print_section("Teste 5: Cadastrar Disponibilidade do Líder")
+    """Testa cadastro de disponibilidade do baterista"""
+    print_section("Teste 5: Cadastrar Disponibilidade do Baterista")
 
     # Criar 3 disponibilidades
     availabilities = []
@@ -210,8 +211,8 @@ def test_create_leader_availability(token):
     return availabilities
 
 def test_get_leader_availabilities(token):
-    """Testa listagem de disponibilidades do líder"""
-    print_section("Teste 6: Listar Disponibilidades do Líder")
+    """Testa listagem de disponibilidades do baterista"""
+    print_section("Teste 6: Listar Disponibilidades do Baterista")
 
     response = requests.get(
         f"{BASE_URL}/leader-availabilities/?upcoming=true",
@@ -250,16 +251,53 @@ def test_delete_event(token, event_id):
         print(response.text)
         return False
 
+
+def test_cross_midnight_event(token_creator, token_approver):
+    """Cria evento que cruza meia-noite (23:00–02:00) e aprova."""
+    print_section("Teste 8: Evento cruzando meia-noite")
+
+    date_24 = (datetime.now() + timedelta(days=3)).strftime('%Y-%m-%d')
+
+    payload = {
+        "title": "Virada de Natal",
+        "description": "Show que cruza meia-noite",
+        "location": "Casa de Eventos",
+        "event_date": date_24,
+        "start_time": "23:00",
+        "end_time": "02:00",  # madrugada do dia seguinte
+        "payment_amount": "800.00",
+        "is_solo": False
+    }
+
+    resp = requests.post(f"{BASE_URL}/events/", headers=get_headers(token_creator), json=payload)
+    if resp.status_code != 201:
+        print(f"✗ Falha ao criar evento cruzando meia-noite: {resp.status_code}")
+        print(resp.text)
+        return False
+
+    event = resp.json()
+    print(f"✓ Evento criado (cruza meia-noite): ID {event['id']}, status {event['status']}")
+
+    # Aprovar com o baterista
+    resp_appr = requests.post(f\"{BASE_URL}/events/{event['id']}/approve/\", headers=get_headers(token_approver))
+    if resp_appr.status_code != 200:
+        print(f\"✗ Falha ao aprovar evento cruzando meia-noite: {resp_appr.status_code}\")
+        print(resp_appr.text)
+        return False
+
+    print(\"✓ Evento cruzando meia-noite aprovado com sucesso\")
+    return True
+
 def main():
     """Executa todos os testes"""
     print("\n" + "="*60)
-    print("  TESTE COMPLETO DO SISTEMA - AGENDA DE MÚSICOS")
+    print(f"  TESTE COMPLETO DO SISTEMA - AGENDA DE MÚSICOS (BASE_URL={BASE_URL})")
     print("="*60)
 
     # Login dos usuários
     print_section("Fazendo login dos usuários")
-    arthur_token = login("arthur", "arthur123")
-    roberto_token = login("roberto", "roberto123")
+    arthur_token = login("arthur", CREDENTIALS['arthur']['password'])
+    roberto_token = login("roberto", CREDENTIALS['roberto']['password'])
 
     if not arthur_token or not roberto_token:
         print("\n✗ Erro nos logins. Abortando testes.")
@@ -312,6 +350,12 @@ def main():
 
     # Teste 7: Deletar show solo (Arthur)
     if solo_event_id and test_delete_event(arthur_token, solo_event_id):
+        results["passed"] += 1
+    else:
+        results["failed"] += 1
+
+    # Teste 8: Evento cruzando meia-noite (Arthur cria, Roberto aprova)
+    if test_cross_midnight_event(arthur_token, roberto_token):
         results["passed"] += 1
     else:
         results["failed"] += 1
