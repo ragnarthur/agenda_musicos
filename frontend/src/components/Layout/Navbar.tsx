@@ -56,8 +56,8 @@ const Navbar: React.FC = () => {
     };
   }, [loadNotifications]);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 

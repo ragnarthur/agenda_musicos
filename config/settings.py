@@ -2,6 +2,7 @@
 from pathlib import Path
 from decouple import config
 from datetime import timedelta
+from urllib.parse import urlparse
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -36,6 +37,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # Antes do CommonMiddleware
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'config.middleware.JWTAuthCookieMiddleware',
     'django.middleware.common.CommonMiddleware',
     'config.middleware.CSPMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -65,11 +67,48 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # DATABASE
+default_db_url = f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
+DATABASE_URL = config('DATABASE_URL', default=default_db_url)
+
+
+def parse_database_url(url: str) -> dict:
+    parsed = urlparse(url)
+    scheme = (parsed.scheme or 'sqlite').lower()
+
+    if scheme in ('sqlite', 'sqlite3'):
+        db_path = parsed.path or ''
+        if not db_path:
+            name = BASE_DIR / 'db.sqlite3'
+        elif db_path.startswith('/'):
+            name = db_path
+        else:
+            name = BASE_DIR / db_path
+        return {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': str(name),
+        }
+
+    if scheme in ('postgres', 'postgresql', 'psql'):
+        options = {}
+        if not DEBUG:
+            options['sslmode'] = 'require'
+
+        return {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': (parsed.path or '').lstrip('/'),
+            'USER': parsed.username or '',
+            'PASSWORD': parsed.password or '',
+            'HOST': parsed.hostname or 'localhost',
+            'PORT': parsed.port or '',
+            'CONN_MAX_AGE': 600,
+            'OPTIONS': options,
+        }
+
+    raise ValueError(f'Banco de dados não suportado: {url}')
+
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': parse_database_url(DATABASE_URL)
 }
 
 # PASSWORD VALIDATION
@@ -154,6 +193,8 @@ if not DEBUG:
     # SECURE_HSTS_PRELOAD = True
 
 # LOGGING CONFIGURATION
+LOG_DIR = BASE_DIR / 'logs'
+LOG_DIR.mkdir(exist_ok=True)
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -185,7 +226,7 @@ LOGGING = {
         'file': {
             'level': 'WARNING',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'django.log',
+            'filename': LOG_DIR / 'django.log',
             'maxBytes': 1024 * 1024 * 10,  # 10MB
             'backupCount': 5,
             'formatter': 'verbose',

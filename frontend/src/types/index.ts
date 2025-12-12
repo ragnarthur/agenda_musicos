@@ -104,11 +104,6 @@ export interface LeaderAvailabilityCreate {
   notes?: string;
 }
 
-export interface AuthTokens {
-  access: string;
-  refresh: string;
-}
-
 export interface LoginCredentials {
   username: string;
   password: string;
@@ -116,9 +111,8 @@ export interface LoginCredentials {
 
 export interface AuthContextType {
   user: Musician | null;
-  tokens: AuthTokens | null;
   login: (credentials: LoginCredentials) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
   isLeader: boolean;
   loading: boolean;

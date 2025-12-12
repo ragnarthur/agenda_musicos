@@ -1,8 +1,8 @@
 # Repository Guidelines
 
 ## Estrutura do Projeto
-- Backend Django/DRF em `agenda/` (models, serializers, views, validators, management commands). Configurações em `config/settings.py`; `.env` define `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`.
-- Frontend React + Vite + TypeScript em `frontend/src` (páginas, componentes, hooks, serviços). Build de produção em `frontend/dist` servido pelo nginx.
+- Backend Django/DRF em `agenda/` (models, serializers, views, validators, management commands). Configurações em `config/settings.py`; `.env` define `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, `DATABASE_URL`, `CORS_ALLOWED_ORIGINS`, `CSP_HEADER`.
+- Frontend React + Vite + TypeScript em `frontend/src` (páginas, componentes, hooks, serviços). Build de produção em `frontend/dist` servido pelo nginx. Configure `VITE_API_URL` no `frontend/.env` (ex.: `https://seu-domínio/api`) usando o modelo `frontend/.env.example`.
 - Scripts e infra: `update.sh` (deploy completo), `supervisor.conf` e `nginx.conf`, testes rápidos em `test_complete_workflow.py` e `test_auth.py`.
 
 ## Build, Teste e Desenvolvimento
@@ -26,5 +26,6 @@
 - PRs: descreva problema/solução, comandos executados, resultados de testes e evidências visuais para mudanças de UI. Aponte qualquer atualização necessária em `.env` ou scripts de deploy.
 
 ## Segurança e Deploy
-- Nunca versionar secrets; use `.env` (backend) e `.env.local` (frontend). Limpe tokens de testes após uso.
-- Deploy típico no servidor: `ssh ...`; `sudo -u www-data git pull origin main`; `cd frontend && sudo -u www-data npm install && sudo -u www-data npm run build`; `cd .. && sudo supervisorctl restart agenda-musicos-group:agenda-musicos && sudo systemctl restart nginx`.
+- Nunca versionar secrets; use `.env` (backend) e `.env.local` (frontend). Backend lê `DATABASE_URL` via `dj-database-url` e armazena JWTs em cookies HttpOnly (não há tokens em localStorage).
+- Após deploy, verifique `/var/www/agenda-musicos/logs/django.log` (permissões e rotação) e confirme que `VITE_API_URL` aponta para o ngrok/host atual.
+- Deploy típico: `ssh ...`; `sudo -u www-data git pull origin main`; `cd frontend && sudo -u www-data npm ci && sudo -u www-data npm run build`; `cd .. && sudo supervisorctl restart agenda-musicos-group:agenda-musicos && sudo systemctl restart nginx`.
