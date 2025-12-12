@@ -154,12 +154,12 @@ const EventsList: React.FC = () => {
 
         const tone =
           diffDays < 0
-            ? 'bg-gray-50 border-gray-200'
+            ? { bg: 'bg-gray-50', ring: 'from-gray-200 to-gray-300' }
             : diffDays <= 7
-              ? 'bg-emerald-50 border-emerald-200'
+              ? { bg: 'bg-emerald-50', ring: 'from-emerald-200 to-emerald-300' }
               : diffDays <= 30
-                ? 'bg-blue-50 border-blue-200'
-                : 'bg-indigo-50 border-indigo-200';
+                ? { bg: 'bg-blue-50', ring: 'from-blue-200 to-blue-300' }
+                : { bg: 'bg-indigo-50', ring: 'from-indigo-200 to-indigo-300' };
 
         return {
           dateKey,
@@ -315,39 +315,43 @@ const EventsList: React.FC = () => {
               return (
                 <div
                   key={group.dateKey}
-                  className={`rounded-xl border p-4 shadow-lg backdrop-blur ${group.tone}`}
-                  style={{ borderColor: 'rgba(255,255,255,0.7)', backgroundColor: 'rgba(255,255,255,0.9)' }}
+                  className={`rounded-xl p-[1px] bg-gradient-to-br ${group.tone.ring} shadow-xl`}
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <div className="pill-date">
-                        <CalendarIcon className="h-4 w-4 text-primary-600" />
-                        {group.label}
+                  <div
+                    className={`rounded-[14px] border border-white/70 p-4 shadow-lg backdrop-blur ${group.tone.bg}`}
+                    style={{ backgroundColor: 'rgba(255,255,255,0.9)' }}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <div className="pill-date">
+                          <CalendarIcon className="h-4 w-4 text-primary-600" />
+                          {group.label}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-base font-semibold text-gray-900">Sara (Voz/Violão)</h3>
-                        <span className="text-xs text-gray-600">{group.sara.length} evento(s)</span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-base font-semibold text-gray-900">Sara (Voz/Violão)</h3>
+                          <span className="text-xs text-gray-600">{group.sara.length} evento(s)</span>
+                        </div>
+                        {group.sara.length === 0 ? (
+                          <p className="text-sm text-gray-500 italic">Sem eventos nesta data.</p>
+                        ) : (
+                          <div className="space-y-3">{group.sara.map(renderEventCard)}</div>
+                        )}
                       </div>
-                      {group.sara.length === 0 ? (
-                        <p className="text-sm text-gray-500 italic">Sem eventos nesta data.</p>
-                      ) : (
-                        <div className="space-y-3">{group.sara.map(renderEventCard)}</div>
-                      )}
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-base font-semibold text-gray-900">Arthur (Voz/Violão/Guitarra)</h3>
-                        <span className="text-xs text-gray-600">{group.arthur.length} evento(s)</span>
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-base font-semibold text-gray-900">Arthur (Voz/Violão/Guitarra)</h3>
+                          <span className="text-xs text-gray-600">{group.arthur.length} evento(s)</span>
+                        </div>
+                        {group.arthur.length === 0 ? (
+                          <p className="text-sm text-gray-500 italic">Sem eventos nesta data.</p>
+                        ) : (
+                          <div className="space-y-3">{group.arthur.map(renderEventCard)}</div>
+                        )}
                       </div>
-                      {group.arthur.length === 0 ? (
-                        <p className="text-sm text-gray-500 italic">Sem eventos nesta data.</p>
-                      ) : (
-                        <div className="space-y-3">{group.arthur.map(renderEventCard)}</div>
-                      )}
                     </div>
                   </div>
                 </div>
