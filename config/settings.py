@@ -37,6 +37,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'config.middleware.CSPMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -143,14 +144,14 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
 # Configurações adicionais de segurança para produção com HTTPS
-# Descomente quando estiver usando HTTPS em produção
-# if not DEBUG:
-#     SECURE_SSL_REDIRECT = True
-#     SESSION_COOKIE_SECURE = True
-#     CSRF_COOKIE_SECURE = True
-#     SECURE_HSTS_SECONDS = 31536000
-#     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-#     SECURE_HSTS_PRELOAD = True
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # Se o ambiente tiver HTTPS, habilitar também:
+    # SECURE_SSL_REDIRECT = True
+    # SECURE_HSTS_SECONDS = 31536000
+    # SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    # SECURE_HSTS_PRELOAD = True
 
 # LOGGING CONFIGURATION
 LOGGING = {

@@ -869,6 +869,26 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
             from rest_framework.exceptions import ValidationError
             raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
 
+    def perform_destroy(self, instance):
+        """
+        Permite apenas deletar a própria disponibilidade de líder.
+        """
+        try:
+            musician = self.request.user.musician_profile
+
+            if not musician.is_leader():
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied('Apenas líderes podem excluir disponibilidades.')
+
+            if instance.leader != musician:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied('Você não pode excluir disponibilidades de outros líderes.')
+
+            super().perform_destroy(instance)
+        except Musician.DoesNotExist:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
+
     @action(detail=True, methods=['get'])
     def conflicting_events(self, request, pk=None):
         """
