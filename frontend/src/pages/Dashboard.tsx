@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Clock, Crown, Plus, Users, ChevronRight, Star, ListChecks, Zap } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { useAuth } from '../contexts/AuthContext';
@@ -56,6 +56,7 @@ const Dashboard: React.FC = () => {
   const [pendingEvents, setPendingEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const nextEvent = events[0];
+  const prefersReducedMotion = useReducedMotion();
 
   const getStartDateTime = (event: Event): number => {
     try {
@@ -215,7 +216,11 @@ const Dashboard: React.FC = () => {
 
         {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="rounded-xl border border-primary-100 bg-white p-5 shadow-sm">
+          <motion.div
+            className="rounded-xl border border-primary-100 bg-white p-5 shadow-sm"
+            whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.01 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 16 }}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Eventos pendentes</p>
@@ -228,9 +233,13 @@ const Dashboard: React.FC = () => {
             <Link to="/aprovacoes" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary-700">
               Ver aprovações <ChevronRight className="h-4 w-4" />
             </Link>
-          </div>
+          </motion.div>
 
-          <div className="rounded-xl border border-green-100 bg-white p-5 shadow-sm">
+          <motion.div
+            className="rounded-xl border border-green-100 bg-white p-5 shadow-sm"
+            whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.01 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 16 }}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Próximos eventos</p>
@@ -243,10 +252,14 @@ const Dashboard: React.FC = () => {
             <Link to="/eventos" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-green-700">
               Ver agenda <ChevronRight className="h-4 w-4" />
             </Link>
-          </div>
+          </motion.div>
 
           {isLeader ? (
-            <div className="rounded-xl border border-amber-100 bg-white p-5 shadow-sm">
+            <motion.div
+              className="rounded-xl border border-amber-100 bg-white p-5 shadow-sm"
+              whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.01 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 16 }}
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Agenda do baterista</p>
@@ -262,9 +275,13 @@ const Dashboard: React.FC = () => {
               >
                 Gerenciar agenda <ChevronRight className="h-4 w-4" />
               </Link>
-            </div>
+            </motion.div>
           ) : (
-            <div className="rounded-xl border border-blue-100 bg-white p-5 shadow-sm">
+            <motion.div
+              className="rounded-xl border border-blue-100 bg-white p-5 shadow-sm"
+              whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.01 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 16 }}
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Equipe</p>
@@ -280,7 +297,7 @@ const Dashboard: React.FC = () => {
               >
                 Ver grade por músico <ChevronRight className="h-4 w-4" />
               </Link>
-            </div>
+            </motion.div>
           )}
         </div>
 
