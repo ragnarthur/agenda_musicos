@@ -92,6 +92,14 @@
   .status-chip.rejected { @apply bg-rose-100 text-rose-700 border border-rose-200; }
   .status-chip.cancelled { @apply bg-gray-100 text-gray-700 border border-gray-200; }
   .status-chip.default { @apply bg-slate-100 text-slate-700 border border-slate-200; }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* Animações utilitárias */
