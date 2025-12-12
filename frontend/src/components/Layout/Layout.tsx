@@ -8,9 +8,14 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-slate-50 via-white to-slate-100">
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -top-20 -left-10 h-72 w-72 rounded-full bg-primary-200/50 blur-3xl" />
+        <div className="absolute top-10 right-[-120px] h-80 w-80 rounded-full bg-indigo-200/60 blur-3xl" />
+        <div className="absolute bottom-[-140px] left-1/3 h-96 w-96 rounded-full bg-emerald-200/50 blur-[120px]" />
+      </div>
       <Navbar />
-      <main className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-24">
+      <main className="relative container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-24">
         {children}
       </main>
     </div>
