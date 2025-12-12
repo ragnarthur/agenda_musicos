@@ -56,7 +56,7 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="bg-white shadow-md">
+    <nav className="bg-white/90 backdrop-blur shadow-md sticky top-0 z-40">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo e Nome */}
@@ -134,7 +134,7 @@ const Navbar: React.FC = () => {
       </div>
 
       {/* Menu Mobile */}
-      <div className="md:hidden border-t border-gray-200">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white/90 backdrop-blur shadow-[0_-6px_20px_rgba(0,0,0,0.08)] z-40">
         <div className="flex justify-around p-2">
           <Link
             to="/eventos"
@@ -147,6 +147,14 @@ const Navbar: React.FC = () => {
                 {pendingMyResponse}
               </span>
             )}
+          </Link>
+
+          <Link
+            to="/eventos/agenda"
+            className="flex flex-col items-center text-gray-700 hover:text-primary-600 p-2"
+          >
+            <Clock className="h-6 w-6 rotate-45" />
+            <span className="text-xs mt-1">Grade</span>
           </Link>
 
           <Link
