@@ -129,34 +129,38 @@ const Dashboard: React.FC = () => {
               <p className="mt-2 text-gray-700">
                 Acompanhe os eventos, aprovações e disponibilidade do baterista em um só lugar.
               </p>
-              <div className="mt-4 flex flex-wrap gap-3">
+              <div className="mt-4 flex flex-wrap gap-2">
                 <Link
                   to="/eventos/novo"
-                  className="inline-flex items-center gap-2 rounded-full bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-primary-700"
+                  className="inline-flex items-center gap-2 rounded-full bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow hover:shadow-md hover:bg-primary-700 transition-transform hover:-translate-y-0.5"
+                  title="Criar novo evento"
                 >
                   <Plus className="h-4 w-4" />
                   Novo evento
                 </Link>
                 <Link
                   to="/eventos/agenda"
-                  className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"
+                  className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-white px-4 py-2 text-sm font-semibold text-primary-700 hover:bg-primary-50 transition-transform hover:-translate-y-0.5"
+                  title="Visão em colunas por músico"
                 >
                   <Calendar className="h-4 w-4" />
                   Grade por músico
                 </Link>
                 <Link
-                  to="/disponibilidades"
-                  className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"
-                >
-                  <Clock className="h-4 w-4" />
-                  Agenda do baterista
-                </Link>
-                <Link
                   to="/eventos"
-                  className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"
+                  className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50 transition-transform hover:-translate-y-0.5"
+                  title="Ver todas as datas"
                 >
                   <ListChecks className="h-4 w-4" />
                   Todas as datas
+                </Link>
+                <Link
+                  to="/disponibilidades"
+                  className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50 transition-transform hover:-translate-y-0.5"
+                  title="Agenda do baterista"
+                >
+                  <Clock className="h-4 w-4" />
+                  Agenda do baterista
                 </Link>
               </div>
             </div>
