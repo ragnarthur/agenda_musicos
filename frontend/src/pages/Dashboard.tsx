@@ -53,6 +53,7 @@ const Dashboard: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [pendingEvents, setPendingEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const nextEvent = events[0];
 
   const getStartDateTime = (event: Event): number => {
     try {
@@ -120,7 +121,7 @@ const Dashboard: React.FC = () => {
       <div className="space-y-8">
         {/* Hero */}
         <div className="overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-r from-indigo-50 via-white to-blue-50 p-6 shadow-sm">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex flex-col md:flex-row md:items-stretch md:justify-between gap-4">
             <div>
               <p className="text-sm font-semibold text-primary-700">Agenda de Shows</p>
               <h1 className="mt-1 text-3xl font-bold text-gray-900">
@@ -164,6 +165,44 @@ const Dashboard: React.FC = () => {
                 </Link>
               </div>
             </div>
+
+            {nextEvent && (
+              <div className="w-full md:w-80 rounded-xl border border-white/60 bg-white/80 backdrop-blur px-4 py-3 shadow-inner flex flex-col justify-between">
+                <div className="flex items-center gap-2 text-xs font-semibold text-primary-700 uppercase">
+                  <Zap className="h-4 w-4" />
+                  Evento mais próximo
+                </div>
+                <div className="mt-1">
+                  <h3 className="text-lg font-bold text-gray-900 line-clamp-1">{nextEvent.title}</h3>
+                  <p className="text-sm text-gray-600 line-clamp-1">{nextEvent.location || 'Local a definir'}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {format(parseISO(nextEvent.event_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })} •{' '}
+                    {nextEvent.start_time.slice(0, 5)} - {nextEvent.end_time.slice(0, 5)}
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-gray-700">
+                    <Users className="h-4 w-4 text-gray-500" />
+                    {buildLineup(nextEvent).map((name) => (
+                      <span
+                        key={name}
+                        className="inline-flex items-center gap-1 rounded-full bg-gray-50 border border-gray-200 px-3 py-1 font-medium text-gray-700"
+                      >
+                        {name}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="mt-3 text-xs text-gray-500">
+                    Status:{' '}
+                    <span className={`badge badge-${nextEvent.status}`}>{getStatusLabel(nextEvent)}</span>
+                  </div>
+                </div>
+                <Link
+                  to={`/eventos/${nextEvent.id}`}
+                  className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary-700 hover:text-primary-800"
+                >
+                  Ver detalhes <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
+            )}
           </div>
         </div>
 
