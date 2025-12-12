@@ -1,5 +1,5 @@
 // pages/LeaderAvailability.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar as CalendarIcon, Clock, Plus, Edit, Trash2, AlertCircle, Info } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
@@ -27,11 +27,7 @@ const LeaderAvailabilityPage: React.FC = () => {
     notes: '',
   });
 
-  useEffect(() => {
-    loadAvailabilities();
-  }, [timeFilter]);
-
-  const loadAvailabilities = async () => {
+  const loadAvailabilities = useCallback(async () => {
     try {
       setLoading(true);
       const params: Record<string, boolean> = {};
@@ -49,7 +45,11 @@ const LeaderAvailabilityPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [timeFilter]);
+
+  useEffect(() => {
+    loadAvailabilities();
+  }, [loadAvailabilities]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,9 +94,9 @@ const LeaderAvailabilityPage: React.FC = () => {
       setEditingId(null);
       resetForm();
       await loadAvailabilities();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Erro ao salvar disponibilidade:', err);
-      const error = err as { response?: { data?: any } };
+      const error = err as { response?: { data?: unknown } };
       if (error.response?.data) {
         const data = error.response.data;
         let errorMessage = 'Erro ao salvar disponibilidade. Tente novamente.';
@@ -149,7 +149,7 @@ const LeaderAvailabilityPage: React.FC = () => {
       setActionLoading(true);
       await leaderAvailabilityService.delete(id);
       await loadAvailabilities();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao deletar disponibilidade:', error);
       alert('Erro ao deletar disponibilidade. Tente novamente.');
     } finally {
