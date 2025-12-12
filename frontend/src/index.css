@@ -22,8 +22,7 @@
   body {
     @apply text-gray-900;
     font-family: var(--font-sans);
-    background: #f8fafc;
-    background-attachment: fixed;
+    background: transparent;
   }
 
   ::selection {
