@@ -1,5 +1,5 @@
 // pages/EventDetail.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Calendar,
@@ -41,11 +41,7 @@ const EventDetail: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
 
-  useEffect(() => {
-    loadEvent();
-  }, [id]);
-
-  const loadEvent = async () => {
+  const loadEvent = useCallback(async () => {
     if (!id) return;
 
     try {
@@ -67,7 +63,11 @@ const EventDetail: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, user?.user.id]);
+
+  useEffect(() => {
+    loadEvent();
+  }, [loadEvent]);
 
   const handleSetAvailability = async () => {
     if (!id) return;

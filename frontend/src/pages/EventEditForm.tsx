@@ -1,5 +1,5 @@
 // pages/EventEditForm.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Calendar, MapPin, Clock, Phone, FileText, Save, X } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
@@ -25,11 +25,7 @@ const EventEditForm: React.FC = () => {
     is_solo: false,
   });
 
-  useEffect(() => {
-    loadEvent();
-  }, [id]);
-
-  const loadEvent = async () => {
+  const loadEvent = useCallback(async () => {
     if (!id) return;
 
     try {
@@ -55,7 +51,11 @@ const EventEditForm: React.FC = () => {
     } finally {
       setLoadingEvent(false);
     }
-  };
+  }, [id, navigate]);
+
+  useEffect(() => {
+    loadEvent();
+  }, [loadEvent]);
 
   // Função para formatar telefone brasileiro
   const formatPhone = (value: string): string => {
@@ -126,9 +126,9 @@ const EventEditForm: React.FC = () => {
 
       await eventService.update(parseInt(id), formData);
       navigate(`/eventos/${id}`);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Erro ao atualizar evento:', err);
-      const error = err as { response?: { data?: any } };
+      const error = err as { response?: { data?: unknown } };
       if (error.response?.data) {
         const data = error.response.data;
         let errorMessage = 'Erro ao atualizar evento. Tente novamente.';

@@ -1,5 +1,5 @@
 // components/Layout/Navbar.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Music, Calendar, Users, LogOut, Crown, Clock } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -25,14 +25,7 @@ const Navbar: React.FC = () => {
     return displayMap[user.instrument] || user.instrument;
   };
 
-  useEffect(() => {
-    loadNotifications();
-    // Recarregar a cada 30 segundos
-    const interval = setInterval(loadNotifications, 30000);
-    return () => clearInterval(interval);
-  }, [user]);
-
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     try {
       // Eventos pendentes de minha resposta
       const myPending = await eventService.getPendingMyResponse();
@@ -46,7 +39,13 @@ const Navbar: React.FC = () => {
     } catch (error) {
       console.error('Erro ao carregar notificações:', error);
     }
-  };
+  }, [isLeader]);
+
+  useEffect(() => {
+    loadNotifications();
+    const interval = setInterval(loadNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [loadNotifications]);
 
   const handleLogout = () => {
     logout();
