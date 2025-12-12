@@ -143,16 +143,16 @@ const Navbar: React.FC = () => {
 
       {/* Menu Mobile */}
       <div
-        className="md:hidden fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white/85 backdrop-blur-lg shadow-[0_-6px_20px_rgba(0,0,0,0.08)] z-40"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 8px)' }}
+        className="md:hidden fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white/90 backdrop-blur-lg shadow-[0_-6px_20px_rgba(0,0,0,0.12)] z-40"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 10px)' }}
       >
-        <div className="flex justify-around p-2 pt-3">
+        <div className="flex w-full justify-between gap-1 px-1 py-2">
           <Link
             to="/eventos"
-            className="flex flex-col items-center text-gray-700 hover:text-primary-600 p-2 relative"
+            className="flex-1 min-w-[64px] flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 relative rounded-lg transition-colors"
           >
             <Calendar className="h-6 w-6" />
-            <span className="text-xs mt-1">Eventos</span>
+            <span className="text-[11px] mt-1 leading-none">Eventos</span>
             {pendingMyResponse > 0 && (
               <span className="absolute top-0 right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                 {pendingMyResponse}
@@ -162,35 +162,35 @@ const Navbar: React.FC = () => {
 
           <Link
             to="/eventos/agenda"
-            className="flex flex-col items-center text-gray-700 hover:text-primary-600 p-2"
+            className="flex-1 min-w-[64px] flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 rounded-lg transition-colors"
           >
             <Clock className="h-6 w-6 rotate-45" />
-            <span className="text-xs mt-1">Grade</span>
+            <span className="text-[11px] mt-1 leading-none">Grade</span>
           </Link>
 
           <Link
             to="/musicos"
-            className="flex flex-col items-center text-gray-700 hover:text-primary-600 p-2"
+            className="flex-1 min-w-[64px] flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 rounded-lg transition-colors"
           >
             <Users className="h-6 w-6" />
-            <span className="text-xs mt-1">Músicos</span>
+            <span className="text-[11px] mt-1 leading-none">Músicos</span>
           </Link>
 
           <Link
             to="/disponibilidades"
-            className="flex flex-col items-center text-gray-700 hover:text-primary-600 p-2"
+            className="flex-1 min-w-[64px] flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 rounded-lg transition-colors"
           >
             <Clock className="h-6 w-6" />
-            <span className="text-xs mt-1">{isLeader ? 'Horários' : 'Datas'}</span>
+            <span className="text-[11px] mt-1 leading-none">{isLeader ? 'Horários' : 'Datas'}</span>
           </Link>
 
           {isLeader && (
             <Link
               to="/aprovacoes"
-              className="flex flex-col items-center text-yellow-600 hover:text-yellow-700 p-2 relative"
+              className="flex-1 min-w-[64px] flex flex-col items-center justify-center text-yellow-700 hover:text-yellow-800 py-2 relative rounded-lg transition-colors"
             >
               <Crown className="h-6 w-6" />
-              <span className="text-xs mt-1">Aprovações</span>
+              <span className="text-[11px] mt-1 leading-none">Aprovações</span>
               {pendingApproval > 0 && (
                 <span className="absolute top-0 right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                   {pendingApproval}
