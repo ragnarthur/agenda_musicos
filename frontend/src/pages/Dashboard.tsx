@@ -99,6 +99,23 @@ const Dashboard: React.FC = () => {
     );
   }
 
+  const getStatusLabel = (event: Event) => {
+    switch (event.status) {
+      case 'approved':
+        return 'Aprovado pelo Batera!';
+      case 'confirmed':
+        return 'Confirmado';
+      case 'proposed':
+        return 'Proposta enviada';
+      case 'rejected':
+        return 'Rejeitado';
+      case 'cancelled':
+        return 'Cancelado';
+      default:
+        return event.status_display;
+    }
+  };
+
   return (
     <Layout>
       <div className="space-y-8">
@@ -170,9 +187,7 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div className="mt-3 text-xs text-gray-500">
                   Status:{' '}
-                  <span className={`badge badge-${nextEvent.status}`}>
-                    {nextEvent.status_display} · Aprovado pelo Batera!
-                  </span>
+                  <span className={`badge badge-${nextEvent.status}`}>{getStatusLabel(nextEvent)}</span>
                 </div>
               </div>
             )}
