@@ -335,69 +335,6 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Próximos Eventos */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Próximos Eventos</h2>
-            <Link to="/eventos" className="text-primary-600 hover:text-primary-700 text-sm font-medium">
-              Ver todos →
-            </Link>
-          </div>
-
-          {events.length === 0 ? (
-            <div className="text-center py-8">
-              <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-600">Nenhum evento próximo</p>
-              <Link
-                to="/eventos/novo"
-                className="mt-4 inline-flex items-center space-x-2 btn-primary"
-              >
-                <Plus className="h-5 w-5" />
-                <span>Criar Evento</span>
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {events.map((event) => (
-                <Link
-                  key={event.id}
-                  to={`/eventos/${event.id}`}
-                  className="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">{event.title}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{event.location}</p>
-                      <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
-                        <span>
-                          {format(parseISO(event.event_date), "dd/MM/yyyy")}
-                        </span>
-                        <span>
-                          {event.start_time.slice(0, 5)} - {event.end_time.slice(0, 5)}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-gray-700">
-                        <Users className="h-4 w-4 text-gray-500" />
-                        {buildLineup(event).map((name) => (
-                          <span
-                            key={name}
-                            className="inline-flex items-center gap-1 rounded-full bg-white border border-gray-200 px-3 py-1 font-medium text-gray-700"
-                          >
-                            {name}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <span className={`badge badge-${event.status}`}>
-                      {event.status_display}
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-
         {/* Botão Flutuante para Criar Evento */}
         <Link
           to="/eventos/novo"

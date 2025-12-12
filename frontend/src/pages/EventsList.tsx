@@ -75,6 +75,20 @@ const belongsTo = (event: Event, target: 'sara' | 'arthur'): boolean => {
   return false;
 };
 
+const getStartDateTime = (event: Event): number => {
+  try {
+    if (event.start_datetime) {
+      return parseISO(event.start_datetime).getTime();
+    }
+    if (event.event_date && event.start_time) {
+      return parseISO(`${event.event_date}T${event.start_time}`).getTime();
+    }
+  } catch {
+    // ignore parse errors
+  }
+  return 0;
+};
+
 const EventsList: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
