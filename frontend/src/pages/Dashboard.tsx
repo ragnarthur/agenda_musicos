@@ -1,7 +1,7 @@
 // pages/Dashboard.tsx
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, Crown, Plus, Users, ChevronRight, Star, ListChecks } from 'lucide-react';
+import { Calendar, Clock, Crown, Plus, Users, ChevronRight, Star, ListChecks, Zap } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { useAuth } from '../contexts/AuthContext';
