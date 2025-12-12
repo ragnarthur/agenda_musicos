@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 // contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { AuthContextType, AuthTokens, LoginCredentials, Musician } from '../types';

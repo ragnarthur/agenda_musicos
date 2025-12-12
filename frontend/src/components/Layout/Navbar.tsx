@@ -42,9 +42,12 @@ const Navbar: React.FC = () => {
   }, [isLeader]);
 
   useEffect(() => {
-    loadNotifications();
+    const timeout = setTimeout(() => void loadNotifications(), 0);
     const interval = setInterval(loadNotifications, 30000);
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
   }, [loadNotifications]);
 
   const handleLogout = () => {
