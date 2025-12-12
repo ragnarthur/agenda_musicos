@@ -179,18 +179,19 @@ const EventsList: React.FC = () => {
     const lineup = extractLineup(event);
     const startLabel = event.start_time ? event.start_time.slice(0, 5) : '--:--';
     const endLabel = event.end_time ? event.end_time.slice(0, 5) : '--:--';
+    const statusClass = `status-chip ${event.status || 'default'}`;
     return (
       <Link
         key={event.id}
         to={`/eventos/${event.id}`}
-        className="block rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+        className="block rounded-xl border border-white/70 bg-white/90 backdrop-blur p-4 shadow-lg hover:shadow-xl transition-all"
       >
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 text-xs uppercase tracking-wide">
-              <span className="font-semibold text-primary-600">{event.status_display}</span>
+              <span className={statusClass}>{event.status_display}</span>
               {event.is_solo && (
-                <span className="rounded-full bg-indigo-50 px-2 py-0.5 font-semibold text-indigo-700">Solo</span>
+                <span className="status-chip default">Solo</span>
               )}
             </div>
             <h3 className="mt-1 text-lg font-semibold text-gray-900">{event.title}</h3>
@@ -214,7 +215,7 @@ const EventsList: React.FC = () => {
               ))}
             </div>
           </div>
-          <span className={`badge badge-${event.status}`}>{event.status_display}</span>
+          <span className={statusClass}>{event.status_display}</span>
         </div>
       </Link>
     );
@@ -232,7 +233,7 @@ const EventsList: React.FC = () => {
         </div>
 
         {/* Busca */}
-        <div className="card">
+        <div className="card-contrast">
           <div className="relative">
             <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
             <input
@@ -299,7 +300,7 @@ const EventsList: React.FC = () => {
         {loading ? (
           <Loading text="Carregando eventos..." />
         ) : events.length === 0 ? (
-          <div className="card text-center py-12">
+          <div className="card-contrast text-center py-12">
             <CalendarIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 mb-4">Nenhum evento encontrado</p>
             <Link to="/eventos/novo" className="btn-primary inline-flex items-center space-x-2">
@@ -314,14 +315,15 @@ const EventsList: React.FC = () => {
               return (
                 <div
                   key={group.dateKey}
-                  className={`rounded-xl border p-4 shadow-sm ${group.tone}`}
+                  className={`rounded-xl border p-4 shadow-lg backdrop-blur ${group.tone}`}
+                  style={{ borderColor: 'rgba(255,255,255,0.7)', backgroundColor: 'rgba(255,255,255,0.9)' }}
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-primary-600">Data</p>
-                      <h2 className="text-lg font-bold text-gray-900">
+                      <div className="pill-date">
+                        <CalendarIcon className="h-4 w-4 text-primary-600" />
                         {group.label}
-                      </h2>
+                      </div>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
