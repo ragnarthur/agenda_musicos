@@ -9,14 +9,27 @@
   --color-primary: #4338ca; /* indigo-700 */
   --color-primary-light: #6366f1;
   --color-secondary: #22c55e; /* green-500 */
-  --color-surface: rgba(255, 255, 255, 0.86);
+  --color-accent: #f59e0b; /* amber-500 */
+  --color-surface: rgba(255, 255, 255, 0.9);
   --color-border: rgba(67, 56, 202, 0.12);
+  --glow-1: rgba(79, 70, 229, 0.14);
+  --glow-2: rgba(14, 165, 233, 0.14);
+  --shadow-strong: 0 20px 80px rgba(0, 0, 0, 0.08);
 }
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply text-gray-900;
     font-family: var(--font-sans);
+    background: radial-gradient(circle at 20% 20%, var(--glow-1), transparent 35%),
+      radial-gradient(circle at 80% 0%, var(--glow-2), transparent 35%),
+      linear-gradient(180deg, #f8fafc 0%, #eef2ff 40%, #f8fafc 100%);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: var(--color-primary-light);
+    color: #fff;
   }
 }
 
@@ -38,7 +51,8 @@
   }
 
   .card {
-    @apply bg-white/90 backdrop-blur rounded-2xl shadow-lg p-6 border border-gray-100;
+    @apply bg-white/90 backdrop-blur rounded-2xl p-6 border border-white/70 shadow-lg;
+    box-shadow: var(--shadow-strong);
   }
 
   .badge {
@@ -85,6 +99,13 @@
 /* Animações utilitárias */
 .fade-in-up {
   @apply animate-[fadeInUp_0.4s_ease-out_forwards];
+}
+
+.glass {
+  background: var(--color-surface);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
 }
 
 @keyframes fadeInUp {
