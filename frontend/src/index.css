@@ -22,9 +22,7 @@
   body {
     @apply text-gray-900;
     font-family: var(--font-sans);
-    background: radial-gradient(circle at 20% 20%, var(--glow-1), transparent 35%),
-      radial-gradient(circle at 80% 0%, var(--glow-2), transparent 35%),
-      linear-gradient(180deg, #f8fafc 0%, #eef2ff 40%, #f8fafc 100%);
+    background: #f8fafc;
     background-attachment: fixed;
   }
 
