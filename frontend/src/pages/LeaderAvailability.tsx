@@ -201,15 +201,18 @@ const LeaderAvailabilityPage: React.FC = () => {
         </div>
 
         {/* Info sobre buffer de 40 minutos */}
-        <div className="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-          <div className="flex-1 text-sm text-blue-800">
-            <p className="font-medium mb-1">Intervalo de Segurança de 40 Minutos</p>
-            <p>
-              O sistema mantém automaticamente um intervalo de 40 minutos antes e depois de cada evento.
-              Este tempo é reservado para deslocamento, montagem e desmontagem de equipamentos,
-              garantindo que você chegue preparado e tenha tempo suficiente entre apresentações.
-            </p>
+        <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-white/85 backdrop-blur p-4 shadow-lg">
+          <div className="spotlight pointer-events-none absolute inset-0 -z-10" />
+          <div className="flex items-start space-x-3">
+            <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1 text-sm text-blue-800">
+              <p className="font-medium mb-1">Intervalo de Segurança de 40 Minutos</p>
+              <p>
+                O sistema mantém automaticamente um intervalo de 40 minutos antes e depois de cada evento.
+                Este tempo é reservado para deslocamento, montagem e desmontagem de equipamentos,
+                garantindo que você chegue preparado e tenha tempo suficiente entre apresentações.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -254,7 +257,7 @@ const LeaderAvailabilityPage: React.FC = () => {
             {availabilities.map((availability) => (
               <div
                 key={availability.id}
-                className={`card ${availability.has_conflicts ? 'border-red-300 bg-red-50' : ''}`}
+                className={`card-contrast ${availability.has_conflicts ? 'border-red-300 bg-red-50/80' : ''}`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">

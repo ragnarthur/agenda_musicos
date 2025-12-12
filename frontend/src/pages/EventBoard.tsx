@@ -173,27 +173,22 @@ const EventBoard: React.FC = () => {
   const renderEventCard = (event: Event) => {
     const lineup = extractNames(event);
     const hasRoberto = belongsTo(event, 'roberto');
+    const statusClass = `status-chip ${event.status || 'default'}`;
     return (
       <Link
         key={event.id}
         to={`/eventos/${event.id}`}
-        className="block rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+        className="block rounded-xl border border-white/70 bg-white/90 backdrop-blur p-4 shadow-lg hover:shadow-xl transition-all"
       >
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wide text-primary-600">
-                {statusLabel[event.status]}
-              </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={statusClass}>{statusLabel[event.status]}</span>
               {event.is_solo && (
-                <span className="text-[11px] rounded-full bg-indigo-50 px-2 py-0.5 font-semibold text-indigo-700">
-                  Solo
-                </span>
+                <span className="status-chip default">Solo</span>
               )}
               {hasRoberto && (
-                <span className="text-[11px] rounded-full bg-yellow-50 px-2 py-0.5 font-semibold text-yellow-700">
-                  Bateria
-                </span>
+                <span className="status-chip approved">Bateria</span>
               )}
             </div>
             <h3 className="mt-1 text-lg font-semibold text-gray-900">{event.title}</h3>
@@ -231,25 +226,29 @@ const EventBoard: React.FC = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Grade por Músico</h1>
-            <p className="text-gray-600">Eventos organizados por data em colunas para Sara e Arthur.</p>
-          </div>
-          <div className="flex gap-3">
-            <Link
-              to="/eventos"
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Lista de eventos
-            </Link>
-            <Link
-              to="/eventos/novo"
-              className="btn-primary inline-flex items-center gap-2"
-            >
-              Criar evento
-            </Link>
+        <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-white/80 backdrop-blur p-6 shadow-lg">
+          <div className="spotlight pointer-events-none absolute inset-0 -z-10" />
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <p className="text-sm font-semibold text-primary-700">Grade por músico</p>
+              <h1 className="text-3xl font-bold text-gray-900">Visão em colunas</h1>
+              <p className="text-gray-600">Eventos organizados por data para Sara e Arthur.</p>
+            </div>
+            <div className="flex gap-3">
+              <Link
+                to="/eventos"
+                className="inline-flex items-center gap-2 rounded-full border border-primary-100 bg-white px-4 py-2 text-sm font-semibold text-primary-700 hover:bg-primary-50"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Lista de eventos
+              </Link>
+              <Link
+                to="/eventos/novo"
+                className="btn-primary inline-flex items-center gap-2 rounded-full shadow"
+              >
+                Criar evento
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -281,11 +280,13 @@ const EventBoard: React.FC = () => {
             if (!saraEvents.length && !arthurEvents.length) return null;
 
             return (
-              <div key={group.dateKey} className="card">
-                <div className="mb-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-primary-600">Data</p>
-                    <h2 className="text-xl font-bold text-gray-900">{group.label}</h2>
+              <div key={group.dateKey} className="card-contrast">
+                <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-3">
+                    <div className="pill-date">
+                      <Calendar className="h-4 w-4 text-primary-600" />
+                      {group.label}
+                    </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
