@@ -62,12 +62,14 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="bg-white/90 backdrop-blur shadow-md sticky top-0 z-40">
+    <nav className="bg-white/80 backdrop-blur-xl shadow-md sticky top-0 z-40 border-b border-white/60">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo e Nome */}
-          <Link to="/" className="flex items-center space-x-2">
-            <Music className="h-8 w-8 text-primary-600" />
+          <Link to="/" className="flex items-center space-x-2 hover:scale-[1.01] transition-transform">
+            <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center shadow-inner">
+              <Music className="h-6 w-6 text-primary-600" />
+            </div>
             <span className="text-xl font-bold text-gray-900">Agenda Músicos</span>
           </Link>
 
@@ -140,7 +142,7 @@ const Navbar: React.FC = () => {
       </div>
 
       {/* Menu Mobile */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white/90 backdrop-blur shadow-[0_-6px_20px_rgba(0,0,0,0.08)] z-40">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white/85 backdrop-blur-lg shadow-[0_-6px_20px_rgba(0,0,0,0.08)] z-40">
         <div className="flex justify-around p-2">
           <Link
             to="/eventos"
