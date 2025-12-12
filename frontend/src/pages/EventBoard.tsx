@@ -76,12 +76,31 @@ const belongsTo = (event: Event, target: 'sara' | 'arthur' | 'roberto'): boolean
 };
 
 const formatTimeRange = (event: Event) => {
-  const start = event.start_time.slice(0, 5);
-  const end = event.end_time.slice(0, 5);
-  const startDt = parseISO(event.start_datetime);
-  const endDt = parseISO(event.end_datetime);
-  const crossesDay = endDt.getDate() !== startDt.getDate();
-  return crossesDay ? `${start} - ${end} (+1d)` : `${start} - ${end}`;
+  const startLabel = event.start_time ? event.start_time.slice(0, 5) : '--:--';
+  const endLabel = event.end_time ? event.end_time.slice(0, 5) : '--:--';
+
+  try {
+    const startDt = event.start_datetime ? parseISO(event.start_datetime) : null;
+    const endDt = event.end_datetime ? parseISO(event.end_datetime) : null;
+    if (startDt && endDt) {
+      const crossesDay = endDt.getDate() !== startDt.getDate();
+      return crossesDay ? `${startLabel} - ${endLabel} (+1d)` : `${startLabel} - ${endLabel}`;
+    }
+  } catch (e) {
+    // ignore parse errors
+  }
+
+  return `${startLabel} - ${endLabel}`;
+};
+
+const getStartTimestamp = (event: Event): number => {
+  try {
+    if (event.start_datetime) return parseISO(event.start_datetime).getTime();
+    if (event.event_date && event.start_time) return parseISO(`${event.event_date}T${event.start_time}`).getTime();
+  } catch (e) {
+    return 0;
+  }
+  return 0;
 };
 
 const statusLabel: Record<EventStatus, string> = {
@@ -121,7 +140,8 @@ const EventBoard: React.FC = () => {
   const groupedByDate = useMemo(() => {
     const groups = new Map<string, Event[]>();
     events.forEach((event) => {
-      const key = format(parseISO(event.event_date), 'yyyy-MM-dd');
+      if (!event.event_date) return;
+      const key = event.event_date;
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key)!.push(event);
     });
@@ -132,9 +152,7 @@ const EventBoard: React.FC = () => {
       .map(([dateKey, list]) => ({
         dateKey,
         label: format(parseISO(dateKey), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR }),
-        events: list.sort((a, b) =>
-          parseISO(a.start_datetime).getTime() - parseISO(b.start_datetime).getTime()
-        ),
+        events: list.sort((a, b) => getStartTimestamp(a) - getStartTimestamp(b)),
       }));
   }, [events]);
 
