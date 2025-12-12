@@ -13,14 +13,20 @@ const Navbar: React.FC = () => {
 
   const formatInstrument = () => {
     if (!user) return '';
-    if (user.bio) return user.bio; // exibe bio quando existir (vocal/violão/guitarra)
+    const fullName = user.full_name.toLowerCase();
+
+    // Regras customizadas
+    if (fullName.includes('sara')) return 'Vocalista e violonista';
+    if (fullName.includes('arthur')) return 'Vocalista, violonista e guitarrista';
+    if (fullName.includes('roberto')) return 'Baterista';
+
     const displayMap: Record<string, string> = {
       vocal: 'Vocal',
       guitar: 'Guitarra',
       bass: 'Baixo',
       drums: 'Bateria',
       keyboard: 'Teclado',
-      other: 'Outro',
+      other: 'Músico',
     };
     return displayMap[user.instrument] || user.instrument;
   };
