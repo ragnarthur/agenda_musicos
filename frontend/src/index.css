@@ -177,3 +177,25 @@
   50% { filter: blur(70px) hue-rotate(30deg); }
   100% { filter: blur(70px) hue-rotate(-20deg); }
 }
+
+.hero-animated {
+  position: absolute;
+  inset: -12%;
+  background: linear-gradient(135deg,
+    rgba(99, 102, 241, 0.18),
+    rgba(6, 182, 212, 0.16),
+    rgba(236, 72, 153, 0.12),
+    rgba(34, 197, 94, 0.14));
+  background-size: 220% 220%;
+  animation: heroShift 16s ease-in-out infinite;
+  filter: blur(46px);
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: -12;
+}
+
+@keyframes heroShift {
+  0% { background-position: 0% 40%; transform: scale(1); }
+  50% { background-position: 100% 60%; transform: scale(1.03); }
+  100% { background-position: 0% 40%; transform: scale(1); }
+}

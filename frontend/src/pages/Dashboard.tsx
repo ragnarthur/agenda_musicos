@@ -124,11 +124,12 @@ const Dashboard: React.FC = () => {
       <div className="space-y-8">
         {/* Hero */}
         <motion.div
-          className="relative overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-r from-indigo-50 via-white to-cyan-50 p-6 shadow-lg"
+          className="relative overflow-hidden rounded-2xl border border-white/70 bg-white/70 backdrop-blur p-6 shadow-lg"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 120, damping: 18 }}
         >
+          <div className="hero-animated" />
           <div className="spotlight pointer-events-none absolute inset-0 -z-10" />
           <div className="flex flex-col md:flex-row md:items-stretch md:justify-between gap-4">
             <div>
