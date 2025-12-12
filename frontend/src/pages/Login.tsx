@@ -21,9 +21,10 @@ const Login: React.FC = () => {
     try {
       await login({ username, password });
       navigate('/');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro no login:', err);
-      if (err.response?.status === 401) {
+      const error = err as { response?: { status?: number } };
+      if (error.response?.status === 401) {
         setError('Usuário ou senha incorretos');
       } else {
         setError('Erro ao fazer login. Tente novamente.');
