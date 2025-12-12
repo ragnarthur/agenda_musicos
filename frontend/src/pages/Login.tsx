@@ -1,12 +1,13 @@
 // pages/Login.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Music, LogIn } from 'lucide-react';
+import { Music, LogIn, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -79,15 +80,25 @@ const Login: React.FC = () => {
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Senha
               </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input-field"
-                placeholder="Digite sua senha"
-                required
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="input-field pr-12"
+                  placeholder="Digite sua senha"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
             </div>
 
             <button
@@ -108,6 +119,9 @@ const Login: React.FC = () => {
               )}
             </button>
           </form>
+          <div className="mt-6 text-center text-xs text-gray-500">
+            Powered by <span className="font-semibold text-primary-600">DXM Tech</span> — Arthur Araújo
+          </div>
         </div>
       </div>
     </div>
