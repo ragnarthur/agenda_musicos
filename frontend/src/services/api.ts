@@ -1,56 +1,47 @@
 // services/api.ts
-import axios from 'axios';
-import type { AuthTokens, LoginCredentials, Musician, Event, EventCreate, Availability, AvailabilityResponse, LeaderAvailability, LeaderAvailabilityCreate } from '../types';
+import axios, { AxiosError } from 'axios';
+import type { LoginCredentials, Musician, Event, EventCreate, Availability, AvailabilityResponse, LeaderAvailability, LeaderAvailabilityCreate } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
-// Criar instância do axios
+// Instância global com cookies seguros
 export const api = axios.create({
   baseURL: API_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
+    Accept: 'application/json',
   },
 });
 
-// Interceptor para adicionar token nas requisições
-api.interceptors.request.use(
-  (config) => {
-    const tokensStr = localStorage.getItem('tokens');
-    if (tokensStr) {
-      const tokens: AuthTokens = JSON.parse(tokensStr);
-      config.headers.Authorization = `Bearer ${tokens.access}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+let refreshingPromise: Promise<void> | null = null;
 
-// Interceptor para refresh token
+const refreshAuthToken = async (): Promise<void> => {
+  if (!refreshingPromise) {
+    refreshingPromise = axios
+      .post(`${API_URL}/token/refresh/`, {}, { withCredentials: true })
+      .then(() => {
+        refreshingPromise = null;
+      })
+      .catch((error) => {
+        refreshingPromise = null;
+        throw error;
+      });
+  }
+  return refreshingPromise;
+};
+
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+  async (error: AxiosError) => {
+    const originalRequest = error.config as typeof error.config & { _retry?: boolean };
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       originalRequest._retry = true;
-
       try {
-        const tokensStr = localStorage.getItem('tokens');
-        if (tokensStr) {
-          const tokens: AuthTokens = JSON.parse(tokensStr);
-          const response = await axios.post(`${API_URL}/token/refresh/`, {
-            refresh: tokens.refresh,
-          });
-
-          const newTokens: AuthTokens = response.data;
-          localStorage.setItem('tokens', JSON.stringify(newTokens));
-
-          originalRequest.headers.Authorization = `Bearer ${newTokens.access}`;
-          return api(originalRequest);
-        }
+        await refreshAuthToken();
+        return api(originalRequest);
       } catch (refreshError) {
-        localStorage.removeItem('tokens');
-        localStorage.removeItem('user');
         window.location.href = '/login';
         return Promise.reject(refreshError);
       }
@@ -62,16 +53,12 @@ api.interceptors.response.use(
 
 // Auth Service
 export const authService = {
-  login: async (credentials: LoginCredentials): Promise<AuthTokens> => {
-    const response = await axios.post(`${API_URL}/token/`, credentials);
-    return response.data;
+  login: async (credentials: LoginCredentials): Promise<void> => {
+    await api.post('/token/', credentials);
   },
 
-  refreshToken: async (refreshToken: string): Promise<AuthTokens> => {
-    const response = await axios.post(`${API_URL}/token/refresh/`, {
-      refresh: refreshToken,
-    });
-    return response.data;
+  logout: async (): Promise<void> => {
+    await api.post('/token/logout/');
   },
 };
 

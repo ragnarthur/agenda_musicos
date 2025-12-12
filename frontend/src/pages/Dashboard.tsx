@@ -131,7 +131,7 @@ const Dashboard: React.FC = () => {
         >
           <div className="hero-animated" />
           <div className="spotlight pointer-events-none absolute inset-0 -z-10" />
-          <div className="flex flex-col md:flex-row md:items-stretch md:justify-between gap-4">
+          <div className="relative flex flex-col md:flex-row md:items-stretch md:justify-between gap-4">
             <div>
               <p className="text-sm font-semibold text-primary-700">Agenda de Shows</p>
               <h1 className="mt-1 text-3xl font-bold text-gray-900">
@@ -223,11 +223,12 @@ const Dashboard: React.FC = () => {
         {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <motion.div
-            className="card-contrast"
+            className="relative overflow-hidden card-contrast"
             whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.01 }}
             transition={{ type: 'spring', stiffness: 200, damping: 16 }}
           >
-            <div className="flex items-center justify-between">
+            <div className="hero-animated opacity-60" />
+            <div className="relative flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Eventos pendentes</p>
                 <p className="text-3xl font-bold text-primary-600">{pendingEvents.length}</p>
@@ -236,17 +237,18 @@ const Dashboard: React.FC = () => {
                 <Clock className="h-8 w-8 text-primary-600" />
               </div>
             </div>
-            <Link to="/aprovacoes" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary-700">
+            <Link to="/aprovacoes" className="relative mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary-700">
               Ver aprovações <ChevronRight className="h-4 w-4" />
             </Link>
           </motion.div>
 
           <motion.div
-            className="card-contrast"
+            className="relative overflow-hidden card-contrast"
             whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.01 }}
             transition={{ type: 'spring', stiffness: 200, damping: 16 }}
           >
-            <div className="flex items-center justify-between">
+            <div className="hero-animated opacity-60" />
+            <div className="relative flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Próximos eventos</p>
                 <p className="text-3xl font-bold text-green-600">{agendaCount}</p>
@@ -255,18 +257,19 @@ const Dashboard: React.FC = () => {
                 <Calendar className="h-8 w-8 text-green-600" />
               </div>
             </div>
-            <Link to="/eventos" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-green-700">
+            <Link to="/eventos" className="relative mt-3 inline-flex items-center gap-1 text-sm font-semibold text-green-700">
               Ver agenda <ChevronRight className="h-4 w-4" />
             </Link>
           </motion.div>
 
           {isLeader ? (
             <motion.div
-              className="card-contrast"
+              className="relative overflow-hidden card-contrast"
               whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.01 }}
               transition={{ type: 'spring', stiffness: 200, damping: 16 }}
             >
-              <div className="flex items-center justify-between">
+              <div className="hero-animated opacity-60" />
+              <div className="relative flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Agenda do baterista</p>
                   <p className="text-lg font-semibold text-amber-700">Modo ativo</p>
@@ -277,18 +280,19 @@ const Dashboard: React.FC = () => {
               </div>
               <Link
                 to="/disponibilidades"
-                className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-amber-700"
+                className="relative mt-3 inline-flex items-center gap-1 text-sm font-semibold text-amber-700"
               >
                 Gerenciar agenda <ChevronRight className="h-4 w-4" />
               </Link>
             </motion.div>
           ) : (
             <motion.div
-              className="card-contrast"
+              className="relative overflow-hidden card-contrast"
               whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.01 }}
               transition={{ type: 'spring', stiffness: 200, damping: 16 }}
             >
-              <div className="flex items-center justify-between">
+              <div className="hero-animated opacity-60" />
+              <div className="relative flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Equipe</p>
                   <p className="text-lg font-semibold text-blue-700">Acesso rápido</p>
@@ -299,7 +303,7 @@ const Dashboard: React.FC = () => {
               </div>
               <Link
                 to="/eventos/agenda"
-                className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-blue-700"
+                className="relative mt-3 inline-flex items-center gap-1 text-sm font-semibold text-blue-700"
               >
                 Ver grade por músico <ChevronRight className="h-4 w-4" />
               </Link>
@@ -308,8 +312,9 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Linha do tempo rápida */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-3">
+        <div className="card relative overflow-hidden">
+          <div className="hero-animated opacity-60" />
+          <div className="relative flex items-center justify-between mb-3">
             <div>
               <p className="text-xs uppercase tracking-wide text-primary-600">Próximos eventos</p>
               <h2 className="text-lg font-bold text-gray-900">Agenda em ordem cronológica</h2>
@@ -321,14 +326,15 @@ const Dashboard: React.FC = () => {
           {events.length === 0 ? (
             <p className="text-sm text-gray-500">Nenhum evento futuro.</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="relative grid grid-cols-1 md:grid-cols-2 gap-3">
               {events.map((event) => (
                 <Link
                   key={event.id}
                   to={`/eventos/${event.id}`}
-                  className="rounded-xl border border-white/70 bg-white/90 backdrop-blur p-4 shadow-lg hover:shadow-xl transition-all"
+                  className="relative overflow-hidden rounded-xl border border-white/70 bg-white/90 backdrop-blur p-4 shadow-lg hover:shadow-xl transition-all"
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="hero-animated opacity-50" />
+                  <div className="relative flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className={`status-chip ${event.status || 'default'}`}>{getStatusLabel(event)}</span>
@@ -364,8 +370,9 @@ const Dashboard: React.FC = () => {
 
         {/* Eventos Aguardando Resposta */}
         {pendingEvents.length > 0 && (
-          <div className="card">
-            <div className="flex items-center justify-between mb-4">
+          <div className="card relative overflow-hidden">
+            <div className="hero-animated opacity-50" />
+            <div className="relative flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">
                 Aguardando sua Resposta
               </h2>
@@ -376,9 +383,10 @@ const Dashboard: React.FC = () => {
                 <Link
                   key={event.id}
                   to={`/eventos/${event.id}`}
-                  className="block p-4 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors"
+                  className="relative block p-4 bg-yellow-50/80 rounded-lg hover:bg-yellow-100 transition-colors overflow-hidden"
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="hero-animated opacity-40" />
+                  <div className="relative flex items-start justify-between">
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900">{event.title}</h3>
                       <p className="text-sm text-gray-600 mt-1">{event.location}</p>
