@@ -75,13 +75,22 @@ const belongsTo = (event: Event, target: 'sara' | 'arthur' | 'roberto'): boolean
   return false;
 };
 
+const safeParse = (value?: string | null): Date | null => {
+  if (!value) return null;
+  try {
+    return parseISO(value);
+  } catch (e) {
+    return null;
+  }
+};
+
 const formatTimeRange = (event: Event) => {
   const startLabel = event.start_time ? event.start_time.slice(0, 5) : '--:--';
   const endLabel = event.end_time ? event.end_time.slice(0, 5) : '--:--';
 
   try {
-    const startDt = event.start_datetime ? parseISO(event.start_datetime) : null;
-    const endDt = event.end_datetime ? parseISO(event.end_datetime) : null;
+    const startDt = safeParse(event.start_datetime);
+    const endDt = safeParse(event.end_datetime);
     if (startDt && endDt) {
       const crossesDay = endDt.getDate() !== startDt.getDate();
       return crossesDay ? `${startLabel} - ${endLabel} (+1d)` : `${startLabel} - ${endLabel}`;
@@ -94,11 +103,11 @@ const formatTimeRange = (event: Event) => {
 };
 
 const getStartTimestamp = (event: Event): number => {
-  try {
-    if (event.start_datetime) return parseISO(event.start_datetime).getTime();
-    if (event.event_date && event.start_time) return parseISO(`${event.event_date}T${event.start_time}`).getTime();
-  } catch (e) {
-    return 0;
+  const dt = safeParse(event.start_datetime);
+  if (dt) return dt.getTime();
+  if (event.event_date && event.start_time) {
+    const fallback = safeParse(`${event.event_date}T${event.start_time}`);
+    if (fallback) return fallback.getTime();
   }
   return 0;
 };
@@ -151,7 +160,9 @@ const EventBoard: React.FC = () => {
       .sort(([a], [b]) => (a < b ? -1 : 1))
       .map(([dateKey, list]) => ({
         dateKey,
-        label: format(parseISO(dateKey), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR }),
+        label: safeParse(dateKey)
+          ? format(parseISO(dateKey), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+          : dateKey,
         events: list.sort((a, b) => getStartTimestamp(a) - getStartTimestamp(b)),
       }));
   }, [events]);
