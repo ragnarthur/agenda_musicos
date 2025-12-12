@@ -1,5 +1,5 @@
 // pages/EventForm.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Calendar, MapPin, Clock, Phone, FileText, Save, X, CheckCircle, Info } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
@@ -29,9 +29,18 @@ const EventForm: React.FC = () => {
   });
 
   // Carregar disponibilidades do líder ao montar o componente
+  const loadLeaderAvailabilities = useCallback(async () => {
+    try {
+      const data = await leaderAvailabilityService.getAll({ upcoming: true });
+      setLeaderAvailabilities(data.slice(0, 10)); // Mostrar apenas as próximas 10
+    } catch (error) {
+      console.error('Erro ao carregar disponibilidades:', error);
+    }
+  }, []);
+
   useEffect(() => {
     loadLeaderAvailabilities();
-  }, []);
+  }, [loadLeaderAvailabilities]);
 
   // Verificar se a data escolhida coincide com uma disponibilidade do líder
   useEffect(() => {
@@ -44,15 +53,6 @@ const EventForm: React.FC = () => {
       setMatchingAvailability(null);
     }
   }, [formData.event_date, leaderAvailabilities]);
-
-  const loadLeaderAvailabilities = async () => {
-    try {
-      const data = await leaderAvailabilityService.getAll({ upcoming: true });
-      setLeaderAvailabilities(data.slice(0, 10)); // Mostrar apenas as próximas 10
-    } catch (error) {
-      console.error('Erro ao carregar disponibilidades:', error);
-    }
-  };
 
   // Função para formatar telefone brasileiro
   const formatPhone = (value: string): string => {
@@ -121,9 +121,9 @@ const EventForm: React.FC = () => {
 
       const event = await eventService.create(formData);
       navigate(`/eventos/${event.id}`);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Erro ao criar evento:', err);
-      const error = err as { response?: { data?: any } };
+      const error = err as { response?: { data?: unknown } };
       if (error.response?.data) {
         const data = error.response.data;
         let errorMessage = 'Erro ao criar evento. Tente novamente.';

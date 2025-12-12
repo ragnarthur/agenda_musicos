@@ -79,7 +79,7 @@ const safeParse = (value?: string | null): Date | null => {
   if (!value) return null;
   try {
     return parseISO(value);
-  } catch (e) {
+  } catch {
     return null;
   }
 };
@@ -95,7 +95,7 @@ const formatTimeRange = (event: Event) => {
       const crossesDay = endDt.getDate() !== startDt.getDate();
       return crossesDay ? `${startLabel} - ${endLabel} (+1d)` : `${startLabel} - ${endLabel}`;
     }
-  } catch (e) {
+  } catch {
     // ignore parse errors
   }
 

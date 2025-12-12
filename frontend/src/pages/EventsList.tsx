@@ -1,5 +1,5 @@
 // pages/EventsList.tsx
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Calendar as CalendarIcon, Search, X, Users, Clock } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
@@ -82,20 +82,7 @@ const EventsList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('upcoming');
 
-  useEffect(() => {
-    loadEvents();
-  }, [filter, timeFilter]);
-
-  // Debounce para busca
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      loadEvents();
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     try {
       setLoading(true);
       const params: Record<string, string | boolean> = {};
@@ -121,7 +108,20 @@ const EventsList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter, searchTerm, timeFilter]);
+
+  useEffect(() => {
+    loadEvents();
+  }, [filter, timeFilter, loadEvents]);
+
+  // Debounce para busca
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadEvents();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, loadEvents]);
 
   const groups = useMemo(() => {
     const byDate = new Map<string, Event[]>();
@@ -345,16 +345,3 @@ const EventsList: React.FC = () => {
 };
 
 export default EventsList;
-const getStartDateTime = (event: Event): number => {
-  try {
-    if (event.start_datetime) {
-      return parseISO(event.start_datetime).getTime();
-    }
-    if (event.event_date && event.start_time) {
-      return parseISO(`${event.event_date}T${event.start_time}`).getTime();
-    }
-  } catch (e) {
-    // ignore parse errors
-  }
-  return 0;
-};

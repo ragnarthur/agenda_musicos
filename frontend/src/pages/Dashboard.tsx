@@ -60,17 +60,13 @@ const Dashboard: React.FC = () => {
       if (event.event_date && event.start_time) {
         return parseISO(`${event.event_date}T${event.start_time}`).getTime();
       }
-    } catch (e) {
+    } catch {
       return 0;
     }
     return 0;
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = React.useCallback(async () => {
     try {
       setLoading(true);
       const [allEvents, pending] = await Promise.all([
@@ -86,7 +82,11 @@ const Dashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const agendaCount = events.length;
 
