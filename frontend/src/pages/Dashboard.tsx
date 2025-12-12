@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Clock, Crown, Plus, Users, ChevronRight, Star, ListChecks, Zap } from 'lucide-react';
+import { motion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,6 +10,7 @@ import { eventService } from '../services/api';
 import type { Availability, Event } from '../types';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import TiltCard from '../components/common/TiltCard';
 
 const instrumentLabels: Record<string, string> = {
   vocal: 'Voz',
@@ -120,7 +122,12 @@ const Dashboard: React.FC = () => {
     <Layout>
       <div className="space-y-8">
         {/* Hero */}
-        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-r from-indigo-50 via-white to-blue-50 p-6 shadow-sm">
+        <motion.div
+          className="overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-r from-indigo-50 via-white to-blue-50 p-6 shadow-sm"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 120, damping: 18 }}
+        >
           <div className="flex flex-col md:flex-row md:items-stretch md:justify-between gap-4">
             <div>
               <p className="text-sm font-semibold text-primary-700">Agenda de Shows</p>
@@ -167,7 +174,7 @@ const Dashboard: React.FC = () => {
             </div>
 
             {nextEvent && (
-              <div className="w-full md:w-80 rounded-xl border border-white/60 bg-white/80 backdrop-blur px-4 py-3 shadow-inner flex flex-col justify-between">
+              <TiltCard className="w-full md:w-80 rounded-xl border border-white/60 bg-white/80 backdrop-blur px-4 py-3 shadow-inner flex flex-col justify-between">
                 <div className="flex items-center gap-2 text-xs font-semibold text-primary-700 uppercase">
                   <Zap className="h-4 w-4" />
                   Evento mais próximo
@@ -201,10 +208,10 @@ const Dashboard: React.FC = () => {
                 >
                   Ver detalhes <ChevronRight className="h-4 w-4" />
                 </Link>
-              </div>
+              </TiltCard>
             )}
           </div>
-        </div>
+        </motion.div>
 
         {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
