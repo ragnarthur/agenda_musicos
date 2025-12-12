@@ -66,11 +66,14 @@ const Navbar: React.FC = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 gap-3 flex-wrap">
           {/* Logo e Nome */}
-          <Link to="/" className="flex items-center space-x-2 hover:scale-[1.01] transition-transform">
+          <Link
+            to="/"
+            className="flex items-center space-x-2 hover:scale-[1.01] transition-transform min-w-fit"
+          >
             <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center shadow-inner">
               <Music className="h-6 w-6 text-primary-600" />
             </div>
-            <span className="text-xl font-bold text-gray-900">Agenda Músicos</span>
+            <span className="text-lg sm:text-xl font-bold text-gray-900">Agenda Músicos</span>
           </Link>
 
           {/* Links de Navegação */}
@@ -121,18 +124,24 @@ const Navbar: React.FC = () => {
           </div>
 
           {/* Usuário e Logout */}
-          <div className="flex items-center space-x-4">
-            <div className="text-right">
-              <p className="text-sm font-medium text-gray-900">{user?.full_name}</p>
-              <p className="text-xs text-gray-500">
+          <div className="flex items-center space-x-4 min-w-fit">
+            <div className="hidden md:block text-right">
+              <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">{user?.full_name}</p>
+              <p className="text-xs text-gray-500 truncate max-w-[220px]">
                 {formatInstrument()}
                 {isLeader && <span className="ml-1 text-yellow-600">🥁 Agenda do Baterista</span>}
               </p>
             </div>
 
+            <div className="md:hidden flex items-center gap-2 text-sm text-gray-700">
+              <span className="font-semibold truncate max-w-[120px]">
+                {user?.user?.first_name || user?.full_name || user?.user?.username}
+              </span>
+            </div>
+
             <button
               onClick={handleLogout}
-              className="flex items-center space-x-1 text-gray-700 hover:text-red-600 transition-colors"
+              className="flex items-center space-x-1 text-gray-700 hover:text-red-600 transition-colors md:px-0 px-2"
               title="Sair"
             >
               <LogOut className="h-5 w-5" />
