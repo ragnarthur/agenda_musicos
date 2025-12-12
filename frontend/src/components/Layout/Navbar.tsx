@@ -63,8 +63,8 @@ const Navbar: React.FC = () => {
 
   return (
     <nav className="bg-white/80 backdrop-blur-xl shadow-md sticky top-0 z-40 border-b border-white/60">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16 gap-3 flex-wrap">
+      <div className="container mx-auto px-3 sm:px-4">
+        <div className="flex items-center justify-between min-h-[64px] py-2 gap-3 flex-wrap">
           {/* Logo e Nome */}
           <Link
             to="/"
@@ -155,13 +155,23 @@ const Navbar: React.FC = () => {
         className="md:hidden fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white/90 backdrop-blur-lg shadow-[0_-6px_20px_rgba(0,0,0,0.12)] z-40"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 10px)' }}
       >
-        <div className="flex w-full justify-between gap-1 px-1 py-2">
+        <div
+          className="flex w-full justify-start gap-1 px-2 py-2 overflow-x-auto no-scrollbar"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
+          <Link
+            to="/"
+            className="w-16 flex-shrink-0 flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 relative rounded-lg transition-colors"
+          >
+            <Music className="h-5 w-5" />
+            <span className="text-[10px] mt-1 leading-none">Início</span>
+          </Link>
           <Link
             to="/eventos"
-            className="flex-1 min-w-[64px] flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 relative rounded-lg transition-colors"
+            className="w-16 flex-shrink-0 flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 relative rounded-lg transition-colors"
           >
-            <Calendar className="h-6 w-6" />
-            <span className="text-[11px] mt-1 leading-none">Eventos</span>
+            <Calendar className="h-5 w-5" />
+            <span className="text-[10px] mt-1 leading-none">Eventos</span>
             {pendingMyResponse > 0 && (
               <span className="absolute top-0 right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                 {pendingMyResponse}
@@ -171,35 +181,35 @@ const Navbar: React.FC = () => {
 
           <Link
             to="/eventos/agenda"
-            className="flex-1 min-w-[64px] flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 rounded-lg transition-colors"
+            className="w-16 flex-shrink-0 flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 rounded-lg transition-colors"
           >
-            <Clock className="h-6 w-6 rotate-45" />
-            <span className="text-[11px] mt-1 leading-none">Grade</span>
+            <Clock className="h-5 w-5 rotate-45" />
+            <span className="text-[10px] mt-1 leading-none">Grade</span>
           </Link>
 
           <Link
             to="/musicos"
-            className="flex-1 min-w-[64px] flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 rounded-lg transition-colors"
+            className="w-16 flex-shrink-0 flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 rounded-lg transition-colors"
           >
-            <Users className="h-6 w-6" />
-            <span className="text-[11px] mt-1 leading-none">Músicos</span>
+            <Users className="h-5 w-5" />
+            <span className="text-[10px] mt-1 leading-none">Músicos</span>
           </Link>
 
           <Link
             to="/disponibilidades"
-            className="flex-1 min-w-[64px] flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 rounded-lg transition-colors"
+            className="w-16 flex-shrink-0 flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 rounded-lg transition-colors"
           >
-            <Clock className="h-6 w-6" />
-            <span className="text-[11px] mt-1 leading-none">{isLeader ? 'Horários' : 'Datas'}</span>
+            <Clock className="h-5 w-5" />
+            <span className="text-[10px] mt-1 leading-none">{isLeader ? 'Horários' : 'Datas'}</span>
           </Link>
 
           {isLeader && (
             <Link
               to="/aprovacoes"
-              className="flex-1 min-w-[64px] flex flex-col items-center justify-center text-yellow-700 hover:text-yellow-800 py-2 relative rounded-lg transition-colors"
+              className="w-16 flex-shrink-0 flex flex-col items-center justify-center text-yellow-700 hover:text-yellow-800 py-2 relative rounded-lg transition-colors"
             >
-              <Crown className="h-6 w-6" />
-              <span className="text-[11px] mt-1 leading-none">Aprovações</span>
+              <Crown className="h-5 w-5" />
+              <span className="text-[10px] mt-1 leading-none">Aprovações</span>
               {pendingApproval > 0 && (
                 <span className="absolute top-0 right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                   {pendingApproval}
