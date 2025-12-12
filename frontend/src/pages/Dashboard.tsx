@@ -124,11 +124,12 @@ const Dashboard: React.FC = () => {
       <div className="space-y-8">
         {/* Hero */}
         <motion.div
-          className="overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-r from-indigo-50 via-white to-blue-50 p-6 shadow-sm"
+          className="relative overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-r from-indigo-50 via-white to-cyan-50 p-6 shadow-lg"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 120, damping: 18 }}
         >
+          <div className="spotlight pointer-events-none absolute inset-0 -z-10" />
           <div className="flex flex-col md:flex-row md:items-stretch md:justify-between gap-4">
             <div>
               <p className="text-sm font-semibold text-primary-700">Agenda de Shows</p>
@@ -175,41 +176,45 @@ const Dashboard: React.FC = () => {
             </div>
 
             {nextEvent && (
-              <TiltCard className="w-full md:w-80 rounded-xl border border-white/60 bg-white/80 backdrop-blur px-4 py-3 shadow-inner flex flex-col justify-between">
-                <div className="flex items-center gap-2 text-xs font-semibold text-primary-700 uppercase">
-                  <Zap className="h-4 w-4" />
-                  Evento mais próximo
-                </div>
-                <div className="mt-1">
-                  <h3 className="text-lg font-bold text-gray-900 line-clamp-1">{nextEvent.title}</h3>
-                  <p className="text-sm text-gray-600 line-clamp-1">{nextEvent.location || 'Local a definir'}</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {format(parseISO(nextEvent.event_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })} •{' '}
-                    {nextEvent.start_time.slice(0, 5)} - {nextEvent.end_time.slice(0, 5)}
-                  </p>
-                  <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-gray-700">
-                    <Users className="h-4 w-4 text-gray-500" />
-                    {buildLineup(nextEvent).map((name) => (
-                      <span
-                        key={name}
-                        className="inline-flex items-center gap-1 rounded-full bg-gray-50 border border-gray-200 px-3 py-1 font-medium text-gray-700"
-                      >
-                        {name}
-                      </span>
-                    ))}
+              <div className="w-full md:w-80 rounded-2xl p-[1px] bg-gradient-to-br from-indigo-200 via-white to-cyan-200 shadow-xl">
+                <TiltCard className="rounded-[18px] border border-white/60 bg-white/85 backdrop-blur px-4 py-3 shadow-inner flex flex-col justify-between h-full">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-primary-700 uppercase">
+                    <Zap className="h-4 w-4" />
+                    Evento mais próximo
                   </div>
-                  <div className="mt-3 text-xs text-gray-500">
-                    Status:{' '}
-                    <span className={`badge badge-${nextEvent.status}`}>{getStatusLabel(nextEvent)}</span>
+                  <div className="mt-2 space-y-2">
+                    <div className="pill-date">
+                      <Calendar className="h-4 w-4 text-primary-600" />
+                      {format(parseISO(nextEvent.event_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900 line-clamp-1">{nextEvent.title}</h3>
+                    <p className="text-sm text-gray-600 line-clamp-1">{nextEvent.location || 'Local a definir'}</p>
+                    <p className="text-xs text-gray-500">
+                      {nextEvent.start_time.slice(0, 5)} - {nextEvent.end_time.slice(0, 5)}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-700">
+                      <Users className="h-4 w-4 text-gray-500" />
+                      {buildLineup(nextEvent).map((name) => (
+                        <span
+                          key={name}
+                          className="inline-flex items-center gap-1 rounded-full bg-gray-50 border border-gray-200 px-3 py-1 font-medium text-gray-700"
+                        >
+                          {name}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`status-chip ${nextEvent.status || 'default'}`}>{getStatusLabel(nextEvent)}</span>
+                    </div>
                   </div>
-                </div>
-                <Link
-                  to={`/eventos/${nextEvent.id}`}
-                  className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary-700 hover:text-primary-800"
-                >
-                  Ver detalhes <ChevronRight className="h-4 w-4" />
-                </Link>
-              </TiltCard>
+                  <Link
+                    to={`/eventos/${nextEvent.id}`}
+                    className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary-700 hover:text-primary-800"
+                  >
+                    Ver detalhes <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </TiltCard>
+              </div>
             )}
           </div>
         </motion.div>
@@ -217,7 +222,7 @@ const Dashboard: React.FC = () => {
         {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <motion.div
-            className="rounded-xl border border-primary-100 bg-white p-5 shadow-sm"
+            className="card-contrast"
             whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.01 }}
             transition={{ type: 'spring', stiffness: 200, damping: 16 }}
           >
@@ -236,7 +241,7 @@ const Dashboard: React.FC = () => {
           </motion.div>
 
           <motion.div
-            className="rounded-xl border border-green-100 bg-white p-5 shadow-sm"
+            className="card-contrast"
             whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.01 }}
             transition={{ type: 'spring', stiffness: 200, damping: 16 }}
           >
@@ -256,7 +261,7 @@ const Dashboard: React.FC = () => {
 
           {isLeader ? (
             <motion.div
-              className="rounded-xl border border-amber-100 bg-white p-5 shadow-sm"
+              className="card-contrast"
               whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.01 }}
               transition={{ type: 'spring', stiffness: 200, damping: 16 }}
             >
@@ -278,7 +283,7 @@ const Dashboard: React.FC = () => {
             </motion.div>
           ) : (
             <motion.div
-              className="rounded-xl border border-blue-100 bg-white p-5 shadow-sm"
+              className="card-contrast"
               whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.01 }}
               transition={{ type: 'spring', stiffness: 200, damping: 16 }}
             >
@@ -320,15 +325,20 @@ const Dashboard: React.FC = () => {
                 <Link
                   key={event.id}
                   to={`/eventos/${event.id}`}
-                  className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                  className="rounded-xl border border-white/70 bg-white/90 backdrop-blur p-4 shadow-lg hover:shadow-xl transition-all"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <p className="text-xs font-semibold text-primary-600 uppercase">{getStatusLabel(event)}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`status-chip ${event.status || 'default'}`}>{getStatusLabel(event)}</span>
+                        <span className="pill-date">
+                          <Clock className="h-4 w-4 text-primary-600" />
+                          {format(parseISO(event.event_date), "dd 'de' MMMM", { locale: ptBR })}
+                        </span>
+                      </div>
                       <h3 className="mt-1 text-base font-semibold text-gray-900">{event.title}</h3>
                       <p className="text-sm text-gray-600">{event.location}</p>
                       <p className="text-xs text-gray-500 mt-1">
-                        {format(parseISO(event.event_date), "dd 'de' MMMM", { locale: ptBR })} •{' '}
                         {event.start_time.slice(0, 5)} - {event.end_time.slice(0, 5)}
                       </p>
                       <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-gray-700">
