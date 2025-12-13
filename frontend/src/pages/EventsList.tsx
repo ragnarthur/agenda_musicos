@@ -1,7 +1,16 @@
 // pages/EventsList.tsx
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Calendar as CalendarIcon, Search, X, Users, Clock } from 'lucide-react';
+import {
+  Plus,
+  Calendar as CalendarIcon,
+  Search,
+  X,
+  Users,
+  Clock,
+  Sparkles,
+  Filter,
+} from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { eventService } from '../services/api';
@@ -175,6 +184,18 @@ const EventsList: React.FC = () => {
       });
   }, [events]);
 
+  const statistics = useMemo(() => {
+    const now = Date.now();
+    const upcoming = events.filter((ev) => getStartDateTime(ev) >= now);
+    const confirmed = events.filter((ev) => ev.status === 'confirmed' || ev.status === 'approved');
+    const solos = events.filter((ev) => ev.is_solo);
+    return {
+      upcoming: upcoming.length,
+      confirmed: confirmed.length,
+      solos: solos.length,
+    };
+  }, [events]);
+
   const renderEventCard = (event: Event) => {
     const lineup = extractLineup(event);
     const startLabel = event.start_time ? event.start_time.slice(0, 5) : '--:--';
@@ -224,77 +245,104 @@ const EventsList: React.FC = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900">Eventos</h1>
-          <Link to="/eventos/novo" className="btn-primary flex items-center space-x-2">
-            <Plus className="h-5 w-5" />
-            <span>Novo Evento</span>
-          </Link>
-        </div>
-
-        {/* Busca */}
-        <div className="card-contrast">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-field pl-10 pr-10"
-              placeholder="Buscar eventos por título ou local..."
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            )}
+        <section className="overflow-hidden rounded-3xl border border-white/40 bg-gradient-to-r from-primary-500/15 via-white to-cyan-400/20 p-6 shadow-2xl">
+          <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/60 px-3 py-1 text-xs font-semibold text-primary-700 shadow-sm">
+                <Sparkles className="h-4 w-4" />
+                Dashboard de Eventos
+              </div>
+              <h1 className="mt-3 text-3xl font-bold text-gray-900">Agenda completa</h1>
+              <p className="mt-1 text-sm text-gray-700">
+                Acompanhe todos os shows confirmados, propostas em andamento e datas solo em um só lugar.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <div className="rounded-2xl border border-white/70 bg-white/90 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur">
+                  <p className="text-xs uppercase tracking-wide text-gray-500">Próximos 30 dias</p>
+                  <p className="text-2xl text-primary-700">{statistics.upcoming}</p>
+                </div>
+                <div className="rounded-2xl border border-white/70 bg-white/90 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur">
+                  <p className="text-xs uppercase tracking-wide text-gray-500">Aprovados</p>
+                  <p className="text-2xl text-emerald-600">{statistics.confirmed}</p>
+                </div>
+                <div className="rounded-2xl border border-white/70 bg-white/90 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur">
+                  <p className="text-xs uppercase tracking-wide text-gray-500">Shows Solo</p>
+                  <p className="text-2xl text-indigo-600">{statistics.solos}</p>
+                </div>
+              </div>
+            </div>
+            <Link to="/eventos/novo" className="btn-primary flex items-center justify-center gap-2 self-start">
+              <Plus className="h-5 w-5" />
+              <span>Novo Evento</span>
+            </Link>
           </div>
-        </div>
+        </section>
 
-        {/* Filtro de Tempo */}
-        <div className="flex space-x-2 overflow-x-auto pb-2">
-          {([
-            { value: 'upcoming', label: 'Próximos' },
-            { value: 'all', label: 'Todos' },
-            { value: 'past', label: 'Histórico' },
-          ] as { value: TimeFilter; label: string }[]).map((item) => (
-            <button
-              key={item.value}
-              onClick={() => setTimeFilter(item.value)}
-              className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
-                timeFilter === item.value
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
+        <div className="rounded-3xl border border-white/60 bg-white/90 p-5 shadow-xl backdrop-blur">
+          <div className="grid gap-4 md:grid-cols-[2fr,1fr]">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50/50 pl-12 pr-12 py-3 text-sm text-gray-800 shadow-inner focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-200"
+                placeholder="Busque por título, local ou contato..."
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3.5 top-3 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-2 rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-600">
+              <Filter className="h-4 w-4 text-primary-500" />
+              Ajuste filtros e visualize apenas o que importa
+            </div>
+          </div>
 
-        {/* Filtros de Status */}
-        <div className="flex space-x-2 overflow-x-auto pb-2">
-          {[
-            { value: 'all', label: 'Todos' },
-            { value: 'proposed', label: 'Propostas' },
-            { value: 'approved', label: 'Aprovados' },
-            { value: 'confirmed', label: 'Confirmados' },
-          ].map((item) => (
-            <button
-              key={item.value}
-              onClick={() => setFilter(item.value)}
-              className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
-                filter === item.value
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
+          <div className="mt-5 flex flex-wrap gap-2">
+            {([
+              { value: 'upcoming', label: 'Próximos' },
+              { value: 'all', label: 'Todos' },
+              { value: 'past', label: 'Histórico' },
+            ] as { value: TimeFilter; label: string }[]).map((item) => (
+              <button
+                key={item.value}
+                onClick={() => setTimeFilter(item.value)}
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+                  timeFilter === item.value
+                    ? 'bg-primary-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {[
+              { value: 'all', label: 'Todos' },
+              { value: 'proposed', label: 'Propostas' },
+              { value: 'approved', label: 'Aprovados' },
+              { value: 'confirmed', label: 'Confirmados' },
+            ].map((item) => (
+              <button
+                key={item.value}
+                onClick={() => setFilter(item.value)}
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+                  filter === item.value
+                    ? 'bg-emerald-600 text-white shadow-md'
+                    : 'bg-white text-gray-700 border border-gray-200 hover:border-primary-200'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {loading ? (
