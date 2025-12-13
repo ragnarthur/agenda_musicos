@@ -39,7 +39,7 @@ const Approvals: React.FC = () => {
           </div>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Aprovações Pendentes</h1>
-            <p className="text-gray-600">Eventos aguardando sua aprovação como líder</p>
+            <p className="text-gray-600">Eventos aguardando sua decisão</p>
           </div>
         </div>
 
@@ -69,7 +69,9 @@ const Approvals: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <span className="badge badge-proposed">{event.status_display}</span>
+                  <span className="badge badge-proposed">
+                    {event.approval_label || event.status_display}
+                  </span>
                 </div>
 
                 {/* Informações do Evento */}
@@ -154,10 +156,9 @@ const Approvals: React.FC = () => {
             <div className="flex items-start space-x-3">
               <Crown className="h-5 w-5 text-yellow-600 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-yellow-800">Modo Baterista (agenda) ativo</p>
+                <p className="text-sm font-medium text-yellow-800">Aprovação colaborativa</p>
                 <p className="text-sm text-yellow-700 mt-1">
-                  Você pode aprovar ou rejeitar esses eventos. Clique em "Ver Detalhes" para
-                  analisar cada proposta e tomar uma decisão.
+                  Qualquer músico pode aprovar ou rejeitar eventos. Clique em "Ver Detalhes" para analisar cada proposta e decidir.
                 </p>
               </div>
             </div>

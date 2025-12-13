@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { eventService } from '../../services/api';
 
 const Navbar: React.FC = () => {
-  const { user, logout, isLeader } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [pendingMyResponse, setPendingMyResponse] = useState(0);
   const [pendingApproval, setPendingApproval] = useState(0);
@@ -37,15 +37,13 @@ const Navbar: React.FC = () => {
       const myPending = await eventService.getPendingMyResponse();
       setPendingMyResponse(myPending.length);
 
-      // Eventos pendentes de aprovação (apenas para líderes)
-      if (isLeader) {
-        const approvals = await eventService.getAll({ pending_approval: true });
-        setPendingApproval(approvals.length);
-      }
+      // Eventos pendentes de aprovação
+      const approvals = await eventService.getAll({ pending_approval: true });
+      setPendingApproval(approvals.length);
     } catch (error) {
       console.error('Erro ao carregar notificações:', error);
     }
-  }, [isLeader]);
+  }, []);
 
   useEffect(() => {
     const timeout = setTimeout(() => void loadNotifications(), 0);
@@ -104,23 +102,21 @@ const Navbar: React.FC = () => {
               className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 transition-colors"
             >
               <Clock className="h-5 w-5" />
-              <span>{isLeader ? 'Minhas Disponibilidades' : 'Datas Disponíveis'}</span>
+              <span>Datas Disponíveis</span>
             </Link>
 
-            {isLeader && (
-              <Link
-                to="/aprovacoes"
-                className="flex items-center space-x-1 text-yellow-600 hover:text-yellow-700 transition-colors relative"
-              >
-                <Crown className="h-5 w-5" />
-                <span>Aprovações</span>
-                {pendingApproval > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                    {pendingApproval}
-                  </span>
-                )}
-              </Link>
-            )}
+            <Link
+              to="/aprovacoes"
+              className="flex items-center space-x-1 text-yellow-600 hover:text-yellow-700 transition-colors relative"
+            >
+              <Crown className="h-5 w-5" />
+              <span>Aprovações</span>
+              {pendingApproval > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {pendingApproval}
+                </span>
+              )}
+            </Link>
           </div>
 
           {/* Usuário e Logout */}
@@ -129,7 +125,6 @@ const Navbar: React.FC = () => {
               <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">{user?.full_name}</p>
               <p className="text-xs text-gray-500 truncate max-w-[220px]">
                 {formatInstrument()}
-                {isLeader && <span className="ml-1 text-yellow-600">🥁 Agenda do Baterista</span>}
               </p>
             </div>
 
@@ -200,23 +195,21 @@ const Navbar: React.FC = () => {
             className="w-16 flex-shrink-0 flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 rounded-lg transition-colors"
           >
             <Clock className="h-5 w-5" />
-            <span className="text-[10px] mt-1 leading-none">{isLeader ? 'Horários' : 'Datas'}</span>
+            <span className="text-[10px] mt-1 leading-none">Datas</span>
           </Link>
 
-          {isLeader && (
-            <Link
-              to="/aprovacoes"
-              className="w-16 flex-shrink-0 flex flex-col items-center justify-center text-yellow-700 hover:text-yellow-800 py-2 relative rounded-lg transition-colors"
-            >
-              <Crown className="h-5 w-5" />
-              <span className="text-[10px] mt-1 leading-none">Aprovações</span>
-              {pendingApproval > 0 && (
-                <span className="absolute top-0 right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {pendingApproval}
-                </span>
-              )}
-            </Link>
-          )}
+          <Link
+            to="/aprovacoes"
+            className="w-16 flex-shrink-0 flex flex-col items-center justify-center text-yellow-700 hover:text-yellow-800 py-2 relative rounded-lg transition-colors"
+          >
+            <Crown className="h-5 w-5" />
+            <span className="text-[10px] mt-1 leading-none">Aprovações</span>
+            {pendingApproval > 0 && (
+              <span className="absolute top-0 right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {pendingApproval}
+              </span>
+            )}
+          </Link>
         </div>
       </div>
     </nav>

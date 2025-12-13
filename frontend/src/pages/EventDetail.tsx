@@ -31,7 +31,7 @@ import { ptBR } from 'date-fns/locale';
 const EventDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, isLeader } = useAuth();
+  const { user } = useAuth();
 
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
@@ -154,6 +154,11 @@ const EventDetail: React.FC = () => {
     );
   }
 
+  const approvalLabel =
+    event.status === 'approved'
+      ? event.approval_label || (event.approved_by_name ? `Aprovado por ${event.approved_by_name}` : event.status_display)
+      : event.status_display;
+
   const availabilityCounts = {
     available: event.availabilities?.filter((a) => a.response === 'available').length || 0,
     unavailable: event.availabilities?.filter((a) => a.response === 'unavailable').length || 0,
@@ -180,7 +185,7 @@ const EventDetail: React.FC = () => {
               <p className="mt-2 text-gray-600">{event.description}</p>
             </div>
             <div className="flex items-center space-x-3">
-              <span className={`badge badge-${event.status}`}>{event.status_display}</span>
+              <span className={`badge badge-${event.status}`}>{approvalLabel}</span>
 
               {/* Ações do Criador */}
               {event.created_by === user?.user.id && event.status !== 'cancelled' && (
@@ -373,10 +378,10 @@ const EventDetail: React.FC = () => {
           </div>
         </div>
 
-        {/* Ações do Baterista */}
-        {isLeader && event.status === 'proposed' && (
+        {/* Ações de aprovação */}
+        {event.status === 'proposed' && (
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Ações do Baterista</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Ações de aprovação</h2>
             <div className="flex items-center space-x-4">
               <button
                 onClick={handleApprove}

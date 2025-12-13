@@ -57,11 +57,11 @@ class Event(models.Model):
     Músicos criam propostas que precisam ser aprovadas pelo líder.
     """
     STATUS_CHOICES = [
-        ('proposed', 'Proposta Enviada'),      # Sara/Arthur criam
-        ('approved', 'Aprovada pelo Líder'),    # Roberto aprova
-        ('rejected', 'Rejeitada'),              # Roberto rejeita
-        ('confirmed', 'Confirmada'),            # Todos disponíveis
-        ('cancelled', 'Cancelada'),             # Cancelada depois
+        ('proposed', 'Proposta Enviada'),
+        ('approved', 'Aprovado'),
+        ('rejected', 'Rejeitado'),
+        ('confirmed', 'Confirmado'),
+        ('cancelled', 'Cancelado'),
     ]
     
     title = models.CharField(max_length=200, help_text='Nome do evento/show')

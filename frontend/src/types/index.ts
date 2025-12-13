@@ -57,6 +57,7 @@ export interface Event {
   approved_at?: string;
   rejection_reason?: string;
   availabilities?: Availability[];
+  approval_label?: string;
   logs?: EventLog[];
   availability_summary?: {
     pending: number;

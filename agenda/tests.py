@@ -223,6 +223,26 @@ class EventAPITest(APITestCase):
         
         # Verifica se availabilities foram criadas
         self.assertEqual(event.availabilities.count(), 2)  # Sara e Roberto
+
+    def test_create_event_creates_availability_for_all_musicians(self):
+        """Criação de evento deve incluir todos os músicos ativos"""
+        extra_user = User.objects.create_user(username='joao', password='senha123')
+        extra_musician = Musician.objects.create(user=extra_user, instrument='bass', role='member', is_active=True)
+
+        self.client.force_authenticate(user=self.sara)
+        payload = {
+            'title': 'Show Completo',
+            'location': 'Bar XYZ',
+            'event_date': (date.today() + timedelta(days=5)).isoformat(),
+            'start_time': '20:00:00',
+            'end_time': '23:00:00',
+        }
+        response = self.client.post('/api/events/', payload)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        event = Event.objects.get(id=response.data['id'])
+        self.assertEqual(event.availabilities.count(), 3)
+        self.assertTrue(Availability.objects.filter(event=event, musician=extra_musician, response='pending').exists())
     
     def test_approve_event_as_leader(self):
         """Testa aprovação de evento como líder"""
@@ -248,7 +268,7 @@ class EventAPITest(APITestCase):
         self.assertEqual(event.approved_by, self.roberto)
     
     def test_approve_event_as_member_forbidden(self):
-        """Testa que membros não podem aprovar"""
+        """Membros agora podem aprovar eventos"""
         event = Event.objects.create(
             title='Show',
             location='Local',
@@ -263,7 +283,10 @@ class EventAPITest(APITestCase):
         self.client.force_authenticate(user=self.sara)
         
         response = self.client.post(f'/api/events/{event.id}/approve/')
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        event.refresh_from_db()
+        self.assertEqual(event.status, 'approved')
+        self.assertEqual(event.approved_by, self.sara)
     
     def test_set_availability(self):
         """Testa marcar disponibilidade"""
