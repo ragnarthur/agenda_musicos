@@ -304,7 +304,7 @@ const EventsList: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-2">
+          <div className="mt-5 flex flex-wrap gap-3">
             {([
               { value: 'upcoming', label: 'Próximos' },
               { value: 'all', label: 'Todos' },
@@ -313,17 +313,18 @@ const EventsList: React.FC = () => {
               <button
                 key={item.value}
                 onClick={() => setTimeFilter(item.value)}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+                className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-semibold transition-all ${
                   timeFilter === item.value
-                    ? 'bg-primary-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'border-primary-500 bg-primary-600 text-white shadow-lg shadow-primary-200/60'
+                    : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-white hover:border-primary-200'
                 }`}
               >
-                {item.label}
+                <span className="h-2 w-2 rounded-full bg-current opacity-80" />
+                <span>{item.label}</span>
               </button>
             ))}
           </div>
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-wrap gap-3">
             {[
               { value: 'all', label: 'Todos' },
               { value: 'proposed', label: 'Propostas' },
@@ -333,13 +334,14 @@ const EventsList: React.FC = () => {
               <button
                 key={item.value}
                 onClick={() => setFilter(item.value)}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+                className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-semibold transition-all ${
                   filter === item.value
-                    ? 'bg-emerald-600 text-white shadow-md'
-                    : 'bg-white text-gray-700 border border-gray-200 hover:border-primary-200'
+                    ? 'border-emerald-500 bg-emerald-600 text-white shadow-lg shadow-emerald-200/60'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-emerald-200'
                 }`}
               >
-                {item.label}
+                <span className="h-2 w-2 rounded-full bg-current opacity-80" />
+                <span>{item.label}</span>
               </button>
             ))}
           </div>
