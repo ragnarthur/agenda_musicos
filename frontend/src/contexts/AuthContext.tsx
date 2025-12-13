@@ -16,6 +16,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const currentUser = await musicianService.getMe();
         setUser(currentUser);
       } catch (error) {
+        const status = (error as { response?: { status?: number } })?.response?.status;
+        if (status !== 401) {
+          console.error('Erro ao carregar sessão do usuário:', error);
+        }
         setUser(null);
       } finally {
         setLoading(false);
