@@ -14,10 +14,11 @@ import {
   Sparkles,
   Target,
   ShieldCheck,
+  AlertTriangle,
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import { eventService, leaderAvailabilityService } from '../services/api';
-import type { EventCreate, LeaderAvailability } from '../types';
+import type { Event, EventCreate, LeaderAvailability } from '../types';
 import { format, parseISO } from 'date-fns';
 
 const EventForm: React.FC = () => {
@@ -30,6 +31,17 @@ const EventForm: React.FC = () => {
   const [leaderAvailabilities, setLeaderAvailabilities] = useState<LeaderAvailability[]>([]);
   const [matchingAvailability, setMatchingAvailability] = useState<LeaderAvailability | null>(null);
   const dateInputRef = useRef<HTMLInputElement | null>(null);
+  const [conflictInfo, setConflictInfo] = useState<{
+    loading: boolean;
+    hasConflicts: boolean;
+    conflicts: Event[];
+    bufferMinutes: number;
+  }>({
+    loading: false,
+    hasConflicts: false,
+    conflicts: [],
+    bufferMinutes: 40,
+  });
 
   const [formData, setFormData] = useState<EventCreate>({
     title: '',
@@ -87,6 +99,45 @@ const EventForm: React.FC = () => {
       setMatchingAvailability(null);
     }
   }, [formData.event_date, leaderAvailabilities]);
+
+  // Preview de conflitos sempre que data/horários forem preenchidos
+  useEffect(() => {
+    const { event_date, start_time, end_time } = formData;
+    if (!event_date || !start_time || !end_time) {
+      setConflictInfo((prev) => ({ ...prev, hasConflicts: false, conflicts: [] }));
+      return;
+    }
+
+    let cancelled = false;
+    const timeout = setTimeout(async () => {
+      setConflictInfo((prev) => ({ ...prev, loading: true }));
+      try {
+        const result = await eventService.previewConflicts({
+          event_date,
+          start_time,
+          end_time,
+        });
+        if (!cancelled) {
+          setConflictInfo({
+            loading: false,
+            hasConflicts: result.has_conflicts,
+            conflicts: result.conflicts || [],
+            bufferMinutes: result.buffer_minutes,
+          });
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error('Erro ao checar conflitos:', err);
+          setConflictInfo((prev) => ({ ...prev, loading: false }));
+        }
+      }
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
+  }, [formData.event_date, formData.start_time, formData.end_time]);
 
   // Função para formatar telefone brasileiro
   const formatPhone = (value: string): string => {
@@ -234,6 +285,53 @@ const EventForm: React.FC = () => {
             <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center space-x-2">
               <Info className="h-5 w-5" />
               <span>Data e horários preenchidos automaticamente a partir da disponibilidade do líder.</span>
+            </div>
+          )}
+
+          {/* Preview de conflitos */}
+          {formData.event_date && formData.start_time && formData.end_time && (
+            <div
+              className={`rounded-lg border px-4 py-3 flex items-start space-x-3 ${
+                conflictInfo.loading
+                  ? 'bg-blue-50 border-blue-200 text-blue-700'
+                  : conflictInfo.hasConflicts
+                    ? 'bg-red-50 border-red-200 text-red-700'
+                    : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+              }`}
+            >
+              {conflictInfo.loading ? (
+                <ShieldCheck className="h-5 w-5 mt-0.5" />
+              ) : conflictInfo.hasConflicts ? (
+                <AlertTriangle className="h-5 w-5 mt-0.5" />
+              ) : (
+                <CheckCircle className="h-5 w-5 mt-0.5" />
+              )}
+              <div className="flex-1 space-y-2">
+                <p className="font-semibold">
+                  {conflictInfo.loading
+                    ? 'Checando conflitos...'
+                    : conflictInfo.hasConflicts
+                      ? 'Conflitos encontrados para este horário'
+                      : 'Horário livre (considerando buffer de 40 min)'}
+                </p>
+                {!conflictInfo.loading && conflictInfo.hasConflicts && (
+                  <div className="space-y-1 text-sm">
+                    {conflictInfo.conflicts.slice(0, 3).map((conflict) => (
+                      <div key={conflict.id} className="flex items-center justify-between">
+                        <span className="font-medium">{conflict.title}</span>
+                        <span className="text-xs text-gray-600">
+                          {conflict.event_date} {conflict.start_time.slice(0, 5)}-{conflict.end_time.slice(0, 5)}
+                        </span>
+                      </div>
+                    ))}
+                    {conflictInfo.conflicts.length > 3 && (
+                      <p className="text-xs text-gray-700">
+                        +{conflictInfo.conflicts.length - 3} conflito(s) adicional(is) listado(s) na agenda.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

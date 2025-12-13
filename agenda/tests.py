@@ -5,7 +5,8 @@ from django.utils import timezone
 from datetime import date, time, timedelta
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
-from .models import Musician, Event, Availability, LeaderAvailability
+from .models import Musician, Event, Availability, LeaderAvailability, EventLog
+from .views import EventViewSet
 
 
 class MusicianModelTest(TestCase):
@@ -296,3 +297,223 @@ class EventAPITest(APITestCase):
         availability = Availability.objects.get(musician=self.sara_musician, event=event)
         self.assertEqual(availability.response, 'available')
         self.assertEqual(availability.notes, 'Posso tocar!')
+        self.assertIsNotNone(availability.responded_at)
+
+    def test_set_availability_sets_responded_at(self):
+        """Marcar disponibilidade deve preencher responded_at para respostas não pendentes"""
+        event = Event.objects.create(
+            title='Show',
+            location='Local',
+            event_date=date.today() + timedelta(days=7),
+            start_time=time(20, 0),
+            end_time=time(23, 0),
+            created_by=self.sara
+        )
+
+        Availability.objects.create(
+            musician=self.sara_musician,
+            event=event,
+            response='pending'
+        )
+
+        self.client.force_authenticate(user=self.sara)
+        response = self.client.post(
+            f'/api/events/{event.id}/set_availability/',
+            {'response': 'available', 'notes': 'Confirmado'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        availability = Availability.objects.get(musician=self.sara_musician, event=event)
+        self.assertEqual(availability.response, 'available')
+        self.assertIsNotNone(availability.responded_at)
+        self.assertTrue(EventLog.objects.filter(event=event, action='availability').exists())
+
+    def test_solo_event_sets_approval_fields(self):
+        """Show solo deve ser criado aprovado com carimbo de aprovador"""
+        self.client.force_authenticate(user=self.sara)
+
+        data = {
+            'title': 'Show Solo',
+            'location': 'Café',
+            'event_date': (date.today() + timedelta(days=3)).isoformat(),
+            'start_time': '19:00:00',
+            'end_time': '21:00:00',
+            'is_solo': True,
+        }
+
+        response = self.client.post('/api/events/', data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        event = Event.objects.get(id=response.data['id'])
+        self.assertEqual(event.status, 'approved')
+        self.assertEqual(event.approved_by, self.sara)
+        self.assertIsNotNone(event.approved_at)
+        self.assertTrue(EventLog.objects.filter(event=event, action='created').exists())
+
+
+class RestoreAvailabilityConflictTest(TestCase):
+    """Testes da restauração de disponibilidade considerando eventos que cruzam datas"""
+
+    def setUp(self):
+        self.sara = User.objects.create_user(username='sara', password='senha123')
+        self.roberto = User.objects.create_user(username='roberto', password='senha123')
+        self.roberto_musician = Musician.objects.create(
+            user=self.roberto,
+            instrument='drums',
+            role='leader'
+        )
+
+    def test_restore_skips_conflict_from_previous_day_event(self):
+        """Não deve restaurar disponibilidade quando há evento cruzando meia-noite no dia anterior"""
+        base_date = timezone.now().date() + timedelta(days=5)
+
+        # Disponibilidade original do líder
+        LeaderAvailability.objects.create(
+            leader=self.roberto_musician,
+            date=base_date,
+            start_time=time(22, 0),
+            end_time=time(2, 0),
+            is_active=True
+        )
+
+        # Evento que será removido
+        event_to_restore = Event.objects.create(
+            title='Show tarde da noite',
+            location='Casa de shows',
+            event_date=base_date,
+            start_time=time(0, 30),
+            end_time=time(1, 30),
+            created_by=self.sara,
+            status='cancelled'
+        )
+
+        # Evento do dia anterior cruzando para o dia alvo
+        Event.objects.create(
+            title='Evento na véspera',
+            location='Arena',
+            event_date=base_date - timedelta(days=1),
+            start_time=time(23, 30),
+            end_time=time(0, 30),
+            created_by=self.roberto,
+            status='approved'
+        )
+
+        before_count = LeaderAvailability.objects.filter(leader=self.roberto_musician).count()
+
+        viewset = EventViewSet()
+        viewset._restore_leader_availability(event_to_restore)
+
+        after_count = LeaderAvailability.objects.filter(leader=self.roberto_musician).count()
+        self.assertEqual(before_count, after_count)
+        restored = LeaderAvailability.objects.filter(notes__icontains='Restaurada', leader=self.roberto_musician)
+        self.assertFalse(restored.exists())
+
+
+class LeaderAvailabilityAPITest(APITestCase):
+    """Testes de atualização de disponibilidade do líder com eventos cruzando datas"""
+
+    def setUp(self):
+        self.roberto = User.objects.create_user(username='roberto', password='senha123')
+        self.roberto_musician = Musician.objects.create(
+            user=self.roberto,
+            instrument='drums',
+            role='leader'
+        )
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.roberto)
+
+    def test_update_splits_availability_with_cross_midnight_event(self):
+        """Atualizar disponibilidade deve considerar eventos que começam no dia anterior e cruzam meia-noite"""
+        base_date = timezone.now().date() + timedelta(days=4)
+
+        availability = LeaderAvailability.objects.create(
+            leader=self.roberto_musician,
+            date=base_date,
+            start_time=time(1, 30),
+            end_time=time(2, 30),
+            is_active=True
+        )
+
+        Event.objects.create(
+            title='Evento cruzando meia-noite',
+            location='Local',
+            event_date=base_date - timedelta(days=1),
+            start_time=time(23, 30),
+            end_time=time(0, 30),
+            created_by=self.roberto,
+            status='approved'
+        )
+
+        payload = {
+            'date': base_date.isoformat(),
+            'start_time': '00:00',
+            'end_time': '02:00',
+        }
+
+        response = self.client.put(f'/api/leader-availabilities/{availability.id}/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        availability.refresh_from_db()
+        self.assertFalse(availability.is_active)
+
+        fragments = LeaderAvailability.objects.filter(
+            leader=self.roberto_musician,
+            is_active=True,
+            date=base_date
+        )
+        self.assertTrue(fragments.filter(start_time=time(1, 10), end_time=time(2, 0)).exists())
+
+
+class EventLogAndPreviewTest(APITestCase):
+    """Testes de histórico e preview de conflitos"""
+
+    def setUp(self):
+        self.creator = User.objects.create_user(username='sara', password='senha123')
+        self.leader_user = User.objects.create_user(username='roberto', password='senha123')
+        self.creator_musician = Musician.objects.create(user=self.creator, instrument='vocal', role='member')
+        self.leader_musician = Musician.objects.create(user=self.leader_user, instrument='drums', role='leader')
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.creator)
+
+    def test_preview_conflicts_endpoint(self):
+        """Preview deve retornar conflito quando há sobreposição com buffer"""
+        base_date = date.today() + timedelta(days=6)
+        conflicting_event = Event.objects.create(
+            title='Evento existente',
+            location='Casa',
+            event_date=base_date,
+            start_time=time(20, 0),
+            end_time=time(22, 0),
+            created_by=self.creator,
+            status='approved'
+        )
+
+        payload = {
+            'event_date': base_date.isoformat(),
+            'start_time': '21:00',
+            'end_time': '23:00'
+        }
+        response = self.client.post('/api/events/preview_conflicts/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertTrue(data['has_conflicts'])
+        self.assertEqual(data['count'], 1)
+        self.assertEqual(data['conflicts'][0]['id'], conflicting_event.id)
+
+    def test_logs_returned_in_detail(self):
+        """Detalhe do evento deve retornar logs recentes"""
+        event = Event.objects.create(
+            title='Show para log',
+            location='Local',
+            event_date=date.today() + timedelta(days=7),
+            start_time=time(19, 0),
+            end_time=time(21, 0),
+            created_by=self.creator,
+            status='proposed'
+        )
+        EventLog.objects.create(event=event, performed_by=self.creator, action='created', description='Criado')
+
+        response = self.client.get(f'/api/events/{event.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('logs', response.data)
+        self.assertGreaterEqual(len(response.data['logs']), 1)

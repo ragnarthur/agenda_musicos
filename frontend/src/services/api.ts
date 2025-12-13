@@ -151,6 +151,20 @@ export const eventService = {
     const response = await api.get('/events/pending_my_response/');
     return response.data;
   },
+
+  previewConflicts: async (payload: {
+    event_date: string;
+    start_time: string;
+    end_time: string;
+  }): Promise<{
+    has_conflicts: boolean;
+    count: number;
+    buffer_minutes: number;
+    conflicts: Event[];
+  }> => {
+    const response = await api.post('/events/preview_conflicts/', payload);
+    return response.data;
+  },
 };
 
 // Availability Service
