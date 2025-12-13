@@ -329,7 +329,6 @@ const EventsList: React.FC = () => {
               { value: 'all', label: 'Todos os status' },
               { value: 'proposed', label: 'Propostas' },
               { value: 'approved', label: 'Aprovados' },
-              { value: 'confirmed', label: 'Confirmados' },
             ].map((item) => (
               <button
                 key={item.value}
