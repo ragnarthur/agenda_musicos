@@ -198,7 +198,7 @@ const EventForm: React.FC = () => {
               </p>
               <h1 className="mt-2 text-3xl font-bold text-gray-900">Novo Evento</h1>
               <p className="mt-1 text-sm text-gray-700">
-                Informe cada detalhe com clareza para agilizar a liberação do Roberto e garantir aos clientes uma proposta alinhada à experiência DXM.
+                Informe cada detalhe com clareza para agilizar a liberação do Roberto e entregar uma proposta profissional para o cliente.
               </p>
             </div>
             <div className="rounded-2xl border border-white/60 bg-white/80 px-6 py-4 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur">
