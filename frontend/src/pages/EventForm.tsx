@@ -447,7 +447,8 @@ const EventForm: React.FC = () => {
                 Show Solo
               </label>
               <p className="text-sm text-gray-600 mt-1">
-                Marque esta opção se for um show solo. Shows solo não requerem aprovação do líder e são automaticamente aprovados.
+                Use esta opção quando o Roberto não participar. O evento fica marcado como solo, sai do fluxo
+                de aprovação e é liberado automaticamente no calendário.
               </p>
             </div>
           </div>
