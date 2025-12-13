@@ -307,8 +307,8 @@ const EventsList: React.FC = () => {
           <div className="mt-5 flex flex-wrap gap-3">
             {([
               { value: 'upcoming', label: 'Próximos' },
-              { value: 'all', label: 'Todos' },
               { value: 'past', label: 'Histórico' },
+              { value: 'all', label: 'Todos os períodos' },
             ] as { value: TimeFilter; label: string }[]).map((item) => (
               <button
                 key={item.value}
@@ -326,7 +326,7 @@ const EventsList: React.FC = () => {
           </div>
           <div className="mt-4 flex flex-wrap gap-3">
             {[
-              { value: 'all', label: 'Todos' },
+              { value: 'all', label: 'Todos os status' },
               { value: 'proposed', label: 'Propostas' },
               { value: 'approved', label: 'Aprovados' },
               { value: 'confirmed', label: 'Confirmados' },
