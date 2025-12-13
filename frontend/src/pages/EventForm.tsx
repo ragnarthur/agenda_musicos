@@ -1,7 +1,20 @@
 // pages/EventForm.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Calendar, MapPin, Clock, Phone, FileText, Save, X, CheckCircle, Info } from 'lucide-react';
+import {
+  Calendar,
+  MapPin,
+  Clock,
+  Phone,
+  FileText,
+  Save,
+  X,
+  CheckCircle,
+  Info,
+  Sparkles,
+  Target,
+  ShieldCheck,
+} from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import { eventService, leaderAvailabilityService } from '../services/api';
 import type { EventCreate, LeaderAvailability } from '../types';
@@ -41,6 +54,26 @@ const EventForm: React.FC = () => {
   useEffect(() => {
     loadLeaderAvailabilities();
   }, [loadLeaderAvailabilities]);
+
+  const formattedEventDate = useMemo(() => {
+    if (!formData.event_date) return 'Selecione uma data';
+    try {
+      return format(parseISO(formData.event_date), 'dd/MM/yyyy');
+    } catch {
+      return 'Data inválida';
+    }
+  }, [formData.event_date]);
+
+  const durationPreview = useMemo(() => {
+    if (!formData.start_time || !formData.end_time) return null;
+    const [startH, startM] = formData.start_time.split(':').map(Number);
+    const [endH, endM] = formData.end_time.split(':').map(Number);
+    let minutes = (endH * 60 + endM) - (startH * 60 + startM);
+    if (minutes <= 0) minutes += 24 * 60;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins.toString().padStart(2, '0')}min`;
+  }, [formData.start_time, formData.end_time]);
 
   // Verificar se a data escolhida coincide com uma disponibilidade do líder
   useEffect(() => {
@@ -155,18 +188,38 @@ const EventForm: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Novo Evento</h1>
-          <p className="mt-2 text-gray-600">Crie uma proposta de evento para a banda</p>
+      <section className="mx-auto max-w-5xl space-y-8">
+        <div className="relative overflow-hidden rounded-3xl border border-white/40 bg-gradient-to-r from-indigo-500/15 via-white to-cyan-400/20 p-6 shadow-2xl">
+          <div className="pointer-events-none absolute -right-10 top-0 h-40 w-40 rounded-full bg-primary-300/30 blur-3xl" />
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="flex items-center text-xs font-semibold uppercase tracking-wide text-primary-600">
+                <Sparkles className="mr-2 h-4 w-4" /> Assistente de Eventos
+              </p>
+              <h1 className="mt-2 text-3xl font-bold text-gray-900">Novo Evento</h1>
+              <p className="mt-1 text-sm text-gray-700">
+                Preencha as informações com precisão para acelerar a aprovação do baterista e dar ao cliente
+                uma visão profissional da apresentação.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/60 bg-white/80 px-6 py-4 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur">
+              <p className="text-xs uppercase tracking-wide text-gray-500">Formato</p>
+              <p className="text-lg text-primary-700">
+                {formData.is_solo ? 'Show Solo (auto aprovado)' : 'Banda completa (passa por aprovação)'}
+              </p>
+              <p className="mt-2 text-xs uppercase tracking-wide text-gray-500">Duração estimada</p>
+              <p className="text-lg text-gray-900">{durationPreview ?? 'Defina os horários'}</p>
+            </div>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="card space-y-6">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              {error}
-            </div>
-          )}
+        <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
+          <form onSubmit={handleSubmit} className="card space-y-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                {error}
+              </div>
+            )}
 
           {prefilledData && (
             <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center space-x-2">
@@ -368,7 +421,7 @@ const EventForm: React.FC = () => {
           )}
 
           {/* Show Solo */}
-          <div className="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="flex items-start space-x-3 rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 via-white to-indigo-50 p-4">
             <input
               type="checkbox"
               id="is_solo"
@@ -417,11 +470,77 @@ const EventForm: React.FC = () => {
             </button>
           </div>
 
-          <p className="text-sm text-gray-500 text-center">
-            * Campos obrigatórios
-          </p>
+          <p className="text-center text-sm text-gray-500">* Campos obrigatórios</p>
         </form>
-      </div>
+
+        <aside className="space-y-5">
+          <div className="rounded-2xl border border-white/50 bg-white/90 p-5 shadow-xl backdrop-blur">
+            <div className="mb-4 flex items-center gap-2">
+              <Target className="h-5 w-5 text-primary-600" />
+              <h3 className="text-lg font-semibold text-gray-900">Resumo da Proposta</h3>
+            </div>
+            <dl className="space-y-3 text-sm">
+              <div className="flex justify-between border-b border-gray-100 pb-3">
+                <dt className="text-gray-500">Data</dt>
+                <dd className="font-semibold text-gray-900">{formattedEventDate}</dd>
+              </div>
+              <div className="flex justify-between border-b border-gray-100 pb-3">
+                <dt className="text-gray-500">Horário</dt>
+                <dd className="font-semibold text-gray-900">
+                  {formData.start_time ? formData.start_time.slice(0, 5) : '--:--'} às{' '}
+                  {formData.end_time ? formData.end_time.slice(0, 5) : '--:--'}
+                </dd>
+              </div>
+              <div className="flex justify-between border-b border-gray-100 pb-3">
+                <dt className="text-gray-500">Duração</dt>
+                <dd className="font-semibold text-gray-900">{durationPreview ?? 'Pendente'}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-gray-500">Formato</dt>
+                <dd className="font-semibold text-gray-900">
+                  {formData.is_solo ? 'Show solo' : 'Banda completa'}
+                </dd>
+              </div>
+            </dl>
+
+            {matchingAvailability && !formData.is_solo && (
+              <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+                <p className="flex items-center font-semibold">
+                  <ShieldCheck className="mr-2 h-4 w-4" /> Disponibilidade confirmada
+                </p>
+                <p className="mt-1">
+                  {matchingAvailability.start_time.slice(0, 5)} - {matchingAvailability.end_time.slice(0, 5)}
+                </p>
+                {matchingAvailability.notes && (
+                  <p className="mt-1 text-green-700">{matchingAvailability.notes}</p>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-white/40 bg-white/85 p-5 text-sm shadow-lg backdrop-blur">
+            <div className="mb-3 flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary-600" />
+              <p className="font-semibold text-gray-900">Dicas rápidas</p>
+            </div>
+            <ul className="space-y-3 text-gray-700">
+              <li>
+                <strong className="text-gray-900">Detalhes completos:</strong> título, local e contato bem
+                descritos ajudam o baterista a aprovar mais rápido.
+              </li>
+              <li>
+                <strong className="text-gray-900">Horários coerentes:</strong> lembre-se do buffer de 40 minutos
+                entre eventos e possíveis deslocamentos.
+              </li>
+              <li>
+                <strong className="text-gray-900">Show solo:</strong> utilize essa opção quando o Roberto não
+                participará. O evento é liberado na hora.
+              </li>
+            </ul>
+          </div>
+        </aside>
+        </div>
+      </section>
     </Layout>
   );
 };
