@@ -73,16 +73,23 @@ DATABASE_URL = config('DATABASE_URL', default=default_db_url)
 
 def parse_database_url(url: str) -> dict:
     parsed = urlparse(url)
+    normalized_url = url.lower()
     scheme = (parsed.scheme or 'sqlite').lower()
 
     if scheme in ('sqlite', 'sqlite3'):
         db_path = parsed.path or ''
         if not db_path:
             name = BASE_DIR / 'db.sqlite3'
-        elif db_path.startswith('/'):
-            name = db_path
         else:
-            name = BASE_DIR / db_path
+            # Detect se o caminho informado deve ser tratado como absoluto.
+            # Por convenção, URLs no formato sqlite:////abs/path apontam para caminhos absolutos.
+            is_absolute = normalized_url.startswith('sqlite:////') or normalized_url.startswith('sqlite3:////')
+            if db_path.startswith('/') and is_absolute:
+                name = db_path
+            else:
+                # Remove a barra inicial para evitar gerar caminhos fora do BASE_DIR.
+                relative_path = db_path.lstrip('/')
+                name = BASE_DIR / relative_path
         return {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': str(name),
