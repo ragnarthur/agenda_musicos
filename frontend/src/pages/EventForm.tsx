@@ -1,5 +1,5 @@
 // pages/EventForm.tsx
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Calendar,
@@ -29,6 +29,7 @@ const EventForm: React.FC = () => {
   const [error, setError] = useState('');
   const [leaderAvailabilities, setLeaderAvailabilities] = useState<LeaderAvailability[]>([]);
   const [matchingAvailability, setMatchingAvailability] = useState<LeaderAvailability | null>(null);
+  const dateInputRef = useRef<HTMLInputElement | null>(null);
 
   const [formData, setFormData] = useState<EventCreate>({
     title: '',
@@ -186,6 +187,13 @@ const EventForm: React.FC = () => {
     }
   };
 
+  const openDatePicker = () => {
+    const input = dateInputRef.current;
+    if (input && typeof input.showPicker === 'function') {
+      input.showPicker();
+    }
+  };
+
   return (
     <Layout>
       <section className="mx-auto max-w-5xl space-y-8">
@@ -303,6 +311,9 @@ const EventForm: React.FC = () => {
                   type="date"
                   value={formData.event_date}
                   onChange={handleChange}
+                  ref={dateInputRef}
+                  onFocus={openDatePicker}
+                  onClick={openDatePicker}
                   className="input-field pl-10"
                   required
                 />
