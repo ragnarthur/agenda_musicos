@@ -16,9 +16,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="absolute bottom-[-140px] left-1/3 h-96 w-96 rounded-full bg-emerald-200/40 blur-[120px]" />
       </div>
       <Navbar />
-      <main className="relative z-10 container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-24">
-        {children}
-      </main>
+
+      <div className="relative z-10 flex min-h-screen flex-col pt-6 sm:pt-8">
+        <main className="container mx-auto flex-1 max-w-6xl px-4 pb-16 sm:px-6 lg:px-8">
+          {children}
+        </main>
+
+        <footer className="border-t border-white/20 bg-white/5 px-4 py-6 text-center text-sm font-semibold text-slate-700 backdrop-blur">
+          <p className="text-xs sm:text-sm text-slate-800">
+            <span className="mr-1 text-base text-primary-700">®</span>
+            DXM Tech - Arthur Araújo. Todos os direitos reservados.
+          </p>
+        </footer>
+      </div>
     </div>
   );
 };
