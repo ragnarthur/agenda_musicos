@@ -198,14 +198,15 @@ const EventForm: React.FC = () => {
               </p>
               <h1 className="mt-2 text-3xl font-bold text-gray-900">Novo Evento</h1>
               <p className="mt-1 text-sm text-gray-700">
-                Preencha as informações com precisão para acelerar a aprovação do baterista e dar ao cliente
-                uma visão profissional da apresentação.
+                Informe cada detalhe com clareza para agilizar a liberação do Roberto e garantir aos clientes uma proposta alinhada à experiência DXM.
               </p>
             </div>
             <div className="rounded-2xl border border-white/60 bg-white/80 px-6 py-4 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur">
               <p className="text-xs uppercase tracking-wide text-gray-500">Formato</p>
               <p className="text-lg text-primary-700">
-                {formData.is_solo ? 'Show Solo (auto aprovado)' : 'Banda completa (passa por aprovação)'}
+                {formData.is_solo
+                  ? 'Show Solo (auto aprovado)'
+                  : 'Duo Violão + Bateria (passa por aprovação)'}
               </p>
               <p className="mt-2 text-xs uppercase tracking-wide text-gray-500">Duração estimada</p>
               <p className="text-lg text-gray-900">{durationPreview ?? 'Defina os horários'}</p>
