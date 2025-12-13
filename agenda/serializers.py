@@ -2,7 +2,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.utils import timezone
-from .models import Musician, Event, Availability, LeaderAvailability
+from .models import Musician, Event, Availability, LeaderAvailability, EventLog
 from .validators import validate_not_empty_string
 
 
@@ -102,6 +102,19 @@ class EventListSerializer(serializers.ModelSerializer):
         }
 
 
+class EventLogSerializer(serializers.ModelSerializer):
+    """Serializer simples para histórico do evento"""
+    performed_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = EventLog
+        fields = ['id', 'action', 'description', 'performed_by', 'performed_by_name', 'created_at']
+        read_only_fields = fields
+
+    def get_performed_by_name(self, obj):
+        return obj.performed_by.get_full_name() if obj.performed_by else 'Sistema'
+
+
 class EventDetailSerializer(serializers.ModelSerializer):
     """Serializer completo de evento com todas as disponibilidades"""
     availabilities = AvailabilitySerializer(many=True, read_only=True)
@@ -109,6 +122,7 @@ class EventDetailSerializer(serializers.ModelSerializer):
     approved_by_name = serializers.SerializerMethodField()
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     can_approve = serializers.SerializerMethodField()
+    logs = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
@@ -118,7 +132,7 @@ class EventDetailSerializer(serializers.ModelSerializer):
             'payment_amount', 'is_solo', 'status', 'status_display', 'can_approve',
             'created_by', 'created_by_name', 'approved_by', 'approved_by_name',
             'approved_at', 'rejection_reason', 'availabilities',
-            'created_at', 'updated_at'
+            'logs', 'created_at', 'updated_at'
         ]
         read_only_fields = [
             'id', 'start_datetime', 'end_datetime', 'created_by',
@@ -143,6 +157,11 @@ class EventDetailSerializer(serializers.ModelSerializer):
             return musician.is_leader() and obj.can_be_approved()
         except Musician.DoesNotExist:
             return False
+
+    def get_logs(self, obj):
+        """Retorna últimos registros de log (limitado para evitar payload grande)"""
+        logs = obj.logs.select_related('performed_by').all()[:20]
+        return EventLogSerializer(logs, many=True).data
     
     def validate(self, data):
         """Validações customizadas"""

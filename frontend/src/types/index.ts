@@ -57,6 +57,7 @@ export interface Event {
   approved_at?: string;
   rejection_reason?: string;
   availabilities?: Availability[];
+  logs?: EventLog[];
   availability_summary?: {
     pending: number;
     available: number;
@@ -120,3 +121,12 @@ export interface AuthContextType {
 
 export type AvailabilityResponse = 'pending' | 'available' | 'unavailable' | 'maybe';
 export type EventStatus = 'proposed' | 'approved' | 'rejected' | 'confirmed' | 'cancelled';
+
+export interface EventLog {
+  id: number;
+  action: 'created' | 'approved' | 'rejected' | 'cancelled' | 'availability';
+  description: string;
+  performed_by: number | null;
+  performed_by_name: string;
+  created_at: string;
+}

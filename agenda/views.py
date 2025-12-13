@@ -6,9 +6,9 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime, time, date
 import logging
-from .models import Musician, Event, Availability, LeaderAvailability
+from .models import Musician, Event, Availability, LeaderAvailability, EventLog
 from .serializers import (
     MusicianSerializer,
     EventListSerializer,
@@ -57,7 +57,8 @@ class EventViewSet(viewsets.ModelViewSet):
     4. Músicos marcam disponibilidade
     """
     queryset = Event.objects.prefetch_related(
-        'availabilities__musician__user'
+        'availabilities__musician__user',
+        'logs__performed_by'
     ).select_related('created_by', 'approved_by').all()
     permission_classes = [IsAuthenticated]
 
@@ -136,6 +137,43 @@ class EventViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(event_date__gte=timezone.now().date())
 
         return queryset
+
+    @action(detail=False, methods=['post'])
+    def preview_conflicts(self, request):
+        """
+        POST /events/preview_conflicts/
+        Body: { "event_date": "YYYY-MM-DD", "start_time": "HH:MM", "end_time": "HH:MM" }
+        Retorna eventos que conflitam com o período (incluindo buffer de 40 minutos).
+        """
+        data = request.data
+        try:
+            event_date = date.fromisoformat(data.get('event_date'))
+            start_time_value = time.fromisoformat(data.get('start_time'))
+            end_time_value = time.fromisoformat(data.get('end_time'))
+        except Exception:
+            return Response({'detail': 'Formato inválido de data/horário.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Constrói datetime com detecção de cruzar meia-noite
+        start_dt = timezone.make_aware(datetime.combine(event_date, start_time_value))
+        if end_time_value <= start_time_value:
+            end_dt = timezone.make_aware(datetime.combine(event_date + timedelta(days=1), end_time_value))
+        else:
+            end_dt = timezone.make_aware(datetime.combine(event_date, end_time_value))
+
+        buffer = timedelta(minutes=40)
+        conflicts = Event.objects.filter(
+            status__in=['proposed', 'approved', 'confirmed'],
+            start_datetime__lt=end_dt + buffer,
+            end_datetime__gt=start_dt - buffer
+        )
+
+        serializer = EventListSerializer(conflicts, many=True, context={'request': request})
+        return Response({
+            'has_conflicts': conflicts.exists(),
+            'count': conflicts.count(),
+            'buffer_minutes': 40,
+            'conflicts': serializer.data
+        })
     
     def perform_create(self, serializer):
         """
@@ -145,10 +183,23 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         is_solo = serializer.validated_data.get('is_solo', False)
 
+        approved_kwargs = {}
+        if is_solo:
+            approved_kwargs = {
+                'approved_by': self.request.user,
+                'approved_at': timezone.now(),
+            }
+
         # Se é evento solo, vai direto para 'approved', caso contrário 'proposed'
         event = serializer.save(
             created_by=self.request.user,
-            status='approved' if is_solo else 'proposed'
+            status='approved' if is_solo else 'proposed',
+            **approved_kwargs
+        )
+        self._log_event(
+            event,
+            'created',
+            'Show solo criado e aprovado automaticamente.' if is_solo else 'Evento criado e enviado para aprovação.'
         )
 
         # Criar availabilities:
@@ -346,21 +397,15 @@ class EventViewSet(viewsets.ModelViewSet):
         except Musician.DoesNotExist:
             return
 
-        # Considera eventos ativos no dia inicial e, se cruzar meia-noite, no dia seguinte
-        start_date = event.start_datetime.date()
-        end_date = event.end_datetime.date()
-        date_filter = [start_date]
-        if end_date != start_date:
-            date_filter.append(end_date)
-
-        other_events = Event.objects.filter(
-            event_date__in=date_filter,
-            status__in=['proposed', 'approved', 'confirmed']
-        ).exclude(id=event.id)
-
-        # Verifica se o período do evento está livre de conflitos com outros eventos
         event_start = event.start_datetime
         event_end = event.end_datetime
+
+        # Busca eventos que se sobrepõem considerando buffer, inclusive cruzando datas
+        other_events = Event.objects.filter(
+            status__in=['proposed', 'approved', 'confirmed'],
+            start_datetime__lt=event_end + buffer,
+            end_datetime__gt=event_start - buffer
+        ).exclude(id=event.id)
 
         # Verifica conflitos considerando buffer de 40min ao redor dos eventos
         has_conflict = False
@@ -430,6 +475,15 @@ class EventViewSet(viewsets.ModelViewSet):
                 updated_at=now
             )
 
+    def _log_event(self, event, action, description):
+        """Cria registro de histórico do evento"""
+        EventLog.objects.create(
+            event=event,
+            performed_by=getattr(self.request, 'user', None) if hasattr(self, 'request') else None,
+            action=action,
+            description=description
+        )
+
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def approve(self, request, pk=None):
         """
@@ -454,6 +508,7 @@ class EventViewSet(viewsets.ModelViewSet):
         
         # Tenta aprovar
         if event.approve(request.user):
+            self._log_event(event, 'approved', 'Evento aprovado pelo líder.')
             serializer = EventDetailSerializer(event, context={'request': request})
             return Response(serializer.data)
         else:
@@ -494,6 +549,11 @@ class EventViewSet(viewsets.ModelViewSet):
             if not event.is_solo:
                 self._restore_leader_availability(event)
 
+            self._log_event(
+                event,
+                'rejected',
+                f'Evento rejeitado pelo líder. Motivo: {reason or "Não informado."}'
+            )
             serializer = EventDetailSerializer(event, context={'request': request})
             return Response(serializer.data)
         else:
@@ -528,6 +588,7 @@ class EventViewSet(viewsets.ModelViewSet):
         # Cancela o evento
         event.status = 'cancelled'
         event.save()
+        self._log_event(event, 'cancelled', 'Evento cancelado pelo criador.')
 
         # Restaura disponibilidade do líder quando evento é cancelado
         if not event.is_solo:
@@ -563,17 +624,32 @@ class EventViewSet(viewsets.ModelViewSet):
                 {'detail': f'Response inválido. Opções: {", ".join(valid_responses)}'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
+        # Captura estado anterior para log
+        previous = Availability.objects.filter(musician=musician, event=event).first()
+
         # Cria ou atualiza a disponibilidade
         availability, created = Availability.objects.update_or_create(
             musician=musician,
             event=event,
             defaults={
                 'response': response_value,
-                'notes': request.data.get('notes', '')
+                'notes': request.data.get('notes', ''),
+                'responded_at': timezone.now() if response_value != 'pending' else None,
             }
         )
-        
+
+        # Registra log apenas se houve mudança e resposta não é pendente
+        if response_value != 'pending':
+            prev_response = previous.response if previous else None
+            prev_notes = previous.notes if previous else ''
+            if created or prev_response != response_value or prev_notes != request.data.get('notes', ''):
+                self._log_event(
+                    event,
+                    'availability',
+                    f'{musician.user.get_full_name() or musician.user.username} marcou disponibilidade: {response_value}'
+                )
+
         serializer = AvailabilitySerializer(availability)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
@@ -858,7 +934,6 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
 
             instance = serializer.save()
             conflicting_events = Event.objects.filter(
-                event_date=instance.date,
                 status__in=['proposed', 'approved', 'confirmed'],
                 start_datetime__lt=instance.end_datetime,
                 end_datetime__gt=instance.start_datetime

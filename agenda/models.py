@@ -202,6 +202,38 @@ class Event(models.Model):
         return False
 
 
+class EventLog(models.Model):
+    """
+    Registro de ações relevantes em um evento.
+    Usado para histórico/auditoria no detalhe do evento.
+    """
+    ACTION_CHOICES = [
+        ('created', 'Criado'),
+        ('approved', 'Aprovado'),
+        ('rejected', 'Rejeitado'),
+        ('cancelled', 'Cancelado'),
+        ('availability', 'Disponibilidade'),
+    ]
+
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='logs')
+    performed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    action = models.CharField(max_length=30, choices=ACTION_CHOICES)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Log de Evento'
+        verbose_name_plural = 'Logs de Evento'
+        indexes = [
+            models.Index(fields=['event', 'created_at']),
+        ]
+
+    def __str__(self):
+        user = self.performed_by.get_full_name() if self.performed_by else 'Sistema'
+        return f"{self.get_action_display()} - {user} ({self.created_at})"
+
+
 class Availability(models.Model):
     """
     Disponibilidade de cada músico para eventos.
