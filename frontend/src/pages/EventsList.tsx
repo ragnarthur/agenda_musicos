@@ -201,6 +201,10 @@ const EventsList: React.FC = () => {
     const startLabel = event.start_time ? event.start_time.slice(0, 5) : '--:--';
     const endLabel = event.end_time ? event.end_time.slice(0, 5) : '--:--';
     const statusClass = `status-chip ${event.status || 'default'}`;
+    const statusLabel =
+      event.status === 'approved'
+        ? event.approval_label || (event.approved_by_name ? `Aprovado por ${event.approved_by_name}` : event.status_display)
+        : event.status_display;
     return (
       <Link
         key={event.id}
@@ -210,7 +214,7 @@ const EventsList: React.FC = () => {
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 text-xs uppercase tracking-wide">
-              <span className={statusClass}>{event.status_display}</span>
+              <span className={statusClass}>{statusLabel}</span>
               {event.is_solo && (
                 <span className="status-chip default">Solo</span>
               )}
@@ -236,7 +240,7 @@ const EventsList: React.FC = () => {
               ))}
             </div>
           </div>
-          <span className={statusClass}>{event.status_display}</span>
+          <span className={statusClass}>{statusLabel}</span>
         </div>
       </Link>
     );

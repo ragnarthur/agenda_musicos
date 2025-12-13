@@ -106,12 +106,14 @@ class EventViewSet(viewsets.ModelViewSet):
         if self.request.query_params.get('my_proposals') == 'true':
             queryset = queryset.filter(created_by=self.request.user)
 
-        # Pendentes de aprovação (apenas para líderes)
+        # Pendentes de aprovação (eventos propostos onde o músico tem availability)
         if self.request.query_params.get('pending_approval') == 'true':
             try:
                 musician = self.request.user.musician_profile
-                if musician.is_leader():
-                    queryset = queryset.filter(status='proposed')
+                queryset = queryset.filter(
+                    status='proposed',
+                    availabilities__musician=musician
+                ).distinct()
             except Musician.DoesNotExist:
                 queryset = queryset.none()
 
@@ -204,40 +206,28 @@ class EventViewSet(viewsets.ModelViewSet):
 
         # Criar availabilities:
         # - Para eventos solo: apenas o criador
-        # - Para eventos com banda: criador + Roberto (líder)
+        # - Para eventos com banda: todos os músicos ativos
 
         availabilities = []
 
-        # 1. Criador do evento (automaticamente disponível)
         try:
-            creator_musician = self.request.user.musician_profile
+            all_musicians = Musician.objects.filter(is_active=True)
+        except Musician.DoesNotExist:
+            all_musicians = Musician.objects.none()
+
+        for musician in all_musicians:
+            if is_solo and musician.user != self.request.user:
+                continue
+            response_value = 'available' if musician.user == self.request.user else 'pending'
+            note_value = 'Evento criado por mim' if musician.user == self.request.user else ''
             availabilities.append(
                 Availability(
-                    musician=creator_musician,
+                    musician=musician,
                     event=event,
-                    response='available',
-                    notes='Evento criado por mim' if not is_solo else 'Show solo'
+                    response=response_value,
+                    notes=note_value
                 )
             )
-        except Musician.DoesNotExist:
-            pass
-
-        # 2. Líder da banda - apenas se NÃO for evento solo
-        if not is_solo:
-            try:
-                # Busca líder ativo dinamicamente (não hardcoded)
-                leader = Musician.objects.filter(role='leader', is_active=True).first()
-                # Só criar se líder existir e não for o criador
-                if leader and leader.user != self.request.user:
-                    availabilities.append(
-                        Availability(
-                            musician=leader,
-                            event=event,
-                            response='pending'
-                        )
-                    )
-            except Musician.DoesNotExist:
-                pass
 
         # Criar availabilities usando update_or_create para evitar race conditions
         # Também preenche timestamps corretamente (bulk_create não preenche auto_now/auto_now_add)
@@ -488,27 +478,29 @@ class EventViewSet(viewsets.ModelViewSet):
     def approve(self, request, pk=None):
         """
         POST /events/{id}/approve/
-        Apenas líderes podem aprovar eventos propostos.
+        Qualquer músico participante pode aprovar eventos propostos.
         """
         event = self.get_object()
         
-        # Verifica se usuário é líder
         try:
             musician = request.user.musician_profile
-            if not musician.is_leader():
-                return Response(
-                    {'detail': 'Apenas líderes podem aprovar eventos.'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
         except Musician.DoesNotExist:
             return Response(
                 {'detail': 'Usuário não possui perfil de músico.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+        # Garante que o músico está associado ao evento (cria se não existir)
+        Availability.objects.update_or_create(
+            musician=musician,
+            event=event,
+            defaults={'response': 'pending'}
+        )
         
         # Tenta aprovar
         if event.approve(request.user):
-            self._log_event(event, 'approved', 'Evento aprovado pelo líder.')
+            approver_name = request.user.get_full_name() or request.user.username
+            self._log_event(event, 'approved', f'Evento aprovado por {approver_name}.')
             serializer = EventDetailSerializer(event, context={'request': request})
             return Response(serializer.data)
         else:
@@ -522,23 +514,23 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         POST /events/{id}/reject/
         Body: { "reason": "motivo da rejeição" }
-        Apenas líderes podem rejeitar eventos propostos.
+        Qualquer músico participante pode rejeitar eventos propostos.
         """
         event = self.get_object()
         
-        # Verifica se usuário é líder
         try:
             musician = request.user.musician_profile
-            if not musician.is_leader():
-                return Response(
-                    {'detail': 'Apenas líderes podem rejeitar eventos.'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
         except Musician.DoesNotExist:
             return Response(
                 {'detail': 'Usuário não possui perfil de músico.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+        Availability.objects.update_or_create(
+            musician=musician,
+            event=event,
+            defaults={'response': 'pending'}
+        )
         
         # Pega o motivo
         reason = request.data.get('reason', '')
@@ -552,7 +544,7 @@ class EventViewSet(viewsets.ModelViewSet):
             self._log_event(
                 event,
                 'rejected',
-                f'Evento rejeitado pelo líder. Motivo: {reason or "Não informado."}'
+                f'Evento rejeitado por {musician.user.get_full_name() or musician.user.username}. Motivo: {reason or "Não informado."}'
             )
             serializer = EventDetailSerializer(event, context={'request': request})
             return Response(serializer.data)

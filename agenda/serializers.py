@@ -75,13 +75,14 @@ class EventListSerializer(serializers.ModelSerializer):
     approved_by_name = serializers.SerializerMethodField()
     availability_summary = serializers.SerializerMethodField()
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    approval_label = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
         fields = [
             'id', 'title', 'location', 'event_date', 'start_time', 'end_time',
             'status', 'status_display', 'created_by_name', 'approved_by_name',
-            'availability_summary', 'payment_amount', 'is_solo', 'created_at', 'created_by'
+            'approval_label', 'availability_summary', 'payment_amount', 'is_solo', 'created_at', 'created_by'
         ]
     
     def get_created_by_name(self, obj):
@@ -89,6 +90,12 @@ class EventListSerializer(serializers.ModelSerializer):
     
     def get_approved_by_name(self, obj):
         return obj.approved_by.get_full_name() if obj.approved_by else None
+
+    def get_approval_label(self, obj):
+        """Mostra quem aprovou quando status é aprovado"""
+        if obj.status == 'approved' and obj.approved_by:
+            return f"Aprovado por {obj.approved_by.get_full_name() or obj.approved_by.username}"
+        return obj.get_status_display()
     
     def get_availability_summary(self, obj):
         """Retorna resumo das disponibilidades"""
@@ -123,6 +130,7 @@ class EventDetailSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     can_approve = serializers.SerializerMethodField()
     logs = serializers.SerializerMethodField()
+    approval_label = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
@@ -131,7 +139,7 @@ class EventDetailSerializer(serializers.ModelSerializer):
             'event_date', 'start_time', 'end_time', 'start_datetime', 'end_datetime',
             'payment_amount', 'is_solo', 'status', 'status_display', 'can_approve',
             'created_by', 'created_by_name', 'approved_by', 'approved_by_name',
-            'approved_at', 'rejection_reason', 'availabilities',
+            'approved_at', 'rejection_reason', 'approval_label', 'availabilities',
             'logs', 'created_at', 'updated_at'
         ]
         read_only_fields = [
@@ -157,6 +165,11 @@ class EventDetailSerializer(serializers.ModelSerializer):
             return musician.is_leader() and obj.can_be_approved()
         except Musician.DoesNotExist:
             return False
+
+    def get_approval_label(self, obj):
+        if obj.status == 'approved' and obj.approved_by:
+            return f"Aprovado por {obj.approved_by.get_full_name() or obj.approved_by.username}"
+        return obj.get_status_display()
 
     def get_logs(self, obj):
         """Retorna últimos registros de log (limitado para evitar payload grande)"""
