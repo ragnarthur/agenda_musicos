@@ -42,7 +42,9 @@ api.interceptors.response.use(
         await refreshAuthToken();
         return api(originalRequest);
       } catch (refreshError) {
-        window.location.href = '/login';
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }

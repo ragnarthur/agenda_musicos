@@ -11,6 +11,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const isLoginPage = window.location.pathname === '/login';
+    if (isLoginPage) {
+      setLoading(false);
+      return;
+    }
+
     const bootstrap = async () => {
       try {
         const currentUser = await musicianService.getMe();
