@@ -133,3 +133,41 @@ export interface EventLog {
   performed_by_name: string;
   created_at: string;
 }
+
+// Marketplace - vagas e candidaturas de músicos freelancers
+export type GigStatus = 'open' | 'in_review' | 'hired' | 'closed' | 'cancelled';
+
+export interface MarketplaceApplication {
+  id: number;
+  gig: number;
+  musician: number;
+  musician_name: string;
+  cover_letter?: string;
+  expected_fee?: string;
+  status: 'pending' | 'hired' | 'rejected';
+  created_at: string;
+}
+
+export interface MarketplaceGig {
+  id: number;
+  title: string;
+  description?: string;
+  city?: string;
+  location?: string;
+  event_date?: string;
+  start_time?: string;
+  end_time?: string;
+  budget?: string;
+  contact_name?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  genres?: string;
+  status: GigStatus;
+  created_by?: number;
+  created_by_name: string;
+  applications_count: number;
+  applications?: MarketplaceApplication[];
+  my_application?: MarketplaceApplication | null;
+  created_at: string;
+  updated_at: string;
+}

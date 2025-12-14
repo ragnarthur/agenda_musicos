@@ -1,6 +1,18 @@
 // services/api.ts
 import axios, { AxiosError } from 'axios';
-import type { LoginCredentials, Musician, Event, EventCreate, Availability, AvailabilityResponse, LeaderAvailability, LeaderAvailabilityCreate } from '../types';
+import type {
+  LoginCredentials,
+  Musician,
+  Event,
+  EventCreate,
+  Availability,
+  AvailabilityResponse,
+  LeaderAvailability,
+  LeaderAvailabilityCreate,
+  MarketplaceGig,
+  MarketplaceApplication,
+  GigStatus,
+} from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -224,6 +236,47 @@ export const leaderAvailabilityService = {
 
   getConflictingEvents: async (id: number): Promise<Event[]> => {
     const response = await api.get(`/leader-availabilities/${id}/conflicting_events/`);
+    return response.data;
+  },
+};
+
+// Marketplace Service
+export const marketplaceService = {
+  getGigs: async (params?: { status?: GigStatus; mine?: boolean }): Promise<MarketplaceGig[]> => {
+    const response = await api.get('/marketplace/gigs/', { params });
+    return response.data.results || response.data;
+  },
+
+  createGig: async (data: Partial<MarketplaceGig>): Promise<MarketplaceGig> => {
+    const response = await api.post('/marketplace/gigs/', data);
+    return response.data;
+  },
+
+  applyToGig: async (
+    gigId: number,
+    payload: { cover_letter?: string; expected_fee?: string | number }
+  ): Promise<MarketplaceApplication> => {
+    const response = await api.post(`/marketplace/gigs/${gigId}/apply/`, payload);
+    return response.data;
+  },
+
+  getGigApplications: async (gigId: number): Promise<MarketplaceApplication[]> => {
+    const response = await api.get(`/marketplace/gigs/${gigId}/applications/`);
+    return response.data;
+  },
+
+  hireApplication: async (gigId: number, applicationId: number): Promise<MarketplaceGig> => {
+    const response = await api.post(`/marketplace/gigs/${gigId}/hire/`, { application_id: applicationId });
+    return response.data;
+  },
+
+  closeGig: async (gigId: number, status: 'closed' | 'cancelled' = 'closed'): Promise<MarketplaceGig> => {
+    const response = await api.post(`/marketplace/gigs/${gigId}/close/`, { status });
+    return response.data;
+  },
+
+  getMyApplications: async (): Promise<MarketplaceApplication[]> => {
+    const response = await api.get('/marketplace/applications/');
     return response.data;
   },
 };
