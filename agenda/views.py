@@ -17,7 +17,7 @@ from .serializers import (
     AvailabilitySerializer,
     LeaderAvailabilitySerializer
 )
-from .permissions import IsLeaderOrReadOnly, IsOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly
 
 
 class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
@@ -792,13 +792,8 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """
-        Permissões customizadas:
-        - create/update/delete: apenas líderes
-        - list/retrieve: todos os músicos autenticados
+        Permissões: todos autenticados podem criar/editar suas próprias disponibilidades.
         """
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            # Apenas líderes podem modificar
-            return [IsAuthenticated(), IsLeaderOrReadOnly()]
         return [IsAuthenticated()]
 
     def _split_availability_with_events(self, availability, events):
@@ -861,19 +856,10 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """
-        Salva disponibilidade atribuindo o líder logado.
-        Apenas líderes ativos podem criar disponibilidades.
+        Salva disponibilidade atribuindo o músico logado.
         """
         try:
             musician = self.request.user.musician_profile
-
-            if not musician.is_leader():
-                from rest_framework.exceptions import PermissionDenied
-                raise PermissionDenied('Apenas líderes podem cadastrar disponibilidades.')
-
-            if not musician.is_active:
-                from rest_framework.exceptions import PermissionDenied
-                raise PermissionDenied('Músico inativo não pode cadastrar disponibilidades.')
 
             serializer.save(leader=musician)
             created = serializer.instance
@@ -910,19 +896,15 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         """
-        Permite apenas que o líder atualize suas próprias disponibilidades.
+        Permite apenas que o músico atualize suas próprias disponibilidades.
         """
         try:
             musician = self.request.user.musician_profile
 
-            if not musician.is_leader():
-                from rest_framework.exceptions import PermissionDenied
-                raise PermissionDenied('Apenas líderes podem atualizar disponibilidades.')
-
             # Verifica se a disponibilidade pertence ao líder
             if serializer.instance.leader != musician:
                 from rest_framework.exceptions import PermissionDenied
-                raise PermissionDenied('Você não pode editar disponibilidades de outros líderes.')
+                raise PermissionDenied('Você não pode editar disponibilidades de outros músicos.')
 
             instance = serializer.save()
             conflicting_events = Event.objects.filter(
@@ -938,18 +920,14 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         """
-        Permite apenas deletar a própria disponibilidade de líder.
+        Permite apenas deletar a própria disponibilidade.
         """
         try:
             musician = self.request.user.musician_profile
 
-            if not musician.is_leader():
-                from rest_framework.exceptions import PermissionDenied
-                raise PermissionDenied('Apenas líderes podem excluir disponibilidades.')
-
             if instance.leader != musician:
                 from rest_framework.exceptions import PermissionDenied
-                raise PermissionDenied('Você não pode excluir disponibilidades de outros líderes.')
+                raise PermissionDenied('Você não pode excluir disponibilidades de outros músicos.')
 
             super().perform_destroy(instance)
         except Musician.DoesNotExist:

@@ -289,7 +289,7 @@ class Availability(models.Model):
 
 class LeaderAvailability(models.Model):
     """
-    Datas e horários disponíveis cadastrados pelo líder (baterista).
+    Datas e horários disponíveis cadastrados por cada músico.
     Outros músicos visualizam essas disponibilidades ao criar eventos.
     Regra: mínimo 40 minutos entre eventos.
     """
@@ -297,8 +297,7 @@ class LeaderAvailability(models.Model):
         Musician,
         on_delete=models.CASCADE,
         related_name='leader_availabilities',
-        limit_choices_to={'role': 'leader'},
-        help_text='Líder que cadastrou a disponibilidade'
+        help_text='Músico que cadastrou a disponibilidade'
     )
     date = models.DateField(help_text='Data disponível')
     start_time = models.TimeField(help_text='Hora de início da disponibilidade')
