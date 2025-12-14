@@ -1,6 +1,6 @@
 // pages/Musicians.tsx
 import React, { useEffect, useState } from 'react';
-import { Users, Music, Phone, Mail, Crown, AtSign } from 'lucide-react';
+import { Users, Music, Phone, Mail, Crown, Instagram } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { musicianService } from '../services/api';
@@ -129,7 +129,7 @@ const Musicians: React.FC = () => {
 
                     {musician.instagram && (
                       <div className="flex items-center space-x-2 text-gray-600">
-                        <AtSign className="h-4 w-4" />
+                        <Instagram className="h-4 w-4" />
                         <span className="text-sm">{musician.instagram}</span>
                       </div>
                     )}
