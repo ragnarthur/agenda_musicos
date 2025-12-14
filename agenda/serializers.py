@@ -34,12 +34,13 @@ class MusicianSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     full_name = serializers.SerializerMethodField()
     is_leader = serializers.SerializerMethodField()
+    public_email = serializers.SerializerMethodField()
     
     class Meta:
         model = Musician
         fields = [
             'id', 'user', 'full_name', 'instrument', 'role', 
-            'is_leader', 'bio', 'phone', 'is_active', 'created_at'
+            'is_leader', 'bio', 'phone', 'instagram', 'public_email', 'is_active', 'created_at'
         ]
         read_only_fields = ['id', 'created_at']
     
@@ -48,6 +49,9 @@ class MusicianSerializer(serializers.ModelSerializer):
     
     def get_is_leader(self, obj):
         return obj.is_leader()
+
+    def get_public_email(self, obj):
+        return obj.user.email or None
 
 
 class AvailabilitySerializer(serializers.ModelSerializer):
