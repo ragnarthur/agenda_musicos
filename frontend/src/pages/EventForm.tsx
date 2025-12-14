@@ -54,7 +54,7 @@ const EventForm: React.FC = () => {
     is_solo: false,
   });
 
-  // Carregar disponibilidades do líder ao montar o componente
+  // Carregar disponibilidades publicadas ao montar o componente
   const loadLeaderAvailabilities = useCallback(async () => {
     try {
       const data = await leaderAvailabilityService.getAll({ upcoming: true });
@@ -88,7 +88,7 @@ const EventForm: React.FC = () => {
     return `${hours}h ${mins.toString().padStart(2, '0')}min`;
   }, [formData.start_time, formData.end_time]);
 
-  // Verificar se a data escolhida coincide com uma disponibilidade do líder
+  // Verificar se a data escolhida coincide com uma disponibilidade publicada
   useEffect(() => {
     if (formData.event_date) {
       const matching = leaderAvailabilities.find(
@@ -284,7 +284,7 @@ const EventForm: React.FC = () => {
           {prefilledData && (
             <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center space-x-2">
               <Info className="h-5 w-5" />
-              <span>Data e horários preenchidos automaticamente a partir da disponibilidade do líder.</span>
+              <span>Data e horários preenchidos automaticamente a partir de uma disponibilidade publicada.</span>
             </div>
           )}
 
@@ -417,7 +417,7 @@ const EventForm: React.FC = () => {
                 />
               </div>
 
-              {/* Aviso se data coincide com disponibilidade do líder */}
+          {/* Aviso se data coincide com disponibilidade publicada */}
               {matchingAvailability && !formData.is_solo && (
                 <div className="flex items-start space-x-2 mt-2 p-3 bg-green-50 rounded-lg border border-green-200">
                   <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />

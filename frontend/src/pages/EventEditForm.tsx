@@ -329,7 +329,7 @@ const EventEditForm: React.FC = () => {
                 Show Solo
               </label>
               <p className="text-sm text-gray-600 mt-1">
-                Marque esta opção se for um show solo. Shows solo não requerem aprovação do líder e são automaticamente aprovados.
+                Marque esta opção se for um show solo. Shows solo são automaticamente aprovados.
               </p>
             </div>
           </div>

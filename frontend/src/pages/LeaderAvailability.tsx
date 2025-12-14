@@ -10,7 +10,7 @@ import { format, parseISO } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 
 const LeaderAvailabilityPage: React.FC = () => {
-  const { isLeader } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [availabilities, setAvailabilities] = useState<LeaderAvailability[]>([]);
   const [loading, setLoading] = useState(true);
@@ -179,25 +179,18 @@ const LeaderAvailabilityPage: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              {isLeader ? 'Minha agenda de bateria' : 'Agenda do Baterista'}
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900">Minhas disponibilidades</h1>
             <p className="mt-2 text-gray-600">
-              {isLeader
-                ? 'Cadastre datas e horários disponíveis para shows'
-                : 'Veja quando o líder está disponível para shows'
-              }
+              Cadastre seus horários livres e veja quando outros músicos estão disponíveis para montar duos/trios.
             </p>
           </div>
-          {isLeader && (
-            <button
-              onClick={() => setShowModal(true)}
-              className="btn-primary flex items-center space-x-2"
-            >
-              <Plus className="h-5 w-5" />
-              <span>Nova Disponibilidade</span>
-            </button>
-          )}
+          <button
+            onClick={() => setShowModal(true)}
+            className="btn-primary flex items-center space-x-2"
+          >
+            <Plus className="h-5 w-5" />
+            <span>Nova Disponibilidade</span>
+          </button>
         </div>
 
         {/* Info sobre buffer de 40 minutos */}
@@ -254,81 +247,84 @@ const LeaderAvailabilityPage: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
-            {availabilities.map((availability) => (
-              <div
-                key={availability.id}
-                className={`card-contrast ${availability.has_conflicts ? 'border-red-300 bg-red-50/80' : ''}`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <CalendarIcon className="h-5 w-5 text-gray-500" />
-                      <span className="text-lg font-semibold text-gray-900">
-                        {format(parseISO(availability.date), 'dd/MM/yyyy')}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-3 mb-2">
-                      <Clock className="h-5 w-5 text-gray-500" />
-                      <span className="text-gray-700">
-                        {availability.start_time.slice(0, 5)} - {availability.end_time.slice(0, 5)}
-                      </span>
-                    </div>
-                    {availability.notes && (
-                      <p className="text-sm text-gray-600 mt-2">{availability.notes}</p>
-                    )}
-                    {availability.has_conflicts && (
-                      <div className="flex items-start space-x-2 mt-3 p-2 bg-red-100 rounded">
-                        <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
-                        <p className="text-sm text-red-700">
-                          <strong>
-                            {availability.conflicting_events_count === 1
-                              ? 'Existe 1 conflito'
-                              : `${availability.conflicting_events_count} conflitos encontrados`}
-                          </strong>
-                          {' '}para este intervalo. Ajuste o horário ou libere o evento conflitante.
-                          (Cálculo inclui buffer de 40 min antes/depois)
-                        </p>
+            {availabilities.map((availability) => {
+              const isOwner = availability.leader === user?.id;
+              return (
+                <div
+                  key={availability.id}
+                  className={`card-contrast ${availability.has_conflicts ? 'border-red-300 bg-red-50/80' : ''}`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <CalendarIcon className="h-5 w-5 text-gray-500" />
+                        <span className="text-lg font-semibold text-gray-900">
+                          {format(parseISO(availability.date), 'dd/MM/yyyy')}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-2 ml-4">
-                    {isLeader ? (
-                      <>
+                      <div className="flex items-center space-x-3 mb-2">
+                        <Clock className="h-5 w-5 text-gray-500" />
+                        <span className="text-gray-700">
+                          {availability.start_time.slice(0, 5)} - {availability.end_time.slice(0, 5)}
+                        </span>
+                      </div>
+                      {availability.notes && (
+                        <p className="text-sm text-gray-600 mt-2">{availability.notes}</p>
+                      )}
+                      {availability.has_conflicts && (
+                        <div className="flex items-start space-x-2 mt-3 p-2 bg-red-100 rounded">
+                          <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+                          <p className="text-sm text-red-700">
+                            <strong>
+                              {availability.conflicting_events_count === 1
+                                ? 'Existe 1 conflito'
+                                : `${availability.conflicting_events_count} conflitos encontrados`}
+                            </strong>
+                            {' '}para este intervalo. Ajuste o horário ou libere o evento conflitante.
+                            (Cálculo inclui buffer de 40 min antes/depois)
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2 ml-4">
+                      {isOwner ? (
+                        <>
+                          <button
+                            onClick={() => handleEdit(availability)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Editar"
+                          >
+                            <Edit className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(availability.id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Deletar"
+                            disabled={actionLoading}
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        </>
+                      ) : (
                         <button
-                          onClick={() => handleEdit(availability)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Editar"
+                          onClick={() => navigate('/eventos/novo', {
+                            state: {
+                              date: availability.date,
+                              start_time: availability.start_time,
+                              end_time: availability.end_time
+                            }
+                          })}
+                          className="btn-primary flex items-center space-x-2"
                         >
-                          <Edit className="h-5 w-5" />
+                          <Plus className="h-5 w-5" />
+                          <span>Propor Evento</span>
                         </button>
-                        <button
-                          onClick={() => handleDelete(availability.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Deletar"
-                          disabled={actionLoading}
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </button>
-                      </>
-                    ) : (
-                      <button
-                        onClick={() => navigate('/eventos/novo', {
-                          state: {
-                            date: availability.date,
-                            start_time: availability.start_time,
-                            end_time: availability.end_time
-                          }
-                        })}
-                        className="btn-primary flex items-center space-x-2"
-                      >
-                        <Plus className="h-5 w-5" />
-                        <span>Criar Evento</span>
-                      </button>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
