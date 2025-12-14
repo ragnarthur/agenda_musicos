@@ -3,8 +3,8 @@ from agenda.models import Musician
 
 users = [
     {"username": "sara", "first": "Sara", "last": "Carmo", "password": "sara2025@", "instrument": "guitar", "role": "member", "bio": "Vocal e violão", "email": "saram.carmo@hotmail.com", "phone": "(17)99193-3859", "instagram": "@saracarmocantora"},
-    {"username": "arthur", "first": "Arthur", "last": "Araújo", "password": "arthur2025@", "instrument": "guitar", "role": "member", "bio": "Vocal, violão e guitarra"},
-    {"username": "roberto", "first": "Roberto", "last": "Guimarães", "password": "roberto2025@", "instrument": "drums", "role": "leader", "bio": "Baterista e líder"},
+    {"username": "arthur", "first": "Arthur", "last": "Araújo", "password": "arthur2025@", "instrument": "guitar", "role": "member", "bio": "Vocal, violão e guitarra", "email": "catsinthegarden01@gmail.com", "phone": "(34) 98811-5465", "instagram": "@arthuraraujo07"},
+    {"username": "roberto", "first": "Roberto", "last": "Guimarães", "password": "roberto2025@", "instrument": "drums", "role": "leader", "bio": "Baterista e líder", "email": "riguimaandroid@gmail.com", "phone": "(34) 99174-3948", "instagram": "@roberto.guimaraes.299"},
 ]
 
 admin, _ = User.objects.get_or_create(username="admin", defaults={"email": "admin@example.com"})
