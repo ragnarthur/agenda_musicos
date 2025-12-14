@@ -18,34 +18,37 @@ class Command(BaseCommand):
                 'username': 'sara',
                 'first_name': 'Sara',
                 'last_name': 'Carmo',
-                'email': 'sara@musica.com',
+                'email': 'saram.carmo@hotmail.com',
                 'password': 'sara2025@',
-                'instrument': 'vocal',
+                'instrument': 'guitar',
                 'role': 'member',
-                'bio': 'Vocal e violão - Contrata músicos para apresentações',
-                'phone': '(11) 98888-1111'
+                'bio': 'Vocalista e violonista - contrata músicos para apresentações',
+                'phone': '(17) 99193-3859',
+                'instagram': '@saracarmocantora',
             },
             {
                 'username': 'arthur',
                 'first_name': 'Arthur',
                 'last_name': 'Araújo',
-                'email': 'arthur@musica.com',
+                'email': 'catsinthegarden01@gmail.com',
                 'password': 'arthur2025@',
                 'instrument': 'guitar',
                 'role': 'member',
-                'bio': 'Vocal, violão e guitarra - Contrata músicos para apresentações',
-                'phone': '(11) 98888-2222'
+                'bio': 'Vocal, violão e guitarra - contrata músicos para apresentações',
+                'phone': '(34) 98811-5465',
+                'instagram': '@arthuraraujo07',
             },
             {
                 'username': 'roberto',
                 'first_name': 'Roberto',
                 'last_name': 'Guimarães',
-                'email': 'roberto@musica.com',
+                'email': 'riguimaandroid@gmail.com',
                 'password': 'roberto2025@',
                 'instrument': 'drums',
                 'role': 'leader',
                 'bio': 'Baterista e líder da banda',
-                'phone': '(11) 98888-3333'
+                'phone': '(34) 99174-3948',
+                'instagram': '@roberto.guimaraes.299',
             }
         ]
 
@@ -64,7 +67,8 @@ class Command(BaseCommand):
                 'instrument': data['instrument'],
                 'role': data['role'],
                 'bio': data['bio'],
-                'phone': data['phone']
+                'phone': data['phone'],
+                'instagram': data.get('instagram', ''),
             }
 
             # Criar ou atualizar usuário
