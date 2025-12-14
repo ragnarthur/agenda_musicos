@@ -12,6 +12,7 @@ import EventBoard from './pages/EventBoard';
 import Approvals from './pages/Approvals';
 import Musicians from './pages/Musicians';
 import LeaderAvailability from './pages/LeaderAvailability';
+import Marketplace from './pages/Marketplace';
 import Loading from './components/common/Loading';
 
 // Componente para rotas protegidas
@@ -82,6 +83,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Musicians />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/marketplace"
+        element={
+          <ProtectedRoute>
+            <Marketplace />
           </ProtectedRoute>
         }
       />

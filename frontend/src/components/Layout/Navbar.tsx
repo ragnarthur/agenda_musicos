@@ -1,7 +1,7 @@
 // components/Layout/Navbar.tsx
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Music, Calendar, Users, LogOut, Crown, Clock } from 'lucide-react';
+import { Music, Calendar, Users, LogOut, Crown, Clock, Megaphone } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { eventService } from '../../services/api';
 
@@ -106,6 +106,14 @@ const Navbar: React.FC = () => {
             </Link>
 
             <Link
+              to="/marketplace"
+              className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 transition-colors"
+            >
+              <Megaphone className="h-5 w-5" />
+              <span>Marketplace</span>
+            </Link>
+
+            <Link
               to="/aprovacoes"
               className="flex items-center space-x-1 text-yellow-600 hover:text-yellow-700 transition-colors relative"
             >
@@ -188,6 +196,14 @@ const Navbar: React.FC = () => {
           >
             <Users className="h-5 w-5" />
             <span className="text-[10px] mt-1 leading-none">Músicos</span>
+          </Link>
+
+          <Link
+            to="/marketplace"
+            className="w-20 flex-shrink-0 flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 rounded-lg transition-colors"
+          >
+            <Megaphone className="h-5 w-5" />
+            <span className="text-[10px] mt-1 leading-none">Marketplace</span>
           </Link>
 
           <Link
