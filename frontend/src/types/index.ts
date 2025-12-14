@@ -18,6 +18,8 @@ export interface Musician {
   is_leader: boolean;
   bio?: string;
   phone?: string;
+  instagram?: string;
+  public_email?: string | null;
   is_active: boolean;
   created_at: string;
 }

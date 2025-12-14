@@ -35,6 +35,7 @@ class Musician(models.Model):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='member')
     bio = models.TextField(blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
+    instagram = models.CharField(max_length=100, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     

@@ -1,6 +1,6 @@
 // pages/Musicians.tsx
 import React, { useEffect, useState } from 'react';
-import { Users, Music, Phone, Mail, Crown } from 'lucide-react';
+import { Users, Music, Phone, Mail, Crown, AtSign } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { musicianService } from '../services/api';
@@ -48,21 +48,6 @@ const Musicians: React.FC = () => {
     return emojis[instrument] || '🎵';
   };
 
-  const normalize = (value?: string | null) => (value || '').toLowerCase();
-
-  const withOverrides = (musician: Musician) => {
-    const isArthur =
-      normalize(musician.full_name).includes('arthur') ||
-      normalize(musician.user.username).includes('arthur');
-
-    return {
-      username: isArthur ? 'arthuraraujo07' : musician.user.username,
-      phone: isArthur ? '(34) 98811-5465' : musician.phone,
-      email: isArthur ? 'arthuraraujo07@hotmail.com' : musician.user.email,
-      bio: musician.bio,
-    };
-  };
-
   return (
     <Layout>
       <div className="space-y-6">
@@ -96,70 +81,74 @@ const Musicians: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {musicians.map((musician) => (
-              <div key={musician.id} className="card-contrast hover:shadow-2xl transition-all">
-                {(() => {
-                  const data = withOverrides(musician);
-                  const emoji = getInstrumentEmoji(musician.instrument, musician.bio);
-                  const isLeader = musician.is_leader;
-                  return (
-                    <>
-                      {/* Header do Card */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="bg-primary-100 p-3 rounded-full">
-                            <span className="text-2xl">{emoji}</span>
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900 flex items-center space-x-2">
-                              <span>{musician.full_name}</span>
-                              {isLeader && <Crown className="h-4 w-4 text-yellow-500" />}
-                            </h3>
-                            <p className="text-sm text-gray-600">@{data.username}</p>
-                          </div>
-                        </div>
+            {musicians.map((musician) => {
+              const emoji = getInstrumentEmoji(musician.instrument, musician.bio);
+              const isLeader = musician.is_leader;
+              const username = musician.instagram || musician.user.username;
+              const contactEmail = musician.public_email || musician.user.email;
+              return (
+                <div key={musician.id} className="card-contrast hover:shadow-2xl transition-all">
+                  {/* Header do Card */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-primary-100 p-3 rounded-full">
+                        <span className="text-2xl">{emoji}</span>
                       </div>
-
-                      {/* Informações */}
-                      <div className="space-y-3">
-                        {data.bio && (
-                          <div className="flex items-center space-x-2 text-gray-700">
-                            <Music className="h-4 w-4 text-primary-600" />
-                            <span className="text-sm font-medium">{data.bio}</span>
-                          </div>
-                        )}
-
-                        {data.phone && (
-                          <div className="flex items-center space-x-2 text-gray-600">
-                            <Phone className="h-4 w-4" />
-                            <span className="text-sm">{data.phone}</span>
-                          </div>
-                        )}
-
-                        {data.email && (
-                          <div className="flex items-center space-x-2 text-gray-600">
-                            <Mail className="h-4 w-4" />
-                            <span className="text-sm">{data.email}</span>
-                          </div>
-                        )}
+                      <div>
+                        <h3 className="font-semibold text-gray-900 flex items-center space-x-2">
+                          <span>{musician.full_name}</span>
+                          {isLeader && <Crown className="h-4 w-4 text-yellow-500" />}
+                        </h3>
+                        {username && <p className="text-sm text-gray-600">@{username.replace('@', '')}</p>}
                       </div>
+                    </div>
+                  </div>
 
-                      {/* Badge de Papel */}
-                      <div className="mt-4">
-                        {isLeader ? (
-                          <span className="status-chip approved">
-                            <Crown className="h-3 w-3" />
-                            <span>Baterista (agenda compartilhada)</span>
-                          </span>
-                        ) : (
-                          <span className="status-chip default">Membro</span>
-                        )}
+                  {/* Informações */}
+                  <div className="space-y-3">
+                    {musician.bio && (
+                      <div className="flex items-center space-x-2 text-gray-700">
+                        <Music className="h-4 w-4 text-primary-600" />
+                        <span className="text-sm font-medium">{musician.bio}</span>
                       </div>
-                    </>
-                  );
-                })()}
-              </div>
-            ))}
+                    )}
+
+                    {musician.phone && (
+                      <div className="flex items-center space-x-2 text-gray-600">
+                        <Phone className="h-4 w-4" />
+                        <span className="text-sm">{musician.phone}</span>
+                      </div>
+                    )}
+
+                    {contactEmail && (
+                      <div className="flex items-center space-x-2 text-gray-600">
+                        <Mail className="h-4 w-4" />
+                        <span className="text-sm">{contactEmail}</span>
+                      </div>
+                    )}
+
+                    {musician.instagram && (
+                      <div className="flex items-center space-x-2 text-gray-600">
+                        <AtSign className="h-4 w-4" />
+                        <span className="text-sm">{musician.instagram}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Badge de Papel */}
+                  <div className="mt-4">
+                    {isLeader ? (
+                      <span className="status-chip approved">
+                        <Crown className="h-3 w-3" />
+                        <span>Baterista (agenda compartilhada)</span>
+                      </span>
+                    ) : (
+                      <span className="status-chip default">Membro</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -173,7 +162,7 @@ const Musicians: React.FC = () => {
                   Total: {musicians.length} músico{musicians.length !== 1 ? 's' : ''}
                 </p>
                 <p className="text-sm text-primary-700 mt-1">
-                  Sara e Arthur são vocalistas e violonistas que contratam apresentações com Roberto, nosso baterista com agenda compartilhada.
+                  Todos os músicos podem se conectar para formar duos e trios, com contatos disponíveis para combinar diretamente.
                 </p>
               </div>
             </div>
