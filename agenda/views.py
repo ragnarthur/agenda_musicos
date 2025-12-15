@@ -771,17 +771,28 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         from django.utils import timezone
         queryset = LeaderAvailability.objects.filter(is_active=True).select_related('leader__user')
 
-        mine = self.request.query_params.get('mine') == 'true'
-        public_only = self.request.query_params.get('public') == 'true'
+        mine_param = self.request.query_params.get('mine') == 'true'
+        public_param = self.request.query_params.get('public') == 'true'
 
-        if mine:
-            try:
-                musician = self.request.user.musician_profile
-                queryset = queryset.filter(leader=musician)
-            except Musician.DoesNotExist:
+        # Default: mostrar apenas minhas agendas se nada for informado
+        if not mine_param and not public_param:
+            mine_param = True
+
+        musician = None
+        try:
+            musician = self.request.user.musician_profile
+        except Musician.DoesNotExist:
+            if not public_param:
                 return LeaderAvailability.objects.none()
-        elif public_only:
+
+        if mine_param and public_param and musician:
+            queryset = queryset.filter(models.Q(leader=musician) | models.Q(is_public=True))
+        elif mine_param and musician:
+            queryset = queryset.filter(leader=musician)
+        elif public_param:
             queryset = queryset.filter(is_public=True)
+        else:
+            return LeaderAvailability.objects.none()
 
         # Filtro por data futura
         if self.request.query_params.get('upcoming') == 'true':
@@ -798,12 +809,12 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
 
         # Filtro por líder específico
         leader_id = self.request.query_params.get('leader')
-        if leader_id:
+        if leader_id and public_param:
             queryset = queryset.filter(leader_id=leader_id)
 
         # Busca por nome/username/instagram do músico
         search = self.request.query_params.get('search')
-        if search:
+        if search and public_param:
             queryset = queryset.filter(
                 Q(leader__user__first_name__icontains=search) |
                 Q(leader__user__last_name__icontains=search) |
