@@ -1,14 +1,18 @@
 # agenda/views.py
+import logging
+from datetime import timedelta, datetime, time, date
+
+from django.db import models, transaction
+from django.db.models import Q, Count
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+
 from rest_framework import viewsets, status
-from django.db import models
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.shortcuts import get_object_or_404
-from django.db.models import Q
-from django.utils import timezone
-from datetime import timedelta, datetime, time, date
-import logging
+from rest_framework.exceptions import ValidationError, PermissionDenied
+
 from .models import Musician, Event, Availability, LeaderAvailability, EventLog, Organization, Membership
 from .serializers import (
     MusicianSerializer,
@@ -19,20 +23,7 @@ from .serializers import (
     LeaderAvailabilitySerializer
 )
 from .permissions import IsOwnerOrReadOnly
-
-
-def get_user_organization(user):
-    """
-    Retorna a organização do usuário (primeira membership ativa) ou a organização do perfil de músico.
-    """
-    membership = Membership.objects.filter(user=user, status='active').select_related('organization').first()
-    if membership:
-        return membership.organization
-    try:
-        musician = user.musician_profile
-        return musician.organization
-    except Musician.DoesNotExist:
-        return None
+from .utils import get_user_organization, split_availability_with_events
 
 
 class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
@@ -76,7 +67,7 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
 class EventViewSet(viewsets.ModelViewSet):
     """
     ViewSet completo para eventos.
-    
+
     Fluxo:
     1. Sara/Arthur criam proposta (POST /events/)
     2. Sistema cria availabilities para todos os músicos
@@ -118,6 +109,24 @@ class EventViewSet(viewsets.ModelViewSet):
         - ?upcoming=true (eventos futuros)
         """
         queryset = super().get_queryset()
+
+        # Adiciona anotações para contagem de disponibilidades (otimização N+1)
+        queryset = queryset.annotate(
+            avail_pending=Count('availabilities', filter=Q(availabilities__response='pending')),
+            avail_available=Count('availabilities', filter=Q(availabilities__response='available')),
+            avail_unavailable=Count('availabilities', filter=Q(availabilities__response='unavailable')),
+            avail_maybe=Count('availabilities', filter=Q(availabilities__response='maybe')),
+            avail_total=Count('availabilities'),
+        )
+
+        # Filtra por organização do usuário (segurança multi-tenant)
+        org = get_user_organization(self.request.user)
+        if org:
+            queryset = queryset.filter(organization=org)
+        else:
+            # Usuário sem organização só vê eventos que criou
+            queryset = queryset.filter(created_by=self.request.user)
+
         # Exibe eventos onde o usuário participa (criador ou availability)
         try:
             musician = self.request.user.musician_profile
@@ -158,7 +167,6 @@ class EventViewSet(viewsets.ModelViewSet):
         if search:
             # Limita tamanho da query para prevenir DoS
             if len(search) > 100:
-                from rest_framework.exceptions import ValidationError
                 raise ValidationError({'search': 'Busca não pode ter mais de 100 caracteres.'})
             queryset = queryset.filter(
                 Q(title__icontains=search) | Q(location__icontains=search)
@@ -166,12 +174,10 @@ class EventViewSet(viewsets.ModelViewSet):
 
         # Eventos passados
         if self.request.query_params.get('past') == 'true':
-            from django.utils import timezone
             queryset = queryset.filter(event_date__lt=timezone.now().date())
 
         # Eventos futuros (padrão)
         if self.request.query_params.get('upcoming') == 'true':
-            from django.utils import timezone
             queryset = queryset.filter(event_date__gte=timezone.now().date())
 
         return queryset
@@ -217,10 +223,10 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         Cria evento e disponibilidades para todos os músicos da organização.
         Status inicial: 'proposed' (exceto se is_solo=True, então 'approved').
+        Usa transação atômica para garantir consistência dos dados.
         """
         org = get_user_organization(self.request.user)
         if not org:
-            from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied('Usuário sem organização.')
         is_solo = serializer.validated_data.get('is_solo', False)
 
@@ -231,58 +237,60 @@ class EventViewSet(viewsets.ModelViewSet):
                 'approved_at': timezone.now(),
             }
 
-        # Se é evento solo, vai direto para 'approved', caso contrário 'proposed'
-        event = serializer.save(
-            created_by=self.request.user,
-            organization=org,
-            status='approved' if is_solo else 'proposed',
-            **approved_kwargs
-        )
-        self._log_event(
-            event,
-            'created',
-            'Show solo criado e aprovado automaticamente.' if is_solo else 'Evento criado e enviado para aprovação.'
-        )
-
-        # Criar availabilities:
-        # - Para eventos solo: apenas o criador
-        # - Para eventos com banda: todos os músicos ativos da organização
-        availabilities = []
-
-        try:
-            all_musicians = Musician.objects.filter(is_active=True)
-        except Musician.DoesNotExist:
-            all_musicians = Musician.objects.none()
-
-        for musician in all_musicians:
-            if is_solo and musician.user != self.request.user:
-                continue
-            response_value = 'available' if musician.user == self.request.user else 'pending'
-            note_value = 'Evento criado por mim' if musician.user == self.request.user else ''
-            availabilities.append(
-                Availability(
-                    musician=musician,
-                    event=event,
-                    response=response_value,
-                    notes=note_value
-                )
+        # Transação atômica para garantir que evento + disponibilidades são criados juntos
+        with transaction.atomic():
+            # Se é evento solo, vai direto para 'approved', caso contrário 'proposed'
+            event = serializer.save(
+                created_by=self.request.user,
+                organization=org,
+                status='approved' if is_solo else 'proposed',
+                **approved_kwargs
+            )
+            self._log_event(
+                event,
+                'created',
+                'Show solo criado e aprovado automaticamente.' if is_solo else 'Evento criado e enviado para aprovação.'
             )
 
-        # Criar availabilities usando update_or_create para evitar race conditions
-        # Também preenche timestamps corretamente (bulk_create não preenche auto_now/auto_now_add)
-        if availabilities:
-            now = timezone.now()
-            for availability in availabilities:
-                # update_or_create é atômico e evita violação de unique_together
-                Availability.objects.update_or_create(
-                    musician=availability.musician,
-                    event=availability.event,
-                    defaults={
-                        'response': availability.response,
-                        'notes': availability.notes if hasattr(availability, 'notes') else '',
-                        'responded_at': now if availability.response != 'pending' else None,
-                    }
+            # Criar availabilities (dentro da transação):
+            # - Para eventos solo: apenas o criador
+            # - Para eventos com banda: todos os músicos ativos da organização
+            availabilities = []
+
+            try:
+                all_musicians = Musician.objects.filter(is_active=True)
+            except Musician.DoesNotExist:
+                all_musicians = Musician.objects.none()
+
+            for musician in all_musicians:
+                if is_solo and musician.user != self.request.user:
+                    continue
+                response_value = 'available' if musician.user == self.request.user else 'pending'
+                note_value = 'Evento criado por mim' if musician.user == self.request.user else ''
+                availabilities.append(
+                    Availability(
+                        musician=musician,
+                        event=event,
+                        response=response_value,
+                        notes=note_value
+                    )
                 )
+
+            # Criar availabilities usando update_or_create para evitar race conditions
+            # Também preenche timestamps corretamente (bulk_create não preenche auto_now/auto_now_add)
+            if availabilities:
+                now = timezone.now()
+                for availability in availabilities:
+                    # update_or_create é atômico e evita violação de unique_together
+                    Availability.objects.update_or_create(
+                        musician=availability.musician,
+                        event=availability.event,
+                        defaults={
+                            'response': availability.response,
+                            'notes': availability.notes if hasattr(availability, 'notes') else '',
+                            'responded_at': now if availability.response != 'pending' else None,
+                        }
+                    )
 
     def perform_destroy(self, instance):
         """
@@ -291,7 +299,6 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         request_user = getattr(self, 'request', None).user if hasattr(self, 'request') else None
         if request_user and instance.created_by and instance.created_by != request_user:
-            from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied('Apenas o criador pode deletar este evento.')
 
         # Restaura disponibilidade do líder antes de deletar
@@ -303,69 +310,9 @@ class EventViewSet(viewsets.ModelViewSet):
     def _split_availability_with_events(self, availability, events):
         """
         Divide uma disponibilidade removendo os intervalos ocupados por eventos.
-        Cria novos slots com as sobras, desativando a disponibilidade original.
+        Delega para função utilitária em utils.py.
         """
-        if not events:
-            return
-
-        tz = timezone.get_current_timezone()
-        start = availability.start_datetime
-        end = availability.end_datetime
-        buffer = timedelta(minutes=40)
-
-        # ordena eventos por início
-        events = sorted(events, key=lambda e: e.start_datetime)
-
-        new_slots = []
-        cursor = start
-
-        for ev in events:
-            ev_start = ev.start_datetime - buffer
-            ev_end = ev.end_datetime + buffer
-
-            # Se há espaço antes do evento, cria slot
-            if ev_start > cursor:
-                new_slots.append(
-                    (cursor, min(ev_start, end))
-                )
-            # move cursor após o evento
-            if ev_end > cursor:
-                cursor = max(cursor, ev_end)
-
-        # Sobra final
-        if cursor < end:
-            new_slots.append((cursor, end))
-
-        # Desativa disponibilidade original
-        availability.is_active = False
-        availability.save(update_fields=['is_active'])
-
-        # Cria novas disponibilidades com as sobras
-        objs = []
-        now = timezone.now()
-        for slot_start, slot_end in new_slots:
-            if slot_end <= slot_start:
-                continue
-            # Preenche todos os campos para evitar problemas com bulk_create
-            # bulk_create não preenche auto_now/auto_now_add automaticamente
-            date_value = slot_start.astimezone(tz).date()
-            start_time = slot_start.astimezone(tz).time()
-            end_time = slot_end.astimezone(tz).time()
-            objs.append(
-                LeaderAvailability(
-                    leader=availability.leader,
-                    date=date_value,
-                    start_time=start_time,
-                    end_time=end_time,
-                    start_datetime=slot_start,
-                    end_datetime=slot_end,
-                    notes=availability.notes,
-                    created_at=now,
-                    updated_at=now,
-                )
-            )
-        if objs:
-            LeaderAvailability.objects.bulk_create(objs)
+        return split_availability_with_events(availability, events, LeaderAvailability)
 
     def _restore_leader_availability(self, event):
         """
@@ -423,6 +370,9 @@ class EventViewSet(viewsets.ModelViewSet):
         # Não há conflitos - cria disponibilidades cobrindo o período do evento.
         # Se cruzar meia-noite, divide em dois dias.
         now = timezone.now()
+        start_date = event_start.date()
+        end_date = event_end.date()
+
         if end_date != start_date:
             # Parte 1: do início até 23:59 do dia inicial
             end_dt1 = timezone.make_aware(
@@ -483,16 +433,23 @@ class EventViewSet(viewsets.ModelViewSet):
     def approve(self, request, pk=None):
         """
         POST /events/{id}/approve/
-        Qualquer músico participante pode aprovar eventos propostos.
+        Apenas líderes podem aprovar eventos propostos.
         """
         event = self.get_object()
-        
+
         try:
             musician = request.user.musician_profile
         except Musician.DoesNotExist:
             return Response(
                 {'detail': 'Usuário não possui perfil de músico.'},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Verifica se o usuário é líder
+        if not musician.is_leader():
+            return Response(
+                {'detail': 'Apenas líderes podem aprovar eventos.'},
+                status=status.HTTP_403_FORBIDDEN
             )
 
         # Garante que o músico está associado ao evento (cria se não existir)
@@ -519,16 +476,23 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         POST /events/{id}/reject/
         Body: { "reason": "motivo da rejeição" }
-        Qualquer músico participante pode rejeitar eventos propostos.
+        Apenas líderes podem rejeitar eventos propostos.
         """
         event = self.get_object()
-        
+
         try:
             musician = request.user.musician_profile
         except Musician.DoesNotExist:
             return Response(
                 {'detail': 'Usuário não possui perfil de músico.'},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Verifica se o usuário é líder
+        if not musician.is_leader():
+            return Response(
+                {'detail': 'Apenas líderes podem rejeitar eventos.'},
+                status=status.HTTP_403_FORBIDDEN
             )
 
         Availability.objects.update_or_create(
@@ -726,7 +690,6 @@ class AvailabilityViewSet(viewsets.ModelViewSet):
             musician = self.request.user.musician_profile
             serializer.save(musician=musician)
         except Musician.DoesNotExist:
-            from rest_framework.exceptions import ValidationError
             raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
     
     def perform_update(self, serializer):
@@ -739,7 +702,6 @@ class AvailabilityViewSet(viewsets.ModelViewSet):
                 raise PermissionDenied('Você não pode editar disponibilidades de outros músicos.')
             serializer.save()
         except Musician.DoesNotExist:
-            from rest_framework.exceptions import ValidationError
             raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
 
     def perform_destroy(self, instance):
@@ -752,7 +714,6 @@ class AvailabilityViewSet(viewsets.ModelViewSet):
                 raise PermissionDenied('Você não pode deletar disponibilidades de outros músicos.')
             super().perform_destroy(instance)
         except Musician.DoesNotExist:
-            from rest_framework.exceptions import ValidationError
             raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
 
 
@@ -780,7 +741,6 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         - ?mine=true (apenas minhas)
         - ?instrument=<instrument> (filtrar por instrumento do músico)
         """
-        from django.utils import timezone
         queryset = LeaderAvailability.objects.filter(is_active=True).select_related('leader__user')
 
         mine_param = self.request.query_params.get('mine') == 'true'
@@ -849,61 +809,10 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
 
     def _split_availability_with_events(self, availability, events):
         """
-        Divide uma disponibilidade removendo intervalos ocupados por eventos,
-        criando novas sobras e desativando a disponibilidade original.
+        Divide uma disponibilidade removendo intervalos ocupados por eventos.
+        Delega para função utilitária em utils.py.
         """
-        if not events:
-            return
-
-        tz = timezone.get_current_timezone()
-        start = availability.start_datetime
-        end = availability.end_datetime
-        buffer = timedelta(minutes=40)
-
-        events = sorted(events, key=lambda e: e.start_datetime)
-        new_slots = []
-        cursor = start
-
-        for ev in events:
-            ev_start = ev.start_datetime - buffer
-            ev_end = ev.end_datetime + buffer
-
-            if ev_start > cursor:
-                new_slots.append((cursor, min(ev_start, end)))
-            if ev_end > cursor:
-                cursor = max(cursor, ev_end)
-
-        if cursor < end:
-            new_slots.append((cursor, end))
-
-        availability.is_active = False
-        availability.save(update_fields=['is_active'])
-
-        objs = []
-        now = timezone.now()
-        for slot_start, slot_end in new_slots:
-            if slot_end <= slot_start:
-                continue
-            # Garantir campos completos para não depender do save() (bulk_create não chama save)
-            # bulk_create não preenche auto_now/auto_now_add automaticamente
-            date_value = slot_start.astimezone(tz).date()
-            start_time = slot_start.astimezone(tz).time()
-            end_time = slot_end.astimezone(tz).time()
-            objs.append(
-                LeaderAvailability(
-                    leader=availability.leader,
-                    date=date_value,
-                    start_time=start_time,
-                    end_time=end_time,
-                    start_datetime=slot_start,
-                    end_datetime=slot_end,
-                    notes=availability.notes,
-                    created_at=now,
-                    updated_at=now,
-                )
-            )
-        if objs:
-            LeaderAvailability.objects.bulk_create(objs)
+        return split_availability_with_events(availability, events, LeaderAvailability)
 
     def perform_create(self, serializer):
         """
@@ -923,7 +832,6 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
                 # Ajusta disponibilidade recém-criada consumindo eventos já existentes
                 self._split_availability_with_events(created, list(conflicting_events))
         except Musician.DoesNotExist:
-            from rest_framework.exceptions import ValidationError
             raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
 
     def create(self, request, *args, **kwargs):
@@ -966,7 +874,6 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
             if conflicting_events.exists():
                 self._split_availability_with_events(instance, list(conflicting_events))
         except Musician.DoesNotExist:
-            from rest_framework.exceptions import ValidationError
             raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
 
     def perform_destroy(self, instance):
@@ -982,7 +889,6 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
 
             super().perform_destroy(instance)
         except Musician.DoesNotExist:
-            from rest_framework.exceptions import ValidationError
             raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
 
     @action(detail=True, methods=['get'])

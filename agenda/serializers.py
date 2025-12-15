@@ -102,15 +102,29 @@ class EventListSerializer(serializers.ModelSerializer):
         return obj.get_status_display()
     
     def get_availability_summary(self, obj):
-        """Retorna resumo das disponibilidades"""
-        availabilities = obj.availabilities.all()
-        return {
-            'pending': availabilities.filter(response='pending').count(),
-            'available': availabilities.filter(response='available').count(),
-            'unavailable': availabilities.filter(response='unavailable').count(),
-            'maybe': availabilities.filter(response='maybe').count(),
-            'total': availabilities.count(),
-        }
+        """
+        Retorna resumo das disponibilidades.
+        Usa valores pré-anotados se disponíveis (otimização N+1),
+        caso contrário calcula com uma única iteração.
+        """
+        # Verifica se os valores foram pré-anotados no queryset
+        if hasattr(obj, 'avail_pending'):
+            return {
+                'pending': obj.avail_pending or 0,
+                'available': obj.avail_available or 0,
+                'unavailable': obj.avail_unavailable or 0,
+                'maybe': obj.avail_maybe or 0,
+                'total': obj.avail_total or 0,
+            }
+
+        # Fallback: calcula com uma única iteração (evita 5 queries)
+        summary = {'pending': 0, 'available': 0, 'unavailable': 0, 'maybe': 0, 'total': 0}
+        for availability in obj.availabilities.all():
+            response = availability.response
+            if response in summary:
+                summary[response] += 1
+            summary['total'] += 1
+        return summary
 
 
 class EventLogSerializer(serializers.ModelSerializer):
