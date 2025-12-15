@@ -209,33 +209,39 @@ const LeaderAvailabilityPage: React.FC = () => {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Disponibilidades da banda</h1>
-            <p className="mt-2 text-gray-600">
-              Cada músico cadastra seus horários livres. Filtre por nome para encontrar alguém e montar duos ou trios.
-            </p>
+        <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 text-white p-6 shadow-xl">
+          <div className="pointer-events-none absolute inset-0 -z-10 opacity-40 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.2),_transparent_40%)]" />
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold">Agendas compartilhadas</h1>
+              <p className="text-white/80 max-w-2xl text-sm sm:text-base">
+                Cadastre seus horários livres, escolha tornar públicos ou privados e receba convites sem overbooking.
+                O sistema já respeita 40 minutos de buffer entre gigs.
+              </p>
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-white/70">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Ideal para duos, trios e freelas rápidos</span>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowModal(true)}
+              className="btn-primary flex items-center space-x-2 shadow-lg"
+            >
+              <Plus className="h-5 w-5" />
+              <span>Nova disponibilidade</span>
+            </button>
           </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="btn-primary flex items-center space-x-2"
-          >
-            <Plus className="h-5 w-5" />
-            <span>Nova Disponibilidade</span>
-          </button>
         </div>
 
         {/* Info sobre buffer de 40 minutos */}
-        <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-white/85 backdrop-blur p-4 shadow-lg">
+        <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-white/90 backdrop-blur p-4 shadow-lg">
           <div className="spotlight pointer-events-none absolute inset-0 -z-10" />
           <div className="flex items-start space-x-3">
-            <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-            <div className="flex-1 text-sm text-blue-800">
-              <p className="font-medium mb-1">Intervalo de Segurança de 40 Minutos</p>
+            <Info className="h-5 w-5 text-primary-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1 text-sm text-primary-800">
+              <p className="font-medium mb-1">Buffer automático de 40 minutos</p>
               <p>
-                O sistema mantém automaticamente um intervalo de 40 minutos antes e depois de cada evento.
-                Este tempo é reservado para deslocamento, montagem e desmontagem de equipamentos,
-                garantindo que você chegue preparado e tenha tempo suficiente entre apresentações.
+                Bloqueamos 40 minutos antes/depois de cada gig para deslocamento e setup. Isso evita overbooking e mantém sua agenda realista.
               </p>
             </div>
           </div>
@@ -264,15 +270,15 @@ const LeaderAvailabilityPage: React.FC = () => {
           </div>
 
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:space-x-3">
-            <label className="inline-flex items-center space-x-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                className="rounded border-gray-300"
-                checked={showShared}
-                onChange={(e) => setShowShared(e.target.checked)}
-              />
-              <span>Ver agendas compartilhadas</span>
-            </label>
+            <button
+              onClick={() => setShowShared((prev) => !prev)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                showShared ? 'bg-primary-600 text-white border-primary-600 shadow' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <Share className="h-4 w-4" />
+              <span>{showShared ? 'Mostrando públicas' : 'Ver agendas compartilhadas'}</span>
+            </button>
             <div className="relative">
               <Search className="h-4 w-4 text-gray-400 absolute left-3 top-2.5" />
               <input
