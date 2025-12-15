@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from agenda.models import Musician
+from agenda.models import Musician, Organization, Membership
 
 users = [
     {"username": "sara", "first": "Sara", "last": "Carmo", "password": "sara2025@", "instrument": "guitar", "role": "member", "bio": "Vocal e violão", "email": "saram.carmo@hotmail.com", "phone": "(17)99193-3859", "instagram": "@saracarmocantora"},
@@ -20,6 +20,16 @@ for u in users:
     user.email = u.get("email", "") or user.email
     user.set_password(u["password"])
     user.save()
+    org_defaults = {"subscription_status": "active"}
+    if u["username"] == "roberto":
+        org_defaults["owner"] = user
+    org, _ = Organization.objects.get_or_create(name="Banda Principal", defaults=org_defaults)
+    # Garante owner como Roberto se existir
+    if org.owner is None and u["username"] == "roberto":
+        org.owner = user
+        org.save(update_fields=["owner"])
+
+    Membership.objects.get_or_create(user=user, organization=org, defaults={"role": "owner" if u["username"] == "roberto" else "member", "status": "active"})
     Musician.objects.update_or_create(
         user=user,
         defaults={
@@ -28,7 +38,8 @@ for u in users:
             "bio": u.get("bio", ""),
             "phone": u.get("phone", ""),
             "instagram": u.get("instagram", ""),
-            "is_active": True
+            "is_active": True,
+            "organization": org
         }
     )
 

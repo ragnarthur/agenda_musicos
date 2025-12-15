@@ -94,6 +94,7 @@ export interface LeaderAvailability {
   start_datetime: string;
   end_datetime: string;
   notes?: string;
+   is_public: boolean;
   is_active: boolean;
   has_conflicts: boolean;
   conflicting_events_count: number;
@@ -106,6 +107,7 @@ export interface LeaderAvailabilityCreate {
   start_time: string;
   end_time: string;
   notes?: string;
+  is_public?: boolean;
 }
 
 export interface LoginCredentials {

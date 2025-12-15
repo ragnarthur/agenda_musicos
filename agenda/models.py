@@ -7,6 +7,61 @@ from django.utils import timezone
 from datetime import datetime
 
 
+class Organization(models.Model):
+    """
+    Organização/grupo que utiliza o sistema.
+    Controla escopo de dados e assinatura.
+    """
+    name = models.CharField(max_length=150, unique=True)
+    owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='owned_organizations')
+    subscription_status = models.CharField(max_length=30, default='active')  # active, trialing, past_due, cancelled
+    plan_id = models.CharField(max_length=50, blank=True, null=True)
+    current_period_end = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Organização'
+        verbose_name_plural = 'Organizações'
+
+    def __str__(self):
+        return self.name
+
+
+class Membership(models.Model):
+    """
+    Associação de usuários a uma organização.
+    """
+    ROLE_CHOICES = [
+        ('owner', 'Owner'),
+        ('admin', 'Admin'),
+        ('member', 'Member'),
+    ]
+
+    STATUS_CHOICES = [
+        ('active', 'Ativo'),
+        ('invited', 'Convidado'),
+        ('suspended', 'Suspenso'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='memberships')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='memberships')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='member')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'organization')
+        ordering = ['organization__name', 'user__username']
+        verbose_name = 'Membro da organização'
+        verbose_name_plural = 'Membros das organizações'
+
+    def __str__(self):
+        return f"{self.user.username} em {self.organization.name}"
+
+
 class Musician(models.Model):
     """
     Modelo para representar músicos da banda.
@@ -27,9 +82,16 @@ class Musician(models.Model):
     ]
     
     user = models.OneToOneField(
-        User, 
+        User,
         on_delete=models.CASCADE,
         related_name='musician_profile'
+    )
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name='musicians',
+        null=True,
+        blank=True
     )
     instrument = models.CharField(max_length=20, choices=INSTRUMENT_CHOICES)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='member')
@@ -97,6 +159,15 @@ class Event(models.Model):
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='proposed')
     
+    # Escopo da organização
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name='events',
+        null=True,
+        blank=True
+    )
+
     # Quem criou a proposta
     created_by = models.ForeignKey(
         User,
@@ -253,8 +324,8 @@ class Availability(models.Model):
         related_name='availabilities'
     )
     event = models.ForeignKey(
-        Event, 
-        on_delete=models.CASCADE, 
+        Event,
+        on_delete=models.CASCADE,
         related_name='availabilities'
     )
     response = models.CharField(
@@ -291,7 +362,7 @@ class Availability(models.Model):
 class LeaderAvailability(models.Model):
     """
     Datas e horários disponíveis cadastrados por cada músico.
-    Outros músicos visualizam essas disponibilidades ao criar eventos.
+    Outros músicos podem visualizar quando marcado como público.
     Regra: mínimo 40 minutos entre eventos.
     """
     leader = models.ForeignKey(
@@ -299,6 +370,13 @@ class LeaderAvailability(models.Model):
         on_delete=models.CASCADE,
         related_name='leader_availabilities',
         help_text='Músico que cadastrou a disponibilidade'
+    )
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name='leader_availabilities',
+        null=True,
+        blank=True
     )
     date = models.DateField(help_text='Data disponível')
     start_time = models.TimeField(help_text='Hora de início da disponibilidade')
@@ -313,6 +391,10 @@ class LeaderAvailability(models.Model):
     start_datetime = models.DateTimeField(help_text='Data/hora início completa')
     end_datetime = models.DateTimeField(help_text='Data/hora fim completa')
 
+    is_public = models.BooleanField(
+        default=False,
+        help_text='Indica se outros músicos podem ver esta disponibilidade'
+    )
     is_active = models.BooleanField(
         default=True,
         help_text='Se False, a disponibilidade foi removida/cancelada'
