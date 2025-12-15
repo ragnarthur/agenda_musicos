@@ -1,5 +1,6 @@
 # agenda/views.py
 from rest_framework import viewsets, status
+from django.db import models
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -140,7 +141,7 @@ class EventViewSet(viewsets.ModelViewSet):
                     availabilities__musician=musician
                 ).distinct()
             except Musician.DoesNotExist:
-                queryset = queryset.none()
+                return Event.objects.none()
 
         # Busca por título ou local
         search = self.request.query_params.get('search')
