@@ -44,7 +44,17 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        return Musician.objects.filter(is_active=True).select_related('user')
+        queryset = Musician.objects.filter(is_active=True).select_related('user')
+        search = self.request.query_params.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(user__first_name__icontains=search) |
+                Q(user__last_name__icontains=search) |
+                Q(user__username__icontains=search) |
+                Q(instagram__icontains=search) |
+                Q(bio__icontains=search)
+            )
+        return queryset
     
     @action(detail=False, methods=['get'])
     def me(self, request):
