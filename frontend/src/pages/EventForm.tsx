@@ -487,7 +487,7 @@ const EventForm: React.FC = () => {
             startTime={formData.start_time}
             endTime={formData.end_time}
             duration={durationPreview}
-            isSolo={formData.is_solo}
+            isSolo={formData.is_solo ?? false}
             matchingAvailability={matchingAvailability}
           />
         </div>

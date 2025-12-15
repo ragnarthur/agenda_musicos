@@ -3,7 +3,7 @@
  * Funções utilitárias de formatação compartilhadas entre componentes.
  */
 
-import { Musician, Availability } from '../types';
+import type { Musician, Availability } from '../types';
 
 /**
  * Extrai o nome de exibição de um músico.
