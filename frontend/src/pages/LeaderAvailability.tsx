@@ -274,7 +274,7 @@ const LeaderAvailabilityPage: React.FC = () => {
               <input
                 type="text"
                 className="pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary-500"
-                placeholder="Buscar músico por nome/usuário"
+                placeholder="Buscar músico (ex: Bruno, @drums)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
