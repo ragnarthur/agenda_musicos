@@ -114,9 +114,11 @@ class LeaderAvailabilityAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         """Auto-set leader if not set"""
+        from .models import Musician
         if not obj.pk and not obj.leader:
             try:
                 obj.leader = request.user.musician_profile
-            except:
+            except (Musician.DoesNotExist, AttributeError):
+                # Usuário não possui perfil de músico - deixa leader como None
                 pass
         super().save_model(request, obj, form, change)

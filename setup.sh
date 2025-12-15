@@ -22,6 +22,12 @@ PROJECT_DIR="/var/www/agenda-musicos"
 SERVER_IP="45.237.131.177"
 SERVER_PORT="2030"
 INTERNAL_PORT="8005"
+CREDENTIALS_FILE="$PROJECT_DIR/.credentials"
+
+# Generate secure random password
+generate_password() {
+    openssl rand -base64 24 | tr -dc 'a-zA-Z0-9' | head -c 20
+}
 
 # =============================================================================
 # Helper Functions
@@ -118,18 +124,32 @@ setup_database() {
     # Check if database already exists
     if sudo -u postgres psql -lqt | cut -d \| -f 1 | grep -qw agenda_musicos; then
         print_warning "Banco de dados 'agenda_musicos' já existe. Pulando criação."
+        # Load existing password from credentials file
+        if [ -f "$CREDENTIALS_FILE" ]; then
+            DB_PASSWORD=$(grep "^DB_PASSWORD=" "$CREDENTIALS_FILE" | cut -d'=' -f2)
+        fi
     else
         print_step "Criando banco de dados..."
 
+        # Generate secure random password
+        DB_PASSWORD=$(generate_password)
+
         sudo -u postgres psql <<EOF
 CREATE DATABASE agenda_musicos;
-CREATE USER agenda_user WITH PASSWORD 'agenda_password_2024';
+CREATE USER agenda_user WITH PASSWORD '$DB_PASSWORD';
 ALTER ROLE agenda_user SET client_encoding TO 'utf8';
 ALTER ROLE agenda_user SET default_transaction_isolation TO 'read committed';
 ALTER ROLE agenda_user SET timezone TO 'America/Sao_Paulo';
 GRANT ALL PRIVILEGES ON DATABASE agenda_musicos TO agenda_user;
 EOF
+
+        # Save password to credentials file
+        mkdir -p $(dirname "$CREDENTIALS_FILE")
+        echo "DB_PASSWORD=$DB_PASSWORD" >> "$CREDENTIALS_FILE"
+        chmod 600 "$CREDENTIALS_FILE"
+
         print_step "Banco de dados criado ✓"
+        print_step "Senha do banco salva em: $CREDENTIALS_FILE"
     fi
 }
 
@@ -142,6 +162,15 @@ setup_django() {
     # Create .env if not exists
     if [ ! -f ".env" ]; then
         print_step "Criando arquivo .env..."
+
+        # Load DB password from credentials file
+        if [ -f "$CREDENTIALS_FILE" ]; then
+            DB_PASSWORD=$(grep "^DB_PASSWORD=" "$CREDENTIALS_FILE" | cut -d'=' -f2)
+        else
+            print_error "Arquivo de credenciais não encontrado. Execute setup_database primeiro."
+            exit 1
+        fi
+
         cat > .env <<EOF
 SECRET_KEY=$(python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())")
 DEBUG=False
@@ -149,9 +178,10 @@ ALLOWED_HOSTS=localhost,127.0.0.1,$SERVER_IP
 SERVER_IP=$SERVER_IP
 SERVER_PORT=$SERVER_PORT
 INTERNAL_PORT=$INTERNAL_PORT
-DATABASE_URL=postgresql://agenda_user:agenda_password_2024@localhost/agenda_musicos
+DATABASE_URL=postgresql://agenda_user:${DB_PASSWORD}@localhost/agenda_musicos
 CORS_ORIGINS=http://$SERVER_IP:$SERVER_PORT
 EOF
+        chmod 600 .env
     fi
 
     # Run migrations
@@ -160,12 +190,20 @@ EOF
     # Collect static files
     python manage.py collectstatic --noinput
 
+    # Generate admin password if not exists
+    if ! grep -q "^ADMIN_PASSWORD=" "$CREDENTIALS_FILE" 2>/dev/null; then
+        ADMIN_PASSWORD=$(generate_password)
+        echo "ADMIN_PASSWORD=$ADMIN_PASSWORD" >> "$CREDENTIALS_FILE"
+    else
+        ADMIN_PASSWORD=$(grep "^ADMIN_PASSWORD=" "$CREDENTIALS_FILE" | cut -d'=' -f2)
+    fi
+
     # Create superuser (skip if already exists)
     python manage.py shell <<EOF
 from django.contrib.auth.models import User
 if not User.objects.filter(username='admin').exists():
-    User.objects.create_superuser('admin', 'admin@localhost', 'admin123')
-    print('Superuser created: admin/admin123')
+    User.objects.create_superuser('admin', 'admin@localhost', '$ADMIN_PASSWORD')
+    print('Superuser created successfully')
 else:
     print('Superuser already exists')
 EOF
@@ -246,9 +284,21 @@ setup_permissions() {
     # Set ownership
     chown -R www-data:www-data .
 
-    # Set permissions
-    chmod -R 755 .
-    chmod -R 775 staticfiles/ media/ || true
+    # Set permissions - diretórios com 755, arquivos com 644
+    find . -type d -exec chmod 755 {} \;
+    find . -type f -exec chmod 644 {} \;
+
+    # Arquivos executáveis
+    chmod 755 manage.py
+    chmod 755 setup.sh
+    chmod 755 update.sh 2>/dev/null || true
+
+    # Diretórios que precisam de escrita
+    chmod -R 775 staticfiles/ media/ 2>/dev/null || true
+
+    # Proteger arquivos sensíveis
+    chmod 600 .env 2>/dev/null || true
+    chmod 600 "$CREDENTIALS_FILE" 2>/dev/null || true
 
     print_step "Permissões configuradas ✓"
 }
@@ -279,16 +329,21 @@ print_summary() {
     echo ""
     echo -e "Servidor: ${YELLOW}http://$SERVER_IP:$SERVER_PORT${NC}"
     echo ""
-    echo "Credenciais:"
+    echo -e "${YELLOW}IMPORTANTE - Credenciais:${NC}"
+    echo "  As senhas foram salvas em: $CREDENTIALS_FILE"
+    echo "  Este arquivo contém:"
+    echo "    - DB_PASSWORD: Senha do banco PostgreSQL"
+    echo "    - ADMIN_PASSWORD: Senha do admin Django"
+    echo ""
+    echo "  Para visualizar as credenciais:"
+    echo "    sudo cat $CREDENTIALS_FILE"
+    echo ""
     echo "  Admin Django:"
     echo "    - URL: http://$SERVER_IP:$SERVER_PORT/admin/"
     echo "    - User: admin"
-    echo "    - Pass: admin123"
     echo ""
-    echo "  Músicos (login no app):"
-    echo "    - sara / senha123 (Vocalista)"
-    echo "    - arthur / senha123 (Vocalista)"
-    echo "    - roberto / senha123 (Baterista e Líder)"
+    echo -e "${RED}ATENÇÃO:${NC} Altere as senhas dos músicos de demonstração!"
+    echo "  Use: python manage.py changepassword <username>"
     echo ""
     echo "Comandos úteis:"
     echo "  - Ver logs: sudo supervisorctl tail -f agenda-musicos"

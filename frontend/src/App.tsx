@@ -1,30 +1,35 @@
 // App.tsx
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import EventsList from './pages/EventsList';
-import EventForm from './pages/EventForm';
-import EventEditForm from './pages/EventEditForm';
-import EventDetail from './pages/EventDetail';
-import EventBoard from './pages/EventBoard';
-import Approvals from './pages/Approvals';
-import Musicians from './pages/Musicians';
-import LeaderAvailability from './pages/LeaderAvailability';
-import Marketplace from './pages/Marketplace';
 import Loading from './components/common/Loading';
+
+// Lazy load de páginas para otimizar o bundle inicial
+const Login = lazy(() => import('./pages/Login'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const EventsList = lazy(() => import('./pages/EventsList'));
+const EventForm = lazy(() => import('./pages/EventForm'));
+const EventEditForm = lazy(() => import('./pages/EventEditForm'));
+const EventDetail = lazy(() => import('./pages/EventDetail'));
+const EventBoard = lazy(() => import('./pages/EventBoard'));
+const Approvals = lazy(() => import('./pages/Approvals'));
+const Musicians = lazy(() => import('./pages/Musicians'));
+const LeaderAvailability = lazy(() => import('./pages/LeaderAvailability'));
+const Marketplace = lazy(() => import('./pages/Marketplace'));
+
+// Componente de loading para Suspense
+const PageLoader: React.FC = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <Loading text="Carregando..." />
+  </div>
+);
 
 // Componente para rotas protegidas
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loading text="Carregando..." />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   return isAuthenticated ? children : <Navigate to="/login" replace />;
@@ -35,11 +40,7 @@ const PublicRoute: React.FC<{ children: React.ReactElement }> = ({ children }) =
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loading text="Carregando..." />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   return !isAuthenticated ? children : <Navigate to="/" replace />;
@@ -47,112 +48,114 @@ const PublicRoute: React.FC<{ children: React.ReactElement }> = ({ children }) =
 
 function AppRoutes() {
   return (
-    <Routes>
-      {/* Rotas Públicas */}
-      <Route
-        path="/login"
-        element={
-          <PublicRoute>
-            <Login />
-          </PublicRoute>
-        }
-      />
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        {/* Rotas Públicas */}
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
 
-      <Route
-        path="/eventos/agenda"
-        element={
-          <ProtectedRoute>
-            <EventBoard />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/eventos/agenda"
+          element={
+            <ProtectedRoute>
+              <EventBoard />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Rotas Protegidas */}
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
+        {/* Rotas Protegidas */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Rotas específicas ANTES das rotas dinâmicas */}
-      <Route
-        path="/musicos"
-        element={
-          <ProtectedRoute>
-            <Musicians />
-          </ProtectedRoute>
-        }
-      />
+        {/* Rotas específicas ANTES das rotas dinâmicas */}
+        <Route
+          path="/musicos"
+          element={
+            <ProtectedRoute>
+              <Musicians />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/marketplace"
-        element={
-          <ProtectedRoute>
-            <Marketplace />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/marketplace"
+          element={
+            <ProtectedRoute>
+              <Marketplace />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/aprovacoes"
-        element={
-          <ProtectedRoute>
-            <Approvals />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/aprovacoes"
+          element={
+            <ProtectedRoute>
+              <Approvals />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/disponibilidades"
-        element={
-          <ProtectedRoute>
-            <LeaderAvailability />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/disponibilidades"
+          element={
+            <ProtectedRoute>
+              <LeaderAvailability />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/eventos"
-        element={
-          <ProtectedRoute>
-            <EventsList />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/eventos"
+          element={
+            <ProtectedRoute>
+              <EventsList />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/eventos/novo"
-        element={
-          <ProtectedRoute>
-            <EventForm />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/eventos/novo"
+          element={
+            <ProtectedRoute>
+              <EventForm />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/eventos/:id/editar"
-        element={
-          <ProtectedRoute>
-            <EventEditForm />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/eventos/:id/editar"
+          element={
+            <ProtectedRoute>
+              <EventEditForm />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/eventos/:id"
-        element={
-          <ProtectedRoute>
-            <EventDetail />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/eventos/:id"
+          element={
+            <ProtectedRoute>
+              <EventDetail />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Rota padrão - redireciona para home */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Rota padrão - redireciona para home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   );
 }
 
