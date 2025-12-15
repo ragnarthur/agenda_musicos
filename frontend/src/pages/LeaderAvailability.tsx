@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Calendar as CalendarIcon, Clock, Plus, Edit, Trash2, AlertCircle, Info, Users, Search, Share } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
-import { leaderAvailabilityService, musicianService } from '../services/api';
-import type { LeaderAvailability, LeaderAvailabilityCreate, Musician } from '../types';
+import { leaderAvailabilityService } from '../services/api';
+import type { LeaderAvailability, LeaderAvailabilityCreate } from '../types';
 import { format, parseISO } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -14,15 +14,15 @@ const LeaderAvailabilityPage: React.FC = () => {
   const navigate = useNavigate();
   const [availabilities, setAvailabilities] = useState<LeaderAvailability[]>([]);
   const [loading, setLoading] = useState(true);
-  const [musicians, setMusicians] = useState<Musician[]>([]);
+  // Lista de músicos removida (agrupamento por instrumento)
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
   const [timeFilter, setTimeFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming');
-  const [selectedMusician, setSelectedMusician] = useState<number | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showShared, setShowShared] = useState(false);
+  const [instrumentFilter, setInstrumentFilter] = useState<'all' | Musician['instrument']>('all');
 
   const [formData, setFormData] = useState<LeaderAvailabilityCreate>({
     date: '',
@@ -42,12 +42,12 @@ const LeaderAvailabilityPage: React.FC = () => {
         params.past = true;
       }
 
-      if (selectedMusician !== 'all') {
-        params.leader = selectedMusician;
-      }
-
       if (searchTerm.trim()) {
         params.search = searchTerm.trim();
+      }
+
+      if (instrumentFilter !== 'all') {
+        params.instrument = instrumentFilter;
       }
 
       if (showShared) {
@@ -63,22 +63,15 @@ const LeaderAvailabilityPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [timeFilter, selectedMusician, searchTerm, showShared]);
+  }, [timeFilter, searchTerm, showShared, instrumentFilter]);
 
   useEffect(() => {
     loadAvailabilities();
   }, [loadAvailabilities]);
 
   useEffect(() => {
-    const loadMusicians = async () => {
-      try {
-        const list = await musicianService.getAll();
-        setMusicians(list);
-      } catch (error) {
-        console.error('Erro ao carregar músicos para filtro:', error);
-      }
-    };
-    loadMusicians();
+    // placeholder to keep future enhancements; for now musicians list is unused
+    setMusicians([]);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -293,15 +286,16 @@ const LeaderAvailabilityPage: React.FC = () => {
               <Users className="h-4 w-4 text-gray-500" />
               <select
                 className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
-                value={selectedMusician}
-                onChange={(e) => setSelectedMusician(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+                value={instrumentFilter}
+                onChange={(e) => setInstrumentFilter(e.target.value as typeof instrumentFilter)}
               >
-                <option value="all">Todos os músicos</option>
-                {musicians.map((musician) => (
-                  <option key={musician.id} value={musician.id}>
-                    {musician.full_name}
-                  </option>
-                ))}
+                <option value="all">Todos os instrumentos</option>
+                <option value="vocal">Vocal</option>
+                <option value="guitar">Guitarra/Violão</option>
+                <option value="bass">Baixo</option>
+                <option value="drums">Bateria</option>
+                <option value="keyboard">Teclado</option>
+                <option value="other">Outro</option>
               </select>
             </div>
           </div>
