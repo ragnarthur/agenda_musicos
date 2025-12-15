@@ -280,13 +280,16 @@ class EventCreateSerializer(serializers.ModelSerializer):
 class LeaderAvailabilitySerializer(serializers.ModelSerializer):
     """Serializer para disponibilidades cadastradas pelo líder"""
     leader_name = serializers.SerializerMethodField()
+    leader_instrument = serializers.SerializerMethodField()
+    leader_instrument_display = serializers.SerializerMethodField()
     has_conflicts = serializers.SerializerMethodField()
     conflicting_events_count = serializers.SerializerMethodField()
 
     class Meta:
         model = LeaderAvailability
         fields = [
-            'id', 'leader', 'leader_name', 'date', 'start_time', 'end_time',
+            'id', 'leader', 'leader_name', 'leader_instrument', 'leader_instrument_display',
+            'date', 'start_time', 'end_time',
             'start_datetime', 'end_datetime', 'notes', 'is_active',
             'is_public', 'has_conflicts', 'conflicting_events_count',
             'created_at', 'updated_at'
@@ -298,6 +301,22 @@ class LeaderAvailabilitySerializer(serializers.ModelSerializer):
 
     def get_leader_name(self, obj):
         return obj.leader.user.get_full_name() if obj.leader else 'Sistema'
+
+    def get_leader_instrument(self, obj):
+        return obj.leader.instrument if obj.leader else None
+
+    def get_leader_instrument_display(self, obj):
+        if not obj.leader or not obj.leader.instrument:
+            return None
+        instrument_labels = {
+            'vocal': 'Vocal',
+            'guitar': 'Guitarra/Violão',
+            'bass': 'Baixo',
+            'drums': 'Bateria',
+            'keyboard': 'Teclado',
+            'other': 'Outro',
+        }
+        return instrument_labels.get(obj.leader.instrument, obj.leader.instrument)
 
     def get_has_conflicts(self, obj):
         """Verifica se há conflitos com eventos existentes"""

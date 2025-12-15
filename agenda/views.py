@@ -63,6 +63,75 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+    @action(detail=False, methods=['get'])
+    def instruments(self, request):
+        """
+        GET /musicians/instruments/
+        Retorna lista de instrumentos únicos dos músicos cadastrados
+        com contagem de músicos por instrumento
+        """
+        instrument_labels = {
+            'vocal': 'Vocal',
+            'guitar': 'Guitarra/Violão',
+            'bass': 'Baixo',
+            'drums': 'Bateria',
+            'keyboard': 'Teclado',
+            'other': 'Outro',
+        }
+
+        # Busca instrumentos únicos com contagem
+        instruments_data = (
+            Musician.objects
+            .filter(is_active=True)
+            .exclude(instrument__isnull=True)
+            .exclude(instrument='')
+            .values('instrument')
+            .annotate(count=Count('id'))
+            .order_by('instrument')
+        )
+
+        result = []
+        for item in instruments_data:
+            instrument = item['instrument']
+            result.append({
+                'value': instrument,
+                'label': instrument_labels.get(instrument, instrument.capitalize()),
+                'count': item['count']
+            })
+
+        return Response(result)
+
+    @action(detail=False, methods=['get'])
+    def with_availability(self, request):
+        """
+        GET /musicians/with_availability/
+        Retorna músicos que possuem disponibilidades públicas futuras
+        """
+        from .models import LeaderAvailability
+        from django.utils import timezone
+
+        # IDs de músicos com disponibilidades públicas futuras
+        musician_ids = (
+            LeaderAvailability.objects
+            .filter(
+                is_active=True,
+                is_public=True,
+                date__gte=timezone.now().date()
+            )
+            .values_list('leader_id', flat=True)
+            .distinct()
+        )
+
+        queryset = self.get_queryset().filter(id__in=musician_ids)
+
+        # Filtro por instrumento
+        instrument = request.query_params.get('instrument')
+        if instrument:
+            queryset = queryset.filter(instrument=instrument)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
 
 class EventViewSet(viewsets.ModelViewSet):
     """
@@ -789,14 +858,15 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         if instrument:
             queryset = queryset.filter(leader__instrument=instrument)
 
-        # Busca por nome/username/instagram do músico
+        # Busca por nome/username/instagram do músico (funciona em todos os modos)
         search = self.request.query_params.get('search')
-        if search and public_param:
+        if search:
             queryset = queryset.filter(
                 Q(leader__user__first_name__icontains=search) |
                 Q(leader__user__last_name__icontains=search) |
                 Q(leader__user__username__icontains=search) |
-                Q(leader__instagram__icontains=search)
+                Q(leader__instagram__icontains=search) |
+                Q(notes__icontains=search)
             )
 
         return queryset
