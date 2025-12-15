@@ -1,11 +1,11 @@
 // pages/LeaderAvailability.tsx
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar as CalendarIcon, Clock, Plus, Edit, Trash2, AlertCircle, Info, Users, Search, Share } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Plus, Edit, Trash2, AlertCircle, Info, Users, Search, Share, Music } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
-import { leaderAvailabilityService } from '../services/api';
-import type { LeaderAvailability, LeaderAvailabilityCreate, Musician } from '../types';
+import { leaderAvailabilityService, musicianService, type InstrumentOption } from '../services/api';
+import type { LeaderAvailability, LeaderAvailabilityCreate } from '../types';
 import { format, parseISO } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -14,7 +14,7 @@ const LeaderAvailabilityPage: React.FC = () => {
   const navigate = useNavigate();
   const [availabilities, setAvailabilities] = useState<LeaderAvailability[]>([]);
   const [loading, setLoading] = useState(true);
-  // Lista de músicos removida (agrupamento por instrumento)
+  const [instruments, setInstruments] = useState<InstrumentOption[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -22,7 +22,7 @@ const LeaderAvailabilityPage: React.FC = () => {
   const [timeFilter, setTimeFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming');
   const [searchTerm, setSearchTerm] = useState('');
   const [showShared, setShowShared] = useState(false);
-  const [instrumentFilter, setInstrumentFilter] = useState<'all' | Musician['instrument']>('all');
+  const [instrumentFilter, setInstrumentFilter] = useState<string>('all');
 
   const [formData, setFormData] = useState<LeaderAvailabilityCreate>({
     date: '',
@@ -65,11 +65,23 @@ const LeaderAvailabilityPage: React.FC = () => {
     }
   }, [timeFilter, searchTerm, showShared, instrumentFilter]);
 
+  // Carrega lista de instrumentos cadastrados
+  const loadInstruments = useCallback(async () => {
+    try {
+      const data = await musicianService.getInstruments();
+      setInstruments(data);
+    } catch (error) {
+      console.error('Erro ao carregar instrumentos:', error);
+    }
+  }, []);
+
   useEffect(() => {
     loadAvailabilities();
   }, [loadAvailabilities]);
 
-  // Lista de músicos removida (agrupamento por instrumento)
+  useEffect(() => {
+    loadInstruments();
+  }, [loadInstruments]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -280,19 +292,19 @@ const LeaderAvailabilityPage: React.FC = () => {
               />
             </div>
             <div className="flex items-center space-x-2">
-              <Users className="h-4 w-4 text-gray-500" />
+              <Music className="h-4 w-4 text-gray-500" />
               <select
                 className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
                 value={instrumentFilter}
-                onChange={(e) => setInstrumentFilter(e.target.value as typeof instrumentFilter)}
+                onChange={(e) => setInstrumentFilter(e.target.value)}
+                aria-label="Filtrar por instrumento"
               >
                 <option value="all">Todos os instrumentos</option>
-                <option value="vocal">Vocal</option>
-                <option value="guitar">Guitarra/Violão</option>
-                <option value="bass">Baixo</option>
-                <option value="drums">Bateria</option>
-                <option value="keyboard">Teclado</option>
-                <option value="other">Outro</option>
+                {instruments.map((inst) => (
+                  <option key={inst.value} value={inst.value}>
+                    {inst.label} ({inst.count})
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -333,6 +345,12 @@ const LeaderAvailabilityPage: React.FC = () => {
                       <div className="flex items-center space-x-2 text-sm text-gray-600 mb-1">
                         <Users className="h-4 w-4 text-primary-600" />
                         <span className="font-medium">{availability.leader_name}</span>
+                        {availability.leader_instrument_display && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-700">
+                            <Music className="h-3 w-3 mr-1" />
+                            {availability.leader_instrument_display}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center space-x-3 mb-2">
                         <Clock className="h-5 w-5 text-gray-500" />

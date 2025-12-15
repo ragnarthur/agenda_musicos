@@ -76,6 +76,13 @@ export const authService = {
   },
 };
 
+// Tipos para instrumentos
+export interface InstrumentOption {
+  value: string;
+  label: string;
+  count: number;
+}
+
 // Musician Service
 export const musicianService = {
   getAll: async (): Promise<Musician[]> => {
@@ -91,6 +98,16 @@ export const musicianService = {
 
   getById: async (id: number): Promise<Musician> => {
     const response = await api.get(`/musicians/${id}/`);
+    return response.data;
+  },
+
+  getInstruments: async (): Promise<InstrumentOption[]> => {
+    const response = await api.get('/musicians/instruments/');
+    return response.data;
+  },
+
+  getWithAvailability: async (params?: { instrument?: string }): Promise<Musician[]> => {
+    const response = await api.get('/musicians/with_availability/', { params });
     return response.data;
   },
 };
