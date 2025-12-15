@@ -778,6 +778,7 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         - ?search=termo (nome/username do músico)
         - ?public=true (apenas compartilhadas)
         - ?mine=true (apenas minhas)
+        - ?instrument=<instrument> (filtrar por instrumento do músico)
         """
         from django.utils import timezone
         queryset = LeaderAvailability.objects.filter(is_active=True).select_related('leader__user')
@@ -822,6 +823,11 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         leader_id = self.request.query_params.get('leader')
         if leader_id and public_param:
             queryset = queryset.filter(leader_id=leader_id)
+
+        # Filtro por instrumento
+        instrument = self.request.query_params.get('instrument')
+        if instrument:
+            queryset = queryset.filter(leader__instrument=instrument)
 
         # Busca por nome/username/instagram do músico
         search = self.request.query_params.get('search')

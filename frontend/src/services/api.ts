@@ -213,6 +213,7 @@ export const leaderAvailabilityService = {
     search?: string;
     public?: boolean;
     mine?: boolean;
+    instrument?: string;
   }): Promise<LeaderAvailability[]> => {
     const response = await api.get('/leader-availabilities/', { params });
     return response.data.results || response.data;
