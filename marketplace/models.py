@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from agenda.models import Musician
+from agenda.models import Musician, Organization
 
 
 class Gig(models.Model):
@@ -29,6 +29,7 @@ class Gig(models.Model):
     contact_phone = models.CharField(max_length=30, blank=True)
     genres = models.CharField(max_length=120, blank=True, help_text='Estilos desejados (ex: pop, sertanejo)')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='gigs', null=True, blank=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='gigs_posted')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -54,6 +55,7 @@ class GigApplication(models.Model):
 
     gig = models.ForeignKey(Gig, on_delete=models.CASCADE, related_name='applications')
     musician = models.ForeignKey(Musician, on_delete=models.CASCADE, related_name='gig_applications')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='gig_applications', null=True, blank=True)
     cover_letter = models.TextField(blank=True)
     expected_fee = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')

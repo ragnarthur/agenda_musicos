@@ -274,7 +274,7 @@ class LeaderAvailabilitySerializer(serializers.ModelSerializer):
         fields = [
             'id', 'leader', 'leader_name', 'date', 'start_time', 'end_time',
             'start_datetime', 'end_datetime', 'notes', 'is_active',
-            'has_conflicts', 'conflicting_events_count',
+            'is_public', 'has_conflicts', 'conflicting_events_count',
             'created_at', 'updated_at'
         ]
         read_only_fields = [

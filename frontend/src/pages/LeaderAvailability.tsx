@@ -1,11 +1,11 @@
 // pages/LeaderAvailability.tsx
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar as CalendarIcon, Clock, Plus, Edit, Trash2, AlertCircle, Info } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Plus, Edit, Trash2, AlertCircle, Info, Users, Search, Share } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
-import { leaderAvailabilityService } from '../services/api';
-import type { LeaderAvailability, LeaderAvailabilityCreate } from '../types';
+import { leaderAvailabilityService, musicianService } from '../services/api';
+import type { LeaderAvailability, LeaderAvailabilityCreate, Musician } from '../types';
 import { format, parseISO } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -14,11 +14,15 @@ const LeaderAvailabilityPage: React.FC = () => {
   const navigate = useNavigate();
   const [availabilities, setAvailabilities] = useState<LeaderAvailability[]>([]);
   const [loading, setLoading] = useState(true);
+  const [musicians, setMusicians] = useState<Musician[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
   const [timeFilter, setTimeFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming');
+  const [selectedMusician, setSelectedMusician] = useState<number | 'all'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showShared, setShowShared] = useState(false);
 
   const [formData, setFormData] = useState<LeaderAvailabilityCreate>({
     date: '',
@@ -30,12 +34,26 @@ const LeaderAvailabilityPage: React.FC = () => {
   const loadAvailabilities = useCallback(async () => {
     try {
       setLoading(true);
-      const params: Record<string, boolean> = {};
+      const params: Record<string, string | number | boolean> = {};
 
       if (timeFilter === 'upcoming') {
         params.upcoming = true;
       } else if (timeFilter === 'past') {
         params.past = true;
+      }
+
+      if (selectedMusician !== 'all') {
+        params.leader = selectedMusician;
+      }
+
+      if (searchTerm.trim()) {
+        params.search = searchTerm.trim();
+      }
+
+      if (showShared) {
+        params.public = true;
+      } else {
+        params.mine = true;
       }
 
       const data = await leaderAvailabilityService.getAll(params);
@@ -45,11 +63,23 @@ const LeaderAvailabilityPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [timeFilter]);
+  }, [timeFilter, selectedMusician, searchTerm, showShared]);
 
   useEffect(() => {
     loadAvailabilities();
   }, [loadAvailabilities]);
+
+  useEffect(() => {
+    const loadMusicians = async () => {
+      try {
+        const list = await musicianService.getAll();
+        setMusicians(list);
+      } catch (error) {
+        console.error('Erro ao carregar músicos para filtro:', error);
+      }
+    };
+    loadMusicians();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,6 +166,7 @@ const LeaderAvailabilityPage: React.FC = () => {
       start_time: availability.start_time,
       end_time: availability.end_time,
       notes: availability.notes || '',
+      is_public: availability.is_public,
     });
     setShowModal(true);
   };
@@ -163,6 +194,7 @@ const LeaderAvailabilityPage: React.FC = () => {
       start_time: '',
       end_time: '',
       notes: '',
+      is_public: false,
     });
     setError('');
   };
@@ -179,9 +211,9 @@ const LeaderAvailabilityPage: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Minhas disponibilidades</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Disponibilidades da banda</h1>
             <p className="mt-2 text-gray-600">
-              Cadastre seus horários livres e veja quando outros músicos estão disponíveis para montar duos/trios.
+              Cada músico cadastra seus horários livres. Filtre por nome para encontrar alguém e montar duos ou trios.
             </p>
           </div>
           <button
@@ -210,24 +242,63 @@ const LeaderAvailabilityPage: React.FC = () => {
         </div>
 
         {/* Filtros de tempo */}
-        <div className="flex space-x-2 overflow-x-auto pb-2">
-          {[
-            { value: 'upcoming', label: 'Próximas' },
-            { value: 'all', label: 'Todas' },
-            { value: 'past', label: 'Passadas' },
-          ].map((item) => (
-            <button
-              key={item.value}
-              onClick={() => setTimeFilter(item.value as 'upcoming' | 'past' | 'all')}
-              className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
-                timeFilter === item.value
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex space-x-2 overflow-x-auto pb-2">
+            {[
+              { value: 'upcoming', label: 'Próximas' },
+              { value: 'all', label: 'Todas' },
+              { value: 'past', label: 'Passadas' },
+            ].map((item) => (
+              <button
+                key={item.value}
+                onClick={() => setTimeFilter(item.value as 'upcoming' | 'past' | 'all')}
+                className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+                  timeFilter === item.value
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:space-x-3">
+            <label className="inline-flex items-center space-x-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                className="rounded border-gray-300"
+                checked={showShared}
+                onChange={(e) => setShowShared(e.target.checked)}
+              />
+              <span>Ver agendas compartilhadas</span>
+            </label>
+            <div className="relative">
+              <Search className="h-4 w-4 text-gray-400 absolute left-3 top-2.5" />
+              <input
+                type="text"
+                className="pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary-500"
+                placeholder="Buscar músico por nome/usuário"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Users className="h-4 w-4 text-gray-500" />
+              <select
+                className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+                value={selectedMusician}
+                onChange={(e) => setSelectedMusician(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+              >
+                <option value="all">Todos os músicos</option>
+                {musicians.map((musician) => (
+                  <option key={musician.id} value={musician.id}>
+                    {musician.full_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
 
         {/* Lista de disponibilidades */}
@@ -261,6 +332,10 @@ const LeaderAvailabilityPage: React.FC = () => {
                         <span className="text-lg font-semibold text-gray-900">
                           {format(parseISO(availability.date), 'dd/MM/yyyy')}
                         </span>
+                      </div>
+                      <div className="flex items-center space-x-2 text-sm text-gray-600 mb-1">
+                        <Users className="h-4 w-4 text-primary-600" />
+                        <span className="font-medium">{availability.leader_name}</span>
                       </div>
                       <div className="flex items-center space-x-3 mb-2">
                         <Clock className="h-5 w-5 text-gray-500" />
@@ -406,6 +481,20 @@ const LeaderAvailabilityPage: React.FC = () => {
                     placeholder="Ex: Disponível para eventos até 3h de duração"
                   />
                 </div>
+
+                {/* Compartilhar */}
+                <label className="inline-flex items-center space-x-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(formData.is_public)}
+                    onChange={(e) => setFormData(prev => ({ ...prev, is_public: e.target.checked }))}
+                    className="rounded border-gray-300"
+                  />
+                  <span className="flex items-center space-x-1">
+                    <Share className="h-4 w-4 text-primary-600" />
+                    <span>Compartilhar no meu perfil para convites</span>
+                  </span>
+                </label>
 
                 {/* Botões */}
                 <div className="flex items-center justify-end space-x-3 pt-4">

@@ -210,6 +210,9 @@ export const leaderAvailabilityService = {
     past?: boolean;
     date?: string;
     leader?: number;
+    search?: string;
+    public?: boolean;
+    mine?: boolean;
   }): Promise<LeaderAvailability[]> => {
     const response = await api.get('/leader-availabilities/', { params });
     return response.data.results || response.data;

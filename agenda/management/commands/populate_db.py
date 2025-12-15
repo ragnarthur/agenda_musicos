@@ -1,7 +1,7 @@
 # agenda/management/commands/populate_db.py
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from agenda.models import Musician
+from agenda.models import Musician, Organization, Membership
 
 
 class Command(BaseCommand):
@@ -54,6 +54,7 @@ class Command(BaseCommand):
 
         created_count = 0
         updated_count = 0
+        org, _ = Organization.objects.get_or_create(name='Banda Principal', defaults={'subscription_status': 'active'})
 
         for data in musicians_data:
             # Extrair dados do usuário e do músico
@@ -97,6 +98,15 @@ class Command(BaseCommand):
             musician, musician_created = Musician.objects.get_or_create(
                 user=user,
                 defaults=musician_data
+            )
+            if not musician.organization:
+                musician.organization = org
+                musician.save(update_fields=['organization'])
+
+            Membership.objects.get_or_create(
+                user=user,
+                organization=org,
+                defaults={'role': 'owner' if data.get('role') == 'leader' else 'member', 'status': 'active'}
             )
 
             if musician_created:

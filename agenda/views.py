@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.utils import timezone
 from datetime import timedelta, datetime, time, date
 import logging
-from .models import Musician, Event, Availability, LeaderAvailability, EventLog
+from .models import Musician, Event, Availability, LeaderAvailability, EventLog, Organization, Membership
 from .serializers import (
     MusicianSerializer,
     EventListSerializer,
@@ -20,14 +20,30 @@ from .serializers import (
 from .permissions import IsOwnerOrReadOnly
 
 
+def get_user_organization(user):
+    """
+    Retorna a organização do usuário (primeira membership ativa) ou a organização do perfil de músico.
+    """
+    membership = Membership.objects.filter(user=user, status='active').select_related('organization').first()
+    if membership:
+        return membership.organization
+    try:
+        musician = user.musician_profile
+        return musician.organization
+    except Musician.DoesNotExist:
+        return None
+
+
 class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ViewSet para músicos (apenas leitura).
     Lista todos os músicos ativos da banda.
     """
-    queryset = Musician.objects.filter(is_active=True).select_related('user').all()
     serializer_class = MusicianSerializer
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return Musician.objects.filter(is_active=True).select_related('user')
     
     @action(detail=False, methods=['get'])
     def me(self, request):
@@ -91,6 +107,15 @@ class EventViewSet(viewsets.ModelViewSet):
         - ?upcoming=true (eventos futuros)
         """
         queryset = super().get_queryset()
+        # Exibe eventos onde o usuário participa (criador ou availability)
+        try:
+            musician = self.request.user.musician_profile
+            queryset = queryset.filter(
+                models.Q(created_by=self.request.user) |
+                models.Q(availabilities__musician=musician)
+            ).distinct()
+        except Musician.DoesNotExist:
+            queryset = queryset.filter(created_by=self.request.user)
 
         # Filtro por status
         status_filter = self.request.query_params.get('status')
@@ -179,10 +204,13 @@ class EventViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         """
-        Salva evento e cria availabilities apenas para o criador e Roberto.
-        Lógica: Arthur/Sara (contratantes) criam eventos e contratam Roberto (baterista)
-        Status inicial: 'proposed' (exceto se is_solo=True, então 'approved')
+        Cria evento e disponibilidades para todos os músicos da organização.
+        Status inicial: 'proposed' (exceto se is_solo=True, então 'approved').
         """
+        org = get_user_organization(self.request.user)
+        if not org:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied('Usuário sem organização.')
         is_solo = serializer.validated_data.get('is_solo', False)
 
         approved_kwargs = {}
@@ -195,6 +223,7 @@ class EventViewSet(viewsets.ModelViewSet):
         # Se é evento solo, vai direto para 'approved', caso contrário 'proposed'
         event = serializer.save(
             created_by=self.request.user,
+            organization=org,
             status='approved' if is_solo else 'proposed',
             **approved_kwargs
         )
@@ -206,8 +235,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
         # Criar availabilities:
         # - Para eventos solo: apenas o criador
-        # - Para eventos com banda: todos os músicos ativos
-
+        # - Para eventos com banda: todos os músicos ativos da organização
         availabilities = []
 
         try:
@@ -245,10 +273,6 @@ class EventViewSet(viewsets.ModelViewSet):
                     }
                 )
 
-        # Consome disponibilidade do líder imediatamente (eventos com banda) para reservar o slot enquanto aguarda aprovação
-        if not event.is_solo:
-            self._consume_leader_availability(event)
-
     def perform_destroy(self, instance):
         """
         Apenas o criador pode deletar o evento de forma definitiva.
@@ -264,36 +288,6 @@ class EventViewSet(viewsets.ModelViewSet):
             self._restore_leader_availability(instance)
 
         super().perform_destroy(instance)
-
-    def _consume_leader_availability(self, event):
-        """
-        Subtrai o intervalo do evento das disponibilidades ativas do líder,
-        recriando as sobras antes/depois.
-        """
-        try:
-            leader = Musician.objects.filter(role='leader').first()
-            if not leader:
-                return
-        except Musician.DoesNotExist:
-            return
-
-        # Considera disponibilidades no dia inicial e, se o evento cruzar meia-noite, no dia seguinte
-        end_date = event.end_datetime.date()
-        date_filter = [event.event_date]
-        if end_date != event.event_date:
-            date_filter.append(end_date)
-
-        overlaps = LeaderAvailability.objects.filter(
-            leader=leader,
-            is_active=True,
-            date__in=date_filter,
-            start_datetime__lt=event.end_datetime,
-            end_datetime__gt=event.start_datetime
-        )
-
-        for avail in overlaps:
-            events = [event]
-            self._split_availability_with_events(avail, events)
 
     def _split_availability_with_events(self, availability, events):
         """
@@ -693,9 +687,13 @@ class AvailabilityViewSet(viewsets.ModelViewSet):
         """Filtra para mostrar apenas disponibilidades do músico logado"""
         try:
             musician = self.request.user.musician_profile
+            org = get_user_organization(self.request.user)
             queryset = Availability.objects.filter(
                 musician=musician
             ).select_related('musician__user', 'event')
+
+            if org:
+                queryset = queryset.filter(event__organization=org)
             
             # Filtro por status da resposta
             response_filter = self.request.query_params.get('response')
@@ -766,9 +764,24 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         - ?past=true (datas passadas)
         - ?date=YYYY-MM-DD (data específica)
         - ?leader=<id> (filtrar por líder específico)
+        - ?search=termo (nome/username do músico)
+        - ?public=true (apenas compartilhadas)
+        - ?mine=true (apenas minhas)
         """
         from django.utils import timezone
         queryset = LeaderAvailability.objects.filter(is_active=True).select_related('leader__user')
+
+        mine = self.request.query_params.get('mine') == 'true'
+        public_only = self.request.query_params.get('public') == 'true'
+
+        if mine:
+            try:
+                musician = self.request.user.musician_profile
+                queryset = queryset.filter(leader=musician)
+            except Musician.DoesNotExist:
+                return LeaderAvailability.objects.none()
+        elif public_only:
+            queryset = queryset.filter(is_public=True)
 
         # Filtro por data futura
         if self.request.query_params.get('upcoming') == 'true':
@@ -787,6 +800,16 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         leader_id = self.request.query_params.get('leader')
         if leader_id:
             queryset = queryset.filter(leader_id=leader_id)
+
+        # Busca por nome/username/instagram do músico
+        search = self.request.query_params.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(leader__user__first_name__icontains=search) |
+                Q(leader__user__last_name__icontains=search) |
+                Q(leader__user__username__icontains=search) |
+                Q(leader__instagram__icontains=search)
+            )
 
         return queryset
 
@@ -860,8 +883,8 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         """
         try:
             musician = self.request.user.musician_profile
-
-            serializer.save(leader=musician)
+            org = get_user_organization(self.request.user)
+            serializer.save(leader=musician, organization=org)
             created = serializer.instance
             conflicting_events = Event.objects.filter(
                 status__in=['proposed', 'approved', 'confirmed'],
