@@ -3,7 +3,7 @@ import { Megaphone, MapPin, Calendar as CalendarIcon, Phone, Mail, Send, Sparkle
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { marketplaceService } from '../services/api';
-import { MarketplaceGig, MarketplaceApplication } from '../types';
+import type { MarketplaceGig, MarketplaceApplication } from '../types';
 
 const statusStyles: Record<string, string> = {
   open: 'bg-emerald-100 text-emerald-800',
@@ -375,11 +375,11 @@ const Marketplace: React.FC = () => {
 
               <div className="card-contrast">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Minhas candidaturas</h3>
-                {myApplications.length === 0 ? (
+                {Array.isArray(myApplications) && myApplications.length === 0 ? (
                   <p className="text-sm text-gray-600">Você ainda não se candidatou em nenhuma vaga.</p>
                 ) : (
                   <div className="space-y-3">
-                    {myApplications.map((app) => (
+                    {(Array.isArray(myApplications) ? myApplications : []).map((app) => (
                       <div key={app.id} className="border border-gray-100 rounded-lg p-3">
                         <div className="flex items-center justify-between">
                           <p className="font-semibold text-gray-900 truncate">{gigs.find((g) => g.id === app.gig)?.title || 'Vaga'}</p>
