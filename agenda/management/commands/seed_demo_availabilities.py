@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta, time
 
 from django.core.management.base import BaseCommand
+from django.utils import timezone
 
-from agenda.models import Musician, LeaderAvailability
+from agenda.models import Musician, LeaderAvailability, Event
 
 
 class Command(BaseCommand):
@@ -20,11 +21,26 @@ class Command(BaseCommand):
         ]
 
         musicians = Musician.objects.filter(is_active=True)
+        events = Event.objects.filter(
+            status__in=['proposed', 'approved', 'confirmed']
+        ).only('start_datetime', 'end_datetime')
+        buffer = timedelta(minutes=40)
 
         created = 0
         for musician in musicians:
             for d in base_dates:
                 start_time, end_time = slots[(d.day + musician.id) % len(slots)]
+                start_dt = timezone.make_aware(datetime.combine(d, start_time))
+                end_dt = timezone.make_aware(datetime.combine(d, end_time))
+
+                # pula se há conflito com evento existente (considerando buffer)
+                conflict_exists = events.filter(
+                    start_datetime__lt=end_dt + buffer,
+                    end_datetime__gt=start_dt - buffer,
+                ).exists()
+                if conflict_exists:
+                    continue
+
                 LeaderAvailability.objects.get_or_create(
                     leader=musician,
                     date=d,
