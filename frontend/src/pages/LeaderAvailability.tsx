@@ -5,7 +5,7 @@ import { Calendar as CalendarIcon, Clock, Plus, Edit, Trash2, AlertCircle, Info,
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { leaderAvailabilityService } from '../services/api';
-import type { LeaderAvailability, LeaderAvailabilityCreate } from '../types';
+import type { LeaderAvailability, LeaderAvailabilityCreate, Musician } from '../types';
 import { format, parseISO } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -69,10 +69,7 @@ const LeaderAvailabilityPage: React.FC = () => {
     loadAvailabilities();
   }, [loadAvailabilities]);
 
-  useEffect(() => {
-    // placeholder to keep future enhancements; for now musicians list is unused
-    setMusicians([]);
-  }, []);
+  // Lista de músicos removida (agrupamento por instrumento)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
