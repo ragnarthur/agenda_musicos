@@ -277,7 +277,7 @@ export const marketplaceService = {
 
   getMyApplications: async (): Promise<MarketplaceApplication[]> => {
     const response = await api.get('/marketplace/applications/');
-    return response.data;
+    return response.data.results || response.data;
   },
 };
 

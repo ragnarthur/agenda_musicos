@@ -1,10 +1,14 @@
 # config/settings.py
 from pathlib import Path
-from decouple import config
+from decouple import config as decouple_config, Config, RepositoryEnv
 from datetime import timedelta
 from urllib.parse import urlparse
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Preferencialmente usa .env.local para desenvolvimento, caindo para .env/variáveis de ambiente em produção
+ENV_LOCAL = BASE_DIR / '.env.local'
+config = Config(RepositoryEnv(str(ENV_LOCAL))) if ENV_LOCAL.exists() else decouple_config
 
 # SECURITY
 SECRET_KEY = config('SECRET_KEY')
