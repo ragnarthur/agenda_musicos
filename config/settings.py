@@ -1,14 +1,19 @@
 # config/settings.py
 from pathlib import Path
+import os
 from decouple import config as decouple_config, Config, RepositoryEnv
 from datetime import timedelta
 from urllib.parse import urlparse
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Preferencialmente usa .env.local para desenvolvimento, caindo para .env/variáveis de ambiente em produção
+# Perfil de ambiente: produção por padrão. Para usar .env.local, exporte DJANGO_ENV=development (ou ENV=development).
+ENV_PROFILE = os.getenv('DJANGO_ENV') or os.getenv('ENV') or 'production'
 ENV_LOCAL = BASE_DIR / '.env.local'
-config = Config(RepositoryEnv(str(ENV_LOCAL))) if ENV_LOCAL.exists() else decouple_config
+if ENV_PROFILE.lower() != 'production' and ENV_LOCAL.exists():
+    config = Config(RepositoryEnv(str(ENV_LOCAL)))
+else:
+    config = decouple_config
 
 # SECURITY
 SECRET_KEY = config('SECRET_KEY')
