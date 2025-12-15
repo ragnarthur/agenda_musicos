@@ -1,6 +1,6 @@
 // pages/Musicians.tsx
 import React, { useEffect, useState } from 'react';
-import { Users, Music, Phone, Mail, Crown, Instagram } from 'lucide-react';
+import { Users, Music, Phone, Mail, Instagram } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { musicianService } from '../services/api';
@@ -48,6 +48,18 @@ const Musicians: React.FC = () => {
     return emojis[instrument] || '🎵';
   };
 
+  const getInstrumentLabel = (instrument: string) => {
+    const displayMap: Record<string, string> = {
+      vocal: 'Vocalista',
+      guitar: 'Guitarrista/Violão',
+      bass: 'Baixista',
+      drums: 'Baterista',
+      keyboard: 'Tecladista',
+      other: 'Músico(a)',
+    };
+    return displayMap[instrument] || 'Músico(a)';
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -83,9 +95,9 @@ const Musicians: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {musicians.map((musician) => {
               const emoji = getInstrumentEmoji(musician.instrument, musician.bio);
-              const isLeader = musician.is_leader;
               const username = musician.instagram || musician.user.username;
               const contactEmail = musician.public_email || musician.user.email;
+              const instrumentLabel = getInstrumentLabel(musician.instrument);
               return (
                 <div key={musician.id} className="card-contrast hover:shadow-2xl transition-all">
                   {/* Header do Card */}
@@ -97,7 +109,6 @@ const Musicians: React.FC = () => {
                       <div>
                         <h3 className="font-semibold text-gray-900 flex items-center space-x-2">
                           <span>{musician.full_name}</span>
-                          {isLeader && <Crown className="h-4 w-4 text-yellow-500" />}
                         </h3>
                         {username && <p className="text-sm text-gray-600">@{username.replace('@', '')}</p>}
                       </div>
@@ -137,14 +148,7 @@ const Musicians: React.FC = () => {
 
                   {/* Badge de Papel */}
                   <div className="mt-4">
-                    {isLeader ? (
-                      <span className="status-chip approved">
-                        <Crown className="h-3 w-3" />
-                        <span>Baterista (agenda compartilhada)</span>
-                      </span>
-                    ) : (
-                      <span className="status-chip default">Membro</span>
-                    )}
+                    <span className="status-chip default">{instrumentLabel}</span>
                   </div>
                 </div>
               );
