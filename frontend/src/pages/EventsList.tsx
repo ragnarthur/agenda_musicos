@@ -14,6 +14,7 @@ import {
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { eventService } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import type { Availability, Event } from '../types';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -56,34 +57,6 @@ const extractLineup = (event: Event): string[] => {
   return Array.from(names);
 };
 
-const normalize = (value?: string | null) => (value || '').toLowerCase();
-
-const belongsTo = (event: Event, target: 'sara' | 'arthur'): boolean => {
-  const targets =
-    target === 'sara'
-      ? ['sara', 'carmo']
-      : ['arthur', 'araujo', 'araújo'];
-
-  const checkString = (text?: string | null) => targets.some((t) => normalize(text).includes(t));
-
-  const availList = event.availabilities || [];
-  if (availList.length) {
-    for (const avail of availList) {
-      const fullName =
-        avail.musician?.full_name ||
-        avail.musician?.user?.full_name ||
-        `${avail.musician?.user?.first_name || ''} ${avail.musician?.user?.last_name || ''}`.trim();
-      if (checkString(fullName)) return true;
-    }
-  }
-
-  if (checkString(event.created_by_name) || checkString(event.approved_by_name)) {
-    return true;
-  }
-
-  return false;
-};
-
 const getStartDateTime = (event: Event): number => {
   try {
     if (event.start_datetime) {
@@ -104,6 +77,7 @@ const EventsList: React.FC = () => {
   const [filter, setFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('upcoming');
+  const { user } = useAuth();
 
   const loadEvents = useCallback(async () => {
     try {
@@ -125,13 +99,21 @@ const EventsList: React.FC = () => {
       }
 
       const data = await eventService.getAll(params);
-      setEvents(data);
+      if (user) {
+        const mine = data.filter((ev) => {
+          if (ev.created_by === user.id) return true;
+          return (ev.availabilities || []).some((a) => a.musician?.id === user.id);
+        });
+        setEvents(mine);
+      } else {
+        setEvents(data);
+      }
     } catch (error) {
       console.error('Erro ao carregar eventos:', error);
     } finally {
       setLoading(false);
     }
-  }, [filter, searchTerm, timeFilter]);
+  }, [filter, searchTerm, timeFilter, user]);
 
   useEffect(() => {
     loadEvents();
@@ -174,12 +156,7 @@ const EventsList: React.FC = () => {
           dateKey,
           label: format(dateObj, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR }),
           tone,
-          sara: list
-            .filter((ev) => belongsTo(ev, 'sara'))
-            .sort((a, b) => getStartDateTime(a) - getStartDateTime(b)),
-          arthur: list
-            .filter((ev) => belongsTo(ev, 'arthur'))
-            .sort((a, b) => getStartDateTime(a) - getStartDateTime(b)),
+          events: list.sort((a, b) => getStartDateTime(a) - getStartDateTime(b)),
         };
       });
   }, [events]);
@@ -256,9 +233,9 @@ const EventsList: React.FC = () => {
                 <Sparkles className="h-4 w-4" />
                 Dashboard de Eventos
               </div>
-              <h1 className="mt-3 text-3xl font-bold text-gray-900">Agenda completa</h1>
+              <h1 className="mt-3 text-3xl font-bold text-gray-900">Meus eventos</h1>
               <p className="mt-1 text-sm text-gray-700">
-                Acompanhe todos os shows confirmados, propostas em andamento e datas solo em um só lugar.
+                Acompanhe apenas os eventos que você criou ou foi convidado.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <div className="rounded-2xl border border-white/70 bg-white/90 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur">
