@@ -202,7 +202,26 @@ class EventDetailSerializer(serializers.ModelSerializer):
     def get_logs(self, obj):
         """Retorna últimos registros de log (limitado para evitar payload grande)"""
         logs = obj.logs.select_related('performed_by').all()[:20]
-        return EventLogSerializer(logs, many=True).data
+        raw_logs = EventLogSerializer(logs, many=True).data
+
+        # Ajusta textos de disponibilidade para PT-BR quando existirem registros antigos
+        response_labels = {
+            'available': 'Disponível',
+            'unavailable': 'Indisponível',
+            'maybe': 'Talvez',
+            'pending': 'Pendente',
+        }
+
+        adjusted_logs = []
+        for log in raw_logs:
+            desc = log.get('description', '')
+            if log.get('action') == 'availability':
+                for eng, label in response_labels.items():
+                    desc = desc.replace(f': {eng}', f': {label}')
+            log['description'] = desc
+            adjusted_logs.append(log)
+
+        return adjusted_logs
 
     def get_can_rate(self, obj):
         """
