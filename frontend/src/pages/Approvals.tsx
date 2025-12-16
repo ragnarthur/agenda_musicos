@@ -156,9 +156,9 @@ const Approvals: React.FC = () => {
             <div className="flex items-start space-x-3">
               <Crown className="h-5 w-5 text-yellow-600 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-yellow-800">Aprovação colaborativa</p>
+                <p className="text-sm font-medium text-yellow-800">Aprovação apenas para convidados</p>
                 <p className="text-sm text-yellow-700 mt-1">
-                  Qualquer músico pode aprovar ou rejeitar eventos. Clique em "Ver Detalhes" para analisar cada proposta e decidir.
+                  Apenas músicos convidados podem aprovar ou rejeitar estes eventos. Clique em "Ver Detalhes" para analisar cada proposta e decidir.
                 </p>
               </div>
             </div>

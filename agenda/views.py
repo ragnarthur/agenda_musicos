@@ -558,12 +558,12 @@ class EventViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # Garante que o músico está associado ao evento (cria se não existir)
-        Availability.objects.update_or_create(
-            musician=musician,
-            event=event,
-            defaults={'response': 'pending'}
-        )
+        # Garante que o músico foi convidado para o evento
+        if not event.availabilities.filter(musician=musician).exists():
+            return Response(
+                {'detail': 'Apenas músicos convidados podem aprovar este evento.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
         
         # Tenta aprovar
         if event.approve(request.user):
@@ -601,11 +601,12 @@ class EventViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        Availability.objects.update_or_create(
-            musician=musician,
-            event=event,
-            defaults={'response': 'pending'}
-        )
+        # Garante que o músico foi convidado para o evento
+        if not event.availabilities.filter(musician=musician).exists():
+            return Response(
+                {'detail': 'Apenas músicos convidados podem rejeitar este evento.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
         
         # Pega o motivo
         reason = request.data.get('reason', '')
@@ -682,6 +683,13 @@ class EventViewSet(viewsets.ModelViewSet):
             return Response(
                 {'detail': 'Usuário não possui perfil de músico.'},
                 status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Apenas músicos convidados podem responder disponibilidade
+        if not event.availabilities.filter(musician=musician).exists():
+            return Response(
+                {'detail': 'Você não foi convidado para este evento.'},
+                status=status.HTTP_403_FORBIDDEN
             )
 
         # Valida response
