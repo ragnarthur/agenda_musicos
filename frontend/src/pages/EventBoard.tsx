@@ -166,9 +166,6 @@ const EventBoard: React.FC = () => {
               {event.is_solo && (
                 <span className="status-chip default">Solo</span>
               )}
-              {hasRoberto && (
-                <span className="status-chip approved">Bateria</span>
-              )}
             </div>
             <h3 className="mt-1 text-lg font-semibold text-gray-900">{event.title}</h3>
             <p className="text-sm text-gray-600">{event.location}</p>
