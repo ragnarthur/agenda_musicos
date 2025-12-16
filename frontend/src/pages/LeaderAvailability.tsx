@@ -249,64 +249,87 @@ const LeaderAvailabilityPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Filtros de tempo */}
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex space-x-2 overflow-x-auto pb-2">
-            {[
-              { value: 'upcoming', label: 'Próximas' },
-              { value: 'all', label: 'Todas' },
-              { value: 'past', label: 'Passadas' },
-            ].map((item) => (
-              <button
-                key={item.value}
-                onClick={() => setTimeFilter(item.value as 'upcoming' | 'past' | 'all')}
-                className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
-                  timeFilter === item.value
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:space-x-3">
+        {/* Tabs: Minhas Datas vs Explorar Músicos */}
+        <div className="flex flex-col gap-4">
+          {/* Tabs principais */}
+          <div className="flex border-b border-gray-200">
             <button
-              onClick={() => setShowShared((prev) => !prev)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                showShared ? 'bg-primary-600 text-white border-primary-600 shadow' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+              onClick={() => setShowShared(false)}
+              className={`flex items-center gap-2 px-6 py-3 font-medium border-b-2 transition-colors ${
+                !showShared
+                  ? 'border-primary-600 text-primary-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              <Share className="h-4 w-4" />
-              <span>{showShared ? 'Mostrando públicas' : 'Ver agendas compartilhadas'}</span>
+              <CalendarIcon className="h-4 w-4" />
+              <span>Minhas Datas</span>
             </button>
-            <div className="relative">
-              <Search className="h-4 w-4 text-gray-400 absolute left-3 top-2.5" />
-              <input
-                type="text"
-                className="pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary-500"
-                placeholder="Buscar músico (ex: Bruno, @drums)"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+            <button
+              onClick={() => setShowShared(true)}
+              className={`flex items-center gap-2 px-6 py-3 font-medium border-b-2 transition-colors ${
+                showShared
+                  ? 'border-primary-600 text-primary-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <Users className="h-4 w-4" />
+              <span>Explorar Músicos</span>
+            </button>
+          </div>
+
+          {/* Filtros */}
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex space-x-2 overflow-x-auto pb-2">
+              {[
+                { value: 'upcoming', label: 'Próximas' },
+                { value: 'all', label: 'Todas' },
+                { value: 'past', label: 'Passadas' },
+              ].map((item) => (
+                <button
+                  key={item.value}
+                  onClick={() => setTimeFilter(item.value as 'upcoming' | 'past' | 'all')}
+                  className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+                    timeFilter === item.value
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
             </div>
-            <div className="flex items-center space-x-2">
-              <Music className="h-4 w-4 text-gray-500" />
-              <select
-                className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
-                value={instrumentFilter}
-                onChange={(e) => setInstrumentFilter(e.target.value)}
-                aria-label="Filtrar por instrumento"
-              >
-                <option value="all">Todos os instrumentos</option>
-                {instruments.map((inst) => (
-                  <option key={inst.value} value={inst.value}>
-                    {inst.label} ({inst.count})
-                  </option>
-                ))}
-              </select>
-            </div>
+
+            {/* Filtros de busca - visíveis apenas em "Explorar Músicos" */}
+            {showShared && (
+              <div className="flex flex-col gap-2 md:flex-row md:items-center md:space-x-3">
+                <div className="relative">
+                  <Search className="h-4 w-4 text-gray-400 absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    className="pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary-500 w-full md:w-auto"
+                    placeholder="Buscar músico (ex: Bruno)"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Music className="h-4 w-4 text-gray-500" />
+                  <select
+                    className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+                    value={instrumentFilter}
+                    onChange={(e) => setInstrumentFilter(e.target.value)}
+                    aria-label="Filtrar por instrumento"
+                  >
+                    <option value="all">Todos os instrumentos</option>
+                    {instruments.map((inst) => (
+                      <option key={inst.value} value={inst.value}>
+                        {inst.label} ({inst.count})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
