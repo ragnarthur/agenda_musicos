@@ -1020,8 +1020,12 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
     def available_musicians(self, request):
         """
         GET /leader-availabilities/available_musicians/?date=YYYY-MM-DD
-        Retorna músicos que têm disponibilidades públicas na data especificada.
-        Útil para selecionar quem convidar ao criar um evento.
+        Retorna todos os músicos ativos para convite, indicando quais têm
+        disponibilidade publicada na data.
+
+        Parâmetros opcionais:
+        - instrument: filtra por instrumento
+        - only_available: se 'true', retorna apenas músicos com disponibilidade
         """
         date_param = request.query_params.get('date')
         if not date_param:
@@ -1038,20 +1042,6 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Busca disponibilidades públicas na data
-        availabilities = LeaderAvailability.objects.filter(
-            is_active=True,
-            is_public=True,
-            date=target_date
-        ).select_related('leader__user').exclude(
-            leader__user=request.user  # Exclui o próprio usuário
-        )
-
-        # Filtro opcional por instrumento
-        instrument = request.query_params.get('instrument')
-        if instrument:
-            availabilities = availabilities.filter(leader__instrument=instrument)
-
         instrument_labels = {
             'vocal': 'Vocal',
             'guitar': 'Guitarra/Violão',
@@ -1061,18 +1051,53 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
             'other': 'Outro',
         }
 
-        result = []
+        # Busca todos os músicos ativos, exceto o próprio usuário
+        musicians = Musician.objects.filter(
+            is_active=True
+        ).select_related('user').exclude(
+            user=request.user
+        )
+
+        # Filtro opcional por instrumento
+        instrument = request.query_params.get('instrument')
+        if instrument:
+            musicians = musicians.filter(instrument=instrument)
+
+        # Busca disponibilidades públicas na data (para associar aos músicos)
+        availabilities_map = {}
+        availabilities = LeaderAvailability.objects.filter(
+            is_active=True,
+            is_public=True,
+            date=target_date
+        ).select_related('leader')
+
         for avail in availabilities:
-            musician = avail.leader
-            result.append({
+            availabilities_map[avail.leader_id] = avail
+
+        only_available = request.query_params.get('only_available', '').lower() == 'true'
+
+        result = []
+        for musician in musicians:
+            avail = availabilities_map.get(musician.id)
+
+            # Se only_available=true, pula músicos sem disponibilidade
+            if only_available and not avail:
+                continue
+
+            musician_data = {
                 'musician_id': musician.id,
                 'musician_name': musician.user.get_full_name() or musician.user.username,
                 'instrument': musician.instrument,
                 'instrument_display': instrument_labels.get(musician.instrument, musician.instrument or ''),
-                'availability_id': avail.id,
-                'start_time': avail.start_time.strftime('%H:%M'),
-                'end_time': avail.end_time.strftime('%H:%M'),
-                'notes': avail.notes or '',
-            })
+                'has_availability': avail is not None,
+                'availability_id': avail.id if avail else None,
+                'start_time': avail.start_time.strftime('%H:%M') if avail else None,
+                'end_time': avail.end_time.strftime('%H:%M') if avail else None,
+                'notes': avail.notes if avail else None,
+            }
+            result.append(musician_data)
+
+        # Ordena: músicos com disponibilidade primeiro, depois por nome
+        result.sort(key=lambda x: (not x['has_availability'], x['musician_name']))
 
         return Response(result)

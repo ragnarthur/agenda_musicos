@@ -90,10 +90,11 @@ export interface AvailableMusician {
   musician_name: string;
   instrument: string;
   instrument_display: string;
-  availability_id: number;
-  start_time: string;
-  end_time: string;
-  notes?: string;
+  has_availability: boolean;
+  availability_id: number | null;
+  start_time: string | null;
+  end_time: string | null;
+  notes?: string | null;
 }
 
 export interface LeaderAvailability {

@@ -1,6 +1,6 @@
 // components/event/ProposalSummary.tsx
 import React from 'react';
-import { Target, ShieldCheck, Sparkles, Users } from 'lucide-react';
+import { Target, ShieldCheck, Sparkles, Users, CheckCircle } from 'lucide-react';
 import type { LeaderAvailability, AvailableMusician } from '../../types';
 
 interface ProposalSummaryProps {
@@ -67,8 +67,11 @@ const ProposalSummary: React.FC<ProposalSummaryProps> = ({
             </p>
             <ul className="space-y-1">
               {selectedMusicianDetails.map(m => (
-                <li key={m.musician_id} className="text-xs">
+                <li key={m.musician_id} className="text-xs flex items-center gap-1">
                   • {m.musician_name} ({m.instrument_display})
+                  {m.has_availability && (
+                    <CheckCircle className="h-3 w-3 text-green-600" aria-label="Disponibilidade confirmada" />
+                  )}
                 </li>
               ))}
             </ul>
@@ -97,8 +100,8 @@ const ProposalSummary: React.FC<ProposalSummaryProps> = ({
         </div>
         <ul className="space-y-3 text-gray-700">
           <li>
-            <strong className="text-gray-900">Convide músicos:</strong> selecione músicos que tenham
-            disponibilidade publicada na data do evento.
+            <strong className="text-gray-900">Convide músicos:</strong> selecione qualquer músico da
+            banda. Músicos com disponibilidade publicada aparecem em destaque.
           </li>
           <li>
             <strong className="text-gray-900">Confirmação:</strong> o evento só é confirmado quando

@@ -503,7 +503,7 @@ const EventForm: React.FC = () => {
               </div>
             </div>
 
-            {/* Seleção de Músicos Disponíveis */}
+            {/* Seleção de Músicos para Convite */}
             {!formData.is_solo && formData.event_date && (
               <div className="rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-50 via-white to-indigo-50 p-4">
                 <div className="flex items-center gap-2 mb-3">
@@ -516,16 +516,13 @@ const EventForm: React.FC = () => {
                 {loadingMusicians ? (
                   <div className="flex items-center justify-center py-4">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600" />
-                    <span className="ml-2 text-sm text-gray-600">Buscando músicos disponíveis...</span>
+                    <span className="ml-2 text-sm text-gray-600">Carregando músicos...</span>
                   </div>
                 ) : availableMusicians.length === 0 ? (
                   <div className="text-center py-4">
                     <Info className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                     <p className="text-sm text-gray-600">
-                      Nenhum músico tem disponibilidade publicada para esta data.
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Os músicos precisam cadastrar suas disponibilidades na página "Minhas Datas".
+                      Nenhum músico disponível para convite.
                     </p>
                   </div>
                 ) : (
@@ -542,23 +539,38 @@ const EventForm: React.FC = () => {
                           className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
                             selectedMusicians.includes(musician.musician_id)
                               ? 'border-purple-500 bg-purple-50 shadow-sm'
-                              : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/50'
+                              : musician.has_availability
+                                ? 'border-green-200 bg-green-50/30 hover:border-purple-300 hover:bg-purple-50/50'
+                                : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/50'
                           }`}
                         >
                           <div className="flex items-center gap-3">
                             <div className={`p-2 rounded-lg ${
                               selectedMusicians.includes(musician.musician_id)
                                 ? 'bg-purple-500 text-white'
-                                : 'bg-gray-100 text-gray-600'
+                                : musician.has_availability
+                                  ? 'bg-green-100 text-green-600'
+                                  : 'bg-gray-100 text-gray-600'
                             }`}>
                               <Music className="h-4 w-4" />
                             </div>
                             <div>
-                              <p className="font-medium text-gray-900">{musician.musician_name}</p>
-                              <p className="text-xs text-gray-500">
-                                {musician.instrument_display} • Disponível das {musician.start_time} às {musician.end_time}
+                              <p className="font-medium text-gray-900">
+                                {musician.musician_name}
+                                {musician.has_availability && (
+                                  <span className="ml-2 inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">
+                                    <CheckCircle className="h-3 w-3 mr-0.5" />
+                                    Disponível
+                                  </span>
+                                )}
                               </p>
-                              {musician.notes && (
+                              <p className="text-xs text-gray-500">
+                                {musician.instrument_display}
+                                {musician.has_availability && musician.start_time && musician.end_time && (
+                                  <span className="text-green-600"> • {musician.start_time} às {musician.end_time}</span>
+                                )}
+                              </p>
+                              {musician.has_availability && musician.notes && (
                                 <p className="text-xs text-gray-400 mt-0.5">{musician.notes}</p>
                               )}
                             </div>
