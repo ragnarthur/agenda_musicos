@@ -43,7 +43,7 @@ const Musicians: React.FC = () => {
       bass: '🎸',
       drums: '🥁',
       keyboard: '🎹',
-      other: '🎵',
+      percussion: '🥁',
     };
     return emojis[instrument] || '🎵';
   };
@@ -55,7 +55,7 @@ const Musicians: React.FC = () => {
       bass: 'Baixista',
       drums: 'Baterista',
       keyboard: 'Tecladista',
-      other: 'Músico(a)',
+      percussion: 'Percussionista',
     };
     return displayMap[instrument] || 'Músico(a)';
   };

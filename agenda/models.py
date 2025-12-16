@@ -73,7 +73,7 @@ class Musician(models.Model):
         ('bass', 'Baixo'),
         ('drums', 'Bateria'),
         ('keyboard', 'Teclado'),
-        ('other', 'Outro'),
+        ('percussion', 'Percussão/Outros'),
     ]
     
     ROLE_CHOICES = [

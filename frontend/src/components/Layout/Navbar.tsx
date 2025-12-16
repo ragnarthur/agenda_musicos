@@ -26,7 +26,7 @@ const Navbar: React.FC = () => {
       bass: 'Baixo',
       drums: 'Bateria',
       keyboard: 'Teclado',
-      other: 'Músico',
+      percussion: 'Percussão',
     };
     return displayMap[user.instrument] || user.instrument;
   };

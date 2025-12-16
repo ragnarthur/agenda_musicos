@@ -87,7 +87,7 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
             'bass': 'Baixo',
             'drums': 'Bateria',
             'keyboard': 'Teclado',
-            'other': 'Outro',
+            'percussion': 'Percussão/Outros',
         }
 
         # Busca instrumentos únicos com contagem
@@ -1193,7 +1193,7 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
             'bass': 'Baixo',
             'drums': 'Bateria',
             'keyboard': 'Teclado',
-            'other': 'Outro',
+            'percussion': 'Percussão/Outros',
         }
 
         # Busca todos os músicos ativos, exceto o próprio usuário

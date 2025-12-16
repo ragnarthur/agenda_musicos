@@ -18,7 +18,7 @@ const instrumentLabels: Record<string, string> = {
   bass: 'Baixo',
   drums: 'Bateria',
   keyboard: 'Teclado',
-  other: 'Músico',
+  percussion: 'Percussão',
 };
 
 const formatMusicianLabel = (availability: Availability) => {
