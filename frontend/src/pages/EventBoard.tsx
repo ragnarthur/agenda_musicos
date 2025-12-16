@@ -47,8 +47,6 @@ const extractNames = (event: Event): string[] => {
   return Array.from(names);
 };
 
-const normalize = (value?: string | null) => (value || '').toLowerCase();
-
 const safeParse = (value?: string | null): Date | null => {
   if (!value) return null;
   try {
@@ -154,7 +152,6 @@ const EventBoard: React.FC = () => {
 
   const renderEventCard = (event: Event) => {
     const lineup = extractNames(event);
-    const hasRoberto = belongsTo(event, 'roberto');
     const statusClass = `status-chip ${event.status || 'default'}`;
     return (
       <Link
