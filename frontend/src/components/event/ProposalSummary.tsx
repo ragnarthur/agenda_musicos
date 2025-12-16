@@ -1,7 +1,7 @@
 // components/event/ProposalSummary.tsx
 import React from 'react';
-import { Target, ShieldCheck, Sparkles } from 'lucide-react';
-import type { LeaderAvailability } from '../../types';
+import { Target, ShieldCheck, Sparkles, Users } from 'lucide-react';
+import type { LeaderAvailability, AvailableMusician } from '../../types';
 
 interface ProposalSummaryProps {
   formattedDate: string;
@@ -10,6 +10,8 @@ interface ProposalSummaryProps {
   duration: string | null;
   isSolo: boolean;
   matchingAvailability: LeaderAvailability | null;
+  selectedMusicians?: number[];
+  availableMusicians?: AvailableMusician[];
 }
 
 const ProposalSummary: React.FC<ProposalSummaryProps> = ({
@@ -19,7 +21,13 @@ const ProposalSummary: React.FC<ProposalSummaryProps> = ({
   duration,
   isSolo,
   matchingAvailability,
+  selectedMusicians = [],
+  availableMusicians = [],
 }) => {
+  const selectedMusicianDetails = availableMusicians.filter(m =>
+    selectedMusicians.includes(m.musician_id)
+  );
+
   return (
     <aside className="space-y-5">
       <div className="rounded-2xl border border-white/50 bg-white/90 p-5 shadow-xl backdrop-blur">
@@ -46,10 +54,26 @@ const ProposalSummary: React.FC<ProposalSummaryProps> = ({
           <div className="flex justify-between">
             <dt className="text-gray-500">Formato</dt>
             <dd className="font-semibold text-gray-900">
-              {isSolo ? 'Show solo' : 'Banda completa'}
+              {isSolo ? 'Show solo' : selectedMusicians.length > 0 ? `${selectedMusicians.length + 1} músicos` : 'Aguardando seleção'}
             </dd>
           </div>
         </dl>
+
+        {/* Músicos selecionados */}
+        {!isSolo && selectedMusicianDetails.length > 0 && (
+          <div className="mt-5 rounded-xl border border-purple-200 bg-purple-50 p-3 text-sm text-purple-800">
+            <p className="flex items-center font-semibold mb-2">
+              <Users className="mr-2 h-4 w-4" aria-hidden="true" /> Músicos convidados
+            </p>
+            <ul className="space-y-1">
+              {selectedMusicianDetails.map(m => (
+                <li key={m.musician_id} className="text-xs">
+                  • {m.musician_name} ({m.instrument_display})
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {matchingAvailability && !isSolo && (
           <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-800">
@@ -73,16 +97,16 @@ const ProposalSummary: React.FC<ProposalSummaryProps> = ({
         </div>
         <ul className="space-y-3 text-gray-700">
           <li>
-            <strong className="text-gray-900">Detalhes completos:</strong> título, local e contato bem
-            descritos ajudam o baterista a aprovar mais rápido.
+            <strong className="text-gray-900">Convide músicos:</strong> selecione músicos que tenham
+            disponibilidade publicada na data do evento.
           </li>
           <li>
-            <strong className="text-gray-900">Horários coerentes:</strong> lembre-se do buffer de 40 minutos
-            entre eventos e possíveis deslocamentos.
+            <strong className="text-gray-900">Confirmação:</strong> o evento só é confirmado quando
+            todos os músicos convidados aceitarem o convite.
           </li>
           <li>
-            <strong className="text-gray-900">Show solo:</strong> utilize essa opção quando o Roberto não
-            participará. O evento é liberado na hora.
+            <strong className="text-gray-900">Show solo:</strong> marque esta opção se você for tocar
+            sozinho. O evento é aprovado automaticamente.
           </li>
         </ul>
       </div>

@@ -173,14 +173,21 @@ class EventDetailSerializer(serializers.ModelSerializer):
         return obj.approved_by.get_full_name() if obj.approved_by else None
     
     def get_can_approve(self, obj):
-        """Verifica se o usuário atual pode aprovar"""
+        """
+        Verifica se o usuário atual pode responder ao convite.
+        Retorna True se o músico foi convidado e ainda não respondeu (pending).
+        """
         request = self.context.get('request')
         if not request or not request.user.is_authenticated:
             return False
-        
+
         try:
             musician = request.user.musician_profile
-            return musician.is_leader() and obj.can_be_approved()
+            # Verifica se foi convidado e ainda está pendente
+            availability = obj.availabilities.filter(musician=musician).first()
+            if availability and availability.response == 'pending':
+                return True
+            return False
         except Musician.DoesNotExist:
             return False
 
@@ -240,13 +247,19 @@ class EventDetailSerializer(serializers.ModelSerializer):
 class EventCreateSerializer(serializers.ModelSerializer):
     """Serializer para criação de eventos (campos simplificados)"""
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    invited_musicians = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True,
+        required=False,
+        help_text='Lista de IDs dos músicos a convidar para o evento'
+    )
 
     class Meta:
         model = Event
         fields = [
             'id', 'title', 'description', 'location', 'venue_contact',
             'event_date', 'start_time', 'end_time', 'payment_amount', 'is_solo',
-            'status', 'status_display'
+            'status', 'status_display', 'invited_musicians'
         ]
         read_only_fields = ['id', 'status', 'status_display']
     

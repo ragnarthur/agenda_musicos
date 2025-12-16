@@ -290,76 +290,85 @@ class EventViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         """
-        Cria evento e disponibilidades para todos os músicos da organização.
-        Status inicial: 'proposed' (exceto se is_solo=True, então 'approved').
-        Usa transação atômica para garantir consistência dos dados.
+        Cria evento e disponibilidades para músicos convidados.
+
+        Novo fluxo:
+        - is_solo=True: evento aprovado automaticamente, apenas criador participa
+        - is_solo=False: evento fica 'proposed', aguarda aprovação dos convidados
+        - Quando todos os convidados aceitarem, evento muda para 'confirmed'
         """
         org = get_user_organization(self.request.user)
         if not org:
             raise PermissionDenied('Usuário sem organização.')
+
         is_solo = serializer.validated_data.get('is_solo', False)
+        invited_musicians_ids = serializer.validated_data.pop('invited_musicians', [])
 
-        approved_kwargs = {}
-        if is_solo:
-            approved_kwargs = {
-                'approved_by': self.request.user,
-                'approved_at': timezone.now(),
-            }
-
-        # Transação atômica para garantir que evento + disponibilidades são criados juntos
+        # Transação atômica para garantir consistência
         with transaction.atomic():
-            # Se é evento solo, vai direto para 'approved', caso contrário 'proposed'
-            event = serializer.save(
-                created_by=self.request.user,
-                organization=org,
-                status='approved' if is_solo else 'proposed',
-                **approved_kwargs
-            )
-            self._log_event(
-                event,
-                'created',
-                'Show solo criado e aprovado automaticamente.' if is_solo else 'Evento criado e enviado para aprovação.'
-            )
+            # Evento solo: aprovado automaticamente
+            # Evento com convidados: aguarda aprovação dos músicos
+            if is_solo:
+                event = serializer.save(
+                    created_by=self.request.user,
+                    organization=org,
+                    status='approved',
+                    approved_by=self.request.user,
+                    approved_at=timezone.now(),
+                )
+                self._log_event(event, 'created', 'Show solo criado e aprovado automaticamente.')
+            else:
+                event = serializer.save(
+                    created_by=self.request.user,
+                    organization=org,
+                    status='proposed',
+                )
+                self._log_event(event, 'created', 'Evento criado aguardando confirmação dos músicos convidados.')
 
-            # Criar availabilities (dentro da transação):
-            # - Para eventos solo: apenas o criador
-            # - Para eventos com banda: todos os músicos ativos da organização
-            availabilities = []
-
+            # Buscar músico do criador
             try:
-                all_musicians = Musician.objects.filter(is_active=True)
+                creator_musician = self.request.user.musician_profile
             except Musician.DoesNotExist:
-                all_musicians = Musician.objects.none()
+                creator_musician = None
 
-            for musician in all_musicians:
-                if is_solo and musician.user != self.request.user:
-                    continue
-                response_value = 'available' if musician.user == self.request.user else 'pending'
-                note_value = 'Evento criado por mim' if musician.user == self.request.user else ''
-                availabilities.append(
-                    Availability(
-                        musician=musician,
-                        event=event,
-                        response=response_value,
-                        notes=note_value
-                    )
+            now = timezone.now()
+
+            # Criar availability do criador (sempre 'available')
+            if creator_musician:
+                Availability.objects.update_or_create(
+                    musician=creator_musician,
+                    event=event,
+                    defaults={
+                        'response': 'available',
+                        'notes': 'Evento criado por mim',
+                        'responded_at': now,
+                    }
                 )
 
-            # Criar availabilities usando update_or_create para evitar race conditions
-            # Também preenche timestamps corretamente (bulk_create não preenche auto_now/auto_now_add)
-            if availabilities:
-                now = timezone.now()
-                for availability in availabilities:
-                    # update_or_create é atômico e evita violação de unique_together
+            # Se não for solo, criar availability para músicos convidados
+            if not is_solo and invited_musicians_ids:
+                invited_musicians = Musician.objects.filter(
+                    id__in=invited_musicians_ids,
+                    is_active=True
+                ).exclude(user=self.request.user)  # Exclui o criador (já adicionado acima)
+
+                for musician in invited_musicians:
                     Availability.objects.update_or_create(
-                        musician=availability.musician,
-                        event=availability.event,
+                        musician=musician,
+                        event=event,
                         defaults={
-                            'response': availability.response,
-                            'notes': availability.notes if hasattr(availability, 'notes') else '',
-                            'responded_at': now if availability.response != 'pending' else None,
+                            'response': 'pending',
+                            'notes': '',
+                            'responded_at': None,
                         }
                     )
+
+            # Se não for solo e não tiver convidados, confirma automaticamente
+            # (evento só do criador)
+            if not is_solo and not invited_musicians_ids:
+                event.status = 'confirmed'
+                event.save()
+                self._log_event(event, 'approved', 'Evento confirmado automaticamente (sem convidados).')
 
     def perform_destroy(self, instance):
         """
@@ -633,9 +642,11 @@ class EventViewSet(viewsets.ModelViewSet):
         POST /events/{id}/set_availability/
         Body: { "response": "available|unavailable|maybe|pending", "notes": "..." }
         Marca disponibilidade do músico logado para o evento.
+
+        Quando todos os convidados aceitarem (available), o evento muda para 'confirmed'.
         """
         event = self.get_object()
-        
+
         # Pega músico logado
         try:
             musician = request.user.musician_profile
@@ -644,11 +655,11 @@ class EventViewSet(viewsets.ModelViewSet):
                 {'detail': 'Usuário não possui perfil de músico.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         # Valida response
         response_value = request.data.get('response', 'pending')
         valid_responses = ['pending', 'available', 'unavailable', 'maybe']
-        
+
         if response_value not in valid_responses:
             return Response(
                 {'detail': f'Response inválido. Opções: {", ".join(valid_responses)}'},
@@ -680,8 +691,39 @@ class EventViewSet(viewsets.ModelViewSet):
                     f'{musician.user.get_full_name() or musician.user.username} marcou disponibilidade: {response_value}'
                 )
 
+        # Verifica se todos os convidados aceitaram e confirma o evento
+        if event.status == 'proposed' and response_value == 'available':
+            self._check_and_confirm_event(event)
+
         serializer = AvailabilitySerializer(availability)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def _check_and_confirm_event(self, event):
+        """
+        Verifica se todos os músicos convidados aceitaram e confirma o evento.
+        """
+        all_availabilities = event.availabilities.all()
+
+        # Conta respostas
+        total = all_availabilities.count()
+        available_count = all_availabilities.filter(response='available').count()
+        pending_count = all_availabilities.filter(response='pending').count()
+        unavailable_count = all_availabilities.filter(response='unavailable').count()
+
+        # Se não tem pendentes e todos aceitaram, confirma
+        if pending_count == 0 and available_count == total and total > 0:
+            event.status = 'confirmed'
+            event.save()
+            self._log_event(
+                event,
+                'approved',
+                f'Evento confirmado! Todos os {total} músicos aceitaram.'
+            )
+        # Se alguém recusou, pode notificar o criador
+        elif unavailable_count > 0 and pending_count == 0:
+            # Todos responderam, mas alguém recusou
+            # Status permanece 'proposed' para o criador decidir
+            pass
     
     @action(detail=False, methods=['get'])
     def my_events(self, request):
@@ -973,3 +1015,64 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         from .serializers import EventListSerializer
         serializer = EventListSerializer(conflicting, many=True, context={'request': request})
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def available_musicians(self, request):
+        """
+        GET /leader-availabilities/available_musicians/?date=YYYY-MM-DD
+        Retorna músicos que têm disponibilidades públicas na data especificada.
+        Útil para selecionar quem convidar ao criar um evento.
+        """
+        date_param = request.query_params.get('date')
+        if not date_param:
+            return Response(
+                {'detail': 'Parâmetro "date" é obrigatório.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            target_date = date.fromisoformat(date_param)
+        except ValueError:
+            return Response(
+                {'detail': 'Formato de data inválido. Use YYYY-MM-DD.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Busca disponibilidades públicas na data
+        availabilities = LeaderAvailability.objects.filter(
+            is_active=True,
+            is_public=True,
+            date=target_date
+        ).select_related('leader__user').exclude(
+            leader__user=request.user  # Exclui o próprio usuário
+        )
+
+        # Filtro opcional por instrumento
+        instrument = request.query_params.get('instrument')
+        if instrument:
+            availabilities = availabilities.filter(leader__instrument=instrument)
+
+        instrument_labels = {
+            'vocal': 'Vocal',
+            'guitar': 'Guitarra/Violão',
+            'bass': 'Baixo',
+            'drums': 'Bateria',
+            'keyboard': 'Teclado',
+            'other': 'Outro',
+        }
+
+        result = []
+        for avail in availabilities:
+            musician = avail.leader
+            result.append({
+                'musician_id': musician.id,
+                'musician_name': musician.user.get_full_name() or musician.user.username,
+                'instrument': musician.instrument,
+                'instrument_display': instrument_labels.get(musician.instrument, musician.instrument or ''),
+                'availability_id': avail.id,
+                'start_time': avail.start_time.strftime('%H:%M'),
+                'end_time': avail.end_time.strftime('%H:%M'),
+                'notes': avail.notes or '',
+            })
+
+        return Response(result)

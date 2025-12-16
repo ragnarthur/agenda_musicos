@@ -12,13 +12,16 @@ import {
   CheckCircle,
   Info,
   Sparkles,
+  Users,
+  UserPlus,
+  Music,
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import ConflictPreview from '../components/event/ConflictPreview';
 import AvailabilityPicker from '../components/event/AvailabilityPicker';
 import ProposalSummary from '../components/event/ProposalSummary';
 import { eventService, leaderAvailabilityService } from '../services/api';
-import type { Event, EventCreate, LeaderAvailability } from '../types';
+import type { Event, EventCreate, LeaderAvailability, AvailableMusician } from '../types';
 import { format, parseISO } from 'date-fns';
 
 interface ConflictInfo {
@@ -37,6 +40,9 @@ const EventForm: React.FC = () => {
   const [error, setError] = useState('');
   const [leaderAvailabilities, setLeaderAvailabilities] = useState<LeaderAvailability[]>([]);
   const [matchingAvailability, setMatchingAvailability] = useState<LeaderAvailability | null>(null);
+  const [availableMusicians, setAvailableMusicians] = useState<AvailableMusician[]>([]);
+  const [selectedMusicians, setSelectedMusicians] = useState<number[]>([]);
+  const [loadingMusicians, setLoadingMusicians] = useState(false);
   const dateInputRef = useRef<HTMLInputElement | null>(null);
   const [conflictInfo, setConflictInfo] = useState<ConflictInfo>({
     loading: false,
@@ -97,6 +103,48 @@ const EventForm: React.FC = () => {
       setMatchingAvailability(null);
     }
   }, [formData.event_date, leaderAvailabilities]);
+
+  // Carrega músicos disponíveis quando a data muda
+  useEffect(() => {
+    if (!formData.event_date || formData.is_solo) {
+      setAvailableMusicians([]);
+      setSelectedMusicians([]);
+      return;
+    }
+
+    let cancelled = false;
+    const loadMusicians = async () => {
+      setLoadingMusicians(true);
+      try {
+        const musicians = await leaderAvailabilityService.getAvailableMusicians({ date: formData.event_date });
+        if (!cancelled) {
+          setAvailableMusicians(musicians);
+          // Limpa seleção quando muda a data
+          setSelectedMusicians([]);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar músicos disponíveis:', err);
+        if (!cancelled) {
+          setAvailableMusicians([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingMusicians(false);
+        }
+      }
+    };
+
+    loadMusicians();
+    return () => { cancelled = true; };
+  }, [formData.event_date, formData.is_solo]);
+
+  const toggleMusicianSelection = (musicianId: number) => {
+    setSelectedMusicians(prev =>
+      prev.includes(musicianId)
+        ? prev.filter(id => id !== musicianId)
+        : [...prev, musicianId]
+    );
+  };
 
   useEffect(() => {
     const { event_date, start_time, end_time } = formData;
@@ -181,7 +229,13 @@ const EventForm: React.FC = () => {
         return;
       }
 
-      const event = await eventService.create(formData);
+      // Inclui músicos selecionados se não for solo
+      const eventData: EventCreate = {
+        ...formData,
+        invited_musicians: formData.is_solo ? [] : selectedMusicians,
+      };
+
+      const event = await eventService.create(eventData);
       navigate(`/eventos/${event.id}`);
     } catch (err: unknown) {
       console.error('Erro ao criar evento:', err);
@@ -236,13 +290,13 @@ const EventForm: React.FC = () => {
               </p>
               <h1 className="mt-2 text-3xl font-bold text-gray-900">Novo Evento</h1>
               <p className="mt-1 text-sm text-gray-700">
-                Informe cada detalhe com clareza para agilizar a liberação do Roberto e entregar uma proposta profissional para o cliente.
+                Preencha os detalhes do evento e convide músicos disponíveis para participar.
               </p>
             </div>
             <div className="rounded-2xl border border-white/60 bg-white/80 px-6 py-4 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur">
               <p className="text-xs uppercase tracking-wide text-gray-500">Formato</p>
               <p className="text-lg text-primary-700">
-                {formData.is_solo ? 'Show Solo (auto aprovado)' : 'Duo Violão + Bateria (passa por aprovação)'}
+                {formData.is_solo ? 'Show Solo' : selectedMusicians.length > 0 ? `Banda (${selectedMusicians.length + 1} músicos)` : 'Selecione músicos'}
               </p>
               <p className="mt-2 text-xs uppercase tracking-wide text-gray-500">Duração estimada</p>
               <p className="text-lg text-gray-900">{durationPreview ?? 'Defina os horários'}</p>
@@ -443,11 +497,98 @@ const EventForm: React.FC = () => {
                   Show Solo
                 </label>
                 <p className="text-sm text-gray-600 mt-1">
-                  Use esta opção quando o Roberto não participar. O evento fica marcado como solo, sai do fluxo
-                  de aprovação e é liberado automaticamente no calendário.
+                  Marque se você for tocar sozinho. O evento é aprovado automaticamente sem precisar
+                  de confirmação de outros músicos.
                 </p>
               </div>
             </div>
+
+            {/* Seleção de Músicos Disponíveis */}
+            {!formData.is_solo && formData.event_date && (
+              <div className="rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-50 via-white to-indigo-50 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Users className="h-5 w-5 text-purple-600" />
+                  <h3 className="text-sm font-semibold text-gray-900">
+                    Convidar Músicos
+                  </h3>
+                </div>
+
+                {loadingMusicians ? (
+                  <div className="flex items-center justify-center py-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600" />
+                    <span className="ml-2 text-sm text-gray-600">Buscando músicos disponíveis...</span>
+                  </div>
+                ) : availableMusicians.length === 0 ? (
+                  <div className="text-center py-4">
+                    <Info className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600">
+                      Nenhum músico tem disponibilidade publicada para esta data.
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Os músicos precisam cadastrar suas disponibilidades na página "Minhas Datas".
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Selecione os músicos que você quer convidar para tocar neste evento.
+                      Eles receberão uma notificação e precisarão confirmar a participação.
+                    </p>
+                    <div className="space-y-2">
+                      {availableMusicians.map((musician) => (
+                        <div
+                          key={musician.musician_id}
+                          onClick={() => toggleMusicianSelection(musician.musician_id)}
+                          className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                            selectedMusicians.includes(musician.musician_id)
+                              ? 'border-purple-500 bg-purple-50 shadow-sm'
+                              : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg ${
+                              selectedMusicians.includes(musician.musician_id)
+                                ? 'bg-purple-500 text-white'
+                                : 'bg-gray-100 text-gray-600'
+                            }`}>
+                              <Music className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{musician.musician_name}</p>
+                              <p className="text-xs text-gray-500">
+                                {musician.instrument_display} • Disponível das {musician.start_time} às {musician.end_time}
+                              </p>
+                              {musician.notes && (
+                                <p className="text-xs text-gray-400 mt-0.5">{musician.notes}</p>
+                              )}
+                            </div>
+                          </div>
+                          <div className={`flex items-center justify-center w-6 h-6 rounded-full border-2 ${
+                            selectedMusicians.includes(musician.musician_id)
+                              ? 'border-purple-500 bg-purple-500'
+                              : 'border-gray-300'
+                          }`}>
+                            {selectedMusicians.includes(musician.musician_id) && (
+                              <CheckCircle className="h-4 w-4 text-white" />
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {selectedMusicians.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-purple-200">
+                        <div className="flex items-center gap-2 text-sm text-purple-700">
+                          <UserPlus className="h-4 w-4" />
+                          <span>
+                            {selectedMusicians.length} músico{selectedMusicians.length > 1 ? 's' : ''} selecionado{selectedMusicians.length > 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
 
             {/* Botões */}
             <div className="flex items-center justify-end space-x-4 pt-4 border-t">
@@ -489,6 +630,8 @@ const EventForm: React.FC = () => {
             duration={durationPreview}
             isSolo={formData.is_solo ?? false}
             matchingAvailability={matchingAvailability}
+            selectedMusicians={selectedMusicians}
+            availableMusicians={availableMusicians}
           />
         </div>
       </section>
