@@ -1,5 +1,5 @@
 // pages/EventForm.tsx
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Calendar,
@@ -18,10 +18,9 @@ import {
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import ConflictPreview from '../components/event/ConflictPreview';
-import AvailabilityPicker from '../components/event/AvailabilityPicker';
 import ProposalSummary from '../components/event/ProposalSummary';
-import { eventService, leaderAvailabilityService } from '../services/api';
-import type { Event, EventCreate, LeaderAvailability, AvailableMusician } from '../types';
+import { eventService, musicianService } from '../services/api';
+import type { Event, EventCreate, AvailableMusician, Musician } from '../types';
 import { format, parseISO } from 'date-fns';
 
 interface ConflictInfo {
@@ -31,6 +30,15 @@ interface ConflictInfo {
   bufferMinutes: number;
 }
 
+const instrumentLabels: Record<string, string> = {
+  vocal: 'Vocal',
+  guitar: 'Guitarra/Violão',
+  bass: 'Baixo',
+  drums: 'Bateria',
+  keyboard: 'Teclado',
+  other: 'Outro',
+};
+
 const EventForm: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -38,8 +46,6 @@ const EventForm: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [leaderAvailabilities, setLeaderAvailabilities] = useState<LeaderAvailability[]>([]);
-  const [matchingAvailability, setMatchingAvailability] = useState<LeaderAvailability | null>(null);
   const [availableMusicians, setAvailableMusicians] = useState<AvailableMusician[]>([]);
   const [selectedMusicians, setSelectedMusicians] = useState<number[]>([]);
   const [loadingMusicians, setLoadingMusicians] = useState(false);
@@ -62,19 +68,6 @@ const EventForm: React.FC = () => {
     is_solo: false,
   });
 
-  const loadLeaderAvailabilities = useCallback(async () => {
-    try {
-      const data = await leaderAvailabilityService.getAll({ upcoming: true });
-      setLeaderAvailabilities(data.slice(0, 10));
-    } catch (error) {
-      console.error('Erro ao carregar disponibilidades:', error);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadLeaderAvailabilities();
-  }, [loadLeaderAvailabilities]);
-
   const formattedEventDate = useMemo(() => {
     if (!formData.event_date) return 'Selecione uma data';
     try {
@@ -95,18 +88,9 @@ const EventForm: React.FC = () => {
     return `${hours}h ${mins.toString().padStart(2, '0')}min`;
   }, [formData.start_time, formData.end_time]);
 
+  // Carrega todos os músicos cadastrados para seleção (exceto em show solo)
   useEffect(() => {
-    if (formData.event_date) {
-      const matching = leaderAvailabilities.find(avail => avail.date === formData.event_date);
-      setMatchingAvailability(matching || null);
-    } else {
-      setMatchingAvailability(null);
-    }
-  }, [formData.event_date, leaderAvailabilities]);
-
-  // Carrega músicos disponíveis quando a data muda
-  useEffect(() => {
-    if (!formData.event_date || formData.is_solo) {
+    if (formData.is_solo) {
       setAvailableMusicians([]);
       setSelectedMusicians([]);
       return;
@@ -116,14 +100,25 @@ const EventForm: React.FC = () => {
     const loadMusicians = async () => {
       setLoadingMusicians(true);
       try {
-        const musicians = await leaderAvailabilityService.getAvailableMusicians({ date: formData.event_date });
+        const musicians: Musician[] = await musicianService.getAll();
+        const mapped = musicians.map(musician => ({
+          musician_id: musician.id,
+          musician_name: musician.full_name,
+          instrument: musician.instrument,
+          instrument_display: instrumentLabels[musician.instrument] || musician.instrument,
+          has_availability: false,
+          availability_id: null,
+          start_time: null,
+          end_time: null,
+          notes: null,
+        }));
+
         if (!cancelled) {
-          setAvailableMusicians(musicians);
-          // Limpa seleção quando muda a data
+          setAvailableMusicians(mapped);
           setSelectedMusicians([]);
         }
       } catch (err) {
-        console.error('Erro ao carregar músicos disponíveis:', err);
+        console.error('Erro ao carregar músicos:', err);
         if (!cancelled) {
           setAvailableMusicians([]);
         }
@@ -136,7 +131,7 @@ const EventForm: React.FC = () => {
 
     loadMusicians();
     return () => { cancelled = true; };
-  }, [formData.event_date, formData.is_solo]);
+  }, [formData.is_solo]);
 
   const toggleMusicianSelection = (musicianId: number) => {
     setSelectedMusicians(prev =>
@@ -403,21 +398,6 @@ const EventForm: React.FC = () => {
                   />
                 </div>
 
-                {matchingAvailability && !formData.is_solo && (
-                  <div className="flex items-start space-x-2 mt-2 p-3 bg-green-50 rounded-lg border border-green-200">
-                    <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 text-sm text-green-800">
-                      <p className="font-medium">Baterista disponível nesta data!</p>
-                      <p className="mt-1">
-                        Horário disponível: {matchingAvailability.start_time.slice(0, 5)} -{' '}
-                        {matchingAvailability.end_time.slice(0, 5)}
-                      </p>
-                      {matchingAvailability.notes && (
-                        <p className="mt-1 text-green-700">{matchingAvailability.notes}</p>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
 
               <div>
@@ -473,15 +453,6 @@ const EventForm: React.FC = () => {
               />
             </div>
 
-            {/* Agenda do Baterista */}
-            {!formData.is_solo && (
-              <AvailabilityPicker
-                availabilities={leaderAvailabilities}
-                selectedDate={formData.event_date}
-                onDateSelect={(date) => setFormData(prev => ({ ...prev, event_date: date }))}
-              />
-            )}
-
             {/* Show Solo */}
             <div className="flex items-start space-x-3 rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 via-white to-indigo-50 p-4">
               <input
@@ -504,12 +475,12 @@ const EventForm: React.FC = () => {
             </div>
 
             {/* Seleção de Músicos para Convite */}
-            {!formData.is_solo && formData.event_date && (
+            {!formData.is_solo && (
               <div className="rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-50 via-white to-indigo-50 p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Users className="h-5 w-5 text-purple-600" />
                   <h3 className="text-sm font-semibold text-gray-900">
-                    Convidar Músicos
+                    Selecionar músicos
                   </h3>
                 </div>
 
@@ -521,14 +492,12 @@ const EventForm: React.FC = () => {
                 ) : availableMusicians.length === 0 ? (
                   <div className="text-center py-4">
                     <Info className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600">
-                      Nenhum músico disponível para convite.
-                    </p>
+                    <p className="text-sm text-gray-600">Nenhum músico cadastrado para convite.</p>
                   </div>
                 ) : (
                   <>
                     <p className="text-sm text-gray-600 mb-3">
-                      Selecione os músicos que você quer convidar para tocar neste evento.
+                      Selecione os músicos cadastrados na plataforma para participarem deste evento.
                       Eles receberão uma notificação e precisarão confirmar a participação.
                     </p>
                     <div className="space-y-2">
@@ -641,7 +610,6 @@ const EventForm: React.FC = () => {
             endTime={formData.end_time}
             duration={durationPreview}
             isSolo={formData.is_solo ?? false}
-            matchingAvailability={matchingAvailability}
             selectedMusicians={selectedMusicians}
             availableMusicians={availableMusicians}
           />
