@@ -1,7 +1,7 @@
 // components/event/ProposalSummary.tsx
 import React from 'react';
-import { Target, ShieldCheck, Sparkles, Users, CheckCircle } from 'lucide-react';
-import type { LeaderAvailability, AvailableMusician } from '../../types';
+import { Target, Sparkles, Users, CheckCircle } from 'lucide-react';
+import type { AvailableMusician } from '../../types';
 
 interface ProposalSummaryProps {
   formattedDate: string;
@@ -9,7 +9,6 @@ interface ProposalSummaryProps {
   endTime: string;
   duration: string | null;
   isSolo: boolean;
-  matchingAvailability: LeaderAvailability | null;
   selectedMusicians?: number[];
   availableMusicians?: AvailableMusician[];
 }
@@ -20,7 +19,6 @@ const ProposalSummary: React.FC<ProposalSummaryProps> = ({
   endTime,
   duration,
   isSolo,
-  matchingAvailability,
   selectedMusicians = [],
   availableMusicians = [],
 }) => {
@@ -78,19 +76,6 @@ const ProposalSummary: React.FC<ProposalSummaryProps> = ({
           </div>
         )}
 
-        {matchingAvailability && !isSolo && (
-          <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-800">
-            <p className="flex items-center font-semibold">
-              <ShieldCheck className="mr-2 h-4 w-4" aria-hidden="true" /> Disponibilidade confirmada
-            </p>
-            <p className="mt-1">
-              {matchingAvailability.start_time.slice(0, 5)} - {matchingAvailability.end_time.slice(0, 5)}
-            </p>
-            {matchingAvailability.notes && (
-              <p className="mt-1 text-green-700">{matchingAvailability.notes}</p>
-            )}
-          </div>
-        )}
       </div>
 
       <div className="rounded-2xl border border-white/40 bg-white/85 p-5 text-sm shadow-lg backdrop-blur">
@@ -101,7 +86,7 @@ const ProposalSummary: React.FC<ProposalSummaryProps> = ({
         <ul className="space-y-3 text-gray-700">
           <li>
             <strong className="text-gray-900">Convide músicos:</strong> selecione qualquer músico da
-            banda. Músicos com disponibilidade publicada aparecem em destaque.
+            banda diretamente na lista de convidados.
           </li>
           <li>
             <strong className="text-gray-900">Confirmação:</strong> o evento só é confirmado quando
