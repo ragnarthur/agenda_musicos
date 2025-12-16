@@ -103,9 +103,12 @@ const Dashboard: React.FC = () => {
   }
 
   const getStatusLabel = (event: Event) => {
+    if (event.status === 'approved') {
+      if (event.is_solo) return 'Aprovado (solo)';
+      if (event.approved_by_name) return `Aprovado por ${event.approved_by_name}`;
+      return 'Aprovado';
+    }
     switch (event.status) {
-      case 'approved':
-        return 'Aprovado pelo Batera!';
       case 'confirmed':
         return 'Confirmado';
       case 'proposed':
