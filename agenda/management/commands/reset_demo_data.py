@@ -56,11 +56,17 @@ CORE_MUSICIANS = [
 
 BOT_MUSICIANS = [
     {'username': 'bot_vocal', 'first_name': 'Lívia', 'last_name': 'Bot', 'instrument': 'vocal'},
+    {'username': 'bot_vocal2', 'first_name': 'Mariana', 'last_name': 'Bot', 'instrument': 'vocal'},
     {'username': 'bot_guitar', 'first_name': 'Marcos', 'last_name': 'Bot', 'instrument': 'guitar'},
+    {'username': 'bot_guitar2', 'first_name': 'Rafael', 'last_name': 'Bot', 'instrument': 'guitar'},
     {'username': 'bot_bass', 'first_name': 'Diego', 'last_name': 'Bot', 'instrument': 'bass'},
+    {'username': 'bot_bass2', 'first_name': 'Pedro', 'last_name': 'Bot', 'instrument': 'bass'},
     {'username': 'bot_drums', 'first_name': 'Fernanda', 'last_name': 'Bot', 'instrument': 'drums'},
+    {'username': 'bot_drums2', 'first_name': 'Lucas', 'last_name': 'Bot', 'instrument': 'drums'},
     {'username': 'bot_keys', 'first_name': 'Carla', 'last_name': 'Bot', 'instrument': 'keyboard'},
+    {'username': 'bot_keys2', 'first_name': 'Gabriel', 'last_name': 'Bot', 'instrument': 'keyboard'},
     {'username': 'bot_perc', 'first_name': 'Carlos', 'last_name': 'Bot', 'instrument': 'percussion'},
+    {'username': 'bot_perc2', 'first_name': 'Maria', 'last_name': 'Bot', 'instrument': 'percussion'},
 ]
 
 
@@ -73,9 +79,15 @@ class Command(BaseCommand):
             action='store_true',
             help='Não recria eventos de teste.',
         )
+        parser.add_argument(
+            '--no-avail',
+            action='store_true',
+            help='Não recria disponibilidades demo.',
+        )
 
     def handle(self, *args, **options):
         no_events = options['no_events']
+        no_avail = options['no_avail']
         org = self._get_org()
 
         self.stdout.write(self.style.WARNING('Limpando eventos e avaliações...'))
@@ -93,6 +105,10 @@ class Command(BaseCommand):
         if not no_events:
             self.stdout.write(self.style.WARNING('Criando eventos demo...'))
             call_command('seed_demo_events', clear=True)
+
+        if not no_avail:
+            self.stdout.write(self.style.WARNING('Gerando disponibilidades demo...'))
+            call_command('seed_demo_availabilities')
 
         self.stdout.write(self.style.SUCCESS('Reset concluído.'))
 
