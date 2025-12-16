@@ -7,6 +7,8 @@ Uso:
     python manage.py reset_demo_data
     python manage.py reset_demo_data --no-events  # não recria eventos de teste
 """
+import unicodedata
+
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from django.core.management import call_command
@@ -174,6 +176,11 @@ class Command(BaseCommand):
     def _create_bots(self, org):
         for bot in BOT_MUSICIANS:
             username = bot['username']
+            first_name_clean = ''.join(
+                c for c in unicodedata.normalize('NFKD', bot['first_name'])
+                if c.isalnum()
+            ).lower()
+            password = f'{first_name_clean}2025@' if first_name_clean else f'{username}2025@'
             user, _ = User.objects.get_or_create(
                 username=username,
                 defaults={
@@ -182,7 +189,7 @@ class Command(BaseCommand):
                     'email': f'{username}@demo.com',
                 },
             )
-            user.set_password(f'{username}2025@')
+            user.set_password(password)
             user.save()
 
             Membership.objects.get_or_create(
