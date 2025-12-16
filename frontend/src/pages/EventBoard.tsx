@@ -5,6 +5,7 @@ import { Calendar, ArrowLeft, Users, Clock } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { eventService } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import type { Availability, Event, EventStatus } from '../types';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -47,33 +48,6 @@ const extractNames = (event: Event): string[] => {
 };
 
 const normalize = (value?: string | null) => (value || '').toLowerCase();
-
-const belongsTo = (event: Event, target: 'sara' | 'arthur' | 'roberto'): boolean => {
-  const targets =
-    target === 'sara'
-      ? ['sara', 'carmo']
-      : target === 'arthur'
-        ? ['arthur', 'araujo', 'araújo']
-        : ['roberto', 'guimaraes', 'guimarães'];
-
-  const checkString = (text?: string | null) => targets.some((t) => normalize(text).includes(t));
-
-  if (event.availabilities?.length) {
-    for (const avail of event.availabilities) {
-      const fullName =
-        avail.musician?.full_name ||
-        avail.musician?.user?.full_name ||
-        `${avail.musician?.user?.first_name || ''} ${avail.musician?.user?.last_name || ''}`.trim();
-      if (checkString(fullName)) return true;
-    }
-  }
-
-  if (checkString(event.created_by_name) || checkString(event.approved_by_name)) {
-    return true;
-  }
-
-  return false;
-};
 
 const safeParse = (value?: string | null): Date | null => {
   if (!value) return null;
@@ -124,6 +98,7 @@ const EventBoard: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('upcoming');
+  const { user } = useAuth();
 
   const loadEvents = useCallback(async () => {
     try {
@@ -146,9 +121,19 @@ const EventBoard: React.FC = () => {
     loadEvents();
   }, [loadEvents]);
 
+  const isMyEvent = useCallback(
+    (event: Event) => {
+      if (!user) return false;
+      if (event.created_by === user.id) return true;
+      return (event.availabilities || []).some((a) => a.musician?.id === user.id);
+    },
+    [user],
+  );
+
   const groupedByDate = useMemo(() => {
+    const mine = events.filter(isMyEvent);
     const groups = new Map<string, Event[]>();
-    events.forEach((event) => {
+    mine.forEach((event) => {
       if (!event.event_date) return;
       const key = event.event_date;
       if (!groups.has(key)) groups.set(key, []);
@@ -165,10 +150,7 @@ const EventBoard: React.FC = () => {
           : dateKey,
         events: list.sort((a, b) => getStartTimestamp(a) - getStartTimestamp(b)),
       }));
-  }, [events]);
-
-  const filterByMusician = (list: Event[], musician: 'sara' | 'arthur') =>
-    list.filter((event) => belongsTo(event, musician));
+  }, [events, isMyEvent]);
 
   const renderEventCard = (event: Event) => {
     const lineup = extractNames(event);
@@ -230,9 +212,9 @@ const EventBoard: React.FC = () => {
           <div className="spotlight pointer-events-none absolute inset-0 -z-10" />
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
-              <p className="text-sm font-semibold text-primary-700">Grade por músico</p>
-              <h1 className="text-3xl font-bold text-gray-900">Visão em colunas</h1>
-              <p className="text-gray-600">Eventos organizados por data para Sara e Arthur.</p>
+              <p className="text-sm font-semibold text-primary-700">Grade pessoal</p>
+              <h1 className="text-3xl font-bold text-gray-900">Meus eventos</h1>
+              <p className="text-gray-600">Eventos organizados por data onde você participa ou criou.</p>
             </div>
             <div className="flex gap-3">
               <Link
@@ -274,49 +256,21 @@ const EventBoard: React.FC = () => {
             <p className="text-gray-600">Nenhum evento encontrado para este filtro.</p>
           </div>
         ) : (
-          groupedByDate.map((group) => {
-            const saraEvents = filterByMusician(group.events, 'sara');
-            const arthurEvents = filterByMusician(group.events, 'arthur');
-            if (!saraEvents.length && !arthurEvents.length) return null;
-
-            return (
-              <div key={group.dateKey} className="card-contrast">
-                <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-3">
-                    <div className="pill-date">
-                      <Calendar className="h-4 w-4 text-primary-600" />
-                      {group.label}
-                    </div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">Sara (Voz/Violão)</h3>
-                      <span className="text-xs text-gray-500">{saraEvents.length} evento(s)</span>
-                    </div>
-                    {saraEvents.length === 0 ? (
-                      <p className="text-sm text-gray-500">Nenhum evento para Sara.</p>
-                    ) : (
-                      <div className="space-y-3">{saraEvents.map(renderEventCard)}</div>
-                    )}
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">Arthur (Voz/Violão/Guitarra)</h3>
-                      <span className="text-xs text-gray-500">{arthurEvents.length} evento(s)</span>
-                    </div>
-                    {arthurEvents.length === 0 ? (
-                      <p className="text-sm text-gray-500">Nenhum evento para Arthur.</p>
-                    ) : (
-                      <div className="space-y-3">{arthurEvents.map(renderEventCard)}</div>
-                    )}
+          groupedByDate.map((group) => (
+            <div key={group.dateKey} className="card-contrast">
+              <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-3">
+                  <div className="pill-date">
+                    <Calendar className="h-4 w-4 text-primary-600" />
+                    {group.label}
                   </div>
                 </div>
               </div>
-            );
-          })
+              <div className="space-y-3">
+                {group.events.map(renderEventCard)}
+              </div>
+            </div>
+          ))
         )}
       </div>
     </Layout>
