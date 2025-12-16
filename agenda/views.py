@@ -13,14 +13,25 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
-from .models import Musician, Event, Availability, LeaderAvailability, EventLog, Organization, Membership
+from .models import (
+    Musician,
+    Event,
+    Availability,
+    LeaderAvailability,
+    EventLog,
+    Organization,
+    Membership,
+    MusicianRating,
+)
 from .serializers import (
     MusicianSerializer,
     EventListSerializer,
     EventDetailSerializer,
     EventCreateSerializer,
     AvailabilitySerializer,
-    LeaderAvailabilitySerializer
+    LeaderAvailabilitySerializer,
+    MusicianRatingSerializer,
+    RatingSubmitSerializer,
 )
 from .permissions import IsOwnerOrReadOnly
 from .utils import get_user_organization, split_availability_with_events
@@ -507,6 +518,23 @@ class EventViewSet(viewsets.ModelViewSet):
             description=description
         )
 
+    def _can_user_rate_event(self, event, user):
+        """
+        Verifica se o usuário pode avaliar os músicos do evento.
+        Apenas o criador do evento pode avaliar e somente após a data do evento.
+        """
+        if not event.created_by or event.created_by != user:
+            return False, 'Apenas o criador do evento pode avaliar os músicos.', status.HTTP_403_FORBIDDEN
+
+        if event.event_date >= timezone.now().date():
+            return False, 'Avaliações são liberadas apenas após a data do evento.', status.HTTP_400_BAD_REQUEST
+
+        already_rated = MusicianRating.objects.filter(event=event, rated_by=user).exists()
+        if already_rated:
+            return False, 'Você já enviou avaliações para este evento.', status.HTTP_400_BAD_REQUEST
+
+        return True, '', status.HTTP_200_OK
+
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def approve(self, request, pk=None):
         """
@@ -724,6 +752,123 @@ class EventViewSet(viewsets.ModelViewSet):
             # Todos responderam, mas alguém recusou
             # Status permanece 'proposed' para o criador decidir
             pass
+
+    @action(detail=True, methods=['get'])
+    def can_rate(self, request, pk=None):
+        """
+        GET /events/{id}/can_rate/
+        Retorna se o usuário atual pode avaliar os músicos do evento.
+        """
+        event = self.get_object()
+        can_rate, reason, _ = self._can_user_rate_event(event, request.user)
+
+        return Response({
+            'can_rate': can_rate,
+            'reason': reason
+        })
+
+    @action(detail=True, methods=['post'])
+    def submit_ratings(self, request, pk=None):
+        """
+        POST /events/{id}/submit_ratings/
+        Body: { "ratings": [{ "musician_id": 1, "rating": 5, "comment": "..." }] }
+        Permite ao criador do evento avaliar os músicos após a data do evento.
+        """
+        event = self.get_object()
+        can_rate, reason, status_code = self._can_user_rate_event(event, request.user)
+
+        if not can_rate:
+            return Response(
+                {'detail': reason, 'can_rate': False},
+                status=status_code
+            )
+
+        serializer = RatingSubmitSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        ratings_data = serializer.validated_data['ratings']
+
+        allowed_musician_ids = set(event.availabilities.values_list('musician_id', flat=True))
+        if not allowed_musician_ids:
+            return Response(
+                {'detail': 'Evento não possui músicos associados para avaliação.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        seen_ids = set()
+        normalized_ratings = []
+
+        for item in ratings_data:
+            musician_id_raw = item.get('musician_id')
+            rating_raw = item.get('rating')
+
+            try:
+                musician_id = int(musician_id_raw)
+            except (TypeError, ValueError):
+                return Response(
+                    {'detail': f'ID de músico inválido: {musician_id_raw}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            try:
+                rating_value = int(rating_raw)
+            except (TypeError, ValueError):
+                return Response(
+                    {'detail': f'Nota inválida para o músico {musician_id}.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if rating_value < 1 or rating_value > 5:
+                return Response(
+                    {'detail': f'Nota do músico {musician_id} deve estar entre 1 e 5.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if musician_id in seen_ids:
+                return Response(
+                    {'detail': 'Não é permitido avaliar o mesmo músico mais de uma vez.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if musician_id not in allowed_musician_ids:
+                return Response(
+                    {'detail': f'Músico {musician_id} não faz parte do evento.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            seen_ids.add(musician_id)
+            normalized_ratings.append({
+                'musician_id': musician_id,
+                'rating': rating_value,
+                'comment': (item.get('comment') or '').strip() or None,
+            })
+
+        musicians_map = {
+            m.id: m for m in Musician.objects.filter(id__in=seen_ids)
+        }
+        missing_musicians = seen_ids - set(musicians_map.keys())
+
+        if missing_musicians:
+            missing_list = ', '.join(map(str, sorted(missing_musicians)))
+            return Response(
+                {'detail': f'Músicos não encontrados: {missing_list}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        created_ratings = []
+        with transaction.atomic():
+            for item in normalized_ratings:
+                musician = musicians_map[item['musician_id']]
+                rating_obj = MusicianRating.objects.create(
+                    event=event,
+                    musician=musician,
+                    rated_by=request.user,
+                    rating=item['rating'],
+                    comment=item['comment']
+                )
+                created_ratings.append(rating_obj)
+
+        output_serializer = MusicianRatingSerializer(created_ratings, many=True, context={'request': request})
+        return Response(output_serializer.data, status=status.HTTP_201_CREATED)
     
     @action(detail=False, methods=['get'])
     def my_events(self, request):

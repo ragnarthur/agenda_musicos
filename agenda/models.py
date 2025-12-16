@@ -99,6 +99,19 @@ class Musician(models.Model):
     phone = models.CharField(max_length=20, blank=True, null=True)
     instagram = models.CharField(max_length=100, blank=True, null=True)
     is_active = models.BooleanField(default=True)
+
+    # Campos de rating (agregados/cached)
+    average_rating = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        default=0,
+        help_text='Média de avaliações recebidas (1-5)'
+    )
+    total_ratings = models.PositiveIntegerField(
+        default=0,
+        help_text='Total de avaliações recebidas'
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -500,3 +513,107 @@ class LeaderAvailability(models.Model):
     def has_conflicts(self):
         """Verifica se há eventos conflitantes"""
         return self.get_conflicting_events().exists()
+
+
+class EventInstrument(models.Model):
+    """
+    Instrumentos necessários para um evento.
+    Permite especificar quantidade de cada instrumento.
+    """
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name='required_instruments'
+    )
+    instrument = models.CharField(
+        max_length=20,
+        choices=Musician.INSTRUMENT_CHOICES,
+        help_text='Tipo de instrumento necessário'
+    )
+    quantity = models.PositiveIntegerField(
+        default=1,
+        help_text='Quantidade de músicos deste instrumento'
+    )
+
+    class Meta:
+        unique_together = ['event', 'instrument']
+        ordering = ['instrument']
+        verbose_name = 'Instrumento do Evento'
+        verbose_name_plural = 'Instrumentos do Evento'
+
+    def __str__(self):
+        return f"{self.event.title} - {self.quantity}x {self.get_instrument_display()}"
+
+
+class MusicianRating(models.Model):
+    """
+    Avaliação de músico após um evento.
+    Apenas o criador do evento pode avaliar.
+    Escala de 1-5 estrelas.
+    """
+    RATING_CHOICES = [(i, str(i)) for i in range(1, 6)]
+
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name='ratings',
+        help_text='Evento relacionado à avaliação'
+    )
+    musician = models.ForeignKey(
+        Musician,
+        on_delete=models.CASCADE,
+        related_name='ratings_received',
+        help_text='Músico avaliado'
+    )
+    rated_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='ratings_given',
+        help_text='Usuário que fez a avaliação'
+    )
+    rating = models.PositiveIntegerField(
+        choices=RATING_CHOICES,
+        help_text='Nota de 1 a 5 estrelas'
+    )
+    comment = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Comentário opcional sobre o músico'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['event', 'musician', 'rated_by']
+        ordering = ['-created_at']
+        verbose_name = 'Avaliação de Músico'
+        verbose_name_plural = 'Avaliações de Músicos'
+        indexes = [
+            models.Index(fields=['musician', 'rating']),
+        ]
+
+    def __str__(self):
+        return f"{self.musician} - {self.rating} estrelas - {self.event.title}"
+
+    def save(self, *args, **kwargs):
+        """Atualiza estatísticas do músico ao salvar"""
+        super().save(*args, **kwargs)
+        self._update_musician_stats()
+
+    def delete(self, *args, **kwargs):
+        """Atualiza estatísticas do músico ao deletar"""
+        musician = self.musician
+        super().delete(*args, **kwargs)
+        self._update_musician_stats(musician)
+
+    def _update_musician_stats(self, musician=None):
+        """Recalcula média e total de avaliações do músico"""
+        from django.db.models import Avg
+
+        musician = musician or self.musician
+        stats = MusicianRating.objects.filter(musician=musician).aggregate(
+            avg=Avg('rating'),
+            total=models.Count('id')
+        )
+        musician.average_rating = stats['avg'] or 0
+        musician.total_ratings = stats['total'] or 0
+        musician.save(update_fields=['average_rating', 'total_ratings'])
