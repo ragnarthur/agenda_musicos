@@ -217,7 +217,6 @@ const EventsList: React.FC = () => {
               ))}
             </div>
           </div>
-          <span className={statusClass}>{statusLabel}</span>
         </div>
       </Link>
     );
