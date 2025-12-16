@@ -150,7 +150,7 @@ class Command(BaseCommand):
             'username': 'maria_sax',
             'first_name': 'Maria',
             'last_name': 'Souza',
-            'instrument': 'other',
+            'instrument': 'percussion',
             'bio': 'Saxofonista jazz/bossa, eventos sofisticados',
             'phone': '(11) 97777-9999',
             'instagram': '@maria.sax',
@@ -159,7 +159,7 @@ class Command(BaseCommand):
             'username': 'carlos_perc',
             'first_name': 'Carlos',
             'last_name': 'Nunes',
-            'instrument': 'other',
+            'instrument': 'percussion',
             'bio': 'Percussionista samba/pagode/axé',
             'phone': '(21) 96666-0000',
             'instagram': '@carlos.perc',
@@ -373,7 +373,7 @@ class Command(BaseCommand):
             'bass': 'Baixo',
             'drums': 'Bateria',
             'keyboard': 'Teclado',
-            'other': 'Outro',
+            'percussion': 'Percussão/Outros',
         }
 
         for inst, names in sorted(instrument_counts.items()):

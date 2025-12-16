@@ -13,7 +13,7 @@ export interface Musician {
   id: number;
   user: User;
   full_name: string;
-  instrument: 'vocal' | 'guitar' | 'bass' | 'drums' | 'keyboard' | 'other';
+  instrument: 'vocal' | 'guitar' | 'bass' | 'drums' | 'keyboard' | 'percussion';
   role: 'member' | 'leader';
   is_leader: boolean;
   bio?: string;

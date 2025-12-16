@@ -135,7 +135,7 @@ export const INSTRUMENT_LABELS: Record<string, string> = {
   bass: 'Baixo',
   drums: 'Bateria',
   keyboard: 'Teclado',
-  other: 'Outro',
+  percussion: 'Percussão/Outros',
 };
 
 /**

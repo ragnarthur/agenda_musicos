@@ -367,7 +367,7 @@ class LeaderAvailabilitySerializer(serializers.ModelSerializer):
             'bass': 'Baixo',
             'drums': 'Bateria',
             'keyboard': 'Teclado',
-            'other': 'Outro',
+            'percussion': 'Percussão/Outros',
         }
         return instrument_labels.get(obj.leader.instrument, obj.leader.instrument)
 
