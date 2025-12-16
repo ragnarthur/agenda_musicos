@@ -484,9 +484,9 @@ class AvailableMusiciansEndpointTest(APITestCase):
         self.client.force_authenticate(user=self.user)
         self.target_date = date.today() + timedelta(days=3)
 
-    def test_available_musicians_returns_public_availabilities(self):
-        """Testa que o endpoint retorna músicos com disponibilidades públicas"""
-        # Criar disponibilidade pública
+    def test_available_musicians_returns_all_with_availability_flag(self):
+        """Testa que o endpoint retorna todos os músicos com flag has_availability"""
+        # Criar disponibilidade pública para musician2
         LeaderAvailability.objects.create(
             leader=self.musician2,
             date=self.target_date,
@@ -500,12 +500,16 @@ class AvailableMusiciansEndpointTest(APITestCase):
         response = self.client.get(url, {'date': self.target_date.isoformat()})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Deve retornar musician2 (o próprio usuário é excluído)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['musician_name'], 'Roberto Silva')
         self.assertEqual(response.data[0]['instrument'], 'drums')
+        self.assertTrue(response.data[0]['has_availability'])
+        self.assertEqual(response.data[0]['start_time'], '14:00')
+        self.assertEqual(response.data[0]['end_time'], '18:00')
 
-    def test_available_musicians_excludes_private_availabilities(self):
-        """Testa que disponibilidades privadas não aparecem"""
+    def test_available_musicians_private_availability_not_shown(self):
+        """Testa que disponibilidades privadas resultam em has_availability=False"""
         # Criar disponibilidade privada
         LeaderAvailability.objects.create(
             leader=self.musician2,
@@ -520,7 +524,11 @@ class AvailableMusiciansEndpointTest(APITestCase):
         response = self.client.get(url, {'date': self.target_date.isoformat()})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 0)
+        # Músico aparece, mas sem disponibilidade pública
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['musician_name'], 'Roberto Silva')
+        self.assertFalse(response.data[0]['has_availability'])
+        self.assertIsNone(response.data[0]['start_time'])
 
     def test_available_musicians_excludes_self(self):
         """Testa que o próprio usuário não aparece na lista"""
@@ -538,7 +546,9 @@ class AvailableMusiciansEndpointTest(APITestCase):
         response = self.client.get(url, {'date': self.target_date.isoformat()})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 0)
+        # Apenas musician2, não o próprio usuário
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['musician_name'], 'Roberto Silva')
 
     def test_available_musicians_requires_date(self):
         """Testa que parâmetro date é obrigatório"""
@@ -557,11 +567,33 @@ class AvailableMusiciansEndpointTest(APITestCase):
             last_name='Bass'
         )
         Membership.objects.create(user=user3, organization=self.org, role='member', status='active')
-        musician3 = Musician.objects.create(
+        Musician.objects.create(
             user=user3, instrument='bass', organization=self.org, is_active=True
         )
 
-        # Disponibilidades públicas
+        url = reverse('leader-availability-available-musicians')
+        response = self.client.get(url, {'date': self.target_date.isoformat(), 'instrument': 'drums'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Apenas músico de drums (musician2), não o baixista
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['instrument'], 'drums')
+
+    def test_available_musicians_only_available_filter(self):
+        """Testa filtro only_available que retorna apenas músicos com disponibilidade"""
+        # Criar terceiro músico (baixista) sem disponibilidade
+        user3 = User.objects.create_user(
+            username='carlos',
+            password='pass123',
+            first_name='Carlos',
+            last_name='Bass'
+        )
+        Membership.objects.create(user=user3, organization=self.org, role='member', status='active')
+        Musician.objects.create(
+            user=user3, instrument='bass', organization=self.org, is_active=True
+        )
+
+        # Disponibilidade pública apenas para musician2
         LeaderAvailability.objects.create(
             leader=self.musician2,
             date=self.target_date,
@@ -570,18 +602,51 @@ class AvailableMusiciansEndpointTest(APITestCase):
             is_active=True,
             is_public=True
         )
+
+        url = reverse('leader-availability-available-musicians')
+
+        # Sem filtro: retorna ambos
+        response = self.client.get(url, {'date': self.target_date.isoformat()})
+        self.assertEqual(len(response.data), 2)
+
+        # Com filtro only_available: retorna apenas musician2
+        response = self.client.get(url, {'date': self.target_date.isoformat(), 'only_available': 'true'})
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['musician_name'], 'Roberto Silva')
+        self.assertTrue(response.data[0]['has_availability'])
+
+    def test_available_musicians_sorted_by_availability_then_name(self):
+        """Testa que músicos com disponibilidade aparecem primeiro"""
+        # Criar terceiro músico (baixista)
+        user3 = User.objects.create_user(
+            username='carlos',
+            password='pass123',
+            first_name='Carlos',
+            last_name='Bass'
+        )
+        Membership.objects.create(user=user3, organization=self.org, role='member', status='active')
+        Musician.objects.create(
+            user=user3, instrument='bass', organization=self.org, is_active=True
+        )
+
+        # Disponibilidade pública apenas para musician2 (Roberto)
         LeaderAvailability.objects.create(
-            leader=musician3,
+            leader=self.musician2,
             date=self.target_date,
-            start_time=time(10, 0),
-            end_time=time(14, 0),
+            start_time=time(14, 0),
+            end_time=time(18, 0),
             is_active=True,
             is_public=True
         )
 
         url = reverse('leader-availability-available-musicians')
-        response = self.client.get(url, {'date': self.target_date.isoformat(), 'instrument': 'drums'})
+        response = self.client.get(url, {'date': self.target_date.isoformat()})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['instrument'], 'drums')
+        self.assertEqual(len(response.data), 2)
+        # Roberto (com disponibilidade) deve vir primeiro
+        self.assertEqual(response.data[0]['musician_name'], 'Roberto Silva')
+        self.assertTrue(response.data[0]['has_availability'])
+        # Carlos (sem disponibilidade) deve vir depois
+        self.assertEqual(response.data[1]['musician_name'], 'Carlos Bass')
+        self.assertFalse(response.data[1]['has_availability'])
