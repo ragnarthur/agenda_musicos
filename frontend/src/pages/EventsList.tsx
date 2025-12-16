@@ -99,21 +99,13 @@ const EventsList: React.FC = () => {
       }
 
       const data = await eventService.getAll(params);
-      if (user) {
-        const mine = data.filter((ev) => {
-          if (ev.created_by === user.id) return true;
-          return (ev.availabilities || []).some((a) => a.musician?.id === user.id);
-        });
-        setEvents(mine);
-      } else {
-        setEvents(data);
-      }
+      setEvents(data);
     } catch (error) {
       console.error('Erro ao carregar eventos:', error);
     } finally {
       setLoading(false);
     }
-  }, [filter, searchTerm, timeFilter, user]);
+  }, [filter, searchTerm, timeFilter]);
 
   useEffect(() => {
     loadEvents();
@@ -174,7 +166,7 @@ const EventsList: React.FC = () => {
   }, [events]);
 
   const renderEventCard = (event: Event) => {
-    const lineup = extractLineup(event);
+    const lineup = event.availabilities ? extractLineup(event) : [event.created_by_name];
     const startLabel = event.start_time ? event.start_time.slice(0, 5) : '--:--';
     const endLabel = event.end_time ? event.end_time.slice(0, 5) : '--:--';
     const statusClass = `status-chip ${event.status || 'default'}`;
