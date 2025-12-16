@@ -341,7 +341,6 @@ const EventsList: React.FC = () => {
         ) : (
           <div className="space-y-4">
             {groups.map((group) => {
-              if (group.sara.length === 0 && group.arthur.length === 0) return null;
               return (
                 <div
                   key={group.dateKey}
