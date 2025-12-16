@@ -720,11 +720,18 @@ class EventViewSet(viewsets.ModelViewSet):
         if response_value != 'pending':
             prev_response = previous.response if previous else None
             prev_notes = previous.notes if previous else ''
+            response_labels = {
+                'available': 'Disponível',
+                'unavailable': 'Indisponível',
+                'maybe': 'Talvez',
+                'pending': 'Pendente',
+            }
+            response_label = response_labels.get(response_value, response_value)
             if created or prev_response != response_value or prev_notes != request.data.get('notes', ''):
                 self._log_event(
                     event,
                     'availability',
-                    f'{musician.user.get_full_name() or musician.user.username} marcou disponibilidade: {response_value}'
+                    f'{musician.user.get_full_name() or musician.user.username} marcou disponibilidade: {response_label}'
                 )
 
         # Verifica se todos os convidados aceitaram e confirma o evento
