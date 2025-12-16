@@ -49,6 +49,7 @@ const EventForm: React.FC = () => {
   const [availableMusicians, setAvailableMusicians] = useState<AvailableMusician[]>([]);
   const [selectedMusicians, setSelectedMusicians] = useState<number[]>([]);
   const [loadingMusicians, setLoadingMusicians] = useState(false);
+  const [instrumentFilter, setInstrumentFilter] = useState<string>('all');
   const dateInputRef = useRef<HTMLInputElement | null>(null);
   const [conflictInfo, setConflictInfo] = useState<ConflictInfo>({
     loading: false,
@@ -132,6 +133,23 @@ const EventForm: React.FC = () => {
     loadMusicians();
     return () => { cancelled = true; };
   }, [formData.is_solo]);
+
+  const instrumentOptions = useMemo(() => {
+    const counts: Record<string, number> = {};
+    availableMusicians.forEach((m) => {
+      counts[m.instrument] = (counts[m.instrument] || 0) + 1;
+    });
+    return Object.keys(counts).map((instrument) => ({
+      value: instrument,
+      label: instrumentLabels[instrument] || instrument,
+      count: counts[instrument],
+    }));
+  }, [availableMusicians]);
+
+  const filteredMusicians = useMemo(() => {
+    if (instrumentFilter === 'all') return availableMusicians;
+    return availableMusicians.filter((m) => m.instrument === instrumentFilter);
+  }, [availableMusicians, instrumentFilter]);
 
   const toggleMusicianSelection = (musicianId: number) => {
     setSelectedMusicians(prev =>
@@ -480,9 +498,39 @@ const EventForm: React.FC = () => {
                 <div className="flex items-center gap-2 mb-3">
                   <Users className="h-5 w-5 text-purple-600" />
                   <h3 className="text-sm font-semibold text-gray-900">
-                    Selecionar músicos
+                    Selecionar músicos por instrumento
                   </h3>
                 </div>
+
+                {instrumentOptions.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => setInstrumentFilter('all')}
+                      className={`px-3 py-1.5 rounded-full text-sm border transition ${
+                        instrumentFilter === 'all'
+                          ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300'
+                      }`}
+                    >
+                      Todos
+                    </button>
+                    {instrumentOptions.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setInstrumentFilter(opt.value)}
+                        className={`px-3 py-1.5 rounded-full text-sm border transition ${
+                          instrumentFilter === opt.value
+                            ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                            : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300'
+                        }`}
+                      >
+                        {opt.label} <span className="text-xs text-gray-500 ml-1">({opt.count})</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 {loadingMusicians ? (
                   <div className="flex items-center justify-center py-4">
@@ -494,14 +542,21 @@ const EventForm: React.FC = () => {
                     <Info className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                     <p className="text-sm text-gray-600">Nenhum músico cadastrado para convite.</p>
                   </div>
+                ) : filteredMusicians.length === 0 ? (
+                  <div className="text-center py-4">
+                    <Info className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600">
+                      Nenhum músico com o instrumento selecionado.
+                    </p>
+                  </div>
                 ) : (
                   <>
                     <p className="text-sm text-gray-600 mb-3">
-                      Selecione os músicos cadastrados na plataforma para participarem deste evento.
+                      Escolha primeiro o instrumento e, em seguida, os músicos que tocarão no evento.
                       Eles receberão uma notificação e precisarão confirmar a participação.
                     </p>
                     <div className="space-y-2">
-                      {availableMusicians.map((musician) => (
+                      {filteredMusicians.map((musician) => (
                         <div
                           key={musician.musician_id}
                           onClick={() => toggleMusicianSelection(musician.musician_id)}
