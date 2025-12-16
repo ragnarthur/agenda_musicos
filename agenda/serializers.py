@@ -2,7 +2,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.utils import timezone
-from .models import Musician, Event, Availability, LeaderAvailability, EventLog
+from .models import Musician, Event, Availability, LeaderAvailability, EventLog, EventInstrument, MusicianRating
 from .validators import validate_not_empty_string
 
 
@@ -35,18 +35,19 @@ class MusicianSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
     is_leader = serializers.SerializerMethodField()
     public_email = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Musician
         fields = [
-            'id', 'user', 'full_name', 'instrument', 'role', 
-            'is_leader', 'bio', 'phone', 'instagram', 'public_email', 'is_active', 'created_at'
+            'id', 'user', 'full_name', 'instrument', 'role',
+            'is_leader', 'bio', 'phone', 'instagram', 'public_email', 'is_active',
+            'average_rating', 'total_ratings', 'created_at'
         ]
-        read_only_fields = ['id', 'created_at']
-    
+        read_only_fields = ['id', 'average_rating', 'total_ratings', 'created_at']
+
     def get_full_name(self, obj):
         return obj.user.get_full_name() or obj.user.username
-    
+
     def get_is_leader(self, obj):
         return obj.is_leader()
 
@@ -147,8 +148,10 @@ class EventDetailSerializer(serializers.ModelSerializer):
     approved_by_name = serializers.SerializerMethodField()
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     can_approve = serializers.SerializerMethodField()
+    can_rate = serializers.SerializerMethodField()
     logs = serializers.SerializerMethodField()
     approval_label = serializers.SerializerMethodField()
+    required_instruments = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
@@ -156,9 +159,9 @@ class EventDetailSerializer(serializers.ModelSerializer):
             'id', 'title', 'description', 'location', 'venue_contact',
             'event_date', 'start_time', 'end_time', 'start_datetime', 'end_datetime',
             'payment_amount', 'is_solo', 'status', 'status_display', 'can_approve',
-            'created_by', 'created_by_name', 'approved_by', 'approved_by_name',
+            'can_rate', 'created_by', 'created_by_name', 'approved_by', 'approved_by_name',
             'approved_at', 'rejection_reason', 'approval_label', 'availabilities',
-            'logs', 'created_at', 'updated_at'
+            'required_instruments', 'logs', 'created_at', 'updated_at'
         ]
         read_only_fields = [
             'id', 'start_datetime', 'end_datetime', 'created_by',
@@ -200,7 +203,38 @@ class EventDetailSerializer(serializers.ModelSerializer):
         """Retorna últimos registros de log (limitado para evitar payload grande)"""
         logs = obj.logs.select_related('performed_by').all()[:20]
         return EventLogSerializer(logs, many=True).data
-    
+
+    def get_can_rate(self, obj):
+        """
+        Verifica se o usuário pode avaliar os músicos do evento.
+        Condições: é criador + data do evento já passou + ainda não avaliou
+        """
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+
+        # Apenas criador pode avaliar
+        if obj.created_by != request.user:
+            return False
+
+        # Evento deve estar no passado
+        if obj.event_date >= timezone.now().date():
+            return False
+
+        # Verifica se já avaliou algum músico neste evento
+        already_rated = MusicianRating.objects.filter(
+            event=obj,
+            rated_by=request.user
+        ).exists()
+
+        return not already_rated
+
+    def get_required_instruments(self, obj):
+        """Retorna instrumentos necessários para o evento"""
+        from .serializers import EventInstrumentSerializer
+        instruments = obj.required_instruments.all()
+        return EventInstrumentSerializer(instruments, many=True).data
+
     def validate(self, data):
         """Validações customizadas"""
         errors = {}
@@ -253,13 +287,19 @@ class EventCreateSerializer(serializers.ModelSerializer):
         required=False,
         help_text='Lista de IDs dos músicos a convidar para o evento'
     )
+    required_instruments = serializers.ListField(
+        child=serializers.DictField(),
+        write_only=True,
+        required=False,
+        help_text='Lista de instrumentos necessários [{instrument, quantity}]'
+    )
 
     class Meta:
         model = Event
         fields = [
             'id', 'title', 'description', 'location', 'venue_contact',
             'event_date', 'start_time', 'end_time', 'payment_amount', 'is_solo',
-            'status', 'status_display', 'invited_musicians'
+            'status', 'status_display', 'invited_musicians', 'required_instruments'
         ]
         read_only_fields = ['id', 'status', 'status_display']
     
@@ -360,3 +400,60 @@ class LeaderAvailabilitySerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(errors)
 
         return data
+
+
+class EventInstrumentSerializer(serializers.ModelSerializer):
+    """Serializer para instrumentos necessários de um evento"""
+    instrument_display = serializers.CharField(source='get_instrument_display', read_only=True)
+
+    class Meta:
+        model = EventInstrument
+        fields = ['id', 'instrument', 'instrument_display', 'quantity']
+        read_only_fields = ['id']
+
+
+class MusicianRatingSerializer(serializers.ModelSerializer):
+    """Serializer para avaliações de músicos"""
+    musician_name = serializers.SerializerMethodField()
+    rated_by_name = serializers.SerializerMethodField()
+    event_title = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MusicianRating
+        fields = [
+            'id', 'event', 'event_title', 'musician', 'musician_name',
+            'rating', 'comment', 'rated_by', 'rated_by_name', 'created_at'
+        ]
+        read_only_fields = ['id', 'rated_by', 'created_at']
+
+    def get_musician_name(self, obj):
+        return obj.musician.user.get_full_name() or obj.musician.user.username
+
+    def get_rated_by_name(self, obj):
+        return obj.rated_by.get_full_name() or obj.rated_by.username
+
+    def get_event_title(self, obj):
+        return obj.event.title
+
+
+class RatingSubmitSerializer(serializers.Serializer):
+    """Serializer para submissão de múltiplas avaliações"""
+    ratings = serializers.ListField(
+        child=serializers.DictField(),
+        help_text='Lista de avaliações [{musician_id, rating, comment}]'
+    )
+
+    def validate_ratings(self, value):
+        """Valida lista de ratings"""
+        if not value:
+            raise serializers.ValidationError('Lista de avaliações não pode estar vazia.')
+
+        for item in value:
+            if 'musician_id' not in item:
+                raise serializers.ValidationError('Cada avaliação deve conter musician_id.')
+            if 'rating' not in item:
+                raise serializers.ValidationError('Cada avaliação deve conter rating.')
+            if not 1 <= item['rating'] <= 5:
+                raise serializers.ValidationError('Rating deve ser entre 1 e 5.')
+
+        return value
