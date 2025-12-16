@@ -82,6 +82,18 @@ export interface EventCreate {
   end_time: string;
   payment_amount?: string;
   is_solo?: boolean;
+  invited_musicians?: number[];
+}
+
+export interface AvailableMusician {
+  musician_id: number;
+  musician_name: string;
+  instrument: string;
+  instrument_display: string;
+  availability_id: number;
+  start_time: string;
+  end_time: string;
+  notes?: string;
 }
 
 export interface LeaderAvailability {

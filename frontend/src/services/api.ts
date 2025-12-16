@@ -9,6 +9,7 @@ import type {
   AvailabilityResponse,
   LeaderAvailability,
   LeaderAvailabilityCreate,
+  AvailableMusician,
   MarketplaceGig,
   MarketplaceApplication,
   GigStatus,
@@ -257,6 +258,11 @@ export const leaderAvailabilityService = {
 
   getConflictingEvents: async (id: number): Promise<Event[]> => {
     const response = await api.get(`/leader-availabilities/${id}/conflicting_events/`);
+    return response.data;
+  },
+
+  getAvailableMusicians: async (params: { date: string; instrument?: string }): Promise<AvailableMusician[]> => {
+    const response = await api.get('/leader-availabilities/available_musicians/', { params });
     return response.data;
   },
 };
