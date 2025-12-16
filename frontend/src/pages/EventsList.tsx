@@ -359,30 +359,7 @@ const EventsList: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="text-base font-semibold text-gray-900">Sara (Voz/Violão)</h3>
-                          <span className="text-xs text-gray-600">{group.sara.length} evento(s)</span>
-                        </div>
-                        {group.sara.length === 0 ? (
-                          <p className="text-sm text-gray-500 italic">Sem eventos nesta data.</p>
-                        ) : (
-                          <div className="space-y-3">{group.sara.map(renderEventCard)}</div>
-                        )}
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="text-base font-semibold text-gray-900">Arthur (Voz/Violão/Guitarra)</h3>
-                          <span className="text-xs text-gray-600">{group.arthur.length} evento(s)</span>
-                        </div>
-                        {group.arthur.length === 0 ? (
-                          <p className="text-sm text-gray-500 italic">Sem eventos nesta data.</p>
-                        ) : (
-                          <div className="space-y-3">{group.arthur.map(renderEventCard)}</div>
-                        )}
-                      </div>
-                    </div>
+                    <div className="space-y-3">{group.events.map(renderEventCard)}</div>
                   </div>
                 </div>
               );
