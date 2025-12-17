@@ -22,6 +22,8 @@ from .models import (
     Organization,
     Membership,
     MusicianRating,
+    Connection,
+    MusicianBadge,
 )
 from .serializers import (
     MusicianSerializer,
@@ -32,9 +34,11 @@ from .serializers import (
     LeaderAvailabilitySerializer,
     MusicianRatingSerializer,
     RatingSubmitSerializer,
+    ConnectionSerializer,
+    MusicianBadgeSerializer,
 )
 from .permissions import IsOwnerOrReadOnly
-from .utils import get_user_organization, split_availability_with_events
+from .utils import get_user_organization, split_availability_with_events, award_badges_for_musician
 
 
 class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
@@ -987,6 +991,56 @@ class AvailabilityViewSet(viewsets.ModelViewSet):
         except Musician.DoesNotExist:
             raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
 
+
+class ConnectionViewSet(viewsets.ModelViewSet):
+    """
+    Conexões entre músicos (seguir, ligar depois, indicar, já toquei com).
+    """
+    serializer_class = ConnectionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        try:
+            musician = self.request.user.musician_profile
+        except Musician.DoesNotExist:
+            return Connection.objects.none()
+
+        qs = Connection.objects.filter(follower=musician).select_related('target__user', 'follower__user')
+
+        ctype = self.request.query_params.get('type')
+        if ctype:
+            qs = qs.filter(connection_type=ctype)
+
+        return qs
+
+    def perform_create(self, serializer):
+        try:
+            musician = self.request.user.musician_profile
+        except Musician.DoesNotExist:
+            raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
+
+        target = serializer.validated_data.get('target')
+        if target == musician:
+            raise ValidationError({'detail': 'Não é possível criar conexão consigo mesmo.'})
+
+        serializer.save(follower=musician)
+
+
+class BadgeViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Lista badges do músico logado. Recalcula antes de retornar.
+    """
+    serializer_class = MusicianBadgeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        try:
+            musician = self.request.user.musician_profile
+        except Musician.DoesNotExist:
+            return MusicianBadge.objects.none()
+
+        award_badges_for_musician(musician)
+        return MusicianBadge.objects.filter(musician=musician)
 
 class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
     """

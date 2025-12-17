@@ -1,7 +1,14 @@
 ﻿# agenda/urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import MusicianViewSet, EventViewSet, AvailabilityViewSet, LeaderAvailabilityViewSet
+from .views import (
+    MusicianViewSet,
+    EventViewSet,
+    AvailabilityViewSet,
+    LeaderAvailabilityViewSet,
+    ConnectionViewSet,
+    BadgeViewSet,
+)
 
 # Router do DRF gera automaticamente as URLs
 router = DefaultRouter()
@@ -9,6 +16,8 @@ router.register('musicians', MusicianViewSet, basename='musician')
 router.register('events', EventViewSet, basename='event')
 router.register('availabilities', AvailabilityViewSet, basename='availability')
 router.register('leader-availabilities', LeaderAvailabilityViewSet, basename='leader-availability')
+router.register('connections', ConnectionViewSet, basename='connection')
+router.register('badges', BadgeViewSet, basename='badge')
 
 urlpatterns = [
     path('', include(router.urls)),
