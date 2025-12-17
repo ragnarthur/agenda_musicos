@@ -18,11 +18,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <Navbar />
 
       <div className="relative z-10 flex min-h-screen flex-col pt-6 sm:pt-8">
-        <main className="container mx-auto flex-1 max-w-6xl px-4 pb-16 sm:px-6 lg:px-8">
+        {/* pb-24 para acomodar navbar mobile fixa (64px + safe-area) */}
+        <main className="container mx-auto flex-1 max-w-6xl px-3 sm:px-4 pb-28 md:pb-16 lg:px-8">
           {children}
         </main>
 
-        <footer className="border-t border-white/20 bg-white/5 px-4 py-6 text-center text-sm font-semibold text-slate-700 backdrop-blur">
+        <footer className="hidden md:block border-t border-white/20 bg-white/5 px-4 py-6 text-center text-sm font-semibold text-slate-700 backdrop-blur">
           <p className="text-xs sm:text-sm text-slate-800">
             <span className="mr-1 text-base text-primary-700">®</span>
             DXM Tech - Arthur Araújo. Todos os direitos reservados.

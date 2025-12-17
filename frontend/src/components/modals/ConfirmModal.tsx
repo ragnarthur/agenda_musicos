@@ -36,15 +36,15 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center sm:p-4 z-50"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+      <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl max-w-md w-full p-5 sm:p-6">
         <h3
           id="modal-title"
-          className={`text-xl font-bold mb-4 flex items-center space-x-2 ${
+          className={`text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2 ${
             confirmVariant === 'danger' ? 'text-red-600' : 'text-gray-900'
           }`}
         >
@@ -52,20 +52,20 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
           <span>{title}</span>
         </h3>
 
-        <div className="text-gray-600 mb-6">{message}</div>
+        <div className="text-sm sm:text-base text-gray-600 mb-5 sm:mb-6">{message}</div>
 
-        <div className="flex items-center justify-end space-x-3">
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-3">
           <button
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            className="w-full sm:w-auto px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
           >
             {cancelText}
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className={`px-4 py-2 rounded-lg disabled:opacity-50 transition-colors flex items-center space-x-2 ${variantClasses[confirmVariant]}`}
+            className={`w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-lg disabled:opacity-50 transition-colors flex items-center justify-center gap-2 ${variantClasses[confirmVariant]}`}
           >
             {icon && <span>{icon}</span>}
             <span>{loading ? 'Processando...' : confirmText}</span>
