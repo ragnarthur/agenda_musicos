@@ -401,12 +401,23 @@ class LeaderAvailabilitySerializer(serializers.ModelSerializer):
         return instrument_labels.get(obj.leader.instrument, obj.leader.instrument)
 
     def get_has_conflicts(self, obj):
-        """Verifica se há conflitos com eventos existentes"""
-        return obj.has_conflicts()
+        """
+        Verifica se há conflitos com eventos existentes.
+        Usa cache para evitar query duplicada com conflicting_events_count.
+        """
+        # Usa cache no objeto para evitar query duplicada
+        if not hasattr(obj, '_cached_conflicts_count'):
+            obj._cached_conflicts_count = obj.get_conflicting_events().count()
+        return obj._cached_conflicts_count > 0
 
     def get_conflicting_events_count(self, obj):
-        """Conta eventos conflitantes"""
-        return obj.get_conflicting_events().count()
+        """
+        Conta eventos conflitantes.
+        Usa cache para evitar query duplicada com has_conflicts.
+        """
+        if not hasattr(obj, '_cached_conflicts_count'):
+            obj._cached_conflicts_count = obj.get_conflicting_events().count()
+        return obj._cached_conflicts_count
 
     def validate(self, data):
         """Validações customizadas"""
