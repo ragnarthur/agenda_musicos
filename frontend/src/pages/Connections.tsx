@@ -46,9 +46,9 @@ const Connections: React.FC = () => {
           badgeService.getMine(),
           musicianService.getAll(),
         ]);
-        setConnections(conn);
-        setBadges(bgs);
-        setMusicians(mus);
+        setConnections(Array.isArray(conn) ? conn : []);
+        setBadges(Array.isArray(bgs) ? bgs : []);
+        setMusicians(Array.isArray(mus) ? mus : mus.results || []);
       } catch (error) {
         console.error('Erro ao carregar conexões/badges:', error);
       } finally {
@@ -74,7 +74,7 @@ const Connections: React.FC = () => {
 
   const stats = useMemo(() => {
     const totals: Record<ConnectionType, number> = { follow: 0, call_later: 0, recommend: 0, played_with: 0 };
-    connections.forEach((c) => {
+    (connections || []).forEach((c) => {
       totals[c.connection_type] = (totals[c.connection_type] || 0) + 1;
     });
     return totals;
@@ -82,7 +82,7 @@ const Connections: React.FC = () => {
 
   const grouped = useMemo(() => {
     const groups: Record<ConnectionType, Connection[]> = { follow: [], call_later: [], recommend: [], played_with: [] };
-    connections.forEach((c) => groups[c.connection_type].push(c));
+    (connections || []).forEach((c) => groups[c.connection_type].push(c));
     return groups;
   }, [connections]);
 

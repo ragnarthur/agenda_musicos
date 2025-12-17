@@ -285,7 +285,7 @@ export const leaderAvailabilityService = {
 export const connectionService = {
   getAll: async (params?: { type?: string }): Promise<Connection[]> => {
     const response = await api.get('/connections/', { params });
-    return response.data;
+    return response.data.results || response.data;
   },
 
   create: async (payload: { target_id: number; connection_type: string; notes?: string }): Promise<Connection> => {
