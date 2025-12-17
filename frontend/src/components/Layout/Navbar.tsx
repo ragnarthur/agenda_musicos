@@ -272,7 +272,7 @@ const NavLinkMobile: React.FC<{
       {icon}
       {label}
     </span>
-    {badge && badge > 0 && (
+    {Number(badge) > 0 && (
       <span className="bg-red-500 text-white text-xs font-bold rounded-full h-5 min-w-5 px-1 flex items-center justify-center">
         {badge}
       </span>
