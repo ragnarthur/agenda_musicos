@@ -347,4 +347,73 @@ export const marketplaceService = {
   },
 };
 
+// Registration Types
+export interface RegisterData {
+  email: string;
+  username: string;
+  password: string;
+  first_name: string;
+  last_name?: string;
+  phone?: string;
+  instrument?: string;
+  bio?: string;
+}
+
+export interface RegistrationStatus {
+  status: string;
+  status_display: string;
+  email: string;
+  first_name: string;
+  email_verified: boolean;
+  payment_completed: boolean;
+  is_expired: boolean;
+  payment_token?: string;
+}
+
+export interface PaymentData {
+  payment_token: string;
+  card_number: string;
+  card_holder: string;
+  card_expiry: string;
+  card_cvv: string;
+}
+
+// Registration Service (público - não requer autenticação)
+export const registrationService = {
+  register: async (data: RegisterData): Promise<{ message: string; email: string }> => {
+    const response = await api.post('/register/', data);
+    return response.data;
+  },
+
+  verifyEmail: async (token: string): Promise<{
+    message: string;
+    status: string;
+    payment_token?: string;
+    email?: string;
+    first_name?: string;
+  }> => {
+    const response = await api.post('/verify-email/', { token });
+    return response.data;
+  },
+
+  getStatus: async (token: string): Promise<RegistrationStatus> => {
+    const response = await api.get('/registration-status/', { params: { token } });
+    return response.data;
+  },
+
+  processPayment: async (data: PaymentData): Promise<{
+    message: string;
+    username: string;
+    email: string;
+  }> => {
+    const response = await api.post('/process-payment/', data);
+    return response.data;
+  },
+
+  resendVerification: async (email: string): Promise<{ message: string }> => {
+    const response = await api.post('/resend-verification/', { email });
+    return response.data;
+  },
+};
+
 export default api;

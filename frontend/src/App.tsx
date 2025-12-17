@@ -18,6 +18,9 @@ const Musicians = lazy(() => import('./pages/Musicians'));
 const LeaderAvailability = lazy(() => import('./pages/LeaderAvailability'));
 const Marketplace = lazy(() => import('./pages/Marketplace'));
 const Connections = lazy(() => import('./pages/Connections'));
+const Register = lazy(() => import('./pages/Register'));
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
+const Payment = lazy(() => import('./pages/Payment'));
 
 // Componente de loading para Suspense
 const PageLoader: React.FC = () => (
@@ -61,6 +64,17 @@ function AppRoutes() {
             </PublicRoute>
           }
         />
+        <Route
+          path="/cadastro"
+          element={
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          }
+        />
+
+        <Route path="/verificar-email" element={<VerifyEmail />} />
+        <Route path="/pagamento" element={<Payment />} />
 
         <Route
           path="/eventos/agenda"

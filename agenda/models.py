@@ -681,3 +681,113 @@ class MusicianBadge(models.Model):
 
     def __str__(self):
         return f"{self.musician} - {self.name}"
+
+
+class PendingRegistration(models.Model):
+    """
+    Cadastro pendente de verificação de email e pagamento.
+    Fluxo:
+    1. Usuário preenche formulário de cadastro
+    2. Sistema envia email de verificação
+    3. Usuário confirma email clicando no link
+    4. Usuário realiza pagamento
+    5. Sistema cria User + Musician e remove PendingRegistration
+    """
+    STATUS_CHOICES = [
+        ('pending_email', 'Aguardando verificação de email'),
+        ('email_verified', 'Email verificado - Aguardando pagamento'),
+        ('payment_pending', 'Pagamento em processamento'),
+        ('completed', 'Cadastro concluído'),
+        ('expired', 'Expirado'),
+    ]
+
+    INSTRUMENT_CHOICES = [
+        ('vocal', 'Vocal'),
+        ('guitar', 'Guitarra/Violão'),
+        ('bass', 'Baixo'),
+        ('drums', 'Bateria'),
+        ('keyboard', 'Teclado'),
+        ('percussion', 'Percussão/Outros'),
+    ]
+
+    # Dados do cadastro
+    email = models.EmailField(unique=True)
+    username = models.CharField(max_length=150)
+    password_hash = models.CharField(max_length=255, help_text='Senha hasheada')
+    first_name = models.CharField(max_length=150)
+    last_name = models.CharField(max_length=150, blank=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    instrument = models.CharField(max_length=20, choices=INSTRUMENT_CHOICES, blank=True, null=True)
+    bio = models.TextField(blank=True, null=True)
+
+    # Status e tokens
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending_email')
+    email_token = models.CharField(max_length=64, unique=True, help_text='Token de verificação de email')
+    payment_token = models.CharField(max_length=64, unique=True, null=True, blank=True, help_text='Token de pagamento')
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    email_verified_at = models.DateTimeField(null=True, blank=True)
+    payment_completed_at = models.DateTimeField(null=True, blank=True)
+    expires_at = models.DateTimeField(help_text='Data de expiração do cadastro pendente')
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Cadastro Pendente'
+        verbose_name_plural = 'Cadastros Pendentes'
+        indexes = [
+            models.Index(fields=['email']),
+            models.Index(fields=['email_token']),
+            models.Index(fields=['payment_token']),
+            models.Index(fields=['status']),
+        ]
+
+    def __str__(self):
+        return f"{self.email} - {self.get_status_display()}"
+
+    def is_expired(self):
+        """Verifica se o cadastro expirou"""
+        return timezone.now() > self.expires_at
+
+    def verify_email(self):
+        """Marca email como verificado e gera token de pagamento"""
+        import secrets
+        self.status = 'email_verified'
+        self.email_verified_at = timezone.now()
+        self.payment_token = secrets.token_urlsafe(32)
+        self.save()
+
+    def complete_registration(self):
+        """
+        Finaliza o cadastro criando User e Musician.
+        Retorna o User criado.
+        """
+        from django.contrib.auth.models import User
+
+        # Cria o usuário
+        user = User.objects.create(
+            username=self.username,
+            email=self.email,
+            first_name=self.first_name,
+            last_name=self.last_name,
+        )
+        # Define a senha (já vem hasheada)
+        user.password = self.password_hash
+        user.save()
+
+        # Cria o perfil de músico
+        musician = Musician.objects.create(
+            user=user,
+            phone=self.phone or '',
+            instrument=self.instrument or '',
+            bio=self.bio or '',
+            role='member',
+            is_active=True,
+        )
+
+        # Atualiza status
+        self.status = 'completed'
+        self.payment_completed_at = timezone.now()
+        self.save()
+
+        return user
