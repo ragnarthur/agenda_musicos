@@ -245,7 +245,7 @@ const NavLink: React.FC<{ to: string; icon: React.ReactNode; label: string; badg
   >
     {icon}
     <span>{label}</span>
-    {badge && badge > 0 && (
+    {typeof badge === 'number' && badge > 0 && (
       <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 min-w-5 px-1 flex items-center justify-center">
         {badge}
       </span>
@@ -272,7 +272,7 @@ const NavLinkMobile: React.FC<{
       {icon}
       {label}
     </span>
-    {Number(badge) > 0 && (
+    {typeof badge === 'number' && badge > 0 && (
       <span className="bg-red-500 text-white text-xs font-bold rounded-full h-5 min-w-5 px-1 flex items-center justify-center">
         {badge}
       </span>
