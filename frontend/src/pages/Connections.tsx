@@ -15,7 +15,7 @@ const connectionLabels: Record<ConnectionType, string> = {
   played_with: 'Já toquei com',
 };
 
-const connectionIcons: Record<ConnectionType, JSX.Element> = {
+const connectionIcons: Record<ConnectionType, React.ReactNode> = {
   follow: <Sparkles className="h-4 w-4" />,
   call_later: <PhoneIcon />,
   recommend: <Users className="h-4 w-4" />,
