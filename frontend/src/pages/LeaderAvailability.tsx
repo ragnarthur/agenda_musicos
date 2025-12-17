@@ -5,6 +5,7 @@ import { Calendar as CalendarIcon, Clock, Plus, Edit, Trash2, AlertCircle, Info,
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { leaderAvailabilityService, musicianService, type InstrumentOption } from '../services/api';
+import { showToast } from '../utils/toast';
 import type { LeaderAvailability, LeaderAvailabilityCreate } from '../types';
 import { format, parseISO } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
@@ -59,7 +60,7 @@ const LeaderAvailabilityPage: React.FC = () => {
       const data = await leaderAvailabilityService.getAll(params);
       setAvailabilities(data);
     } catch (error) {
-      console.error('Erro ao carregar disponibilidades:', error);
+      showToast.apiError(error);
     } finally {
       setLoading(false);
     }
@@ -118,8 +119,10 @@ const LeaderAvailabilityPage: React.FC = () => {
 
       if (editingId) {
         await leaderAvailabilityService.update(editingId, formData);
+        showToast.success('Disponibilidade atualizada!');
       } else {
         await leaderAvailabilityService.create(formData);
+        showToast.availabilityCreated();
       }
 
       setShowModal(false);
@@ -127,7 +130,6 @@ const LeaderAvailabilityPage: React.FC = () => {
       resetForm();
       await loadAvailabilities();
     } catch (err: unknown) {
-      console.error('Erro ao salvar disponibilidade:', err);
       const error = err as { response?: { data?: unknown } };
       if (error.response?.data) {
         const data = error.response.data;
@@ -181,10 +183,10 @@ const LeaderAvailabilityPage: React.FC = () => {
     try {
       setActionLoading(true);
       await leaderAvailabilityService.delete(id);
+      showToast.availabilityDeleted();
       await loadAvailabilities();
     } catch (error: unknown) {
-      console.error('Erro ao deletar disponibilidade:', error);
-      alert('Erro ao deletar disponibilidade. Tente novamente.');
+      showToast.apiError(error);
     } finally {
       setActionLoading(false);
     }

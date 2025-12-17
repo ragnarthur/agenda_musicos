@@ -1,6 +1,7 @@
 // App.tsx
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Loading from './components/common/Loading';
 
@@ -174,6 +175,31 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <AppRoutes />
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#1f2937',
+              color: '#f9fafb',
+              borderRadius: '0.75rem',
+              padding: '12px 16px',
+            },
+            success: {
+              iconTheme: {
+                primary: '#10b981',
+                secondary: '#f9fafb',
+              },
+            },
+            error: {
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#f9fafb',
+              },
+              duration: 5000,
+            },
+          }}
+        />
       </AuthProvider>
     </BrowserRouter>
   );

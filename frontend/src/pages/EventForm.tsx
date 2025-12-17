@@ -20,6 +20,7 @@ import Layout from '../components/Layout/Layout';
 import ConflictPreview from '../components/event/ConflictPreview';
 import ProposalSummary from '../components/event/ProposalSummary';
 import { eventService, musicianService } from '../services/api';
+import { showToast } from '../utils/toast';
 import type { Event, EventCreate, AvailableMusician, Musician } from '../types';
 import { format, parseISO } from 'date-fns';
 
@@ -249,9 +250,9 @@ const EventForm: React.FC = () => {
       };
 
       const event = await eventService.create(eventData);
+      showToast.eventCreated();
       navigate(`/eventos/${event.id}`);
     } catch (err: unknown) {
-      console.error('Erro ao criar evento:', err);
       const error = err as { response?: { data?: unknown } };
       if (error.response?.data) {
         const data = error.response.data;

@@ -26,6 +26,7 @@ import RejectModal from '../components/modals/RejectModal';
 import RatingModal from '../components/modals/RatingModal';
 import { useAuth } from '../contexts/AuthContext';
 import { eventService } from '../services/api';
+import { showToast } from '../utils/toast';
 import type { Event, AvailabilityResponse, RatingInput } from '../types';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -64,7 +65,7 @@ const EventDetail: React.FC = () => {
         setNotes(myAvailability.notes || '');
       }
     } catch (error) {
-      console.error('Erro ao carregar evento:', error);
+      showToast.apiError(error);
     } finally {
       setLoading(false);
     }
@@ -80,9 +81,10 @@ const EventDetail: React.FC = () => {
     try {
       setActionLoading(true);
       await eventService.setAvailability(parseInt(id), selectedResponse, notes);
+      showToast.availabilityUpdated();
       await loadEvent();
     } catch (error) {
-      console.error('Erro ao marcar disponibilidade:', error);
+      showToast.apiError(error);
     } finally {
       setActionLoading(false);
     }
@@ -94,9 +96,10 @@ const EventDetail: React.FC = () => {
     try {
       setActionLoading(true);
       await eventService.approve(parseInt(id));
+      showToast.eventApproved();
       await loadEvent();
     } catch (error) {
-      console.error('Erro ao aprovar evento:', error);
+      showToast.apiError(error);
     } finally {
       setActionLoading(false);
     }
@@ -108,10 +111,10 @@ const EventDetail: React.FC = () => {
     try {
       setActionLoading(true);
       await eventService.delete(parseInt(id));
+      showToast.eventDeleted();
       navigate('/eventos');
     } catch (error) {
-      console.error('Erro ao deletar evento:', error);
-      alert('Erro ao deletar evento. Tente novamente.');
+      showToast.apiError(error);
     } finally {
       setActionLoading(false);
       setShowDeleteModal(false);
@@ -124,10 +127,10 @@ const EventDetail: React.FC = () => {
     try {
       setActionLoading(true);
       await eventService.cancel(parseInt(id));
+      showToast.eventCancelled();
       await loadEvent();
     } catch (error) {
-      console.error('Erro ao cancelar evento:', error);
-      alert('Erro ao cancelar evento. Tente novamente.');
+      showToast.apiError(error);
     } finally {
       setActionLoading(false);
       setShowCancelModal(false);
@@ -140,10 +143,11 @@ const EventDetail: React.FC = () => {
     try {
       setActionLoading(true);
       await eventService.reject(parseInt(id), rejectionReason);
+      showToast.eventRejected();
       setShowRejectModal(false);
       await loadEvent();
     } catch (error) {
-      console.error('Erro ao rejeitar evento:', error);
+      showToast.apiError(error);
     } finally {
       setActionLoading(false);
     }
@@ -155,12 +159,12 @@ const EventDetail: React.FC = () => {
     try {
       setActionLoading(true);
       await eventService.submitRatings(parseInt(id), ratings);
+      showToast.ratingsSubmitted();
       setShowRatingModal(false);
       setRatingSuccess(true);
       await loadEvent();
     } catch (error) {
-      console.error('Erro ao enviar avaliações:', error);
-      alert('Erro ao enviar avaliações. Tente novamente.');
+      showToast.apiError(error);
     } finally {
       setActionLoading(false);
     }
