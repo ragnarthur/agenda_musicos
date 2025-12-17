@@ -76,7 +76,6 @@ const EventsList: React.FC = () => {
   const [filter, setFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('upcoming');
-  const { user } = useAuth();
 
   const loadEvents = useCallback(async () => {
     try {
