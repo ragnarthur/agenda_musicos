@@ -149,88 +149,119 @@ const Navbar: React.FC = () => {
         )}
       </div>
 
-      {/* Menu Mobile */}
+      {/* Barra de Navegação Mobile - Fixa na parte inferior */}
       <div
-        className="md:hidden fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white/90 backdrop-blur-lg shadow-[0_-6px_20px_rgba(0,0,0,0.12)] z-40"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 10px)' }}
+        className="md:hidden fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white shadow-[0_-4px_12px_rgba(0,0,0,0.1)] z-40"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
-        <div
-          className="flex w-full justify-start gap-1 px-2 py-2 overflow-x-auto no-scrollbar"
-          style={{ WebkitOverflowScrolling: 'touch' }}
-        >
+        <div className="grid grid-cols-5 w-full">
           <Link
             to="/"
-            className="w-16 flex-shrink-0 flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 relative rounded-lg transition-colors"
+            className="flex flex-col items-center justify-center text-gray-600 hover:text-primary-600 py-2 transition-colors"
           >
             <Music className="h-5 w-5" />
-            <span className="text-[10px] mt-1 leading-none">Início</span>
+            <span className="text-[10px] mt-1">Início</span>
           </Link>
+
           <Link
             to="/eventos"
-            className="w-16 flex-shrink-0 flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 relative rounded-lg transition-colors"
+            className="flex flex-col items-center justify-center text-gray-600 hover:text-primary-600 py-2 relative transition-colors"
           >
             <Calendar className="h-5 w-5" />
-            <span className="text-[10px] mt-1 leading-none">Eventos</span>
+            <span className="text-[10px] mt-1">Eventos</span>
             {pendingMyResponse > 0 && (
-              <span className="absolute top-0 right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+              <span className="absolute top-1 right-2 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
                 {pendingMyResponse}
               </span>
             )}
           </Link>
 
           <Link
-            to="/eventos/agenda"
-            className="w-16 flex-shrink-0 flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 rounded-lg transition-colors"
-          >
-            <Clock className="h-5 w-5 rotate-45" />
-            <span className="text-[10px] mt-1 leading-none">Grade</span>
-          </Link>
-
-          <Link
             to="/musicos"
-            className="w-16 flex-shrink-0 flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 rounded-lg transition-colors"
+            className="flex flex-col items-center justify-center text-gray-600 hover:text-primary-600 py-2 transition-colors"
           >
             <Users className="h-5 w-5" />
-            <span className="text-[10px] mt-1 leading-none">Músicos</span>
+            <span className="text-[10px] mt-1">Músicos</span>
           </Link>
 
           <Link
             to="/conexoes"
-            className="w-20 flex-shrink-0 flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 rounded-lg transition-colors"
+            className="flex flex-col items-center justify-center text-gray-600 hover:text-primary-600 py-2 transition-colors"
           >
             <HeartHandshake className="h-5 w-5" />
-            <span className="text-[10px] mt-1 leading-none">Rede</span>
+            <span className="text-[10px] mt-1">Rede</span>
           </Link>
 
-          <Link
-            to="/marketplace"
-            className="w-20 flex-shrink-0 flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 rounded-lg transition-colors"
+          <button
+            onClick={() => setOpenMenu((prev) => !prev)}
+            className="flex flex-col items-center justify-center text-gray-600 hover:text-primary-600 py-2 relative transition-colors"
           >
-            <Megaphone className="h-5 w-5" />
-            <span className="text-[10px] mt-1 leading-none">Marketplace</span>
-          </Link>
-
-          <Link
-            to="/disponibilidades"
-            className="w-16 flex-shrink-0 flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 rounded-lg transition-colors"
-          >
-            <Clock className="h-5 w-5" />
-            <span className="text-[10px] mt-1 leading-none">Datas</span>
-          </Link>
-
-          <Link
-            to="/aprovacoes"
-            className="w-16 flex-shrink-0 flex flex-col items-center justify-center text-yellow-700 hover:text-yellow-800 py-2 relative rounded-lg transition-colors"
-          >
-            <Crown className="h-5 w-5" />
-            <span className="text-[10px] mt-1 leading-none">Aprovações</span>
+            <Menu className="h-5 w-5" />
+            <span className="text-[10px] mt-1">Mais</span>
             {pendingApproval > 0 && (
-              <span className="absolute top-0 right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+              <span className="absolute top-1 right-2 bg-yellow-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
                 {pendingApproval}
               </span>
             )}
-          </Link>
+          </button>
         </div>
+
+        {/* Menu Expandido "Mais" */}
+        {openMenu && (
+          <div className="absolute bottom-full left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-3 space-y-2">
+            <Link
+              to="/eventos/agenda"
+              onClick={() => setOpenMenu(false)}
+              className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              <Clock className="h-5 w-5 rotate-45" />
+              <span className="text-sm">Grade de Eventos</span>
+            </Link>
+            <Link
+              to="/disponibilidades"
+              onClick={() => setOpenMenu(false)}
+              className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              <Clock className="h-5 w-5" />
+              <span className="text-sm">Datas Disponíveis</span>
+            </Link>
+            <Link
+              to="/marketplace"
+              onClick={() => setOpenMenu(false)}
+              className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              <Megaphone className="h-5 w-5" />
+              <span className="text-sm">Marketplace</span>
+            </Link>
+            <Link
+              to="/aprovacoes"
+              onClick={() => setOpenMenu(false)}
+              className="flex items-center justify-between px-3 py-2 text-yellow-700 hover:bg-yellow-50 rounded-lg transition-colors"
+            >
+              <span className="flex items-center gap-3">
+                <Crown className="h-5 w-5" />
+                <span className="text-sm font-medium">Aprovações</span>
+              </span>
+              {pendingApproval > 0 && (
+                <span className="bg-yellow-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {pendingApproval}
+                </span>
+              )}
+            </Link>
+            <div className="border-t border-gray-100 pt-2 mt-2">
+              <button
+                onClick={() => {
+                  setOpenMenu(false);
+                  handleLogout();
+                }}
+                className="flex items-center gap-3 w-full px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <LogOut className="h-5 w-5" />
+                <span className="text-sm font-medium">Sair</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );
