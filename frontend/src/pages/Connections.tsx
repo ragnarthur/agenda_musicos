@@ -48,7 +48,7 @@ const Connections: React.FC = () => {
         ]);
         setConnections(Array.isArray(conn) ? conn : []);
         setBadges(Array.isArray(bgs) ? bgs : []);
-        setMusicians(Array.isArray(mus) ? mus : mus.results || []);
+        setMusicians(Array.isArray(mus) ? mus : []);
       } catch (error) {
         console.error('Erro ao carregar conexões/badges:', error);
       } finally {
