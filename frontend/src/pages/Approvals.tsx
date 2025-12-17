@@ -33,13 +33,13 @@ const Approvals: React.FC = () => {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center space-x-3">
-          <div className="bg-yellow-100 p-3 rounded-lg">
-            <Crown className="h-8 w-8 text-yellow-600" />
+        <div className="flex items-start gap-3">
+          <div className="bg-yellow-100 p-2.5 sm:p-3 rounded-lg flex-shrink-0">
+            <Crown className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600" />
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Aprovações Pendentes</h1>
-            <p className="text-gray-600">Eventos aguardando sua decisão</p>
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Aprovações Pendentes</h1>
+            <p className="text-gray-600 text-sm sm:text-base">Eventos aguardando sua decisão</p>
           </div>
         </div>
 
@@ -59,74 +59,73 @@ const Approvals: React.FC = () => {
           <div className="space-y-4">
             {events.map((event) => (
               <div key={event.id} className="card hover:shadow-lg transition-shadow">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-start space-x-3">
-                      <Calendar className="h-6 w-6 text-primary-600 mt-1" />
-                      <div>
-                        <h3 className="text-xl font-semibold text-gray-900">{event.title}</h3>
-                        <p className="text-gray-600 mt-1">{event.description}</p>
-                      </div>
+                {/* Header do card - responsivo */}
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-4">
+                  <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
+                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary-600 mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 break-words">{event.title}</h3>
+                      <p className="text-gray-600 mt-1 text-sm sm:text-base line-clamp-2">{event.description}</p>
                     </div>
                   </div>
-                  <span className="badge badge-proposed">
+                  <span className="badge badge-proposed self-start flex-shrink-0">
                     {event.approval_label || event.status_display}
                   </span>
                 </div>
 
                 {/* Informações do Evento */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div className="flex items-center space-x-2 text-gray-600">
-                    <Calendar className="h-5 w-5" />
-                    <span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mb-4 text-sm sm:text-base">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                    <span className="truncate">
                       {format(parseISO(event.event_date), "dd 'de' MMMM 'de' yyyy", {
                         locale: ptBR,
                       })}
                     </span>
                   </div>
 
-                  <div className="flex items-center space-x-2 text-gray-600">
-                    <Clock className="h-5 w-5" />
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Clock className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                     <span>
                       {event.start_time.slice(0, 5)} - {event.end_time.slice(0, 5)}
                     </span>
                   </div>
 
-                  <div className="flex items-center space-x-2 text-gray-600">
-                    <MapPin className="h-5 w-5" />
-                    <span>{event.location}</span>
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <MapPin className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                    <span className="truncate">{event.location}</span>
                   </div>
 
                   <div className="text-gray-600">
-                    <span className="text-sm">Criado por: </span>
+                    <span className="text-xs sm:text-sm">Criado por: </span>
                     <span className="font-medium">{event.created_by_name}</span>
                   </div>
                 </div>
 
                 {/* Resumo de Disponibilidade */}
                 {event.availability_summary && (
-                  <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600 mb-2">Disponibilidade dos músicos:</p>
-                    <div className="flex items-center space-x-4">
-                      <span className="text-sm">
+                  <div className="mb-4 p-2 sm:p-3 bg-gray-50 rounded-lg">
+                    <p className="text-xs sm:text-sm text-gray-600 mb-2">Disponibilidade dos músicos:</p>
+                    <div className="grid grid-cols-2 gap-1.5 sm:flex sm:items-center sm:gap-4">
+                      <span className="text-xs sm:text-sm">
                         <span className="text-green-600 font-medium">
                           ✓ {event.availability_summary.available}
                         </span>
                         <span className="text-gray-500"> disponíveis</span>
                       </span>
-                      <span className="text-sm">
+                      <span className="text-xs sm:text-sm">
                         <span className="text-red-600 font-medium">
                           ✗ {event.availability_summary.unavailable}
                         </span>
                         <span className="text-gray-500"> indisponíveis</span>
                       </span>
-                      <span className="text-sm">
+                      <span className="text-xs sm:text-sm">
                         <span className="text-blue-600 font-medium">
                           ? {event.availability_summary.maybe}
                         </span>
                         <span className="text-gray-500"> talvez</span>
                       </span>
-                      <span className="text-sm">
+                      <span className="text-xs sm:text-sm">
                         <span className="text-yellow-600 font-medium">
                           ⏱ {event.availability_summary.pending}
                         </span>
@@ -137,14 +136,12 @@ const Approvals: React.FC = () => {
                 )}
 
                 {/* Ações */}
-                <div className="flex items-center space-x-3">
-                  <Link
-                    to={`/eventos/${event.id}`}
-                    className="flex-1 btn-secondary text-center"
-                  >
-                    Ver Detalhes
-                  </Link>
-                </div>
+                <Link
+                  to={`/eventos/${event.id}`}
+                  className="block w-full btn-secondary text-center py-2.5 sm:py-2"
+                >
+                  Ver Detalhes
+                </Link>
               </div>
             ))}
           </div>
@@ -152,12 +149,12 @@ const Approvals: React.FC = () => {
 
         {/* Informação */}
         {!loading && events.length > 0 && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div className="flex items-start space-x-3">
-              <Crown className="h-5 w-5 text-yellow-600 mt-0.5" />
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4">
+            <div className="flex items-start gap-2 sm:gap-3">
+              <Crown className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-medium text-yellow-800">Aprovação apenas para convidados</p>
-                <p className="text-sm text-yellow-700 mt-1">
+                <p className="text-xs sm:text-sm font-medium text-yellow-800">Aprovação apenas para convidados</p>
+                <p className="text-xs sm:text-sm text-yellow-700 mt-1">
                   Apenas músicos convidados podem aprovar ou rejeitar estes eventos. Clique em "Ver Detalhes" para analisar cada proposta e decidir.
                 </p>
               </div>

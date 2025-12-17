@@ -420,10 +420,10 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Botão Flutuante para Criar Evento */}
+        {/* Botão Flutuante para Criar Evento - posicionado acima da navbar mobile */}
         <Link
           to="/eventos/novo"
-          className="fixed bottom-8 right-8 bg-primary-600 hover:bg-primary-700 text-white rounded-full p-4 shadow-lg transition-all hover:scale-110"
+          className="fixed bottom-24 md:bottom-8 right-4 md:right-8 bg-primary-600 hover:bg-primary-700 text-white rounded-full p-4 shadow-lg transition-all hover:scale-110 z-30"
           title="Criar novo evento"
         >
           <Plus className="h-6 w-6" />

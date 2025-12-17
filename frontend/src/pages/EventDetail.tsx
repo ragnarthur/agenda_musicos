@@ -196,16 +196,16 @@ const EventDetail: React.FC = () => {
             <span>Voltar</span>
           </button>
 
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900">{event.title}</h1>
-              <p className="mt-2 text-gray-600">{event.description}</p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">{event.title}</h1>
+              <p className="mt-2 text-gray-600 text-sm sm:text-base">{event.description}</p>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center justify-between sm:justify-end gap-3 flex-wrap">
               <span className={`badge badge-${event.status}`}>{approvalLabel}</span>
 
               {canEdit && (
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-1 sm:gap-2">
                   <button
                     onClick={() => navigate(`/eventos/${event.id}/editar`)}
                     className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -326,11 +326,11 @@ const EventDetail: React.FC = () => {
         {event.status === 'proposed' && (
           <div className="card">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Ações de aprovação</h2>
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <button
                 onClick={handleApprove}
                 disabled={actionLoading}
-                className="flex-1 btn-primary flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-700"
+                className="flex-1 btn-primary flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700"
               >
                 <ThumbsUp className="h-5 w-5" />
                 <span>Aprovar Evento</span>
@@ -339,7 +339,7 @@ const EventDetail: React.FC = () => {
               <button
                 onClick={() => setShowRejectModal(true)}
                 disabled={actionLoading}
-                className="flex-1 btn-danger flex items-center justify-center space-x-2"
+                className="flex-1 btn-danger flex items-center justify-center gap-2"
               >
                 <ThumbsDown className="h-5 w-5" />
                 <span>Rejeitar Evento</span>

@@ -90,13 +90,13 @@ const RatingModal: React.FC<RatingModalProps> = ({
 
   const renderStars = (musicianId: number, currentRating: number) => {
     return (
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5 sm:gap-1">
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
             type="button"
             onClick={() => handleRatingChange(musicianId, star)}
-            className={`p-1 transition-all hover:scale-110 ${
+            className={`p-0.5 sm:p-1 transition-all hover:scale-110 ${
               star <= currentRating
                 ? 'text-yellow-400'
                 : 'text-gray-300 hover:text-yellow-200'
@@ -104,12 +104,12 @@ const RatingModal: React.FC<RatingModalProps> = ({
             aria-label={`${star} estrelas`}
           >
             <Star
-              className="h-7 w-7"
+              className="h-6 w-6 sm:h-7 sm:w-7"
               fill={star <= currentRating ? 'currentColor' : 'none'}
             />
           </button>
         ))}
-        <span className="ml-2 text-sm text-gray-500">
+        <span className="ml-2 text-xs sm:text-sm text-gray-500">
           {currentRating > 0 ? `${currentRating}/5` : 'Selecione'}
         </span>
       </div>
@@ -118,14 +118,14 @@ const RatingModal: React.FC<RatingModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center sm:p-4 z-50"
       role="dialog"
       aria-modal="true"
       aria-labelledby="rating-modal-title"
     >
-      <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl max-w-lg w-full max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-100">
           <div>
             <h3
               id="rating-modal-title"
@@ -147,7 +147,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 sm:space-y-6">
           {ratings.length === 0 ? (
             <p className="text-center text-gray-500 py-8">
               Nenhum músico disponível para avaliação.
@@ -186,18 +186,18 @@ const RatingModal: React.FC<RatingModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-5 border-t border-gray-100 bg-gray-50">
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-3 p-4 sm:p-5 border-t border-gray-100 bg-gray-50">
           <button
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-colors"
+            className="w-full sm:w-auto px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={handleSubmit}
             disabled={loading || ratings.length === 0}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+            className="w-full sm:w-auto px-4 py-2.5 sm:py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
           >
             <Send className="h-4 w-4" />
             <span>{loading ? 'Enviando...' : 'Enviar Avaliações'}</span>
