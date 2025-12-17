@@ -1,7 +1,7 @@
 // pages/Connections.tsx
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Star, Sparkles, HeartHandshake, Plus, X, Filter, UserCheck } from 'lucide-react';
+import { Users, Star, Sparkles, HeartHandshake, Plus, X, Filter, UserCheck, Bookmark, PhoneCall } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { badgeService, connectionService, musicianService } from '../services/api';
@@ -9,22 +9,18 @@ import type { Connection, ConnectionType, Musician, MusicianBadge } from '../typ
 import { INSTRUMENT_LABELS } from '../utils/formatting';
 
 const connectionLabels: Record<ConnectionType, string> = {
-  follow: 'Seguir favorito',
+  follow: 'Seguir',
   call_later: 'Ligar depois',
-  recommend: 'Indicar para vaga',
-  played_with: 'Já toquei com',
+  recommend: 'Indicar',
+  played_with: 'Já toquei',
 };
 
 const connectionIcons: Record<ConnectionType, React.ReactNode> = {
   follow: <Sparkles className="h-4 w-4" />,
-  call_later: <PhoneIcon />,
-  recommend: <Users className="h-4 w-4" />,
+  call_later: <PhoneCall className="h-4 w-4" />,
+  recommend: <Bookmark className="h-4 w-4" />,
   played_with: <HeartHandshake className="h-4 w-4" />,
 };
-
-function PhoneIcon() {
-  return <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 5.5 5.5 3 9 6.5 6.5 9 15 17.5 17.5 15 21 18.5 18.5 21c-.5.5-2.5 1-6-2.5S3.5 6 3 5.5Z" /></svg>;
-}
 
 const Connections: React.FC = () => {
   const [connections, setConnections] = useState<Connection[]>([]);
@@ -32,10 +28,8 @@ const Connections: React.FC = () => {
   const [musicians, setMusicians] = useState<Musician[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingAction, setLoadingAction] = useState(false);
-  const [connectionType, setConnectionType] = useState<ConnectionType>('follow');
   const [search, setSearch] = useState('');
   const [instrumentFilter, setInstrumentFilter] = useState<string>('all');
-  const [selected, setSelected] = useState<Musician | null>(null);
 
   useEffect(() => {
     const loadAll = async () => {
@@ -80,24 +74,35 @@ const Connections: React.FC = () => {
     return totals;
   }, [connections]);
 
+  const connectionMap = useMemo(() => {
+    const map: Record<number, Partial<Record<ConnectionType, Connection>>> = {};
+    (connections || []).forEach((c) => {
+      if (!map[c.target.id]) map[c.target.id] = {};
+      map[c.target.id][c.connection_type] = c;
+    });
+    return map;
+  }, [connections]);
+
   const grouped = useMemo(() => {
     const groups: Record<ConnectionType, Connection[]> = { follow: [], call_later: [], recommend: [], played_with: [] };
     (connections || []).forEach((c) => groups[c.connection_type].push(c));
     return groups;
   }, [connections]);
 
-  const handleCreate = async () => {
-    if (!selected) return;
+  const handleToggle = async (targetId: number, type: ConnectionType) => {
+    const existing = connectionMap[targetId]?.[type];
+    setLoadingAction(true);
     try {
-      setLoadingAction(true);
-      await connectionService.create({
-        target_id: selected.id,
-        connection_type: connectionType,
-      });
-      const updated = await connectionService.getAll();
-      setConnections(updated);
+      if (existing) {
+        await connectionService.delete(existing.id);
+        setConnections((prev) => prev.filter((c) => c.id !== existing.id));
+      } else {
+        await connectionService.create({ target_id: targetId, connection_type: type });
+        const refreshed = await connectionService.getAll();
+        setConnections(Array.isArray(refreshed) ? refreshed : []);
+      }
     } catch (error) {
-      console.error('Erro ao criar conexão:', error);
+      console.error('Erro ao alternar conexão:', error);
     } finally {
       setLoadingAction(false);
     }
@@ -170,22 +175,6 @@ const Connections: React.FC = () => {
                 </p>
                 <p className="text-xs text-gray-500">Seguir favoritos, ligar depois, indicar ou marcar “já toquei com”.</p>
               </div>
-              <div className="flex items-center gap-2">
-                {(Object.keys(connectionLabels) as ConnectionType[]).map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => setConnectionType(type)}
-                    className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
-                      connectionType === type
-                        ? 'border-indigo-500 bg-indigo-600 text-white shadow'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-indigo-300'
-                    }`}
-                  >
-                    {connectionIcons[type]}
-                    {connectionLabels[type]}
-                  </button>
-                ))}
-              </div>
             </div>
 
             <div className="rounded-2xl border border-gray-100 bg-gray-50/70 p-4">
@@ -217,53 +206,43 @@ const Connections: React.FC = () => {
                 </div>
               </div>
 
-              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[320px] overflow-auto pr-1">
+              <div className="mt-3 grid grid-cols-1 gap-3 max-h-[500px] overflow-auto pr-1">
                 {filteredMusicians.map((m) => {
-                  const isSelected = selected?.id === m.id;
+                  const active = connectionMap[m.id] || {};
                   return (
-                    <button
-                      key={m.id}
-                      onClick={() => setSelected(m)}
-                      className={`text-left rounded-xl border p-3 transition ${
-                        isSelected ? 'border-indigo-500 bg-indigo-50 shadow' : 'border-gray-200 bg-white hover:border-indigo-300'
-                      }`}
-                    >
+                    <div key={m.id} className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-semibold text-gray-900">{m.full_name}</p>
                           <p className="text-xs text-gray-500">{INSTRUMENT_LABELS[m.instrument] || m.instrument}</p>
                         </div>
-                        {isSelected && <UserCheck className="h-5 w-5 text-indigo-600" />}
+                        <UserCheck className="h-5 w-5 text-indigo-600" />
                       </div>
-                    </button>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {(Object.keys(connectionLabels) as ConnectionType[]).map((type) => {
+                          const isOn = Boolean(active[type]);
+                          return (
+                            <button
+                              key={type}
+                              onClick={() => handleToggle(m.id, type)}
+                              className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                                isOn
+                                  ? 'border-indigo-500 bg-indigo-600 text-white shadow'
+                                  : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-indigo-300'
+                              }`}
+                              disabled={loadingAction}
+                            >
+                              {connectionIcons[type]}
+                              {connectionLabels[type]}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   );
                 })}
                 {filteredMusicians.length === 0 && (
                   <p className="text-sm text-gray-500 col-span-full">Nenhum músico encontrado.</p>
-                )}
-              </div>
-
-              <div className="mt-3 flex items-center gap-2">
-                <button
-                  onClick={handleCreate}
-                  disabled={!selected || loadingAction}
-                  className="btn-primary inline-flex items-center gap-2 disabled:opacity-50"
-                >
-                  {loadingAction ? (
-                    <div className="animate-spin h-4 w-4 border-b-2 border-white rounded-full" />
-                  ) : (
-                    <Plus className="h-4 w-4" />
-                  )}
-                  <span>Criar conexão</span>
-                </button>
-                {selected && (
-                  <button
-                    onClick={() => setSelected(null)}
-                    className="btn-secondary inline-flex items-center gap-2"
-                  >
-                    <X className="h-4 w-4" />
-                    <span>Limpar seleção</span>
-                  </button>
                 )}
               </div>
             </div>
@@ -296,6 +275,7 @@ const Connections: React.FC = () => {
                           <button
                             onClick={() => handleDelete(c.id)}
                             className="text-xs text-red-600 hover:text-red-700"
+                            disabled={loadingAction}
                           >
                             Remover
                           </button>
