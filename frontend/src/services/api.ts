@@ -13,6 +13,8 @@ import type {
   MarketplaceGig,
   MarketplaceApplication,
   GigStatus,
+  MusicianRating,
+  RatingInput,
 } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
@@ -193,6 +195,16 @@ export const eventService = {
     conflicts: Event[];
   }> => {
     const response = await api.post('/events/preview_conflicts/', payload);
+    return response.data;
+  },
+
+  canRate: async (id: number): Promise<{ can_rate: boolean; reason: string }> => {
+    const response = await api.get(`/events/${id}/can_rate/`);
+    return response.data;
+  },
+
+  submitRatings: async (id: number, ratings: RatingInput[]): Promise<MusicianRating[]> => {
+    const response = await api.post(`/events/${id}/submit_ratings/`, { ratings });
     return response.data;
   },
 };

@@ -52,6 +52,7 @@ export interface Event {
   status: 'proposed' | 'approved' | 'rejected' | 'confirmed' | 'cancelled';
   status_display: string;
   can_approve?: boolean;
+  can_rate?: boolean;
   created_by: number;
   created_by_name: string;
   approved_by?: number;
@@ -187,4 +188,23 @@ export interface MarketplaceGig {
   my_application?: MarketplaceApplication | null;
   created_at: string;
   updated_at: string;
+}
+
+// Avaliações de músicos
+export interface MusicianRating {
+  id: number;
+  event: number;
+  musician: number;
+  musician_name: string;
+  rated_by: number;
+  rated_by_name: string;
+  rating: 1 | 2 | 3 | 4 | 5;
+  comment?: string;
+  created_at: string;
+}
+
+export interface RatingInput {
+  musician_id: number;
+  rating: number;
+  comment?: string;
 }

@@ -14,6 +14,7 @@ import {
   Edit,
   Trash2,
   Ban,
+  Star,
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
@@ -22,9 +23,10 @@ import AvailabilityList from '../components/event/AvailabilityList';
 import EventTimeline from '../components/event/EventTimeline';
 import ConfirmModal from '../components/modals/ConfirmModal';
 import RejectModal from '../components/modals/RejectModal';
+import RatingModal from '../components/modals/RatingModal';
 import { useAuth } from '../contexts/AuthContext';
 import { eventService } from '../services/api';
-import type { Event, AvailabilityResponse } from '../types';
+import type { Event, AvailabilityResponse, RatingInput } from '../types';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -42,6 +44,8 @@ const EventDetail: React.FC = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingSuccess, setRatingSuccess] = useState(false);
 
   const loadEvent = useCallback(async () => {
     if (!id) return;
@@ -140,6 +144,23 @@ const EventDetail: React.FC = () => {
       await loadEvent();
     } catch (error) {
       console.error('Erro ao rejeitar evento:', error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSubmitRatings = async (ratings: RatingInput[]) => {
+    if (!id) return;
+
+    try {
+      setActionLoading(true);
+      await eventService.submitRatings(parseInt(id), ratings);
+      setShowRatingModal(false);
+      setRatingSuccess(true);
+      await loadEvent();
+    } catch (error) {
+      console.error('Erro ao enviar avaliações:', error);
+      alert('Erro ao enviar avaliações. Tente novamente.');
     } finally {
       setActionLoading(false);
     }
@@ -327,6 +348,37 @@ const EventDetail: React.FC = () => {
           </div>
         )}
 
+        {/* Seção de Avaliação de Músicos */}
+        {(event.can_rate || ratingSuccess) && (
+          <div className="card">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Star className="h-5 w-5 text-yellow-500" />
+              Avaliação dos Músicos
+            </h2>
+            {ratingSuccess ? (
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+                <p className="font-medium">Avaliações enviadas com sucesso!</p>
+                <p className="text-sm mt-1">Obrigado por avaliar os músicos deste evento.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-gray-600">
+                  O evento já ocorreu. Avalie os músicos que participaram para ajudar outros
+                  contratantes a escolher os melhores profissionais.
+                </p>
+                <button
+                  onClick={() => setShowRatingModal(true)}
+                  disabled={actionLoading}
+                  className="btn-primary flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-600"
+                >
+                  <Star className="h-5 w-5" />
+                  <span>Avaliar Músicos</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Disponibilidade de Todos os Músicos */}
         <AvailabilityList availabilities={event.availabilities || []} />
 
@@ -370,6 +422,15 @@ const EventDetail: React.FC = () => {
           confirmVariant="danger"
           loading={actionLoading}
           icon={<Trash2 className="h-5 w-5" />}
+        />
+
+        <RatingModal
+          isOpen={showRatingModal}
+          onClose={() => setShowRatingModal(false)}
+          onSubmit={handleSubmitRatings}
+          availabilities={event.availabilities || []}
+          eventTitle={event.title}
+          loading={actionLoading}
         />
       </div>
     </Layout>
