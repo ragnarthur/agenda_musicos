@@ -236,4 +236,48 @@ const Navbar: React.FC = () => {
   );
 };
 
+const NavLink: React.FC<{ to: string; icon: React.ReactNode; label: string; badge?: number; accent?: boolean }> = ({ to, icon, label, badge, accent }) => (
+  <Link
+    to={to}
+    className={`flex items-center space-x-1 transition-colors relative ${
+      accent ? 'text-yellow-600 hover:text-yellow-700' : 'text-gray-700 hover:text-primary-600'
+    }`}
+  >
+    {icon}
+    <span>{label}</span>
+    {badge && badge > 0 && (
+      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 min-w-5 px-1 flex items-center justify-center">
+        {badge}
+      </span>
+    )}
+  </Link>
+);
+
+const NavLinkMobile: React.FC<{
+  to: string;
+  icon: React.ReactNode;
+  label: string;
+  badge?: number;
+  accent?: boolean;
+  onClick?: () => void;
+}> = ({ to, icon, label, badge, accent, onClick }) => (
+  <Link
+    to={to}
+    onClick={onClick}
+    className={`flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition ${
+      accent ? 'border-yellow-200 bg-yellow-50 text-yellow-700' : 'border-gray-200 bg-white text-gray-700'
+    }`}
+  >
+    <span className="flex items-center gap-2">
+      {icon}
+      {label}
+    </span>
+    {badge && badge > 0 && (
+      <span className="bg-red-500 text-white text-xs font-bold rounded-full h-5 min-w-5 px-1 flex items-center justify-center">
+        {badge}
+      </span>
+    )}
+  </Link>
+);
+
 export default Navbar;
