@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Music, LogIn, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { showToast } from '../utils/toast';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -21,9 +22,9 @@ const Login: React.FC = () => {
 
     try {
       await login({ username, password });
+      showToast.success('Login realizado com sucesso!');
       navigate('/');
     } catch (err: unknown) {
-      console.error('Erro no login:', err);
       const error = err as { response?: { status?: number } };
       if (error.response?.status === 401) {
         setError('Usuário ou senha incorretos');
