@@ -152,6 +152,34 @@ export interface EventLog {
   created_at: string;
 }
 
+export type ConnectionType = 'follow' | 'call_later' | 'recommend' | 'played_with';
+
+export interface Connection {
+  id: number;
+  follower: Musician;
+  target: Musician;
+  connection_type: ConnectionType;
+  verified: boolean;
+  notes?: string | null;
+  created_at: string;
+}
+
+export interface MusicianBadge {
+  id: number;
+  musician: Musician;
+  slug: string;
+  name: string;
+  description?: string | null;
+  icon?: string | null;
+  awarded_at: string;
+}
+
+export interface RatingInput {
+  musician_id: number;
+  rating: number;
+  comment?: string;
+}
+
 // Marketplace - vagas e candidaturas de músicos freelancers
 export type GigStatus = 'open' | 'in_review' | 'hired' | 'closed' | 'cancelled';
 
