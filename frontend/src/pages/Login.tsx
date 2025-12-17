@@ -1,6 +1,6 @@
 // pages/Login.tsx
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Music, LogIn, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { showToast } from '../utils/toast';
@@ -122,6 +122,13 @@ const Login: React.FC = () => {
           </form>
           <div className="mt-6 text-center text-xs text-gray-500">
             Powered by <span className="font-semibold text-primary-600">DXM Tech</span> — Arthur Araújo
+          </div>
+
+          <div className="mt-4 text-center text-sm text-gray-600">
+            Ainda não tem conta?{' '}
+            <Link to="/cadastro" className="text-primary-600 hover:text-primary-700 font-medium">
+              Criar conta
+            </Link>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-﻿# agenda/urls.py
+# agenda/urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
@@ -8,6 +8,13 @@ from .views import (
     LeaderAvailabilityViewSet,
     ConnectionViewSet,
     BadgeViewSet,
+)
+from .registration_views import (
+    RegisterView,
+    VerifyEmailView,
+    RegistrationStatusView,
+    ProcessPaymentView,
+    ResendVerificationView,
 )
 
 # Router do DRF gera automaticamente as URLs
@@ -21,6 +28,12 @@ router.register('badges', BadgeViewSet, basename='badge')
 
 urlpatterns = [
     path('', include(router.urls)),
+    # Registro de novos usuários (público)
+    path('register/', RegisterView.as_view(), name='register'),
+    path('verify-email/', VerifyEmailView.as_view(), name='verify-email'),
+    path('registration-status/', RegistrationStatusView.as_view(), name='registration-status'),
+    path('process-payment/', ProcessPaymentView.as_view(), name='process-payment'),
+    path('resend-verification/', ResendVerificationView.as_view(), name='resend-verification'),
 ]
 
 """

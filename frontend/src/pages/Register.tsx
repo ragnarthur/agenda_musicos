@@ -1,0 +1,411 @@
+// pages/Register.tsx
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Music, UserPlus, Eye, EyeOff, Mail, User, Phone, Guitar, FileText, ArrowLeft, CheckCircle } from 'lucide-react';
+import { registrationService, type RegisterData } from '../services/api';
+import { showToast } from '../utils/toast';
+
+const INSTRUMENTS = [
+  { value: '', label: 'Selecione um instrumento' },
+  { value: 'vocal', label: 'Vocal' },
+  { value: 'guitar', label: 'Guitarra/Violão' },
+  { value: 'bass', label: 'Baixo' },
+  { value: 'drums', label: 'Bateria' },
+  { value: 'keyboard', label: 'Teclado' },
+  { value: 'percussion', label: 'Percussão/Outros' },
+];
+
+const Register: React.FC = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const [formData, setFormData] = useState<RegisterData & { confirmPassword: string }>({
+    email: '',
+    username: '',
+    password: '',
+    confirmPassword: '',
+    first_name: '',
+    last_name: '',
+    phone: '',
+    instrument: '',
+    bio: '',
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    // Limpa erro do campo quando usuário digita
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.email) {
+      newErrors.email = 'Email é obrigatório';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Email inválido';
+    }
+
+    if (!formData.username) {
+      newErrors.username = 'Nome de usuário é obrigatório';
+    } else if (formData.username.length < 3) {
+      newErrors.username = 'Mínimo de 3 caracteres';
+    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+      newErrors.username = 'Apenas letras, números e underscore';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Senha é obrigatória';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Mínimo de 6 caracteres';
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Senhas não conferem';
+    }
+
+    if (!formData.first_name) {
+      newErrors.first_name = 'Nome é obrigatório';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validate()) return;
+
+    setLoading(true);
+    setErrors({});
+
+    try {
+      const { confirmPassword, ...data } = formData;
+      const response = await registrationService.register(data);
+      setRegisteredEmail(response.email);
+      setSuccess(true);
+      showToast.success('Cadastro iniciado! Verifique seu email.');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: Record<string, string | string[]> } };
+      if (error.response?.data) {
+        const apiErrors: Record<string, string> = {};
+        for (const [key, value] of Object.entries(error.response.data)) {
+          apiErrors[key] = Array.isArray(value) ? value[0] : String(value);
+        }
+        setErrors(apiErrors);
+      } else {
+        showToast.error('Erro ao fazer cadastro. Tente novamente.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Tela de sucesso
+  if (success) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center px-4">
+        <div className="max-w-md w-full">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
+            <div className="flex justify-center mb-6">
+              <div className="bg-green-100 p-4 rounded-full">
+                <CheckCircle className="h-12 w-12 text-green-600" />
+              </div>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Verifique seu email!</h2>
+            <p className="text-gray-600 mb-6">
+              Enviamos um link de verificação para:
+              <br />
+              <strong className="text-gray-900">{registeredEmail}</strong>
+            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-blue-800">
+                Clique no link do email para confirmar sua conta e continuar para o pagamento.
+              </p>
+            </div>
+            <div className="space-y-3">
+              <Link
+                to="/login"
+                className="block w-full btn-primary text-center"
+              >
+                Ir para Login
+              </Link>
+              <button
+                onClick={() => {
+                  setSuccess(false);
+                  setFormData({
+                    email: '',
+                    username: '',
+                    password: '',
+                    confirmPassword: '',
+                    first_name: '',
+                    last_name: '',
+                    phone: '',
+                    instrument: '',
+                    bio: '',
+                  });
+                }}
+                className="block w-full btn-secondary text-center"
+              >
+                Fazer novo cadastro
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center px-4 py-8">
+      <div className="max-w-lg w-full">
+        {/* Logo e Título */}
+        <div className="text-center mb-6">
+          <div className="flex justify-center mb-4">
+            <div className="bg-white p-4 rounded-full shadow-lg">
+              <Music className="h-10 w-10 text-primary-600" />
+            </div>
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-2">Criar Conta</h1>
+          <p className="text-primary-100">Junte-se à comunidade de músicos</p>
+        </div>
+
+        {/* Card de Registro */}
+        <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Nome e Sobrenome */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Nome *
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                  <input
+                    id="first_name"
+                    name="first_name"
+                    type="text"
+                    value={formData.first_name}
+                    onChange={handleChange}
+                    className={`input-field pl-10 ${errors.first_name ? 'border-red-500' : ''}`}
+                    placeholder="Seu nome"
+                  />
+                </div>
+                {errors.first_name && <p className="text-red-500 text-xs mt-1">{errors.first_name}</p>}
+              </div>
+              <div>
+                <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Sobrenome
+                </label>
+                <input
+                  id="last_name"
+                  name="last_name"
+                  type="text"
+                  value={formData.last_name}
+                  onChange={handleChange}
+                  className="input-field"
+                  placeholder="Seu sobrenome"
+                />
+              </div>
+            </div>
+
+            {/* Email */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Email *
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={`input-field pl-10 ${errors.email ? 'border-red-500' : ''}`}
+                  placeholder="seu@email.com"
+                />
+              </div>
+              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+            </div>
+
+            {/* Username */}
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                Nome de usuário *
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-2.5 text-gray-400">@</span>
+                <input
+                  id="username"
+                  name="username"
+                  type="text"
+                  value={formData.username}
+                  onChange={handleChange}
+                  className={`input-field pl-8 ${errors.username ? 'border-red-500' : ''}`}
+                  placeholder="usuario123"
+                />
+              </div>
+              {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
+            </div>
+
+            {/* Senhas */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                  Senha *
+                </label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={handleChange}
+                    className={`input-field pr-10 ${errors.password ? 'border-red-500' : ''}`}
+                    placeholder="Min. 6 caracteres"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(prev => !prev)}
+                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+                  </button>
+                </div>
+                {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+              </div>
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirmar senha *
+                </label>
+                <div className="relative">
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className={`input-field pr-10 ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                    placeholder="Repita a senha"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(prev => !prev)}
+                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                  >
+                    {showConfirmPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+                  </button>
+                </div>
+                {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
+              </div>
+            </div>
+
+            {/* Telefone e Instrumento */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                  Telefone
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="input-field pl-10"
+                    placeholder="(11) 99999-9999"
+                  />
+                </div>
+              </div>
+              <div>
+                <label htmlFor="instrument" className="block text-sm font-medium text-gray-700 mb-1">
+                  Instrumento
+                </label>
+                <div className="relative">
+                  <Guitar className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                  <select
+                    id="instrument"
+                    name="instrument"
+                    value={formData.instrument}
+                    onChange={handleChange}
+                    className="input-field pl-10 appearance-none"
+                  >
+                    {INSTRUMENTS.map(inst => (
+                      <option key={inst.value} value={inst.value}>{inst.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Bio */}
+            <div>
+              <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
+                Sobre você
+              </label>
+              <div className="relative">
+                <FileText className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                <textarea
+                  id="bio"
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleChange}
+                  rows={3}
+                  className="input-field pl-10 resize-none"
+                  placeholder="Conte um pouco sobre sua experiência musical..."
+                />
+              </div>
+            </div>
+
+            {/* Botão Submit */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full btn-primary flex items-center justify-center space-x-2 disabled:opacity-50"
+            >
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>Cadastrando...</span>
+                </>
+              ) : (
+                <>
+                  <UserPlus className="h-5 w-5" />
+                  <span>Criar Conta</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Link para Login */}
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Já tem uma conta?{' '}
+              <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
+                Fazer login
+              </Link>
+            </p>
+          </div>
+
+          <div className="mt-4 text-center text-xs text-gray-500">
+            Powered by <span className="font-semibold text-primary-600">DXM Tech</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Register;
