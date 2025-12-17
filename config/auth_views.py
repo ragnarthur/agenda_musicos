@@ -7,6 +7,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from agenda.throttles import LoginRateThrottle
+
 ACCESS_COOKIE = 'access_token'
 REFRESH_COOKIE = 'refresh_token'
 
@@ -55,7 +57,9 @@ class CookieTokenMixin:
 class CookieTokenObtainPairView(CookieTokenMixin, TokenObtainPairView):
     """
     Versão do TokenObtainPairView que persiste os tokens em cookies HttpOnly.
+    Rate limited: 5 tentativas por minuto para prevenir brute force.
     """
+    throttle_classes = [LoginRateThrottle]
 
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)

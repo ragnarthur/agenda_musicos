@@ -13,6 +13,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
+from .throttles import CreateEventRateThrottle, PreviewConflictsRateThrottle, BurstRateThrottle
+
 from .models import (
     Musician,
     Event,
@@ -174,6 +176,21 @@ class EventViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated(), IsOwnerOrReadOnly()]
         return [IsAuthenticated()]
 
+    def get_throttles(self):
+        """
+        Throttles customizados por action:
+        - create: limite de criação de eventos
+        - preview_conflicts: limite de chamadas de preview
+        - approve/reject: limite burst para ações sensíveis
+        """
+        if self.action == 'create':
+            return [CreateEventRateThrottle()]
+        if self.action == 'preview_conflicts':
+            return [PreviewConflictsRateThrottle()]
+        if self.action in ['approve', 'reject', 'cancel']:
+            return [BurstRateThrottle()]
+        return super().get_throttles()
+
     def get_serializer_class(self):
         """Escolhe serializer baseado na action"""
         if self.action == 'list':
@@ -289,10 +306,17 @@ class EventViewSet(viewsets.ModelViewSet):
             end_dt = timezone.make_aware(datetime.combine(event_date, end_time_value))
 
         buffer = timedelta(minutes=40)
+        # Adiciona anotações para otimizar N+1
         conflicts = Event.objects.filter(
             status__in=['proposed', 'approved', 'confirmed'],
             start_datetime__lt=end_dt + buffer,
             end_datetime__gt=start_dt - buffer
+        ).select_related('created_by', 'approved_by').annotate(
+            avail_pending=Count('availabilities', filter=Q(availabilities__response='pending')),
+            avail_available=Count('availabilities', filter=Q(availabilities__response='available')),
+            avail_unavailable=Count('availabilities', filter=Q(availabilities__response='unavailable')),
+            avail_maybe=Count('availabilities', filter=Q(availabilities__response='maybe')),
+            avail_total=Count('availabilities'),
         )
 
         serializer = EventListSerializer(conflicts, many=True, context={'request': request})
@@ -899,13 +923,21 @@ class EventViewSet(viewsets.ModelViewSet):
             musician = request.user.musician_profile
             events = Event.objects.filter(
                 availabilities__musician=musician
-            ).distinct().prefetch_related('availabilities__musician__user')
-            
+            ).distinct().select_related('created_by', 'approved_by').prefetch_related(
+                'availabilities__musician__user'
+            ).annotate(
+                avail_pending=Count('availabilities', filter=Q(availabilities__response='pending')),
+                avail_available=Count('availabilities', filter=Q(availabilities__response='available')),
+                avail_unavailable=Count('availabilities', filter=Q(availabilities__response='unavailable')),
+                avail_maybe=Count('availabilities', filter=Q(availabilities__response='maybe')),
+                avail_total=Count('availabilities'),
+            )
+
             serializer = self.get_serializer(events, many=True)
             return Response(serializer.data)
         except Musician.DoesNotExist:
             return Response([], status=status.HTTP_200_OK)
-    
+
     @action(detail=False, methods=['get'])
     def pending_my_response(self, request):
         """
@@ -917,8 +949,16 @@ class EventViewSet(viewsets.ModelViewSet):
             events = Event.objects.filter(
                 availabilities__musician=musician,
                 availabilities__response='pending'
-            ).prefetch_related('availabilities__musician__user')
-            
+            ).select_related('created_by', 'approved_by').prefetch_related(
+                'availabilities__musician__user'
+            ).annotate(
+                avail_pending=Count('availabilities', filter=Q(availabilities__response='pending')),
+                avail_available=Count('availabilities', filter=Q(availabilities__response='available')),
+                avail_unavailable=Count('availabilities', filter=Q(availabilities__response='unavailable')),
+                avail_maybe=Count('availabilities', filter=Q(availabilities__response='maybe')),
+                avail_total=Count('availabilities'),
+            )
+
             serializer = EventListSerializer(events, many=True, context={'request': request})
             return Response(serializer.data)
         except Musician.DoesNotExist:

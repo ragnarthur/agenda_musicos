@@ -163,6 +163,11 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/hour',
         'user': '1000/hour',
+        # Throttles específicos para endpoints críticos
+        'login': '5/minute',           # Previne brute force
+        'create_event': '30/hour',     # Limita criação de eventos
+        'preview_conflicts': '60/minute',  # Preview durante criação
+        'burst': '10/minute',          # Rate para ações sensíveis
     },
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 50,
