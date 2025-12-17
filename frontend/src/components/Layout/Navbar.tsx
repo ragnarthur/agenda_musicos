@@ -1,7 +1,18 @@
 // components/Layout/Navbar.tsx
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Music, Calendar, Users, LogOut, Crown, Clock, Megaphone, HeartHandshake } from 'lucide-react';
+import {
+  Music,
+  Calendar,
+  Users,
+  LogOut,
+  Crown,
+  Clock,
+  Megaphone,
+  HeartHandshake,
+  Menu,
+  X,
+} from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { eventService } from '../../services/api';
 
@@ -10,6 +21,7 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const [pendingMyResponse, setPendingMyResponse] = useState(0);
   const [pendingApproval, setPendingApproval] = useState(0);
+  const [openMenu, setOpenMenu] = useState(false);
 
   const formatInstrument = () => {
     if (!user) return '';
@@ -60,9 +72,9 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="bg-white/80 backdrop-blur-xl shadow-md sticky top-0 z-40 border-b border-white/60">
+    <nav className="bg-white/90 backdrop-blur-xl shadow-md sticky top-0 z-40 border-b border-white/60">
       <div className="container mx-auto px-3 sm:px-4">
-        <div className="flex items-center justify-between min-h-[64px] py-2 gap-3 flex-wrap">
+        <div className="flex items-center justify-between min-h-[64px] py-2 gap-3">
           {/* Logo e Nome */}
           <Link
             to="/"
@@ -76,63 +88,18 @@ const Navbar: React.FC = () => {
 
           {/* Links de Navegação */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link
-              to="/eventos"
-              className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 transition-colors relative"
-            >
-              <Calendar className="h-5 w-5" />
-              <span>Eventos</span>
-              {pendingMyResponse > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {pendingMyResponse}
-                </span>
-              )}
-            </Link>
-
-            <Link
-              to="/musicos"
-              className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 transition-colors"
-            >
-              <Users className="h-5 w-5" />
-              <span>Músicos</span>
-            </Link>
-
-            <Link
-              to="/conexoes"
-              className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 transition-colors"
-            >
-              <HeartHandshake className="h-5 w-5" />
-              <span>Rede & Badges</span>
-            </Link>
-
-            <Link
-              to="/disponibilidades"
-              className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 transition-colors"
-            >
-              <Clock className="h-5 w-5" />
-              <span>Datas Disponíveis</span>
-            </Link>
-
-            <Link
-              to="/marketplace"
-              className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 transition-colors"
-            >
-              <Megaphone className="h-5 w-5" />
-              <span>Marketplace</span>
-            </Link>
-
-            <Link
+            <NavLink to="/eventos" icon={<Calendar className="h-5 w-5" />} label="Eventos" badge={pendingMyResponse} />
+            <NavLink to="/musicos" icon={<Users className="h-5 w-5" />} label="Músicos" />
+            <NavLink to="/conexoes" icon={<HeartHandshake className="h-5 w-5" />} label="Rede & Badges" />
+            <NavLink to="/disponibilidades" icon={<Clock className="h-5 w-5" />} label="Datas Disponíveis" />
+            <NavLink to="/marketplace" icon={<Megaphone className="h-5 w-5" />} label="Marketplace" />
+            <NavLink
               to="/aprovacoes"
-              className="flex items-center space-x-1 text-yellow-600 hover:text-yellow-700 transition-colors relative"
-            >
-              <Crown className="h-5 w-5" />
-              <span>Aprovações</span>
-              {pendingApproval > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {pendingApproval}
-                </span>
-              )}
-            </Link>
+              icon={<Crown className="h-5 w-5" />}
+              label="Aprovações"
+              badge={pendingApproval}
+              accent
+            />
           </div>
 
           {/* Usuário e Logout */}
@@ -150,15 +117,36 @@ const Navbar: React.FC = () => {
               </span>
             </div>
 
-            <button
-              onClick={handleLogout}
-              className="flex items-center space-x-1 text-gray-700 hover:text-red-600 transition-colors md:px-0 px-2"
-              title="Sair"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                className="md:hidden inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white p-2 text-gray-700 hover:border-primary-300 hover:text-primary-600"
+                onClick={() => setOpenMenu((prev) => !prev)}
+                aria-label="Abrir menu"
+              >
+                {openMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center space-x-1 text-gray-700 hover:text-red-600 transition-colors md:px-0 px-2"
+                title="Sair"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Menu Mobile */}
+        {openMenu && (
+          <div className="md:hidden border-t border-gray-100 py-3 space-y-2">
+            <NavLinkMobile to="/eventos" icon={<Calendar className="h-4 w-4" />} label="Eventos" badge={pendingMyResponse} onClick={() => setOpenMenu(false)} />
+            <NavLinkMobile to="/musicos" icon={<Users className="h-4 w-4" />} label="Músicos" onClick={() => setOpenMenu(false)} />
+            <NavLinkMobile to="/conexoes" icon={<HeartHandshake className="h-4 w-4" />} label="Rede & Badges" onClick={() => setOpenMenu(false)} />
+            <NavLinkMobile to="/disponibilidades" icon={<Clock className="h-4 w-4" />} label="Datas Disponíveis" onClick={() => setOpenMenu(false)} />
+            <NavLinkMobile to="/marketplace" icon={<Megaphone className="h-4 w-4" />} label="Marketplace" onClick={() => setOpenMenu(false)} />
+            <NavLinkMobile to="/aprovacoes" icon={<Crown className="h-4 w-4" />} label="Aprovações" badge={pendingApproval} accent onClick={() => setOpenMenu(false)} />
+          </div>
+        )}
       </div>
 
       {/* Menu Mobile */}
@@ -204,6 +192,14 @@ const Navbar: React.FC = () => {
           >
             <Users className="h-5 w-5" />
             <span className="text-[10px] mt-1 leading-none">Músicos</span>
+          </Link>
+
+          <Link
+            to="/conexoes"
+            className="w-20 flex-shrink-0 flex flex-col items-center justify-center text-gray-700 hover:text-primary-600 py-2 rounded-lg transition-colors"
+          >
+            <HeartHandshake className="h-5 w-5" />
+            <span className="text-[10px] mt-1 leading-none">Rede</span>
           </Link>
 
           <Link
