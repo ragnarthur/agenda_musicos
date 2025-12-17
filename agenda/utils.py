@@ -111,3 +111,57 @@ def get_user_organization(user):
         return musician.organization
     except Musician.DoesNotExist:
         return None
+
+
+def award_badges_for_musician(musician):
+    """
+    Avalia critérios e atribui badges para um músico.
+    Retorna lista de MusicianBadge recém-criadas.
+    """
+    from .models import MusicianBadge, Availability, Connection
+    from django.db.models import Count
+
+    awarded = []
+    now = timezone.now()
+    today = now.date()
+    last_30 = today - timedelta(days=30)
+
+    # Eventos tocados (disponível)
+    played_events = Availability.objects.filter(
+        musician=musician,
+        response='available',
+        event__event_date__lte=today
+    )
+    total_played = played_events.count()
+
+    played_last_30 = played_events.filter(event__event_date__gte=last_30).count()
+
+    # Conexões
+    connections_count = Connection.objects.filter(follower=musician).count()
+
+    # Definições de badges
+    badges_def = [
+        ('first_show', '🎸 Primeiro Show', 'Completou o primeiro evento', total_played >= 1),
+        ('five_stars', '⭐ 5 Estrelas', 'Manteve média 5.0', musician.average_rating == 5 and musician.total_ratings >= 5),
+        ('hot_month', '🔥 Em Alta', '10 shows no último mês', played_last_30 >= 10),
+        ('top_musician', '👑 Top Músico', 'Destaque pela avaliação', musician.total_ratings >= 10 and musician.average_rating >= 4.5),
+        ('networking', '🤝 Networking', '50 conexões criadas', connections_count >= 50),
+        ('busy_calendar', '📅 Agenda Cheia', '20 shows em 30 dias', played_last_30 >= 20),
+    ]
+
+    for slug, name, desc, condition in badges_def:
+        if not condition:
+            continue
+        badge, created = MusicianBadge.objects.get_or_create(
+            musician=musician,
+            slug=slug,
+            defaults={
+                'name': name,
+                'description': desc,
+                'icon': name.split(' ')[0],  # Emoji já incluso no nome
+            }
+        )
+        if created:
+            awarded.append(badge)
+
+    return awarded

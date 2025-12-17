@@ -2,7 +2,17 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.utils import timezone
-from .models import Musician, Event, Availability, LeaderAvailability, EventLog, EventInstrument, MusicianRating
+from .models import (
+    Musician,
+    Event,
+    Availability,
+    LeaderAvailability,
+    EventLog,
+    EventInstrument,
+    MusicianRating,
+    Connection,
+    MusicianBadge,
+)
 from .validators import validate_not_empty_string
 
 
@@ -476,3 +486,44 @@ class RatingSubmitSerializer(serializers.Serializer):
                 raise serializers.ValidationError('Rating deve ser entre 1 e 5.')
 
         return value
+
+
+class ConnectionSerializer(serializers.ModelSerializer):
+    follower = MusicianSerializer(read_only=True)
+    target = MusicianSerializer(read_only=True)
+    target_id = serializers.PrimaryKeyRelatedField(
+        source='target',
+        queryset=Musician.objects.filter(is_active=True),
+        write_only=True,
+    )
+
+    class Meta:
+        model = Connection
+        fields = [
+            'id',
+            'follower',
+            'target',
+            'target_id',
+            'connection_type',
+            'verified',
+            'notes',
+            'created_at',
+        ]
+        read_only_fields = ['id', 'follower', 'created_at']
+
+    def validate(self, attrs):
+        target = attrs.get('target') or getattr(self.instance, 'target', None)
+        request = self.context.get('request')
+        if request and hasattr(request.user, 'musician_profile') and target:
+            if request.user.musician_profile == target:
+                raise serializers.ValidationError('Você não pode criar conexão consigo mesmo.')
+        return attrs
+
+
+class MusicianBadgeSerializer(serializers.ModelSerializer):
+    musician = MusicianSerializer(read_only=True)
+
+    class Meta:
+        model = MusicianBadge
+        fields = ['id', 'musician', 'slug', 'name', 'description', 'icon', 'awarded_at']
+        read_only_fields = fields

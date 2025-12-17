@@ -617,3 +617,67 @@ class MusicianRating(models.Model):
         musician.average_rating = stats['avg'] or 0
         musician.total_ratings = stats['total'] or 0
         musician.save(update_fields=['average_rating', 'total_ratings'])
+
+
+class Connection(models.Model):
+    """
+    Relações entre músicos: seguir, salvar para ligar depois, indicar e "já toquei com".
+    """
+    CONNECTION_TYPES = [
+        ('follow', 'Seguir favorito'),
+        ('call_later', 'Ligar depois'),
+        ('recommend', 'Indicar para vaga'),
+        ('played_with', 'Já toquei com'),
+    ]
+
+    follower = models.ForeignKey(
+        Musician,
+        on_delete=models.CASCADE,
+        related_name='connections_from',
+        help_text='Músico que iniciou a conexão'
+    )
+    target = models.ForeignKey(
+        Musician,
+        on_delete=models.CASCADE,
+        related_name='connections_to',
+        help_text='Músico alvo da conexão'
+    )
+    connection_type = models.CharField(max_length=20, choices=CONNECTION_TYPES, default='follow')
+    verified = models.BooleanField(default=False, help_text='Marcação de "já toquei com" confirmada')
+    notes = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [('follower', 'target', 'connection_type')]
+        ordering = ['-created_at']
+        verbose_name = 'Conexão de Músico'
+        verbose_name_plural = 'Conexões de Músico'
+
+    def __str__(self):
+        return f"{self.follower} -> {self.target} ({self.connection_type})"
+
+
+class MusicianBadge(models.Model):
+    """
+    Badge/conquista atribuída a um músico.
+    As definições estão no código e só guardamos slug/nome/descrição no momento da premiação.
+    """
+    musician = models.ForeignKey(
+        Musician,
+        on_delete=models.CASCADE,
+        related_name='badges'
+    )
+    slug = models.CharField(max_length=50, help_text='Identificador da badge (ex: first_show)')
+    name = models.CharField(max_length=100)
+    description = models.CharField(max_length=255, blank=True, null=True)
+    icon = models.CharField(max_length=10, blank=True, null=True, help_text='Emoji opcional')
+    awarded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [('musician', 'slug')]
+        ordering = ['-awarded_at']
+        verbose_name = 'Badge de Músico'
+        verbose_name_plural = 'Badges de Músico'
+
+    def __str__(self):
+        return f"{self.musician} - {self.name}"
