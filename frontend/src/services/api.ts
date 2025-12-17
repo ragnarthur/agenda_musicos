@@ -15,6 +15,8 @@ import type {
   GigStatus,
   MusicianRating,
   RatingInput,
+  Connection,
+  MusicianBadge,
 } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
@@ -275,6 +277,31 @@ export const leaderAvailabilityService = {
 
   getAvailableMusicians: async (params: { date: string; instrument?: string }): Promise<AvailableMusician[]> => {
     const response = await api.get('/leader-availabilities/available_musicians/', { params });
+    return response.data;
+  },
+};
+
+// Connections Service
+export const connectionService = {
+  getAll: async (params?: { type?: string }): Promise<Connection[]> => {
+    const response = await api.get('/connections/', { params });
+    return response.data;
+  },
+
+  create: async (payload: { target_id: number; connection_type: string; notes?: string }): Promise<Connection> => {
+    const response = await api.post('/connections/', payload);
+    return response.data;
+  },
+
+  delete: async (id: number): Promise<void> => {
+    await api.delete(`/connections/${id}/`);
+  },
+};
+
+// Badges Service
+export const badgeService = {
+  getMine: async (): Promise<MusicianBadge[]> => {
+    const response = await api.get('/badges/');
     return response.data;
   },
 };

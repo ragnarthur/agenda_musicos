@@ -1,7 +1,7 @@
 // components/Layout/Navbar.tsx
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Music, Calendar, Users, LogOut, Crown, Clock, Megaphone } from 'lucide-react';
+import { Music, Calendar, Users, LogOut, Crown, Clock, Megaphone, HeartHandshake } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { eventService } from '../../services/api';
 
@@ -95,6 +95,14 @@ const Navbar: React.FC = () => {
             >
               <Users className="h-5 w-5" />
               <span>Músicos</span>
+            </Link>
+
+            <Link
+              to="/conexoes"
+              className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 transition-colors"
+            >
+              <HeartHandshake className="h-5 w-5" />
+              <span>Rede & Badges</span>
             </Link>
 
             <Link
