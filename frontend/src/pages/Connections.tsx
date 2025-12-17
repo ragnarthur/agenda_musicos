@@ -1,7 +1,7 @@
 // pages/Connections.tsx
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Star, Sparkles, HeartHandshake, Plus, X, Filter, UserCheck, Bookmark, PhoneCall } from 'lucide-react';
+import { Users, Star, Sparkles, HeartHandshake, Filter, UserCheck, Bookmark, PhoneCall } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { badgeService, connectionService, musicianService } from '../services/api';
