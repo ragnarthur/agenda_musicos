@@ -113,6 +113,42 @@ class Musician(models.Model):
         help_text='Total de avaliações recebidas'
     )
 
+    # Stripe subscription fields
+    stripe_customer_id = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text='Stripe Customer ID'
+    )
+    stripe_subscription_id = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text='Stripe Subscription ID'
+    )
+    subscription_plan = models.CharField(
+        max_length=20,
+        choices=[('monthly', 'Mensal'), ('annual', 'Anual')],
+        blank=True,
+        null=True,
+        help_text='Plano de assinatura'
+    )
+    subscription_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('active', 'Ativa'),
+            ('canceled', 'Cancelada'),
+            ('past_due', 'Pagamento Pendente'),
+        ],
+        default='active',
+        help_text='Status da assinatura Stripe'
+    )
+    subscription_ends_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text='Data de término da assinatura'
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:

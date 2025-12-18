@@ -416,4 +416,62 @@ export const registrationService = {
   },
 };
 
+// Payment Service Types (microserviço de pagamento)
+const PAYMENT_SERVICE_URL = import.meta.env.VITE_PAYMENT_SERVICE_URL || 'http://localhost:3001/api';
+
+export interface CheckoutSessionRequest {
+  payment_token: string;
+  plan: 'monthly' | 'annual';
+  success_url: string;
+  cancel_url: string;
+}
+
+export interface CheckoutSessionResponse {
+  session_id: string;
+  checkout_url: string;
+}
+
+export interface SessionStatusResponse {
+  status: string;
+  payment_status: string;
+  customer_email: string;
+  subscription_id: string;
+}
+
+// Payment Service (comunicação com microserviço Node.js)
+export const paymentService = {
+  createCheckoutSession: async (data: CheckoutSessionRequest): Promise<CheckoutSessionResponse> => {
+    const response = await fetch(`${PAYMENT_SERVICE_URL}/checkout/create-session`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw { response: { data: error } };
+    }
+
+    return response.json();
+  },
+
+  getSessionStatus: async (sessionId: string): Promise<SessionStatusResponse> => {
+    const response = await fetch(`${PAYMENT_SERVICE_URL}/checkout/session/${sessionId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw { response: { data: error } };
+    }
+
+    return response.json();
+  },
+};
+
 export default api;

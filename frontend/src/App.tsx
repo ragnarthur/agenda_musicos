@@ -21,6 +21,8 @@ const Connections = lazy(() => import('./pages/Connections'));
 const Register = lazy(() => import('./pages/Register'));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const Payment = lazy(() => import('./pages/Payment'));
+const PlanSelection = lazy(() => import('./pages/PlanSelection'));
+const PaymentSuccess = lazy(() => import('./pages/PaymentSuccess'));
 
 // Componente de loading para Suspense
 const PageLoader: React.FC = () => (
@@ -75,6 +77,8 @@ function AppRoutes() {
 
         <Route path="/verificar-email" element={<VerifyEmail />} />
         <Route path="/pagamento" element={<Payment />} />
+        <Route path="/planos" element={<PlanSelection />} />
+        <Route path="/pagamento/sucesso" element={<PaymentSuccess />} />
 
         <Route
           path="/eventos/agenda"

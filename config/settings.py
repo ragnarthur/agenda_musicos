@@ -211,6 +211,10 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='Agenda Musicos <norep
 # Frontend URL (para links de verificação de email)
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
 
+# Payment Service Integration
+PAYMENT_SERVICE_URL = config('PAYMENT_SERVICE_URL', default='http://localhost:3001')
+PAYMENT_SERVICE_SECRET = config('PAYMENT_SERVICE_SECRET', default='')
+
 # SECURITY HEADERS
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True

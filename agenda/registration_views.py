@@ -485,3 +485,145 @@ class ResendVerificationView(APIView):
         return Response({
             'message': 'Email de verificação reenviado!'
         })
+
+
+class PaymentCallbackView(APIView):
+    """
+    POST /api/payment-callback/
+    Chamado pelo Payment Service após pagamento aprovado via Stripe.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        # Validar secret compartilhado
+        service_secret = request.headers.get('X-Service-Secret')
+        expected_secret = getattr(settings, 'PAYMENT_SERVICE_SECRET', None)
+
+        if not expected_secret or service_secret != expected_secret:
+            logger.warning('Payment callback with invalid service secret')
+            return Response(
+                {'error': 'Unauthorized'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        payment_token = request.data.get('payment_token')
+        stripe_customer_id = request.data.get('stripe_customer_id')
+        stripe_subscription_id = request.data.get('stripe_subscription_id')
+        plan = request.data.get('plan')  # 'monthly' ou 'annual'
+
+        if not all([payment_token, stripe_customer_id, stripe_subscription_id, plan]):
+            return Response(
+                {'error': 'Missing required fields'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            pending = PendingRegistration.objects.get(payment_token=payment_token)
+        except PendingRegistration.DoesNotExist:
+            return Response(
+                {'error': 'Invalid payment token'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if pending.status == 'completed':
+            return Response(
+                {'error': 'Registration already completed'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            with transaction.atomic():
+                # Finaliza registro (cria User + Musician)
+                user = pending.complete_registration()
+
+                # Cria organização pessoal
+                org = Organization.objects.create(
+                    name=f"Org de {pending.first_name}",
+                    owner=user,
+                    subscription_status='active',
+                )
+
+                # Adiciona como membro owner
+                Membership.objects.create(
+                    user=user,
+                    organization=org,
+                    role='owner',
+                    status='active',
+                )
+
+                # Salvar IDs do Stripe no Musician
+                musician = user.musician_profile
+                musician.stripe_customer_id = stripe_customer_id
+                musician.stripe_subscription_id = stripe_subscription_id
+                musician.subscription_plan = plan
+                musician.subscription_status = 'active'
+                musician.save()
+
+                logger.info(f'Payment callback completed for user {user.username}')
+
+        except Exception as e:
+            logger.error(f'Error in payment callback: {e}')
+            return Response(
+                {'error': 'Failed to complete registration'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        # Envia email de boas-vindas
+        try:
+            ProcessPaymentView()._send_welcome_email(pending, user)
+        except Exception as e:
+            logger.error(f'Error sending welcome email: {e}')
+
+        return Response({
+            'success': True,
+            'user_id': user.id,
+            'username': user.username,
+        }, status=status.HTTP_201_CREATED)
+
+
+class SubscriptionStatusUpdateView(APIView):
+    """
+    POST /api/subscription-status-update/
+    Chamado pelo Payment Service quando status da assinatura muda.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        # Validar secret compartilhado
+        service_secret = request.headers.get('X-Service-Secret')
+        expected_secret = getattr(settings, 'PAYMENT_SERVICE_SECRET', None)
+
+        if not expected_secret or service_secret != expected_secret:
+            logger.warning('Subscription update with invalid service secret')
+            return Response(
+                {'error': 'Unauthorized'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        stripe_customer_id = request.data.get('stripe_customer_id')
+        new_status = request.data.get('status')
+        subscription_ends_at = request.data.get('subscription_ends_at')
+
+        if not stripe_customer_id or not new_status:
+            return Response(
+                {'error': 'Missing required fields'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            musician = Musician.objects.get(stripe_customer_id=stripe_customer_id)
+        except Musician.DoesNotExist:
+            return Response(
+                {'error': 'Musician not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        musician.subscription_status = new_status
+        if subscription_ends_at:
+            from django.utils.dateparse import parse_datetime
+            musician.subscription_ends_at = parse_datetime(subscription_ends_at)
+        musician.save()
+
+        logger.info(f'Subscription status updated for musician {musician.id}: {new_status}')
+
+        return Response({'success': True})
