@@ -13,6 +13,7 @@ const INSTRUMENTS = [
   { value: 'drums', label: 'Bateria' },
   { value: 'keyboard', label: 'Teclado' },
   { value: 'percussion', label: 'Percussão/Outros' },
+  { value: 'other', label: 'Outro (digite)' },
 ];
 
 const Register: React.FC = () => {
@@ -24,7 +25,7 @@ const Register: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [resending, setResending] = useState(false);
 
-  const [formData, setFormData] = useState<RegisterData & { confirmPassword: string }>({
+  const [formData, setFormData] = useState<RegisterData & { confirmPassword: string; instrumentOther: string }>({
     email: '',
     username: '',
     password: '',
@@ -33,12 +34,18 @@ const Register: React.FC = () => {
     last_name: '',
     phone: '',
     instrument: '',
+    instrumentOther: '',
     bio: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    // Se usuário muda o select de instrumento, limpa o campo customizado
+    if (name === 'instrument' && value !== 'other') {
+      setFormData(prev => ({ ...prev, instrument: value, instrumentOther: '' }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
     // Limpa erro do campo quando usuário digita
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -76,6 +83,18 @@ const Register: React.FC = () => {
       newErrors.first_name = 'Nome é obrigatório';
     }
 
+    if (!formData.instrument) {
+      newErrors.instrument = 'Instrumento é obrigatório';
+    }
+
+    if (formData.instrument === 'other') {
+      if (!formData.instrumentOther.trim()) {
+        newErrors.instrumentOther = 'Descreva seu instrumento';
+      } else if (formData.instrumentOther.trim().length < 3) {
+        newErrors.instrumentOther = 'Use pelo menos 3 caracteres';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -89,8 +108,12 @@ const Register: React.FC = () => {
     setErrors({});
 
     try {
-      const { confirmPassword, ...data } = formData;
-      const response = await registrationService.register(data);
+      const { confirmPassword, instrumentOther, ...data } = formData;
+      const instrumentValue =
+        data.instrument === 'other' ? instrumentOther.trim() : (data.instrument || '').trim();
+
+      const payload = { ...data, instrument: instrumentValue };
+      const response = await registrationService.register(payload);
       setRegisteredEmail(response.email);
       setSuccess(true);
       showToast.success('Cadastro iniciado! Verifique seu email.');
@@ -177,6 +200,7 @@ const Register: React.FC = () => {
                     last_name: '',
                     phone: '',
                     instrument: '',
+                    instrumentOther: '',
                     bio: '',
                   });
                 }}
@@ -366,13 +390,33 @@ const Register: React.FC = () => {
                     name="instrument"
                     value={formData.instrument}
                     onChange={handleChange}
-                    className="input-field pl-10 appearance-none"
+                    className={`input-field pl-10 appearance-none ${errors.instrument ? 'border-red-500' : ''}`}
                   >
                     {INSTRUMENTS.map(inst => (
                       <option key={inst.value} value={inst.value}>{inst.label}</option>
                     ))}
                   </select>
                 </div>
+                {errors.instrument && <p className="text-red-500 text-xs mt-1">{errors.instrument}</p>}
+                {formData.instrument === 'other' && (
+                  <div className="mt-3">
+                    <label htmlFor="instrumentOther" className="block text-sm font-medium text-gray-700 mb-1">
+                      Qual instrumento?
+                    </label>
+                    <input
+                      id="instrumentOther"
+                      name="instrumentOther"
+                      type="text"
+                      value={formData.instrumentOther}
+                      onChange={handleChange}
+                      className={`input-field ${errors.instrumentOther ? 'border-red-500' : ''}`}
+                      placeholder="Ex.: Violino, Trompete, Flauta..."
+                    />
+                    {errors.instrumentOther && (
+                      <p className="text-red-500 text-xs mt-1">{errors.instrumentOther}</p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
