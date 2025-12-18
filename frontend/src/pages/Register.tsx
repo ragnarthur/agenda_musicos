@@ -1,7 +1,7 @@
 // pages/Register.tsx
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Music, UserPlus, Eye, EyeOff, Mail, User, Phone, Guitar, FileText, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Music, UserPlus, Eye, EyeOff, Mail, User, Phone, Guitar, FileText, CheckCircle } from 'lucide-react';
 import { registrationService, type RegisterData } from '../services/api';
 import { showToast } from '../utils/toast';
 
@@ -16,7 +16,6 @@ const INSTRUMENTS = [
 ];
 
 const Register: React.FC = () => {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
