@@ -57,8 +57,18 @@ class RegisterView(APIView):
         first_name = data['first_name'].strip()
         last_name = data.get('last_name', '').strip()
         phone = data.get('phone', '').strip()
-        instrument = data.get('instrument', '')
+        instrument = str(data.get('instrument', '') or '').strip()
         bio = data.get('bio', '').strip()
+
+        if instrument and len(instrument) > 50:
+            errors['instrument'] = 'Instrumento deve ter no máximo 50 caracteres.'
+
+        # Normaliza instrumento para evitar duplicados (ex: violin/Violin)
+        if instrument:
+            instrument = instrument.lower()
+
+        if errors:
+            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
         # Validação de email
         if User.objects.filter(email=email).exists():

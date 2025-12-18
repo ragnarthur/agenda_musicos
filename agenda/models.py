@@ -67,6 +67,7 @@ class Musician(models.Model):
     Modelo para representar músicos da banda.
     Separado do User para permitir extensões futuras sem mexer no auth.
     """
+    # Lista de referência usada em seeds; instrumentos agora podem ser livres
     INSTRUMENT_CHOICES = [
         ('vocal', 'Vocal'),
         ('guitar', 'Guitarra'),
@@ -75,7 +76,7 @@ class Musician(models.Model):
         ('keyboard', 'Teclado'),
         ('percussion', 'Percussão/Outros'),
     ]
-    
+
     ROLE_CHOICES = [
         ('member', 'Membro'),
         ('leader', 'Líder/Aprovador'),  # Roberto será leader
@@ -93,7 +94,7 @@ class Musician(models.Model):
         null=True,
         blank=True
     )
-    instrument = models.CharField(max_length=20, choices=INSTRUMENT_CHOICES)
+    instrument = models.CharField(max_length=50, help_text='Instrumento principal do músico')
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='member')
     bio = models.TextField(blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
@@ -526,8 +527,7 @@ class EventInstrument(models.Model):
         related_name='required_instruments'
     )
     instrument = models.CharField(
-        max_length=20,
-        choices=Musician.INSTRUMENT_CHOICES,
+        max_length=50,
         help_text='Tipo de instrumento necessário'
     )
     quantity = models.PositiveIntegerField(
@@ -701,15 +701,6 @@ class PendingRegistration(models.Model):
         ('expired', 'Expirado'),
     ]
 
-    INSTRUMENT_CHOICES = [
-        ('vocal', 'Vocal'),
-        ('guitar', 'Guitarra/Violão'),
-        ('bass', 'Baixo'),
-        ('drums', 'Bateria'),
-        ('keyboard', 'Teclado'),
-        ('percussion', 'Percussão/Outros'),
-    ]
-
     # Dados do cadastro
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=150)
@@ -717,7 +708,7 @@ class PendingRegistration(models.Model):
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150, blank=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
-    instrument = models.CharField(max_length=20, choices=INSTRUMENT_CHOICES, blank=True, null=True)
+    instrument = models.CharField(max_length=50, blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
 
     # Status e tokens
