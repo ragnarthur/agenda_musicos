@@ -15,6 +15,8 @@ from .registration_views import (
     RegistrationStatusView,
     ProcessPaymentView,
     ResendVerificationView,
+    PaymentCallbackView,
+    SubscriptionStatusUpdateView,
 )
 
 # Router do DRF gera automaticamente as URLs
@@ -34,6 +36,9 @@ urlpatterns = [
     path('registration-status/', RegistrationStatusView.as_view(), name='registration-status'),
     path('process-payment/', ProcessPaymentView.as_view(), name='process-payment'),
     path('resend-verification/', ResendVerificationView.as_view(), name='resend-verification'),
+    # Callbacks do Payment Service (chamados pelo microserviço)
+    path('payment-callback/', PaymentCallbackView.as_view(), name='payment-callback'),
+    path('subscription-status-update/', SubscriptionStatusUpdateView.as_view(), name='subscription-status-update'),
 ]
 
 """
