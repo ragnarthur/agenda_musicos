@@ -22,6 +22,7 @@ const Register: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [resending, setResending] = useState(false);
 
   const [formData, setFormData] = useState<RegisterData & { confirmPassword: string }>({
     email: '',
@@ -126,11 +127,37 @@ const Register: React.FC = () => {
               <br />
               <strong className="text-gray-900">{registeredEmail}</strong>
             </p>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4 text-left">
+              <p className="text-sm text-gray-800 font-medium">Como receber o código:</p>
+              <ul className="list-disc list-inside text-sm text-gray-600 mt-2 space-y-1">
+                <li>O email é enviado por <strong>catsinthegarden01@gmail.com</strong>.</li>
+                <li>Procure pelo código/link na caixa de entrada e no spam.</li>
+                <li>Clique no link para confirmar e seguir para o pagamento.</li>
+              </ul>
+            </div>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
               <p className="text-sm text-blue-800">
                 Clique no link do email para confirmar sua conta e continuar para o pagamento.
               </p>
             </div>
+            <button
+              type="button"
+              onClick={async () => {
+                setResending(true);
+                try {
+                  await registrationService.resendVerification(registeredEmail);
+                  showToast.success('Email reenviado! Verifique sua caixa de entrada.');
+                } catch {
+                  showToast.error('Não foi possível reenviar agora. Tente novamente.');
+                } finally {
+                  setResending(false);
+                }
+              }}
+              disabled={resending}
+              className="w-full btn-secondary mb-3 disabled:opacity-50"
+            >
+              {resending ? 'Reenviando...' : 'Reenviar email de verificação'}
+            </button>
             <div className="space-y-3">
               <Link
                 to="/login"
