@@ -120,15 +120,16 @@ const Login: React.FC = () => {
               )}
             </button>
           </form>
-          <div className="mt-6 text-center text-xs text-gray-500">
-            Powered by <span className="font-semibold text-primary-600">DXM Tech</span> — Arthur Araújo
-          </div>
 
           <div className="mt-4 text-center text-sm text-gray-600">
             Ainda não tem conta?{' '}
             <Link to="/cadastro" className="text-primary-600 hover:text-primary-700 font-medium">
               Criar conta
             </Link>
+          </div>
+
+          <div className="mt-6 text-center text-xs text-gray-500">
+            Powered by <span className="font-semibold text-primary-600">DXM Tech</span> — Arthur Araújo
           </div>
         </div>
       </div>
