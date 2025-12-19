@@ -5,6 +5,9 @@ import { Music, CheckCircle, XCircle, Loader2, CreditCard, AlertCircle, Clock, S
 import { registrationService } from '../services/api';
 import { showToast } from '../utils/toast';
 
+const useStripe = import.meta.env.VITE_USE_STRIPE === 'true';
+const allowFake = import.meta.env.VITE_ALLOW_FAKE_PAYMENT === 'true';
+
 const VerifyEmail: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -15,6 +18,7 @@ const VerifyEmail: React.FC = () => {
   const [paymentToken, setPaymentToken] = useState<string | null>(null);
   const [userData, setUserData] = useState<{ email: string; first_name: string } | null>(null);
   const [trialStarted, setTrialStarted] = useState(false);
+  const [autoRedirecting, setAutoRedirecting] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -25,6 +29,22 @@ const VerifyEmail: React.FC = () => {
 
     verifyEmail();
   }, [token]);
+
+  useEffect(() => {
+    if (status === 'success' && paymentToken && !trialStarted) {
+      // Redireciona automaticamente para o próximo passo do pagamento
+      setAutoRedirecting(true);
+      const timer = setTimeout(() => {
+        if (useStripe && !allowFake) {
+          navigate(`/planos?token=${paymentToken}`);
+        } else {
+          navigate(`/pagamento?token=${paymentToken}`);
+        }
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [status, paymentToken, trialStarted, navigate]);
 
   const verifyEmail = async () => {
     if (!token) return;
@@ -58,8 +78,6 @@ const VerifyEmail: React.FC = () => {
   const handleContinueToPayment = () => {
     if (paymentToken) {
       // Redireciona para seleção de planos (Stripe real) ou pagamento fictício
-      const useStripe = import.meta.env.VITE_USE_STRIPE === 'true';
-      const allowFake = import.meta.env.VITE_ALLOW_FAKE_PAYMENT === 'true';
       if (useStripe && !allowFake) {
         navigate(`/planos?token=${paymentToken}`);
       } else {
@@ -195,6 +213,9 @@ const VerifyEmail: React.FC = () => {
                         <p className="text-sm text-gray-600 mb-3">
                           Comece com acesso completo imediato via assinatura.
                         </p>
+                        {autoRedirecting && (
+                          <p className="text-xs text-gray-500 mb-2">Redirecionando automaticamente...</p>
+                        )}
                         <button
                           onClick={handleContinueToPayment}
                           className="w-full btn-secondary flex items-center justify-center gap-2"
