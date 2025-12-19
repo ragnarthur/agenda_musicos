@@ -42,8 +42,8 @@ const Login: React.FC = () => {
         {/* Logo e Título */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="bg-white p-4 rounded-full shadow-lg logo-glow">
-              <Music className="h-12 w-12 text-primary-700 logo-animated" />
+            <div className="p-4 rounded-full shadow-lg logo-glow bg-gradient-to-br from-primary-500 via-indigo-500 to-emerald-400">
+              <Music className="h-12 w-12 text-white drop-shadow-lg" />
             </div>
           </div>
           <h1 className="text-4xl font-bold text-white mb-2 logo-animated drop-shadow-lg">GigFlow</h1>

@@ -80,8 +80,8 @@ const Navbar: React.FC = () => {
             to="/"
             className="flex items-center space-x-3 hover:scale-[1.01] transition-transform min-w-fit"
           >
-            <div className="h-10 w-10 rounded-full bg-white/80 flex items-center justify-center shadow-inner logo-glow">
-              <Music className="h-6 w-6 text-primary-700 logo-animated" />
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary-500 via-indigo-500 to-emerald-400 flex items-center justify-center shadow-lg logo-glow">
+              <Music className="h-6 w-6 text-white" />
             </div>
             <div className="flex flex-col leading-tight">
               <span className="text-lg sm:text-xl font-bold logo-animated">
