@@ -157,18 +157,35 @@ const PlanSelection: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center px-4 py-8">
       <div className="max-w-4xl w-full">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="bg-white p-4 rounded-full shadow-lg">
-              <Music className="h-10 w-10 text-primary-600" />
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="bg-white p-3 rounded-full shadow-lg">
+              <Music className="h-8 w-8 text-primary-600" />
+            </div>
+            <div>
+              <p className="text-sm text-primary-100 uppercase tracking-wide">GigFlow</p>
+              <h1 className="text-3xl font-bold text-white leading-tight">Escolha seu plano</h1>
+              {status && (
+                <p className="text-primary-100 text-sm">
+                  Olá <strong>{status.first_name}</strong>, escolha o melhor plano para você.
+                </p>
+              )}
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Escolha seu plano</h1>
-          {status && (
-            <p className="text-primary-100">
-              Olá <strong>{status.first_name}</strong>, escolha o melhor plano para você.
-            </p>
-          )}
+          <div className="flex items-center gap-3">
+            <Link
+              to="/cadastro"
+              className="hidden sm:inline-block text-white/80 hover:text-white text-sm underline-offset-4 hover:underline"
+            >
+              Voltar ao cadastro
+            </Link>
+            <Link
+              to="/login"
+              className="text-white/90 border border-white/40 px-4 py-2 rounded-lg text-sm hover:bg-white/10 transition"
+            >
+              Ir para login
+            </Link>
+          </div>
         </div>
 
         {error && (

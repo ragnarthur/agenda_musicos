@@ -168,7 +168,7 @@ const Payment: React.FC = () => {
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Cadastro Concluído!</h2>
             <p className="text-gray-600 mb-6">
-              Bem-vindo à <strong>Agenda Músicos</strong>!
+              Bem-vindo à <strong>GigFlow</strong>!
               <br />
               Sua conta está ativa e pronta para uso.
             </p>
@@ -223,7 +223,7 @@ const Payment: React.FC = () => {
           <div className="bg-white/10 backdrop-blur rounded-2xl p-6 text-white">
             <div className="flex items-center gap-3 mb-6">
               <Music className="h-8 w-8" />
-              <h2 className="text-2xl font-bold">Agenda Músicos</h2>
+              <h2 className="text-2xl font-bold">GigFlow</h2>
             </div>
 
             <h3 className="text-xl font-semibold mb-4">Plano Profissional</h3>
