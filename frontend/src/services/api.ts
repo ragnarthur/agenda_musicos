@@ -67,6 +67,16 @@ api.interceptors.response.use(
       ? publicAuthPaths.some((path) => originalRequest.url?.includes(path))
       : false;
 
+    const publicRoutes = [
+      '/login',
+      '/cadastro',
+      '/verificar-email',
+      '/pagamento',
+      '/planos',
+      '/planos/sucesso',
+    ];
+    const isOnPublicRoute = publicRoutes.some((route) => window.location.pathname.startsWith(route));
+
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       if (isPublicAuthPath) {
         return Promise.reject(error);
@@ -77,7 +87,10 @@ api.interceptors.response.use(
         await refreshAuthToken();
         return api(originalRequest);
       } catch (refreshError) {
-        if (window.location.pathname !== '/login') {
+        const isUserProfileCall = originalRequest.url?.includes('/musicians/me/');
+
+        // Em rotas públicas, não redirecionamos para login (ex: verificação de email)
+        if (!isPublicAuthPath && !isOnPublicRoute && !isUserProfileCall && window.location.pathname !== '/login') {
           window.location.href = '/login';
         }
         return Promise.reject(refreshError);
