@@ -247,7 +247,7 @@ const Register: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Nome *
+                  Nome{errors.first_name && <span className="text-red-500 ml-1">*</span>}
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
@@ -282,7 +282,7 @@ const Register: React.FC = () => {
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email *
+                Email{errors.email && <span className="text-red-500 ml-1">*</span>}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
@@ -302,7 +302,8 @@ const Register: React.FC = () => {
             {/* Username */}
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                Nome de usuário * <span className="text-xs text-gray-500">(usado para login)</span>
+                Nome de usuário <span className="text-xs text-gray-500">(usado para login)</span>
+                {errors.username && <span className="text-red-500 ml-1">*</span>}
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-2.5 text-gray-400">@</span>
@@ -326,7 +327,7 @@ const Register: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Senha *
+                  Senha{errors.password && <span className="text-red-500 ml-1">*</span>}
                 </label>
                 <div className="relative">
                   <input
@@ -350,7 +351,7 @@ const Register: React.FC = () => {
               </div>
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                  Confirmar senha *
+                  Confirmar senha{errors.confirmPassword && <span className="text-red-500 ml-1">*</span>}
                 </label>
                 <div className="relative">
                   <input
@@ -395,7 +396,7 @@ const Register: React.FC = () => {
               </div>
               <div>
                 <label htmlFor="instrument" className="block text-sm font-medium text-gray-700 mb-1">
-                  Instrumento
+                  Instrumento{errors.instrument && <span className="text-red-500 ml-1">*</span>}
                 </label>
                 <div className="relative">
                   <Guitar className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
