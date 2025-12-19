@@ -78,12 +78,17 @@ const Navbar: React.FC = () => {
           {/* Logo e Nome */}
           <Link
             to="/"
-            className="flex items-center space-x-2 hover:scale-[1.01] transition-transform min-w-fit"
+            className="flex items-center space-x-3 hover:scale-[1.01] transition-transform min-w-fit"
           >
             <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center shadow-inner">
               <Music className="h-6 w-6 text-primary-600" />
             </div>
-            <span className="text-lg sm:text-xl font-bold text-gray-900">GigFlow</span>
+            <div className="flex flex-col leading-tight">
+              <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-primary-600 via-purple-600 to-emerald-500 bg-clip-text text-transparent">
+                GigFlow
+              </span>
+              <span className="text-[11px] text-gray-500 hidden sm:block">Agenda para músicos</span>
+            </div>
           </Link>
 
           {/* Links de Navegação */}
