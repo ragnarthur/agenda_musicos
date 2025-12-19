@@ -38,16 +38,16 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
+      <div className="w-full max-w-lg">
         {/* Logo e Título */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <div className="flex justify-center mb-4">
             <div className="p-4 rounded-full shadow-lg logo-glow bg-gradient-to-br from-primary-500 via-indigo-500 to-emerald-400">
               <Music className="h-12 w-12 text-white drop-shadow-lg" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-1 logo-animated drop-shadow-lg">GigFlow</h1>
-          <p className="text-primary-50 font-medium text-sm">Agenda inteligente para músicos</p>
+          <h1 className="text-4xl font-bold text-white mb-2 logo-animated drop-shadow-lg">GigFlow</h1>
+          <p className="text-primary-50 font-medium text-sm tracking-wide">Agenda inteligente para músicos</p>
         </div>
 
         {/* Card de Login */}
