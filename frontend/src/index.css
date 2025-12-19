@@ -200,6 +200,21 @@
   100% { background-position: 0% 40%; transform: scale(1); }
 }
 
+/* Logo animated gradient */
+.logo-animated {
+  background: linear-gradient(120deg, #312e81, #6366f1, #22d3ee, #10b981, #a855f7);
+  background-size: 220% 220%;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: logoShift 8s ease-in-out infinite;
+}
+
+@keyframes logoShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animated-bg,
   .hero-animated,
