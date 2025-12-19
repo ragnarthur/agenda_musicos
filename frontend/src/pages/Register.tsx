@@ -40,13 +40,11 @@ const Register: React.FC = () => {
 
   const formatPhone = (value: string) => {
     const digits = value.replace(/\D/g, '').slice(0, 11);
-    if (digits.length > 6) {
-      return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-    }
-    if (digits.length > 2) {
-      return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-    }
-    return digits;
+    if (digits.length <= 2) return digits;
+    const area = digits.slice(0, 2);
+    const mid = digits.slice(2, 7);
+    const end = digits.slice(7);
+    return end ? `(${area}) ${mid}-${end}` : `(${area}) ${digits.slice(2)}`;
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
