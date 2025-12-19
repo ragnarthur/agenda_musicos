@@ -21,6 +21,8 @@ const Connections = lazy(() => import('./pages/Connections'));
 const Register = lazy(() => import('./pages/Register'));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const Payment = lazy(() => import('./pages/Payment'));
+const Plans = lazy(() => import('./pages/Plans'));
+const PlanSuccess = lazy(() => import('./pages/PlanSuccess'));
 const PlanSelection = lazy(() => import('./pages/PlanSelection'));
 const PaymentSuccess = lazy(() => import('./pages/PaymentSuccess'));
 
@@ -77,6 +79,8 @@ function AppRoutes() {
 
         <Route path="/verificar-email" element={<VerifyEmail />} />
         <Route path="/pagamento" element={<Payment />} />
+        <Route path="/planos" element={<Plans />} />
+        <Route path="/planos/sucesso" element={<PlanSuccess />} />
         <Route path="/planos" element={<PlanSelection />} />
         <Route path="/pagamento/sucesso" element={<PaymentSuccess />} />
 

@@ -363,7 +363,11 @@ class ProcessPaymentView(APIView):
 
                 # Atualiza músico com organização
                 musician = user.musician_profile
-                # Se quiser associar organização ao músico, faça aqui
+                # Marca assinatura como ativa no pagamento fictício
+                musician.subscription_status = 'active'
+                musician.subscription_plan = 'monthly'
+                musician.subscription_ends_at = None
+                musician.save()
 
         except Exception as e:
             logger.error(f'Erro ao finalizar cadastro: {e}')
@@ -543,7 +547,7 @@ class StartTrialView(APIView):
                 org = Organization.objects.create(
                     name=f"Org de {pending.first_name}",
                     owner=user,
-                    subscription_status='trialing',
+                    subscription_status='trial',
                 )
 
                 # Adiciona como membro owner
