@@ -214,6 +214,7 @@ FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
 # Payment Service Integration
 PAYMENT_SERVICE_URL = config('PAYMENT_SERVICE_URL', default='http://localhost:3001')
 PAYMENT_SERVICE_SECRET = config('PAYMENT_SERVICE_SECRET', default='')
+USE_STRIPE = config('USE_STRIPE', default=False, cast=bool)
 
 # SECURITY HEADERS
 SECURE_BROWSER_XSS_FILTER = True
