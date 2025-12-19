@@ -487,6 +487,135 @@ class ResendVerificationView(APIView):
         })
 
 
+class StartTrialView(APIView):
+    """
+    POST /api/start-trial/
+    Inicia período de teste gratuito de 7 dias.
+    Cria User + Musician sem exigir pagamento.
+    """
+    permission_classes = [AllowAny]
+    throttle_classes = [BurstRateThrottle]
+
+    def post(self, request):
+        payment_token = request.data.get('payment_token')
+
+        if not payment_token:
+            return Response(
+                {'error': 'Token não fornecido.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            pending = PendingRegistration.objects.get(payment_token=payment_token)
+        except PendingRegistration.DoesNotExist:
+            return Response(
+                {'error': 'Token inválido ou expirado.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Verifica se já foi completado
+        if pending.status == 'completed':
+            return Response(
+                {'error': 'Cadastro já foi concluído.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Verifica se email foi verificado
+        if pending.status == 'pending_email':
+            return Response(
+                {'error': 'Email ainda não foi verificado.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Verifica se expirou
+        if pending.is_expired():
+            return Response(
+                {'error': 'Cadastro expirado. Faça o cadastro novamente.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            with transaction.atomic():
+                # Cria User + Musician (trial)
+                user = pending.complete_registration()
+
+                # Cria organização pessoal
+                org = Organization.objects.create(
+                    name=f"Org de {pending.first_name}",
+                    owner=user,
+                    subscription_status='trialing',
+                )
+
+                # Adiciona como membro owner
+                Membership.objects.create(
+                    user=user,
+                    organization=org,
+                    role='owner',
+                    status='active',
+                )
+
+                # Inicia trial de 7 dias
+                musician = user.musician_profile
+                musician.start_trial(days=7)
+
+                logger.info(f'Trial started for user {user.username}')
+
+        except Exception as e:
+            logger.error(f'Error starting trial: {e}')
+            return Response(
+                {'error': 'Erro ao iniciar período de teste.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        # Envia email de boas-vindas (trial)
+        try:
+            self._send_trial_welcome_email(pending, user)
+        except Exception as e:
+            logger.error(f'Error sending trial welcome email: {e}')
+
+        return Response({
+            'message': 'Período de teste iniciado com sucesso!',
+            'username': user.username,
+            'email': user.email,
+            'trial_days': 7,
+        }, status=status.HTTP_201_CREATED)
+
+    def _send_trial_welcome_email(self, pending: PendingRegistration, user):
+        """Envia email de boas-vindas para trial"""
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+
+        subject = 'Bem-vindo à Agenda Músicos - Seu teste gratuito começou!'
+        message = f"""
+Olá {pending.first_name}!
+
+Seu período de teste gratuito de 7 dias começou!
+
+Agora você pode acessar a plataforma com suas credenciais:
+- Usuário: {user.username}
+- Link: {frontend_url}/login
+
+Durante o período de teste você tem acesso a todas as funcionalidades:
+- Gerenciar seus shows e eventos
+- Conectar-se com outros músicos
+- Receber convites para tocar
+- Marketplace de vagas
+- E muito mais!
+
+Após 7 dias, você precisará assinar um plano para continuar usando.
+
+Bons shows!
+Equipe Agenda Músicos
+        """
+
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=True,
+        )
+
+
 class PaymentCallbackView(APIView):
     """
     POST /api/payment-callback/

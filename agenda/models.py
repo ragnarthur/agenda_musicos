@@ -136,17 +136,31 @@ class Musician(models.Model):
     subscription_status = models.CharField(
         max_length=20,
         choices=[
+            ('trial', 'Período de Teste'),
             ('active', 'Ativa'),
             ('canceled', 'Cancelada'),
             ('past_due', 'Pagamento Pendente'),
+            ('expired', 'Expirada'),
         ],
-        default='active',
-        help_text='Status da assinatura Stripe'
+        default='trial',
+        help_text='Status da assinatura'
     )
     subscription_ends_at = models.DateTimeField(
         blank=True,
         null=True,
         help_text='Data de término da assinatura'
+    )
+
+    # Trial fields
+    trial_ends_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text='Data de término do período de teste'
+    )
+    trial_started_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text='Data de início do período de teste'
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -162,6 +176,51 @@ class Musician(models.Model):
     def is_leader(self):
         """Verifica se o músico é líder/aprovador"""
         return self.role == 'leader'
+
+    def is_on_trial(self):
+        """Verifica se está em período de teste"""
+        if self.subscription_status != 'trial':
+            return False
+        if not self.trial_ends_at:
+            return False
+        return timezone.now() < self.trial_ends_at
+
+    def trial_days_remaining(self):
+        """Retorna dias restantes do trial"""
+        if not self.is_on_trial():
+            return 0
+        delta = self.trial_ends_at - timezone.now()
+        return max(0, delta.days)
+
+    def has_active_subscription(self):
+        """Verifica se tem assinatura ativa (paga ou trial)"""
+        if self.is_on_trial():
+            return True
+        if self.subscription_status == 'active':
+            if self.subscription_ends_at:
+                return timezone.now() < self.subscription_ends_at
+            return True
+        return False
+
+    def get_subscription_info(self):
+        """Retorna informações da assinatura para o frontend"""
+        return {
+            'status': self.subscription_status,
+            'is_trial': self.is_on_trial(),
+            'trial_days_remaining': self.trial_days_remaining(),
+            'trial_ends_at': self.trial_ends_at.isoformat() if self.trial_ends_at else None,
+            'plan': self.subscription_plan,
+            'has_active_subscription': self.has_active_subscription(),
+            'subscription_ends_at': self.subscription_ends_at.isoformat() if self.subscription_ends_at else None,
+        }
+
+    def start_trial(self, days=7):
+        """Inicia período de teste"""
+        from datetime import timedelta
+        self.subscription_status = 'trial'
+        self.trial_started_at = timezone.now()
+        self.trial_ends_at = timezone.now() + timedelta(days=days)
+        self.save()
 
 
 class Event(models.Model):
