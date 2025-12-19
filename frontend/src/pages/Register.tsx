@@ -38,11 +38,24 @@ const Register: React.FC = () => {
     bio: '',
   });
 
+  const formatPhone = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 11);
+    if (digits.length > 6) {
+      return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+    }
+    if (digits.length > 2) {
+      return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    }
+    return digits;
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     // Se usuário muda o select de instrumento, limpa o campo customizado
     if (name === 'instrument' && value !== 'other') {
       setFormData(prev => ({ ...prev, instrument: value, instrumentOther: '' }));
+    } else if (name === 'phone') {
+      setFormData(prev => ({ ...prev, phone: formatPhone(value) }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
