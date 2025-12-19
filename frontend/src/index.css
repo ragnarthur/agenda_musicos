@@ -207,12 +207,36 @@
   -webkit-background-clip: text;
   color: transparent;
   animation: logoShift 8s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(79, 70, 229, 0.35));
 }
 
 @keyframes logoShift {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
+}
+
+/* Glow pulsante para ícone/logo */
+.logo-glow {
+  position: relative;
+}
+
+.logo-glow::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.25), transparent 55%),
+              radial-gradient(circle at 70% 70%, rgba(16, 185, 129, 0.22), transparent 60%);
+  filter: blur(12px);
+  opacity: 0.75;
+  animation: glowPulse 5s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes glowPulse {
+  0%, 100% { transform: scale(0.98); opacity: 0.65; }
+  50% { transform: scale(1.04); opacity: 0.95; }
 }
 
 @media (prefers-reduced-motion: reduce) {
