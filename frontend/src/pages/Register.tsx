@@ -302,7 +302,7 @@ const Register: React.FC = () => {
             {/* Username */}
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                Nome de usuário *
+                Nome de usuário * <span className="text-xs text-gray-500">(usado para login)</span>
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-2.5 text-gray-400">@</span>
@@ -317,6 +317,9 @@ const Register: React.FC = () => {
                 />
               </div>
               {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
+              {!errors.username && formData.username && (
+                <p className="text-xs text-gray-500 mt-1">Seu login será @{formData.username}</p>
+              )}
             </div>
 
             {/* Senhas */}
