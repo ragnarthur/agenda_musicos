@@ -46,9 +46,7 @@ const Login: React.FC = () => {
               <Music className="h-12 w-12 text-primary-600" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-primary-50 via-white to-emerald-200 bg-clip-text text-transparent">
-            GigFlow
-          </h1>
+          <h1 className="text-4xl font-bold text-white mb-2 logo-animated">GigFlow</h1>
           <p className="text-primary-100">Agenda inteligente para músicos</p>
         </div>
 

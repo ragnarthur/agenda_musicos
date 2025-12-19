@@ -84,7 +84,7 @@ const Navbar: React.FC = () => {
               <Music className="h-6 w-6 text-primary-600" />
             </div>
             <div className="flex flex-col leading-tight">
-              <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-primary-600 via-purple-600 to-emerald-500 bg-clip-text text-transparent">
+              <span className="text-lg sm:text-xl font-bold logo-animated">
                 GigFlow
               </span>
               <span className="text-[11px] text-gray-500 hidden sm:block">Agenda para músicos</span>
