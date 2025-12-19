@@ -53,7 +53,25 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as typeof error.config & { _retry?: boolean };
 
+    // Endpoints públicos (não autenticados) não devem redirecionar para login
+    const publicAuthPaths = [
+      '/register/',
+      '/verify-email/',
+      '/registration-status/',
+      '/process-payment/',
+      '/resend-verification/',
+      '/start-trial/',
+    ];
+
+    const isPublicAuthPath = originalRequest?.url
+      ? publicAuthPaths.some((path) => originalRequest.url?.includes(path))
+      : false;
+
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+      if (isPublicAuthPath) {
+        return Promise.reject(error);
+      }
+
       originalRequest._retry = true;
       try {
         await refreshAuthToken();
