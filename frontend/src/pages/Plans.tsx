@@ -119,7 +119,7 @@ const Plans: React.FC = () => {
             <div className="flex items-center gap-3 mb-6">
               <Sparkles className="h-6 w-6 text-primary-600" />
               <div>
-                <p className="text-sm text-gray-500">Escolha seu plano</p>
+                <p className="text-sm text-gray-500">GigFlow · para músicos</p>
                 <h1 className="text-2xl font-bold text-gray-900">Acesse tudo na GigFlow</h1>
               </div>
             </div>

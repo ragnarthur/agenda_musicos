@@ -222,7 +222,7 @@ const Payment: React.FC = () => {
           {/* Coluna da esquerda - Benefícios */}
           <div className="bg-white/10 backdrop-blur rounded-2xl p-6 text-white">
             <div className="flex items-center gap-3 mb-6">
-              <Music className="h-8 w-8" />
+              <Music className="h-8 w-8 text-white" />
               <h2 className="text-2xl font-bold">GigFlow</h2>
             </div>
 
