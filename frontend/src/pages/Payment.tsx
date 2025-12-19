@@ -216,7 +216,7 @@ const Payment: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center px-4 py-8">
       <div className="max-w-4xl w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Coluna da esquerda - Benefícios */}
