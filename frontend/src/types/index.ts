@@ -9,11 +9,21 @@ export interface User {
   full_name: string;
 }
 
+export interface SubscriptionInfo {
+  status: 'trial' | 'active' | 'canceled' | 'past_due' | 'expired';
+  is_trial: boolean;
+  trial_days_remaining: number;
+  trial_ends_at: string | null;
+  plan: 'monthly' | 'annual' | null;
+  has_active_subscription: boolean;
+  subscription_ends_at: string | null;
+}
+
 export interface Musician {
   id: number;
   user: User;
   full_name: string;
-  instrument: 'vocal' | 'guitar' | 'bass' | 'drums' | 'keyboard' | 'percussion';
+  instrument: 'vocal' | 'guitar' | 'bass' | 'drums' | 'keyboard' | 'percussion' | string;
   role: 'member' | 'leader';
   is_leader: boolean;
   bio?: string;
@@ -22,6 +32,7 @@ export interface Musician {
   public_email?: string | null;
   is_active: boolean;
   created_at: string;
+  subscription_info?: SubscriptionInfo;
 }
 
 export interface Availability {

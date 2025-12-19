@@ -45,15 +45,16 @@ class MusicianSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
     is_leader = serializers.SerializerMethodField()
     public_email = serializers.SerializerMethodField()
+    subscription_info = serializers.SerializerMethodField()
 
     class Meta:
         model = Musician
         fields = [
             'id', 'user', 'full_name', 'instrument', 'role',
             'is_leader', 'bio', 'phone', 'instagram', 'public_email', 'is_active',
-            'average_rating', 'total_ratings', 'created_at'
+            'average_rating', 'total_ratings', 'created_at', 'subscription_info'
         ]
-        read_only_fields = ['id', 'average_rating', 'total_ratings', 'created_at']
+        read_only_fields = ['id', 'average_rating', 'total_ratings', 'created_at', 'subscription_info']
 
     def get_full_name(self, obj):
         return obj.user.get_full_name() or obj.user.username
@@ -63,6 +64,13 @@ class MusicianSerializer(serializers.ModelSerializer):
 
     def get_public_email(self, obj):
         return obj.user.email or None
+
+    def get_subscription_info(self, obj):
+        # Só retorna info de assinatura para o próprio usuário
+        request = self.context.get('request')
+        if request and request.user == obj.user:
+            return obj.get_subscription_info()
+        return None
 
 
 class AvailabilitySerializer(serializers.ModelSerializer):

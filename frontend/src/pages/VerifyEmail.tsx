@@ -1,7 +1,7 @@
 // pages/VerifyEmail.tsx
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { Music, CheckCircle, XCircle, Loader2, CreditCard, AlertCircle } from 'lucide-react';
+import { Music, CheckCircle, XCircle, Loader2, CreditCard, AlertCircle, Clock, Sparkles } from 'lucide-react';
 import { registrationService } from '../services/api';
 import { showToast } from '../utils/toast';
 
@@ -10,10 +10,11 @@ const VerifyEmail: React.FC = () => {
   const navigate = useNavigate();
   const token = searchParams.get('token');
 
-  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'already_verified'>('loading');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'already_verified' | 'starting_trial'>('loading');
   const [message, setMessage] = useState('');
   const [paymentToken, setPaymentToken] = useState<string | null>(null);
   const [userData, setUserData] = useState<{ email: string; first_name: string } | null>(null);
+  const [trialStarted, setTrialStarted] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -66,6 +67,24 @@ const VerifyEmail: React.FC = () => {
     }
   };
 
+  const handleStartTrial = async () => {
+    if (!paymentToken) return;
+
+    setStatus('starting_trial');
+
+    try {
+      const response = await registrationService.startTrial(paymentToken);
+      setTrialStarted(true);
+      setStatus('success');
+      showToast.success(`Período de teste iniciado! Você tem ${response.trial_days} dias grátis.`);
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } };
+      setStatus('error');
+      setMessage(error.response?.data?.error || 'Erro ao iniciar período de teste.');
+      showToast.error('Erro ao iniciar período de teste.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center px-4">
       <div className="max-w-md w-full">
@@ -98,42 +117,111 @@ const VerifyEmail: React.FC = () => {
                   <CheckCircle className="h-12 w-12 text-green-600" />
                 </div>
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">Email Verificado!</h2>
-              {userData && (
-                <p className="text-gray-600 mb-4">
-                  Olá <strong>{userData.first_name}</strong>, seu email foi confirmado com sucesso.
-                </p>
-              )}
 
-              {paymentToken && (
+              {trialStarted ? (
                 <>
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Período de Teste Ativado!</h2>
+                  <p className="text-gray-600 mb-4">
+                    Olá <strong>{userData?.first_name}</strong>, seu período de teste de 7 dias começou!
+                  </p>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
                     <div className="flex items-start gap-3">
-                      <CreditCard className="h-5 w-5 text-blue-600 mt-0.5" />
+                      <Sparkles className="h-5 w-5 text-green-600 mt-0.5" />
                       <div className="text-left">
-                        <p className="text-sm font-medium text-blue-800">Próximo passo: Pagamento</p>
-                        <p className="text-sm text-blue-700">
-                          Para ativar sua conta, complete o pagamento da assinatura.
+                        <p className="text-sm font-medium text-green-800">Acesso completo por 7 dias</p>
+                        <p className="text-sm text-green-700">
+                          Explore todas as funcionalidades da plataforma gratuitamente.
                         </p>
                       </div>
                     </div>
                   </div>
+                  <Link to="/login" className="block w-full btn-primary text-center">
+                    Fazer Login
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Email Verificado!</h2>
+                  {userData && (
+                    <p className="text-gray-600 mb-4">
+                      Olá <strong>{userData.first_name}</strong>, seu email foi confirmado com sucesso.
+                    </p>
+                  )}
 
-                  <button
-                    onClick={handleContinueToPayment}
-                    className="w-full btn-primary flex items-center justify-center gap-2"
-                  >
-                    <CreditCard className="h-5 w-5" />
-                    Continuar para Pagamento
-                  </button>
+                  {paymentToken && (
+                    <>
+                      <p className="text-gray-600 mb-6">
+                        Escolha como deseja começar:
+                      </p>
+
+                      {/* Opção Trial - Destacada */}
+                      <div className="bg-gradient-to-r from-primary-50 to-purple-50 border-2 border-primary-200 rounded-lg p-4 mb-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Clock className="h-5 w-5 text-primary-600" />
+                          <span className="text-sm font-semibold text-primary-700 bg-primary-100 px-2 py-0.5 rounded">
+                            Recomendado
+                          </span>
+                        </div>
+                        <h3 className="font-semibold text-gray-900 mb-1">Teste Grátis por 7 Dias</h3>
+                        <p className="text-sm text-gray-600 mb-3">
+                          Acesse todas as funcionalidades sem compromisso. Sem cartão de crédito.
+                        </p>
+                        <button
+                          onClick={handleStartTrial}
+                          className="w-full btn-primary flex items-center justify-center gap-2"
+                        >
+                          <Sparkles className="h-5 w-5" />
+                          Começar Teste Grátis
+                        </button>
+                      </div>
+
+                      {/* Divisor */}
+                      <div className="relative my-4">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-gray-200"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                          <span className="bg-white px-3 text-gray-500">ou</span>
+                        </div>
+                      </div>
+
+                      {/* Opção Pagamento */}
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CreditCard className="h-5 w-5 text-gray-600" />
+                        </div>
+                        <h3 className="font-semibold text-gray-900 mb-1">Assinar Agora</h3>
+                        <p className="text-sm text-gray-600 mb-3">
+                          Comece com acesso completo imediato via assinatura.
+                        </p>
+                        <button
+                          onClick={handleContinueToPayment}
+                          className="w-full btn-secondary flex items-center justify-center gap-2"
+                        >
+                          <CreditCard className="h-5 w-5" />
+                          Ver Planos
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {!paymentToken && (
+                    <Link to="/login" className="block w-full btn-primary text-center">
+                      Ir para Login
+                    </Link>
+                  )}
                 </>
               )}
+            </div>
+          )}
 
-              {!paymentToken && (
-                <Link to="/login" className="block w-full btn-primary text-center">
-                  Ir para Login
-                </Link>
-              )}
+          {status === 'starting_trial' && (
+            <div className="text-center">
+              <div className="flex justify-center mb-6">
+                <Loader2 className="h-16 w-16 text-primary-600 animate-spin" />
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Ativando seu período de teste...</h2>
+              <p className="text-gray-600">Aguarde um momento</p>
             </div>
           )}
 

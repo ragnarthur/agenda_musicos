@@ -414,6 +414,16 @@ export const registrationService = {
     const response = await api.post('/resend-verification/', { email });
     return response.data;
   },
+
+  startTrial: async (paymentToken: string): Promise<{
+    message: string;
+    username: string;
+    email: string;
+    trial_days: number;
+  }> => {
+    const response = await api.post('/start-trial/', { payment_token: paymentToken });
+    return response.data;
+  },
 };
 
 // Payment Service Types (microserviço de pagamento)

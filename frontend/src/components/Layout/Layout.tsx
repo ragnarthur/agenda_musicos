@@ -1,6 +1,7 @@
 // components/Layout/Layout.tsx
 import React from 'react';
 import Navbar from './Navbar';
+import TrialBanner from '../TrialBanner';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -15,6 +16,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="absolute top-10 right-[-120px] h-80 w-80 rounded-full bg-indigo-200/50 blur-3xl" />
         <div className="absolute bottom-[-140px] left-1/3 h-96 w-96 rounded-full bg-emerald-200/40 blur-[120px]" />
       </div>
+      <TrialBanner />
       <Navbar />
 
       <div className="relative z-10 flex min-h-screen flex-col pt-6 sm:pt-8">
