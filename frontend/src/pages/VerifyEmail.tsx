@@ -59,7 +59,8 @@ const VerifyEmail: React.FC = () => {
     if (paymentToken) {
       // Redireciona para seleção de planos (Stripe real) ou pagamento fictício
       const useStripe = import.meta.env.VITE_USE_STRIPE === 'true';
-      if (useStripe) {
+      const allowFake = import.meta.env.VITE_ALLOW_FAKE_PAYMENT === 'true';
+      if (useStripe && !allowFake) {
         navigate(`/planos?token=${paymentToken}`);
       } else {
         navigate(`/pagamento?token=${paymentToken}`);

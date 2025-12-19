@@ -293,7 +293,9 @@ class ProcessPaymentView(APIView):
     throttle_classes = [BurstRateThrottle]
 
     def post(self, request):
-        if getattr(settings, 'USE_STRIPE', False):
+        use_stripe = getattr(settings, 'USE_STRIPE', False)
+        allow_fake = getattr(settings, 'ALLOW_FAKE_PAYMENT', False)
+        if use_stripe and not allow_fake:
             return Response(
                 {'error': 'Pagamento direto desativado. Use o checkout Stripe.'},
                 status=status.HTTP_403_FORBIDDEN
