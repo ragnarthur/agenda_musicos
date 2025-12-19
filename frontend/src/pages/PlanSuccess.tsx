@@ -106,8 +106,8 @@ const PlanSuccess: React.FC = () => {
       <div className="max-w-md w-full">
         <div className="text-center mb-6">
           <div className="flex justify-center mb-4">
-            <div className="bg-white p-4 rounded-full shadow-lg">
-              <CreditCard className="h-10 w-10 text-primary-600" />
+            <div className="p-4 rounded-full shadow-lg logo-glow bg-gradient-to-br from-primary-500 via-indigo-500 to-emerald-400">
+              <CreditCard className="h-10 w-10 text-white" />
             </div>
           </div>
           <h1 className="text-2xl font-bold logo-animated">GigFlow</h1>
