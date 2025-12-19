@@ -253,8 +253,8 @@ const Register: React.FC = () => {
         {/* Logo e Título */}
         <div className="text-center mb-6">
           <div className="flex justify-center mb-4">
-            <div className="bg-white p-4 rounded-full shadow-lg">
-              <Music className="h-10 w-10 text-primary-600" />
+            <div className="p-4 rounded-full shadow-lg logo-glow bg-gradient-to-br from-primary-500 via-indigo-500 to-emerald-400">
+              <Music className="h-10 w-10 text-white" />
             </div>
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Criar Conta</h1>
