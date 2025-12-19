@@ -1,14 +1,14 @@
 // pages/Dashboard.tsx
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, Crown, Plus, Users, ChevronRight, Star, ListChecks, Zap } from 'lucide-react';
+import { Calendar, CalendarClock, Clock, Crown, Plus, Users, ChevronRight, Star, ListChecks, Zap } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { useAuth } from '../contexts/AuthContext';
 import { eventService } from '../services/api';
 import type { Availability, Event } from '../types';
-import { format, parseISO } from 'date-fns';
+import { format, isToday, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import TiltCard from '../components/common/TiltCard';
 
@@ -54,6 +54,7 @@ const Dashboard: React.FC = () => {
   const { user, isLeader } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [pendingEvents, setPendingEvents] = useState<Event[]>([]);
+  const [todayEvents, setTodayEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const nextEvent = events[0];
   const prefersReducedMotion = useReducedMotion();
@@ -70,6 +71,28 @@ const Dashboard: React.FC = () => {
     return 0;
   };
 
+  const isEventToday = (event: Event): boolean => {
+    if (event.event_date) {
+      try {
+        return isToday(parseISO(event.event_date));
+      } catch {
+        // continua tentando com start_datetime
+      }
+    }
+
+    if (event.start_datetime) {
+      try {
+        return isToday(parseISO(event.start_datetime));
+      } catch {
+        return false;
+      }
+    }
+
+    return false;
+  };
+
+  const formatTime = (time?: string) => (time ? time.slice(0, 5) : '--:--');
+
   const loadData = React.useCallback(async () => {
     try {
       setLoading(true);
@@ -79,6 +102,7 @@ const Dashboard: React.FC = () => {
       ]);
 
       const sorted = [...allEvents].sort((a, b) => getStartDateTime(a) - getStartDateTime(b));
+      setTodayEvents(allEvents.filter(isEventToday));
       setEvents(sorted.slice(0, 5)); // Próximos 5 eventos
       setPendingEvents(pending);
     } catch (error) {
@@ -222,6 +246,85 @@ const Dashboard: React.FC = () => {
             )}
           </div>
         </motion.div>
+
+        {/* Alertas do dia */}
+        {todayEvents.length > 0 && (
+          <motion.div
+            className="relative overflow-hidden rounded-2xl border border-amber-200 bg-amber-50/90 backdrop-blur p-4 shadow-lg"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 140, damping: 18, delay: 0.05 }}
+          >
+            <div className="hero-animated opacity-40" />
+            <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-start gap-3">
+                <div className="h-12 w-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shadow-inner">
+                  <CalendarClock className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-amber-700 font-semibold">Eventos de hoje</p>
+                  <h3 className="text-lg sm:text-xl font-bold text-amber-900">
+                    {todayEvents.length === 1
+                      ? 'Você tem 1 evento hoje'
+                      : `Você tem ${todayEvents.length} eventos hoje`}
+                  </h3>
+                  <p className="text-sm text-amber-800">
+                    Revise horário, local e equipe antes de sair para o show.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid w-full md:w-auto grid-cols-1 sm:grid-cols-2 gap-2">
+                {todayEvents.slice(0, 3).map((event) => {
+                  const dateLabel = (() => {
+                    try {
+                      return event.event_date
+                        ? format(parseISO(event.event_date), "dd 'de' MMMM", { locale: ptBR })
+                        : 'Data a definir';
+                    } catch {
+                      return 'Data a definir';
+                    }
+                  })();
+
+                  return (
+                    <Link
+                      key={event.id}
+                      to={`/eventos/${event.id}`}
+                      className="relative overflow-hidden rounded-xl border border-amber-200 bg-white/90 backdrop-blur px-3 py-2 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5"
+                    >
+                      <div className="hero-animated opacity-30" />
+                      <div className="relative flex items-start justify-between gap-3">
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold text-gray-900 line-clamp-1">{event.title}</p>
+                          <p className="text-xs text-gray-600 line-clamp-1">{event.location || 'Local a definir'}</p>
+                          <p className="text-[11px] text-gray-500">
+                            Hoje · {formatTime(event.start_time)} - {formatTime(event.end_time)}
+                          </p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                      </div>
+                      <div className="relative mt-2 flex items-center gap-2 flex-wrap">
+                        <span className={`status-chip ${event.status || 'default'}`}>{getStatusLabel(event)}</span>
+                        <span className="pill-date">
+                          <Clock className="h-4 w-4 text-primary-600" />
+                          {dateLabel}
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
+                {todayEvents.length > 3 && (
+                  <Link
+                    to="/eventos"
+                    className="inline-flex items-center justify-center rounded-xl border border-amber-200 bg-amber-100 text-amber-800 px-3 py-2 text-sm font-semibold hover:bg-amber-200 transition-colors"
+                  >
+                    Ver todos (+{todayEvents.length - 3})
+                  </Link>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
