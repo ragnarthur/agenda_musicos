@@ -47,6 +47,27 @@ const Register: React.FC = () => {
     return end ? `(${area}) ${mid}-${end}` : `(${area}) ${digits.slice(2)}`;
   };
 
+  const getPasswordStrength = (password: string) => {
+    let score = 0;
+    if (password.length >= 6) score += 1;
+    if (password.length >= 8) score += 1;
+    if (/[A-Z]/.test(password)) score += 1;
+    if (/[a-z]/.test(password)) score += 1;
+    if (/\d/.test(password)) score += 1;
+    if (/[^A-Za-z0-9]/.test(password)) score += 1;
+
+    const levels = [
+      { label: 'Muito fraca', color: 'bg-red-400' },
+      { label: 'Fraca', color: 'bg-orange-400' },
+      { label: 'Média', color: 'bg-yellow-400' },
+      { label: 'Boa', color: 'bg-emerald-500' },
+      { label: 'Forte', color: 'bg-emerald-600' },
+    ];
+
+    const idx = Math.min(levels.length - 1, Math.max(0, score - 1));
+    return { score, ...levels[idx] };
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     // Se usuário muda o select de instrumento, limpa o campo customizado
@@ -348,6 +369,22 @@ const Register: React.FC = () => {
                   </button>
                 </div>
                 {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+                {!errors.password && formData.password && (
+                  <div className="mt-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="flex-1 h-2 rounded-full bg-gray-200 overflow-hidden">
+                        <div
+                          className={`${getPasswordStrength(formData.password).color} h-2 transition-all`}
+                          style={{ width: `${(getPasswordStrength(formData.password).score / 6) * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-600">{getPasswordStrength(formData.password).label}</span>
+                    </div>
+                    <p className="text-[11px] text-gray-500">
+                      Use letras maiúsculas/minúsculas, números e símbolos para fortalecer sua senha.
+                    </p>
+                  </div>
+                )}
               </div>
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
