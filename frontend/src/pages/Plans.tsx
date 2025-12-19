@@ -120,7 +120,7 @@ const Plans: React.FC = () => {
               <Sparkles className="h-6 w-6 text-primary-600" />
               <div>
                 <p className="text-sm text-gray-500">Escolha seu plano</p>
-                <h1 className="text-2xl font-bold text-gray-900">Acesse tudo da Agenda Músicos</h1>
+                <h1 className="text-2xl font-bold text-gray-900">Acesse tudo na GigFlow</h1>
               </div>
             </div>
 
@@ -204,7 +204,7 @@ const Plans: React.FC = () => {
               </li>
               <li className="flex gap-2">
                 <CheckCircle className="h-5 w-5 text-emerald-300 mt-0.5" />
-                <span>Sem salvar dados de cartão na Agenda Músicos.</span>
+                <span>Sem salvar dados de cartão na GigFlow.</span>
               </li>
               <li className="flex gap-2">
                 <CheckCircle className="h-5 w-5 text-emerald-300 mt-0.5" />

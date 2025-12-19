@@ -83,7 +83,7 @@ const Navbar: React.FC = () => {
             <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center shadow-inner">
               <Music className="h-6 w-6 text-primary-600" />
             </div>
-            <span className="text-lg sm:text-xl font-bold text-gray-900">Agenda Músicos</span>
+            <span className="text-lg sm:text-xl font-bold text-gray-900">GigFlow</span>
           </Link>
 
           {/* Links de Navegação */}

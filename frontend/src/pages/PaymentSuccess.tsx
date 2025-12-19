@@ -110,7 +110,7 @@ const PaymentSuccess: React.FC = () => {
           </h2>
 
           <p className="text-gray-600 mb-6">
-            Bem-vindo à <strong>Agenda Músicos</strong>!
+            Bem-vindo à <strong>GigFlow</strong>!
             <br />
             Sua conta está ativa e pronta para uso.
           </p>

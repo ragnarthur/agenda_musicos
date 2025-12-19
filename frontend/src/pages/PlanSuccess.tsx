@@ -110,7 +110,7 @@ const PlanSuccess: React.FC = () => {
               <CreditCard className="h-10 w-10 text-primary-600" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-white">Agenda Músicos</h1>
+          <h1 className="text-2xl font-bold text-white">GigFlow</h1>
         </div>
 
         <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
