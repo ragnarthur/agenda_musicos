@@ -19,6 +19,7 @@ from .registration_views import (
     PaymentCallbackView,
     SubscriptionStatusUpdateView,
 )
+from django.conf import settings
 
 # Router do DRF gera automaticamente as URLs
 router = DefaultRouter()
@@ -35,6 +36,7 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('verify-email/', VerifyEmailView.as_view(), name='verify-email'),
     path('registration-status/', RegistrationStatusView.as_view(), name='registration-status'),
+    # Pagamento fictício só disponível quando Stripe está desativado
     path('process-payment/', ProcessPaymentView.as_view(), name='process-payment'),
     path('resend-verification/', ResendVerificationView.as_view(), name='resend-verification'),
     path('start-trial/', StartTrialView.as_view(), name='start-trial'),

@@ -18,6 +18,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 from django.db import transaction
+from django.conf import settings
 
 from rest_framework import status
 from rest_framework.views import APIView
@@ -292,6 +293,12 @@ class ProcessPaymentView(APIView):
     throttle_classes = [BurstRateThrottle]
 
     def post(self, request):
+        if getattr(settings, 'USE_STRIPE', False):
+            return Response(
+                {'error': 'Pagamento direto desativado. Use o checkout Stripe.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         payment_token = request.data.get('payment_token')
         card_number = request.data.get('card_number', '')
         card_holder = request.data.get('card_holder', '')
