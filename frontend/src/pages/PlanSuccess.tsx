@@ -102,7 +102,7 @@ const PlanSuccess: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center px-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-6">
           <div className="flex justify-center mb-4">
