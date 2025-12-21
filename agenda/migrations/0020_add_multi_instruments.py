@@ -8,12 +8,12 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.add_field(
+        migrations.AddField(
             model_name='musician',
             name='instruments',
             field=models.JSONField(blank=True, default=list, help_text='Lista de instrumentos (multi-instrumentista)'),
         ),
-        migrations.add_field(
+        migrations.AddField(
             model_name='pendingregistration',
             name='instruments',
             field=models.JSONField(blank=True, default=list),
