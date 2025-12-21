@@ -160,7 +160,7 @@ const Register: React.FC = () => {
       }
     } else {
       const primary =
-        formData.instrument === 'other' ? extraInstrument : formData.instrument.trim();
+        formData.instrument === 'other' ? extraInstrument : (formData.instrument || '').trim();
 
       if (!primary) {
         newErrors.instrument = 'Instrumento é obrigatório';
@@ -195,7 +195,7 @@ const Register: React.FC = () => {
         ].map((inst) => inst.trim()).filter(Boolean);
       } else {
         const primary =
-          data.instrument === 'other' ? customInstrument : data.instrument.trim();
+          data.instrument === 'other' ? customInstrument : (data.instrument || '').trim();
         if (primary) {
           allInstruments = [primary];
         }
