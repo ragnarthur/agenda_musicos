@@ -17,6 +17,7 @@ import { eventService } from '../services/api';
 import type { Availability, Event } from '../types';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { getEventComputedStatus } from '../utils/events';
 
 type TimeFilter = 'upcoming' | 'past' | 'all';
 
@@ -167,11 +168,9 @@ const EventsList: React.FC = () => {
     const lineup = event.availabilities ? extractLineup(event) : [event.created_by_name];
     const startLabel = event.start_time ? event.start_time.slice(0, 5) : '--:--';
     const endLabel = event.end_time ? event.end_time.slice(0, 5) : '--:--';
-    const statusClass = `status-chip ${event.status || 'default'}`;
-    const statusLabel =
-      event.status === 'approved'
-        ? event.approval_label || (event.approved_by_name ? `Aprovado por ${event.approved_by_name}` : event.status_display)
-        : event.status_display;
+    const computedStatus = getEventComputedStatus(event);
+    const statusClass = `status-chip ${computedStatus.status || 'default'}`;
+    const statusLabel = computedStatus.label;
     return (
       <Link
         key={event.id}

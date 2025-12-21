@@ -11,6 +11,7 @@ import type { Availability, Event } from '../types';
 import { format, isToday, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import TiltCard from '../components/common/TiltCard';
+import { getEventComputedStatus } from '../utils/events';
 
 const instrumentLabels: Record<string, string> = {
   vocal: 'Voz',
@@ -57,6 +58,7 @@ const Dashboard: React.FC = () => {
   const [todayEvents, setTodayEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const nextEvent = events[0];
+  const nextComputedStatus = nextEvent ? getEventComputedStatus(nextEvent) : null;
   const prefersReducedMotion = useReducedMotion();
 
   const getStartDateTime = (event: Event): number => {
@@ -125,26 +127,6 @@ const Dashboard: React.FC = () => {
       </Layout>
     );
   }
-
-  const getStatusLabel = (event: Event) => {
-    if (event.status === 'approved') {
-      if (event.is_solo) return 'Aprovado (solo)';
-      if (event.approved_by_name) return `Aprovado por ${event.approved_by_name}`;
-      return 'Aprovado';
-    }
-    switch (event.status) {
-      case 'confirmed':
-        return 'Confirmado';
-      case 'proposed':
-        return 'Proposta enviada';
-      case 'rejected':
-        return 'Rejeitado';
-      case 'cancelled':
-        return 'Cancelado';
-      default:
-        return event.status_display;
-    }
-  };
 
   return (
     <Layout>
@@ -232,7 +214,9 @@ const Dashboard: React.FC = () => {
                       ))}
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`status-chip ${nextEvent.status || 'default'}`}>{getStatusLabel(nextEvent)}</span>
+                      <span className={`status-chip ${nextComputedStatus?.status || nextEvent.status || 'default'}`}>
+                        {nextComputedStatus?.label}
+                      </span>
                     </div>
                   </div>
                   <Link
@@ -276,6 +260,7 @@ const Dashboard: React.FC = () => {
 
               <div className="grid w-full md:w-auto grid-cols-1 sm:grid-cols-2 gap-2">
                 {todayEvents.slice(0, 3).map((event) => {
+                  const computedStatus = getEventComputedStatus(event);
                   const dateLabel = (() => {
                     try {
                       return event.event_date
@@ -304,7 +289,9 @@ const Dashboard: React.FC = () => {
                         <ChevronRight className="h-4 w-4 text-amber-600 flex-shrink-0" />
                       </div>
                       <div className="relative mt-2 flex items-center gap-2 flex-wrap">
-                        <span className={`status-chip ${event.status || 'default'}`}>{getStatusLabel(event)}</span>
+                        <span className={`status-chip ${computedStatus.status || 'default'}`}>
+                          {computedStatus.label}
+                        </span>
                         <span className="pill-date">
                           <Clock className="h-4 w-4 text-primary-600" />
                           {dateLabel}
@@ -433,43 +420,48 @@ const Dashboard: React.FC = () => {
             <p className="text-sm text-gray-500">Nenhum evento futuro.</p>
           ) : (
             <div className="relative grid grid-cols-1 md:grid-cols-2 gap-3">
-              {events.map((event) => (
-                <Link
-                  key={event.id}
-                  to={`/eventos/${event.id}`}
-                  className="relative overflow-hidden rounded-xl border border-white/70 bg-white/90 backdrop-blur p-4 shadow-lg hover:shadow-xl transition-all"
-                >
-                  <div className="hero-animated opacity-50" />
-                  <div className="relative flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`status-chip ${event.status || 'default'}`}>{getStatusLabel(event)}</span>
-                        <span className="pill-date">
-                          <Clock className="h-4 w-4 text-primary-600" />
-                          {format(parseISO(event.event_date), "dd 'de' MMMM", { locale: ptBR })}
-                        </span>
-                      </div>
-                      <h3 className="mt-1 text-base font-semibold text-gray-900">{event.title}</h3>
-                      <p className="text-sm text-gray-600">{event.location}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {event.start_time.slice(0, 5)} - {event.end_time.slice(0, 5)}
-                      </p>
-                      <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-gray-700">
-                        <Users className="h-4 w-4 text-gray-500" />
-                        {buildLineup(event).map((name) => (
-                          <span
-                            key={name}
-                            className="inline-flex items-center gap-1 rounded-full bg-gray-50 border border-gray-200 px-3 py-1 font-medium text-gray-700"
-                          >
-                            {name}
+              {events.map((event) => {
+                const computedStatus = getEventComputedStatus(event);
+                return (
+                  <Link
+                    key={event.id}
+                    to={`/eventos/${event.id}`}
+                    className="relative overflow-hidden rounded-xl border border-white/70 bg-white/90 backdrop-blur p-4 shadow-lg hover:shadow-xl transition-all"
+                  >
+                    <div className="hero-animated opacity-50" />
+                    <div className="relative flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`status-chip ${computedStatus.status || 'default'}`}>
+                            {computedStatus.label}
                           </span>
-                        ))}
+                          <span className="pill-date">
+                            <Clock className="h-4 w-4 text-primary-600" />
+                            {format(parseISO(event.event_date), "dd 'de' MMMM", { locale: ptBR })}
+                          </span>
+                        </div>
+                        <h3 className="mt-1 text-base font-semibold text-gray-900">{event.title}</h3>
+                        <p className="text-sm text-gray-600">{event.location}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {event.start_time.slice(0, 5)} - {event.end_time.slice(0, 5)}
+                        </p>
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-gray-700">
+                          <Users className="h-4 w-4 text-gray-500" />
+                          {buildLineup(event).map((name) => (
+                            <span
+                              key={name}
+                              className="inline-flex items-center gap-1 rounded-full bg-gray-50 border border-gray-200 px-3 py-1 font-medium text-gray-700"
+                            >
+                              {name}
+                            </span>
+                          ))}
+                        </div>
                       </div>
+                      <ChevronRight className="h-5 w-5 text-gray-400" />
                     </div>
-                    <ChevronRight className="h-5 w-5 text-gray-400" />
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>
