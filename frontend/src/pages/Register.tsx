@@ -5,20 +5,39 @@ import { Music, UserPlus, Eye, EyeOff, Mail, User, Phone, FileText, CheckCircle 
 import { registrationService, type RegisterData } from '../services/api';
 import { showToast } from '../utils/toast';
 
-const INSTRUMENTS = [
+const BASE_INSTRUMENTS = [
   { value: 'vocal', label: 'Vocal' },
   { value: 'guitar', label: 'Guitarra' },
   { value: 'acoustic_guitar', label: 'Violão' },
   { value: 'bass', label: 'Baixo' },
   { value: 'drums', label: 'Bateria' },
   { value: 'keyboard', label: 'Teclado' },
-  { value: 'percussion', label: 'Percussão/Outros' },
+  { value: 'piano', label: 'Piano' },
+  { value: 'synth', label: 'Sintetizador' },
+  { value: 'percussion', label: 'Percussão' },
+  { value: 'cajon', label: 'Cajón' },
+  { value: 'violin', label: 'Violino' },
+  { value: 'viola', label: 'Viola' },
+  { value: 'cello', label: 'Violoncelo' },
+  { value: 'double_bass', label: 'Contrabaixo acústico' },
+  { value: 'saxophone', label: 'Saxofone' },
+  { value: 'trumpet', label: 'Trompete' },
+  { value: 'trombone', label: 'Trombone' },
+  { value: 'flute', label: 'Flauta' },
+  { value: 'clarinet', label: 'Clarinete' },
+  { value: 'harmonica', label: 'Gaita' },
+  { value: 'ukulele', label: 'Ukulele' },
+  { value: 'banjo', label: 'Banjo' },
+  { value: 'mandolin', label: 'Bandolim' },
+  { value: 'dj', label: 'DJ' },
+  { value: 'producer', label: 'Produtor(a)' },
 ];
+
+const INSTRUMENTS = [...BASE_INSTRUMENTS, { value: 'other', label: 'Outro (digite)' }];
 
 const SELECT_INSTRUMENT_OPTIONS = [
   { value: '', label: 'Selecione um instrumento principal' },
   ...INSTRUMENTS,
-  { value: 'other', label: 'Outro (digite)' },
 ];
 
 const Register: React.FC = () => {
@@ -91,9 +110,15 @@ const Register: React.FC = () => {
   const toggleInstrument = (value: string) => {
     setFormData((prev) => {
       const exists = prev.instruments.includes(value);
-      const instruments = exists
+      let instruments = exists
         ? prev.instruments.filter((inst) => inst !== value)
         : [...prev.instruments, value];
+
+      // Se desmarca "Outro", limpa o campo de texto
+      if (!instruments.includes('other')) {
+        instruments = instruments.filter((inst) => inst !== 'other');
+      }
+
       return { ...prev, instruments };
     });
     if (errors.instrument) {
@@ -105,8 +130,9 @@ const Register: React.FC = () => {
     setFormData((prev) => ({
       ...prev,
       isMultiInstrumentist: value,
-      // se desligar o modo multi, limpa seleção múltipla
+      // se desligar o modo multi, limpa seleção múltipla e "outro"
       instruments: value ? prev.instruments : [],
+      instrumentOther: value ? prev.instrumentOther : '',
     }));
     if (errors.instrument) {
       setErrors((prev) => ({ ...prev, instrument: '' }));
@@ -147,17 +173,27 @@ const Register: React.FC = () => {
     const extraInstrument = formData.instrumentOther.trim();
 
     if (formData.isMultiInstrumentist) {
-      const selectedInstruments = [
-        ...formData.instruments,
-        ...(extraInstrument ? [extraInstrument] : []),
-      ].map((inst) => inst.trim()).filter(Boolean);
+      const selectedInstruments = formData.instruments
+        .filter((inst) => inst !== 'other')
+        .map((inst) => inst.trim())
+        .filter(Boolean);
 
-      if (!selectedInstruments.length) {
+      const includeOther = formData.instruments.includes('other');
+
+      if (includeOther) {
+        if (!extraInstrument) {
+          newErrors.instrument = 'Informe o instrumento em "Outro"';
+        } else if (extraInstrument.length < 3) {
+          newErrors.instrument = 'Use pelo menos 3 caracteres para o instrumento adicional';
+        } else {
+          selectedInstruments.push(extraInstrument);
+        }
+      }
+
+      if (!selectedInstruments.length && !newErrors.instrument) {
         newErrors.instrument = 'Selecione ou informe pelo menos um instrumento';
-      } else if (selectedInstruments.some((inst) => inst.length > 50)) {
+      } else if (selectedInstruments.some((inst) => inst.length > 50) && !newErrors.instrument) {
         newErrors.instrument = 'Instrumento deve ter no máximo 50 caracteres';
-      } else if (extraInstrument && extraInstrument.length < 3) {
-        newErrors.instrument = 'Use pelo menos 3 caracteres para o instrumento adicional';
       }
     } else {
       const primary =
@@ -190,10 +226,14 @@ const Register: React.FC = () => {
 
       let allInstruments: string[] = [];
       if (isMultiInstrumentist) {
-        allInstruments = [
-          ...instruments,
-          ...(customInstrument ? [customInstrument] : []),
-        ].map((inst) => inst.trim()).filter(Boolean);
+        allInstruments = instruments
+          .filter((inst) => inst !== 'other')
+          .map((inst) => inst.trim())
+          .filter(Boolean);
+
+        if (instruments.includes('other') && customInstrument.trim()) {
+          allInstruments.push(customInstrument.trim());
+        }
       } else {
         const primary =
           data.instrument === 'other' ? customInstrument : (data.instrument || '').trim();
