@@ -14,6 +14,7 @@ from .models import (
     MusicianBadge,
 )
 from .validators import validate_not_empty_string
+from .utils import get_user_organization
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -90,6 +91,13 @@ class AvailabilitySerializer(serializers.ModelSerializer):
             'notes', 'responded_at', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'responded_at', 'created_at', 'updated_at']
+
+    def validate(self, attrs):
+        if self.instance and 'musician' in attrs:
+            raise serializers.ValidationError({
+                'musician_id': 'Não é permitido alterar o músico desta disponibilidade.'
+            })
+        return attrs
 
 
 class EventListSerializer(serializers.ModelSerializer):
@@ -340,6 +348,37 @@ class EventCreateSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'status', 'status_display']
     
+    def validate_required_instruments(self, value):
+        if not value:
+            return []
+
+        normalized = {}
+        for item in value:
+            if not isinstance(item, dict):
+                raise serializers.ValidationError('Cada instrumento deve ser um objeto.')
+
+            instrument_raw = item.get('instrument', '')
+            instrument = str(instrument_raw).strip()
+            if not instrument:
+                raise serializers.ValidationError('Instrumento é obrigatório.')
+
+            quantity_raw = item.get('quantity', 1)
+            try:
+                quantity = int(quantity_raw)
+            except (TypeError, ValueError):
+                raise serializers.ValidationError('Quantidade inválida para instrumento.')
+
+            if quantity <= 0:
+                raise serializers.ValidationError('Quantidade deve ser maior que zero.')
+
+            key = instrument.lower()
+            if key in normalized:
+                normalized[key]['quantity'] += quantity
+            else:
+                normalized[key] = {'instrument': instrument, 'quantity': quantity}
+
+        return list(normalized.values())
+
     def validate(self, data):
         """Validações"""
         errors = {}
@@ -452,12 +491,15 @@ class LeaderAvailabilitySerializer(serializers.ModelSerializer):
 
 class EventInstrumentSerializer(serializers.ModelSerializer):
     """Serializer para instrumentos necessários de um evento"""
-    instrument_display = serializers.CharField(source='get_instrument_display', read_only=True)
+    instrument_display = serializers.SerializerMethodField()
 
     class Meta:
         model = EventInstrument
         fields = ['id', 'instrument', 'instrument_display', 'quantity']
         read_only_fields = ['id']
+
+    def get_instrument_display(self, obj):
+        return obj.get_instrument_label()
 
 
 class MusicianRatingSerializer(serializers.ModelSerializer):
@@ -534,8 +576,12 @@ class ConnectionSerializer(serializers.ModelSerializer):
         target = attrs.get('target') or getattr(self.instance, 'target', None)
         request = self.context.get('request')
         if request and hasattr(request.user, 'musician_profile') and target:
-            if request.user.musician_profile == target:
+            follower = request.user.musician_profile
+            if follower == target:
                 raise serializers.ValidationError('Você não pode criar conexão consigo mesmo.')
+            org = get_user_organization(request.user)
+            if org and target.organization_id != org.id:
+                raise serializers.ValidationError('Você só pode criar conexões dentro da sua organização.')
         return attrs
 
 

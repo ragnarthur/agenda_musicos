@@ -35,7 +35,7 @@ def test_user_authentication(username, password):
     try:
         musician = user.musician_profile
         role_icon = '👑' if musician.is_leader() else '♪'
-        print(f'  {role_icon} Instrumento: {musician.get_instrument_display()}')
+        print(f'  {role_icon} Instrumento: {musician.get_instrument_label()}')
         print(f'  Papel: {musician.get_role_display()}')
     except Musician.DoesNotExist:
         print(f'  ⚠️  Sem perfil de músico')

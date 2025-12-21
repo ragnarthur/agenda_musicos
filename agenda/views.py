@@ -21,6 +21,7 @@ from .models import (
     Availability,
     LeaderAvailability,
     EventLog,
+    EventInstrument,
     Organization,
     Membership,
     MusicianRating,
@@ -51,8 +52,23 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = MusicianSerializer
     permission_classes = [IsAuthenticated]
     
+    def _scope_queryset(self, queryset):
+        if self.request.user.is_staff:
+            return queryset
+
+        org = get_user_organization(self.request.user)
+        if org:
+            return queryset.filter(organization=org)
+
+        try:
+            musician = self.request.user.musician_profile
+        except Musician.DoesNotExist:
+            return queryset.none()
+        return queryset.filter(id=musician.id)
+
     def get_queryset(self):
         queryset = Musician.objects.filter(is_active=True).select_related('user')
+        queryset = self._scope_queryset(queryset)
         search = self.request.query_params.get('search')
         if search:
             queryset = queryset.filter(
@@ -98,8 +114,7 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
 
         # Busca instrumentos únicos com contagem
         instruments_data = (
-            Musician.objects
-            .filter(is_active=True)
+            self._scope_queryset(Musician.objects.filter(is_active=True))
             .exclude(instrument__isnull=True)
             .exclude(instrument='')
             .values('instrument')
@@ -128,16 +143,23 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
         from django.utils import timezone
 
         # IDs de músicos com disponibilidades públicas futuras
-        musician_ids = (
-            LeaderAvailability.objects
-            .filter(
-                is_active=True,
-                is_public=True,
-                date__gte=timezone.now().date()
-            )
-            .values_list('leader_id', flat=True)
-            .distinct()
+        availability_qs = LeaderAvailability.objects.filter(
+            is_active=True,
+            is_public=True,
+            date__gte=timezone.now().date()
         )
+        if not request.user.is_staff:
+            org = get_user_organization(request.user)
+            if org:
+                availability_qs = availability_qs.filter(organization=org)
+            else:
+                try:
+                    musician = request.user.musician_profile
+                except Musician.DoesNotExist:
+                    return Response([])
+                availability_qs = availability_qs.filter(leader=musician)
+
+        musician_ids = availability_qs.values_list('leader_id', flat=True).distinct()
 
         queryset = self.get_queryset().filter(id__in=musician_ids)
 
@@ -319,6 +341,12 @@ class EventViewSet(viewsets.ModelViewSet):
             avail_total=Count('availabilities'),
         )
 
+        org = get_user_organization(request.user)
+        if org:
+            conflicts = conflicts.filter(organization=org)
+        else:
+            conflicts = conflicts.filter(created_by=request.user)
+
         serializer = EventListSerializer(conflicts, many=True, context={'request': request})
         return Response({
             'has_conflicts': conflicts.exists(),
@@ -342,6 +370,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
         is_solo = serializer.validated_data.get('is_solo', False)
         invited_musicians_ids = serializer.validated_data.pop('invited_musicians', [])
+        required_instruments = serializer.validated_data.pop('required_instruments', [])
 
         # Transação atômica para garantir consistência
         with transaction.atomic():
@@ -363,6 +392,9 @@ class EventViewSet(viewsets.ModelViewSet):
                     status='proposed',
                 )
                 self._log_event(event, 'created', 'Evento criado aguardando confirmação dos músicos convidados.')
+
+            if required_instruments:
+                self._save_required_instruments(event, required_instruments)
 
             # Buscar músico do criador
             try:
@@ -388,7 +420,8 @@ class EventViewSet(viewsets.ModelViewSet):
             if not is_solo and invited_musicians_ids:
                 invited_musicians = Musician.objects.filter(
                     id__in=invited_musicians_ids,
-                    is_active=True
+                    is_active=True,
+                    organization=org
                 ).exclude(user=self.request.user)  # Exclui o criador (já adicionado acima)
 
                 for musician in invited_musicians:
@@ -408,6 +441,9 @@ class EventViewSet(viewsets.ModelViewSet):
                 event.status = 'confirmed'
                 event.save()
                 self._log_event(event, 'approved', 'Evento confirmado automaticamente (sem convidados).')
+
+            if not is_solo:
+                self._consume_leader_availability(event)
 
     def perform_destroy(self, instance):
         """
@@ -431,6 +467,61 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         return split_availability_with_events(availability, events, LeaderAvailability)
 
+    def _get_event_organization(self, event):
+        if event.organization_id:
+            return event.organization
+        if event.created_by_id:
+            return get_user_organization(event.created_by)
+        return None
+
+    def _get_event_leader(self, event):
+        org = self._get_event_organization(event)
+        if org:
+            return Musician.objects.filter(
+                role='leader',
+                is_active=True,
+                organization=org
+            ).first()
+        if event.created_by_id:
+            try:
+                musician = event.created_by.musician_profile
+            except Musician.DoesNotExist:
+                return None
+            if musician.is_leader():
+                return musician
+        return Musician.objects.filter(
+            role='leader',
+            is_active=True,
+            organization__isnull=True
+        ).first()
+
+    def _consume_leader_availability(self, event):
+        """
+        Consome disponibilidades do líder para bloquear o horário do evento.
+        """
+        if event.is_solo:
+            return
+
+        leader = self._get_event_leader(event)
+        if not leader:
+            return
+
+        org = self._get_event_organization(event)
+        queryset = LeaderAvailability.objects.filter(leader=leader, is_active=True)
+        if org:
+            queryset = queryset.filter(organization=org)
+        else:
+            queryset = queryset.filter(organization__isnull=True)
+
+        buffer = timedelta(minutes=40)
+        overlapping = queryset.filter(
+            start_datetime__lt=event.end_datetime + buffer,
+            end_datetime__gt=event.start_datetime - buffer
+        )
+
+        for availability in overlapping:
+            self._split_availability_with_events(availability, [event])
+
     def _restore_leader_availability(self, event):
         """
         Restaura disponibilidade do líder quando evento é deletado, rejeitado ou cancelado.
@@ -449,13 +540,11 @@ class EventViewSet(viewsets.ModelViewSet):
         buffer = timedelta(minutes=40)
 
         # Busca líder
-        try:
-            leader = Musician.objects.filter(role='leader', is_active=True).first()
-            if not leader:
-                return
-        except Musician.DoesNotExist:
+        leader = self._get_event_leader(event)
+        if not leader:
             return
 
+        org = self._get_event_organization(event)
         event_start = event.start_datetime
         event_end = event.end_datetime
 
@@ -465,6 +554,10 @@ class EventViewSet(viewsets.ModelViewSet):
             start_datetime__lt=event_end + buffer,
             end_datetime__gt=event_start - buffer
         ).exclude(id=event.id)
+        if org:
+            other_events = other_events.filter(organization=org)
+        elif event.created_by_id:
+            other_events = other_events.filter(created_by=event.created_by)
 
         # Verifica conflitos considerando buffer de 40min ao redor dos eventos
         has_conflict = False
@@ -497,6 +590,7 @@ class EventViewSet(viewsets.ModelViewSet):
             )
             LeaderAvailability.objects.create(
                 leader=leader,
+                organization=org,
                 date=start_date,
                 start_time=event.start_time,
                 end_time=end_dt1.time(),
@@ -513,6 +607,7 @@ class EventViewSet(viewsets.ModelViewSet):
             )
             LeaderAvailability.objects.create(
                 leader=leader,
+                organization=org,
                 date=end_date,
                 start_time=start_dt2.time(),
                 end_time=event.end_time,
@@ -526,6 +621,7 @@ class EventViewSet(viewsets.ModelViewSet):
         else:
             LeaderAvailability.objects.create(
                 leader=leader,
+                organization=org,
                 date=start_date,
                 start_time=event.start_time,
                 end_time=event.end_time,
@@ -536,6 +632,25 @@ class EventViewSet(viewsets.ModelViewSet):
                 created_at=now,
                 updated_at=now
             )
+
+    def _save_required_instruments(self, event, required_instruments):
+        if not required_instruments:
+            return
+
+        objs = []
+        for item in required_instruments:
+            instrument = (item.get('instrument') or '').strip()
+            quantity = item.get('quantity', 1)
+            if not instrument:
+                continue
+            objs.append(EventInstrument(
+                event=event,
+                instrument=instrument,
+                quantity=quantity,
+            ))
+
+        if objs:
+            EventInstrument.objects.bulk_create(objs)
 
     def _log_event(self, event, action, description):
         """Cria registro de histórico do evento"""
@@ -923,7 +1038,13 @@ class EventViewSet(viewsets.ModelViewSet):
             musician = request.user.musician_profile
             events = Event.objects.filter(
                 availabilities__musician=musician
-            ).distinct().select_related('created_by', 'approved_by').prefetch_related(
+            ).distinct()
+
+            org = get_user_organization(request.user)
+            if org:
+                events = events.filter(organization=org)
+
+            events = events.select_related('created_by', 'approved_by').prefetch_related(
                 'availabilities__musician__user'
             ).annotate(
                 avail_pending=Count('availabilities', filter=Q(availabilities__response='pending')),
@@ -949,7 +1070,13 @@ class EventViewSet(viewsets.ModelViewSet):
             events = Event.objects.filter(
                 availabilities__musician=musician,
                 availabilities__response='pending'
-            ).select_related('created_by', 'approved_by').prefetch_related(
+            ).distinct()
+
+            org = get_user_organization(request.user)
+            if org:
+                events = events.filter(organization=org)
+
+            events = events.select_related('created_by', 'approved_by').prefetch_related(
                 'availabilities__musician__user'
             ).annotate(
                 avail_pending=Count('availabilities', filter=Q(availabilities__response='pending')),
@@ -1122,14 +1249,24 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
             if not public_param:
                 return LeaderAvailability.objects.none()
 
-        if mine_param and public_param and musician:
-            queryset = queryset.filter(models.Q(leader=musician) | models.Q(is_public=True))
-        elif mine_param and musician:
+        org = get_user_organization(self.request.user)
+        if not org:
+            if not musician:
+                return LeaderAvailability.objects.none()
+            if public_param and not mine_param:
+                return LeaderAvailability.objects.none()
             queryset = queryset.filter(leader=musician)
-        elif public_param:
-            queryset = queryset.filter(is_public=True)
         else:
-            return LeaderAvailability.objects.none()
+            queryset = queryset.filter(organization=org)
+
+            if mine_param and public_param and musician:
+                queryset = queryset.filter(models.Q(leader=musician) | models.Q(is_public=True))
+            elif mine_param and musician:
+                queryset = queryset.filter(leader=musician)
+            elif public_param:
+                queryset = queryset.filter(is_public=True)
+            else:
+                return LeaderAvailability.objects.none()
 
         # Filtro por data futura
         if self.request.query_params.get('upcoming') == 'true':
@@ -1312,6 +1449,12 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
             user=request.user
         )
 
+        org = get_user_organization(request.user)
+        if org:
+            musicians = musicians.filter(organization=org)
+        elif not request.user.is_staff:
+            return Response([])
+
         # Filtro opcional por instrumento
         instrument = request.query_params.get('instrument')
         if instrument:
@@ -1324,6 +1467,8 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
             is_public=True,
             date=target_date
         ).select_related('leader')
+        if org:
+            availabilities = availabilities.filter(organization=org)
 
         for avail in availabilities:
             availabilities_map[avail.leader_id] = avail
