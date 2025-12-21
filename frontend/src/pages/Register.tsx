@@ -14,6 +14,12 @@ const INSTRUMENTS = [
   { value: 'percussion', label: 'Percussão/Outros' },
 ];
 
+const SELECT_INSTRUMENT_OPTIONS = [
+  { value: '', label: 'Selecione um instrumento principal' },
+  ...INSTRUMENTS,
+  { value: 'other', label: 'Outro (digite)' },
+];
+
 const Register: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -23,7 +29,7 @@ const Register: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [resending, setResending] = useState(false);
 
-  const [formData, setFormData] = useState<RegisterData & { confirmPassword: string; instrumentOther: string; instruments: string[] }>({
+  const [formData, setFormData] = useState<RegisterData & { confirmPassword: string; instrumentOther: string; instruments: string[]; isMultiInstrumentist: boolean }>({
     email: '',
     username: '',
     password: '',
@@ -34,6 +40,7 @@ const Register: React.FC = () => {
     instrument: '',
     instruments: [],
     instrumentOther: '',
+    isMultiInstrumentist: false,
     bio: '',
   });
 
@@ -75,7 +82,7 @@ const Register: React.FC = () => {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
     // Limpa erro do campo quando usuário digita
-    if (errors[name] || (name === 'instrumentOther' && errors.instrument)) {
+    if (errors[name] || name === 'instrument' || name === 'instrumentOther') {
       setErrors(prev => ({ ...prev, [name]: '', instrument: '' }));
     }
   };
@@ -88,6 +95,18 @@ const Register: React.FC = () => {
         : [...prev.instruments, value];
       return { ...prev, instruments };
     });
+    if (errors.instrument) {
+      setErrors((prev) => ({ ...prev, instrument: '' }));
+    }
+  };
+
+  const toggleMultiInstrumentist = (value: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      isMultiInstrumentist: value,
+      // se desligar o modo multi, limpa seleção múltipla
+      instruments: value ? prev.instruments : [],
+    }));
     if (errors.instrument) {
       setErrors((prev) => ({ ...prev, instrument: '' }));
     }
@@ -125,17 +144,31 @@ const Register: React.FC = () => {
     }
 
     const extraInstrument = formData.instrumentOther.trim();
-    const selectedInstruments = [
-      ...formData.instruments,
-      ...(extraInstrument ? [extraInstrument] : []),
-    ].map((inst) => inst.trim()).filter(Boolean);
 
-    if (!selectedInstruments.length) {
-      newErrors.instrument = 'Selecione ou informe pelo menos um instrumento';
-    } else if (selectedInstruments.some((inst) => inst.length > 50)) {
-      newErrors.instrument = 'Instrumento deve ter no máximo 50 caracteres';
-    } else if (extraInstrument && extraInstrument.length < 3) {
-      newErrors.instrument = 'Use pelo menos 3 caracteres para o instrumento adicional';
+    if (formData.isMultiInstrumentist) {
+      const selectedInstruments = [
+        ...formData.instruments,
+        ...(extraInstrument ? [extraInstrument] : []),
+      ].map((inst) => inst.trim()).filter(Boolean);
+
+      if (!selectedInstruments.length) {
+        newErrors.instrument = 'Selecione ou informe pelo menos um instrumento';
+      } else if (selectedInstruments.some((inst) => inst.length > 50)) {
+        newErrors.instrument = 'Instrumento deve ter no máximo 50 caracteres';
+      } else if (extraInstrument && extraInstrument.length < 3) {
+        newErrors.instrument = 'Use pelo menos 3 caracteres para o instrumento adicional';
+      }
+    } else {
+      const primary =
+        formData.instrument === 'other' ? extraInstrument : formData.instrument.trim();
+
+      if (!primary) {
+        newErrors.instrument = 'Instrumento é obrigatório';
+      } else if (primary.length > 50) {
+        newErrors.instrument = 'Instrumento deve ter no máximo 50 caracteres';
+      } else if (formData.instrument === 'other' && primary.length < 3) {
+        newErrors.instrument = 'Use pelo menos 3 caracteres para o instrumento';
+      }
     }
 
     setErrors(newErrors);
@@ -151,12 +184,23 @@ const Register: React.FC = () => {
     setErrors({});
 
     try {
-      const { confirmPassword, instrumentOther, instruments, ...data } = formData;
+      const { confirmPassword, instrumentOther, instruments, isMultiInstrumentist, ...data } = formData;
       const customInstrument = instrumentOther.trim();
-      const allInstruments = [
-        ...instruments,
-        ...(customInstrument ? [customInstrument] : []),
-      ].map((inst) => inst.trim()).filter(Boolean);
+
+      let allInstruments: string[] = [];
+      if (isMultiInstrumentist) {
+        allInstruments = [
+          ...instruments,
+          ...(customInstrument ? [customInstrument] : []),
+        ].map((inst) => inst.trim()).filter(Boolean);
+      } else {
+        const primary =
+          data.instrument === 'other' ? customInstrument : data.instrument.trim();
+        if (primary) {
+          allInstruments = [primary];
+        }
+      }
+
       const primaryInstrument = allInstruments[0] || '';
 
       const payload = {
@@ -253,6 +297,7 @@ const Register: React.FC = () => {
                     instrument: '',
                     instruments: [],
                     instrumentOther: '',
+                    isMultiInstrumentist: false,
                     bio: '',
                   });
                 }}
@@ -432,7 +477,7 @@ const Register: React.FC = () => {
               </div>
             </div>
 
-            {/* Telefone e Instrumento */}
+            {/* Telefone e Instrumentos */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
@@ -453,53 +498,120 @@ const Register: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Instrumentos{errors.instrument && <span className="text-red-500 ml-1">*</span>}
+                  Você é multi-instrumentista?
                 </label>
-                <p className="text-xs text-gray-500 mb-2">Selecione todos que você toca/canta.</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {INSTRUMENTS.map((inst) => {
-                    const checked = formData.instruments.includes(inst.value);
-                    return (
-                      <label
-                        key={inst.value}
-                        className={`flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer transition-colors ${
-                          checked ? 'border-primary-300 bg-primary-50 text-primary-800' : 'border-gray-200 hover:border-primary-200'
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => toggleInstrument(inst.value)}
-                          className="sr-only"
-                        />
-                        <span
-                          className={`h-4 w-4 rounded border flex items-center justify-center text-[10px] ${
-                            checked ? 'bg-primary-600 border-primary-600 text-white' : 'border-gray-300 text-transparent'
+                <div className="inline-flex rounded-xl border border-gray-200 bg-white overflow-hidden">
+                  <button
+                    type="button"
+                    className={`px-4 py-2 text-sm font-semibold transition-colors ${!formData.isMultiInstrumentist ? 'bg-primary-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}
+                    onClick={() => toggleMultiInstrumentist(false)}
+                  >
+                    Não
+                  </button>
+                  <button
+                    type="button"
+                    className={`px-4 py-2 text-sm font-semibold transition-colors ${formData.isMultiInstrumentist ? 'bg-primary-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}
+                    onClick={() => toggleMultiInstrumentist(true)}
+                  >
+                    Sim
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Instrumentos */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {!formData.isMultiInstrumentist ? (
+                <div>
+                  <label htmlFor="instrument" className="block text-sm font-medium text-gray-700 mb-1">
+                    Instrumento principal{errors.instrument && <span className="text-red-500 ml-1">*</span>}
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="instrument"
+                      name="instrument"
+                      value={formData.instrument}
+                      onChange={handleChange}
+                      className={`input-field ${errors.instrument ? 'border-red-500' : ''}`}
+                    >
+                      {SELECT_INSTRUMENT_OPTIONS.map((inst) => (
+                        <option key={inst.value} value={inst.value}>
+                          {inst.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {formData.instrument === 'other' && (
+                    <div className="mt-3">
+                      <label htmlFor="instrumentOther" className="block text-sm font-medium text-gray-700 mb-1">
+                        Qual instrumento?
+                      </label>
+                      <input
+                        id="instrumentOther"
+                        name="instrumentOther"
+                        type="text"
+                        value={formData.instrumentOther}
+                        onChange={handleChange}
+                        className={`input-field ${errors.instrument ? 'border-red-500' : ''}`}
+                        placeholder="Ex.: Violino, Trompete, Flauta..."
+                      />
+                    </div>
+                  )}
+                  {errors.instrument && <p className="text-red-500 text-xs mt-1">{errors.instrument}</p>}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Selecione os instrumentos{errors.instrument && <span className="text-red-500 ml-1">*</span>}
+                    </label>
+                    <p className="text-xs text-gray-500">Marque todos que você toca/canta.</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {INSTRUMENTS.map((inst) => {
+                      const checked = formData.instruments.includes(inst.value);
+                      return (
+                        <label
+                          key={inst.value}
+                          className={`flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer transition-colors ${
+                            checked ? 'border-primary-300 bg-primary-50 text-primary-800' : 'border-gray-200 hover:border-primary-200'
                           }`}
                         >
-                          ✓
-                        </span>
-                        <span className="text-sm font-medium">{inst.label}</span>
-                      </label>
-                    );
-                  })}
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleInstrument(inst.value)}
+                            className="sr-only"
+                          />
+                          <span
+                            className={`h-4 w-4 rounded border flex items-center justify-center text-[10px] ${
+                              checked ? 'bg-primary-600 border-primary-600 text-white' : 'border-gray-300 text-transparent'
+                            }`}
+                          >
+                            ✓
+                          </span>
+                          <span className="text-sm font-medium">{inst.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-2">
+                    <label htmlFor="instrumentOther" className="block text-sm font-medium text-gray-700 mb-1">
+                      Outro instrumento (opcional)
+                    </label>
+                    <input
+                      id="instrumentOther"
+                      name="instrumentOther"
+                      type="text"
+                      value={formData.instrumentOther}
+                      onChange={handleChange}
+                      className={`input-field ${errors.instrument ? 'border-red-500' : ''}`}
+                      placeholder="Ex.: Violino, Trompete, Flauta..."
+                    />
+                  </div>
+                  {errors.instrument && <p className="text-red-500 text-xs mt-1">{errors.instrument}</p>}
                 </div>
-                <div className="mt-3">
-                  <label htmlFor="instrumentOther" className="block text-sm font-medium text-gray-700 mb-1">
-                    Outro instrumento (opcional)
-                  </label>
-                  <input
-                    id="instrumentOther"
-                    name="instrumentOther"
-                    type="text"
-                    value={formData.instrumentOther}
-                    onChange={handleChange}
-                    className={`input-field ${errors.instrument ? 'border-red-500' : ''}`}
-                    placeholder="Ex.: Violino, Trompete, Flauta..."
-                  />
-                </div>
-                {errors.instrument && <p className="text-red-500 text-xs mt-1">{errors.instrument}</p>}
-              </div>
+              )}
             </div>
 
             {/* Bio */}
