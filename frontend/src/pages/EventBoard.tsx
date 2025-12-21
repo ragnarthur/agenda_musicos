@@ -6,9 +6,10 @@ import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { eventService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import type { Availability, Event, EventStatus } from '../types';
+import type { Availability, Event } from '../types';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { getEventComputedStatus } from '../utils/events';
 
 type TimeFilter = 'upcoming' | 'past' | 'all';
 
@@ -84,14 +85,6 @@ const getStartTimestamp = (event: Event): number => {
   return 0;
 };
 
-const statusLabel: Record<EventStatus, string> = {
-  proposed: 'Proposta',
-  approved: 'Aprovado',
-  rejected: 'Rejeitado',
-  confirmed: 'Confirmado',
-  cancelled: 'Cancelado',
-};
-
 const EventBoard: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -152,7 +145,8 @@ const EventBoard: React.FC = () => {
 
   const renderEventCard = (event: Event) => {
     const lineup = extractNames(event);
-    const statusClass = `status-chip ${event.status || 'default'}`;
+    const computedStatus = getEventComputedStatus(event);
+    const statusClass = `status-chip ${computedStatus.status || 'default'}`;
     return (
       <Link
         key={event.id}
@@ -162,7 +156,7 @@ const EventBoard: React.FC = () => {
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={statusClass}>{statusLabel[event.status]}</span>
+              <span className={statusClass}>{computedStatus.label}</span>
               {event.is_solo && (
                 <span className="status-chip default">Solo</span>
               )}

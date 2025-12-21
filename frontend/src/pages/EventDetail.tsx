@@ -30,6 +30,7 @@ import { showToast } from '../utils/toast';
 import type { Event, AvailabilityResponse, RatingInput } from '../types';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { getEventComputedStatus } from '../utils/events';
 
 const EventDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -178,10 +179,8 @@ const EventDetail: React.FC = () => {
     );
   }
 
-  const approvalLabel =
-    event.status === 'approved'
-      ? event.approval_label || (event.approved_by_name ? `Aprovado por ${event.approved_by_name}` : event.status_display)
-      : event.status_display;
+  const computedStatus = getEventComputedStatus(event);
+  const approvalLabel = computedStatus.label;
 
   const isCreator = event.created_by === user?.user.id;
   const canEdit = isCreator && event.status !== 'cancelled';
@@ -206,7 +205,7 @@ const EventDetail: React.FC = () => {
               <p className="mt-2 text-gray-600 text-sm sm:text-base">{event.description}</p>
             </div>
             <div className="flex items-center justify-between sm:justify-end gap-3 flex-wrap">
-              <span className={`badge badge-${event.status}`}>{approvalLabel}</span>
+              <span className={`badge badge-${computedStatus.status}`}>{approvalLabel}</span>
 
               {canEdit && (
                 <div className="flex items-center gap-1 sm:gap-2">

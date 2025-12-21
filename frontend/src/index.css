@@ -71,6 +71,7 @@
   .badge-rejected { @apply bg-rose-100 text-rose-800 border border-rose-200; }
   .badge-confirmed { @apply bg-cyan-100 text-cyan-800 border border-cyan-200; }
   .badge-cancelled { @apply bg-gray-100 text-gray-700 border border-gray-200; }
+  .badge-completed { @apply bg-indigo-100 text-indigo-800 border border-indigo-200; }
 
   .pill-date {
     @apply inline-flex items-center gap-2 rounded-full bg-white/80 border border-white/60 px-3 py-1 text-xs font-semibold text-gray-700 backdrop-blur;
@@ -88,6 +89,7 @@
   .status-chip.pending { @apply bg-amber-100 text-amber-800 border border-amber-200; }
   .status-chip.rejected { @apply bg-rose-100 text-rose-700 border border-rose-200; }
   .status-chip.cancelled { @apply bg-gray-100 text-gray-700 border border-gray-200; }
+  .status-chip.completed { @apply bg-indigo-100 text-indigo-800 border border-indigo-200; }
   .status-chip.default { @apply bg-slate-100 text-slate-700 border border-slate-200; }
 
   .no-scrollbar {
