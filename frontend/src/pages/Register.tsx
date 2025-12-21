@@ -1,19 +1,17 @@
 // pages/Register.tsx
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Music, UserPlus, Eye, EyeOff, Mail, User, Phone, Guitar, FileText, CheckCircle } from 'lucide-react';
+import { Music, UserPlus, Eye, EyeOff, Mail, User, Phone, FileText, CheckCircle } from 'lucide-react';
 import { registrationService, type RegisterData } from '../services/api';
 import { showToast } from '../utils/toast';
 
 const INSTRUMENTS = [
-  { value: '', label: 'Selecione um instrumento' },
   { value: 'vocal', label: 'Vocal' },
   { value: 'guitar', label: 'Guitarra/Violão' },
   { value: 'bass', label: 'Baixo' },
   { value: 'drums', label: 'Bateria' },
   { value: 'keyboard', label: 'Teclado' },
   { value: 'percussion', label: 'Percussão/Outros' },
-  { value: 'other', label: 'Outro (digite)' },
 ];
 
 const Register: React.FC = () => {
@@ -25,7 +23,7 @@ const Register: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [resending, setResending] = useState(false);
 
-  const [formData, setFormData] = useState<RegisterData & { confirmPassword: string; instrumentOther: string }>({
+  const [formData, setFormData] = useState<RegisterData & { confirmPassword: string; instrumentOther: string; instruments: string[] }>({
     email: '',
     username: '',
     password: '',
@@ -34,6 +32,7 @@ const Register: React.FC = () => {
     last_name: '',
     phone: '',
     instrument: '',
+    instruments: [],
     instrumentOther: '',
     bio: '',
   });
@@ -70,17 +69,27 @@ const Register: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    // Se usuário muda o select de instrumento, limpa o campo customizado
-    if (name === 'instrument' && value !== 'other') {
-      setFormData(prev => ({ ...prev, instrument: value, instrumentOther: '' }));
-    } else if (name === 'phone') {
+    if (name === 'phone') {
       setFormData(prev => ({ ...prev, phone: formatPhone(value) }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
     // Limpa erro do campo quando usuário digita
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+    if (errors[name] || (name === 'instrumentOther' && errors.instrument)) {
+      setErrors(prev => ({ ...prev, [name]: '', instrument: '' }));
+    }
+  };
+
+  const toggleInstrument = (value: string) => {
+    setFormData((prev) => {
+      const exists = prev.instruments.includes(value);
+      const instruments = exists
+        ? prev.instruments.filter((inst) => inst !== value)
+        : [...prev.instruments, value];
+      return { ...prev, instruments };
+    });
+    if (errors.instrument) {
+      setErrors((prev) => ({ ...prev, instrument: '' }));
     }
   };
 
@@ -115,16 +124,18 @@ const Register: React.FC = () => {
       newErrors.first_name = 'Nome é obrigatório';
     }
 
-    if (!formData.instrument) {
-      newErrors.instrument = 'Instrumento é obrigatório';
-    }
+    const extraInstrument = formData.instrumentOther.trim();
+    const selectedInstruments = [
+      ...formData.instruments,
+      ...(extraInstrument ? [extraInstrument] : []),
+    ].map((inst) => inst.trim()).filter(Boolean);
 
-    if (formData.instrument === 'other') {
-      if (!formData.instrumentOther.trim()) {
-        newErrors.instrumentOther = 'Descreva seu instrumento';
-      } else if (formData.instrumentOther.trim().length < 3) {
-        newErrors.instrumentOther = 'Use pelo menos 3 caracteres';
-      }
+    if (!selectedInstruments.length) {
+      newErrors.instrument = 'Selecione ou informe pelo menos um instrumento';
+    } else if (selectedInstruments.some((inst) => inst.length > 50)) {
+      newErrors.instrument = 'Instrumento deve ter no máximo 50 caracteres';
+    } else if (extraInstrument && extraInstrument.length < 3) {
+      newErrors.instrument = 'Use pelo menos 3 caracteres para o instrumento adicional';
     }
 
     setErrors(newErrors);
@@ -140,11 +151,19 @@ const Register: React.FC = () => {
     setErrors({});
 
     try {
-      const { confirmPassword, instrumentOther, ...data } = formData;
-      const instrumentValue =
-        data.instrument === 'other' ? instrumentOther.trim() : (data.instrument || '').trim();
+      const { confirmPassword, instrumentOther, instruments, ...data } = formData;
+      const customInstrument = instrumentOther.trim();
+      const allInstruments = [
+        ...instruments,
+        ...(customInstrument ? [customInstrument] : []),
+      ].map((inst) => inst.trim()).filter(Boolean);
+      const primaryInstrument = allInstruments[0] || '';
 
-      const payload = { ...data, instrument: instrumentValue };
+      const payload = {
+        ...data,
+        instrument: primaryInstrument,
+        instruments: allInstruments,
+      };
       const response = await registrationService.register(payload);
       setRegisteredEmail(response.email);
       setSuccess(true);
@@ -232,6 +251,7 @@ const Register: React.FC = () => {
                     last_name: '',
                     phone: '',
                     instrument: '',
+                    instruments: [],
                     instrumentOther: '',
                     bio: '',
                   });
@@ -432,43 +452,53 @@ const Register: React.FC = () => {
                 </div>
               </div>
               <div>
-                <label htmlFor="instrument" className="block text-sm font-medium text-gray-700 mb-1">
-                  Instrumento{errors.instrument && <span className="text-red-500 ml-1">*</span>}
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Instrumentos{errors.instrument && <span className="text-red-500 ml-1">*</span>}
                 </label>
-                <div className="relative">
-                  <Guitar className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                  <select
-                    id="instrument"
-                    name="instrument"
-                    value={formData.instrument}
+                <p className="text-xs text-gray-500 mb-2">Selecione todos que você toca/canta.</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {INSTRUMENTS.map((inst) => {
+                    const checked = formData.instruments.includes(inst.value);
+                    return (
+                      <label
+                        key={inst.value}
+                        className={`flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer transition-colors ${
+                          checked ? 'border-primary-300 bg-primary-50 text-primary-800' : 'border-gray-200 hover:border-primary-200'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleInstrument(inst.value)}
+                          className="sr-only"
+                        />
+                        <span
+                          className={`h-4 w-4 rounded border flex items-center justify-center text-[10px] ${
+                            checked ? 'bg-primary-600 border-primary-600 text-white' : 'border-gray-300 text-transparent'
+                          }`}
+                        >
+                          ✓
+                        </span>
+                        <span className="text-sm font-medium">{inst.label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+                <div className="mt-3">
+                  <label htmlFor="instrumentOther" className="block text-sm font-medium text-gray-700 mb-1">
+                    Outro instrumento (opcional)
+                  </label>
+                  <input
+                    id="instrumentOther"
+                    name="instrumentOther"
+                    type="text"
+                    value={formData.instrumentOther}
                     onChange={handleChange}
-                    className={`input-field pl-10 appearance-none ${errors.instrument ? 'border-red-500' : ''}`}
-                  >
-                    {INSTRUMENTS.map(inst => (
-                      <option key={inst.value} value={inst.value}>{inst.label}</option>
-                    ))}
-                  </select>
+                    className={`input-field ${errors.instrument ? 'border-red-500' : ''}`}
+                    placeholder="Ex.: Violino, Trompete, Flauta..."
+                  />
                 </div>
                 {errors.instrument && <p className="text-red-500 text-xs mt-1">{errors.instrument}</p>}
-                {formData.instrument === 'other' && (
-                  <div className="mt-3">
-                    <label htmlFor="instrumentOther" className="block text-sm font-medium text-gray-700 mb-1">
-                      Qual instrumento?
-                    </label>
-                    <input
-                      id="instrumentOther"
-                      name="instrumentOther"
-                      type="text"
-                      value={formData.instrumentOther}
-                      onChange={handleChange}
-                      className={`input-field ${errors.instrumentOther ? 'border-red-500' : ''}`}
-                      placeholder="Ex.: Violino, Trompete, Flauta..."
-                    />
-                    {errors.instrumentOther && (
-                      <p className="text-red-500 text-xs mt-1">{errors.instrumentOther}</p>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
 

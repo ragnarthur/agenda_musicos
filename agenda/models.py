@@ -95,6 +95,7 @@ class Musician(models.Model):
         blank=True
     )
     instrument = models.CharField(max_length=50, help_text='Instrumento principal do músico')
+    instruments = models.JSONField(default=list, blank=True, help_text='Lista de instrumentos (multi-instrumentista)')
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='member')
     bio = models.TextField(blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
@@ -804,6 +805,7 @@ class PendingRegistration(models.Model):
     last_name = models.CharField(max_length=150, blank=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     instrument = models.CharField(max_length=50, blank=True, null=True)
+    instruments = models.JSONField(default=list, blank=True)
     bio = models.TextField(blank=True, null=True)
 
     # Status e tokens
@@ -861,11 +863,16 @@ class PendingRegistration(models.Model):
         user.password = self.password_hash
         user.save()
 
+        instruments = self.instruments or []
+        if not instruments and self.instrument:
+            instruments = [self.instrument]
+
         # Cria o perfil de músico
         musician = Musician.objects.create(
             user=user,
             phone=self.phone or '',
             instrument=self.instrument or '',
+            instruments=instruments,
             bio=self.bio or '',
             role='member',
             is_active=True,
