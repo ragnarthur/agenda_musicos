@@ -387,6 +387,7 @@ export interface RegisterData {
   last_name?: string;
   phone?: string;
   instrument?: string;
+  instruments?: string[];
   bio?: string;
 }
 

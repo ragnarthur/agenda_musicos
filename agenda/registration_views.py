@@ -59,7 +59,26 @@ class RegisterView(APIView):
         last_name = data.get('last_name', '').strip()
         phone = data.get('phone', '').strip()
         instrument = str(data.get('instrument', '') or '').strip()
+        instruments_raw = data.get('instruments', [])
+        instruments = []
+
+        if isinstance(instruments_raw, list):
+            for item in instruments_raw:
+                if item is None:
+                    continue
+                value = str(item).strip()
+                if not value:
+                    continue
+                if len(value) > 50:
+                    errors['instrument'] = 'Cada instrumento deve ter no máximo 50 caracteres.'
+                    break
+                instruments.append(value.lower())
+
         bio = data.get('bio', '').strip()
+
+        # Remove duplicados preservando ordem
+        if instruments:
+            instruments = list(dict.fromkeys(instruments))
 
         if instrument and len(instrument) > 50:
             errors['instrument'] = 'Instrumento deve ter no máximo 50 caracteres.'
@@ -67,6 +86,16 @@ class RegisterView(APIView):
         # Normaliza instrumento para evitar duplicados (ex: violin/Violin)
         if instrument:
             instrument = instrument.lower()
+
+        # Se veio lista, define o primeiro como principal
+        if not instrument and instruments:
+            instrument = instruments[0]
+
+        if not instrument and not instruments:
+            errors['instrument'] = 'Instrumento é obrigatório.'
+
+        if instrument and instrument not in instruments:
+            instruments.insert(0, instrument)
 
         if errors:
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
@@ -100,6 +129,7 @@ class RegisterView(APIView):
             last_name=last_name,
             phone=phone,
             instrument=instrument,
+            instruments=instruments,
             bio=bio,
             email_token=email_token,
             expires_at=expires_at,
