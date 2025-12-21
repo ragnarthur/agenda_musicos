@@ -7,7 +7,8 @@ import { showToast } from '../utils/toast';
 
 const INSTRUMENTS = [
   { value: 'vocal', label: 'Vocal' },
-  { value: 'guitar', label: 'Guitarra/Violão' },
+  { value: 'guitar', label: 'Guitarra' },
+  { value: 'acoustic_guitar', label: 'Violão' },
   { value: 'bass', label: 'Baixo' },
   { value: 'drums', label: 'Bateria' },
   { value: 'keyboard', label: 'Teclado' },
