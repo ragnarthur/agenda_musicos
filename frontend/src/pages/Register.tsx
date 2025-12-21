@@ -119,7 +119,11 @@ const Register: React.FC = () => {
         instruments = instruments.filter((inst) => inst !== 'other');
       }
 
-      return { ...prev, instruments };
+      return {
+        ...prev,
+        instruments,
+        instrumentOther: instruments.includes('other') ? prev.instrumentOther : '',
+      };
     });
     if (errors.instrument) {
       setErrors((prev) => ({ ...prev, instrument: '' }));
@@ -636,20 +640,22 @@ const Register: React.FC = () => {
                       );
                     })}
                   </div>
-                  <div className="mt-2">
-                    <label htmlFor="instrumentOther" className="block text-sm font-medium text-gray-700 mb-1">
-                      Outro instrumento (opcional)
-                    </label>
-                    <input
-                      id="instrumentOther"
-                      name="instrumentOther"
-                      type="text"
-                      value={formData.instrumentOther}
-                      onChange={handleChange}
-                      className={`input-field ${errors.instrument ? 'border-red-500' : ''}`}
-                      placeholder="Ex.: Violino, Trompete, Flauta..."
-                    />
-                  </div>
+                  {formData.instruments.includes('other') && (
+                    <div className="mt-2">
+                      <label htmlFor="instrumentOther" className="block text-sm font-medium text-gray-700 mb-1">
+                        Outro instrumento (opcional)
+                      </label>
+                      <input
+                        id="instrumentOther"
+                        name="instrumentOther"
+                        type="text"
+                        value={formData.instrumentOther}
+                        onChange={handleChange}
+                        className={`input-field ${errors.instrument ? 'border-red-500' : ''}`}
+                        placeholder="Ex.: Violino, Trompete, Flauta..."
+                      />
+                    </div>
+                  )}
                   {errors.instrument && <p className="text-red-500 text-xs mt-1">{errors.instrument}</p>}
                 </div>
               )}
