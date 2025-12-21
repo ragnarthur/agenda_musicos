@@ -171,8 +171,15 @@ class Musician(models.Model):
         verbose_name = 'Músico'
         verbose_name_plural = 'Músicos'
     
+    def get_instrument_label(self):
+        """Retorna label do instrumento, com fallback para valores customizados."""
+        if not self.instrument:
+            return 'Sem instrumento'
+        labels = dict(self.INSTRUMENT_CHOICES)
+        return labels.get(self.instrument, self.instrument)
+
     def __str__(self):
-        return f"{self.user.get_full_name() or self.user.username} - {self.get_instrument_display()}"
+        return f"{self.user.get_full_name() or self.user.username} - {self.get_instrument_label()}"
     
     def is_leader(self):
         """Verifica se o músico é líder/aprovador"""
@@ -605,6 +612,12 @@ class LeaderAvailability(models.Model):
             models.Q(end_datetime__gt=buffer_start)
         )
 
+        org = self.organization or getattr(self.leader, 'organization', None)
+        if org:
+            conflicting_events = conflicting_events.filter(organization=org)
+        elif self.leader_id:
+            conflicting_events = conflicting_events.filter(created_by=self.leader.user)
+
         return conflicting_events
 
     def has_conflicts(self):
@@ -638,7 +651,12 @@ class EventInstrument(models.Model):
         verbose_name_plural = 'Instrumentos do Evento'
 
     def __str__(self):
-        return f"{self.event.title} - {self.quantity}x {self.get_instrument_display()}"
+        return f"{self.event.title} - {self.quantity}x {self.get_instrument_label()}"
+
+    def get_instrument_label(self):
+        """Retorna label do instrumento, com fallback para valores customizados."""
+        labels = dict(Musician.INSTRUMENT_CHOICES)
+        return labels.get(self.instrument, self.instrument)
 
 
 class MusicianRating(models.Model):
