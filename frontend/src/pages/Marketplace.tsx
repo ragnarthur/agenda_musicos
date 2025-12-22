@@ -258,6 +258,13 @@ const Marketplace: React.FC = () => {
     }
   };
 
+  const scrollToGig = (gigId: number) => {
+    const target = document.getElementById(`gig-${gigId}`);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   useEffect(() => {
     if (!cityOpen) return undefined;
 
@@ -392,7 +399,7 @@ const Marketplace: React.FC = () => {
                   const isOwner = gig.created_by ? gig.created_by === user?.user.id : false;
 
                   return (
-                    <div key={gig.id} className="card-contrast hover:shadow-2xl transition-all">
+                    <div id={`gig-${gig.id}`} key={gig.id} className="card-contrast hover:shadow-2xl transition-all">
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                         <div>
                           <div className="flex items-center gap-2">
@@ -540,7 +547,12 @@ const Marketplace: React.FC = () => {
                 ) : (
                   <div className="space-y-3">
                     {myGigs.map((gig) => (
-                      <div key={gig.id} className="border border-gray-100 rounded-lg p-3">
+                      <button
+                        key={gig.id}
+                        type="button"
+                        onClick={() => scrollToGig(gig.id)}
+                        className="w-full text-left border border-gray-100 rounded-lg p-3 transition hover:border-primary-200 hover:bg-primary-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-200"
+                      >
                         <div className="flex items-center justify-between gap-2">
                           <p className="font-semibold text-gray-900 truncate">{gig.title}</p>
                           <span className={`px-2 py-1 rounded-full text-xs font-semibold ${statusStyles[gig.status] || 'bg-gray-100 text-gray-700'}`}>
@@ -554,7 +566,7 @@ const Marketplace: React.FC = () => {
                           <span>•</span>
                           <span>Candidaturas: {gig.applications_count}</span>
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 )}
