@@ -138,14 +138,27 @@ class EventListSerializer(serializers.ModelSerializer):
             return f"Aprovado por {obj.approved_by.get_full_name() or obj.approved_by.username}"
         if obj.status == 'confirmed':
             # Busca o último músico que aceitou (trigou a confirmação)
+            # Primeiro tenta com responded_at preenchido
             last_available = obj.availabilities.filter(
-                response='available'
+                response='available',
+                responded_at__isnull=False
             ).order_by('-responded_at').first()
+
+            # Fallback: qualquer músico disponível
+            if not last_available:
+                last_available = obj.availabilities.filter(
+                    response='available'
+                ).select_related('musician__user').first()
+
+            # Fallback final: criador do evento
             if last_available:
                 name = last_available.musician.user.get_full_name() or last_available.musician.user.username
                 return f"Confirmado por {name}"
+            elif obj.created_by:
+                name = obj.created_by.get_full_name() or obj.created_by.username
+                return f"Confirmado por {name}"
         return obj.get_status_display()
-    
+
     def get_availability_summary(self, obj):
         """
         Retorna resumo das disponibilidades.
@@ -244,11 +257,24 @@ class EventDetailSerializer(serializers.ModelSerializer):
             return f"Aprovado por {obj.approved_by.get_full_name() or obj.approved_by.username}"
         if obj.status == 'confirmed':
             # Busca o último músico que aceitou (trigou a confirmação)
+            # Primeiro tenta com responded_at preenchido
             last_available = obj.availabilities.filter(
-                response='available'
+                response='available',
+                responded_at__isnull=False
             ).order_by('-responded_at').first()
+
+            # Fallback: qualquer músico disponível
+            if not last_available:
+                last_available = obj.availabilities.filter(
+                    response='available'
+                ).select_related('musician__user').first()
+
+            # Fallback final: criador do evento
             if last_available:
                 name = last_available.musician.user.get_full_name() or last_available.musician.user.username
+                return f"Confirmado por {name}"
+            elif obj.created_by:
+                name = obj.created_by.get_full_name() or obj.created_by.username
                 return f"Confirmado por {name}"
         return obj.get_status_display()
 
