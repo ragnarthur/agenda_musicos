@@ -344,6 +344,8 @@ const Marketplace: React.FC = () => {
     }
   }, [duration, customDuration, customDurationActive]);
 
+  const myGigs = gigs.filter((gig) => gig.created_by === user?.user.id);
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -529,6 +531,31 @@ const Marketplace: React.FC = () => {
                   <Megaphone className="h-4 w-4" />
                   Nova oportunidade
                 </button>
+              </div>
+
+              <div className="card-contrast">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Minhas vagas</h3>
+                {myGigs.length === 0 ? (
+                  <p className="text-sm text-gray-600">Você ainda não publicou nenhuma vaga.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {myGigs.map((gig) => (
+                      <div key={gig.id} className="border border-gray-100 rounded-lg p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-semibold text-gray-900 truncate">{gig.title}</p>
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${statusStyles[gig.status] || 'bg-gray-100 text-gray-700'}`}>
+                            {statusLabel[gig.status] || gig.status}
+                          </span>
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-600">
+                          <span>{gig.city || 'Cidade a combinar'}</span>
+                          <span>•</span>
+                          <span>{formatDate(gig.event_date)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="card-contrast">
