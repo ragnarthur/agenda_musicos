@@ -262,7 +262,7 @@ const Payment: React.FC = () => {
                   <Star className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="font-medium">Marketplace de Vagas</h4>
+                  <h4 className="font-medium">Vagas de Shows</h4>
                   <p className="text-white/70 text-sm">Encontre oportunidades de shows</p>
                 </div>
               </div>

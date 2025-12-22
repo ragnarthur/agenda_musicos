@@ -70,7 +70,7 @@ const Marketplace: React.FC = () => {
       setMyApplications(myApplicationsData);
     } catch (err) {
       console.error(err);
-      setError('Não foi possível carregar o marketplace. Tente novamente.');
+      setError('Não foi possível carregar as vagas. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -85,7 +85,11 @@ const Marketplace: React.FC = () => {
 
     try {
       setCreating(true);
-      await marketplaceService.createGig(form);
+      const payload = {
+        ...form,
+        budget: normalizeCurrency(form.budget),
+      };
+      await marketplaceService.createGig(payload);
       setForm({
         title: '',
         description: '',
@@ -113,12 +117,13 @@ const Marketplace: React.FC = () => {
   };
 
   const handleApplyChange = (gigId: number, field: keyof ApplyForm, value: string) => {
+    const nextValue = field === 'expected_fee' ? formatCurrencyInput(value) : value;
     setApplyForms((prev) => ({
       ...prev,
       [gigId]: {
         cover_letter: prev[gigId]?.cover_letter || '',
         expected_fee: prev[gigId]?.expected_fee || '',
-        [field]: value,
+        [field]: nextValue,
       },
     }));
   };
@@ -126,7 +131,10 @@ const Marketplace: React.FC = () => {
   const handleApply = async (gigId: number) => {
     const payload = applyForms[gigId] || { cover_letter: '', expected_fee: '' };
     try {
-      await marketplaceService.applyToGig(gigId, payload);
+      await marketplaceService.applyToGig(gigId, {
+        ...payload,
+        expected_fee: normalizeCurrency(payload.expected_fee),
+      });
       await loadData();
     } catch (err) {
       console.error(err);
@@ -149,6 +157,19 @@ const Marketplace: React.FC = () => {
   const formatTime = (value?: string | null) => {
     if (!value) return null;
     return value.slice(0, 5);
+  };
+
+  const formatCurrencyInput = (value: string) => {
+    const digits = value.replace(/\D/g, '');
+    if (!digits) return '';
+    const amount = Number(digits) / 100;
+    return `R$ ${amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  const normalizeCurrency = (value: string) => {
+    const digits = value.replace(/\D/g, '');
+    if (!digits) return undefined;
+    return (Number(digits) / 100).toFixed(2);
   };
 
   const formatPhone = (value: string) => {
@@ -232,7 +253,7 @@ const Marketplace: React.FC = () => {
                 <Megaphone className="h-6 w-6 text-primary-700" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Marketplace de Gigs</h1>
+                <h1 className="text-2xl font-bold text-gray-900">Vagas de Shows</h1>
                 <p className="text-sm text-gray-600">
                   Publique vagas e concorra a shows como freelancer. Encontre músicos prontos para tocar.
                 </p>
@@ -246,7 +267,7 @@ const Marketplace: React.FC = () => {
         </div>
 
         {loading ? (
-          <Loading text="Carregando marketplace..." />
+          <Loading text="Carregando vagas..." />
         ) : error ? (
           <div className="card-contrast bg-red-50/80 border-red-200">
             <p className="text-red-800 mb-3">{error}</p>
@@ -347,6 +368,7 @@ const Marketplace: React.FC = () => {
                                 placeholder="Cache desejado (opcional)"
                                 value={applyForm.expected_fee}
                                 onChange={(e) => handleApplyChange(gig.id, 'expected_fee', e.target.value)}
+                                inputMode="decimal"
                                 disabled={!canApply}
                               />
                               <button
@@ -528,7 +550,7 @@ const Marketplace: React.FC = () => {
               </div>
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Data e horário</label>
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div className="space-y-3">
                   <input
                     type="date"
                     className="input-field py-3 text-sm sm:text-base"
@@ -536,18 +558,20 @@ const Marketplace: React.FC = () => {
                     onChange={(e) => setForm({ ...form, event_date: e.target.value })}
                     min={new Date().toISOString().split('T')[0]}
                   />
-                  <input
-                    type="time"
-                    className="input-field py-3 text-sm sm:text-base"
-                    value={form.start_time}
-                    onChange={(e) => setForm({ ...form, start_time: e.target.value })}
-                  />
-                  <input
-                    type="time"
-                    className="input-field py-3 text-sm sm:text-base"
-                    value={form.end_time}
-                    onChange={(e) => setForm({ ...form, end_time: e.target.value })}
-                  />
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <input
+                      type="time"
+                      className="input-field py-3 text-sm sm:text-base"
+                      value={form.start_time}
+                      onChange={(e) => setForm({ ...form, start_time: e.target.value })}
+                    />
+                    <input
+                      type="time"
+                      className="input-field py-3 text-sm sm:text-base"
+                      value={form.end_time}
+                      onChange={(e) => setForm({ ...form, end_time: e.target.value })}
+                    />
+                  </div>
                 </div>
               </div>
               <div>
@@ -555,9 +579,13 @@ const Marketplace: React.FC = () => {
                 <input
                   type="text"
                   className="input-field"
-                  placeholder="Ex: 1500"
+                  placeholder="R$ 0,00"
                   value={form.budget}
-                  onChange={(e) => setForm({ ...form, budget: e.target.value })}
+                  onChange={(e) => {
+                    const formatted = formatCurrencyInput(e.target.value);
+                    setForm({ ...form, budget: formatted });
+                  }}
+                  inputMode="decimal"
                 />
               </div>
               <div>

@@ -101,7 +101,7 @@ const Navbar: React.FC = () => {
             <NavLink to="/musicos" icon={<Users className="h-5 w-5" />} label="Músicos" />
             <NavLink to="/conexoes" icon={<HeartHandshake className="h-5 w-5" />} label="Rede & Badges" />
             <NavLink to="/disponibilidades" icon={<Clock className="h-5 w-5" />} label="Datas Disponíveis" />
-            <NavLink to="/marketplace" icon={<Megaphone className="h-5 w-5" />} label="Marketplace" />
+            <NavLink to="/marketplace" icon={<Megaphone className="h-5 w-5" />} label="Vagas" />
             <NavLink
               to="/aprovacoes"
               icon={<Crown className="h-5 w-5" />}
@@ -212,7 +212,7 @@ const Navbar: React.FC = () => {
                 className="flex items-center gap-3 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
               >
                 <Megaphone className="h-5 w-5" />
-                <span className="text-sm">Marketplace</span>
+                <span className="text-sm">Vagas</span>
               </Link>
               <Link
                 to="/aprovacoes"
