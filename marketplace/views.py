@@ -68,6 +68,17 @@ class GigViewSet(viewsets.ModelViewSet):
             contact_email=contact_email,
         )
 
+    def perform_update(self, serializer):
+        gig = self.get_object()
+        if gig.created_by != self.request.user and not self.request.user.is_staff:
+            raise PermissionDenied('Apenas quem publicou a vaga pode editar.')
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if instance.created_by != self.request.user and not self.request.user.is_staff:
+            raise PermissionDenied('Apenas quem publicou a vaga pode excluir.')
+        instance.delete()
+
     @action(detail=True, methods=['post'])
     def apply(self, request, pk=None):
         """Músico freelancer se candidata a uma vaga."""

@@ -367,6 +367,15 @@ export const marketplaceService = {
     return response.data;
   },
 
+  updateGig: async (gigId: number, data: Partial<MarketplaceGig>): Promise<MarketplaceGig> => {
+    const response = await api.patch(`/marketplace/gigs/${gigId}/`, data);
+    return response.data;
+  },
+
+  deleteGig: async (gigId: number): Promise<void> => {
+    await api.delete(`/marketplace/gigs/${gigId}/`);
+  },
+
   applyToGig: async (
     gigId: number,
     payload: { cover_letter?: string; expected_fee?: string | number }
