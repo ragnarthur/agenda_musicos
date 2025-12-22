@@ -133,9 +133,17 @@ class EventListSerializer(serializers.ModelSerializer):
         return obj.approved_by.get_full_name() if obj.approved_by else None
 
     def get_approval_label(self, obj):
-        """Mostra quem aprovou quando status é aprovado"""
+        """Mostra quem aprovou/confirmou o evento"""
         if obj.status == 'approved' and obj.approved_by:
             return f"Aprovado por {obj.approved_by.get_full_name() or obj.approved_by.username}"
+        if obj.status == 'confirmed':
+            # Busca o último músico que aceitou (trigou a confirmação)
+            last_available = obj.availabilities.filter(
+                response='available'
+            ).order_by('-responded_at').first()
+            if last_available:
+                name = last_available.musician.user.get_full_name() or last_available.musician.user.username
+                return f"Confirmado por {name}"
         return obj.get_status_display()
     
     def get_availability_summary(self, obj):
@@ -231,8 +239,17 @@ class EventDetailSerializer(serializers.ModelSerializer):
             return False
 
     def get_approval_label(self, obj):
+        """Mostra quem aprovou/confirmou o evento"""
         if obj.status == 'approved' and obj.approved_by:
             return f"Aprovado por {obj.approved_by.get_full_name() or obj.approved_by.username}"
+        if obj.status == 'confirmed':
+            # Busca o último músico que aceitou (trigou a confirmação)
+            last_available = obj.availabilities.filter(
+                response='available'
+            ).order_by('-responded_at').first()
+            if last_available:
+                name = last_available.musician.user.get_full_name() or last_available.musician.user.username
+                return f"Confirmado por {name}"
         return obj.get_status_display()
 
     def get_logs(self, obj):
