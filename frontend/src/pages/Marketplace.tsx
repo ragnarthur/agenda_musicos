@@ -458,8 +458,8 @@ const Marketplace: React.FC = () => {
 
                       <div className="mt-4 border-t border-gray-100 pt-3 space-y-3">
                         {isOwner ? (
-                          <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm text-gray-600">
-                            <span className="animate-pulse text-primary-700">Você publicou esta vaga.</span>
+                          <div className="rounded-lg border border-primary-200 bg-gradient-to-r from-primary-100 via-white to-primary-100 px-3 py-2 text-sm text-primary-900 shadow-sm">
+                            <span className="animate-pulse font-semibold tracking-wide">Você publicou esta vaga.</span>
                           </div>
                         ) : gig.my_application ? (
                           <div className="flex items-center justify-between bg-primary-50 border border-primary-100 rounded-lg p-3 text-sm">
