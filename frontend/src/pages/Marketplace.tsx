@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Megaphone, MapPin, Calendar as CalendarIcon, Phone, Mail, Send, Sparkles, Clock3, Loader2, X, PencilLine, Trash2 } from 'lucide-react';
+import { Megaphone, MapPin, Calendar as CalendarIcon, Phone, Mail, Send, Sparkles, Clock3, Loader2, X, PencilLine, Trash2, ArrowUp } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import ConfirmModal from '../components/modals/ConfirmModal';
@@ -263,7 +263,6 @@ const Marketplace: React.FC = () => {
     const target = document.getElementById(`gig-${gigId}`);
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      setShowBackToTop(true);
     }
   };
 
@@ -338,6 +337,15 @@ const Marketplace: React.FC = () => {
   }, [showCreateModal, closeModal]);
 
   useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 320);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
     if (!form.start_time || !duration) return;
     const hours = Number(duration);
     if (!Number.isFinite(hours) || hours <= 0) return;
@@ -366,7 +374,7 @@ const Marketplace: React.FC = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div id="vagas-hero" className="hero-panel">
+        <div id="vagas-hero" className="hero-panel scroll-mt-24">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-xl bg-primary-100/70 flex items-center justify-center shadow-inner">
@@ -931,6 +939,18 @@ const Marketplace: React.FC = () => {
         loading={deleteLoading}
         icon={<Trash2 className="h-5 w-5" />}
       />
+
+      {showBackToTop && !showCreateModal ? (
+        <button
+          type="button"
+          onClick={scrollToHero}
+          className="fixed bottom-5 right-4 z-50 inline-flex items-center gap-2 rounded-full bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-black/20 transition hover:bg-primary-700"
+          aria-label="Voltar ao topo"
+        >
+          <ArrowUp className="h-4 w-4" />
+          Voltar ao topo
+        </button>
+      ) : null}
     </Layout>
   );
 };
