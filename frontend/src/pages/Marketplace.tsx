@@ -255,7 +255,7 @@ const Marketplace: React.FC = () => {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Vagas de Shows</h1>
                 <p className="text-sm text-gray-600">
-                  Publique vagas e concorra a shows como freelancer. Encontre músicos prontos para tocar.
+                  Divulgue oportunidades e encontre músicos disponíveis para fechar o próximo show.
                 </p>
               </div>
             </div>
