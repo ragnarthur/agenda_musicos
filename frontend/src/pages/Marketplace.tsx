@@ -145,7 +145,10 @@ const Marketplace: React.FC = () => {
 
   const formatDate = (value?: string | null) => {
     if (!value) return 'Data a combinar';
-    return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium' }).format(new Date(value));
+    const [year, month, day] = value.split('T')[0].split('-').map(Number);
+    if (!year || !month || !day) return 'Data a combinar';
+    const localDate = new Date(year, month - 1, day);
+    return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium' }).format(localDate);
   };
 
   const formatCurrency = (value?: string | number | null) => {
