@@ -287,84 +287,81 @@ const Marketplace: React.FC = () => {
             <div className="space-y-4">
               <div className="card-contrast border-primary-200/70">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Publicar vaga rápida</h3>
-                <form className="space-y-3" onSubmit={handleCreateGig}>
+                <form className="grid gap-3 sm:grid-cols-2" onSubmit={handleCreateGig}>
                   <input
                     type="text"
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+                    className="input-field sm:col-span-2"
                     placeholder="Título da vaga (ex: Voz e violão - casamento)"
                     value={form.title}
                     onChange={(e) => setForm({ ...form, title: e.target.value })}
                     required
                   />
                   <textarea
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+                    className="input-field sm:col-span-2 min-h-[96px] resize-y"
                     placeholder="Descrição (repertório, duração, observações)"
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
-                    rows={3}
+                    rows={4}
                   />
-                  <div className="grid grid-cols-2 gap-3">
+                  <input
+                    type="text"
+                    className="input-field"
+                    placeholder="Cidade/UF"
+                    value={form.city}
+                    onChange={(e) => setForm({ ...form, city: e.target.value })}
+                  />
+                  <input
+                    type="text"
+                    className="input-field"
+                    placeholder="Local (bar, salão...)"
+                    value={form.location}
+                    onChange={(e) => setForm({ ...form, location: e.target.value })}
+                  />
+                  <input
+                    type="date"
+                    className="input-field"
+                    value={form.event_date}
+                    onChange={(e) => setForm({ ...form, event_date: e.target.value })}
+                  />
+                  <div className="grid gap-2 sm:grid-cols-2">
                     <input
-                      type="text"
-                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
-                      placeholder="Cidade/UF"
-                      value={form.city}
-                      onChange={(e) => setForm({ ...form, city: e.target.value })}
+                      type="time"
+                      className="input-field"
+                      value={form.start_time}
+                      onChange={(e) => setForm({ ...form, start_time: e.target.value })}
                     />
                     <input
-                      type="text"
-                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
-                      placeholder="Local (bar, salão...)"
-                      value={form.location}
-                      onChange={(e) => setForm({ ...form, location: e.target.value })}
+                      type="time"
+                      className="input-field"
+                      value={form.end_time}
+                      onChange={(e) => setForm({ ...form, end_time: e.target.value })}
                     />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <input
-                      type="date"
-                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
-                      value={form.event_date}
-                      onChange={(e) => setForm({ ...form, event_date: e.target.value })}
-                    />
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="time"
-                        className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
-                        value={form.start_time}
-                        onChange={(e) => setForm({ ...form, start_time: e.target.value })}
-                      />
-                      <input
-                        type="time"
-                        className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
-                        value={form.end_time}
-                        onChange={(e) => setForm({ ...form, end_time: e.target.value })}
-                      />
-                    </div>
                   </div>
                   <input
                     type="text"
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+                    className="input-field"
                     placeholder="Cache (ex: 1500)"
                     value={form.budget}
                     onChange={(e) => setForm({ ...form, budget: e.target.value })}
                   />
                   <input
                     type="text"
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+                    className="input-field"
                     placeholder="Estilos (pop, rock, sertanejo)"
                     value={form.genres}
                     onChange={(e) => setForm({ ...form, genres: e.target.value })}
                   />
                   <input
                     type="text"
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+                    className="input-field sm:col-span-2"
                     placeholder="Telefone/WhatsApp"
                     value={form.contact_phone}
                     onChange={(e) => setForm({ ...form, contact_phone: e.target.value })}
+                    inputMode="tel"
                   />
                   <button
                     type="submit"
-                    className="btn-primary w-full flex items-center justify-center gap-2"
+                    className="btn-primary w-full flex items-center justify-center gap-2 sm:col-span-2"
                     disabled={creating}
                   >
                     <Megaphone className="h-4 w-4" />
