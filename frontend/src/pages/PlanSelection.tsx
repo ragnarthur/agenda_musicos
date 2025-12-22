@@ -50,7 +50,7 @@ const PLANS: Plan[] = [
 const FEATURES = [
   { icon: Calendar, text: 'Gestão completa de agenda' },
   { icon: Users, text: 'Rede de músicos profissionais' },
-  { icon: Star, text: 'Marketplace de vagas' },
+  { icon: Star, text: 'Vagas de shows' },
   { icon: Shield, text: 'Proteção de dados' },
   { icon: Zap, text: 'Notificações em tempo real' },
 ];

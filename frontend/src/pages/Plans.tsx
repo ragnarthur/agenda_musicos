@@ -23,7 +23,7 @@ const plans: Array<{
     features: [
       'Agenda completa para shows',
       'Convites e respostas rápidas',
-      'Marketplace de vagas e conexões',
+      'Vagas de shows e conexões',
       'Suporte prioritário via email',
     ],
   },
