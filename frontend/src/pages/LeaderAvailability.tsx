@@ -213,16 +213,16 @@ const LeaderAvailabilityPage: React.FC = () => {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 text-white p-6 shadow-xl">
+        <div className="hero-panel">
           <div className="pointer-events-none absolute inset-0 -z-10 opacity-40 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.2),_transparent_40%)]" />
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold">Agendas compartilhadas</h1>
-              <p className="text-white/80 max-w-2xl text-sm sm:text-base">
+              <h1 className="text-3xl font-bold text-gray-900">Agendas compartilhadas</h1>
+              <p className="text-gray-600 max-w-2xl text-sm sm:text-base">
                 Cadastre seus horários livres, escolha tornar públicos ou privados e receba convites sem overbooking.
                 O sistema já respeita 40 minutos de buffer entre gigs.
               </p>
-              <div className="flex items-center gap-2 text-xs sm:text-sm text-white/70">
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span>Ideal para duos, trios e freelas rápidos</span>
               </div>

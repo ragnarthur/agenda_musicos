@@ -128,7 +128,7 @@ const Connections: React.FC = () => {
   return (
     <Layout>
       <div className="space-y-8">
-        <div className="relative overflow-hidden rounded-3xl border border-white/40 bg-gradient-to-r from-indigo-500/15 via-white to-emerald-200/20 p-6 shadow-2xl">
+        <div className="hero-panel">
           <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.12),_transparent_35%)]" />
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>

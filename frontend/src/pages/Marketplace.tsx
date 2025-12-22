@@ -142,21 +142,21 @@ const Marketplace: React.FC = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 text-white shadow-lg">
-          <div className="p-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="hero-panel">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-xl bg-white/10 flex items-center justify-center shadow-inner">
-                <Megaphone className="h-6 w-6" />
+              <div className="h-12 w-12 rounded-xl bg-primary-100/70 flex items-center justify-center shadow-inner">
+                <Megaphone className="h-6 w-6 text-primary-700" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">Marketplace de Gigs</h1>
-                <p className="text-sm text-white/80">
+                <h1 className="text-2xl font-bold text-gray-900">Marketplace de Gigs</h1>
+                <p className="text-sm text-gray-600">
                   Publique vagas e concorra a shows como freelancer. Sara, Arthur e Roberto já estão prontos.
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-sm text-white/80">
-              <Sparkles className="h-4 w-4" />
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Sparkles className="h-4 w-4 text-primary-600" />
               <span>Fluxo simples: publicar → candidatar → contratar</span>
             </div>
           </div>

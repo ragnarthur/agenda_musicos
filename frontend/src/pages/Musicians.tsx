@@ -64,21 +64,21 @@ const Musicians: React.FC = () => {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 text-white p-6 shadow-xl">
+        <div className="hero-panel">
           <div className="pointer-events-none absolute inset-0 -z-10 opacity-40 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.2),_transparent_40%)]" />
           <div className="flex items-start justify-between gap-4 flex-col sm:flex-row sm:items-center">
             <div className="flex items-center space-x-3">
-              <div className="bg-white/15 p-3 rounded-lg shadow-inner">
-                <Users className="h-8 w-8 text-white" />
+              <div className="bg-primary-100/70 p-3 rounded-lg shadow-inner">
+                <Users className="h-8 w-8 text-primary-700" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold">Músicos freelancers</h1>
-                <p className="text-white/80 text-sm sm:text-base">
+                <h1 className="text-3xl font-bold text-gray-900">Músicos freelancers</h1>
+                <p className="text-gray-600 text-sm sm:text-base">
                   Perfis com contatos, redes e agenda compartilhada para você montar o time ideal.
                 </p>
               </div>
             </div>
-            <div className="text-sm text-white/80 flex items-center gap-2">
+            <div className="text-sm text-gray-600 flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
               <span>Conecte, convide e feche gigs em minutos</span>
             </div>

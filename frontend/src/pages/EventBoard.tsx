@@ -196,7 +196,7 @@ const EventBoard: React.FC = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-white/80 backdrop-blur p-6 shadow-lg">
+        <div className="hero-panel">
           <div className="spotlight pointer-events-none absolute inset-0 -z-10" />
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
