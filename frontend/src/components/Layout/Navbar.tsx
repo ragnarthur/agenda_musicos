@@ -21,7 +21,7 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const [pendingMyResponse, setPendingMyResponse] = useState(0);
   const [pendingApproval, setPendingApproval] = useState(0);
-  const [openMenu, setOpenMenu] = useState(false);
+  const [openMore, setOpenMore] = useState(false);
 
   const formatInstrument = () => {
     if (!user) return '';
@@ -42,6 +42,10 @@ const Navbar: React.FC = () => {
     };
     return displayMap[user.instrument] || user.instrument;
   };
+
+  const displayName =
+    user?.full_name || user?.user?.first_name || user?.user?.username || 'Conta';
+  const instrumentLabel = formatInstrument();
 
   const loadNotifications = useCallback(async () => {
     try {
@@ -116,23 +120,10 @@ const Navbar: React.FC = () => {
               </p>
             </div>
 
-            <div className="md:hidden flex items-center gap-2 text-sm text-gray-700">
-              <span className="font-semibold truncate max-w-[120px]">
-                {user?.user?.first_name || user?.full_name || user?.user?.username}
-              </span>
-            </div>
-
             <div className="flex items-center gap-2">
               <button
-                className="md:hidden inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white p-2 text-gray-700 hover:border-primary-300 hover:text-primary-600"
-                onClick={() => setOpenMenu((prev) => !prev)}
-                aria-label="Abrir menu"
-              >
-                {openMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </button>
-              <button
                 onClick={handleLogout}
-                className="flex items-center space-x-1 text-gray-700 hover:text-red-600 transition-colors md:px-0 px-2"
+                className="hidden md:flex items-center space-x-1 text-gray-700 hover:text-red-600 transition-colors"
                 title="Sair"
               >
                 <LogOut className="h-5 w-5" />
@@ -140,18 +131,6 @@ const Navbar: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {/* Menu Mobile */}
-        {openMenu && (
-          <div className="md:hidden border-t border-gray-100 py-3 space-y-2">
-            <NavLinkMobile to="/eventos" icon={<Calendar className="h-4 w-4" />} label="Eventos" badge={pendingMyResponse} onClick={() => setOpenMenu(false)} />
-            <NavLinkMobile to="/musicos" icon={<Users className="h-4 w-4" />} label="Músicos" onClick={() => setOpenMenu(false)} />
-            <NavLinkMobile to="/conexoes" icon={<HeartHandshake className="h-4 w-4" />} label="Rede & Badges" onClick={() => setOpenMenu(false)} />
-            <NavLinkMobile to="/disponibilidades" icon={<Clock className="h-4 w-4" />} label="Datas Disponíveis" onClick={() => setOpenMenu(false)} />
-            <NavLinkMobile to="/marketplace" icon={<Megaphone className="h-4 w-4" />} label="Marketplace" onClick={() => setOpenMenu(false)} />
-            <NavLinkMobile to="/aprovacoes" icon={<Crown className="h-4 w-4" />} label="Aprovações" badge={pendingApproval} accent onClick={() => setOpenMenu(false)} />
-          </div>
-        )}
       </div>
 
       {/* Barra de Navegação Mobile - Fixa na parte inferior */}
@@ -159,7 +138,7 @@ const Navbar: React.FC = () => {
         className="md:hidden fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white shadow-[0_-4px_12px_rgba(0,0,0,0.1)] z-40"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
-        <div className="grid grid-cols-5 w-full">
+        <div className="grid grid-cols-4 w-full">
           <Link
             to="/"
             className="flex flex-col items-center justify-center text-gray-600 hover:text-primary-600 py-2 transition-colors"
@@ -182,26 +161,20 @@ const Navbar: React.FC = () => {
           </Link>
 
           <Link
-            to="/musicos"
+            to="/disponibilidades"
             className="flex flex-col items-center justify-center text-gray-600 hover:text-primary-600 py-2 transition-colors"
           >
-            <Users className="h-5 w-5" />
-            <span className="text-[10px] mt-1">Músicos</span>
-          </Link>
-
-          <Link
-            to="/conexoes"
-            className="flex flex-col items-center justify-center text-gray-600 hover:text-primary-600 py-2 transition-colors"
-          >
-            <HeartHandshake className="h-5 w-5" />
-            <span className="text-[10px] mt-1">Rede</span>
+            <Clock className="h-5 w-5" />
+            <span className="text-[10px] mt-1">Datas</span>
           </Link>
 
           <button
-            onClick={() => setOpenMenu((prev) => !prev)}
+            onClick={() => setOpenMore((prev) => !prev)}
             className="flex flex-col items-center justify-center text-gray-600 hover:text-primary-600 py-2 relative transition-colors"
+            aria-expanded={openMore}
+            aria-controls="mobile-more-menu"
           >
-            <Menu className="h-5 w-5" />
+            {openMore ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             <span className="text-[10px] mt-1">Mais</span>
             {pendingApproval > 0 && (
               <span className="absolute top-1 right-2 bg-yellow-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
@@ -212,11 +185,36 @@ const Navbar: React.FC = () => {
         </div>
 
         {/* Menu Expandido "Mais" */}
-        {openMenu && (
-          <div className="absolute bottom-full left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-3 space-y-2">
+        {openMore && (
+          <div
+            id="mobile-more-menu"
+            className="absolute bottom-full left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-3 space-y-2 max-h-[70vh] overflow-y-auto"
+          >
+            <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2">
+              <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
+              {instrumentLabel && (
+                <p className="text-xs text-gray-500 truncate">{instrumentLabel}</p>
+              )}
+            </div>
+            <Link
+              to="/musicos"
+              onClick={() => setOpenMore(false)}
+              className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              <Users className="h-5 w-5" />
+              <span className="text-sm">Músicos</span>
+            </Link>
+            <Link
+              to="/conexoes"
+              onClick={() => setOpenMore(false)}
+              className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              <HeartHandshake className="h-5 w-5" />
+              <span className="text-sm">Rede & Badges</span>
+            </Link>
             <Link
               to="/eventos/agenda"
-              onClick={() => setOpenMenu(false)}
+              onClick={() => setOpenMore(false)}
               className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
             >
               <Clock className="h-5 w-5 rotate-45" />
@@ -224,7 +222,7 @@ const Navbar: React.FC = () => {
             </Link>
             <Link
               to="/disponibilidades"
-              onClick={() => setOpenMenu(false)}
+              onClick={() => setOpenMore(false)}
               className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
             >
               <Clock className="h-5 w-5" />
@@ -232,7 +230,7 @@ const Navbar: React.FC = () => {
             </Link>
             <Link
               to="/marketplace"
-              onClick={() => setOpenMenu(false)}
+              onClick={() => setOpenMore(false)}
               className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
             >
               <Megaphone className="h-5 w-5" />
@@ -240,7 +238,7 @@ const Navbar: React.FC = () => {
             </Link>
             <Link
               to="/aprovacoes"
-              onClick={() => setOpenMenu(false)}
+              onClick={() => setOpenMore(false)}
               className="flex items-center justify-between px-3 py-2 text-yellow-700 hover:bg-yellow-50 rounded-lg transition-colors"
             >
               <span className="flex items-center gap-3">
@@ -256,7 +254,7 @@ const Navbar: React.FC = () => {
             <div className="border-t border-gray-100 pt-2 mt-2">
               <button
                 onClick={() => {
-                  setOpenMenu(false);
+                  setOpenMore(false);
                   handleLogout();
                 }}
                 className="flex items-center gap-3 w-full px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -283,33 +281,6 @@ const NavLink: React.FC<{ to: string; icon: React.ReactNode; label: string; badg
     <span>{label}</span>
     {typeof badge === 'number' && badge > 0 && (
       <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 min-w-5 px-1 flex items-center justify-center">
-        {badge}
-      </span>
-    )}
-  </Link>
-);
-
-const NavLinkMobile: React.FC<{
-  to: string;
-  icon: React.ReactNode;
-  label: string;
-  badge?: number;
-  accent?: boolean;
-  onClick?: () => void;
-}> = ({ to, icon, label, badge, accent, onClick }) => (
-  <Link
-    to={to}
-    onClick={onClick}
-    className={`flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition ${
-      accent ? 'border-yellow-200 bg-yellow-50 text-yellow-700' : 'border-gray-200 bg-white text-gray-700'
-    }`}
-  >
-    <span className="flex items-center gap-2">
-      {icon}
-      {label}
-    </span>
-    {typeof badge === 'number' && badge > 0 && (
-      <span className="bg-red-500 text-white text-xs font-bold rounded-full h-5 min-w-5 px-1 flex items-center justify-center">
         {badge}
       </span>
     )}
