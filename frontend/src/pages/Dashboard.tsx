@@ -142,12 +142,12 @@ const Dashboard: React.FC = () => {
           <div className="spotlight pointer-events-none absolute inset-0 -z-10" />
           <div className="relative flex flex-col md:flex-row md:items-stretch md:justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold text-primary-700">Agenda de Shows</p>
+              <p className="text-sm font-semibold text-primary-700">Agenda Profissional</p>
               <h1 className="mt-1 text-3xl font-bold text-gray-900">
-                Olá, {user?.user.first_name}! Pronto para o próximo palco?
+                Olá, {user?.user.first_name}. Gerencie seus shows e compromissos com precisão.
               </h1>
               <p className="mt-2 text-gray-700">
-                Acompanhe eventos, aprovações e disponibilidades da equipe em um só lugar.
+                Centralize eventos, aprovações e disponibilidades da equipe em um só lugar.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Link

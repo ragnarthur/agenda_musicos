@@ -219,11 +219,11 @@ const EventsList: React.FC = () => {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full bg-white/60 px-3 py-1 text-xs font-semibold text-primary-700 shadow-sm">
                 <Sparkles className="h-4 w-4" />
-                Dashboard de Eventos
+                Painel de Eventos
               </div>
               <h1 className="mt-3 text-3xl font-bold text-gray-900">Meus eventos</h1>
               <p className="mt-1 text-sm text-gray-700">
-                Acompanhe apenas os eventos que você criou ou foi convidado.
+                Acompanhe eventos sob sua gestão ou participação.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <div className="rounded-2xl border border-white/70 bg-white/90 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur">
@@ -235,7 +235,7 @@ const EventsList: React.FC = () => {
                   <p className="text-2xl text-emerald-600">{statistics.confirmed}</p>
                 </div>
                 <div className="rounded-2xl border border-white/70 bg-white/90 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur">
-                  <p className="text-xs uppercase tracking-wide text-gray-500">Shows Solo</p>
+                  <p className="text-xs uppercase tracking-wide text-gray-500">Apresentações solo</p>
                   <p className="text-2xl text-indigo-600">{statistics.solos}</p>
                 </div>
               </div>

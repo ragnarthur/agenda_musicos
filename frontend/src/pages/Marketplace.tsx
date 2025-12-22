@@ -280,7 +280,7 @@ const Marketplace: React.FC = () => {
             <div className="lg:col-span-2 space-y-4">
               {gigs.length === 0 ? (
                 <div className="card-contrast">
-                  <p className="text-gray-700">Nenhuma vaga aberta ainda. Publique a primeira oportunidade!</p>
+                  <p className="text-gray-700">Não há oportunidades ativas. Publique a primeira.</p>
                 </div>
               ) : (
                 gigs.map((gig) => {
@@ -391,7 +391,7 @@ const Marketplace: React.FC = () => {
 
             <div className="space-y-4">
               <div className="card-contrast border-primary-200/70">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Publicar vaga rápida</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Cadastrar oportunidade</h3>
                 <p className="text-sm text-gray-600 mb-4">
                   Cadastre uma nova oportunidade em poucos passos.
                 </p>
@@ -401,7 +401,7 @@ const Marketplace: React.FC = () => {
                   className="btn-primary w-full flex items-center justify-center gap-2"
                 >
                   <Megaphone className="h-4 w-4" />
-                  Adicionar vaga
+                  Nova oportunidade
                 </button>
               </div>
 
@@ -446,7 +446,7 @@ const Marketplace: React.FC = () => {
           >
             <div className="flex items-start justify-between gap-4 mb-6">
               <div>
-                <h3 className="text-2xl font-bold text-gray-900">Nova vaga</h3>
+                <h3 className="text-2xl font-bold text-gray-900">Nova oportunidade</h3>
                 <p className="text-sm text-gray-600">
                   Preencha os detalhes para divulgar sua oportunidade.
                 </p>
@@ -627,7 +627,7 @@ const Marketplace: React.FC = () => {
                   disabled={creating}
                 >
                   <Megaphone className="h-4 w-4" />
-                  {creating ? 'Publicando...' : 'Publicar vaga'}
+                  {creating ? 'Publicando...' : 'Publicar oportunidade'}
                 </button>
               </div>
             </form>

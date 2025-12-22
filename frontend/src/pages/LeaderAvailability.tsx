@@ -219,12 +219,12 @@ const LeaderAvailabilityPage: React.FC = () => {
             <div className="space-y-2">
               <h1 className="text-3xl font-bold text-gray-900">Agendas compartilhadas</h1>
               <p className="text-gray-600 max-w-2xl text-sm sm:text-base">
-                Cadastre seus horários livres, escolha tornar públicos ou privados e receba convites sem overbooking.
-                O sistema já respeita 40 minutos de buffer entre gigs.
+                Cadastre horários disponíveis, defina visibilidade e receba convites com controle de conflitos.
+                O sistema respeita 40 minutos de buffer entre apresentações.
               </p>
               <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span>Ideal para duos, trios e freelas rápidos</span>
+                <span>Ideal para formações variadas e agendas dinâmicas</span>
               </div>
             </div>
             <button
@@ -245,7 +245,7 @@ const LeaderAvailabilityPage: React.FC = () => {
             <div className="flex-1 text-sm text-primary-800">
               <p className="font-medium mb-1">Buffer automático de 40 minutos</p>
               <p>
-                Bloqueamos 40 minutos antes/depois de cada gig para deslocamento e setup. Isso evita overbooking e mantém sua agenda realista.
+                Bloqueamos 40 minutos antes/depois de cada apresentação para deslocamento e preparação. Isso evita conflitos e mantém sua agenda realista.
               </p>
             </div>
           </div>

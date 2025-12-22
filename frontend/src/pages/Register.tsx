@@ -368,7 +368,7 @@ const Register: React.FC = () => {
             </div>
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Criar Conta</h1>
-          <p className="text-primary-100">Junte-se à comunidade de músicos</p>
+          <p className="text-primary-100">Cadastre-se para gerenciar sua agenda e oportunidades profissionais</p>
         </div>
 
         {/* Card de Registro */}

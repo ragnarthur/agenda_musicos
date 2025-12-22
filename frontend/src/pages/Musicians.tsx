@@ -72,15 +72,15 @@ const Musicians: React.FC = () => {
                 <Users className="h-8 w-8 text-primary-700" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Músicos freelancers</h1>
+                <h1 className="text-3xl font-bold text-gray-900">Músicos profissionais</h1>
                 <p className="text-gray-600 text-sm sm:text-base">
-                  Perfis com contatos, redes e agenda compartilhada para você montar o time ideal.
+                  Perfis completos com contatos, redes e disponibilidade para formar a equipe ideal.
                 </p>
               </div>
             </div>
             <div className="text-sm text-gray-600 flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Conecte, convide e feche gigs em minutos</span>
+              <span>Conecte, convide e organize equipes com agilidade</span>
             </div>
           </div>
         </div>

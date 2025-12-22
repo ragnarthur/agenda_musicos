@@ -33,7 +33,7 @@ const PLANS: Plan[] = [
     price: 'R$ 29,90',
     priceValue: 29.9,
     period: '/mês',
-    description: 'Perfeito para começar',
+    description: 'Ideal para iniciar com organização profissional',
   },
   {
     id: 'annual',
@@ -41,14 +41,14 @@ const PLANS: Plan[] = [
     price: 'R$ 299,00',
     priceValue: 299,
     period: '/ano',
-    description: 'Melhor custo-benefício',
+    description: 'Melhor custo-benefício anual',
     savings: 'Economize R$ 59,80',
     popular: true,
   },
 ];
 
 const FEATURES = [
-  { icon: Calendar, text: 'Gestão completa de agenda' },
+  { icon: Calendar, text: 'Gestão profissional de agenda' },
   { icon: Users, text: 'Rede de músicos profissionais' },
   { icon: Star, text: 'Vagas de shows' },
   { icon: Shield, text: 'Proteção de dados' },

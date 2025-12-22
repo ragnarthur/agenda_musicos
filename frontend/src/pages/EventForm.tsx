@@ -300,7 +300,7 @@ const EventForm: React.FC = () => {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="flex items-center text-xs font-semibold uppercase tracking-wide text-primary-600">
-                <Sparkles className="mr-2 h-4 w-4" /> Assistente de Eventos
+                <Sparkles className="mr-2 h-4 w-4" /> Gestão de Eventos
               </p>
               <h1 className="mt-2 text-3xl font-bold text-gray-900">Novo Evento</h1>
               <p className="mt-1 text-sm text-gray-700">

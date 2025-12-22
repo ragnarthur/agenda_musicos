@@ -47,7 +47,9 @@ const Login: React.FC = () => {
             </div>
           </div>
           <h1 className="text-5xl font-bold text-white mb-3 logo-animated drop-shadow-xl leading-tight">GigFlow</h1>
-          <p className="text-primary-50 font-medium text-base tracking-wide">Agenda inteligente para músicos</p>
+          <p className="text-primary-50 font-medium text-base tracking-wide">
+            Plataforma profissional de agenda, disponibilidade e oportunidades para músicos
+          </p>
         </div>
 
         {/* Card de Login */}
@@ -134,7 +136,7 @@ const Login: React.FC = () => {
           </div>
 
           <div className="mt-6 text-center text-xs text-gray-500">
-            Powered by <span className="font-semibold text-primary-600">DXM Tech</span> — Arthur Araújo
+            Powered by <span className="font-semibold text-primary-600">DXM Tech</span>
           </div>
         </div>
       </div>
