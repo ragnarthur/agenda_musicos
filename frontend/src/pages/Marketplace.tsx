@@ -549,30 +549,40 @@ const Marketplace: React.FC = () => {
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Data e horário</label>
-                <div className="space-y-3">
-                  <input
-                    type="date"
-                    className="input-field py-3 text-sm sm:text-base"
-                    value={form.event_date}
-                    onChange={(e) => setForm({ ...form, event_date: e.target.value })}
-                    min={new Date().toISOString().split('T')[0]}
-                  />
-                  <div className="grid gap-3 sm:grid-cols-2">
+                <p className="block text-sm font-medium text-gray-700 mb-2">Data e horário</p>
+                <div className="grid gap-3 sm:grid-cols-4">
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">Data</label>
+                    <input
+                      type="date"
+                      className="input-field h-12 text-sm sm:text-base"
+                      value={form.event_date}
+                      onChange={(e) => setForm({ ...form, event_date: e.target.value })}
+                      min={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">Início</label>
                     <input
                       type="time"
-                      className="input-field py-3 text-sm sm:text-base"
+                      className="input-field h-12 text-sm sm:text-base"
                       value={form.start_time}
                       onChange={(e) => setForm({ ...form, start_time: e.target.value })}
                     />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">Fim</label>
                     <input
                       type="time"
-                      className="input-field py-3 text-sm sm:text-base"
+                      className="input-field h-12 text-sm sm:text-base"
                       value={form.end_time}
                       onChange={(e) => setForm({ ...form, end_time: e.target.value })}
                     />
                   </div>
                 </div>
+                <p className="mt-2 text-xs text-gray-500">
+                  Se ainda não houver data ou horário definidos, deixe em branco.
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Cache</label>
