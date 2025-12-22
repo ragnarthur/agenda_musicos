@@ -100,6 +100,11 @@ const Login: React.FC = () => {
                   {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                 </button>
               </div>
+              <div className="mt-2 text-right">
+                <Link to="/esqueci-senha" className="text-xs font-medium text-primary-600 hover:text-primary-700">
+                  Esqueceu sua senha?
+                </Link>
+              </div>
             </div>
 
             <button

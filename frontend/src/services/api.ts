@@ -61,6 +61,8 @@ api.interceptors.response.use(
       '/process-payment/',
       '/resend-verification/',
       '/start-trial/',
+      '/password-reset/',
+      '/password-reset-confirm/',
     ];
 
     const isPublicAuthPath = originalRequest?.url
@@ -71,6 +73,8 @@ api.interceptors.response.use(
       '/login',
       '/cadastro',
       '/verificar-email',
+      '/esqueci-senha',
+      '/redefinir-senha',
       '/pagamento',
       '/planos',
       '/planos/sucesso',
@@ -109,6 +113,20 @@ export const authService = {
 
   logout: async (): Promise<void> => {
     await api.post('/token/logout/');
+  },
+
+  requestPasswordReset: async (email: string): Promise<{ message: string }> => {
+    const response = await api.post('/password-reset/', { email });
+    return response.data;
+  },
+
+  confirmPasswordReset: async (payload: {
+    uid: string;
+    token: string;
+    new_password: string;
+  }): Promise<{ message: string }> => {
+    const response = await api.post('/password-reset-confirm/', payload);
+    return response.data;
   },
 };
 
