@@ -31,7 +31,7 @@ const PaymentSuccess = lazy(() => import('./pages/PaymentSuccess'));
 
 // Componente de loading para Suspense
 const PageLoader: React.FC = () => (
-  <div className="min-h-screen flex items-center justify-center">
+  <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center">
     <Loading text="Carregando..." />
   </div>
 );

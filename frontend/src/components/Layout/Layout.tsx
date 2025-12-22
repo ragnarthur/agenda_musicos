@@ -9,12 +9,12 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-transparent">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
       <div className="animated-bg pointer-events-none" />
       <div className="pointer-events-none absolute inset-0 z-0">
-        <div className="absolute -top-20 -left-10 h-72 w-72 rounded-full bg-primary-200/40 blur-3xl" />
-        <div className="absolute top-10 right-[-120px] h-80 w-80 rounded-full bg-indigo-200/50 blur-3xl" />
-        <div className="absolute bottom-[-140px] left-1/3 h-96 w-96 rounded-full bg-emerald-200/40 blur-[120px]" />
+        <div className="absolute -top-20 -left-10 h-72 w-72 rounded-full bg-primary-500/25 blur-3xl" />
+        <div className="absolute top-10 right-[-120px] h-80 w-80 rounded-full bg-indigo-500/25 blur-3xl" />
+        <div className="absolute bottom-[-140px] left-1/3 h-96 w-96 rounded-full bg-emerald-500/20 blur-[120px]" />
       </div>
       <TrialBanner />
       <Navbar />
@@ -25,8 +25,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {children}
         </main>
 
-        <footer className="hidden md:block border-t border-white/20 bg-white/5 px-4 py-6 text-center text-sm font-semibold text-slate-700 backdrop-blur">
-          <p className="text-xs sm:text-sm text-slate-800">
+        <footer className="hidden md:block border-t border-white/10 bg-white/5 px-4 py-6 text-center text-sm font-semibold text-slate-200 backdrop-blur">
+          <p className="text-xs sm:text-sm text-slate-200">
             <span className="mr-1 text-base text-primary-700">®</span>
             DXM Tech - Arthur Araújo. Todos os direitos reservados.
           </p>
