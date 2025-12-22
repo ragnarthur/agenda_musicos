@@ -133,7 +133,7 @@ const Dashboard: React.FC = () => {
       <div className="space-y-8">
         {/* Hero */}
         <motion.div
-          className="relative overflow-hidden rounded-2xl border border-white/70 bg-white/70 backdrop-blur p-6 shadow-lg"
+          className="hero-panel"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 120, damping: 18 }}

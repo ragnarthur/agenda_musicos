@@ -214,7 +214,7 @@ const EventsList: React.FC = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <section className="overflow-hidden rounded-3xl border border-white/40 bg-gradient-to-r from-primary-500/15 via-white to-cyan-400/20 p-6 shadow-2xl">
+        <section className="hero-panel">
           <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full bg-white/60 px-3 py-1 text-xs font-semibold text-primary-700 shadow-sm">

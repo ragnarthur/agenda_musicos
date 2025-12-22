@@ -58,6 +58,11 @@
     box-shadow: 0 25px 80px rgba(67, 56, 202, 0.12);
   }
 
+  .hero-panel {
+    @apply relative overflow-hidden rounded-3xl border border-white/40 bg-white/85 backdrop-blur p-6 shadow-2xl;
+    box-shadow: 0 30px 90px rgba(15, 23, 42, 0.18);
+  }
+
   .badge {
     @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
   }

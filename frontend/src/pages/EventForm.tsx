@@ -295,7 +295,7 @@ const EventForm: React.FC = () => {
     <Layout>
       <section className="mx-auto max-w-5xl space-y-8">
         {/* Header */}
-        <div className="relative overflow-hidden rounded-3xl border border-white/40 bg-gradient-to-r from-indigo-500/15 via-white to-cyan-400/20 p-6 shadow-2xl">
+        <div className="hero-panel">
           <div className="pointer-events-none absolute -right-10 top-0 h-40 w-40 rounded-full bg-primary-300/30 blur-3xl" />
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>

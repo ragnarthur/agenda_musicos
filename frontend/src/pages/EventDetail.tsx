@@ -189,7 +189,7 @@ const EventDetail: React.FC = () => {
     <Layout>
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
-        <div className="card-contrast space-y-4">
+        <div className="hero-panel space-y-4">
           <button
             onClick={() => navigate(-1)}
             className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"

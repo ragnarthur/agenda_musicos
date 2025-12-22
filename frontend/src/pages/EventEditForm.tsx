@@ -169,7 +169,7 @@ const EventEditForm: React.FC = () => {
   return (
     <Layout>
       <div className="max-w-3xl mx-auto">
-        <div className="card-contrast mb-6 space-y-2">
+        <div className="hero-panel mb-6 space-y-2">
           <h1 className="text-3xl font-bold text-gray-900">Editar Evento</h1>
           <p className="text-gray-600">Atualize as informações do evento</p>
         </div>
