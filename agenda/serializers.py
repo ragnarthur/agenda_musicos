@@ -65,7 +65,12 @@ class MusicianSerializer(serializers.ModelSerializer):
         return obj.is_leader()
 
     def get_public_email(self, obj):
-        return obj.user.email or None
+        """Retorna email apenas para o próprio usuário (privacidade)"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            if request.user.id == obj.user.id:
+                return obj.user.email
+        return None
 
     def get_subscription_info(self, obj):
         # Só retorna info de assinatura para o próprio usuário
@@ -400,6 +405,18 @@ class EventCreateSerializer(serializers.ModelSerializer):
                     data[field] = validate_not_empty_string(data[field])
                 except serializers.ValidationError as e:
                     errors[field] = str(e.detail[0])
+
+        # Validação de tamanho máximo para prevenir payload abuse
+        max_lengths = {
+            'title': 200,
+            'description': 5000,
+            'location': 300,
+            'venue_contact': 200,
+        }
+        for field, max_len in max_lengths.items():
+            value = data.get(field, '')
+            if value and len(value) > max_len:
+                errors[field] = f'Máximo de {max_len} caracteres.'
 
         # Permite end_time < start_time (eventos noturnos), mas não duração zero
         if data.get('end_time') and data.get('start_time'):

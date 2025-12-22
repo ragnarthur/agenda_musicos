@@ -23,6 +23,12 @@ class GigApplicationSerializer(serializers.ModelSerializer):
     def get_musician_name(self, obj):
         return obj.musician.user.get_full_name() or obj.musician.user.username
 
+    def validate_cover_letter(self, value):
+        """Limita tamanho da carta de apresentação"""
+        if value and len(value) > 2000:
+            raise serializers.ValidationError('Carta de apresentação deve ter no máximo 2000 caracteres.')
+        return value
+
 
 class GigSerializer(serializers.ModelSerializer):
     """Oportunidade de show/vaga publicada no marketplace."""
@@ -67,6 +73,26 @@ class GigSerializer(serializers.ModelSerializer):
             'my_application',
         ]
 
+    def validate(self, data):
+        """Validação de tamanhos máximos para prevenir payload abuse"""
+        errors = {}
+        max_lengths = {
+            'title': 200,
+            'description': 5000,
+            'city': 100,
+            'location': 200,
+            'contact_name': 100,
+            'genres': 120,
+        }
+        for field, max_len in max_lengths.items():
+            value = data.get(field, '')
+            if value and len(value) > max_len:
+                errors[field] = f'Máximo de {max_len} caracteres.'
+
+        if errors:
+            raise serializers.ValidationError(errors)
+        return data
+
     def get_created_by_name(self, obj):
         if not obj.created_by:
             return 'Cliente'
@@ -92,10 +118,10 @@ class GigSerializer(serializers.ModelSerializer):
         )
 
     def get_applications_count(self, obj):
-        try:
-            return obj.applications.count()
-        except Exception:
-            return 0
+        # Usa anotação se disponível (evita query adicional)
+        if hasattr(obj, 'applications_total'):
+            return obj.applications_total
+        return obj.applications.count()
 
     def get_my_application(self, obj):
         """Retorna a candidatura do músico logado (se existir)."""

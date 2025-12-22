@@ -912,35 +912,62 @@ class EventViewSet(viewsets.ModelViewSet):
     def _check_and_confirm_event(self, event):
         """
         Verifica se todos os músicos convidados aceitaram e confirma o evento.
-        Em organizações com líder, só confirma após aprovação.
+        Em organizações com líder, só confirma após aprovação explícita ou implícita.
+        Usa select_for_update para evitar race conditions.
+
+        Aprovação implícita ocorre quando:
+        - O líder é o criador do evento (já está 'available')
+        - O líder já aceitou o convite (response='available')
         """
         leader = self._get_event_leader(event)
         requires_approval = leader is not None and not event.is_solo
+
         if requires_approval and event.status != 'approved':
-            return
+            # Verifica aprovação implícita: líder é o criador ou já aceitou
+            if leader and event.created_by_id == leader.user_id:
+                # Líder é o criador - aprovação implícita
+                pass
+            elif leader:
+                # Verifica se o líder já aceitou o convite
+                leader_availability = event.availabilities.filter(
+                    musician=leader, response='available'
+                ).exists()
+                if not leader_availability:
+                    return  # Líder ainda não aceitou
+            else:
+                return
 
-        all_availabilities = event.availabilities.all()
+        # Usa transação com lock para evitar race condition
+        with transaction.atomic():
+            # Re-busca o evento com lock exclusivo
+            locked_event = Event.objects.select_for_update().get(pk=event.pk)
 
-        # Conta respostas
-        total = all_availabilities.count()
-        available_count = all_availabilities.filter(response='available').count()
-        pending_count = all_availabilities.filter(response='pending').count()
-        unavailable_count = all_availabilities.filter(response='unavailable').count()
+            # Verifica se já foi confirmado (por outra requisição concorrente)
+            if locked_event.status == 'confirmed':
+                return
 
-        # Se não tem pendentes e todos aceitaram, confirma
-        if pending_count == 0 and available_count == total and total > 0:
-            event.status = 'confirmed'
-            event.save()
-            self._log_event(
-                event,
-                'approved',
-                f'Evento confirmado! Todos os {total} músicos aceitaram.'
-            )
-        # Se alguém recusou, pode notificar o criador
-        elif unavailable_count > 0 and pending_count == 0:
-            # Todos responderam, mas alguém recusou
-            # Status permanece 'proposed' para o criador decidir
-            pass
+            all_availabilities = locked_event.availabilities.all()
+
+            # Conta respostas
+            total = all_availabilities.count()
+            available_count = all_availabilities.filter(response='available').count()
+            pending_count = all_availabilities.filter(response='pending').count()
+            unavailable_count = all_availabilities.filter(response='unavailable').count()
+
+            # Se não tem pendentes e todos aceitaram, confirma
+            if pending_count == 0 and available_count == total and total > 0:
+                locked_event.status = 'confirmed'
+                locked_event.save()
+                self._log_event(
+                    locked_event,
+                    'approved',
+                    f'Evento confirmado! Todos os {total} músicos aceitaram.'
+                )
+            # Se alguém recusou, pode notificar o criador
+            elif unavailable_count > 0 and pending_count == 0:
+                # Todos responderam, mas alguém recusou
+                # Status permanece 'proposed' para o criador decidir
+                pass
 
     @action(detail=True, methods=['get'])
     def can_rate(self, request, pk=None):

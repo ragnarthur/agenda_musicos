@@ -16,6 +16,8 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 from django.db import transaction
 from django.conf import settings
@@ -56,6 +58,15 @@ class RegisterView(APIView):
         username = data['username'].strip()
         password = data['password']
         first_name = data['first_name'].strip()
+
+        # Validação de força de senha usando validators do Django
+        try:
+            validate_password(password)
+        except DjangoValidationError as e:
+            return Response(
+                {'password': list(e.messages)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         last_name = data.get('last_name', '').strip()
         phone = data.get('phone', '').strip()
         instrument = str(data.get('instrument', '') or '').strip()
@@ -63,18 +74,26 @@ class RegisterView(APIView):
         instruments = []
 
         if isinstance(instruments_raw, list):
-            for item in instruments_raw:
-                if item is None:
-                    continue
-                value = str(item).strip()
-                if not value:
-                    continue
-                if len(value) > 50:
-                    errors['instrument'] = 'Cada instrumento deve ter no máximo 50 caracteres.'
-                    break
-                instruments.append(value.lower())
+            # Limita número máximo de instrumentos para evitar payload abuse
+            if len(instruments_raw) > 10:
+                errors['instruments'] = 'Máximo de 10 instrumentos permitidos.'
+            else:
+                for item in instruments_raw:
+                    if item is None:
+                        continue
+                    value = str(item).strip()
+                    if not value:
+                        continue
+                    if len(value) > 50:
+                        errors['instruments'] = 'Cada instrumento deve ter no máximo 50 caracteres.'
+                        break
+                    instruments.append(value.lower())
 
         bio = data.get('bio', '').strip()
+
+        # Validação de tamanho do bio para evitar payload abuse
+        if len(bio) > 1000:
+            errors['bio'] = 'Bio deve ter no máximo 1000 caracteres.'
 
         # Remove duplicados preservando ordem
         if instruments:
