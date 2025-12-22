@@ -147,7 +147,7 @@ const Dashboard: React.FC = () => {
                 Olá, {user?.user.first_name}! Pronto para o próximo palco?
               </h1>
               <p className="mt-2 text-gray-700">
-                Acompanhe os eventos, aprovações e disponibilidade do baterista em um só lugar.
+                Acompanhe eventos, aprovações e disponibilidades da equipe em um só lugar.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Link
@@ -177,10 +177,10 @@ const Dashboard: React.FC = () => {
                 <Link
                   to="/disponibilidades"
                   className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50 transition-transform hover:-translate-y-0.5"
-                  title="Agenda do baterista"
+                  title="Disponibilidades"
                 >
                   <Clock className="h-4 w-4" />
-                  Agenda do baterista
+                  Disponibilidades
                 </Link>
               </div>
             </div>
@@ -364,7 +364,7 @@ const Dashboard: React.FC = () => {
               <div className="hero-animated opacity-60" />
               <div className="relative flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Agenda do baterista</p>
+                  <p className="text-sm font-medium text-gray-600">Agenda compartilhada</p>
                   <p className="text-lg font-semibold text-amber-700">Modo ativo</p>
                 </div>
                 <div className="bg-amber-100 p-3 rounded-lg">
@@ -375,7 +375,7 @@ const Dashboard: React.FC = () => {
                 to="/disponibilidades"
                 className="relative mt-3 inline-flex items-center gap-1 text-sm font-semibold text-amber-700"
               >
-                Gerenciar agenda <ChevronRight className="h-4 w-4" />
+                Gerenciar disponibilidades <ChevronRight className="h-4 w-4" />
               </Link>
             </motion.div>
           ) : (
