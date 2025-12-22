@@ -70,12 +70,15 @@ def split_availability_with_events(availability, events, LeaderAvailabilityModel
         objs.append(
             LeaderAvailabilityModel(
                 leader=availability.leader,
+                organization=availability.organization,
                 date=date_value,
                 start_time=start_time,
                 end_time=end_time,
                 start_datetime=slot_start,
                 end_datetime=slot_end,
                 notes=availability.notes,
+                is_public=availability.is_public,
+                is_active=True,
                 created_at=now,
                 updated_at=now,
             )
