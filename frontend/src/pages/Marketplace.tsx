@@ -47,6 +47,7 @@ const Marketplace: React.FC = () => {
     contact_phone: '',
   });
   const [applyForms, setApplyForms] = useState<Record<number, ApplyForm>>({});
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [cityQuery, setCityQuery] = useState('');
   const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
   const [cityOpen, setCityOpen] = useState(false);
@@ -101,6 +102,7 @@ const Marketplace: React.FC = () => {
       setCityOptions([]);
       setCityFeedback('');
       setCityOpen(false);
+      setShowCreateModal(false);
       await loadData();
     } catch (err) {
       console.error(err);
@@ -357,136 +359,17 @@ const Marketplace: React.FC = () => {
             <div className="space-y-4">
               <div className="card-contrast border-primary-200/70">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Publicar vaga rápida</h3>
-                <form className="grid gap-3 sm:grid-cols-2" onSubmit={handleCreateGig}>
-                  <input
-                    type="text"
-                    className="input-field sm:col-span-2"
-                    placeholder="Título da vaga (ex: Voz e violão - casamento)"
-                    value={form.title}
-                    onChange={(e) => setForm({ ...form, title: e.target.value })}
-                    required
-                  />
-                  <textarea
-                    className="input-field sm:col-span-2 min-h-[96px] resize-y"
-                    placeholder="Descrição (repertório, duração, observações)"
-                    value={form.description}
-                    onChange={(e) => setForm({ ...form, description: e.target.value })}
-                    rows={4}
-                  />
-                  <div className="relative sm:col-span-2">
-                    <input
-                      type="text"
-                      className="input-field"
-                      placeholder="Cidade/UF"
-                      value={cityQuery}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setCityQuery(value);
-                        setForm((prev) => ({ ...prev, city: value }));
-                        setCityOpen(true);
-                      }}
-                      onFocus={() => setCityOpen(true)}
-                      onBlur={() => {
-                        setTimeout(() => setCityOpen(false), 150);
-                      }}
-                      autoComplete="off"
-                    />
-                    {cityOpen && (
-                      <div className="absolute z-20 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-56 overflow-y-auto">
-                        {cityLoading && (
-                          <div className="px-3 py-2 text-sm text-gray-500">Buscando cidades...</div>
-                        )}
-                        {!cityLoading && cityOptions.length > 0 && (
-                          <div className="py-1">
-                            {cityOptions.map((city) => {
-                              const label = `${city.name}/${city.state}`;
-                              return (
-                                <button
-                                  key={city.id}
-                                  type="button"
-                                  onMouseDown={(event) => {
-                                    event.preventDefault();
-                                    setCityQuery(label);
-                                    setForm((prev) => ({ ...prev, city: label }));
-                                    setCityOpen(false);
-                                  }}
-                                  className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                >
-                                  {label}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                        {!cityLoading && cityOptions.length === 0 && cityFeedback && (
-                          <div className="px-3 py-2 text-sm text-gray-500">{cityFeedback}</div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <input
-                    type="text"
-                    className="input-field"
-                    placeholder="Local (bar, salão...)"
-                    value={form.location}
-                    onChange={(e) => setForm({ ...form, location: e.target.value })}
-                  />
-                  <input
-                    type="date"
-                    className="input-field py-3 text-sm sm:text-base"
-                    value={form.event_date}
-                    onChange={(e) => setForm({ ...form, event_date: e.target.value })}
-                    min={new Date().toISOString().split('T')[0]}
-                  />
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <input
-                      type="time"
-                      className="input-field py-3 text-sm sm:text-base"
-                      value={form.start_time}
-                      onChange={(e) => setForm({ ...form, start_time: e.target.value })}
-                    />
-                    <input
-                      type="time"
-                      className="input-field py-3 text-sm sm:text-base"
-                      value={form.end_time}
-                      onChange={(e) => setForm({ ...form, end_time: e.target.value })}
-                    />
-                  </div>
-                  <input
-                    type="text"
-                    className="input-field"
-                    placeholder="Cache (ex: 1500)"
-                    value={form.budget}
-                    onChange={(e) => setForm({ ...form, budget: e.target.value })}
-                  />
-                  <input
-                    type="text"
-                    className="input-field"
-                    placeholder="Estilos (pop, rock, sertanejo)"
-                    value={form.genres}
-                    onChange={(e) => setForm({ ...form, genres: e.target.value })}
-                  />
-                  <input
-                    type="text"
-                    className="input-field sm:col-span-2"
-                    placeholder="Telefone/WhatsApp"
-                    value={form.contact_phone}
-                    onChange={(e) => {
-                      const formatted = formatPhone(e.target.value);
-                      setForm((prev) => ({ ...prev, contact_phone: formatted }));
-                    }}
-                    inputMode="tel"
-                    maxLength={15}
-                  />
-                  <button
-                    type="submit"
-                    className="btn-primary w-full flex items-center justify-center gap-2 sm:col-span-2"
-                    disabled={creating}
-                  >
-                    <Megaphone className="h-4 w-4" />
-                    {creating ? 'Publicando...' : 'Publicar vaga'}
-                  </button>
-                </form>
+                <p className="text-sm text-gray-600 mb-4">
+                  Cadastre uma nova oportunidade em poucos passos.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(true)}
+                  className="btn-primary w-full flex items-center justify-center gap-2"
+                >
+                  <Megaphone className="h-4 w-4" />
+                  Adicionar vaga
+                </button>
               </div>
 
               <div className="card-contrast">
@@ -516,6 +399,199 @@ const Marketplace: React.FC = () => {
           </div>
         )}
       </div>
+
+      {showCreateModal && (
+        <div
+          className="fixed inset-0 z-[60] bg-slate-950/60 backdrop-blur-sm flex items-start sm:items-center justify-center px-4 py-6"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setShowCreateModal(false)}
+        >
+          <div
+            className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 mb-6">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">Nova vaga</h3>
+                <p className="text-sm text-gray-600">
+                  Preencha os detalhes para divulgar sua oportunidade.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(false)}
+                className="rounded-full border border-gray-200 p-2 text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                aria-label="Fechar"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form className="grid gap-4 sm:grid-cols-2" onSubmit={handleCreateGig}>
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Título da vaga</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Ex: Voz e violão - casamento"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
+                <textarea
+                  className="input-field min-h-[120px] resize-y"
+                  placeholder="Repertório, duração, observações"
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  rows={4}
+                />
+              </div>
+              <div className="relative sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Cidade/UF</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Digite para buscar"
+                  value={cityQuery}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setCityQuery(value);
+                    setForm((prev) => ({ ...prev, city: value }));
+                    setCityOpen(true);
+                  }}
+                  onFocus={() => setCityOpen(true)}
+                  onBlur={() => {
+                    setTimeout(() => setCityOpen(false), 150);
+                  }}
+                  autoComplete="off"
+                />
+                {cityOpen && (
+                  <div className="absolute z-20 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-56 overflow-y-auto">
+                    {cityLoading && (
+                      <div className="px-3 py-2 text-sm text-gray-500">Buscando cidades...</div>
+                    )}
+                    {!cityLoading && cityOptions.length > 0 && (
+                      <div className="py-1">
+                        {cityOptions.map((city) => {
+                          const label = `${city.name}/${city.state}`;
+                          return (
+                            <button
+                              key={city.id}
+                              type="button"
+                              onMouseDown={(event) => {
+                                event.preventDefault();
+                                setCityQuery(label);
+                                setForm((prev) => ({ ...prev, city: label }));
+                                setCityOpen(false);
+                              }}
+                              className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {!cityLoading && cityOptions.length === 0 && cityFeedback && (
+                      <div className="px-3 py-2 text-sm text-gray-500">{cityFeedback}</div>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Local</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Bar, salão, igreja..."
+                  value={form.location}
+                  onChange={(e) => setForm({ ...form, location: e.target.value })}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Data e horário</label>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <input
+                    type="date"
+                    className="input-field py-3 text-sm sm:text-base"
+                    value={form.event_date}
+                    onChange={(e) => setForm({ ...form, event_date: e.target.value })}
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                  <input
+                    type="time"
+                    className="input-field py-3 text-sm sm:text-base"
+                    value={form.start_time}
+                    onChange={(e) => setForm({ ...form, start_time: e.target.value })}
+                  />
+                  <input
+                    type="time"
+                    className="input-field py-3 text-sm sm:text-base"
+                    value={form.end_time}
+                    onChange={(e) => setForm({ ...form, end_time: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Cache</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Ex: 1500"
+                  value={form.budget}
+                  onChange={(e) => setForm({ ...form, budget: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Estilos</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Pop, rock, sertanejo"
+                  value={form.genres}
+                  onChange={(e) => setForm({ ...form, genres: e.target.value })}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Telefone/WhatsApp</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="(11) 98888-8888"
+                  value={form.contact_phone}
+                  onChange={(e) => {
+                    const formatted = formatPhone(e.target.value);
+                    setForm((prev) => ({ ...prev, contact_phone: formatted }));
+                  }}
+                  inputMode="tel"
+                  maxLength={15}
+                />
+              </div>
+              <div className="sm:col-span-2 flex flex-col sm:flex-row gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="btn-secondary w-full"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary w-full flex items-center justify-center gap-2"
+                  disabled={creating}
+                >
+                  <Megaphone className="h-4 w-4" />
+                  {creating ? 'Publicando...' : 'Publicar vaga'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };
