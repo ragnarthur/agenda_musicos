@@ -54,6 +54,8 @@ const Marketplace: React.FC = () => {
   const [cityLoading, setCityLoading] = useState(false);
   const [cityFeedback, setCityFeedback] = useState('');
   const [duration, setDuration] = useState('');
+  const [customDuration, setCustomDuration] = useState('');
+  const [customDurationActive, setCustomDurationActive] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -108,6 +110,8 @@ const Marketplace: React.FC = () => {
       setCityFeedback('');
       setCityOpen(false);
       setDuration('');
+      setCustomDuration('');
+      setCustomDurationActive(false);
       setShowCreateModal(false);
       await loadData();
     } catch (err) {
@@ -597,7 +601,7 @@ const Marketplace: React.FC = () => {
                   </div>
                 </div>
                 <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                  <div className="sm:col-span-2">
+                  <div className={customDurationActive ? 'sm:col-span-2' : 'sm:col-span-3'}>
                     <label className="block text-xs font-semibold text-gray-500 mb-1">Duração (opcional)</label>
                     <div className="flex flex-wrap gap-2">
                       {[
@@ -609,7 +613,11 @@ const Marketplace: React.FC = () => {
                         <button
                           key={option.value}
                           type="button"
-                          onClick={() => setDuration(option.value)}
+                          onClick={() => {
+                            setDuration(option.value);
+                            setCustomDuration('');
+                            setCustomDurationActive(false);
+                          }}
                           className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
                             duration === option.value
                               ? 'border-primary-600 bg-primary-600 text-white'
@@ -621,25 +629,48 @@ const Marketplace: React.FC = () => {
                       ))}
                       <button
                         type="button"
-                        onClick={() => setDuration('')}
+                        onClick={() => {
+                          setCustomDurationActive(true);
+                          setCustomDuration(duration);
+                        }}
+                        className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                          customDurationActive
+                            ? 'border-primary-600 bg-primary-600 text-white'
+                            : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-primary-200'
+                        }`}
+                      >
+                        Outro
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDuration('');
+                          setCustomDuration('');
+                          setCustomDurationActive(false);
+                        }}
                         className="rounded-full border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-600 hover:border-gray-300"
                       >
                         Limpar
                       </button>
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1">Outro</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="12"
-                      className="input-field h-12 text-sm sm:text-base"
-                      placeholder="Horas"
-                      value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
-                    />
-                  </div>
+                  {customDurationActive ? (
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1">Outro</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="12"
+                        className="input-field h-12 text-sm sm:text-base"
+                        placeholder="Horas"
+                        value={customDuration}
+                        onChange={(e) => {
+                          setCustomDuration(e.target.value);
+                          setDuration(e.target.value);
+                        }}
+                      />
+                    </div>
+                  ) : null}
                 </div>
                 <p className="mt-2 text-xs text-gray-500">
                   Se ainda não houver data ou horário definidos, deixe em branco.
