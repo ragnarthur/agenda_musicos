@@ -459,7 +459,7 @@ const Marketplace: React.FC = () => {
                       <div className="mt-4 border-t border-gray-100 pt-3 space-y-3">
                         {isOwner ? (
                           <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm text-gray-600">
-                            Você publicou esta vaga.
+                            <span className="animate-pulse text-primary-700">Você publicou esta vaga.</span>
                           </div>
                         ) : gig.my_application ? (
                           <div className="flex items-center justify-between bg-primary-50 border border-primary-100 rounded-lg p-3 text-sm">
