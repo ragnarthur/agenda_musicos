@@ -551,6 +551,8 @@ const Marketplace: React.FC = () => {
                           <span>{gig.city || 'Cidade a combinar'}</span>
                           <span>•</span>
                           <span>{formatDate(gig.event_date)}</span>
+                          <span>•</span>
+                          <span>Candidaturas: {gig.applications_count}</span>
                         </div>
                       </div>
                     ))}
