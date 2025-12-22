@@ -33,7 +33,7 @@ const Approvals: React.FC = () => {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-start gap-3">
+        <div className="card-contrast flex items-start gap-3">
           <div className="bg-yellow-100 p-2.5 sm:p-3 rounded-lg flex-shrink-0">
             <Crown className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600" />
           </div>
