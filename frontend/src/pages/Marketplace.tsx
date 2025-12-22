@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { Megaphone, MapPin, Calendar as CalendarIcon, Phone, Mail, Send, Sparkles, Clock3, Loader2, X } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Megaphone, MapPin, Calendar as CalendarIcon, Phone, Mail, Send, Sparkles, Clock3, Loader2, X, PencilLine, Trash2 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
+import ConfirmModal from '../components/modals/ConfirmModal';
+import { useAuth } from '../contexts/AuthContext';
 import { marketplaceService } from '../services/api';
 import type { MarketplaceGig, MarketplaceApplication } from '../types';
 
@@ -30,6 +32,7 @@ type CityOption = { id: number; name: string; state: string };
 const DURATION_PRESETS = ['1', '2', '3', '4'];
 
 const Marketplace: React.FC = () => {
+  const { user } = useAuth();
   const [gigs, setGigs] = useState<MarketplaceGig[]>([]);
   const [myApplications, setMyApplications] = useState<MarketplaceApplication[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,6 +52,9 @@ const Marketplace: React.FC = () => {
   });
   const [applyForms, setApplyForms] = useState<Record<number, ApplyForm>>({});
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingGig, setEditingGig] = useState<MarketplaceGig | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<MarketplaceGig | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [cityQuery, setCityQuery] = useState('');
   const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
   const [cityOpen, setCityOpen] = useState(false);
@@ -81,7 +87,7 @@ const Marketplace: React.FC = () => {
     }
   };
 
-  const handleCreateGig = async (event: React.FormEvent) => {
+  const handleSubmitGig = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!form.title.trim()) {
       setError('Informe um título para a vaga.');
@@ -94,31 +100,18 @@ const Marketplace: React.FC = () => {
         ...form,
         budget: normalizeCurrency(form.budget),
       };
-      await marketplaceService.createGig(payload);
-      setForm({
-        title: '',
-        description: '',
-        city: '',
-        location: '',
-        event_date: '',
-        start_time: '',
-        end_time: '',
-        budget: '',
-        genres: '',
-        contact_phone: '',
-      });
-      setCityQuery('');
-      setCityOptions([]);
-      setCityFeedback('');
-      setCityOpen(false);
-      setDuration('');
-      setCustomDuration('');
-      setCustomDurationActive(false);
+      if (editingGig) {
+        await marketplaceService.updateGig(editingGig.id, payload);
+      } else {
+        await marketplaceService.createGig(payload);
+      }
+      resetForm();
+      setEditingGig(null);
       setShowCreateModal(false);
       await loadData();
     } catch (err) {
       console.error(err);
-      setError('Não foi possível criar a vaga. Verifique os campos e tente novamente.');
+      setError(editingGig ? 'Não foi possível atualizar a vaga. Verifique os campos e tente novamente.' : 'Não foi possível criar a vaga. Verifique os campos e tente novamente.');
     } finally {
       setCreating(false);
     }
@@ -189,6 +182,79 @@ const Marketplace: React.FC = () => {
     return end ? `(${area}) ${mid}-${end}` : `(${area}) ${digits.slice(2)}`;
   };
 
+  const resetForm = useCallback(() => {
+    setForm({
+      title: '',
+      description: '',
+      city: '',
+      location: '',
+      event_date: '',
+      start_time: '',
+      end_time: '',
+      budget: '',
+      genres: '',
+      contact_phone: '',
+    });
+    setCityQuery('');
+    setCityOptions([]);
+    setCityFeedback('');
+    setCityOpen(false);
+    setDuration('');
+    setCustomDuration('');
+    setCustomDurationActive(false);
+  }, []);
+
+  const openCreateModal = () => {
+    setEditingGig(null);
+    resetForm();
+    setShowCreateModal(true);
+  };
+
+  const openEditModal = (gig: MarketplaceGig) => {
+    setEditingGig(gig);
+    setForm({
+      title: gig.title || '',
+      description: gig.description || '',
+      city: gig.city || '',
+      location: gig.location || '',
+      event_date: gig.event_date || '',
+      start_time: gig.start_time ? gig.start_time.slice(0, 5) : '',
+      end_time: gig.end_time ? gig.end_time.slice(0, 5) : '',
+      budget: gig.budget ? formatCurrencyInput(String(gig.budget)) : '',
+      genres: gig.genres || '',
+      contact_phone: gig.contact_phone || '',
+    });
+    setCityQuery(gig.city || '');
+    setCityOptions([]);
+    setCityFeedback('');
+    setCityOpen(false);
+    setDuration('');
+    setCustomDuration('');
+    setCustomDurationActive(false);
+    setShowCreateModal(true);
+  };
+
+  const closeModal = useCallback(() => {
+    setShowCreateModal(false);
+    setEditingGig(null);
+    resetForm();
+  }, [resetForm]);
+
+  const handleDeleteGig = async () => {
+    if (!deleteTarget) return;
+    try {
+      setDeleteLoading(true);
+      await marketplaceService.deleteGig(deleteTarget.id);
+      setDeleteTarget(null);
+      await loadData();
+    } catch (err) {
+      console.error(err);
+      setError('Não foi possível excluir a vaga. Tente novamente.');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!cityOpen) return undefined;
 
@@ -244,12 +310,12 @@ const Marketplace: React.FC = () => {
     if (!showCreateModal) return undefined;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setShowCreateModal(false);
+        closeModal();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showCreateModal]);
+  }, [showCreateModal, closeModal]);
 
   useEffect(() => {
     if (!form.start_time || !duration) return;
@@ -318,6 +384,7 @@ const Marketplace: React.FC = () => {
                 gigs.map((gig) => {
                   const applyForm = applyForms[gig.id] || { cover_letter: '', expected_fee: '' };
                   const canApply = gig.status === 'open' || gig.status === 'in_review';
+                  const isOwner = gig.created_by ? gig.created_by === user?.user.id : false;
 
                   return (
                     <div key={gig.id} className="card-contrast hover:shadow-2xl transition-all">
@@ -332,9 +399,29 @@ const Marketplace: React.FC = () => {
                           <h3 className="text-lg font-semibold text-gray-900 mt-1">{gig.title}</h3>
                           {gig.description && <p className="text-sm text-gray-700 mt-1">{gig.description}</p>}
                         </div>
-                        <div className="text-left sm:text-right text-sm text-gray-600">
+                        <div className="text-left sm:text-right text-sm text-gray-600 space-y-2">
                           <p className="font-semibold text-gray-900">{formatCurrency(gig.budget)}</p>
                           <p>Candidaturas: {gig.applications_count}</p>
+                          {isOwner ? (
+                            <div className="flex flex-wrap gap-2 sm:justify-end">
+                              <button
+                                type="button"
+                                onClick={() => openEditModal(gig)}
+                                className="inline-flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 hover:border-primary-200 hover:text-primary-700 transition-colors"
+                              >
+                                <PencilLine className="h-3.5 w-3.5" />
+                                Editar
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setDeleteTarget(gig)}
+                                className="inline-flex items-center gap-1 rounded-full border border-red-200 px-3 py-1 text-xs font-semibold text-red-600 hover:border-red-300 hover:text-red-700 transition-colors"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                Excluir
+                              </button>
+                            </div>
+                          ) : null}
                         </div>
                       </div>
 
@@ -370,7 +457,11 @@ const Marketplace: React.FC = () => {
                       </div>
 
                       <div className="mt-4 border-t border-gray-100 pt-3 space-y-3">
-                        {gig.my_application ? (
+                        {isOwner ? (
+                          <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm text-gray-600">
+                            Você publicou esta vaga.
+                          </div>
+                        ) : gig.my_application ? (
                           <div className="flex items-center justify-between bg-primary-50 border border-primary-100 rounded-lg p-3 text-sm">
                             <div>
                               <p className="text-primary-800 font-semibold">Você já se candidatou</p>
@@ -429,7 +520,7 @@ const Marketplace: React.FC = () => {
                 </p>
                 <button
                   type="button"
-                  onClick={() => setShowCreateModal(true)}
+                  onClick={openCreateModal}
                   className="btn-primary w-full flex items-center justify-center gap-2"
                 >
                   <Megaphone className="h-4 w-4" />
@@ -470,7 +561,7 @@ const Marketplace: React.FC = () => {
           className="fixed inset-0 z-[60] bg-slate-950/60 backdrop-blur-sm flex items-start sm:items-center justify-center px-4 py-6"
           role="dialog"
           aria-modal="true"
-          onClick={() => setShowCreateModal(false)}
+          onClick={closeModal}
         >
           <div
             className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto"
@@ -478,14 +569,18 @@ const Marketplace: React.FC = () => {
           >
             <div className="flex items-start justify-between gap-4 mb-6">
               <div>
-                <h3 className="text-2xl font-bold text-gray-900">Nova oportunidade</h3>
+                <h3 className="text-2xl font-bold text-gray-900">
+                  {editingGig ? 'Editar oportunidade' : 'Nova oportunidade'}
+                </h3>
                 <p className="text-sm text-gray-600">
-                  Preencha os detalhes para divulgar sua oportunidade.
+                  {editingGig
+                    ? 'Atualize os detalhes da oportunidade publicada.'
+                    : 'Preencha os detalhes para divulgar sua oportunidade.'}
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => setShowCreateModal(false)}
+                onClick={closeModal}
                 className="rounded-full border border-gray-200 p-2 text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 aria-label="Fechar"
               >
@@ -493,7 +588,7 @@ const Marketplace: React.FC = () => {
               </button>
             </div>
 
-            <form className="grid gap-4 sm:grid-cols-2" onSubmit={handleCreateGig}>
+            <form className="grid gap-4 sm:grid-cols-2" onSubmit={handleSubmitGig}>
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Título da vaga</label>
                 <input
@@ -734,7 +829,7 @@ const Marketplace: React.FC = () => {
               <div className="sm:col-span-2 flex flex-col sm:flex-row gap-3">
                 <button
                   type="button"
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={closeModal}
                   className="btn-secondary w-full"
                 >
                   Cancelar
@@ -744,14 +839,33 @@ const Marketplace: React.FC = () => {
                   className="btn-primary w-full flex items-center justify-center gap-2"
                   disabled={creating}
                 >
-                  <Megaphone className="h-4 w-4" />
-                  {creating ? 'Publicando...' : 'Publicar oportunidade'}
+                  {editingGig ? <PencilLine className="h-4 w-4" /> : <Megaphone className="h-4 w-4" />}
+                  {creating
+                    ? editingGig
+                      ? 'Salvando...'
+                      : 'Publicando...'
+                    : editingGig
+                      ? 'Salvar alterações'
+                      : 'Publicar oportunidade'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteGig}
+        title="Excluir oportunidade"
+        message="Tem certeza que deseja excluir esta oportunidade? Essa ação não pode ser desfeita."
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        confirmVariant="danger"
+        loading={deleteLoading}
+        icon={<Trash2 className="h-5 w-5" />}
+      />
     </Layout>
   );
 };
