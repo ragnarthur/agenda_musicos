@@ -19,6 +19,10 @@ from .registration_views import (
     PaymentCallbackView,
     SubscriptionStatusUpdateView,
 )
+from .password_views import (
+    PasswordResetRequestView,
+    PasswordResetConfirmView,
+)
 from django.conf import settings
 
 # Router do DRF gera automaticamente as URLs
@@ -40,6 +44,8 @@ urlpatterns = [
     path('process-payment/', ProcessPaymentView.as_view(), name='process-payment'),
     path('resend-verification/', ResendVerificationView.as_view(), name='resend-verification'),
     path('start-trial/', StartTrialView.as_view(), name='start-trial'),
+    path('password-reset/', PasswordResetRequestView.as_view(), name='password-reset'),
+    path('password-reset-confirm/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
     # Callbacks do Payment Service (chamados pelo microserviço)
     path('payment-callback/', PaymentCallbackView.as_view(), name='payment-callback'),
     path('subscription-status-update/', SubscriptionStatusUpdateView.as_view(), name='subscription-status-update'),

@@ -19,6 +19,8 @@ const LeaderAvailability = lazy(() => import('./pages/LeaderAvailability'));
 const Marketplace = lazy(() => import('./pages/Marketplace'));
 const Connections = lazy(() => import('./pages/Connections'));
 const Register = lazy(() => import('./pages/Register'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const Payment = lazy(() => import('./pages/Payment'));
 const Plans = lazy(() => import('./pages/Plans'));
@@ -76,6 +78,22 @@ function AppRoutes() {
           element={
             <PublicRoute>
               <Register />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/esqueci-senha"
+          element={
+            <PublicRoute>
+              <ForgotPassword />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/redefinir-senha"
+          element={
+            <PublicRoute>
+              <ResetPassword />
             </PublicRoute>
           }
         />
