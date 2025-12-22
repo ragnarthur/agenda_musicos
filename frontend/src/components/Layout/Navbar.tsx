@@ -76,72 +76,74 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="bg-gradient-to-r from-slate-950/90 via-slate-900/85 to-slate-950/90 backdrop-blur-xl shadow-lg shadow-black/30 sticky top-0 z-40 border-b border-white/10">
-      <div className="container mx-auto px-3 sm:px-4">
-        <div className="flex items-center justify-between min-h-[64px] py-2 gap-3">
-          {/* Logo e Nome */}
-          <Link
-            to="/"
-            className="flex items-center space-x-3 hover:scale-[1.01] transition-transform min-w-fit"
-          >
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary-500 via-indigo-500 to-emerald-400 flex items-center justify-center shadow-lg logo-glow">
-              <Music className="h-6 w-6 text-white" />
-            </div>
-            <div className="flex flex-col leading-tight">
-              <span className="text-lg sm:text-xl font-bold logo-animated">
-                GigFlow
-              </span>
-              <span className="text-[11px] text-slate-300/80 hidden sm:block">Agenda para músicos</span>
-            </div>
-          </Link>
+    <>
+      <nav className="bg-gradient-to-r from-slate-950/90 via-slate-900/85 to-slate-950/90 backdrop-blur-xl shadow-lg shadow-black/30 sticky top-0 z-50 border-b border-white/10">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="flex items-center justify-between min-h-[64px] py-2 gap-3">
+            {/* Logo e Nome */}
+            <Link
+              to="/"
+              className="flex items-center space-x-3 hover:scale-[1.01] transition-transform min-w-fit"
+            >
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary-500 via-indigo-500 to-emerald-400 flex items-center justify-center shadow-lg logo-glow">
+                <Music className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex flex-col leading-tight">
+                <span className="text-lg sm:text-xl font-bold logo-animated">
+                  GigFlow
+                </span>
+                <span className="text-[11px] text-slate-300/80 hidden sm:block">Agenda para músicos</span>
+              </div>
+            </Link>
 
-          {/* Links de Navegação */}
-          <div className="hidden md:flex items-center space-x-6">
-            <NavLink to="/eventos" icon={<Calendar className="h-5 w-5" />} label="Eventos" badge={pendingMyResponse} />
-            <NavLink to="/musicos" icon={<Users className="h-5 w-5" />} label="Músicos" />
-            <NavLink to="/conexoes" icon={<HeartHandshake className="h-5 w-5" />} label="Rede & Badges" />
-            <NavLink to="/disponibilidades" icon={<Clock className="h-5 w-5" />} label="Datas Disponíveis" />
-            <NavLink to="/marketplace" icon={<Megaphone className="h-5 w-5" />} label="Marketplace" />
-            <NavLink
-              to="/aprovacoes"
-              icon={<Crown className="h-5 w-5" />}
-              label="Aprovações"
-              badge={pendingApproval}
-              accent
-            />
-          </div>
-
-          {/* Usuário e Logout */}
-          <div className="flex items-center space-x-4 min-w-fit">
-            <div className="hidden md:block text-right">
-              <p className="text-sm font-medium text-slate-100 truncate max-w-[200px]">{user?.full_name}</p>
-              <p className="text-xs text-slate-300 truncate max-w-[220px]">
-                {formatInstrument()}
-              </p>
+            {/* Links de Navegação */}
+            <div className="hidden md:flex items-center space-x-6">
+              <NavLink to="/eventos" icon={<Calendar className="h-5 w-5" />} label="Eventos" badge={pendingMyResponse} />
+              <NavLink to="/musicos" icon={<Users className="h-5 w-5" />} label="Músicos" />
+              <NavLink to="/conexoes" icon={<HeartHandshake className="h-5 w-5" />} label="Rede & Badges" />
+              <NavLink to="/disponibilidades" icon={<Clock className="h-5 w-5" />} label="Datas Disponíveis" />
+              <NavLink to="/marketplace" icon={<Megaphone className="h-5 w-5" />} label="Marketplace" />
+              <NavLink
+                to="/aprovacoes"
+                icon={<Crown className="h-5 w-5" />}
+                label="Aprovações"
+                badge={pendingApproval}
+                accent
+              />
             </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleLogout}
-                className="hidden md:flex items-center space-x-1 text-slate-300 hover:text-red-400 transition-colors"
-                title="Sair"
-              >
-                <LogOut className="h-5 w-5" />
-              </button>
+            {/* Usuário e Logout */}
+            <div className="flex items-center space-x-4 min-w-fit">
+              <div className="hidden md:block text-right">
+                <p className="text-sm font-medium text-slate-100 truncate max-w-[200px]">{user?.full_name}</p>
+                <p className="text-xs text-slate-300 truncate max-w-[220px]">
+                  {formatInstrument()}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleLogout}
+                  className="hidden md:flex items-center space-x-1 text-slate-300 hover:text-red-400 transition-colors"
+                  title="Sair"
+                >
+                  <LogOut className="h-5 w-5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </nav>
 
       {/* Barra de Navegação Mobile - Fixa na parte inferior */}
       <div
-        className="md:hidden fixed bottom-0 left-0 right-0 border-t border-white/10 bg-slate-950/90 shadow-[0_-8px_20px_rgba(0,0,0,0.35)] z-40"
+        className="md:hidden fixed bottom-0 left-0 right-0 border-t border-white/10 bg-slate-950/90 shadow-[0_-8px_20px_rgba(0,0,0,0.35)] z-50"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         <div className="grid grid-cols-4 w-full">
           <Link
             to="/"
-            className="flex flex-col items-center justify-center text-slate-300 hover:text-white py-2 transition-colors"
+            className="flex flex-col items-center justify-center text-slate-200 hover:text-white py-2 transition-colors"
           >
             <Music className="h-5 w-5" />
             <span className="text-[10px] mt-1">Início</span>
@@ -149,7 +151,7 @@ const Navbar: React.FC = () => {
 
           <Link
             to="/eventos"
-            className="flex flex-col items-center justify-center text-slate-300 hover:text-white py-2 relative transition-colors"
+            className="flex flex-col items-center justify-center text-slate-200 hover:text-white py-2 relative transition-colors"
           >
             <Calendar className="h-5 w-5" />
             <span className="text-[10px] mt-1">Eventos</span>
@@ -162,7 +164,7 @@ const Navbar: React.FC = () => {
 
           <Link
             to="/disponibilidades"
-            className="flex flex-col items-center justify-center text-slate-300 hover:text-white py-2 transition-colors"
+            className="flex flex-col items-center justify-center text-slate-200 hover:text-white py-2 transition-colors"
           >
             <Clock className="h-5 w-5" />
             <span className="text-[10px] mt-1">Datas</span>
@@ -170,7 +172,7 @@ const Navbar: React.FC = () => {
 
           <button
             onClick={() => setOpenMore((prev) => !prev)}
-            className="flex flex-col items-center justify-center text-slate-300 hover:text-white py-2 relative transition-colors"
+            className="flex flex-col items-center justify-center text-slate-200 hover:text-white py-2 relative transition-colors"
             aria-expanded={openMore}
             aria-controls="mobile-more-menu"
           >
@@ -266,7 +268,7 @@ const Navbar: React.FC = () => {
           </div>
         )}
       </div>
-    </nav>
+    </>
   );
 };
 
