@@ -24,10 +24,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {children}
         </main>
 
-        <footer className="hidden md:block border-t border-white/10 bg-white/5 px-4 py-6 text-center text-sm font-semibold text-slate-200 backdrop-blur">
+        <footer className="border-t border-white/10 bg-white/5 px-4 py-6 text-center text-sm font-semibold text-slate-200 backdrop-blur">
           <p className="text-xs sm:text-sm text-slate-200">
             <span className="mr-1 text-base text-primary-700">®</span>
-            DXM Tech - Arthur Araújo. Todos os direitos reservados.
+            DXM Tech. Todos os direitos reservados.
           </p>
         </footer>
       </div>
