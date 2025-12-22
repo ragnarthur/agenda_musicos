@@ -120,9 +120,10 @@ def award_badges_for_musician(musician):
     """
     Avalia critérios e atribui badges para um músico.
     Retorna lista de MusicianBadge recém-criadas.
+    Usa get_or_create com tratamento de IntegrityError para evitar race conditions.
     """
     from .models import MusicianBadge, Availability, Connection
-    from django.db.models import Count
+    from django.db import IntegrityError
 
     awarded = []
     now = timezone.now()
@@ -155,16 +156,20 @@ def award_badges_for_musician(musician):
     for slug, name, desc, condition in badges_def:
         if not condition:
             continue
-        badge, created = MusicianBadge.objects.get_or_create(
-            musician=musician,
-            slug=slug,
-            defaults={
-                'name': name,
-                'description': desc,
-                'icon': name.split(' ')[0],  # Emoji já incluso no nome
-            }
-        )
-        if created:
-            awarded.append(badge)
+        try:
+            badge, created = MusicianBadge.objects.get_or_create(
+                musician=musician,
+                slug=slug,
+                defaults={
+                    'name': name,
+                    'description': desc,
+                    'icon': name.split(' ')[0],  # Emoji já incluso no nome
+                }
+            )
+            if created:
+                awarded.append(badge)
+        except IntegrityError:
+            # Race condition: badge já foi criada por outra requisição
+            pass
 
     return awarded
