@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Megaphone, MapPin, Calendar as CalendarIcon, Phone, Mail, Send, Sparkles, Clock3 } from 'lucide-react';
+import { Megaphone, MapPin, Calendar as CalendarIcon, Phone, Mail, Send, Sparkles, Clock3, Loader2 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { marketplaceService } from '../services/api';
@@ -210,6 +210,17 @@ const Marketplace: React.FC = () => {
       controller.abort();
     };
   }, [cityQuery, cityOpen]);
+
+  useEffect(() => {
+    if (!showCreateModal) return undefined;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowCreateModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showCreateModal]);
 
   return (
     <Layout>
@@ -472,7 +483,10 @@ const Marketplace: React.FC = () => {
                 {cityOpen && (
                   <div className="absolute z-20 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-56 overflow-y-auto">
                     {cityLoading && (
-                      <div className="px-3 py-2 text-sm text-gray-500">Buscando cidades...</div>
+                      <div className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Buscando cidades...
+                      </div>
                     )}
                     {!cityLoading && cityOptions.length > 0 && (
                       <div className="py-1">
