@@ -26,6 +26,7 @@ const statusLabel: Record<string, string> = {
 };
 
 type ApplyForm = { cover_letter: string; expected_fee: string };
+type CityOption = { id: number; name: string; state: string };
 
 const Marketplace: React.FC = () => {
   const [gigs, setGigs] = useState<MarketplaceGig[]>([]);
@@ -46,6 +47,11 @@ const Marketplace: React.FC = () => {
     contact_phone: '',
   });
   const [applyForms, setApplyForms] = useState<Record<number, ApplyForm>>({});
+  const [cityQuery, setCityQuery] = useState('');
+  const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
+  const [cityOpen, setCityOpen] = useState(false);
+  const [cityLoading, setCityLoading] = useState(false);
+  const [cityFeedback, setCityFeedback] = useState('');
 
   useEffect(() => {
     loadData();
@@ -91,6 +97,10 @@ const Marketplace: React.FC = () => {
         genres: '',
         contact_phone: '',
       });
+      setCityQuery('');
+      setCityOptions([]);
+      setCityFeedback('');
+      setCityOpen(false);
       await loadData();
     } catch (err) {
       console.error(err);
@@ -138,6 +148,66 @@ const Marketplace: React.FC = () => {
     if (!value) return null;
     return value.slice(0, 5);
   };
+
+  const formatPhone = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 11);
+    if (digits.length <= 2) return digits;
+    const area = digits.slice(0, 2);
+    const mid = digits.slice(2, 7);
+    const end = digits.slice(7);
+    return end ? `(${area}) ${mid}-${end}` : `(${area}) ${digits.slice(2)}`;
+  };
+
+  useEffect(() => {
+    if (!cityOpen) return undefined;
+
+    const query = cityQuery.trim();
+    if (query.length < 3) {
+      setCityOptions([]);
+      setCityLoading(false);
+      setCityFeedback('Digite ao menos 3 letras para buscar');
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    setCityLoading(true);
+    setCityFeedback('');
+
+    const timeout = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `https://brasilapi.com.br/api/cptec/v1/cidade/${encodeURIComponent(query)}`,
+          { signal: controller.signal }
+        );
+        if (!response.ok) {
+          throw new Error('Falha ao buscar cidades');
+        }
+        const data = await response.json();
+        const options = Array.isArray(data)
+          ? data.map((item) => ({
+              id: item.id,
+              name: item.nome,
+              state: item.estado,
+            }))
+          : [];
+        setCityOptions(options.slice(0, 8));
+        if (options.length === 0) {
+          setCityFeedback('Nenhuma cidade encontrada');
+        }
+      } catch (err) {
+        if ((err as Error).name === 'AbortError') return;
+        setCityOptions([]);
+        setCityFeedback('Não foi possível carregar cidades');
+      } finally {
+        setCityLoading(false);
+      }
+    }, 350);
+
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [cityQuery, cityOpen]);
 
   return (
     <Layout>
@@ -303,13 +373,57 @@ const Marketplace: React.FC = () => {
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                     rows={4}
                   />
-                  <input
-                    type="text"
-                    className="input-field"
-                    placeholder="Cidade/UF"
-                    value={form.city}
-                    onChange={(e) => setForm({ ...form, city: e.target.value })}
-                  />
+                  <div className="relative sm:col-span-2">
+                    <input
+                      type="text"
+                      className="input-field"
+                      placeholder="Cidade/UF"
+                      value={cityQuery}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setCityQuery(value);
+                        setForm((prev) => ({ ...prev, city: value }));
+                        setCityOpen(true);
+                      }}
+                      onFocus={() => setCityOpen(true)}
+                      onBlur={() => {
+                        setTimeout(() => setCityOpen(false), 150);
+                      }}
+                      autoComplete="off"
+                    />
+                    {cityOpen && (
+                      <div className="absolute z-20 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-56 overflow-y-auto">
+                        {cityLoading && (
+                          <div className="px-3 py-2 text-sm text-gray-500">Buscando cidades...</div>
+                        )}
+                        {!cityLoading && cityOptions.length > 0 && (
+                          <div className="py-1">
+                            {cityOptions.map((city) => {
+                              const label = `${city.name}/${city.state}`;
+                              return (
+                                <button
+                                  key={city.id}
+                                  type="button"
+                                  onMouseDown={(event) => {
+                                    event.preventDefault();
+                                    setCityQuery(label);
+                                    setForm((prev) => ({ ...prev, city: label }));
+                                    setCityOpen(false);
+                                  }}
+                                  className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                >
+                                  {label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                        {!cityLoading && cityOptions.length === 0 && cityFeedback && (
+                          <div className="px-3 py-2 text-sm text-gray-500">{cityFeedback}</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <input
                     type="text"
                     className="input-field"
@@ -319,20 +433,21 @@ const Marketplace: React.FC = () => {
                   />
                   <input
                     type="date"
-                    className="input-field"
+                    className="input-field py-3 text-sm sm:text-base"
                     value={form.event_date}
                     onChange={(e) => setForm({ ...form, event_date: e.target.value })}
+                    min={new Date().toISOString().split('T')[0]}
                   />
                   <div className="grid gap-2 sm:grid-cols-2">
                     <input
                       type="time"
-                      className="input-field"
+                      className="input-field py-3 text-sm sm:text-base"
                       value={form.start_time}
                       onChange={(e) => setForm({ ...form, start_time: e.target.value })}
                     />
                     <input
                       type="time"
-                      className="input-field"
+                      className="input-field py-3 text-sm sm:text-base"
                       value={form.end_time}
                       onChange={(e) => setForm({ ...form, end_time: e.target.value })}
                     />
@@ -356,8 +471,12 @@ const Marketplace: React.FC = () => {
                     className="input-field sm:col-span-2"
                     placeholder="Telefone/WhatsApp"
                     value={form.contact_phone}
-                    onChange={(e) => setForm({ ...form, contact_phone: e.target.value })}
+                    onChange={(e) => {
+                      const formatted = formatPhone(e.target.value);
+                      setForm((prev) => ({ ...prev, contact_phone: formatted }));
+                    }}
                     inputMode="tel"
+                    maxLength={15}
                   />
                   <button
                     type="submit"
