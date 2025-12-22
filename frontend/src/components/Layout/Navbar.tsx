@@ -76,7 +76,7 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="bg-white/90 backdrop-blur-xl shadow-md sticky top-0 z-40 border-b border-white/60">
+    <nav className="bg-gradient-to-r from-slate-950/90 via-slate-900/85 to-slate-950/90 backdrop-blur-xl shadow-lg shadow-black/30 sticky top-0 z-40 border-b border-white/10">
       <div className="container mx-auto px-3 sm:px-4">
         <div className="flex items-center justify-between min-h-[64px] py-2 gap-3">
           {/* Logo e Nome */}
@@ -91,7 +91,7 @@ const Navbar: React.FC = () => {
               <span className="text-lg sm:text-xl font-bold logo-animated">
                 GigFlow
               </span>
-              <span className="text-[11px] text-gray-500 hidden sm:block">Agenda para músicos</span>
+              <span className="text-[11px] text-slate-300/80 hidden sm:block">Agenda para músicos</span>
             </div>
           </Link>
 
@@ -114,8 +114,8 @@ const Navbar: React.FC = () => {
           {/* Usuário e Logout */}
           <div className="flex items-center space-x-4 min-w-fit">
             <div className="hidden md:block text-right">
-              <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">{user?.full_name}</p>
-              <p className="text-xs text-gray-500 truncate max-w-[220px]">
+              <p className="text-sm font-medium text-slate-100 truncate max-w-[200px]">{user?.full_name}</p>
+              <p className="text-xs text-slate-300 truncate max-w-[220px]">
                 {formatInstrument()}
               </p>
             </div>
@@ -123,7 +123,7 @@ const Navbar: React.FC = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={handleLogout}
-                className="hidden md:flex items-center space-x-1 text-gray-700 hover:text-red-600 transition-colors"
+                className="hidden md:flex items-center space-x-1 text-slate-300 hover:text-red-400 transition-colors"
                 title="Sair"
               >
                 <LogOut className="h-5 w-5" />
@@ -135,13 +135,13 @@ const Navbar: React.FC = () => {
 
       {/* Barra de Navegação Mobile - Fixa na parte inferior */}
       <div
-        className="md:hidden fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white shadow-[0_-4px_12px_rgba(0,0,0,0.1)] z-40"
+        className="md:hidden fixed bottom-0 left-0 right-0 border-t border-white/10 bg-slate-950/90 shadow-[0_-8px_20px_rgba(0,0,0,0.35)] z-40"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         <div className="grid grid-cols-4 w-full">
           <Link
             to="/"
-            className="flex flex-col items-center justify-center text-gray-600 hover:text-primary-600 py-2 transition-colors"
+            className="flex flex-col items-center justify-center text-slate-300 hover:text-white py-2 transition-colors"
           >
             <Music className="h-5 w-5" />
             <span className="text-[10px] mt-1">Início</span>
@@ -149,7 +149,7 @@ const Navbar: React.FC = () => {
 
           <Link
             to="/eventos"
-            className="flex flex-col items-center justify-center text-gray-600 hover:text-primary-600 py-2 relative transition-colors"
+            className="flex flex-col items-center justify-center text-slate-300 hover:text-white py-2 relative transition-colors"
           >
             <Calendar className="h-5 w-5" />
             <span className="text-[10px] mt-1">Eventos</span>
@@ -162,7 +162,7 @@ const Navbar: React.FC = () => {
 
           <Link
             to="/disponibilidades"
-            className="flex flex-col items-center justify-center text-gray-600 hover:text-primary-600 py-2 transition-colors"
+            className="flex flex-col items-center justify-center text-slate-300 hover:text-white py-2 transition-colors"
           >
             <Clock className="h-5 w-5" />
             <span className="text-[10px] mt-1">Datas</span>
@@ -170,7 +170,7 @@ const Navbar: React.FC = () => {
 
           <button
             onClick={() => setOpenMore((prev) => !prev)}
-            className="flex flex-col items-center justify-center text-gray-600 hover:text-primary-600 py-2 relative transition-colors"
+            className="flex flex-col items-center justify-center text-slate-300 hover:text-white py-2 relative transition-colors"
             aria-expanded={openMore}
             aria-controls="mobile-more-menu"
           >
@@ -188,18 +188,18 @@ const Navbar: React.FC = () => {
         {openMore && (
           <div
             id="mobile-more-menu"
-            className="absolute bottom-full left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-3 space-y-2 max-h-[70vh] overflow-y-auto"
+            className="absolute bottom-full left-0 right-0 bg-slate-950/95 border-t border-white/10 shadow-2xl shadow-black/40 p-3 space-y-2 max-h-[70vh] overflow-y-auto"
           >
-            <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2">
-              <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
+            <div className="rounded-xl border border-white/10 bg-slate-900/70 px-3 py-2">
+              <p className="text-sm font-semibold text-slate-100 truncate">{displayName}</p>
               {instrumentLabel && (
-                <p className="text-xs text-gray-500 truncate">{instrumentLabel}</p>
+                <p className="text-xs text-slate-300 truncate">{instrumentLabel}</p>
               )}
             </div>
             <Link
               to="/musicos"
               onClick={() => setOpenMore(false)}
-              className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+              className="flex items-center gap-3 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
             >
               <Users className="h-5 w-5" />
               <span className="text-sm">Músicos</span>
@@ -207,7 +207,7 @@ const Navbar: React.FC = () => {
             <Link
               to="/conexoes"
               onClick={() => setOpenMore(false)}
-              className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+              className="flex items-center gap-3 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
             >
               <HeartHandshake className="h-5 w-5" />
               <span className="text-sm">Rede & Badges</span>
@@ -215,7 +215,7 @@ const Navbar: React.FC = () => {
             <Link
               to="/eventos/agenda"
               onClick={() => setOpenMore(false)}
-              className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+              className="flex items-center gap-3 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
             >
               <Clock className="h-5 w-5 rotate-45" />
               <span className="text-sm">Grade de Eventos</span>
@@ -223,7 +223,7 @@ const Navbar: React.FC = () => {
             <Link
               to="/disponibilidades"
               onClick={() => setOpenMore(false)}
-              className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+              className="flex items-center gap-3 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
             >
               <Clock className="h-5 w-5" />
               <span className="text-sm">Datas Disponíveis</span>
@@ -231,7 +231,7 @@ const Navbar: React.FC = () => {
             <Link
               to="/marketplace"
               onClick={() => setOpenMore(false)}
-              className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+              className="flex items-center gap-3 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
             >
               <Megaphone className="h-5 w-5" />
               <span className="text-sm">Marketplace</span>
@@ -239,7 +239,7 @@ const Navbar: React.FC = () => {
             <Link
               to="/aprovacoes"
               onClick={() => setOpenMore(false)}
-              className="flex items-center justify-between px-3 py-2 text-yellow-700 hover:bg-yellow-50 rounded-lg transition-colors"
+              className="flex items-center justify-between px-3 py-2 text-amber-300 hover:bg-amber-500/10 rounded-lg transition-colors"
             >
               <span className="flex items-center gap-3">
                 <Crown className="h-5 w-5" />
@@ -251,13 +251,13 @@ const Navbar: React.FC = () => {
                 </span>
               )}
             </Link>
-            <div className="border-t border-gray-100 pt-2 mt-2">
+            <div className="border-t border-white/10 pt-2 mt-2">
               <button
                 onClick={() => {
                   setOpenMore(false);
                   handleLogout();
                 }}
-                className="flex items-center gap-3 w-full px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="flex items-center gap-3 w-full px-3 py-2 text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
               >
                 <LogOut className="h-5 w-5" />
                 <span className="text-sm font-medium">Sair</span>
@@ -274,7 +274,7 @@ const NavLink: React.FC<{ to: string; icon: React.ReactNode; label: string; badg
   <Link
     to={to}
     className={`flex items-center space-x-1 transition-colors relative ${
-      accent ? 'text-yellow-600 hover:text-yellow-700' : 'text-gray-700 hover:text-primary-600'
+      accent ? 'text-amber-300 hover:text-amber-200' : 'text-slate-200 hover:text-white'
     }`}
   >
     {icon}
