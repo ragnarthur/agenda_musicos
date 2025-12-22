@@ -20,8 +20,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <Navbar />
 
       <div className="relative z-10 flex min-h-screen flex-col pt-6 sm:pt-8">
-        {/* pb-24 para acomodar navbar mobile fixa (64px + safe-area) */}
-        <main className="container mx-auto flex-1 max-w-6xl px-3 sm:px-4 pb-28 md:pb-16 lg:px-8">
+        <main className="container mx-auto flex-1 max-w-6xl px-3 sm:px-4 pb-16 lg:px-8">
           {children}
         </main>
 
