@@ -55,6 +55,7 @@ const Marketplace: React.FC = () => {
   const [editingGig, setEditingGig] = useState<MarketplaceGig | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<MarketplaceGig | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const [cityQuery, setCityQuery] = useState('');
   const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
   const [cityOpen, setCityOpen] = useState(false);
@@ -262,7 +263,16 @@ const Marketplace: React.FC = () => {
     const target = document.getElementById(`gig-${gigId}`);
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setShowBackToTop(true);
     }
+  };
+
+  const scrollToHero = () => {
+    const hero = document.getElementById('vagas-hero');
+    if (hero) {
+      hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    setShowBackToTop(false);
   };
 
   useEffect(() => {
@@ -356,7 +366,7 @@ const Marketplace: React.FC = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="hero-panel">
+        <div id="vagas-hero" className="hero-panel">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-xl bg-primary-100/70 flex items-center justify-center shadow-inner">
@@ -541,7 +551,18 @@ const Marketplace: React.FC = () => {
               </div>
 
               <div className="card-contrast">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Minhas vagas</h3>
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <h3 className="text-lg font-semibold text-gray-900">Minhas vagas</h3>
+                  {showBackToTop ? (
+                    <button
+                      type="button"
+                      onClick={scrollToHero}
+                      className="text-xs font-semibold text-primary-700 hover:text-primary-800 transition-colors"
+                    >
+                      Voltar ao topo
+                    </button>
+                  ) : null}
+                </div>
                 {myGigs.length === 0 ? (
                   <p className="text-sm text-gray-600">Você ainda não publicou nenhuma vaga.</p>
                 ) : (
