@@ -27,6 +27,7 @@ const statusLabel: Record<string, string> = {
 
 type ApplyForm = { cover_letter: string; expected_fee: string };
 type CityOption = { id: number; name: string; state: string };
+const DURATION_PRESETS = ['1', '2', '3', '4'];
 
 const Marketplace: React.FC = () => {
   const [gigs, setGigs] = useState<MarketplaceGig[]>([]);
@@ -56,6 +57,7 @@ const Marketplace: React.FC = () => {
   const [duration, setDuration] = useState('');
   const [customDuration, setCustomDuration] = useState('');
   const [customDurationActive, setCustomDurationActive] = useState(false);
+  const isCustomDuration = customDurationActive || (duration !== '' && !DURATION_PRESETS.includes(duration));
 
   useEffect(() => {
     loadData();
@@ -262,6 +264,16 @@ const Marketplace: React.FC = () => {
     const endValue = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
     setForm((prev) => ({ ...prev, end_time: endValue }));
   }, [duration, form.start_time]);
+
+  useEffect(() => {
+    if (!duration || DURATION_PRESETS.includes(duration)) return;
+    if (!customDurationActive) {
+      setCustomDurationActive(true);
+    }
+    if (customDuration !== duration) {
+      setCustomDuration(duration);
+    }
+  }, [duration, customDuration, customDurationActive]);
 
   return (
     <Layout>
@@ -601,7 +613,7 @@ const Marketplace: React.FC = () => {
                   </div>
                 </div>
                 <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                  <div className={customDurationActive ? 'sm:col-span-2' : 'sm:col-span-3'}>
+                  <div className={isCustomDuration ? 'sm:col-span-2' : 'sm:col-span-3'}>
                     <label className="block text-xs font-semibold text-gray-500 mb-1">Duração (opcional)</label>
                     <div className="flex flex-wrap gap-2">
                       {[
@@ -615,7 +627,6 @@ const Marketplace: React.FC = () => {
                           type="button"
                           onClick={() => {
                             setDuration(option.value);
-                            setCustomDuration('');
                             setCustomDurationActive(false);
                           }}
                           className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
@@ -631,10 +642,14 @@ const Marketplace: React.FC = () => {
                         type="button"
                         onClick={() => {
                           setCustomDurationActive(true);
-                          setCustomDuration(duration);
+                          if (customDuration) {
+                            setDuration(customDuration);
+                          } else if (DURATION_PRESETS.includes(duration)) {
+                            setDuration('');
+                          }
                         }}
                         className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
-                          customDurationActive
+                          isCustomDuration
                             ? 'border-primary-600 bg-primary-600 text-white'
                             : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-primary-200'
                         }`}
@@ -654,7 +669,7 @@ const Marketplace: React.FC = () => {
                       </button>
                     </div>
                   </div>
-                  {customDurationActive ? (
+                  {isCustomDuration ? (
                     <div>
                       <label className="block text-xs font-semibold text-gray-500 mb-1">Outro</label>
                       <input
@@ -667,6 +682,7 @@ const Marketplace: React.FC = () => {
                         onChange={(e) => {
                           setCustomDuration(e.target.value);
                           setDuration(e.target.value);
+                          setCustomDurationActive(true);
                         }}
                       />
                     </div>
