@@ -53,6 +53,7 @@ const Marketplace: React.FC = () => {
   const [cityOpen, setCityOpen] = useState(false);
   const [cityLoading, setCityLoading] = useState(false);
   const [cityFeedback, setCityFeedback] = useState('');
+  const [duration, setDuration] = useState('');
 
   useEffect(() => {
     loadData();
@@ -106,6 +107,7 @@ const Marketplace: React.FC = () => {
       setCityOptions([]);
       setCityFeedback('');
       setCityOpen(false);
+      setDuration('');
       setShowCreateModal(false);
       await loadData();
     } catch (err) {
@@ -242,6 +244,20 @@ const Marketplace: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showCreateModal]);
+
+  useEffect(() => {
+    if (!form.start_time || !duration) return;
+    const hours = Number(duration);
+    if (!Number.isFinite(hours) || hours <= 0) return;
+    const [h, m] = form.start_time.split(':').map(Number);
+    if (!Number.isFinite(h) || !Number.isFinite(m)) return;
+    const total = h * 60 + m + hours * 60;
+    const nextMinutes = total % (24 * 60);
+    const endH = Math.floor(nextMinutes / 60);
+    const endM = nextMinutes % 60;
+    const endValue = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+    setForm((prev) => ({ ...prev, end_time: endValue }));
+  }, [duration, form.start_time]);
 
   return (
     <Layout>
@@ -577,6 +593,51 @@ const Marketplace: React.FC = () => {
                       className="input-field h-12 text-sm sm:text-base"
                       value={form.end_time}
                       onChange={(e) => setForm({ ...form, end_time: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">Duração (opcional)</label>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { label: '1h', value: '1' },
+                        { label: '2h', value: '2' },
+                        { label: '3h', value: '3' },
+                        { label: '4h', value: '4' },
+                      ].map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setDuration(option.value)}
+                          className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                            duration === option.value
+                              ? 'border-primary-600 bg-primary-600 text-white'
+                              : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-primary-200'
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setDuration('')}
+                        className="rounded-full border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-600 hover:border-gray-300"
+                      >
+                        Limpar
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">Outro</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="12"
+                      className="input-field h-12 text-sm sm:text-base"
+                      placeholder="Horas"
+                      value={duration}
+                      onChange={(e) => setDuration(e.target.value)}
                     />
                   </div>
                 </div>
