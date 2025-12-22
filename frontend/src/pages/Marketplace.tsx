@@ -151,13 +151,13 @@ const Marketplace: React.FC = () => {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Marketplace de Gigs</h1>
                 <p className="text-sm text-gray-600">
-                  Publique vagas e concorra a shows como freelancer. Sara, Arthur e Roberto já estão prontos.
+                  Publique vagas e concorra a shows como freelancer. Encontre músicos prontos para tocar.
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Sparkles className="h-4 w-4 text-primary-600" />
-              <span>Fluxo simples: publicar → candidatar → contratar</span>
+              <span>Talentos e oportunidades reunidos em um só lugar</span>
             </div>
           </div>
         </div>
