@@ -200,9 +200,9 @@ const EventBoard: React.FC = () => {
           <div className="spotlight pointer-events-none absolute inset-0 -z-10" />
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
-              <p className="text-sm font-semibold text-primary-700">Grade pessoal</p>
+              <p className="text-sm font-semibold text-primary-700">Grade de eventos</p>
               <h1 className="text-3xl font-bold text-gray-900">Meus eventos</h1>
-              <p className="text-gray-600">Eventos organizados por data onde você participa ou criou.</p>
+              <p className="text-gray-600">Eventos organizados por data sob sua gestão ou participação.</p>
             </div>
             <div className="flex gap-3">
               <Link

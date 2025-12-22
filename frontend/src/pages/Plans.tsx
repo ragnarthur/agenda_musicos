@@ -22,8 +22,8 @@ const plans: Array<{
     per: '/mês',
     features: [
       'Agenda completa para shows',
-      'Convites e respostas rápidas',
-      'Vagas de shows e conexões',
+      'Convites e respostas com agilidade',
+      'Vagas de shows e conexões profissionais',
       'Suporte prioritário via email',
     ],
   },
@@ -36,7 +36,7 @@ const plans: Array<{
     features: [
       '2 meses grátis (equivale a R$ 24,99/mês)',
       'Prioridade em lançamentos e novidades',
-      'Badge de apoiador anual',
+      'Selo de apoiador anual',
       'Suporte dedicado',
     ],
   },

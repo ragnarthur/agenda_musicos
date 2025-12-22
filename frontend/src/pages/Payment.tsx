@@ -253,7 +253,7 @@ const Payment: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="font-medium">Rede de Músicos</h4>
-                  <p className="text-white/70 text-sm">Conecte-se com outros profissionais</p>
+                  <p className="text-white/70 text-sm">Amplie sua rede com profissionais da música</p>
                 </div>
               </div>
 
@@ -263,7 +263,7 @@ const Payment: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="font-medium">Vagas de Shows</h4>
-                  <p className="text-white/70 text-sm">Encontre oportunidades de shows</p>
+                  <p className="text-white/70 text-sm">Acesse oportunidades de shows com transparência</p>
                 </div>
               </div>
 

@@ -133,11 +133,11 @@ const Connections: React.FC = () => {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-indigo-700 shadow-sm">
-                <HeartHandshake className="h-4 w-4" /> Rede & Badges
+                <HeartHandshake className="h-4 w-4" /> Rede Profissional
               </p>
-              <h1 className="mt-2 text-3xl font-bold text-gray-900">Conexões e conquistas</h1>
+              <h1 className="mt-2 text-3xl font-bold text-gray-900">Conexões profissionais</h1>
               <p className="mt-1 text-gray-700">
-                Salve músicos favoritos, indique para vagas e acompanhe seus badges em tempo real.
+                Construa sua rede, indique músicos para oportunidades e acompanhe conquistas em tempo real.
               </p>
             </div>
             <Link to="/musicos" className="btn-primary inline-flex items-center gap-2">
@@ -173,7 +173,9 @@ const Connections: React.FC = () => {
                 <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                   <Users className="h-4 w-4 text-indigo-600" /> Minhas conexões
                 </p>
-                <p className="text-xs text-gray-500">Seguir favoritos, ligar depois, indicar ou marcar “já toquei com”.</p>
+                <p className="text-xs text-gray-500">
+                  Acompanhe favoritos, indique profissionais e registre colaborações anteriores.
+                </p>
               </div>
             </div>
 
