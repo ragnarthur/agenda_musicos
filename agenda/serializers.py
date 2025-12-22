@@ -1,4 +1,5 @@
 ﻿# agenda/serializers.py
+from datetime import datetime
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -96,6 +97,10 @@ class AvailabilitySerializer(serializers.ModelSerializer):
         if self.instance and 'musician' in attrs:
             raise serializers.ValidationError({
                 'musician_id': 'Não é permitido alterar o músico desta disponibilidade.'
+            })
+        if self.instance and 'event' in attrs and attrs['event'] != self.instance.event:
+            raise serializers.ValidationError({
+                'event': 'Não é permitido alterar o evento desta disponibilidade.'
             })
         return attrs
 
@@ -262,8 +267,12 @@ class EventDetailSerializer(serializers.ModelSerializer):
         if obj.created_by != request.user:
             return False
 
-        # Evento deve estar no passado
-        if obj.event_date >= timezone.now().date():
+        # Evento deve estar no passado (considera término real)
+        event_end = obj.end_datetime
+        if not event_end and obj.event_date and obj.end_time:
+            event_end = timezone.make_aware(datetime.combine(obj.event_date, obj.end_time))
+
+        if event_end and event_end >= timezone.now():
             return False
 
         # Verifica se já avaliou algum músico neste evento

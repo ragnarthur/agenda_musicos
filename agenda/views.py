@@ -361,8 +361,8 @@ class EventViewSet(viewsets.ModelViewSet):
 
         Novo fluxo:
         - is_solo=True: evento aprovado automaticamente, apenas criador participa
-        - is_solo=False: evento fica 'proposed', aguarda aprovação dos convidados
-        - Quando todos os convidados aceitarem, evento muda para 'confirmed'
+        - is_solo=False: evento fica 'proposed' até aprovação do líder
+        - Após aprovação, quando todos os convidados aceitarem, evento muda para 'confirmed'
         """
         org = get_user_organization(self.request.user)
         if not org:
@@ -371,6 +371,18 @@ class EventViewSet(viewsets.ModelViewSet):
         is_solo = serializer.validated_data.get('is_solo', False)
         invited_musicians_ids = serializer.validated_data.pop('invited_musicians', [])
         required_instruments = serializer.validated_data.pop('required_instruments', [])
+
+        if invited_musicians_ids:
+            invited_musicians_ids = list(dict.fromkeys(invited_musicians_ids))
+
+        if not is_solo:
+            leader = Musician.objects.filter(
+                role='leader',
+                is_active=True,
+                organization=org
+            ).first()
+            if leader and leader.user_id != self.request.user.id and leader.id not in invited_musicians_ids:
+                invited_musicians_ids.append(leader.id)
 
         # Transação atômica para garantir consistência
         with transaction.atomic():
@@ -435,15 +447,9 @@ class EventViewSet(viewsets.ModelViewSet):
                         }
                     )
 
-            # Se não for solo e não tiver convidados, confirma automaticamente
-            # (evento só do criador)
-            if not is_solo and not invited_musicians_ids:
-                event.status = 'confirmed'
-                event.save()
-                self._log_event(event, 'approved', 'Evento confirmado automaticamente (sem convidados).')
-
             if not is_solo:
                 self._consume_leader_availability(event)
+                self._check_and_confirm_event(event)
 
     def perform_destroy(self, instance):
         """
@@ -548,6 +554,18 @@ class EventViewSet(viewsets.ModelViewSet):
         event_start = event.start_datetime
         event_end = event.end_datetime
 
+        restore_public = False
+        inactive_availabilities = LeaderAvailability.objects.filter(
+            leader=leader,
+            is_active=False,
+            start_datetime__lt=event_end,
+            end_datetime__gt=event_start,
+        )
+        if org:
+            inactive_availabilities = inactive_availabilities.filter(organization=org)
+        if inactive_availabilities.filter(is_public=True).exists():
+            restore_public = True
+
         # Busca eventos que se sobrepõem considerando buffer, inclusive cruzando datas
         other_events = Event.objects.filter(
             status__in=['proposed', 'approved', 'confirmed'],
@@ -584,9 +602,9 @@ class EventViewSet(viewsets.ModelViewSet):
         end_date = event_end.date()
 
         if end_date != start_date:
-            # Parte 1: do início até 23:59 do dia inicial
+            # Parte 1: do início até meia-noite do dia seguinte
             end_dt1 = timezone.make_aware(
-                timezone.datetime.combine(start_date, timezone.datetime.min.time()).replace(hour=23, minute=59)
+                timezone.datetime.combine(end_date, timezone.datetime.min.time())
             )
             LeaderAvailability.objects.create(
                 leader=leader,
@@ -597,27 +615,28 @@ class EventViewSet(viewsets.ModelViewSet):
                 start_datetime=event_start,
                 end_datetime=end_dt1,
                 notes=f'Restaurada após remoção: {event.title}',
+                is_public=restore_public,
                 is_active=True,
                 created_at=now,
                 updated_at=now
             )
             # Parte 2: do início do dia seguinte até end_time
-            start_dt2 = timezone.make_aware(
-                timezone.datetime.combine(end_date, timezone.datetime.min.time())
-            )
-            LeaderAvailability.objects.create(
-                leader=leader,
-                organization=org,
-                date=end_date,
-                start_time=start_dt2.time(),
-                end_time=event.end_time,
-                start_datetime=start_dt2,
-                end_datetime=event_end,
-                notes=f'Restaurada após remoção: {event.title}',
-                is_active=True,
-                created_at=now,
-                updated_at=now
-            )
+            if event_end.time() != time(0, 0):
+                start_dt2 = end_dt1
+                LeaderAvailability.objects.create(
+                    leader=leader,
+                    organization=org,
+                    date=end_date,
+                    start_time=start_dt2.time(),
+                    end_time=event.end_time,
+                    start_datetime=start_dt2,
+                    end_datetime=event_end,
+                    notes=f'Restaurada após remoção: {event.title}',
+                    is_public=restore_public,
+                    is_active=True,
+                    created_at=now,
+                    updated_at=now
+                )
         else:
             LeaderAvailability.objects.create(
                 leader=leader,
@@ -628,6 +647,7 @@ class EventViewSet(viewsets.ModelViewSet):
                 start_datetime=event_start,
                 end_datetime=event_end,
                 notes=f'Restaurada após remoção: {event.title}',
+                is_public=restore_public,
                 is_active=True,
                 created_at=now,
                 updated_at=now
@@ -669,8 +689,12 @@ class EventViewSet(viewsets.ModelViewSet):
         if not event.created_by or event.created_by != user:
             return False, 'Apenas o criador do evento pode avaliar os músicos.', status.HTTP_403_FORBIDDEN
 
-        if event.event_date >= timezone.now().date():
-            return False, 'Avaliações são liberadas apenas após a data do evento.', status.HTTP_400_BAD_REQUEST
+        event_end = event.end_datetime
+        if not event_end and event.event_date and event.end_time:
+            event_end = timezone.make_aware(datetime.combine(event.event_date, event.end_time))
+
+        if event_end and event_end >= timezone.now():
+            return False, 'Avaliações são liberadas apenas após o término do evento.', status.HTTP_400_BAD_REQUEST
 
         already_rated = MusicianRating.objects.filter(event=event, rated_by=user).exists()
         if already_rated:
@@ -712,6 +736,7 @@ class EventViewSet(viewsets.ModelViewSet):
         if event.approve(request.user):
             approver_name = request.user.get_full_name() or request.user.username
             self._log_event(event, 'approved', f'Evento aprovado por {approver_name}.')
+            self._check_and_confirm_event(event)
             serializer = EventDetailSerializer(event, context={'request': request})
             return Response(serializer.data)
         else:
@@ -878,7 +903,7 @@ class EventViewSet(viewsets.ModelViewSet):
                 )
 
         # Verifica se todos os convidados aceitaram e confirma o evento
-        if event.status == 'proposed' and response_value == 'available':
+        if response_value == 'available':
             self._check_and_confirm_event(event)
 
         serializer = AvailabilitySerializer(availability)
@@ -887,7 +912,13 @@ class EventViewSet(viewsets.ModelViewSet):
     def _check_and_confirm_event(self, event):
         """
         Verifica se todos os músicos convidados aceitaram e confirma o evento.
+        Em organizações com líder, só confirma após aprovação.
         """
+        leader = self._get_event_leader(event)
+        requires_approval = leader is not None and not event.is_solo
+        if requires_approval and event.status != 'approved':
+            return
+
         all_availabilities = event.availabilities.all()
 
         # Conta respostas
@@ -1130,7 +1161,17 @@ class AvailabilityViewSet(viewsets.ModelViewSet):
         """Força o musician a ser o usuário logado"""
         try:
             musician = self.request.user.musician_profile
-            serializer.save(musician=musician)
+            event = serializer.validated_data.get('event')
+            if not event:
+                raise ValidationError({'event': 'Evento é obrigatório.'})
+
+            existing = Availability.objects.filter(musician=musician, event=event).first()
+            if not existing:
+                raise PermissionDenied('Você não foi convidado para este evento.')
+
+            raise ValidationError({
+                'detail': 'Disponibilidade já existe. Use /events/{id}/set_availability/ ou PUT /availabilities/{id}/.'
+            })
         except Musician.DoesNotExist:
             raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
     
@@ -1326,11 +1367,16 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
             org = get_user_organization(self.request.user)
             serializer.save(leader=musician, organization=org)
             created = serializer.instance
+            buffer = timedelta(minutes=40)
             conflicting_events = Event.objects.filter(
                 status__in=['proposed', 'approved', 'confirmed'],
-                start_datetime__lt=created.end_datetime,
-                end_datetime__gt=created.start_datetime
+                start_datetime__lt=created.end_datetime + buffer,
+                end_datetime__gt=created.start_datetime - buffer
             )
+            if org:
+                conflicting_events = conflicting_events.filter(organization=org)
+            else:
+                conflicting_events = conflicting_events.filter(created_by=musician.user)
             if conflicting_events.exists():
                 # Ajusta disponibilidade recém-criada consumindo eventos já existentes
                 self._split_availability_with_events(created, list(conflicting_events))
@@ -1369,11 +1415,17 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
                 raise PermissionDenied('Você não pode editar disponibilidades de outros músicos.')
 
             instance = serializer.save()
+            buffer = timedelta(minutes=40)
             conflicting_events = Event.objects.filter(
                 status__in=['proposed', 'approved', 'confirmed'],
-                start_datetime__lt=instance.end_datetime,
-                end_datetime__gt=instance.start_datetime
+                start_datetime__lt=instance.end_datetime + buffer,
+                end_datetime__gt=instance.start_datetime - buffer
             )
+            org = get_user_organization(self.request.user)
+            if org:
+                conflicting_events = conflicting_events.filter(organization=org)
+            else:
+                conflicting_events = conflicting_events.filter(created_by=musician.user)
             if conflicting_events.exists():
                 self._split_availability_with_events(instance, list(conflicting_events))
         except Musician.DoesNotExist:
@@ -1471,28 +1523,41 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
             availabilities = availabilities.filter(organization=org)
 
         for avail in availabilities:
-            availabilities_map[avail.leader_id] = avail
+            availabilities_map.setdefault(avail.leader_id, []).append(avail)
 
         only_available = request.query_params.get('only_available', '').lower() == 'true'
 
         result = []
         for musician in musicians:
-            avail = availabilities_map.get(musician.id)
+            avail_list = availabilities_map.get(musician.id, [])
+            primary_avail = min(avail_list, key=lambda x: x.start_time) if avail_list else None
 
             # Se only_available=true, pula músicos sem disponibilidade
-            if only_available and not avail:
+            if only_available and not primary_avail:
                 continue
+
+            availability_slots = [
+                {
+                    'id': slot.id,
+                    'start_time': slot.start_time.strftime('%H:%M'),
+                    'end_time': slot.end_time.strftime('%H:%M'),
+                    'notes': slot.notes,
+                }
+                for slot in sorted(avail_list, key=lambda x: x.start_time)
+            ]
 
             musician_data = {
                 'musician_id': musician.id,
                 'musician_name': musician.user.get_full_name() or musician.user.username,
                 'instrument': musician.instrument,
                 'instrument_display': instrument_labels.get(musician.instrument, musician.instrument or ''),
-                'has_availability': avail is not None,
-                'availability_id': avail.id if avail else None,
-                'start_time': avail.start_time.strftime('%H:%M') if avail else None,
-                'end_time': avail.end_time.strftime('%H:%M') if avail else None,
-                'notes': avail.notes if avail else None,
+                'has_availability': primary_avail is not None,
+                'availability_id': primary_avail.id if primary_avail else None,
+                'start_time': primary_avail.start_time.strftime('%H:%M') if primary_avail else None,
+                'end_time': primary_avail.end_time.strftime('%H:%M') if primary_avail else None,
+                'notes': primary_avail.notes if primary_avail else None,
+                'availability_count': len(avail_list),
+                'availability_slots': availability_slots,
             }
             result.append(musician_data)
 

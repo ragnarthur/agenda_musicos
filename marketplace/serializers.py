@@ -72,6 +72,25 @@ class GigSerializer(serializers.ModelSerializer):
             return 'Cliente'
         return obj.created_by.get_full_name() or obj.created_by.username
 
+    def _can_view_contact(self, obj, request) -> bool:
+        if not request or not request.user.is_authenticated:
+            return False
+        if request.user.is_staff or obj.created_by_id == request.user.id:
+            return True
+
+        musician = getattr(request.user, 'musician_profile', None)
+        if not musician:
+            return False
+
+        cached_apps = getattr(obj, '_prefetched_objects_cache', {}).get('applications')
+        if cached_apps is None:
+            cached_apps = list(obj.applications.all())
+
+        return any(
+            app.musician_id == musician.id and app.status == 'hired'
+            for app in cached_apps
+        )
+
     def get_applications_count(self, obj):
         try:
             return obj.applications.count()
@@ -103,5 +122,10 @@ class GigSerializer(serializers.ModelSerializer):
 
         if not is_owner:
             data.pop('applications', None)
+
+        if not self._can_view_contact(instance, request):
+            data['contact_name'] = None
+            data['contact_email'] = None
+            data['contact_phone'] = None
 
         return data
