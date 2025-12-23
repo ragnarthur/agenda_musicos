@@ -115,7 +115,9 @@ const EventBoard: React.FC = () => {
   const isMyEvent = useCallback(
     (event: Event) => {
       if (!user) return false;
-      if (event.created_by === user.id) return true;
+      // event.created_by é User.id, user.user.id é User.id
+      if (event.created_by === user.user.id) return true;
+      // a.musician.id é Musician.id, user.id é Musician.id
       return (event.availabilities || []).some((a) => a.musician?.id === user.id);
     },
     [user],
