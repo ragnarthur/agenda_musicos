@@ -96,22 +96,30 @@ const Dashboard: React.FC = () => {
   const formatTime = (time?: string) => (time ? time.slice(0, 5) : '--:--');
 
   const loadData = React.useCallback(async () => {
-    try {
-      setLoading(true);
-      const [allEvents, pending] = await Promise.all([
-        eventService.getAll({ status: 'proposed,approved,confirmed', upcoming: true }),
-        eventService.getPendingMyResponse(),
-      ]);
+    setLoading(true);
+    const [eventsResult, pendingResult] = await Promise.allSettled([
+      eventService.getAll({ status: 'proposed,approved,confirmed', upcoming: true }),
+      eventService.getPendingMyResponse(),
+    ]);
 
-      const sorted = [...allEvents].sort((a, b) => getStartDateTime(a) - getStartDateTime(b));
-      setTodayEvents(allEvents.filter(isEventToday));
-      setEvents(sorted.slice(0, 5)); // Próximos 5 eventos
-      setPendingEvents(pending);
-    } catch (error) {
-      console.error('Erro ao carregar dados:', error);
-    } finally {
-      setLoading(false);
+    if (eventsResult.status === 'fulfilled') {
+      const sorted = [...eventsResult.value].sort((a, b) => getStartDateTime(a) - getStartDateTime(b));
+      setTodayEvents(eventsResult.value.filter(isEventToday));
+      setEvents(sorted.slice(0, 5));
+    } else {
+      console.error('Erro ao carregar eventos:', eventsResult.reason);
+      setTodayEvents([]);
+      setEvents([]);
     }
+
+    if (pendingResult.status === 'fulfilled') {
+      setPendingEvents(pendingResult.value);
+    } else {
+      console.error('Erro ao carregar pendências:', pendingResult.reason);
+      setPendingEvents([]);
+    }
+
+    setLoading(false);
   }, []);
 
   useEffect(() => {
