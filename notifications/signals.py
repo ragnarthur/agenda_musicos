@@ -2,6 +2,7 @@ import logging
 from django.conf import settings
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 from agenda.models import Availability, Event
 
@@ -11,6 +12,40 @@ logger = logging.getLogger(__name__)
 # Guarda status anterior do evento para detectar mudancas
 _event_previous_status = {}
 
+def _format_relative_day(event_date):
+    """Retorna um texto relativo para a data do evento."""
+    if not event_date:
+        return ''
+
+    today = timezone.localdate()
+    delta = (event_date - today).days
+
+    if delta == 0:
+        return 'hoje'
+    if delta == 1:
+        return 'amanha'
+    if delta > 1:
+        return f'em {delta} dias'
+    if delta == -1:
+        return 'ontem'
+    if delta < -1:
+        return f'ha {abs(delta)} dias'
+    return ''
+
+def _format_event_lines(event):
+    """Monta linhas padronizadas do evento para notificacoes."""
+    event_date = event.event_date.strftime('%d/%m/%Y')
+    start_time = event.start_time.strftime('%H:%M') if event.start_time else '--:--'
+    end_time = event.end_time.strftime('%H:%M') if event.end_time else '--:--'
+    relative = _format_relative_day(event.event_date)
+    date_label = f"{event_date} ({relative})" if relative else event_date
+
+    lines = [
+        f"- Data: {date_label}",
+        f"- Horario: {start_time} - {end_time}",
+        f"- Local: {event.location}",
+    ]
+    return lines
 
 @receiver(pre_save, sender=Event)
 def store_previous_event_status(sender, instance, **kwargs):
@@ -48,29 +83,27 @@ def notify_on_availability_created(sender, instance, created, **kwargs):
 
     # Monta URL do evento
     frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
-    event_url = f"{frontend_url}/events/{event.id}"
-
-    # Formata data
-    event_date = event.event_date.strftime('%d/%m/%Y')
-    start_time = event.start_time.strftime('%H:%M')
+    event_url = f"{frontend_url}/eventos/{event.id}"
 
     # Nome de quem convidou
     inviter_name = ''
     if event.created_by:
         inviter_name = event.created_by.get_full_name() or event.created_by.username
 
-    title = f"Novo convite: {event.title}"
+    title = f"Convite para show: {event.title}"
+    event_lines = _format_event_lines(event)
+    event_lines_text = "\n".join(event_lines)
+    event_date = event.event_date.strftime('%d/%m/%Y')
     body = (
-        f"Voce foi convidado para tocar!\n\n"
-        f"Evento: {event.title}\n"
-        f"Data: {event_date} as {start_time}\n"
-        f"Local: {event.location}\n"
+        f"Voce recebeu um convite para tocar.\n\n"
+        f"Resumo do evento\n"
+        f"{event_lines_text}\n"
     )
 
     if inviter_name:
-        body += f"Convidado por: {inviter_name}\n"
+        body += f"- Convidado por: {inviter_name}\n"
 
-    body += "\nAcesse o app para confirmar sua disponibilidade."
+    body += "\nStatus: aguardando sua resposta.\nAbra o app para confirmar sua disponibilidade."
 
     try:
         notification_service.send_notification(
@@ -125,10 +158,17 @@ def notify_on_availability_response(sender, instance, created, **kwargs):
     response_text = response_labels.get(instance.response, 'respondeu')
 
     frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
-    event_url = f"{frontend_url}/events/{event.id}"
+    event_url = f"{frontend_url}/eventos/{event.id}"
 
-    title = f"Resposta de disponibilidade"
-    body = f"{musician_name} {response_text} para o evento '{event.title}'."
+    title = f"Resposta recebida: {event.title}"
+    event_lines = _format_event_lines(event)
+    event_lines_text = "\n".join(event_lines)
+    body = (
+        f"{musician_name} {response_text}.\n\n"
+        f"Resumo do evento\n"
+        f"{event_lines_text}\n\n"
+        f"Acesse o app para acompanhar o status."
+    )
 
     try:
         notification_service.send_notification(
@@ -169,16 +209,15 @@ def notify_on_event_confirmed(sender, instance, created, **kwargs):
     from notifications.services.base import notification_service
 
     frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
-    event_url = f"{frontend_url}/events/{instance.id}"
-    event_date = instance.event_date.strftime('%d/%m/%Y')
-    start_time = instance.start_time.strftime('%H:%M')
-
+    event_url = f"{frontend_url}/eventos/{instance.id}"
     title = f"Evento confirmado: {instance.title}"
+    event_lines = _format_event_lines(instance)
+    event_lines_text = "\n".join(event_lines)
     body = (
-        f"O evento foi confirmado!\n\n"
-        f"Data: {event_date} as {start_time}\n"
-        f"Local: {instance.location}\n\n"
-        f"Nos vemos la!"
+        f"O evento foi confirmado.\n\n"
+        f"Resumo do evento\n"
+        f"{event_lines_text}\n\n"
+        f"Equipe confirmada. Nos vemos la!"
     )
 
     # Notifica todos os musicos que aceitaram
@@ -221,10 +260,15 @@ def notify_on_event_cancelled(sender, instance, created, **kwargs):
     from notifications.services.base import notification_service
 
     frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
-    event_date = instance.event_date.strftime('%d/%m/%Y')
-
     title = f"Evento cancelado: {instance.title}"
-    body = f"Infelizmente o evento '{instance.title}' do dia {event_date} foi cancelado."
+    event_lines = _format_event_lines(instance)
+    event_lines_text = "\n".join(event_lines)
+    body = (
+        f"O evento foi cancelado.\n\n"
+        f"Resumo do evento\n"
+        f"{event_lines_text}\n\n"
+        f"Se precisar, voce pode reagendar uma nova data."
+    )
 
     # Notifica todos os musicos envolvidos (exceto quem cancelou)
     for availability in instance.availabilities.all():
