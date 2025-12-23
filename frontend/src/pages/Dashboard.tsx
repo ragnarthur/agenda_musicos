@@ -167,7 +167,7 @@ const Dashboard: React.FC = () => {
                   Novo evento
                 </Link>
                 <Link
-                  to="/vagas"
+                  to="/marketplace"
                   className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-white px-4 py-2 text-sm font-semibold text-primary-700 hover:bg-primary-50 transition-transform hover:-translate-y-0.5"
                   title="Ver oportunidades no marketplace"
                 >
