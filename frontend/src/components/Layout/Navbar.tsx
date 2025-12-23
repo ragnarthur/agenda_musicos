@@ -276,11 +276,15 @@ const Navbar: React.FC = () => {
 const AppNavLink: React.FC<{ to: string; icon: React.ReactNode; label: string; badge?: number; accent?: boolean }> = ({ to, icon, label, badge, accent }) => (
   <RouterNavLink
     to={to}
-    className={({ isActive }) => `group flex items-center space-x-1 transition-all relative pb-1 ${
-      accent
-        ? 'text-amber-300 hover:text-amber-200'
-        : 'text-slate-200 hover:text-white'
-    } ${isActive ? 'text-white' : ''} after:absolute after:left-0 after:-bottom-0.5 after:h-0.5 after:w-full after:rounded-full after:bg-gradient-to-r after:from-primary-400 after:via-indigo-300 after:to-emerald-300 after:transition-transform after:duration-300 after:origin-left after:scale-x-0 group-hover:after:scale-x-100 group-focus-visible:after:scale-x-100 ${isActive ? 'after:scale-x-100' : ''}`}
+    className={({ isActive }) => {
+      const hoverTone = accent ? 'hover:bg-amber-500/10' : 'hover:bg-white/10';
+      const activeTone = isActive ? (accent ? 'bg-amber-500/10 text-amber-100' : 'bg-white/10 text-white') : '';
+      return `group flex items-center space-x-1 transition-all relative rounded-full px-2 py-1 ${hoverTone} ${activeTone} hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
+        accent
+          ? 'text-amber-300 hover:text-amber-200'
+          : 'text-slate-200 hover:text-white'
+      } after:absolute after:left-0 after:-bottom-0.5 after:h-0.5 after:w-full after:rounded-full after:bg-gradient-to-r after:from-primary-400 after:via-indigo-300 after:to-emerald-300 after:transition-transform after:duration-300 after:origin-left after:scale-x-0 group-hover:after:scale-x-100 group-focus-visible:after:scale-x-100 ${isActive ? 'after:scale-x-100' : ''}`;
+    }}
   >
     {icon}
     <span>{label}</span>
