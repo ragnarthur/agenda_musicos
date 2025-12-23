@@ -57,17 +57,21 @@ export const getEventComputedStatus = (event: Event): { status: ComputedEventSta
     return { status: 'completed', label: 'Concluído' };
   }
 
-  const approvedLabel =
-    event.approval_label ||
-    (event.approved_by_name ? `Aprovado por ${event.approved_by_name}` : undefined);
-
-  const baseLabel =
-    event.status === 'approved'
-      ? approvedLabel || event.status_display
-      : event.status_display;
+  // Usa approval_label do backend para 'approved' e 'confirmed'
+  if (event.status === 'approved' || event.status === 'confirmed') {
+    const label =
+      event.approval_label ||
+      (event.status === 'approved' && event.approved_by_name
+        ? `Aprovado por ${event.approved_by_name}`
+        : event.status_display);
+    return {
+      status: event.status,
+      label: label || STATUS_LABELS[event.status] || 'Indefinido',
+    };
+  }
 
   return {
     status: event.status,
-    label: baseLabel || STATUS_LABELS[event.status] || 'Indefinido',
+    label: event.status_display || STATUS_LABELS[event.status] || 'Indefinido',
   };
 };
