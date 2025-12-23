@@ -402,6 +402,7 @@ class EventLog(models.Model):
         ('rejected', 'Rejeitado'),
         ('cancelled', 'Cancelado'),
         ('availability', 'Disponibilidade'),
+        ('notification', 'Notificacao'),
     ]
 
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='logs')
