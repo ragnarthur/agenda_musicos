@@ -143,7 +143,7 @@ const Navbar: React.FC = () => {
 
         {/* Navbar Mobile */}
         <div className="md:hidden relative pb-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 -ml-1">
             <Link
               to="/eventos"
               className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
