@@ -1,7 +1,7 @@
 // pages/Dashboard.tsx
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, CalendarClock, Clock, Crown, Plus, Users, ChevronRight, ListChecks, Zap } from 'lucide-react';
+import { Calendar, CalendarClock, Clock, Crown, Plus, Users, ChevronRight, ListChecks, Zap, Briefcase } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
@@ -167,12 +167,12 @@ const Dashboard: React.FC = () => {
                   Novo evento
                 </Link>
                 <Link
-                  to="/eventos/agenda"
+                  to="/vagas"
                   className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-white px-4 py-2 text-sm font-semibold text-primary-700 hover:bg-primary-50 transition-transform hover:-translate-y-0.5"
-                  title="Visão em colunas por músico"
+                  title="Ver oportunidades no marketplace"
                 >
-                  <Calendar className="h-4 w-4" />
-                  Grade por músico
+                  <Briefcase className="h-4 w-4" />
+                  Vagas
                 </Link>
                 <Link
                   to="/eventos"
