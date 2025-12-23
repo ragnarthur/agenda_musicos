@@ -104,7 +104,7 @@ const Navbar: React.FC = () => {
           </Link>
 
           {/* Links de Navegação */}
-          <div className="hidden md:flex items-center space-x-6">
+          <div className="hidden md:flex items-center gap-4 md:-ml-2">
             <AppNavLink to="/eventos" icon={<Calendar className="h-5 w-5" />} label="Eventos" badge={pendingMyResponse} />
             <AppNavLink to="/musicos" icon={<Users className="h-5 w-5" />} label="Músicos" />
             <AppNavLink to="/conexoes" icon={<HeartHandshake className="h-5 w-5" />} label="Rede & Badges" />
