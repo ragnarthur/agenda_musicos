@@ -30,6 +30,7 @@ const useStripe = import.meta.env.VITE_USE_STRIPE === 'true';
 const allowFakePayment = import.meta.env.VITE_ALLOW_FAKE_PAYMENT === 'true';
 const PlanSelection = lazy(() => import('./pages/PlanSelection'));
 const PaymentSuccess = lazy(() => import('./pages/PaymentSuccess'));
+const NotificationSettings = lazy(() => import('./pages/NotificationSettings'));
 
 // Componente de loading para Suspense
 const PageLoader: React.FC = () => (
@@ -175,6 +176,15 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Connections />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/configuracoes/notificacoes"
+          element={
+            <ProtectedRoute>
+              <NotificationSettings />
             </ProtectedRoute>
           }
         />

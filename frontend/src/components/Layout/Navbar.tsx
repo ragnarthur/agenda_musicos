@@ -12,6 +12,7 @@ import {
   HeartHandshake,
   Menu,
   X,
+  Bell,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { eventService } from '../../services/api';
@@ -220,6 +221,14 @@ const Navbar: React.FC = () => {
               >
                 <Megaphone className="h-5 w-5" />
                 <span className="text-sm">Vagas</span>
+              </Link>
+              <Link
+                to="/configuracoes/notificacoes"
+                onClick={() => setOpenMore(false)}
+                className="flex items-center gap-3 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
+              >
+                <Bell className="h-5 w-5" />
+                <span className="text-sm">Notificacoes</span>
               </Link>
               <Link
                 to="/aprovacoes"
