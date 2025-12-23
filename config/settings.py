@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # Local apps
     'agenda',
     'marketplace',
+    'notifications',
 ]
 
 MIDDLEWARE = [
@@ -211,6 +212,14 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='Agenda Musicos <norep
 # Frontend URL (para links de verificação de email)
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
 
+# TELEGRAM BOT CONFIGURATION
+TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN', default='')
+TELEGRAM_BOT_USERNAME = config('TELEGRAM_BOT_USERNAME', default='@GigFlowAgendaBot')
+
+# WHATSAPP SERVICE (futuro - Baileys/Twilio)
+WHATSAPP_SERVICE_URL = config('WHATSAPP_SERVICE_URL', default='')
+WHATSAPP_SERVICE_SECRET = config('WHATSAPP_SERVICE_SECRET', default='')
+
 # Payment Service Integration
 PAYMENT_SERVICE_URL = config('PAYMENT_SERVICE_URL', default='http://localhost:3001')
 PAYMENT_SERVICE_SECRET = config('PAYMENT_SERVICE_SECRET', default='')
@@ -291,6 +300,11 @@ LOGGING = {
             'propagate': False,
         },
         'agenda': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'notifications': {
             'handlers': ['console', 'file'],
             'level': 'INFO',
             'propagate': False,

@@ -54,7 +54,8 @@ const buildLineup = (event: Event): string[] => {
 const Dashboard: React.FC = () => {
   const { user, isLeader } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
-  const [pendingEvents, setPendingEvents] = useState<Event[]>([]);
+  const [pendingApprovals, setPendingApprovals] = useState<Event[]>([]);
+  const [pendingResponses, setPendingResponses] = useState<Event[]>([]);
   const [todayEvents, setTodayEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const nextEvent = events[0];
@@ -100,9 +101,10 @@ const Dashboard: React.FC = () => {
 
     const fetchData = async () => {
       setLoading(true);
-      const [eventsResult, pendingResult] = await Promise.allSettled([
+      const [eventsResult, approvalsResult, responsesResult] = await Promise.allSettled([
         eventService.getAll({ status: 'proposed,approved,confirmed', upcoming: true }),
         eventService.getAll({ pending_approval: true }),
+        eventService.getPendingMyResponse(),
       ]);
 
       if (ignore) return;
@@ -117,11 +119,18 @@ const Dashboard: React.FC = () => {
         setEvents([]);
       }
 
-      if (pendingResult.status === 'fulfilled') {
-        setPendingEvents(pendingResult.value);
+      if (approvalsResult.status === 'fulfilled') {
+        setPendingApprovals(approvalsResult.value);
       } else {
-        console.error('Erro ao carregar pendências:', pendingResult.reason);
-        setPendingEvents([]);
+        console.error('Erro ao carregar pendências:', approvalsResult.reason);
+        setPendingApprovals([]);
+      }
+
+      if (responsesResult.status === 'fulfilled') {
+        setPendingResponses(responsesResult.value);
+      } else {
+        console.error('Erro ao carregar respostas pendentes:', responsesResult.reason);
+        setPendingResponses([]);
       }
 
       setLoading(false);
@@ -340,7 +349,7 @@ const Dashboard: React.FC = () => {
             <div className="relative flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Eventos pendentes</p>
-                <p className="text-3xl font-bold text-primary-600">{pendingEvents.length}</p>
+                <p className="text-3xl font-bold text-primary-600">{pendingApprovals.length}</p>
               </div>
               <div className="bg-primary-100 p-3 rounded-lg">
                 <Clock className="h-8 w-8 text-primary-600" />
@@ -492,17 +501,17 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Eventos Aguardando Resposta */}
-        {pendingEvents.length > 0 && (
+        {pendingResponses.length > 0 && (
           <div className="card relative overflow-hidden">
             <div className="hero-animated opacity-50" />
             <div className="relative flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">
                 Aguardando sua Resposta
               </h2>
-              <span className="badge badge-pending">{pendingEvents.length}</span>
+              <span className="badge badge-pending">{pendingResponses.length}</span>
             </div>
             <div className="space-y-3">
-              {pendingEvents.map((event) => (
+              {pendingResponses.map((event) => (
                 <Link
                   key={event.id}
                   to={`/eventos/${event.id}`}
