@@ -48,16 +48,23 @@ const Navbar: React.FC = () => {
   const instrumentLabel = formatInstrument();
 
   const loadNotifications = useCallback(async () => {
-    try {
-      // Eventos pendentes de minha resposta
-      const myPending = await eventService.getPendingMyResponse();
-      setPendingMyResponse(myPending.length);
+    const [pendingResult, approvalResult] = await Promise.allSettled([
+      eventService.getPendingMyResponse(),
+      eventService.getAll({ pending_approval: true }),
+    ]);
 
-      // Eventos pendentes de aprovação
-      const approvals = await eventService.getAll({ pending_approval: true });
-      setPendingApproval(approvals.length);
-    } catch (error) {
-      console.error('Erro ao carregar notificações:', error);
+    if (pendingResult.status === 'fulfilled') {
+      setPendingMyResponse(pendingResult.value.length);
+    } else {
+      setPendingMyResponse(0);
+      console.error('Erro ao carregar notificações (pendências):', pendingResult.reason);
+    }
+
+    if (approvalResult.status === 'fulfilled') {
+      setPendingApproval(approvalResult.value.length);
+    } else {
+      setPendingApproval(0);
+      console.error('Erro ao carregar notificações (aprovações):', approvalResult.reason);
     }
   }, []);
 
