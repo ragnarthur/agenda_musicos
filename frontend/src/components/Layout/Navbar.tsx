@@ -110,6 +110,7 @@ const Navbar: React.FC = () => {
             <NavLink to="/conexoes" icon={<HeartHandshake className="h-5 w-5" />} label="Rede & Badges" />
             <NavLink to="/disponibilidades" icon={<Clock className="h-5 w-5" />} label="Datas Disponíveis" />
             <NavLink to="/marketplace" icon={<Megaphone className="h-5 w-5" />} label="Vagas" />
+            <NavLink to="/configuracoes/notificacoes" icon={<Bell className="h-5 w-5" />} label="Notificações" />
             <NavLink
               to="/aprovacoes"
               icon={<Crown className="h-5 w-5" />}
@@ -161,6 +162,13 @@ const Navbar: React.FC = () => {
             >
               <Clock className="h-4 w-4" />
               Datas
+            </Link>
+            <Link
+              to="/configuracoes/notificacoes"
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors"
+            >
+              <Bell className="h-4 w-4" />
+              Notificações
             </Link>
             <button
               onClick={() => setOpenMore((prev) => !prev)}
