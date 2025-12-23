@@ -4,7 +4,7 @@ from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
 
-from agenda.models import Availability, Event
+from agenda.models import Availability, Event, EventLog
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +76,7 @@ def notify_on_availability_created(sender, instance, created, **kwargs):
         return
 
     user = instance.musician.user
+    musician_name = user.get_full_name() or user.username
 
     # Import aqui para evitar circular import
     from notifications.models import NotificationType
@@ -106,7 +107,7 @@ def notify_on_availability_created(sender, instance, created, **kwargs):
     body += "\nStatus: aguardando sua resposta.\nAbra o app para confirmar sua disponibilidade."
 
     try:
-        notification_service.send_notification(
+        result = notification_service.send_notification(
             user=user,
             notification_type=NotificationType.EVENT_INVITE,
             title=title,
@@ -119,6 +120,13 @@ def notify_on_availability_created(sender, instance, created, **kwargs):
                 'event_date': event_date,
             }
         )
+        if result.success and result.channel == 'telegram':
+            EventLog.objects.create(
+                event=event,
+                performed_by=None,
+                action='notification',
+                description=f"Convite enviado via Telegram para {musician_name}."
+            )
         logger.info(f"Notificacao de convite enviada para {user.username}")
     except Exception as e:
         logger.error(f"Erro ao enviar notificacao de convite: {e}")
@@ -171,7 +179,7 @@ def notify_on_availability_response(sender, instance, created, **kwargs):
     )
 
     try:
-        notification_service.send_notification(
+        result = notification_service.send_notification(
             user=user,
             notification_type=NotificationType.AVAILABILITY_RESPONSE,
             title=title,
@@ -184,6 +192,13 @@ def notify_on_availability_response(sender, instance, created, **kwargs):
                 'response': instance.response,
             }
         )
+        if result.success and result.channel == 'telegram':
+            EventLog.objects.create(
+                event=event,
+                performed_by=None,
+                action='notification',
+                description="Aviso de resposta enviado via Telegram para o organizador."
+            )
         logger.info(f"Notificacao de resposta enviada para {user.username}")
     except Exception as e:
         logger.error(f"Erro ao enviar notificacao de resposta: {e}")
@@ -221,11 +236,12 @@ def notify_on_event_confirmed(sender, instance, created, **kwargs):
     )
 
     # Notifica todos os musicos que aceitaram
+    telegram_sent = 0
     for availability in instance.availabilities.filter(response='available'):
         user = availability.musician.user
 
         try:
-            notification_service.send_notification(
+            result = notification_service.send_notification(
                 user=user,
                 notification_type=NotificationType.EVENT_CONFIRMED,
                 title=title,
@@ -236,9 +252,20 @@ def notify_on_event_confirmed(sender, instance, created, **kwargs):
                     'url': event_url,
                 }
             )
+            if result.success and result.channel == 'telegram':
+                telegram_sent += 1
             logger.info(f"Notificacao de confirmacao enviada para {user.username}")
         except Exception as e:
             logger.error(f"Erro ao notificar {user.username}: {e}")
+
+    if telegram_sent:
+        label = 'musico' if telegram_sent == 1 else 'musicos'
+        EventLog.objects.create(
+            event=instance,
+            performed_by=None,
+            action='notification',
+            description=f"Aviso de confirmacao enviado via Telegram para {telegram_sent} {label}."
+        )
 
 
 @receiver(post_save, sender=Event)
@@ -271,6 +298,7 @@ def notify_on_event_cancelled(sender, instance, created, **kwargs):
     )
 
     # Notifica todos os musicos envolvidos (exceto quem cancelou)
+    telegram_sent = 0
     for availability in instance.availabilities.all():
         user = availability.musician.user
 
@@ -279,7 +307,7 @@ def notify_on_event_cancelled(sender, instance, created, **kwargs):
             continue
 
         try:
-            notification_service.send_notification(
+            result = notification_service.send_notification(
                 user=user,
                 notification_type=NotificationType.EVENT_CANCELLED,
                 title=title,
@@ -289,6 +317,17 @@ def notify_on_event_cancelled(sender, instance, created, **kwargs):
                     'object_id': instance.id,
                 }
             )
+            if result.success and result.channel == 'telegram':
+                telegram_sent += 1
             logger.info(f"Notificacao de cancelamento enviada para {user.username}")
         except Exception as e:
             logger.error(f"Erro ao notificar {user.username}: {e}")
+
+    if telegram_sent:
+        label = 'musico' if telegram_sent == 1 else 'musicos'
+        EventLog.objects.create(
+            event=instance,
+            performed_by=None,
+            action='notification',
+            description=f"Aviso de cancelamento enviado via Telegram para {telegram_sent} {label}."
+        )

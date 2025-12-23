@@ -23,6 +23,7 @@ class NotificationResult:
     success: bool
     external_id: Optional[str] = None
     error_message: Optional[str] = None
+    channel: Optional[str] = None
 
 
 class BaseProvider(ABC):
@@ -124,6 +125,7 @@ class NotificationService:
         )
 
         # Tenta enviar
+        used_channel = channel
         provider = self.get_provider(channel)
         if not provider or not provider.is_configured():
             # Fallback para email
@@ -131,6 +133,7 @@ class NotificationService:
                 logger.info(f"Fallback para email (provider {channel} nao disponivel)")
                 provider = self.get_provider('email')
                 channel = 'email'
+                used_channel = 'email'
 
         if not provider:
             logger.error("Nenhum provider disponivel")
@@ -165,10 +168,12 @@ class NotificationService:
                         logger.info(f"Tentando fallback para email...")
                         result = email_provider.send(payload, user)
                         if result.success:
+                            used_channel = 'email'
                             log.channel = 'email'
                             log.mark_sent(result.external_id)
                             logger.info(f"Fallback para email bem sucedido")
 
+            result.channel = used_channel
             return result
 
         except Exception as e:
