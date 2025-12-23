@@ -262,16 +262,14 @@ const Marketplace: React.FC = () => {
   const scrollToGig = (gigId: number) => {
     const target = document.getElementById(`gig-${gigId}`);
     if (target) {
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const offset = 96;
+      const top = target.getBoundingClientRect().top + window.scrollY - offset;
+      window.scrollTo({ top, behavior: 'smooth' });
     }
   };
 
   const scrollToHero = () => {
-    const hero = document.getElementById('vagas-hero');
-    if (hero) {
-      hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-    setShowBackToTop(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   useEffect(() => {
