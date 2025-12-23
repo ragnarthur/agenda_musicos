@@ -133,24 +133,24 @@ class EventListSerializer(serializers.ModelSerializer):
         return obj.approved_by.get_full_name() if obj.approved_by else None
 
     def get_approval_label(self, obj):
-        """Mostra quem aprovou/confirmou o evento"""
-        if obj.status == 'approved' and obj.approved_by:
-            return f"Aprovado por {obj.approved_by.get_full_name() or obj.approved_by.username}"
-        if obj.status == 'confirmed':
-            # Busca o último músico que aceitou (trigou a confirmação)
-            # Primeiro tenta com responded_at preenchido
+        """Mostra quem confirmou o evento (texto unificado para approved e confirmed)"""
+        if obj.status in ('approved', 'confirmed'):
+            # Para eventos approved, usa approved_by
+            if obj.approved_by:
+                name = obj.approved_by.get_full_name() or obj.approved_by.username
+                return f"Confirmado por {name}"
+
+            # Busca o último músico que aceitou
             last_available = obj.availabilities.filter(
                 response='available',
                 responded_at__isnull=False
             ).order_by('-responded_at').first()
 
-            # Fallback: qualquer músico disponível
             if not last_available:
                 last_available = obj.availabilities.filter(
                     response='available'
                 ).select_related('musician__user').first()
 
-            # Fallback final: criador do evento
             if last_available:
                 name = last_available.musician.user.get_full_name() or last_available.musician.user.username
                 return f"Confirmado por {name}"
@@ -252,24 +252,24 @@ class EventDetailSerializer(serializers.ModelSerializer):
             return False
 
     def get_approval_label(self, obj):
-        """Mostra quem aprovou/confirmou o evento"""
-        if obj.status == 'approved' and obj.approved_by:
-            return f"Aprovado por {obj.approved_by.get_full_name() or obj.approved_by.username}"
-        if obj.status == 'confirmed':
-            # Busca o último músico que aceitou (trigou a confirmação)
-            # Primeiro tenta com responded_at preenchido
+        """Mostra quem confirmou o evento (texto unificado para approved e confirmed)"""
+        if obj.status in ('approved', 'confirmed'):
+            # Para eventos approved, usa approved_by
+            if obj.approved_by:
+                name = obj.approved_by.get_full_name() or obj.approved_by.username
+                return f"Confirmado por {name}"
+
+            # Busca o último músico que aceitou
             last_available = obj.availabilities.filter(
                 response='available',
                 responded_at__isnull=False
             ).order_by('-responded_at').first()
 
-            # Fallback: qualquer músico disponível
             if not last_available:
                 last_available = obj.availabilities.filter(
                     response='available'
                 ).select_related('musician__user').first()
 
-            # Fallback final: criador do evento
             if last_available:
                 name = last_available.musician.user.get_full_name() or last_available.musician.user.username
                 return f"Confirmado por {name}"
