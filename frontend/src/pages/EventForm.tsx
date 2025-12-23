@@ -233,11 +233,8 @@ const EventForm: React.FC = () => {
         return;
       }
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const eventDate = new Date(formData.event_date);
-
-      if (eventDate < today) {
+      const todayStr = format(new Date(), 'yyyy-MM-dd');
+      if (formData.event_date && formData.event_date < todayStr) {
         setError('A data do evento não pode ser no passado');
         setLoading(false);
         return;
