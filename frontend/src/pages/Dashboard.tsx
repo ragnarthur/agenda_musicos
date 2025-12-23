@@ -395,18 +395,22 @@ const Dashboard: React.FC = () => {
               <div className="hero-animated opacity-60" />
               <div className="relative flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Equipe</p>
-                  <p className="text-lg font-semibold text-blue-700">Acesso rápido</p>
+                  <p className="text-sm font-medium text-gray-600">Minha agenda</p>
+                  <p className="text-lg font-semibold text-blue-700">
+                    {events.filter(e => e.status === 'confirmed').length > 0
+                      ? `${events.filter(e => e.status === 'confirmed').length} show${events.filter(e => e.status === 'confirmed').length > 1 ? 's' : ''} confirmado${events.filter(e => e.status === 'confirmed').length > 1 ? 's' : ''}`
+                      : 'Sem shows confirmados'}
+                  </p>
                 </div>
                 <div className="bg-blue-100 p-3 rounded-lg">
-                  <Star className="h-8 w-8 text-blue-700" />
+                  <Calendar className="h-8 w-8 text-blue-700" />
                 </div>
               </div>
               <Link
                 to="/eventos/agenda"
                 className="relative mt-3 inline-flex items-center gap-1 text-sm font-semibold text-blue-700"
               >
-                Ver grade por músico <ChevronRight className="h-4 w-4" />
+                Ver meus eventos <ChevronRight className="h-4 w-4" />
               </Link>
             </motion.div>
           )}
