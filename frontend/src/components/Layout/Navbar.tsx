@@ -1,6 +1,6 @@
 // components/Layout/Navbar.tsx
 import React, { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink as RouterNavLink, useNavigate } from 'react-router-dom';
 import {
   Music,
   Calendar,
@@ -105,13 +105,13 @@ const Navbar: React.FC = () => {
 
           {/* Links de Navegação */}
           <div className="hidden md:flex items-center space-x-6">
-            <NavLink to="/eventos" icon={<Calendar className="h-5 w-5" />} label="Eventos" badge={pendingMyResponse} />
-            <NavLink to="/musicos" icon={<Users className="h-5 w-5" />} label="Músicos" />
-            <NavLink to="/conexoes" icon={<HeartHandshake className="h-5 w-5" />} label="Rede & Badges" />
-            <NavLink to="/disponibilidades" icon={<Clock className="h-5 w-5" />} label="Datas Disponíveis" />
-            <NavLink to="/marketplace" icon={<Megaphone className="h-5 w-5" />} label="Vagas" />
-            <NavLink to="/configuracoes/notificacoes" icon={<Bell className="h-5 w-5" />} label="Notificações" />
-            <NavLink
+            <AppNavLink to="/eventos" icon={<Calendar className="h-5 w-5" />} label="Eventos" badge={pendingMyResponse} />
+            <AppNavLink to="/musicos" icon={<Users className="h-5 w-5" />} label="Músicos" />
+            <AppNavLink to="/conexoes" icon={<HeartHandshake className="h-5 w-5" />} label="Rede & Badges" />
+            <AppNavLink to="/disponibilidades" icon={<Clock className="h-5 w-5" />} label="Datas Disponíveis" />
+            <AppNavLink to="/marketplace" icon={<Megaphone className="h-5 w-5" />} label="Vagas" />
+            <AppNavLink to="/configuracoes/notificacoes" icon={<Bell className="h-5 w-5" />} label="Notificações" />
+            <AppNavLink
               to="/aprovacoes"
               icon={<Crown className="h-5 w-5" />}
               label="Aprovações"
@@ -146,7 +146,7 @@ const Navbar: React.FC = () => {
           <div className="flex items-center gap-2">
             <Link
               to="/eventos"
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors"
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
             >
               <Calendar className="h-4 w-4" />
               Eventos
@@ -158,21 +158,21 @@ const Navbar: React.FC = () => {
             </Link>
             <Link
               to="/disponibilidades"
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors"
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
             >
               <Clock className="h-4 w-4" />
               Datas
             </Link>
             <Link
               to="/configuracoes/notificacoes"
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors"
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
             >
               <Bell className="h-4 w-4" />
               Notificações
             </Link>
             <button
               onClick={() => setOpenMore((prev) => !prev)}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors"
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
               aria-expanded={openMore}
               aria-controls="mobile-more-menu"
             >
@@ -273,12 +273,14 @@ const Navbar: React.FC = () => {
   );
 };
 
-const NavLink: React.FC<{ to: string; icon: React.ReactNode; label: string; badge?: number; accent?: boolean }> = ({ to, icon, label, badge, accent }) => (
-  <Link
+const AppNavLink: React.FC<{ to: string; icon: React.ReactNode; label: string; badge?: number; accent?: boolean }> = ({ to, icon, label, badge, accent }) => (
+  <RouterNavLink
     to={to}
-    className={`flex items-center space-x-1 transition-colors relative ${
-      accent ? 'text-amber-300 hover:text-amber-200' : 'text-slate-200 hover:text-white'
-    }`}
+    className={({ isActive }) => `group flex items-center space-x-1 transition-all relative pb-1 ${
+      accent
+        ? 'text-amber-300 hover:text-amber-200'
+        : 'text-slate-200 hover:text-white'
+    } ${isActive ? 'text-white' : ''} after:absolute after:left-0 after:-bottom-0.5 after:h-0.5 after:w-full after:rounded-full after:bg-gradient-to-r after:from-primary-400 after:via-indigo-300 after:to-emerald-300 after:transition-transform after:duration-300 after:origin-left after:scale-x-0 group-hover:after:scale-x-100 group-focus-visible:after:scale-x-100 ${isActive ? 'after:scale-x-100' : ''}`}
   >
     {icon}
     <span>{label}</span>
@@ -287,7 +289,7 @@ const NavLink: React.FC<{ to: string; icon: React.ReactNode; label: string; badg
         {badge}
       </span>
     )}
-  </Link>
+  </RouterNavLink>
 );
 
 export default Navbar;
