@@ -396,11 +396,16 @@ const Dashboard: React.FC = () => {
               <div className="relative flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Minha agenda</p>
-                  <p className="text-lg font-semibold text-blue-700">
-                    {events.filter(e => e.status === 'confirmed').length > 0
-                      ? `${events.filter(e => e.status === 'confirmed').length} show${events.filter(e => e.status === 'confirmed').length > 1 ? 's' : ''} confirmado${events.filter(e => e.status === 'confirmed').length > 1 ? 's' : ''}`
-                      : 'Sem shows confirmados'}
-                  </p>
+                  {(() => {
+                    const confirmedCount = events.filter(e => e.status === 'approved' || e.status === 'confirmed').length;
+                    return (
+                      <p className="text-lg font-semibold text-blue-700">
+                        {confirmedCount > 0
+                          ? `${confirmedCount} show${confirmedCount > 1 ? 's' : ''} confirmado${confirmedCount > 1 ? 's' : ''}`
+                          : 'Sem shows confirmados'}
+                      </p>
+                    );
+                  })()}
                 </div>
                 <div className="bg-blue-100 p-3 rounded-lg">
                   <Calendar className="h-8 w-8 text-blue-700" />
