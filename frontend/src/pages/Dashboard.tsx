@@ -1,7 +1,7 @@
 // pages/Dashboard.tsx
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, CalendarClock, Clock, Crown, Plus, Users, ChevronRight, Star, ListChecks, Zap } from 'lucide-react';
+import { Calendar, CalendarClock, Clock, Crown, Plus, Users, ChevronRight, ListChecks, Zap } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
