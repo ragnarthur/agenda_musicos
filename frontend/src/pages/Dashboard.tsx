@@ -95,36 +95,44 @@ const Dashboard: React.FC = () => {
 
   const formatTime = (time?: string) => (time ? time.slice(0, 5) : '--:--');
 
-  const loadData = React.useCallback(async () => {
-    setLoading(true);
-    const [eventsResult, pendingResult] = await Promise.allSettled([
-      eventService.getAll({ status: 'proposed,approved,confirmed', upcoming: true }),
-      eventService.getPendingMyResponse(),
-    ]);
-
-    if (eventsResult.status === 'fulfilled') {
-      const sorted = [...eventsResult.value].sort((a, b) => getStartDateTime(a) - getStartDateTime(b));
-      setTodayEvents(eventsResult.value.filter(isEventToday));
-      setEvents(sorted.slice(0, 5));
-    } else {
-      console.error('Erro ao carregar eventos:', eventsResult.reason);
-      setTodayEvents([]);
-      setEvents([]);
-    }
-
-    if (pendingResult.status === 'fulfilled') {
-      setPendingEvents(pendingResult.value);
-    } else {
-      console.error('Erro ao carregar pendências:', pendingResult.reason);
-      setPendingEvents([]);
-    }
-
-    setLoading(false);
-  }, []);
-
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    let ignore = false;
+
+    const fetchData = async () => {
+      setLoading(true);
+      const [eventsResult, pendingResult] = await Promise.allSettled([
+        eventService.getAll({ status: 'proposed,approved,confirmed', upcoming: true }),
+        eventService.getPendingMyResponse(),
+      ]);
+
+      if (ignore) return;
+
+      if (eventsResult.status === 'fulfilled') {
+        const sorted = [...eventsResult.value].sort((a, b) => getStartDateTime(a) - getStartDateTime(b));
+        setTodayEvents(eventsResult.value.filter(isEventToday));
+        setEvents(sorted.slice(0, 5));
+      } else {
+        console.error('Erro ao carregar eventos:', eventsResult.reason);
+        setTodayEvents([]);
+        setEvents([]);
+      }
+
+      if (pendingResult.status === 'fulfilled') {
+        setPendingEvents(pendingResult.value);
+      } else {
+        console.error('Erro ao carregar pendências:', pendingResult.reason);
+        setPendingEvents([]);
+      }
+
+      setLoading(false);
+    };
+
+    fetchData();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const agendaCount = events.length;
 
