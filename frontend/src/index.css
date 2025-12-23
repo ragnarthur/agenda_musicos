@@ -89,7 +89,7 @@
   }
 
   .status-chip.approved { @apply bg-emerald-100 text-emerald-700 border border-emerald-200; }
-  .status-chip.confirmed { @apply bg-cyan-100 text-cyan-700 border border-cyan-200; }
+  .status-chip.confirmed { @apply bg-emerald-100 text-emerald-700 border border-emerald-200; }
   .status-chip.proposed { @apply bg-amber-100 text-amber-800 border border-amber-200; }
   .status-chip.pending { @apply bg-amber-100 text-amber-800 border border-amber-200; }
   .status-chip.rejected { @apply bg-rose-100 text-rose-700 border border-rose-200; }
