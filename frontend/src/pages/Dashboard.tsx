@@ -102,7 +102,7 @@ const Dashboard: React.FC = () => {
       setLoading(true);
       const [eventsResult, pendingResult] = await Promise.allSettled([
         eventService.getAll({ status: 'proposed,approved,confirmed', upcoming: true }),
-        eventService.getPendingMyResponse(),
+        eventService.getAll({ pending_approval: true }),
       ]);
 
       if (ignore) return;
