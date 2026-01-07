@@ -4,7 +4,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const envSchema = z.object({
-  PORT: z.string().default('3001'),
+  // Server
+  PORT: z.coerce.number().int().positive().default(3001),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
   // Stripe
@@ -14,11 +15,13 @@ const envSchema = z.object({
   STRIPE_ANNUAL_PRICE_ID: z.string().min(1, 'STRIPE_ANNUAL_PRICE_ID is required'),
 
   // Django Integration
-  DJANGO_API_URL: z.string().url().default('http://localhost:8000/api'),
+  // Em Docker/produção, o container fala com o service "backend"
+  DJANGO_API_URL: z.string().url().default('http://backend:8000/api'),
   PAYMENT_SERVICE_SECRET: z.string().min(1, 'PAYMENT_SERVICE_SECRET is required'),
 
-  // CORS
-  ALLOWED_ORIGINS: z.string().default('http://localhost:5173'),
+  // CORS (lista separada por vírgula)
+  // Mesmo com Nginx (mesma origem) isso geralmente não atrapalha, só ajuda em cenários alternativos.
+  ALLOWED_ORIGINS: z.string().default('http://localhost:5173,http://181.215.134.53'),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -29,8 +32,12 @@ if (!parsed.success) {
   process.exit(1);
 }
 
+const allowedOrigins = parsed.data.ALLOWED_ORIGINS.split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+
 export const env = {
-  port: parseInt(parsed.data.PORT, 10),
+  port: parsed.data.PORT,
   nodeEnv: parsed.data.NODE_ENV,
   isDev: parsed.data.NODE_ENV === 'development',
   isProd: parsed.data.NODE_ENV === 'production',
@@ -48,6 +55,6 @@ export const env = {
   },
 
   cors: {
-    allowedOrigins: parsed.data.ALLOWED_ORIGINS.split(',').map(s => s.trim()),
+    allowedOrigins,
   },
 };
