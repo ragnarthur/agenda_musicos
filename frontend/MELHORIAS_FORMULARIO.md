@@ -161,7 +161,7 @@ npm run dev
 
 ### 2. No Navegador
 1. Acesse http://localhost:5173/login
-2. Faça login (sara/senha123)
+2. Faça login (sara/sara2026@)
 3. Clique em "Novo Evento" (botão flutuante +)
 4. Preencha o formulário:
    - **Título:** "Show de Teste"
@@ -192,7 +192,7 @@ npm run dev
 ### 4. Após Criar
 - Evento deve ser criado com sucesso
 - Redireciona para página de detalhes
-- Status: "Proposta" (aguardando aprovação do líder)
+- Status: "Proposta" (aguardando resposta dos convidados)
 - Disponibilidades criadas automaticamente para todos os músicos
 
 ## 💡 Benefícios das Mudanças

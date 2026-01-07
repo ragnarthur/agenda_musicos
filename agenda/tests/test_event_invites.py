@@ -20,7 +20,7 @@ class EventInviteFlowTest(APITestCase):
         self.creator = User.objects.create_user(
             username='arthur',
             email='arthur@test.com',
-            password='arthur2025@',
+            password='arthur2026@',
             first_name='Arthur',
             last_name='Araújo'
         )
@@ -38,7 +38,7 @@ class EventInviteFlowTest(APITestCase):
         self.creator_musician = Musician.objects.create(
             user=self.creator,
             instrument='guitar',
-            role='leader',
+            role='member',
             organization=self.org,
             is_active=True
         )
@@ -47,7 +47,7 @@ class EventInviteFlowTest(APITestCase):
         self.user2 = User.objects.create_user(
             username='roberto',
             email='roberto@test.com',
-            password='roberto2025@',
+            password='roberto2026@',
             first_name='Roberto',
             last_name='Silva'
         )
@@ -68,7 +68,7 @@ class EventInviteFlowTest(APITestCase):
         self.user3 = User.objects.create_user(
             username='carlos',
             email='carlos@test.com',
-            password='carlos2025@',
+            password='carlos2026@',
             first_name='Carlos',
             last_name='Bass'
         )
@@ -125,8 +125,8 @@ class EventInviteFlowTest(APITestCase):
             avail = availabilities.get(musician=musician)
             self.assertEqual(avail.response, 'pending')
 
-    def test_create_solo_event_auto_approved(self):
-        """Testa que evento solo é aprovado automaticamente"""
+    def test_create_solo_event_auto_confirmed(self):
+        """Testa que evento solo é confirmado automaticamente"""
         event_data = {
             'title': 'Show Solo',
             'location': 'Bar do João',
@@ -141,10 +141,10 @@ class EventInviteFlowTest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         event = Event.objects.get(id=response.data['id'])
-        self.assertEqual(event.status, 'approved')
+        self.assertEqual(event.status, 'confirmed')
 
-    def test_event_confirmed_when_all_accept(self):
-        """Testa que evento é confirmado quando todos os convidados aceitam"""
+    def test_event_confirmed_on_first_accept(self):
+        """Testa que evento é confirmado quando um convidado aceita"""
         # Criar evento com convite
         event_data = {
             'title': 'Show no Bar',
@@ -153,7 +153,7 @@ class EventInviteFlowTest(APITestCase):
             'start_time': '20:00',
             'end_time': '23:00',
             'is_solo': False,
-            'invited_musicians': [self.musician2.id]
+            'invited_musicians': [self.musician2.id, self.musician3.id]
         }
 
         url = reverse('event-list')
@@ -177,8 +177,8 @@ class EventInviteFlowTest(APITestCase):
         event.refresh_from_db()
         self.assertEqual(event.status, 'confirmed')
 
-    def test_event_stays_proposed_when_someone_refuses(self):
-        """Testa que evento permanece proposed quando alguém recusa"""
+    def test_event_stays_proposed_when_all_refuse(self):
+        """Testa que evento permanece proposed quando ninguém aceita"""
         # Criar evento com 2 convidados
         event_data = {
             'title': 'Show no Bar',
@@ -194,11 +194,11 @@ class EventInviteFlowTest(APITestCase):
         response = self.client.post(url, event_data, format='json')
         event_id = response.data['id']
 
-        # Primeiro convidado aceita
+        # Primeiro convidado recusa
         self.client.force_authenticate(user=self.user2)
         self.client.post(
             reverse('event-set-availability', args=[event_id]),
-            {'response': 'available'},
+            {'response': 'unavailable'},
             format='json'
         )
 

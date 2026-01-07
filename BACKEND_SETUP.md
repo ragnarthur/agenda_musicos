@@ -1,32 +1,32 @@
 # Agenda de Músicos - Backend Django
 
-Sistema de gerenciamento de agenda para banda, com controle de eventos, disponibilidade de músicos e aprovação de shows.
+Sistema de gerenciamento de agenda para músicos, com controle de eventos, disponibilidade e convites.
 
 ## 🎵 Músicos Cadastrados
 
 O banco de dados já está populado com os seguintes usuários:
 
-### Sara Silva - Vocalista (Membro)
+### Sara Carmo - Vocalista (Membro)
 - **Username:** `sara`
-- **Password:** `senha123`
+- **Password:** `sara2026@`
 - **Email:** sara@banda.com
 - **Instrumento:** Vocal
 - **Telefone:** (11) 98888-1111
 
 ### Arthur Araújo - Guitarrista (Membro)
 - **Username:** `arthur`
-- **Password:** `senha123`
+- **Password:** `arthur2026@`
 - **Email:** arthur@banda.com
 - **Instrumento:** Guitarra
 - **Telefone:** (11) 98888-2222
 
-### Roberto Oliveira - Baterista (👑 LÍDER)
+### Roberto Guimarães - Baterista (Membro)
 - **Username:** `roberto`
-- **Password:** `senha123`
+- **Password:** `roberto2026@`
 - **Email:** roberto@banda.com
 - **Instrumento:** Bateria
 - **Telefone:** (11) 98888-3333
-- **Permissões especiais:** Pode aprovar/rejeitar eventos
+- **Permissões especiais:** Não há permissões especiais
 
 ## 🚀 Como Iniciar o Servidor
 
@@ -50,7 +50,7 @@ Content-Type: application/json
 
 {
   "username": "sara",
-  "password": "senha123"
+  "password": "sara2026@"
 }
 ```
 
@@ -95,8 +95,8 @@ Authorization: Bearer seu_access_token_aqui
 - `GET /api/events/{id}/` - Detalhe de um evento
 - `PUT /api/events/{id}/` - Atualiza evento
 - `DELETE /api/events/{id}/` - Deleta evento
-- `POST /api/events/{id}/approve/` - Aprova evento (apenas líderes)
-- `POST /api/events/{id}/reject/` - Rejeita evento (apenas líderes)
+- `POST /api/events/{id}/approve/` - Confirma participação do convidado
+- `POST /api/events/{id}/reject/` - Recusa participação do convidado
 - `POST /api/events/{id}/set_availability/` - Marca disponibilidade
 - `GET /api/events/my_events/` - Eventos do usuário
 - `GET /api/events/pending_my_response/` - Eventos aguardando resposta
@@ -129,16 +129,22 @@ Content-Type: application/json
 }
 ```
 
-### 2. Sistema cria availabilities para todos os músicos automaticamente
+### 2. Sistema cria availabilities para os músicos convidados
 
-### 3. Roberto (líder) aprova o evento
+### 3. Músico convidado confirma o convite
 
 ```bash
-POST /api/events/{id}/approve/
-Authorization: Bearer {token_do_roberto}
+POST /api/events/{id}/set_availability/
+Authorization: Bearer {token_do_musico}
+Content-Type: application/json
+
+{
+  "response": "available",
+  "notes": "Posso tocar!"
+}
 ```
 
-### 4. Músicos marcam disponibilidade
+### 4. Outros músicos marcam disponibilidade
 
 ```bash
 POST /api/events/{id}/set_availability/
@@ -186,23 +192,18 @@ http://localhost:8000/admin/
 
 ## 📊 Status dos Eventos
 
-- `proposed` - Proposta enviada (aguardando aprovação do líder)
-- `approved` - Aprovada pelo líder
-- `rejected` - Rejeitada pelo líder
-- `confirmed` - Confirmada (todos disponíveis)
+- `proposed` - Proposta enviada (aguardando respostas)
+- `approved` - Confirmada (legado)
+- `rejected` - Rejeitada
+- `confirmed` - Confirmada (convite aceito)
 - `cancelled` - Cancelada
 
 ## 🔒 Permissões
 
-- **Membros (Sara, Arthur):**
+- **Músicos:**
   - Criar propostas de eventos
   - Marcar própria disponibilidade
-  - Ver todos os eventos
-
-- **Líder (Roberto):**
-  - Todas as permissões de membros
-  - Aprovar eventos
-  - Rejeitar eventos
+  - Ver convites e eventos
 
 ## ✅ Backend Pronto!
 

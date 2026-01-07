@@ -62,7 +62,7 @@ export const getEventComputedStatus = (event: Event): { status: ComputedEventSta
     const label =
       event.approval_label ||
       (event.status === 'approved' && event.approved_by_name
-        ? `Aprovado por ${event.approved_by_name}`
+        ? `Confirmado por ${event.approved_by_name}`
         : event.status_display);
     return {
       status: event.status,

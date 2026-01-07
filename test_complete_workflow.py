@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Script de teste completo do sistema de agenda de músicos.
-Testa todas as funcionalidades principais incluindo shows solo e disponibilidades do líder.
+Testa funcionalidades principais incluindo shows solo e convites.
 """
 
 import requests
@@ -13,9 +13,9 @@ from datetime import datetime, timedelta
 # Default ajustado para o domínio ngrok; sobrescreva via env se necessário.
 BASE_URL = os.getenv("BASE_URL", "https://unamazedly-percussional-chandra.ngrok-free.dev/api").rstrip("/")
 CREDENTIALS = {
-    "arthur": {"username": "arthur", "password": "arthur2025@"},
-    "roberto": {"username": "roberto", "password": "roberto2025@"},
-    "sara": {"username": "sara", "password": "sara2025@"},
+    "arthur": {"username": "arthur", "password": "arthur2026@"},
+    "roberto": {"username": "roberto", "password": "roberto2026@"},
+    "sara": {"username": "sara", "password": "sara2026@"},
 }
 
 def print_section(title):
@@ -46,7 +46,7 @@ def get_headers(token):
     }
 
 def test_create_regular_event(token):
-    """Testa criação de evento normal (requer aprovação)"""
+    """Testa criação de evento normal (com convites)"""
     print_section("Teste 1: Criar Evento Normal (com banda)")
 
     tomorrow = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
@@ -83,7 +83,7 @@ def test_create_regular_event(token):
         return None
 
 def test_create_solo_event(token):
-    """Testa criação de evento solo (não requer aprovação)"""
+    """Testa criação de evento solo (não requer convites)"""
     print_section("Teste 2: Criar Show Solo")
 
     in_two_days = (datetime.now() + timedelta(days=2)).strftime('%Y-%m-%d')
@@ -110,13 +110,13 @@ def test_create_solo_event(token):
         print(f"✓ Show solo criado com sucesso!")
         print(f"  - ID: {event['id']}")
         print(f"  - Título: {event['title']}")
-        print(f"  - Status: {event.get('status_display', event.get('status', 'N/A'))} (deve ser 'Aprovada pelo Líder')")
+        print(f"  - Status: {event.get('status_display', event.get('status', 'N/A'))} (deve ser 'Confirmado')")
         print(f"  - É solo?: {event.get('is_solo', False)}")
 
-        if event['status'] == 'approved':
-            print(f"  ✓ Show solo foi aprovado automaticamente!")
+        if event['status'] == 'confirmed':
+            print(f"  ✓ Show solo foi confirmado automaticamente!")
         else:
-            print(f"  ✗ ERRO: Show solo deveria ser aprovado automaticamente!")
+            print(f"  ✗ ERRO: Show solo deveria ser confirmado automaticamente!")
 
         return event['id']
     else:
@@ -125,8 +125,8 @@ def test_create_solo_event(token):
         return None
 
 def test_approve_event(token, event_id):
-    """Testa aprovação de evento pelo líder"""
-    print_section(f"Teste 3: Aprovar Evento #{event_id}")
+    """Testa confirmação de evento pelo convidado"""
+    print_section(f"Teste 3: Confirmar Evento #{event_id}")
 
     response = requests.post(
         f"{BASE_URL}/events/{event_id}/approve/",
@@ -135,12 +135,12 @@ def test_approve_event(token, event_id):
 
     if response.status_code == 200:
         event = response.json()
-        print(f"✓ Evento aprovado com sucesso!")
+        print(f"✓ Evento confirmado com sucesso!")
         print(f"  - Status: {event['status_display']}")
-        print(f"  - Aprovado por: {event['approved_by_name']}")
+        print(f"  - Confirmado por: {event['approved_by_name']}")
         return True
     else:
-        print(f"✗ Erro ao aprovar evento: {response.status_code}")
+        print(f"✗ Erro ao confirmar evento: {response.status_code}")
         print(response.text)
         return False
 
@@ -254,7 +254,7 @@ def test_delete_event(token, event_id):
 
 
 def test_cross_midnight_event(token_creator, token_approver):
-    """Cria evento que cruza meia-noite (23:00–02:00) e aprova."""
+    """Cria evento que cruza meia-noite (23:00–02:00) e confirma."""
     print_section("Teste 8: Evento cruzando meia-noite")
 
     date_24 = (datetime.now() + timedelta(days=3)).strftime('%Y-%m-%d')
@@ -279,14 +279,14 @@ def test_cross_midnight_event(token_creator, token_approver):
     event = resp.json()
     print(f"✓ Evento criado (cruza meia-noite): ID {event['id']}, status {event['status']}")
 
-    # Aprovar com o baterista
+    # Confirmar com o baterista
     resp_appr = requests.post(f"{BASE_URL}/events/{event['id']}/approve/", headers=get_headers(token_approver))
     if resp_appr.status_code != 200:
-        print(f"✗ Falha ao aprovar evento cruzando meia-noite: {resp_appr.status_code}")
+        print(f"✗ Falha ao confirmar evento cruzando meia-noite: {resp_appr.status_code}")
         print(resp_appr.text)
         return False
 
-    print("✓ Evento cruzando meia-noite aprovado com sucesso")
+    print("✓ Evento cruzando meia-noite confirmado com sucesso")
     return True
 
 def main():
@@ -324,7 +324,7 @@ def main():
     else:
         results["failed"] += 1
 
-    # Teste 3: Aprovar evento (Roberto)
+    # Teste 3: Confirmar evento (Roberto)
     if event_id and test_approve_event(roberto_token, event_id):
         results["passed"] += 1
     else:
@@ -355,7 +355,7 @@ def main():
     else:
         results["failed"] += 1
 
-    # Teste 8: Evento cruzando meia-noite (Arthur cria, Roberto aprova)
+    # Teste 8: Evento cruzando meia-noite (Arthur cria, Roberto confirma)
     if test_cross_midnight_event(arthur_token, roberto_token):
         results["passed"] += 1
     else:

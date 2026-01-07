@@ -37,7 +37,7 @@ npm run dev
 ```
 
 ### 2. Testar Navegação
-1. Faça login (sara/senha123)
+1. Faça login (sara/sara2026@)
 2. Clique em "Músicos" no menu
 3. Deve carregar a página com grid de músicos
 4. Verifique que a URL mudou para `/musicos`
@@ -57,7 +57,7 @@ npm run dev
 | `/eventos/novo` | Criar Evento |
 | `/eventos/:id` | Detalhes do Evento |
 | `/musicos` | Lista de Músicos ✓ |
-| `/aprovacoes` | Aprovações (Líder) |
+| `/aprovacoes` | Convites Pendentes |
 
 ## Verificação Rápida
 

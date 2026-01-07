@@ -65,8 +65,8 @@ EVENTS:
 - GET    /api/events/{id}/         - Detalhe de um evento
 - PUT    /api/events/{id}/         - Atualiza evento
 - DELETE /api/events/{id}/         - Deleta evento
-- POST   /api/events/{id}/approve/ - Aprova evento (apenas líderes)
-- POST   /api/events/{id}/reject/  - Rejeita evento (apenas líderes)
+- POST   /api/events/{id}/approve/ - Confirma participação do convidado (compat)
+- POST   /api/events/{id}/reject/  - Recusa participação do convidado (compat)
 - POST   /api/events/{id}/set_availability/ - Marca disponibilidade
 - GET    /api/events/my_events/    - Eventos do usuário
 - GET    /api/events/pending_my_response/ - Eventos aguardando resposta

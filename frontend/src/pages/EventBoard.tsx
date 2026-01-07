@@ -95,7 +95,7 @@ const EventBoard: React.FC = () => {
     try {
       setLoading(true);
       const params: Record<string, string | boolean> = {
-        status: 'proposed,approved,confirmed',
+        status: 'proposed,confirmed,approved',
       };
       if (timeFilter === 'upcoming') params.upcoming = true;
       if (timeFilter === 'past') params.past = true;

@@ -6,7 +6,7 @@
 ```bash
 curl -X POST http://localhost:8000/api/token/ \
   -H "Content-Type: application/json" \
-  -d '{"username":"sara","password":"senha123"}'
+  -d '{"username":"sara","password":"sara2026@"}'
 ```
 
 **Resultado:** ✅ Token gerado com sucesso
@@ -32,7 +32,7 @@ curl http://localhost:8000/api/musicians/ \
   "results": [
     {
       "id": 1,
-      "full_name": "Sara Silva",
+      "full_name": "Sara Carmo",
       "instrument": "vocal",
       "is_leader": false
     },
@@ -44,9 +44,9 @@ curl http://localhost:8000/api/musicians/ \
     },
     {
       "id": 3,
-      "full_name": "Roberto Oliveira",
+      "full_name": "Roberto Guimarães",
       "instrument": "drums",
-      "is_leader": true
+      "is_leader": false
     }
   ]
 }
@@ -128,7 +128,7 @@ npm run dev
 
 ### 2. Testar no Navegador
 1. Acesse http://localhost:5173/login
-2. Login: `sara` / `senha123`
+2. Login: `sara` / `sara2026@`
 3. Clique em "Músicos" no menu
 4. Deve exibir grid com 3 cards de músicos
 

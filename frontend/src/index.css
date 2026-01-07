@@ -72,7 +72,7 @@
   .badge-unavailable { @apply bg-red-100 text-red-800 border border-red-200; }
   .badge-maybe { @apply bg-blue-100 text-blue-800 border border-blue-200; }
   .badge-proposed { @apply bg-amber-100 text-amber-800 border border-amber-200; }
-  .badge-approved { @apply bg-emerald-100 text-emerald-800 border border-emerald-200; }
+  .badge-approved { @apply bg-cyan-100 text-cyan-800 border border-cyan-200; }
   .badge-rejected { @apply bg-rose-100 text-rose-800 border border-rose-200; }
   .badge-confirmed { @apply bg-cyan-100 text-cyan-800 border border-cyan-200; }
   .badge-cancelled { @apply bg-gray-100 text-gray-700 border border-gray-200; }
@@ -88,7 +88,7 @@
     letter-spacing: 0.02em;
   }
 
-  .status-chip.approved { @apply bg-emerald-100 text-emerald-700 border border-emerald-200; }
+  .status-chip.approved { @apply bg-blue-100 text-blue-700 border border-blue-200; }
   .status-chip.confirmed { @apply bg-emerald-100 text-emerald-700 border border-emerald-200; }
   .status-chip.proposed { @apply bg-amber-100 text-amber-800 border border-amber-200; }
   .status-chip.pending { @apply bg-amber-100 text-amber-800 border border-amber-200; }

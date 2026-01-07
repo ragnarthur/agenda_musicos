@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
-    help = 'Redefine senhas de desenvolvimento para sara, arthur e roberto (formato: <username>2025@)'
+    help = 'Redefine senhas de desenvolvimento para sara, arthur e roberto (formato: <username>2026@)'
 
     def handle(self, *args, **options):
         User = get_user_model()
@@ -17,7 +17,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(f'Usuário {username} não encontrado.'))
                 continue
 
-            new_password = f'{username}2025@'
+            new_password = f'{username}2026@'
             user.set_password(new_password)
             user.save(update_fields=['password'])
             updated += 1

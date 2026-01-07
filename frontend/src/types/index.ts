@@ -25,8 +25,7 @@ export interface Musician {
   full_name: string;
   instrument: 'vocal' | 'guitar' | 'bass' | 'drums' | 'keyboard' | 'percussion' | string;
    instruments?: string[];
-  role: 'member' | 'leader';
-  is_leader: boolean;
+  role: 'member';
   bio?: string;
   phone?: string;
   instagram?: string;
@@ -148,7 +147,6 @@ export interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
-  isLeader: boolean;
   loading: boolean;
 }
 

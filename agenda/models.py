@@ -64,7 +64,7 @@ class Membership(models.Model):
 
 class Musician(models.Model):
     """
-    Modelo para representar músicos da banda.
+    Modelo para representar músicos da plataforma.
     Separado do User para permitir extensões futuras sem mexer no auth.
     """
     # Lista de referência usada em seeds; instrumentos agora podem ser livres
@@ -79,7 +79,6 @@ class Musician(models.Model):
 
     ROLE_CHOICES = [
         ('member', 'Membro'),
-        ('leader', 'Líder/Aprovador'),  # Roberto será leader
     ]
     
     user = models.OneToOneField(
@@ -182,8 +181,8 @@ class Musician(models.Model):
         return f"{self.user.get_full_name() or self.user.username} - {self.get_instrument_label()}"
     
     def is_leader(self):
-        """Verifica se o músico é líder/aprovador"""
-        return self.role == 'leader'
+        """Compat: liderança foi descontinuada na plataforma."""
+        return False
 
     def is_on_trial(self):
         """Verifica se está em período de teste"""
@@ -234,11 +233,11 @@ class Musician(models.Model):
 class Event(models.Model):
     """
     Representa uma proposta de evento/show na agenda.
-    Músicos criam propostas que precisam ser aprovadas pelo líder.
+    Músicos criam propostas e confirmam por aceite de convites.
     """
     STATUS_CHOICES = [
         ('proposed', 'Proposta Enviada'),
-        ('approved', 'Aprovado'),
+        ('approved', 'Confirmado'),
         ('rejected', 'Rejeitado'),
         ('confirmed', 'Confirmado'),
         ('cancelled', 'Cancelado'),
@@ -268,10 +267,10 @@ class Event(models.Model):
         help_text='Valor do cachê'
     )
 
-    # Show solo (não requer aprovação do líder)
+    # Show solo (confirmação automática)
     is_solo = models.BooleanField(
         default=False,
-        help_text='Indica se é um show solo (sem necessidade de aprovação do líder)'
+        help_text='Indica se é um show solo (confirmação automática)'
     )
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='proposed')
@@ -294,7 +293,7 @@ class Event(models.Model):
         related_name='created_events'
     )
     
-    # Quem aprovou (Roberto)
+    # Quem confirmou (legado)
     approved_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -366,13 +365,13 @@ class Event(models.Model):
         return f"{self.title} - {self.event_date.strftime('%d/%m/%Y')} - {self.get_status_display()}"
     
     def can_be_approved(self):
-        """Verifica se o evento pode ser aprovado"""
+        """Compat: aprovação foi substituída por confirmação via convites."""
         return self.status == 'proposed'
     
     def approve(self, user):
-        """Aprova o evento"""
+        """Compat: confirma evento quando for necessário manter chamadas antigas."""
         if self.can_be_approved():
-            self.status = 'approved'
+            self.status = 'confirmed'
             self.approved_by = user
             self.approved_at = timezone.now()
             self.save()
@@ -380,7 +379,7 @@ class Event(models.Model):
         return False
     
     def reject(self, user, reason=''):
-        """Rejeita o evento"""
+        """Rejeita o evento (legado)"""
         if self.can_be_approved():
             self.status = 'rejected'
             self.approved_by = user
@@ -522,8 +521,8 @@ class LeaderAvailability(models.Model):
 
     class Meta:
         ordering = ['date', 'start_time']
-        verbose_name = 'Disponibilidade do Líder'
-        verbose_name_plural = 'Disponibilidades do Líder'
+        verbose_name = 'Disponibilidade'
+        verbose_name_plural = 'Disponibilidades'
         indexes = [
             models.Index(fields=['date', 'is_active']),
             models.Index(fields=['leader', 'date']),

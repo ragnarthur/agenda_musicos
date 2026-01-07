@@ -5,8 +5,8 @@ from .models import Musician
 
 class IsLeaderOrReadOnly(permissions.BasePermission):
     """
-    Permissão customizada: apenas líderes podem aprovar/rejeitar.
-    Todos podem ler.
+    Compat: liderança foi descontinuada na plataforma.
+    Mantenha apenas para cenários legados.
     """
 
     def has_permission(self, request, view):
@@ -14,7 +14,7 @@ class IsLeaderOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return request.user and request.user.is_authenticated
 
-        # Escrita apenas para líderes
+        # Escrita sempre negada fora de métodos seguros
         if request.user and request.user.is_authenticated:
             try:
                 return request.user.musician_profile.is_leader()

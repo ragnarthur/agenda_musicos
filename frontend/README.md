@@ -15,9 +15,9 @@ Certifique-se de que o backend Django está rodando em http://localhost:8000
 
 ## 👥 Usuários de Teste
 
-- **sara / senha123** - Vocalista (Membro)
-- **arthur / senha123** - Guitarrista (Membro)
-- **roberto / senha123** - Baterista (Líder)
+- **sara / sara2026@** - Vocalista (Membro)
+- **arthur / arthur2026@** - Guitarrista (Membro)
+- **roberto / roberto2026@** - Baterista (Membro)
 
 ## 🎨 Tecnologias
 

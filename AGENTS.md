@@ -7,7 +7,7 @@
 
 ## Build, Teste e Desenvolvimento
 - Ambiente Python: `python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`.
-- Migrações e seed: `python manage.py migrate` e `python manage.py populate_db` (gera usuários de teste); admin padrão: `admin` / `admin2025@`.
+- Migrações e seed: `python manage.py migrate` e `python manage.py populate_db` (gera usuários de teste); admin padrão: `admin` / `admin2026@`.
 - Servidor local: `python manage.py runserver 0.0.0.0:8000`.
 - Testes backend: `python manage.py test` (regressão); fluxo ponta a ponta contra a API configurada: `python test_complete_workflow.py` (usa `BASE_URL` ou padrão ngrok).
 - Frontend: `cd frontend && npm install`; dev `npm run dev`; build `npm run build`; checagem `npm run lint`.

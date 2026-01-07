@@ -58,8 +58,8 @@ export const showToast = {
   eventCreated: () => toast.success('Evento criado com sucesso!'),
   eventUpdated: () => toast.success('Evento atualizado com sucesso!'),
   eventDeleted: () => toast.success('Evento excluído com sucesso!'),
-  eventApproved: () => toast.success('Evento aprovado!'),
-  eventRejected: () => toast.success('Evento rejeitado.'),
+  eventApproved: () => toast.success('Evento confirmado!'),
+  eventRejected: () => toast.success('Convite recusado.'),
   eventCancelled: () => toast.success('Evento cancelado.'),
 
   availabilityUpdated: () => toast.success('Disponibilidade atualizada!'),

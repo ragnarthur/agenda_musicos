@@ -84,7 +84,7 @@ const EventsList: React.FC = () => {
       const params: Record<string, string | boolean> = {};
 
       if (filter !== 'all') {
-        params.status = filter;
+        params.status = filter === 'confirmed' ? 'confirmed,approved' : filter;
       }
 
       if (searchTerm.trim()) {
@@ -231,7 +231,7 @@ const EventsList: React.FC = () => {
                   <p className="text-2xl text-primary-700">{statistics.upcoming}</p>
                 </div>
                 <div className="rounded-2xl border border-white/70 bg-white/90 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur">
-                  <p className="text-xs uppercase tracking-wide text-gray-500">Aprovados</p>
+                  <p className="text-xs uppercase tracking-wide text-gray-500">Confirmados</p>
                   <p className="text-2xl text-emerald-600">{statistics.confirmed}</p>
                 </div>
                 <div className="rounded-2xl border border-white/70 bg-white/90 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur">
@@ -297,7 +297,7 @@ const EventsList: React.FC = () => {
             {[
               { value: 'all', label: 'Todos os status' },
               { value: 'proposed', label: 'Propostas' },
-              { value: 'approved', label: 'Aprovados' },
+              { value: 'confirmed', label: 'Confirmados' },
             ].map((item) => (
               <button
                 key={item.value}

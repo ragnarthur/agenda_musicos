@@ -1,6 +1,5 @@
 // components/event/AvailabilityList.tsx
 import React from 'react';
-import { Crown } from 'lucide-react';
 import type { Availability } from '../../types';
 import { INSTRUMENT_LABELS, AVAILABILITY_LABELS } from '../../utils/formatting';
 
@@ -68,11 +67,7 @@ const AvailabilityList: React.FC<AvailabilityListProps> = ({ availabilities }) =
             className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
           >
             <div className="flex items-center space-x-3">
-              <div className="flex-shrink-0">
-                {availability.musician.is_leader && (
-                  <Crown className="h-5 w-5 text-yellow-500" aria-label="Líder" />
-                )}
-              </div>
+              <div className="flex-shrink-0" />
               <div>
                 <p className="font-medium text-gray-900">
                   {availability.musician.full_name}

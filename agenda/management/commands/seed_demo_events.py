@@ -48,7 +48,7 @@ class Command(BaseCommand):
             'start_time': time(20, 0),
             'end_time': time(23, 0),
             'instruments': ['vocal', 'keyboard', 'bass', 'drums'],
-            'status': 'approved',
+            'status': 'confirmed',
         },
         {
             'title': '[TESTE] Festival de bairro',
@@ -87,7 +87,7 @@ class Command(BaseCommand):
         created, updated = self._create_events(org, creator, musicians)
 
         self.stdout.write(self.style.SUCCESS(f'Eventos criados: {created}, atualizados: {updated}'))
-        self.stdout.write(self.style.SUCCESS(f'Criador dos eventos: {creator.username} / senha: {creator.username}2025@'))
+        self.stdout.write(self.style.SUCCESS(f'Criador dos eventos: {creator.username} / senha: {creator.username}2026@'))
         self.stdout.write(self.style.SUCCESS('Use os eventos passados (status confirmed) para testar ratings.'))
 
     def _get_or_create_organization(self) -> Organization:

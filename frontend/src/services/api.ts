@@ -284,7 +284,7 @@ export const availabilityService = {
   },
 };
 
-// Leader Availability Service
+// Availability Service
 export const leaderAvailabilityService = {
   getAll: async (params?: {
     upcoming?: boolean;

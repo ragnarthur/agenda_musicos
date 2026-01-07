@@ -89,7 +89,7 @@ Deve mostrar: **Starting development server at http://127.0.0.1:8000/**
 # Obter token
 curl -X POST http://localhost:8000/api/token/ \
   -H "Content-Type: application/json" \
-  -d '{"username":"sara","password":"senha123"}'
+  -d '{"username":"sara","password":"sara2026@"}'
 
 # Copie o access token e teste:
 curl http://localhost:8000/api/musicians/ \
@@ -111,7 +111,7 @@ Deve mostrar: **Local: http://localhost:5173/**
 1. Acesse http://localhost:5173/login
 2. Faça login:
    - Usuário: `sara`
-   - Senha: `senha123`
+   - Senha: `sara2026@`
 3. Clique em "Músicos" no menu (ícone de pessoas)
 4. Deve carregar grid com 3 cards de músicos
 
@@ -121,9 +121,9 @@ Deve mostrar: **Local: http://localhost:5173/**
 ```
 🎵 Componente Musicians montado
 Músicos carregados: Array(3)
-  0: {id: 1, user: {...}, full_name: "Sara Silva", ...}
+  0: {id: 1, user: {...}, full_name: "Sara Carmo", ...}
   1: {id: 2, user: {...}, full_name: "Arthur Araújo", ...}
-  2: {id: 3, user: {...}, full_name: "Roberto Oliveira", ...}
+  2: {id: 3, user: {...}, full_name: "Roberto Guimarães", ...}
 ```
 
 **Não deve ter erros!** Se aparecer erro 401 (Unauthorized), faça logout e login novamente.
@@ -132,9 +132,9 @@ Músicos carregados: Array(3)
 
 | ID | Nome | Username | Instrumento | Papel |
 |----|------|----------|-------------|-------|
-| 1 | Sara Silva | sara | Vocal | Membro |
+| 1 | Sara Carmo | sara | Vocal | Membro |
 | 2 | Arthur Araújo | arthur | Guitar | Membro |
-| 3 | Roberto Oliveira | roberto | Drums | **Líder** 👑 |
+| 3 | Roberto Guimarães | roberto | Drums | Membro |
 
 ## Verificação do Build
 

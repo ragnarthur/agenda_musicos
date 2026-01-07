@@ -32,7 +32,7 @@ CORE_MUSICIANS = [
         'first_name': 'Sara',
         'last_name': 'Carmo',
         'email': 'saram.carmo@hotmail.com',
-        'password': 'sara2025@',
+        'password': 'sara2026@',
         'instrument': 'guitar',
         'role': 'member',
     },
@@ -41,7 +41,7 @@ CORE_MUSICIANS = [
         'first_name': 'Arthur',
         'last_name': 'Araújo',
         'email': 'catsinthegarden01@gmail.com',
-        'password': 'arthur2025@',
+        'password': 'arthur2026@',
         'instrument': 'guitar',
         'role': 'member',
     },
@@ -50,9 +50,9 @@ CORE_MUSICIANS = [
         'first_name': 'Roberto',
         'last_name': 'Guimarães',
         'email': 'riguimaandroid@gmail.com',
-        'password': 'roberto2025@',
+        'password': 'roberto2026@',
         'instrument': 'drums',
-        'role': 'leader',
+        'role': 'member',
     },
 ]
 
@@ -157,7 +157,7 @@ class Command(BaseCommand):
             Membership.objects.get_or_create(
                 user=user,
                 organization=org,
-                defaults={'role': 'owner' if data['role'] == 'leader' else 'member', 'status': 'active'},
+                defaults={'role': 'owner' if data['username'] == 'sara' else 'member', 'status': 'active'},
             )
 
             Musician.objects.update_or_create(
@@ -180,7 +180,7 @@ class Command(BaseCommand):
                 c for c in unicodedata.normalize('NFKD', bot['first_name'])
                 if c.isalnum()
             ).lower()
-            password = f'{first_name_clean}2025@' if first_name_clean else f'{username}2025@'
+            password = f'{first_name_clean}2026@' if first_name_clean else f'{username}2026@'
             user, _ = User.objects.get_or_create(
                 username=username,
                 defaults={

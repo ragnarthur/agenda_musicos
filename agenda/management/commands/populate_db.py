@@ -9,7 +9,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.stdout.write(self.style.WARNING('Iniciando população do banco de dados...'))
-        self.stdout.write(self.style.NOTICE('Senhas padrão configuradas (2025@).'))
+        self.stdout.write(self.style.NOTICE('Senhas padrão configuradas (2026@).'))
         self.stdout.write(self.style.NOTICE('Crie/atualize o admin via "createsuperuser" se necessário.\n'))
 
         # Lista de músicos a serem criados
@@ -19,7 +19,7 @@ class Command(BaseCommand):
                 'first_name': 'Sara',
                 'last_name': 'Carmo',
                 'email': 'saram.carmo@hotmail.com',
-                'password': 'sara2025@',
+                'password': 'sara2026@',
                 'instrument': 'guitar',
                 'role': 'member',
                 'bio': 'Vocalista e violonista - contrata músicos para apresentações',
@@ -31,7 +31,7 @@ class Command(BaseCommand):
                 'first_name': 'Arthur',
                 'last_name': 'Araújo',
                 'email': 'catsinthegarden01@gmail.com',
-                'password': 'arthur2025@',
+                'password': 'arthur2026@',
                 'instrument': 'guitar',
                 'role': 'member',
                 'bio': 'Vocal, violão e guitarra - contrata músicos para apresentações',
@@ -43,10 +43,10 @@ class Command(BaseCommand):
                 'first_name': 'Roberto',
                 'last_name': 'Guimarães',
                 'email': 'riguimaandroid@gmail.com',
-                'password': 'roberto2025@',
+                'password': 'roberto2026@',
                 'instrument': 'drums',
-                'role': 'leader',
-                'bio': 'Baterista e líder da banda',
+                'role': 'member',
+                'bio': 'Baterista',
                 'phone': '(34) 99174-3948',
                 'instagram': '@roberto.guimaraes.299',
             }
@@ -106,12 +106,12 @@ class Command(BaseCommand):
             Membership.objects.get_or_create(
                 user=user,
                 organization=org,
-                defaults={'role': 'owner' if data.get('role') == 'leader' else 'member', 'status': 'active'}
+                defaults={'role': 'owner' if data.get('username') == 'sara' else 'member', 'status': 'active'}
             )
 
             if musician_created:
                 created_count += 1
-                role_display = '👑 LÍDER' if data['role'] == 'leader' else 'Membro'
+                role_display = 'Membro'
                 self.stdout.write(
                     self.style.SUCCESS(
                         f'  ♪ Músico criado: {data["instrument"].upper()} - {role_display}'
@@ -123,7 +123,7 @@ class Command(BaseCommand):
                     setattr(musician, key, value)
                 musician.save()
                 updated_count += 1
-                role_display = '👑 LÍDER' if data['role'] == 'leader' else 'Membro'
+                role_display = 'Membro'
                 self.stdout.write(
                     self.style.WARNING(
                         f'  ♪ Músico atualizado: {data["instrument"].upper()} - {role_display}'
@@ -141,13 +141,13 @@ class Command(BaseCommand):
         self.stdout.write(self.style.NOTICE('-' * 60))
         self.stdout.write('Sara Carmo (Vocal e violão - Membro):')
         self.stdout.write('  username: sara')
-        self.stdout.write('  password: sara2025@')
+        self.stdout.write('  password: sara2026@')
         self.stdout.write('')
         self.stdout.write('Arthur Araújo (Vocal, violão e guitarra - Membro):')
         self.stdout.write('  username: arthur')
-        self.stdout.write('  password: arthur2025@')
+        self.stdout.write('  password: arthur2026@')
         self.stdout.write('')
-        self.stdout.write('Roberto Guimarães (Baterista e líder):')
+        self.stdout.write('Roberto Guimarães (Baterista):')
         self.stdout.write('  username: roberto')
-        self.stdout.write('  password: roberto2025@')
+        self.stdout.write('  password: roberto2026@')
         self.stdout.write(self.style.NOTICE('-' * 60))
