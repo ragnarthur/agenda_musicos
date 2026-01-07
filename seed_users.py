@@ -2,13 +2,13 @@ from django.contrib.auth.models import User
 from agenda.models import Musician, Organization, Membership
 
 users = [
-    {"username": "sara", "first": "Sara", "last": "Carmo", "password": "sara2025@", "instrument": "guitar", "role": "member", "bio": "Vocal e violão", "email": "saram.carmo@hotmail.com", "phone": "(17)99193-3859", "instagram": "@saracarmocantora"},
-    {"username": "arthur", "first": "Arthur", "last": "Araújo", "password": "arthur2025@", "instrument": "guitar", "role": "member", "bio": "Vocal, violão e guitarra", "email": "catsinthegarden01@gmail.com", "phone": "(34) 98811-5465", "instagram": "@arthuraraujo07"},
-    {"username": "roberto", "first": "Roberto", "last": "Guimarães", "password": "roberto2025@", "instrument": "drums", "role": "leader", "bio": "Baterista e líder", "email": "riguimaandroid@gmail.com", "phone": "(34) 99174-3948", "instagram": "@roberto.guimaraes.299"},
+    {"username": "sara", "first": "Sara", "last": "Carmo", "password": "sara2026@", "instrument": "guitar", "role": "member", "bio": "Vocal e violão", "email": "saram.carmo@hotmail.com", "phone": "(17)99193-3859", "instagram": "@saracarmocantora"},
+    {"username": "arthur", "first": "Arthur", "last": "Araújo", "password": "arthur2026@", "instrument": "guitar", "role": "member", "bio": "Vocal, violão e guitarra", "email": "catsinthegarden01@gmail.com", "phone": "(34) 98811-5465", "instagram": "@arthuraraujo07"},
+    {"username": "roberto", "first": "Roberto", "last": "Guimarães", "password": "roberto2026@", "instrument": "drums", "role": "member", "bio": "Baterista", "email": "riguimaandroid@gmail.com", "phone": "(34) 99174-3948", "instagram": "@roberto.guimaraes.299"},
 ]
 
 admin, _ = User.objects.get_or_create(username="admin", defaults={"email": "admin@example.com"})
-admin.set_password("admin2025@")
+admin.set_password("admin2026@")
 admin.is_staff = True
 admin.is_superuser = True
 admin.save()

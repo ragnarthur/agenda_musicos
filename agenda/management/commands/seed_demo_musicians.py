@@ -81,7 +81,7 @@ class Command(BaseCommand):
             user.first_name = data['first_name']
             user.last_name = data['last_name']
             user.email = data['email']
-            user.set_password(f"{data['username']}2025@")
+            user.set_password(f"{data['username']}2026@")
             user.save()
 
             if user_created:
@@ -112,5 +112,5 @@ class Command(BaseCommand):
             f'Usuários criados: {created_users} | Músicos criados: {created_musicians}'
         ))
         self.stdout.write(self.style.SUCCESS(
-            'Senhas: <username>2025@ (ex: livia2025@)'
+            'Senhas: <username>2026@ (ex: livia2026@)'
         ))

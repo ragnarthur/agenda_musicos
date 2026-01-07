@@ -210,8 +210,8 @@ class Command(BaseCommand):
         self.stdout.write(f'Disponibilidades criadas: {availabilities_count}')
         self.stdout.write('')
         self.stdout.write(self.style.WARNING('CREDENCIAIS DE ACESSO:'))
-        self.stdout.write('Senha padrão: <username>2025@')
-        self.stdout.write('Exemplo: livia_vocal / livia_vocal2025@')
+        self.stdout.write('Senha padrão: <username>2026@')
+        self.stdout.write('Exemplo: livia_vocal / livia_vocal2026@')
         self.stdout.write('')
         self._print_summary(musicians)
 
@@ -266,7 +266,7 @@ class Command(BaseCommand):
             # Atualiza dados do usuário
             user.first_name = data['first_name']
             user.last_name = data['last_name']
-            user.set_password(f"{data['username']}2025@")
+            user.set_password(f"{data['username']}2026@")
             user.save()
 
             # Cria membership

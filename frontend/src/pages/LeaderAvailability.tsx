@@ -217,7 +217,7 @@ const LeaderAvailabilityPage: React.FC = () => {
           <div className="pointer-events-none absolute inset-0 -z-10 opacity-40 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.2),_transparent_40%)]" />
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold text-gray-900">Agendas compartilhadas</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Disponibilidades compartilhadas</h1>
               <p className="text-gray-600 max-w-2xl text-sm sm:text-base">
                 Cadastre horários disponíveis, defina visibilidade e receba convites com controle de conflitos.
                 O sistema respeita 40 minutos de buffer entre apresentações.

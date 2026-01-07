@@ -60,9 +60,9 @@ def main():
     print('='*60)
 
     users = [
-        ('sara', 'senha123'),
-        ('arthur', 'senha123'),
-        ('roberto', 'senha123')
+        ('sara', 'sara2026@'),
+        ('arthur', 'arthur2026@'),
+        ('roberto', 'roberto2026@')
     ]
 
     success_count = 0
@@ -81,7 +81,7 @@ def main():
         print(f'   python manage.py runserver')
         print(f'\n   E faça uma requisição POST para:')
         print(f'   http://localhost:8000/api/token/')
-        print(f'   Com body: {{"username": "sara", "password": "senha123"}}')
+        print(f'   Com body: {{"username": "sara", "password": "sara2026@"}}')
     else:
         print('❌ Alguns usuários não puderam ser autenticados.')
 

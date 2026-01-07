@@ -113,7 +113,7 @@ class LeaderAvailabilityAdmin(admin.ModelAdmin):
     )
 
     def save_model(self, request, obj, form, change):
-        """Auto-set leader if not set"""
+        """Auto-define o músico responsável se vazio"""
         from .models import Musician
         if not obj.pk and not obj.leader:
             try:

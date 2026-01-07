@@ -484,7 +484,7 @@ const EventForm: React.FC = () => {
                   Show Solo
                 </label>
                 <p className="text-sm text-gray-600 mt-1">
-                  Marque se você for tocar sozinho. O evento é aprovado automaticamente sem precisar
+                  Marque se você for tocar sozinho. O evento é confirmado automaticamente sem precisar
                   de confirmação de outros músicos.
                 </p>
               </div>

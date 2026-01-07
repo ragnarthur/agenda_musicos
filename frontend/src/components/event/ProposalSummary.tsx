@@ -94,7 +94,7 @@ const ProposalSummary: React.FC<ProposalSummaryProps> = ({
           </li>
           <li>
             <strong className="text-gray-900">Show solo:</strong> marque esta opção se você for tocar
-            sozinho. O evento é aprovado automaticamente.
+            sozinho. O evento é confirmado automaticamente.
           </li>
         </ul>
       </div>

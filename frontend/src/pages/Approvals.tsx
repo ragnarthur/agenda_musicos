@@ -1,7 +1,7 @@
 // pages/Approvals.tsx
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Crown, Calendar, MapPin, Clock } from 'lucide-react';
+import { Calendar, MapPin, Clock, UserCheck } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { eventService } from '../services/api';
@@ -20,7 +20,7 @@ const Approvals: React.FC = () => {
   const loadPendingEvents = async () => {
     try {
       setLoading(true);
-      const data = await eventService.getAll({ pending_approval: true });
+      const data = await eventService.getPendingMyResponse();
       setEvents(data);
     } catch (error) {
       console.error('Erro ao carregar eventos pendentes:', error);
@@ -34,12 +34,12 @@ const Approvals: React.FC = () => {
       <div className="space-y-6">
         {/* Header */}
         <div className="hero-panel flex items-start gap-3">
-          <div className="bg-yellow-100 p-2.5 sm:p-3 rounded-lg flex-shrink-0">
-            <Crown className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600" />
+          <div className="bg-emerald-100 p-2.5 sm:p-3 rounded-lg flex-shrink-0">
+            <UserCheck className="h-6 w-6 sm:h-8 sm:w-8 text-emerald-600" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Aprovações Pendentes</h1>
-            <p className="text-gray-600 text-sm sm:text-base">Eventos aguardando sua decisão</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Convites Pendentes</h1>
+            <p className="text-gray-600 text-sm sm:text-base">Eventos aguardando sua resposta</p>
           </div>
         </div>
 
@@ -47,12 +47,12 @@ const Approvals: React.FC = () => {
           <Loading text="Carregando eventos pendentes..." />
         ) : events.length === 0 ? (
           <div className="card text-center py-12">
-            <Crown className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <UserCheck className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Nenhuma aprovação pendente
+              Nenhum convite pendente
             </h3>
             <p className="text-gray-600">
-              Não há eventos aguardando sua aprovação no momento.
+              Não há eventos aguardando sua resposta no momento.
             </p>
           </div>
         ) : (
@@ -69,7 +69,7 @@ const Approvals: React.FC = () => {
                     </div>
                   </div>
                   <span className="badge badge-proposed self-start flex-shrink-0">
-                    {event.approval_label || event.status_display}
+                    Convite pendente
                   </span>
                 </div>
 
@@ -105,7 +105,7 @@ const Approvals: React.FC = () => {
                 {/* Resumo de Disponibilidade */}
                 {event.availability_summary && (
                   <div className="mb-4 p-2 sm:p-3 bg-gray-50 rounded-lg">
-                    <p className="text-xs sm:text-sm text-gray-600 mb-2">Disponibilidade dos músicos:</p>
+                    <p className="text-xs sm:text-sm text-gray-600 mb-2">Respostas dos músicos:</p>
                     <div className="grid grid-cols-2 gap-1.5 sm:flex sm:items-center sm:gap-4">
                       <span className="text-xs sm:text-sm">
                         <span className="text-green-600 font-medium">
@@ -149,13 +149,13 @@ const Approvals: React.FC = () => {
 
         {/* Informação */}
         {!loading && events.length > 0 && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4">
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 sm:p-4">
             <div className="flex items-start gap-2 sm:gap-3">
-              <Crown className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+              <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-xs sm:text-sm font-medium text-yellow-800">Aprovação apenas para convidados</p>
-                <p className="text-xs sm:text-sm text-yellow-700 mt-1">
-                  Apenas músicos convidados podem aprovar ou rejeitar estes eventos. Clique em "Ver Detalhes" para analisar cada proposta e decidir.
+                <p className="text-xs sm:text-sm font-medium text-emerald-800">Convites abertos</p>
+                <p className="text-xs sm:text-sm text-emerald-700 mt-1">
+                  Confirme sua participação informando a disponibilidade no detalhe do evento.
                 </p>
               </div>
             </div>

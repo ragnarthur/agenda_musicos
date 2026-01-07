@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 """
-Script de teste manual para verificar a lógica de restauração de disponibilidade.
-Testa os seguintes cenários:
-1. Criar evento -> Rejeitar -> Verificar se disponibilidade foi restaurada
-2. Criar evento -> Deletar -> Verificar se disponibilidade foi restaurada
-3. Criar evento -> Aprovar -> Cancelar -> Verificar se disponibilidade foi restaurada
-4. Criar dois eventos no mesmo dia -> Deletar um -> Verificar mesclagem de fragmentos
+Script legado: a restauração automática de disponibilidade foi descontinuada.
+Mantenha apenas como referência histórica do fluxo antigo.
 """
 
 import os
@@ -32,7 +28,7 @@ def setup_test_data():
             'email': 'sara@example.com'
         }
     )
-    sara.set_password('sara2025@')
+    sara.set_password('sara2026@')
     sara.save()
 
     roberto, _ = User.objects.get_or_create(
@@ -43,7 +39,7 @@ def setup_test_data():
             'email': 'roberto@example.com'
         }
     )
-    roberto.set_password('roberto2025@')
+    roberto.set_password('roberto2026@')
     roberto.save()
 
     # Busca ou cria músicos
@@ -60,16 +56,16 @@ def setup_test_data():
         user=roberto,
         defaults={
             'instrument': 'drums',
-            'role': 'leader',
+            'role': 'member',
             'is_active': True
         }
     )
 
-    # Cria disponibilidade do líder para teste
+    # Cria disponibilidade do músico para teste
     # Data futura: amanhã das 18h às 23h
     tomorrow = timezone.now().date() + timedelta(days=1)
 
-    # Remove disponibilidades antigas do líder para esse dia
+    # Remove disponibilidades antigas do músico para esse dia
     LeaderAvailability.objects.filter(
         leader=roberto_musician,
         date=tomorrow
@@ -347,32 +343,12 @@ def test_cancel_restores_availability(sara, roberto, sara_musician, roberto_musi
 
 def main():
     print("\n" + "="*70)
-    print("🚀 INICIANDO TESTES DE RESTAURAÇÃO DE DISPONIBILIDADE")
+    print("⚠️  SCRIPT LEGADO: restauração automática foi removida")
     print("="*70)
+    print("Nada a executar no fluxo atual.")
+    return
 
-    # Setup
-    sara, roberto, sara_musician, roberto_musician, test_date = setup_test_data()
-
-    # Executa testes
-    test1 = test_reject_restores_availability(sara, roberto, sara_musician, roberto_musician, test_date)
-    test2 = test_delete_restores_availability(sara, roberto, sara_musician, roberto_musician, test_date)
-    test3 = test_cancel_restores_availability(sara, roberto, sara_musician, roberto_musician, test_date)
-
-    # Resumo
-    print("\n" + "="*70)
-    print("📊 RESUMO DOS TESTES")
-    print("="*70)
-    print(f"Teste 1 (Rejeição):     {'✅ PASSOU' if test1 else '❌ FALHOU'}")
-    print(f"Teste 2 (Deleção):      {'✅ PASSOU' if test2 else '❌ FALHOU'}")
-    print(f"Teste 3 (Cancelamento): {'✅ PASSOU' if test3 else '❌ FALHOU'}")
-
-    total_passed = sum([test1, test2, test3])
-    print(f"\n🎯 Total: {total_passed}/3 testes passaram")
-
-    if total_passed == 3:
-        print("\n🎉 TODOS OS TESTES PASSARAM!")
-    else:
-        print("\n⚠️  Alguns testes falharam. Revise a lógica.")
+    # Setup e testes antigos removidos do fluxo atual.
 
 
 if __name__ == '__main__':

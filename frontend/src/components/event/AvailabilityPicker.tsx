@@ -27,10 +27,10 @@ const AvailabilityPicker: React.FC<AvailabilityPickerProps> = ({
     <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
       <div className="flex items-center space-x-2 mb-3">
         <Info className="h-5 w-5 text-gray-600" aria-hidden="true" />
-        <h3 className="font-medium text-gray-900">Próximas disponibilidades do baterista</h3>
+        <h3 className="font-medium text-gray-900">Próximas disponibilidades públicas</h3>
       </div>
       <p className="text-sm text-gray-600 mb-3">
-        Escolha uma destas datas para facilitar a aprovação do evento:
+        Escolha uma destas datas para facilitar a confirmação do evento:
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" role="listbox" aria-label="Datas disponíveis">
         {displayedAvailabilities.map((availability) => (

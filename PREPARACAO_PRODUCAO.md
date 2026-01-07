@@ -179,7 +179,7 @@ sudo certbot --nginx -d seudominio.com -d api.seudominio.com
 - [ ] Login funcionando
 - [ ] Criar evento funcionando
 - [ ] Marcar disponibilidade funcionando
-- [ ] Aprovar/rejeitar (líder) funcionando
+- [ ] Responder convites funcionando
 - [ ] Listagem de músicos funcionando
 - [ ] Responsividade mobile testada
 
@@ -283,7 +283,7 @@ npm run build
 - ✅ Sistema de autenticação (JWT)
 - ✅ CRUD de eventos
 - ✅ Sistema de disponibilidade
-- ✅ Aprovação por líder
+- ✅ Convites e confirmações
 - ✅ Listagem de músicos
 - ✅ Dashboard personalizado
 - ✅ Responsive design

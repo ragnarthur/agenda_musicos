@@ -1,7 +1,7 @@
 // pages/Dashboard.tsx
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, CalendarClock, Clock, Crown, Plus, Users, ChevronRight, ListChecks, Zap, Briefcase } from 'lucide-react';
+import { Calendar, CalendarClock, Clock, Plus, Users, ChevronRight, ListChecks, Zap, Briefcase } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
@@ -52,7 +52,7 @@ const buildLineup = (event: Event): string[] => {
 };
 
 const Dashboard: React.FC = () => {
-  const { user, isLeader } = useAuth();
+  const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [pendingApprovals, setPendingApprovals] = useState<Event[]>([]);
   const [pendingResponses, setPendingResponses] = useState<Event[]>([]);
@@ -102,7 +102,7 @@ const Dashboard: React.FC = () => {
     const fetchData = async () => {
       setLoading(true);
       const [eventsResult, approvalsResult, responsesResult] = await Promise.allSettled([
-        eventService.getAll({ status: 'proposed,approved,confirmed', upcoming: true }),
+        eventService.getAll({ status: 'proposed,confirmed,approved', upcoming: true }),
         eventService.getAll({ pending_approval: true }),
         eventService.getPendingMyResponse(),
       ]);
@@ -172,7 +172,7 @@ const Dashboard: React.FC = () => {
                 Olá, {user?.user.first_name}. Gerencie seus shows e compromissos com precisão.
               </h1>
               <p className="mt-2 text-gray-700">
-                Centralize eventos, aprovações e disponibilidades da equipe em um só lugar.
+                Centralize eventos, convites e disponibilidades da equipe em um só lugar.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Link
@@ -348,7 +348,7 @@ const Dashboard: React.FC = () => {
             <div className="hero-animated opacity-60" />
             <div className="relative flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Eventos pendentes</p>
+                <p className="text-sm font-medium text-gray-600">Convites pendentes</p>
                 <p className="text-3xl font-bold text-primary-600">{pendingApprovals.length}</p>
               </div>
               <div className="bg-primary-100 p-3 rounded-lg">
@@ -356,7 +356,7 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
             <Link to="/aprovacoes" className="relative mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary-700">
-              Ver aprovações <ChevronRight className="h-4 w-4" />
+              Ver convites <ChevronRight className="h-4 w-4" />
             </Link>
           </motion.div>
 
@@ -380,62 +380,28 @@ const Dashboard: React.FC = () => {
             </Link>
           </motion.div>
 
-          {isLeader ? (
-            <motion.div
-              className="relative overflow-hidden card-contrast"
-              whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.01 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 16 }}
-            >
-              <div className="hero-animated opacity-60" />
-              <div className="relative flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Agenda compartilhada</p>
-                  <p className="text-lg font-semibold text-amber-700">Modo ativo</p>
-                </div>
-                <div className="bg-amber-100 p-3 rounded-lg">
-                  <Crown className="h-8 w-8 text-amber-700" />
-                </div>
+          <motion.div
+            className="relative overflow-hidden card-contrast"
+            whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.01 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 16 }}
+          >
+            <div className="hero-animated opacity-60" />
+            <div className="relative flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Disponibilidades</p>
+                <p className="text-lg font-semibold text-amber-700">Compartilhe sua agenda</p>
               </div>
-              <Link
-                to="/disponibilidades"
-                className="relative mt-3 inline-flex items-center gap-1 text-sm font-semibold text-amber-700"
-              >
-                Gerenciar disponibilidades <ChevronRight className="h-4 w-4" />
-              </Link>
-            </motion.div>
-          ) : (
-            <motion.div
-              className="relative overflow-hidden card-contrast"
-              whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.01 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 16 }}
-            >
-              <div className="hero-animated opacity-60" />
-              <div className="relative flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Minha agenda</p>
-                  {(() => {
-                    const confirmedCount = events.filter(e => e.status === 'approved' || e.status === 'confirmed').length;
-                    return (
-                      <p className="text-lg font-semibold text-blue-700">
-                        {confirmedCount > 0
-                          ? `${confirmedCount} show${confirmedCount > 1 ? 's' : ''} confirmado${confirmedCount > 1 ? 's' : ''}`
-                          : 'Sem shows confirmados'}
-                      </p>
-                    );
-                  })()}
-                </div>
-                <div className="bg-blue-100 p-3 rounded-lg">
-                  <Calendar className="h-8 w-8 text-blue-700" />
-                </div>
+              <div className="bg-amber-100 p-3 rounded-lg">
+                <CalendarClock className="h-8 w-8 text-amber-700" />
               </div>
-              <Link
-                to="/eventos/agenda"
-                className="relative mt-3 inline-flex items-center gap-1 text-sm font-semibold text-blue-700"
-              >
-                Ver meus eventos <ChevronRight className="h-4 w-4" />
-              </Link>
-            </motion.div>
-          )}
+            </div>
+            <Link
+              to="/disponibilidades"
+              className="relative mt-3 inline-flex items-center gap-1 text-sm font-semibold text-amber-700"
+            >
+              Ver disponibilidades <ChevronRight className="h-4 w-4" />
+            </Link>
+          </motion.div>
         </div>
 
         {/* Linha do tempo rápida */}

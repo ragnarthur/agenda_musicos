@@ -1,4 +1,4 @@
-# Checklist de Aprovação - Agenda Músicos
+# Checklist de Convites - Agenda Músicos
 
 ## Status: APROVADO PARA TESTES REAIS
 
@@ -59,7 +59,7 @@ Data: 2025-12-18
 - [x] Listagem de eventos
 - [x] Criação de proposta de evento
 - [x] Edição de evento
-- [x] Aprovação/Rejeição (líderes)
+- [x] Convites e confirmações
 - [x] Cancelamento
 - [x] Marcação de disponibilidade
 - [x] Detecção de conflitos
@@ -71,7 +71,7 @@ Data: 2025-12-18
 - [x] Filtro por instrumento
 - [x] Sistema de avaliações (1-5 estrelas)
 
-### Disponibilidades (Líderes)
+### Disponibilidades compartilhadas
 - [x] Criar disponibilidade
 - [x] Listar disponibilidades
 - [x] Verificar conflitos com eventos
@@ -159,7 +159,7 @@ FRONTEND_URL=https://seu-dominio.com
 ### Fluxo de Eventos
 1. [ ] Criar novo evento
 2. [ ] Verificar se aparece na lista
-3. [ ] Aprovar evento (se líder)
+3. [ ] Responder convite (disponibilidade)
 4. [ ] Marcar disponibilidade
 
 ### Responsividade

@@ -54,7 +54,7 @@ class MusicianRatingAPITest(APITestCase):
         self.musician2 = Musician.objects.create(
             user=self.musician2_user,
             instrument='drums',
-            role='leader',
+            role='member',
             organization=self.org
         )
 
@@ -67,7 +67,7 @@ class MusicianRatingAPITest(APITestCase):
             end_time=time(23, 0),
             created_by=self.creator,
             organization=self.org,
-            status='approved'
+            status='confirmed'
         )
 
         # Criar availabilities para o evento passado
@@ -256,7 +256,7 @@ class MusicianRatingAPITest(APITestCase):
             end_time=time(23, 30),
             created_by=other_creator,
             organization=self.org,
-            status='approved'
+            status='confirmed'
         )
         Availability.objects.create(
             musician=self.musician1,

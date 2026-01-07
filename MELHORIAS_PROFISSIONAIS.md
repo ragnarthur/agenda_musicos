@@ -233,7 +233,7 @@ dist/assets/index.js    335.43 kB │ gzip: 104.77 kB
 3. ✅ Eventos (grid, filtros, badges)
 4. ✅ Novo Evento (formulário validado)
 5. ✅ Detalhes do Evento (completo)
-6. ✅ Aprovações (apenas líder)
+6. ✅ Convites pendentes
 7. ✅ Músicos (grid com info completa)
 
 ---
@@ -338,7 +338,7 @@ npm run build
 - [ ] Login com todos os usuários
 - [ ] Criar eventos
 - [ ] Marcar disponibilidades
-- [ ] Aprovar/rejeitar (líder)
+- [ ] Responder convites
 - [ ] Navegação completa
 - [ ] Mobile responsiveness
 

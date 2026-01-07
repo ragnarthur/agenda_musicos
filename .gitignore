@@ -59,3 +59,5 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
+.env.docker
+payment-service/.env.docker

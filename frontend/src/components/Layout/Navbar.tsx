@@ -6,13 +6,13 @@ import {
   Calendar,
   Users,
   LogOut,
-  Crown,
   Clock,
   Megaphone,
   HeartHandshake,
   Menu,
   X,
   Bell,
+  UserCheck,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { eventService } from '../../services/api';
@@ -65,7 +65,7 @@ const Navbar: React.FC = () => {
       setPendingApproval(approvalResult.value.length);
     } else {
       setPendingApproval(0);
-      console.error('Erro ao carregar notificações (aprovações):', approvalResult.reason);
+      console.error('Erro ao carregar notificações (convites):', approvalResult.reason);
     }
   }, []);
 
@@ -113,8 +113,8 @@ const Navbar: React.FC = () => {
             <AppNavLink to="/configuracoes/notificacoes" icon={<Bell className="h-5 w-5" />} label="Notificações" />
             <AppNavLink
               to="/aprovacoes"
-              icon={<Crown className="h-5 w-5" />}
-              label="Aprovações"
+              icon={<UserCheck className="h-5 w-5" />}
+              label="Convites"
               badge={pendingApproval}
               accent
             />
@@ -244,8 +244,8 @@ const Navbar: React.FC = () => {
                 className="flex items-center justify-between px-3 py-2 text-amber-300 hover:bg-amber-500/10 rounded-lg transition-colors"
               >
                 <span className="flex items-center gap-3">
-                  <Crown className="h-5 w-5" />
-                  <span className="text-sm font-medium">Aprovações</span>
+                  <UserCheck className="h-5 w-5" />
+                  <span className="text-sm font-medium">Convites</span>
                 </span>
                 {pendingApproval > 0 && (
                   <span className="bg-yellow-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">

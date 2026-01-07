@@ -247,7 +247,7 @@ class GigWorkflowTest(APITestCase):
             user=self.client_user,
             organization=self.client_org,
             instrument='other',
-            role='leader'
+            role='member'
         )
 
         # Músico candidato

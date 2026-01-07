@@ -173,16 +173,16 @@ VITE_API_URL=http://45.237.131.177:2030/api
 **URL:** http://45.237.131.177:2030
 
 **Músicos:**
-- `sara / senha123` - Vocalista e Violonista
-- `arthur / senha123` - Vocalista e Violonista
-- `roberto / senha123` - Baterista e Líder 👑
+- `sara / sara2026@` - Vocalista e Violonista
+- `arthur / arthur2026@` - Vocalista e Violonista
+- `roberto / roberto2026@` - Baterista
 
 ### Admin Django
 **URL:** http://45.237.131.177:2030/admin/
 
 **Credenciais:**
 - User: `admin`
-- Pass: `admin123`
+- Pass: `admin2026@`
 
 ### Banco de Dados
 **PostgreSQL:**

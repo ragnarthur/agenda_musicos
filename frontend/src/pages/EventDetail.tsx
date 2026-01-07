@@ -7,10 +7,7 @@ import {
   MapPin,
   DollarSign,
   User,
-  ThumbsUp,
-  ThumbsDown,
   ArrowLeft,
-  Crown,
   Edit,
   Trash2,
   Ban,
@@ -22,7 +19,6 @@ import AvailabilitySelector from '../components/event/AvailabilitySelector';
 import AvailabilityList from '../components/event/AvailabilityList';
 import EventTimeline from '../components/event/EventTimeline';
 import ConfirmModal from '../components/modals/ConfirmModal';
-import RejectModal from '../components/modals/RejectModal';
 import RatingModal from '../components/modals/RatingModal';
 import { useAuth } from '../contexts/AuthContext';
 import { eventService } from '../services/api';
@@ -42,8 +38,6 @@ const EventDetail: React.FC = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [selectedResponse, setSelectedResponse] = useState<AvailabilityResponse>('pending');
   const [notes, setNotes] = useState('');
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [showRejectModal, setShowRejectModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
@@ -91,21 +85,6 @@ const EventDetail: React.FC = () => {
     }
   };
 
-  const handleApprove = async () => {
-    if (!id) return;
-
-    try {
-      setActionLoading(true);
-      await eventService.approve(parseInt(id));
-      showToast.eventApproved();
-      await loadEvent();
-    } catch (error) {
-      showToast.apiError(error);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
   const handleDelete = async () => {
     if (!id) return;
 
@@ -135,22 +114,6 @@ const EventDetail: React.FC = () => {
     } finally {
       setActionLoading(false);
       setShowCancelModal(false);
-    }
-  };
-
-  const handleReject = async () => {
-    if (!id || !rejectionReason.trim()) return;
-
-    try {
-      setActionLoading(true);
-      await eventService.reject(parseInt(id), rejectionReason);
-      showToast.eventRejected();
-      setShowRejectModal(false);
-      await loadEvent();
-    } catch (error) {
-      showToast.apiError(error);
-    } finally {
-      setActionLoading(false);
     }
   };
 
@@ -300,11 +263,9 @@ const EventDetail: React.FC = () => {
 
               {event.approved_by_name && (
                 <div className="flex items-start space-x-3">
-                  <Crown className="h-5 w-5 text-yellow-500 mt-0.5" />
+                  <User className="h-5 w-5 text-emerald-500 mt-0.5" />
                   <div>
-                    <p className="text-sm text-gray-500">
-                      {event.status === 'approved' ? 'Aprovado por' : 'Rejeitado por'}
-                    </p>
+                    <p className="text-sm text-gray-500">Confirmado por</p>
                     <p className="font-medium">{event.approved_by_name}</p>
                     {event.rejection_reason && (
                       <p className="text-sm text-red-600 mt-1">{event.rejection_reason}</p>
@@ -324,32 +285,6 @@ const EventDetail: React.FC = () => {
             loading={actionLoading}
           />
         </div>
-
-        {/* Ações de aprovação */}
-        {event.status === 'proposed' && (
-          <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Ações de aprovação</h2>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-              <button
-                onClick={handleApprove}
-                disabled={actionLoading}
-                className="flex-1 btn-primary flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700"
-              >
-                <ThumbsUp className="h-5 w-5" />
-                <span>Aprovar Evento</span>
-              </button>
-
-              <button
-                onClick={() => setShowRejectModal(true)}
-                disabled={actionLoading}
-                className="flex-1 btn-danger flex items-center justify-center gap-2"
-              >
-                <ThumbsDown className="h-5 w-5" />
-                <span>Rejeitar Evento</span>
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Seção de Avaliação de Músicos */}
         {(event.can_rate || ratingSuccess) && (
@@ -389,14 +324,6 @@ const EventDetail: React.FC = () => {
         <EventTimeline logs={event.logs || []} />
 
         {/* Modals */}
-        <RejectModal
-          isOpen={showRejectModal}
-          onClose={() => setShowRejectModal(false)}
-          onConfirm={handleReject}
-          reason={rejectionReason}
-          onReasonChange={setRejectionReason}
-          loading={actionLoading}
-        />
 
         <ConfirmModal
           isOpen={showCancelModal}

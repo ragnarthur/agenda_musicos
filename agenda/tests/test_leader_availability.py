@@ -36,7 +36,7 @@ class LeaderAvailabilityModelTest(TestCase):
         self.musician = Musician.objects.create(
             user=self.user,
             instrument='guitar',
-            role='leader',
+            role='member',
             organization=self.org,
             is_active=True
         )
@@ -75,7 +75,7 @@ class LeaderAvailabilityAPITest(APITestCase):
         self.user = User.objects.create_user(
             username='arthur',
             email='arthur@test.com',
-            password='arthur2025@',
+            password='arthur2026@',
             first_name='Arthur',
             last_name='Araújo'
         )
@@ -93,7 +93,7 @@ class LeaderAvailabilityAPITest(APITestCase):
         self.musician = Musician.objects.create(
             user=self.user,
             instrument='guitar',
-            role='leader',
+            role='member',
             organization=self.org,
             is_active=True
         )
@@ -102,7 +102,7 @@ class LeaderAvailabilityAPITest(APITestCase):
         self.user2 = User.objects.create_user(
             username='bruno',
             email='bruno@test.com',
-            password='bruno2025@',
+            password='bruno2026@',
             first_name='Bruno',
             last_name='Silva'
         )
@@ -435,7 +435,7 @@ class AvailableMusiciansEndpointTest(APITestCase):
         self.user = User.objects.create_user(
             username='arthur',
             email='arthur@test.com',
-            password='arthur2025@',
+            password='arthur2026@',
             first_name='Arthur',
             last_name='Araújo'
         )
@@ -453,7 +453,7 @@ class AvailableMusiciansEndpointTest(APITestCase):
         self.musician = Musician.objects.create(
             user=self.user,
             instrument='guitar',
-            role='leader',
+            role='member',
             organization=self.org,
             is_active=True
         )
@@ -462,7 +462,7 @@ class AvailableMusiciansEndpointTest(APITestCase):
         self.user2 = User.objects.create_user(
             username='roberto',
             email='roberto@test.com',
-            password='roberto2025@',
+            password='roberto2026@',
             first_name='Roberto',
             last_name='Silva'
         )

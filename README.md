@@ -4,7 +4,7 @@ Sistema completo de gerenciamento de agenda para bandas e músicos.
 
 ## 📋 Descrição
 
-Aplicação web para gerenciar eventos, disponibilidade de músicos e aprovações de shows. Sara e Arthur (vocalistas e violonistas) criam propostas de eventos que são aprovadas ou rejeitadas por Roberto (baterista e líder da banda).
+Aplicação web para gerenciar eventos, disponibilidade de músicos e convites entre usuários cadastrados. A plataforma permite que músicos se conectem e fechem gigs diretamente.
 
 
 ### Pré-requisitos
@@ -39,14 +39,14 @@ O script `setup.sh` irá automaticamente:
 Acesse: **http://45.237.131.177:2030**
 
 **Credenciais de Login:**
-- Sara (Vocalista): `sara / senha123`
-- Arthur (Vocalista): `arthur / senha123`
-- Roberto (Baterista/Líder): `roberto / senha123`
+- Sara (Vocalista): `sara / sara2026@`
+- Arthur (Vocalista): `arthur / arthur2026@`
+- Roberto (Baterista): `roberto / roberto2026@`
 
 **Admin Django:**
 - URL: http://45.237.131.177:2030/admin/
 - User: `admin`
-- Pass: `admin123`
+- Pass: `admin2026@`
 
 ## 🔄 Atualizar Aplicação
 
@@ -100,11 +100,9 @@ Frontend: http://localhost:5173
 - ✅ Ver disponibilidade de todos os músicos
 - ✅ Visualizar perfis dos músicos
 
-### Para o Líder (Roberto)
-- ✅ Todas as funcionalidades acima
-- ✅ Aprovar eventos propostos
-- ✅ Rejeitar eventos (com motivo)
-- ✅ Acesso à página de Aprovações
+### Convites e Confirmações
+- ✅ Responder convites pendentes
+- ✅ Confirmar participação ao marcar disponibilidade como "Disponível"
 
 ## 🛠️ Comandos Úteis
 

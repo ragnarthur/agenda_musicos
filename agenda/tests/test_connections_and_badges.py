@@ -65,7 +65,7 @@ class ConnectionAndBadgeAPITest(APITestCase):
             event_date=date.today() - timedelta(days=2),
             start_time=time(20, 0),
             end_time=time(22, 0),
-            status='approved',
+            status='confirmed',
             created_by=self.user,
             organization=self.org,
         )

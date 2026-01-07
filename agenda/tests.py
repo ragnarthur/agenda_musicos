@@ -31,14 +31,14 @@ class MusicianModelTest(TestCase):
         self.assertEqual(musician.instrument, 'vocal')
         self.assertFalse(musician.is_leader())
     
-    def test_leader_musician(self):
-        """Testa músico líder"""
+    def test_leader_musician_deprecated(self):
+        """Testa que liderança está descontinuada"""
         musician = Musician.objects.create(
             user=self.user,
             instrument='drums',
             role='leader'
         )
-        self.assertTrue(musician.is_leader())
+        self.assertFalse(musician.is_leader())
 
 
 class EventModelTest(TestCase):
@@ -46,18 +46,12 @@ class EventModelTest(TestCase):
     
     def setUp(self):
         self.user = User.objects.create_user(username='arthur', password='senha123')
-        self.leader_user = User.objects.create_user(username='roberto', password='senha123')
+        self.other_user = User.objects.create_user(username='carlos', password='senha123')
         
         self.musician = Musician.objects.create(
             user=self.user,
             instrument='guitar',
             role='member'
-        )
-        
-        self.leader = Musician.objects.create(
-            user=self.leader_user,
-            instrument='drums',
-            role='leader'
         )
     
     def test_create_event(self):
@@ -86,10 +80,10 @@ class EventModelTest(TestCase):
             status='proposed'
         )
         
-        result = event.approve(self.leader_user)
+        result = event.approve(self.other_user)
         self.assertTrue(result)
-        self.assertEqual(event.status, 'approved')
-        self.assertEqual(event.approved_by, self.leader_user)
+        self.assertEqual(event.status, 'confirmed')
+        self.assertEqual(event.approved_by, self.other_user)
     
     def test_reject_event(self):
         """Testa rejeição de evento"""
@@ -103,7 +97,7 @@ class EventModelTest(TestCase):
             status='proposed'
         )
         
-        result = event.reject(self.leader_user, 'Conflito de agenda')
+        result = event.reject(self.other_user, 'Conflito de agenda')
         self.assertTrue(result)
         self.assertEqual(event.status, 'rejected')
         self.assertEqual(event.rejection_reason, 'Conflito de agenda')
@@ -130,7 +124,7 @@ class LeaderAvailabilityModelTest(TestCase):
 
     def setUp(self):
         user = User.objects.create_user(username='roberto', password='senha123')
-        self.leader = Musician.objects.create(user=user, instrument='drums', role='leader')
+        self.leader = Musician.objects.create(user=user, instrument='drums', role='member')
 
     def test_leader_availability_crossing_midnight(self):
         """Disponibilidade que cruza a meia-noite deve levar end_datetime para o dia seguinte"""
@@ -196,7 +190,7 @@ class EventAPITest(APITestCase):
         self.roberto_musician = Musician.objects.create(
             user=self.roberto,
             instrument='drums',
-            role='leader'
+            role='member'
         )
         
         self.client = APIClient()
@@ -211,6 +205,7 @@ class EventAPITest(APITestCase):
             'event_date': (date.today() + timedelta(days=10)).isoformat(),
             'start_time': '20:00:00',
             'end_time': '23:00:00',
+            'invited_musicians': [self.roberto_musician.id],
         }
         
         response = self.client.post('/api/events/', data)
@@ -224,8 +219,8 @@ class EventAPITest(APITestCase):
         # Verifica se availabilities foram criadas
         self.assertEqual(event.availabilities.count(), 2)  # Sara e Roberto
 
-    def test_create_event_creates_availability_for_all_musicians(self):
-        """Criação de evento deve incluir todos os músicos ativos"""
+    def test_create_event_creates_availability_for_invited_musicians(self):
+        """Criação de evento deve incluir apenas músicos convidados"""
         extra_user = User.objects.create_user(username='joao', password='senha123')
         extra_musician = Musician.objects.create(user=extra_user, instrument='bass', role='member', is_active=True)
 
@@ -236,17 +231,17 @@ class EventAPITest(APITestCase):
             'event_date': (date.today() + timedelta(days=5)).isoformat(),
             'start_time': '20:00:00',
             'end_time': '23:00:00',
+            'invited_musicians': [extra_musician.id],
         }
         response = self.client.post('/api/events/', payload)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         event = Event.objects.get(id=response.data['id'])
-        self.assertEqual(event.availabilities.count(), 3)
+        self.assertEqual(event.availabilities.count(), 2)
         self.assertTrue(Availability.objects.filter(event=event, musician=extra_musician, response='pending').exists())
-    
-    def test_approve_event_as_leader(self):
-        """Testa aprovação de evento como líder"""
-        # Criar evento
+
+    def test_confirm_event_as_invited_musician(self):
+        """Músico convidado pode confirmar participação"""
         event = Event.objects.create(
             title='Show',
             location='Local',
@@ -256,19 +251,22 @@ class EventAPITest(APITestCase):
             created_by=self.sara,
             status='proposed'
         )
-        
-        # Autenticar como líder
+        Availability.objects.create(musician=self.roberto_musician, event=event, response='pending')
+
         self.client.force_authenticate(user=self.roberto)
-        
         response = self.client.post(f'/api/events/{event.id}/approve/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         event.refresh_from_db()
-        self.assertEqual(event.status, 'approved')
-        self.assertEqual(event.approved_by, self.roberto)
-    
-    def test_approve_event_as_member_forbidden(self):
-        """Membros agora podem aprovar eventos"""
+        self.assertEqual(event.status, 'confirmed')
+        self.assertTrue(
+            Availability.objects.filter(event=event, musician=self.roberto_musician, response='available').exists()
+        )
+
+    def test_confirm_event_as_non_invited_forbidden(self):
+        """Usuário não convidado não pode confirmar participação"""
+        extra_user = User.objects.create_user(username='joao2', password='senha123')
+        Musician.objects.create(user=extra_user, instrument='bass', role='member')
         event = Event.objects.create(
             title='Show',
             location='Local',
@@ -278,15 +276,11 @@ class EventAPITest(APITestCase):
             created_by=self.sara,
             status='proposed'
         )
-        
-        # Autenticar como membro (não líder)
-        self.client.force_authenticate(user=self.sara)
-        
+        Availability.objects.create(musician=self.roberto_musician, event=event, response='pending')
+
+        self.client.force_authenticate(user=extra_user)
         response = self.client.post(f'/api/events/{event.id}/approve/')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        event.refresh_from_db()
-        self.assertEqual(event.status, 'approved')
-        self.assertEqual(event.approved_by, self.sara)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
     
     def test_set_availability(self):
         """Testa marcar disponibilidade"""
@@ -352,7 +346,7 @@ class EventAPITest(APITestCase):
         self.assertTrue(EventLog.objects.filter(event=event, action='availability').exists())
 
     def test_solo_event_sets_approval_fields(self):
-        """Show solo deve ser criado aprovado com carimbo de aprovador"""
+        """Show solo deve ser criado confirmado com carimbo do criador"""
         self.client.force_authenticate(user=self.sara)
 
         data = {
@@ -368,79 +362,21 @@ class EventAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         event = Event.objects.get(id=response.data['id'])
-        self.assertEqual(event.status, 'approved')
+        self.assertEqual(event.status, 'confirmed')
         self.assertEqual(event.approved_by, self.sara)
         self.assertIsNotNone(event.approved_at)
         self.assertTrue(EventLog.objects.filter(event=event, action='created').exists())
 
 
-class RestoreAvailabilityConflictTest(TestCase):
-    """Testes da restauração de disponibilidade considerando eventos que cruzam datas"""
-
-    def setUp(self):
-        self.sara = User.objects.create_user(username='sara', password='senha123')
-        self.roberto = User.objects.create_user(username='roberto', password='senha123')
-        self.roberto_musician = Musician.objects.create(
-            user=self.roberto,
-            instrument='drums',
-            role='leader'
-        )
-
-    def test_restore_skips_conflict_from_previous_day_event(self):
-        """Não deve restaurar disponibilidade quando há evento cruzando meia-noite no dia anterior"""
-        base_date = timezone.now().date() + timedelta(days=5)
-
-        # Disponibilidade original do líder
-        LeaderAvailability.objects.create(
-            leader=self.roberto_musician,
-            date=base_date,
-            start_time=time(22, 0),
-            end_time=time(2, 0),
-            is_active=True
-        )
-
-        # Evento que será removido
-        event_to_restore = Event.objects.create(
-            title='Show tarde da noite',
-            location='Casa de shows',
-            event_date=base_date,
-            start_time=time(0, 30),
-            end_time=time(1, 30),
-            created_by=self.sara,
-            status='cancelled'
-        )
-
-        # Evento do dia anterior cruzando para o dia alvo
-        Event.objects.create(
-            title='Evento na véspera',
-            location='Arena',
-            event_date=base_date - timedelta(days=1),
-            start_time=time(23, 30),
-            end_time=time(0, 30),
-            created_by=self.roberto,
-            status='approved'
-        )
-
-        before_count = LeaderAvailability.objects.filter(leader=self.roberto_musician).count()
-
-        viewset = EventViewSet()
-        viewset._restore_leader_availability(event_to_restore)
-
-        after_count = LeaderAvailability.objects.filter(leader=self.roberto_musician).count()
-        self.assertEqual(before_count, after_count)
-        restored = LeaderAvailability.objects.filter(notes__icontains='Restaurada', leader=self.roberto_musician)
-        self.assertFalse(restored.exists())
-
-
 class LeaderAvailabilityAPITest(APITestCase):
-    """Testes de atualização de disponibilidade do líder com eventos cruzando datas"""
+    """Testes de atualização de disponibilidade do músico com eventos cruzando datas"""
 
     def setUp(self):
         self.roberto = User.objects.create_user(username='roberto', password='senha123')
         self.roberto_musician = Musician.objects.create(
             user=self.roberto,
             instrument='drums',
-            role='leader'
+            role='member'
         )
         self.client = APIClient()
         self.client.force_authenticate(user=self.roberto)
@@ -464,7 +400,7 @@ class LeaderAvailabilityAPITest(APITestCase):
             start_time=time(23, 30),
             end_time=time(0, 30),
             created_by=self.roberto,
-            status='approved'
+            status='confirmed'
         )
 
         payload = {
@@ -492,9 +428,9 @@ class EventLogAndPreviewTest(APITestCase):
 
     def setUp(self):
         self.creator = User.objects.create_user(username='sara', password='senha123')
-        self.leader_user = User.objects.create_user(username='roberto', password='senha123')
+        self.other_user = User.objects.create_user(username='roberto', password='senha123')
         self.creator_musician = Musician.objects.create(user=self.creator, instrument='vocal', role='member')
-        self.leader_musician = Musician.objects.create(user=self.leader_user, instrument='drums', role='leader')
+        self.other_musician = Musician.objects.create(user=self.other_user, instrument='drums', role='member')
         self.client = APIClient()
         self.client.force_authenticate(user=self.creator)
 
@@ -508,7 +444,7 @@ class EventLogAndPreviewTest(APITestCase):
             start_time=time(20, 0),
             end_time=time(22, 0),
             created_by=self.creator,
-            status='approved'
+            status='confirmed'
         )
 
         payload = {

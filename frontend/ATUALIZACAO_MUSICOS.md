@@ -10,9 +10,9 @@
 - ✅ Arthur Araújo (mantido)
 
 **Instrumentos e bios atualizados:**
-- ✅ Sara Carmo: "Vocalista e violonista da banda"
-- ✅ Arthur Araújo: "Vocalista e violonista da banda"
-- ✅ Roberto Guimarães: "Baterista e líder da banda"
+- ✅ Sara Carmo: "Vocalista e violonista"
+- ✅ Arthur Araújo: "Vocalista e violonista"
+- ✅ Roberto Guimarães: "Baterista"
 
 ### 2. Interface Atualizada (`src/pages/Musicians.tsx`)
 
@@ -58,15 +58,14 @@ Email: sara@banda.com
 #### c) Descrições Contextuais
 **Título da página:**
 ```
-Músicos da Banda
-Sara e Arthur (vocalistas e violonistas) contratam datas com Roberto (baterista)
+Músicos da Plataforma
+Conheça músicos cadastrados e conecte-se para novos gigs
 ```
 
 **Informação no rodapé:**
 ```
 Total: 3 músicos
-Sara e Arthur são vocalistas e violonistas que contratam
-apresentações com Roberto, nosso baterista e líder da banda.
+Músicos cadastrados para convites e colaborações.
 ```
 
 ### 3. Documentação Atualizada
@@ -83,7 +82,7 @@ apresentações com Roberto, nosso baterista e líder da banda.
 |----------|---------------|-------|--------------|-----|
 | sara | Sara Carmo | Membro | Vocalista e Violonista | Vocalista e violonista da banda |
 | arthur | Arthur Araújo | Membro | Vocalista e Violonista | Vocalista e violonista da banda |
-| roberto | Roberto Guimarães | Líder 👑 | Baterista | Baterista e líder da banda |
+| roberto | Roberto Guimarães | Membro | Baterista | Baterista |
 
 ## 🎯 Como os Cards Aparecem Agora
 
@@ -118,14 +117,14 @@ apresentações com Roberto, nosso baterista e líder da banda.
 ### Card do Roberto Guimarães
 ```
 ┌────────────────────────────────────┐
-│  🥁     Roberto Guimarães 👑       │
+│  🥁     Roberto Guimarães          │
 │          @roberto                  │
 │                                    │
-│  🎵 Baterista e líder da banda     │
+│  🎵 Baterista                      │
 │  📱 (11) 98888-3333               │
 │  ✉️  roberto@banda.com            │
 │                                    │
-│  [👑 Líder da Banda]               │
+│  [Membro]                          │
 └────────────────────────────────────┘
 ```
 
@@ -142,7 +141,7 @@ curl http://localhost:8000/api/musicians/ -H "Authorization: Bearer <TOKEN>"
 - ✅ full_name: "Sara Carmo", "Arthur Araújo", "Roberto Guimarães"
 - ✅ instrument: "vocal", "vocal", "drums"
 - ✅ bio: Textos corretos para cada músico
-- ✅ is_leader: false, false, true
+- ✅ is_leader: false, false, false
 
 ### Frontend
 ```bash
@@ -173,12 +172,12 @@ npm run dev
 
 ### 3. No Navegador
 1. Acesse http://localhost:5173/login
-2. Login com qualquer usuário (sara, arthur ou roberto) / senha123
+2. Login com qualquer usuário (sara, arthur ou roberto) / <username>2026@
 3. Clique em "Músicos" no menu
 4. Veja os 3 cards atualizados:
    - Sara Carmo 🎤🎸
    - Arthur Araújo 🎤🎸
-   - Roberto Guimarães 🥁 👑
+   - Roberto Guimarães 🥁
 
 ### 4. Verificações Visuais
 - ✅ Emojis duplos (🎤🎸) para Sara e Arthur
@@ -186,7 +185,7 @@ npm run dev
 - ✅ Nomes corretos nos cards
 - ✅ Bio como informação principal (destaque)
 - ✅ Descrição contextual no topo e rodapé
-- ✅ Badge "Líder da Banda" com coroa para Roberto
+- ✅ Badge "Membro" para todos
 
 ## 📝 Arquivos Modificados
 
@@ -201,9 +200,9 @@ npm run dev
 
 ✅ **Sara Carmo** - Vocalista e violonista
 ✅ **Arthur Araújo** - Vocalista e violonista
-✅ **Roberto Guimarães** - Baterista e líder
+✅ **Roberto Guimarães** - Baterista
 
-**Contexto claro:** Sara e Arthur contratam apresentações com Roberto (baterista).
+**Contexto claro:** Músicos cadastrados podem interagir por convites.
 
 **Interface melhorada:**
 - Emojis representativos (🎤🎸 e 🥁)

@@ -15,7 +15,6 @@ from .models import (
     MusicianBadge,
 )
 from .validators import validate_not_empty_string
-from .utils import get_user_organization
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -45,7 +44,6 @@ class MusicianSerializer(serializers.ModelSerializer):
     """Serializer de músico com dados do usuário"""
     user = UserSerializer(read_only=True)
     full_name = serializers.SerializerMethodField()
-    is_leader = serializers.SerializerMethodField()
     public_email = serializers.SerializerMethodField()
     subscription_info = serializers.SerializerMethodField()
 
@@ -53,16 +51,13 @@ class MusicianSerializer(serializers.ModelSerializer):
         model = Musician
         fields = [
             'id', 'user', 'full_name', 'instrument', 'instruments', 'role',
-            'is_leader', 'bio', 'phone', 'instagram', 'public_email', 'is_active',
+            'bio', 'phone', 'instagram', 'public_email', 'is_active',
             'average_rating', 'total_ratings', 'created_at', 'subscription_info'
         ]
         read_only_fields = ['id', 'average_rating', 'total_ratings', 'created_at', 'subscription_info']
 
     def get_full_name(self, obj):
         return obj.user.get_full_name() or obj.user.username
-
-    def get_is_leader(self, obj):
-        return obj.is_leader()
 
     def get_public_email(self, obj):
         """Retorna email apenas para o próprio usuário (privacidade)"""
@@ -372,7 +367,7 @@ class EventDetailSerializer(serializers.ModelSerializer):
                 fields_changed = ['event_date', 'start_time', 'end_time']
                 for field in fields_changed:
                     if field in data and data[field] != getattr(self.instance, field):
-                        errors[field] = f'Não é possível alterar {field} de eventos aprovados/confirmados. Cancele e crie novo evento.'
+                        errors[field] = f'Não é possível alterar {field} de eventos confirmados. Cancele e crie novo evento.'
 
         if errors:
             raise serializers.ValidationError(errors)
@@ -476,7 +471,7 @@ class EventCreateSerializer(serializers.ModelSerializer):
 
 
 class LeaderAvailabilitySerializer(serializers.ModelSerializer):
-    """Serializer para disponibilidades cadastradas pelo líder"""
+    """Serializer para disponibilidades cadastradas pelo músico"""
     leader_name = serializers.SerializerMethodField()
     leader_instrument = serializers.SerializerMethodField()
     leader_instrument_display = serializers.SerializerMethodField()
@@ -648,9 +643,6 @@ class ConnectionSerializer(serializers.ModelSerializer):
             follower = request.user.musician_profile
             if follower == target:
                 raise serializers.ValidationError('Você não pode criar conexão consigo mesmo.')
-            org = get_user_organization(request.user)
-            if org and target.organization_id != org.id:
-                raise serializers.ValidationError('Você só pode criar conexões dentro da sua organização.')
         return attrs
 
 
