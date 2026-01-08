@@ -44,6 +44,7 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # Se estiver atrás de proxy (Nginx), isso ajuda o Django a entender HTTPS corretamente
+# (Só vai considerar "secure" quando X-Forwarded-Proto == "https")
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
@@ -62,6 +63,7 @@ INSTALLED_APPS = [
     # Third party
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",  # <-- necessário com blacklist/rotation
     "corsheaders",
 
     # Local
@@ -113,11 +115,11 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 
-# =========================
+# =========================================================
 # Database
-# =========================
-DATABASE_URL = config('DATABASE_URL', default='').strip()
-DB_SSL_REQUIRE = config('DB_SSL_REQUIRE', default=False, cast=bool)
+# =========================================================
+DATABASE_URL = config("DATABASE_URL", default="").strip()
+DB_SSL_REQUIRE = config("DB_SSL_REQUIRE", default=False, cast=bool)
 
 if DATABASE_URL:
     parsed = urlparse(DATABASE_URL)
@@ -130,28 +132,28 @@ if DATABASE_URL:
 
     # Se vier sslmode na URL, respeita. Se não vier, decide por env.
     query = parse_qs(parsed.query)
-    sslmode = query.get('sslmode', [None])[0] or ('require' if DB_SSL_REQUIRE else 'disable')
+    sslmode = query.get("sslmode", [None])[0] or ("require" if DB_SSL_REQUIRE else "disable")
 
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': (parsed.path or '').lstrip('/') or config('POSTGRES_DB', default='postgres'),
-            'USER': unquote(parsed.username or config('POSTGRES_USER', default='postgres')),
-            'PASSWORD': unquote(parsed.password or config('POSTGRES_PASSWORD', default='')),
-            'HOST': parsed.hostname or 'db',
-            'PORT': parsed_port or 5432,
-            'CONN_MAX_AGE': 60,
-            'OPTIONS': {
-                'sslmode': sslmode,
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": (parsed.path or "").lstrip("/") or config("POSTGRES_DB", default="postgres"),
+            "USER": unquote(parsed.username or config("POSTGRES_USER", default="postgres")),
+            "PASSWORD": unquote(parsed.password or config("POSTGRES_PASSWORD", default="")),
+            "HOST": parsed.hostname or "db",
+            "PORT": parsed_port or 5432,
+            "CONN_MAX_AGE": 60,
+            "OPTIONS": {
+                "sslmode": sslmode,
             },
         }
     }
 else:
     # fallback (não deveria acontecer em produção)
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
         }
     }
 
@@ -194,12 +196,31 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-        "rest_framework.authentication.SessionAuthentication",
+        # Dica: SessionAuth pode atrapalhar POST em browser se existir cookie de sessão (CSRF).
+        # Se quiser, deixe só em DEBUG:
+        # *Em produção, JWT costuma ser suficiente*
+        "rest_framework.authentication.SessionAuthentication" if DEBUG else
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
     ),
+
+    # ✅ Corrige seu 500: scope "login" precisa ter rate definido
+    # Mesmo que você NÃO use throttle global, se algum endpoint usa ScopedRateThrottle,
+    # ele vai buscar aqui.
+    "DEFAULT_THROTTLE_RATES": {
+        "login": config("THROTTLE_LOGIN", default="30/min"),
+        # se você tiver outros scopes, já deixa pronto:
+        "token_refresh": config("THROTTLE_TOKEN_REFRESH", default="60/min"),
+    },
 }
+
+# Se você preferir *não* ter browsable API em produção:
+if not DEBUG:
+    REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = (
+        "rest_framework.renderers.JSONRenderer",
+    )
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(config("JWT_ACCESS_MINUTES", default=60))),
