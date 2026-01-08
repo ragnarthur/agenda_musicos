@@ -13,7 +13,8 @@ services:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 15
+      start_period: 20s
     restart: unless-stopped
     stop_grace_period: 30s
     networks: [internal]
@@ -33,18 +34,18 @@ services:
     expose:
       - "8000"
     command:
-      [
-        "sh", "-c",
-        "python manage.py migrate --noinput &&
-         python manage.py collectstatic --noinput &&
-         exec gunicorn config.wsgi:application
-           --bind 0.0.0.0:8000
-           --workers 3
-           --threads 2
-           --timeout 120
-           --access-logfile -
-           --error-logfile -"
-      ]
+      - sh
+      - -c
+      - |
+        python manage.py migrate --noinput &&
+        python manage.py collectstatic --noinput &&
+        exec gunicorn config.wsgi:application \
+          --bind 0.0.0.0:8000 \
+          --workers 3 \
+          --threads 2 \
+          --timeout 120 \
+          --access-logfile - \
+          --error-logfile -
     restart: unless-stopped
     networks: [internal]
 
@@ -74,13 +75,19 @@ services:
     restart: unless-stopped
     networks: [internal]
 
-  # Certbot “on-demand” (você roda `docker compose run --rm certbot ...`)
+  # Certbot “on-demand”
+  # Uso (primeira emissão):
+  # docker compose -f docker-compose.prod.yml run --rm certbot certonly --webroot -w /var/www/certbot \
+  #   -d gigflowagenda.com.br -d www.gigflowagenda.com.br -d api.gigflowagenda.com.br \
+  #   --email catsinthegarden01@gmail.com --agree-tos --no-eff-email --non-interactive
+  #
+  # Renovação:
+  # docker compose -f docker-compose.prod.yml run --rm certbot renew
   certbot:
     image: certbot/certbot:latest
+    entrypoint: ["certbot"]
     volumes:
-      # onde o cert fica persistido (host)
       - ./deploy/certbot/conf:/etc/letsencrypt
-      # webroot do challenge HTTP-01
       - ./deploy/certbot/www:/var/www/certbot
     networks: [internal]
 
@@ -88,19 +95,19 @@ services:
     image: nginx:1.27-alpine
     ports:
       - "80:80"
-      - "443:443"   # ✅ agora o 443 fica de pé
+      - "443:443"
     volumes:
-      # monta a pasta inteira pra pegar default.conf (e futuros arquivos)
+      # Monta a pasta inteira de confs do nginx (default.conf, etc)
       - ./deploy/nginx:/etc/nginx/conf.d:ro
 
-      # arquivos estáticos da app
+      # Static/media servidos pelo Nginx
       - staticfiles:/staticfiles:ro
       - media:/media:ro
 
-      # webroot do certbot (pra renew)
+      # Webroot do desafio ACME (HTTP-01)
       - ./deploy/certbot/www:/var/www/certbot:ro
 
-      # certificados (readonly no nginx)
+      # Certificados (somente leitura no Nginx)
       - ./deploy/certbot/conf:/etc/letsencrypt:ro
     depends_on:
       - backend
