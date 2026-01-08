@@ -195,10 +195,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # =========================================================
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
+        # Em produção, JWT é o que importa.
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-        # Dica: SessionAuth pode atrapalhar POST em browser se existir cookie de sessão (CSRF).
-        # Se quiser, deixe só em DEBUG:
-        # *Em produção, JWT costuma ser suficiente*
+
+        # Em DEBUG, SessionAuth é útil pro browsable API.
+        # (em produção isso só te dá dor de cabeça)
         "rest_framework.authentication.SessionAuthentication" if DEBUG else
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
@@ -206,21 +207,24 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ),
 
-    # ✅ Corrige seu 500: scope "login" precisa ter rate definido
-    # Mesmo que você NÃO use throttle global, se algum endpoint usa ScopedRateThrottle,
-    # ele vai buscar aqui.
+    # ✅ Deixa explícito: quando um endpoint usa ScopedRateThrottle,
+    # ele SEMPRE vai procurar o rate no DEFAULT_THROTTLE_RATES.
+    "DEFAULT_THROTTLE_CLASSES": (
+        "rest_framework.throttling.ScopedRateThrottle",
+    ),
+
+    # ✅ Aqui é o que resolveu seu 500: define o rate do scope "login"
+    # e já deixamos aliases pra não quebrar se o scope for outro.
     "DEFAULT_THROTTLE_RATES": {
+        # token obtain (login)
         "login": config("THROTTLE_LOGIN", default="30/min"),
-        # se você tiver outros scopes, já deixa pronto:
+        "token_obtain_pair": config("THROTTLE_LOGIN", default="30/min"),  # fallback seguro
+
+        # token refresh
         "token_refresh": config("THROTTLE_TOKEN_REFRESH", default="60/min"),
+        "refresh": config("THROTTLE_TOKEN_REFRESH", default="60/min"),    # fallback seguro
     },
 }
-
-# Se você preferir *não* ter browsable API em produção:
-if not DEBUG:
-    REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = (
-        "rest_framework.renderers.JSONRenderer",
-    )
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(config("JWT_ACCESS_MINUTES", default=60))),
@@ -229,6 +233,12 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
+
+# Se você preferir "não ter" browsable API em produção:
+if not DEBUG:
+    REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = (
+        "rest_framework.renderers.JSONRenderer",
+    )
 
 
 # =========================================================
