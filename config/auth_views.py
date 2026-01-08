@@ -1,6 +1,5 @@
 # config/auth_views.py
 from datetime import timedelta
-
 from django.conf import settings
 from rest_framework import status
 from rest_framework.response import Response
@@ -14,14 +13,8 @@ REFRESH_COOKIE = "refresh_token"
 
 
 def _cookie_settings():
-    """
-    Em HTTP (sem TLS), cookie Secure quebra no browser.
-    Controle por env: COOKIE_SECURE=True/False.
-    """
-    secure = getattr(settings, "COOKIE_SECURE", None)
-    if secure is None:
-        secure = not settings.DEBUG  # fallback
-
+    # ✅ respeita uma flag do settings (pra não depender de HTTPS)
+    secure = getattr(settings, "COOKIE_SECURE", (not settings.DEBUG))
     return {"secure": secure, "httponly": True, "samesite": "Lax", "path": "/"}
 
 
@@ -63,15 +56,17 @@ class CookieTokenObtainPairView(CookieTokenMixin, TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
 
-        # garante que tokens sejam dict “real” antes de mexer
-        tokens = dict(response.data) if isinstance(response.data, dict) else {}
+        # tokens padrão do SimpleJWT
+        tokens = dict(response.data)  # {"refresh": "...", "access": "..."}
 
         # seta cookies (opcional)
         self.set_auth_cookies(response, tokens)
 
-        # NÃO apaga tokens do body (frontend precisa disso)
-        tokens["detail"] = "Autenticado com sucesso."
-        response.data = tokens
+        # ✅ NÃO mata o payload — o frontend precisa disso
+        response.data = {
+            "detail": "Autenticado com sucesso.",
+            **tokens,
+        }
         return response
 
 
@@ -79,7 +74,6 @@ class CookieTokenRefreshView(CookieTokenMixin, TokenRefreshView):
     def post(self, request, *args, **kwargs):
         data = request.data.copy()
 
-        # se não veio refresh no body, tenta cookie
         if "refresh" not in data:
             refresh_cookie = request.COOKIES.get(REFRESH_COOKIE)
             if not refresh_cookie:
@@ -92,10 +86,12 @@ class CookieTokenRefreshView(CookieTokenMixin, TokenRefreshView):
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
 
+        # ✅ devolve access/refresh também (muitos frontends esperam)
         payload = dict(serializer.validated_data)
-        payload["detail"] = "Tokens renovados com sucesso."
-
-        response = Response(payload, status=status.HTTP_200_OK)
+        response = Response(
+            {"detail": "Tokens renovados com sucesso.", **payload},
+            status=status.HTTP_200_OK,
+        )
         self.set_auth_cookies(response, payload)
         return response
 
@@ -105,9 +101,6 @@ class CookieTokenLogoutView(CookieTokenMixin, APIView):
     permission_classes = []
 
     def post(self, request):
-        response = Response(
-            {"detail": "Logout realizado com sucesso."},
-            status=status.HTTP_200_OK,
-        )
+        response = Response({"detail": "Logout realizado com sucesso."}, status=status.HTTP_200_OK)
         self.clear_auth_cookies(response)
         return response
