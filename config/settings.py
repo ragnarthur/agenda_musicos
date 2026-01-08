@@ -12,8 +12,6 @@ from decouple import config as decouple_config, Config, RepositoryEnv
 # =========================================================
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Perfil de ambiente: produção por padrão.
-# Para usar .env.local: exporte DJANGO_ENV=development (ou ENV=development)
 ENV_PROFILE = os.getenv("DJANGO_ENV") or os.getenv("ENV") or "production"
 ENV_LOCAL = BASE_DIR / ".env.local"
 
@@ -23,43 +21,42 @@ else:
     config = decouple_config
 
 
+def env_csv(name: str, default: str = "") -> list[str]:
+    """
+    Lê env estilo CSV: "a,b,c" => ["a","b","c"] (strip + remove vazios).
+    """
+    raw = config(name, default=default)
+    if not raw:
+        return []
+    return [item.strip() for item in str(raw).split(",") if item.strip()]
+
+
 # =========================================================
 # Security
 # =========================================================
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=False, cast=bool)
 
-ALLOWED_HOSTS = [
-    h.strip() for h in config("ALLOWED_HOSTS", default="").split(",") if h.strip()
-]
+ALLOWED_HOSTS = env_csv("ALLOWED_HOSTS", default="")
 
-# Se esquecer ALLOWED_HOSTS, em DEBUG a gente salva a pele.
-# Em produção, melhor explodir cedo do que ficar “misteriosamente” quebrado.
 if not ALLOWED_HOSTS:
     if DEBUG:
         ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"]
     else:
         raise RuntimeError("ALLOWED_HOSTS está vazio. Configure a env ALLOWED_HOSTS.")
 
-# Inclui testserver em dev/test (evita dor em testes)
 if DEBUG and "testserver" not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append("testserver")
 
-CSRF_TRUSTED_ORIGINS = [
-    o.strip()
-    for o in config("CSRF_TRUSTED_ORIGINS", default="").split(",")
-    if o.strip()
-]
+CSRF_TRUSTED_ORIGINS = env_csv("CSRF_TRUSTED_ORIGINS", default="")
 
-# Se estiver atrás de proxy (Nginx), isso ajuda o Django a entender HTTPS corretamente
-# (Só vai considerar "secure" quando X-Forwarded-Proto == "https")
+# Atrás de proxy (Nginx/Cloudflare): Django entende HTTPS via header
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
 
-# Toggle de redirecionamento HTTPS (deixe False até você ter SSL no Nginx/Cloudflare)
+# Só ligue se VOCÊ quer que o Django force redirect (muitos deixam o Nginx fazer isso)
 SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=False, cast=bool)
 
-# Cookies seguros (aplicado abaixo)
 COOKIE_SECURE = config("COOKIE_SECURE", default=(not DEBUG), cast=bool)
 
 
@@ -76,10 +73,10 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
 
     # Third party
+    "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt",
-    "rest_framework_simplejwt.token_blacklist",  # necessário com blacklist/rotation
-    "corsheaders",
+    "rest_framework_simplejwt.token_blacklist",
 
     # Local
     "agenda",
@@ -94,7 +91,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
 
-    # CORS precisa ficar alto (antes do CommonMiddleware)
+    # CORS precisa ficar o mais alto possível, antes do CommonMiddleware
     "corsheaders.middleware.CorsMiddleware",
 
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -115,7 +112,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates"],  # se você não usa, pode deixar vazio
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -140,13 +137,11 @@ DB_SSL_REQUIRE = config("DB_SSL_REQUIRE", default=False, cast=bool)
 if DATABASE_URL:
     parsed = urlparse(DATABASE_URL)
 
-    # Evita ValueError quando .port vem zoado
     try:
         parsed_port = parsed.port
     except ValueError:
         parsed_port = None
 
-    # Se vier sslmode na URL, respeita. Se não vier, decide por env.
     query = parse_qs(parsed.query)
     sslmode = query.get("sslmode", [None])[0] or ("require" if DB_SSL_REQUIRE else "disable")
 
@@ -159,13 +154,10 @@ if DATABASE_URL:
             "HOST": parsed.hostname or "db",
             "PORT": parsed_port or 5432,
             "CONN_MAX_AGE": 60,
-            "OPTIONS": {
-                "sslmode": sslmode,
-            },
+            "OPTIONS": {"sslmode": sslmode},
         }
     }
 else:
-    # fallback (não deveria acontecer em produção)
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -207,7 +199,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # =========================================================
-# Cookies / Sessão / CSRF (produção)
+# Cookies / Sessão / CSRF
 # =========================================================
 SESSION_COOKIE_SECURE = COOKIE_SECURE
 CSRF_COOKIE_SECURE = COOKIE_SECURE
@@ -215,7 +207,6 @@ CSRF_COOKIE_SECURE = COOKIE_SECURE
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
 
-# Por padrão, CSRF cookie não é HttpOnly (JS pode precisar ler em apps SPA dependendo do setup)
 CSRF_COOKIE_HTTPONLY = False
 
 
@@ -226,7 +217,6 @@ DEFAULT_AUTH_CLASSES = [
     "rest_framework_simplejwt.authentication.JWTAuthentication",
 ]
 if DEBUG:
-    # útil pro browsable API no dev
     DEFAULT_AUTH_CLASSES.append("rest_framework.authentication.SessionAuthentication")
 
 REST_FRAMEWORK = {
@@ -234,22 +224,14 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
     ),
-
-    # Quando um endpoint usa ScopedRateThrottle,
-    # ele procura o rate no DEFAULT_THROTTLE_RATES.
     "DEFAULT_THROTTLE_CLASSES": (
         "rest_framework.throttling.ScopedRateThrottle",
     ),
-
-    # Define rates por scope (mantém aliases pra não quebrar se mudar nomes)
     "DEFAULT_THROTTLE_RATES": {
-        # token obtain (login)
         "login": config("THROTTLE_LOGIN", default="30/min"),
-        "token_obtain_pair": config("THROTTLE_LOGIN", default="30/min"),  # fallback seguro
-
-        # token refresh
+        "token_obtain_pair": config("THROTTLE_LOGIN", default="30/min"),
         "token_refresh": config("THROTTLE_TOKEN_REFRESH", default="60/min"),
-        "refresh": config("THROTTLE_TOKEN_REFRESH", default="60/min"),    # fallback seguro
+        "refresh": config("THROTTLE_TOKEN_REFRESH", default="60/min"),
     },
 }
 
@@ -261,7 +243,6 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-# Se você preferir "não ter" browsable API em produção:
 if not DEBUG:
     REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = (
         "rest_framework.renderers.JSONRenderer",
@@ -269,19 +250,20 @@ if not DEBUG:
 
 
 # =========================================================
-# CORS
+# CORS (subdomínio API sendo chamado do site)
 # =========================================================
-# Se estiver usando frontend chamando /api (mesma origem via Nginx), CORS quase não entra em jogo.
-CORS_ALLOWED_ORIGINS = [
-    o.strip()
-    for o in config("CORS_ALLOWED_ORIGINS", default="").split(",")
-    if o.strip()
-]
+CORS_ALLOWED_ORIGINS = env_csv("CORS_ALLOWED_ORIGINS", default="")
 
-# Só habilita credenciais se você realmente configurou origens.
-# (evita abrir credenciais “à toa”)
-if CORS_ALLOWED_ORIGINS:
-    CORS_ALLOW_CREDENTIALS = True
+# Se quiser “modo debug” via env:
+# CORS_ALLOW_ALL_ORIGINS=True (NÃO use em produção real)
+CORS_ALLOW_ALL_ORIGINS = config("CORS_ALLOW_ALL_ORIGINS", default=False, cast=bool)
+
+# Como você usa Bearer token, não precisa de cookies cross-site.
+# Pode deixar False. Se for usar cookies/sessão via browser, aí vira True.
+CORS_ALLOW_CREDENTIALS = config("CORS_ALLOW_CREDENTIALS", default=False, cast=bool)
+
+# Limitar CORS só para endpoints de API (recomendado)
+CORS_URLS_REGEX = r"^/api/.*$"
 
 
 # =========================================================
@@ -310,12 +292,11 @@ PAYMENT_SERVICE_SECRET = config("PAYMENT_SERVICE_SECRET", default="")
 TELEGRAM_BOT_TOKEN = config("TELEGRAM_BOT_TOKEN", default="")
 TELEGRAM_BOT_USERNAME = config("TELEGRAM_BOT_USERNAME", default="")
 
-# Se você usa CSP via middleware próprio, você já tem o header pronto no env.
 CSP_HEADER = config("CSP_HEADER", default="")
 
 
 # =========================================================
-# Logging (pra você não ficar no escuro no deploy)
+# Logging
 # =========================================================
 LOG_LEVEL = config("LOG_LEVEL", default="INFO")
 
