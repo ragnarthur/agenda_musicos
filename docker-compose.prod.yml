@@ -32,16 +32,22 @@ services:
       - media:/app/media
     expose:
       - "8000"
+
+    # ✅ FIX do "--bind: not found":
+    # tudo do gunicorn tem que ficar NA MESMA LINHA (sem newline no meio)
     command: >
-      sh -c "python manage.py migrate --noinput &&
-             python manage.py collectstatic --noinput &&
-             gunicorn config.wsgi:application
-             --bind 0.0.0.0:8000
-             --workers 3
-             --threads 2
-             --timeout 120
-             --access-logfile -
-             --error-logfile -"
+      sh -c "
+      python manage.py migrate --noinput &&
+      python manage.py collectstatic --noinput &&
+      gunicorn config.wsgi:application
+      --bind 0.0.0.0:8000
+      --workers 3
+      --threads 2
+      --timeout 120
+      --access-logfile -
+      --error-logfile -
+      "
+
     restart: unless-stopped
     networks: [internal]
 
@@ -50,7 +56,6 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        # Em produção, o ideal é o frontend chamar /api (mesma origem)
         VITE_API_URL: ${VITE_API_URL:-/api}
     expose:
       - "80"
@@ -76,8 +81,6 @@ services:
     image: nginx:1.27-alpine
     ports:
       - "80:80"
-      # 443 a gente liga quando tiver domínio + cert
-      # - "443:443"
     volumes:
       - ./deploy/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - staticfiles:/staticfiles:ro
@@ -96,3 +99,4 @@ volumes:
   postgres_data:
   staticfiles:
   media:
+
