@@ -33,18 +33,11 @@ services:
     expose:
       - "8000"
     command:
-      - sh
-      - -c
-      - |
-        python manage.py migrate --noinput &&
-        python manage.py collectstatic --noinput &&
-        exec gunicorn config.wsgi:application \
-          --bind 0.0.0.0:8000 \
-          --workers 3 \
-          --threads 2 \
-          --timeout 120 \
-          --access-logfile - \
-          --error-logfile -
+      [
+        "sh",
+        "-c",
+        "python manage.py migrate --noinput && python manage.py collectstatic --noinput && exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --threads 2 --timeout 120 --access-logfile - --error-logfile -"
+      ]
     restart: unless-stopped
     networks: [internal]
 
@@ -77,20 +70,21 @@ services:
   nginx:
     image: nginx:1.27-alpine
     ports:
+      # HTTP
       - "80:80"
-      - "443:443"   # <-- agora o host expõe 443 também
+      # HTTPS (vai parar de dar 521 assim que subir cert)
+      - "443:443"
     volumes:
-      # Nginx configs
+      # Seu conf principal do Nginx
       - ./deploy/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./deploy/nginx/ssl.conf:/etc/nginx/conf.d/ssl.conf:ro
 
-      # Static/media
+      # Static/media do Django
       - staticfiles:/staticfiles:ro
       - media:/media:ro
 
-      # Certbot (webroot + certificados)
-      - ./deploy/certbot/www:/var/www/certbot:ro
+      # Certbot (certificados + challenge webroot)
       - ./deploy/certbot/conf:/etc/letsencrypt:ro
+      - ./deploy/certbot/www:/var/www/certbot:ro
     depends_on:
       - backend
       - frontend
@@ -101,9 +95,12 @@ services:
   certbot:
     image: certbot/certbot:latest
     volumes:
-      - ./deploy/certbot/www:/var/www/certbot
+      # Certificados (rw)
       - ./deploy/certbot/conf:/etc/letsencrypt
-    # Não precisa ficar rodando. Vamos chamar "docker compose run --rm certbot ..."
+      # Webroot do challenge (rw)
+      - ./deploy/certbot/www:/var/www/certbot
+    # Não sobe “rodando”, a gente usa via `docker compose run --rm certbot ...`
+    entrypoint: ["sh", "-c", "sleep infinity"]
     networks: [internal]
 
 networks:
