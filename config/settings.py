@@ -33,6 +33,14 @@ ALLOWED_HOSTS = [
     h.strip() for h in config("ALLOWED_HOSTS", default="").split(",") if h.strip()
 ]
 
+# Se esquecer ALLOWED_HOSTS, em DEBUG a gente salva a pele.
+# Em produção, melhor explodir cedo do que ficar “misteriosamente” quebrado.
+if not ALLOWED_HOSTS:
+    if DEBUG:
+        ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"]
+    else:
+        raise RuntimeError("ALLOWED_HOSTS está vazio. Configure a env ALLOWED_HOSTS.")
+
 # Inclui testserver em dev/test (evita dor em testes)
 if DEBUG and "testserver" not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append("testserver")
@@ -46,6 +54,13 @@ CSRF_TRUSTED_ORIGINS = [
 # Se estiver atrás de proxy (Nginx), isso ajuda o Django a entender HTTPS corretamente
 # (Só vai considerar "secure" quando X-Forwarded-Proto == "https")
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
+
+# Toggle de redirecionamento HTTPS (deixe False até você ter SSL no Nginx/Cloudflare)
+SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=False, cast=bool)
+
+# Cookies seguros (aplicado abaixo)
+COOKIE_SECURE = config("COOKIE_SECURE", default=(not DEBUG), cast=bool)
 
 
 # =========================================================
@@ -63,7 +78,7 @@ INSTALLED_APPS = [
     # Third party
     "rest_framework",
     "rest_framework_simplejwt",
-    "rest_framework_simplejwt.token_blacklist",  # <-- necessário com blacklist/rotation
+    "rest_framework_simplejwt.token_blacklist",  # necessário com blacklist/rotation
     "corsheaders",
 
     # Local
@@ -78,6 +93,7 @@ INSTALLED_APPS = [
 # =========================================================
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+
     # CORS precisa ficar alto (antes do CommonMiddleware)
     "corsheaders.middleware.CorsMiddleware",
 
@@ -191,30 +207,41 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # =========================================================
+# Cookies / Sessão / CSRF (produção)
+# =========================================================
+SESSION_COOKIE_SECURE = COOKIE_SECURE
+CSRF_COOKIE_SECURE = COOKIE_SECURE
+
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+
+# Por padrão, CSRF cookie não é HttpOnly (JS pode precisar ler em apps SPA dependendo do setup)
+CSRF_COOKIE_HTTPONLY = False
+
+
+# =========================================================
 # DRF / JWT
 # =========================================================
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        # Em produção, JWT é o que importa.
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+DEFAULT_AUTH_CLASSES = [
+    "rest_framework_simplejwt.authentication.JWTAuthentication",
+]
+if DEBUG:
+    # útil pro browsable API no dev
+    DEFAULT_AUTH_CLASSES.append("rest_framework.authentication.SessionAuthentication")
 
-        # Em DEBUG, SessionAuth é útil pro browsable API.
-        # (em produção isso só te dá dor de cabeça)
-        "rest_framework.authentication.SessionAuthentication" if DEBUG else
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ),
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": tuple(DEFAULT_AUTH_CLASSES),
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
     ),
 
-    # ✅ Deixa explícito: quando um endpoint usa ScopedRateThrottle,
-    # ele SEMPRE vai procurar o rate no DEFAULT_THROTTLE_RATES.
+    # Quando um endpoint usa ScopedRateThrottle,
+    # ele procura o rate no DEFAULT_THROTTLE_RATES.
     "DEFAULT_THROTTLE_CLASSES": (
         "rest_framework.throttling.ScopedRateThrottle",
     ),
 
-    # ✅ Aqui é o que resolveu seu 500: define o rate do scope "login"
-    # e já deixamos aliases pra não quebrar se o scope for outro.
+    # Define rates por scope (mantém aliases pra não quebrar se mudar nomes)
     "DEFAULT_THROTTLE_RATES": {
         # token obtain (login)
         "login": config("THROTTLE_LOGIN", default="30/min"),
@@ -250,7 +277,11 @@ CORS_ALLOWED_ORIGINS = [
     for o in config("CORS_ALLOWED_ORIGINS", default="").split(",")
     if o.strip()
 ]
-CORS_ALLOW_CREDENTIALS = True
+
+# Só habilita credenciais se você realmente configurou origens.
+# (evita abrir credenciais “à toa”)
+if CORS_ALLOWED_ORIGINS:
+    CORS_ALLOW_CREDENTIALS = True
 
 
 # =========================================================
@@ -299,5 +330,3 @@ LOGGING = {
         "level": LOG_LEVEL,
     },
 }
-
-COOKIE_SECURE = config("COOKIE_SECURE", default=(not DEBUG), cast=bool)

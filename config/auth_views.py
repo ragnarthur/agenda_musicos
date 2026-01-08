@@ -56,16 +56,14 @@ class CookieTokenObtainPairView(CookieTokenMixin, TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
 
-        # tokens padrão do SimpleJWT
-        tokens = dict(response.data)  # {"refresh": "...", "access": "..."}
-
-        # seta cookies (opcional)
+        tokens = dict(response.data)  # << garante access/refresh
         self.set_auth_cookies(response, tokens)
 
-        # ✅ NÃO mata o payload — o frontend precisa disso
+        # ✅ IMPORTANTE: não apaga os tokens
         response.data = {
             "detail": "Autenticado com sucesso.",
-            **tokens,
+            "access": tokens.get("access"),
+            "refresh": tokens.get("refresh"),
         }
         return response
 
