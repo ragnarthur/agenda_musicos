@@ -32,22 +32,16 @@ services:
       - media:/app/media
     expose:
       - "8000"
-
-    # ✅ FIX do "--bind: not found":
-    # tudo do gunicorn tem que ficar NA MESMA LINHA (sem newline no meio)
     command: >
-      sh -c "
-      python manage.py migrate --noinput &&
-      python manage.py collectstatic --noinput &&
-      gunicorn config.wsgi:application
-      --bind 0.0.0.0:8000
-      --workers 3
-      --threads 2
-      --timeout 120
-      --access-logfile -
-      --error-logfile -
-      "
-
+      sh -lc "python manage.py migrate --noinput &&
+              python manage.py collectstatic --noinput &&
+              exec gunicorn config.wsgi:application
+              --bind 0.0.0.0:8000
+              --workers 3
+              --threads 2
+              --timeout 120
+              --access-logfile -
+              --error-logfile -"
     restart: unless-stopped
     networks: [internal]
 
@@ -99,4 +93,3 @@ volumes:
   postgres_data:
   staticfiles:
   media:
-
