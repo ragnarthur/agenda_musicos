@@ -32,12 +32,19 @@ services:
       - media:/app/media
     expose:
       - "8000"
-    command: [
-      "sh", "-c",
-      "python manage.py migrate --noinput &&
-       python manage.py collectstatic --noinput &&
-       exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --threads 2 --timeout 120 --access-logfile - --error-logfile -"
-    ]
+    command:
+      [
+        "sh", "-c",
+        "python manage.py migrate --noinput &&
+         python manage.py collectstatic --noinput &&
+         exec gunicorn config.wsgi:application
+           --bind 0.0.0.0:8000
+           --workers 3
+           --threads 2
+           --timeout 120
+           --access-logfile -
+           --error-logfile -"
+      ]
     restart: unless-stopped
     networks: [internal]
 
@@ -67,28 +74,34 @@ services:
     restart: unless-stopped
     networks: [internal]
 
-  # Certbot (não precisa expor porta)
+  # Certbot “on-demand” (você roda `docker compose run --rm certbot ...`)
   certbot:
     image: certbot/certbot:latest
     volumes:
-      - ./deploy/certbot/www:/var/www/certbot
+      # onde o cert fica persistido (host)
       - ./deploy/certbot/conf:/etc/letsencrypt
-    # deixa "parado" — vamos chamar via `docker compose run --rm certbot ...`
-    entrypoint: ["sh", "-c", "sleep infinity"]
+      # webroot do challenge HTTP-01
+      - ./deploy/certbot/www:/var/www/certbot
     networks: [internal]
 
   nginx:
     image: nginx:1.27-alpine
     ports:
       - "80:80"
-      # - "443:443" # (FASE 2) descomente após emitir o certificado
+      - "443:443"   # ✅ agora o 443 fica de pé
     volumes:
-      - ./deploy/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      # - ./deploy/nginx/ssl.conf:/etc/nginx/conf.d/ssl.conf:ro # (FASE 2) descomente após emitir o certificado
-      - ./deploy/certbot/www:/var/www/certbot:ro
-      - ./deploy/certbot/conf:/etc/letsencrypt:ro
+      # monta a pasta inteira pra pegar default.conf (e futuros arquivos)
+      - ./deploy/nginx:/etc/nginx/conf.d:ro
+
+      # arquivos estáticos da app
       - staticfiles:/staticfiles:ro
       - media:/media:ro
+
+      # webroot do certbot (pra renew)
+      - ./deploy/certbot/www:/var/www/certbot:ro
+
+      # certificados (readonly no nginx)
+      - ./deploy/certbot/conf:/etc/letsencrypt:ro
     depends_on:
       - backend
       - frontend
