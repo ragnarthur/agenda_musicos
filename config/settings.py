@@ -299,3 +299,5 @@ LOGGING = {
         "level": LOG_LEVEL,
     },
 }
+
+COOKIE_SECURE = config("COOKIE_SECURE", default=(not DEBUG), cast=bool)
