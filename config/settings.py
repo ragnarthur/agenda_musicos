@@ -2,7 +2,7 @@
 from pathlib import Path
 import os
 from datetime import timedelta
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, unquote
 
 from decouple import config as decouple_config, Config, RepositoryEnv
 
@@ -113,43 +113,45 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 
-# =========================================================
-# Database (FIX SSL)
-# =========================================================
-DATABASE_URL = config("DATABASE_URL", default="")
-
-# 0 = disable (docker/db local), 1 = require (db gerenciado)
-DB_SSL_REQUIRE = config("DB_SSL_REQUIRE", default=False, cast=bool)
+# =========================
+# Database
+# =========================
+DATABASE_URL = config('DATABASE_URL', default='').strip()
+DB_SSL_REQUIRE = config('DB_SSL_REQUIRE', default=False, cast=bool)
 
 if DATABASE_URL:
     parsed = urlparse(DATABASE_URL)
 
-    if parsed.scheme not in ("postgres", "postgresql"):
-        raise ValueError(f"Unsupported DB scheme in DATABASE_URL: {parsed.scheme}")
+    # Evita ValueError quando .port vem zoado
+    try:
+        parsed_port = parsed.port
+    except ValueError:
+        parsed_port = None
 
-    qs = parse_qs(parsed.query or "")
-    sslmode_from_url = (qs.get("sslmode") or [None])[0]
-    final_sslmode = sslmode_from_url or ("require" if DB_SSL_REQUIRE else "disable")
+    # Se vier sslmode na URL, respeita. Se não vier, decide por env.
+    query = parse_qs(parsed.query)
+    sslmode = query.get('sslmode', [None])[0] or ('require' if DB_SSL_REQUIRE else 'disable')
 
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": (parsed.path or "").lstrip("/"),
-            "USER": parsed.username or "",
-            "PASSWORD": parsed.password or "",
-            "HOST": parsed.hostname or "",
-            "PORT": str(parsed.port or 5432),
-            "OPTIONS": {
-                "sslmode": final_sslmode,
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': (parsed.path or '').lstrip('/') or config('POSTGRES_DB', default='postgres'),
+            'USER': unquote(parsed.username or config('POSTGRES_USER', default='postgres')),
+            'PASSWORD': unquote(parsed.password or config('POSTGRES_PASSWORD', default='')),
+            'HOST': parsed.hostname or 'db',
+            'PORT': parsed_port or 5432,
+            'CONN_MAX_AGE': 60,
+            'OPTIONS': {
+                'sslmode': sslmode,
             },
         }
     }
 else:
-    # fallback (dev/test)
+    # fallback (não deveria acontecer em produção)
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 

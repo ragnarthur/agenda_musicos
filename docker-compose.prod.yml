@@ -32,16 +32,7 @@ services:
       - media:/app/media
     expose:
       - "8000"
-    command: >
-      sh -lc "python manage.py migrate --noinput &&
-              python manage.py collectstatic --noinput &&
-              exec gunicorn config.wsgi:application
-              --bind 0.0.0.0:8000
-              --workers 3
-              --threads 2
-              --timeout 120
-              --access-logfile -
-              --error-logfile -"
+    command: ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput && exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --threads 2 --timeout 120 --access-logfile - --error-logfile -"]
     restart: unless-stopped
     networks: [internal]
 
