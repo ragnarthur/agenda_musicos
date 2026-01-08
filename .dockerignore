@@ -16,3 +16,8 @@ frontend/dist/
 payment-service/node_modules/
 payment-service/dist/
 node_modules/
+
+# certbot / letsencrypt (NUNCA mandar pro build context)
+deploy/certbot/
+deploy/certbot/**
+
