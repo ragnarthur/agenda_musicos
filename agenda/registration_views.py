@@ -404,19 +404,26 @@ class ProcessPaymentView(APIView):
             with transaction.atomic():
                 user = pending.complete_registration()
 
-                # Cria organização pessoal para o novo músico
-                org = Organization.objects.create(
-                    name=f"Org de {pending.first_name}",
+                # Cria organização pessoal para o novo músico (usa username para garantir unicidade)
+                org, created = Organization.objects.get_or_create(
                     owner=user,
-                    subscription_status='active',
+                    defaults={
+                        'name': f"Org de {user.username}",
+                        'subscription_status': 'active',
+                    }
                 )
+                if not created:
+                    org.subscription_status = 'active'
+                    org.save()
 
-                # Adiciona como membro da organização
-                Membership.objects.create(
+                # Adiciona como membro da organização (se ainda não for)
+                Membership.objects.get_or_create(
                     user=user,
                     organization=org,
-                    role='owner',
-                    status='active',
+                    defaults={
+                        'role': 'owner',
+                        'status': 'active',
+                    }
                 )
 
                 # Atualiza músico com organização
@@ -601,19 +608,26 @@ class StartTrialView(APIView):
                 # Cria User + Musician (trial)
                 user = pending.complete_registration()
 
-                # Cria organização pessoal
-                org = Organization.objects.create(
-                    name=f"Org de {pending.first_name}",
+                # Cria organização pessoal (usa username para garantir unicidade)
+                org, created = Organization.objects.get_or_create(
                     owner=user,
-                    subscription_status='trial',
+                    defaults={
+                        'name': f"Org de {user.username}",
+                        'subscription_status': 'trial',
+                    }
                 )
+                if not created:
+                    org.subscription_status = 'trial'
+                    org.save()
 
-                # Adiciona como membro owner
-                Membership.objects.create(
+                # Adiciona como membro owner (se ainda não for)
+                Membership.objects.get_or_create(
                     user=user,
                     organization=org,
-                    role='owner',
-                    status='active',
+                    defaults={
+                        'role': 'owner',
+                        'status': 'active',
+                    }
                 )
 
                 # Inicia trial de 7 dias
@@ -727,19 +741,26 @@ class PaymentCallbackView(APIView):
                 # Finaliza registro (cria User + Musician)
                 user = pending.complete_registration()
 
-                # Cria organização pessoal
-                org = Organization.objects.create(
-                    name=f"Org de {pending.first_name}",
+                # Cria organização pessoal (usa username para garantir unicidade)
+                org, created = Organization.objects.get_or_create(
                     owner=user,
-                    subscription_status='active',
+                    defaults={
+                        'name': f"Org de {user.username}",
+                        'subscription_status': 'active',
+                    }
                 )
+                if not created:
+                    org.subscription_status = 'active'
+                    org.save()
 
-                # Adiciona como membro owner
-                Membership.objects.create(
+                # Adiciona como membro owner (se ainda não for)
+                Membership.objects.get_or_create(
                     user=user,
                     organization=org,
-                    role='owner',
-                    status='active',
+                    defaults={
+                        'role': 'owner',
+                        'status': 'active',
+                    }
                 )
 
                 # Salvar IDs do Stripe no Musician
