@@ -6,7 +6,7 @@ import { paymentService, registrationService, billingService } from '../services
 import { showToast } from '../utils/toast';
 import { useAuth } from '../contexts/AuthContext';
 
-type PlanType = 'monthly' | 'annual';
+type PlanType = 'monthly';
 
 const plans: Array<{
   id: PlanType;
@@ -26,19 +26,6 @@ const plans: Array<{
       'Convites e respostas com agilidade',
       'Vagas de shows e conexões profissionais',
       'Suporte prioritário via email',
-    ],
-  },
-  {
-    id: 'annual',
-    name: 'Anual',
-    price: 'R$ 299,90',
-    per: '/ano',
-    highlight: true,
-    features: [
-      '2 meses grátis (equivale a R$ 24,99/mês)',
-      'Prioridade em lançamentos e novidades',
-      'Selo de apoiador anual',
-      'Suporte dedicado',
     ],
   },
 ];
