@@ -18,6 +18,11 @@ services:
     restart: unless-stopped
     stop_grace_period: 30s
     networks: [internal]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   backend:
     build:
@@ -46,8 +51,19 @@ services:
           --timeout 120 \
           --access-logfile - \
           --error-logfile -
+    healthcheck:
+      test: ["CMD-SHELL", "code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/api/); [ \"$code\" = \"200\" ] || [ \"$code\" = \"401\" ] || [ \"$code\" = \"403\" ] || [ \"$code\" = \"405\" ]"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 25s
     restart: unless-stopped
     networks: [internal]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   frontend:
     build:
@@ -55,12 +71,26 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL:-/api}
+        # IMPORTANTÍSSIMO: não deixar o bundle com localhost:3001
+        VITE_PAYMENT_API_URL: ${VITE_PAYMENT_API_URL:-/payments/api}
     expose:
       - "80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost/ >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
     restart: unless-stopped
     networks: [internal]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   payment-service:
     build:
@@ -71,18 +101,22 @@ services:
     expose:
       - "3001"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3001/ >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
     restart: unless-stopped
     networks: [internal]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  # Certbot “on-demand”
-  # Uso (primeira emissão):
-  # docker compose -f docker-compose.prod.yml run --rm certbot certonly --webroot -w /var/www/certbot \
-  #   -d gigflowagenda.com.br -d www.gigflowagenda.com.br -d api.gigflowagenda.com.br \
-  #   --email catsinthegarden01@gmail.com --agree-tos --no-eff-email --non-interactive
-  #
-  # Renovação:
-  # docker compose -f docker-compose.prod.yml run --rm certbot renew
   certbot:
     image: certbot/certbot:latest
     entrypoint: ["certbot"]
@@ -97,24 +131,25 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      # Monta a pasta inteira de confs do nginx (default.conf, etc)
       - ./deploy/nginx:/etc/nginx/conf.d:ro
-
-      # Static/media servidos pelo Nginx
       - staticfiles:/staticfiles:ro
       - media:/media:ro
-
-      # Webroot do desafio ACME (HTTP-01)
       - ./deploy/certbot/www:/var/www/certbot:ro
-
-      # Certificados (somente leitura no Nginx)
       - ./deploy/certbot/conf:/etc/letsencrypt:ro
     depends_on:
-      - backend
-      - frontend
-      - payment-service
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+      payment-service:
+        condition: service_healthy
     restart: unless-stopped
     networks: [internal]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   internal:
