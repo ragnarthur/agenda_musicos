@@ -560,6 +560,10 @@ export const billingService = {
     const response = await api.post('/subscription-checkout/', data);
     return response.data;
   },
+  activateFakeSubscription: async (data: { plan: 'monthly' | 'annual' }): Promise<{ success: boolean }> => {
+    const response = await api.post('/subscription-activate-fake/', data);
+    return response.data;
+  },
 };
 
 // Notification Types
