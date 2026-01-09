@@ -9,15 +9,10 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 10s
-      timeout: 5s
-      retries: 15
-      start_period: 20s
     restart: unless-stopped
     stop_grace_period: 30s
-    networks: [internal]
+    networks:
+      - internal
     logging:
       driver: json-file
       options:
@@ -31,8 +26,7 @@ services:
     env_file:
       - .env.docker
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     volumes:
       - staticfiles:/app/staticfiles
       - media:/app/media
@@ -51,15 +45,9 @@ services:
           --timeout 120 \
           --access-logfile - \
           --error-logfile -
-    # ✅ Healthcheck por socket (não depende de Host/ALLOWED_HOSTS e não precisa curl)
-    healthcheck:
-      test: ["CMD-SHELL", "python -c \"import socket; s=socket.create_connection(('127.0.0.1',8000),3); s.close(); print('ok')\""]
-      interval: 10s
-      timeout: 5s
-      retries: 15
-      start_period: 90s
     restart: unless-stopped
-    networks: [internal]
+    networks:
+      - internal
     logging:
       driver: json-file
       options:
@@ -72,14 +60,14 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL:-/api}
-        # evita bundle com localhost:3001
         VITE_PAYMENT_API_URL: ${VITE_PAYMENT_API_URL:-/payments/api}
     expose:
       - "80"
     depends_on:
       - backend
     restart: unless-stopped
-    networks: [internal]
+    networks:
+      - internal
     logging:
       driver: json-file
       options:
@@ -91,34 +79,19 @@ services:
       context: ./payment-service
       dockerfile: Dockerfile
     env_file:
-      - payment-service/.env.docker
+      - payment-service/.env.prod
     expose:
       - "3001"
     depends_on:
       - backend
     restart: unless-stopped
-    networks: [internal]
+    networks:
+      - internal
     logging:
       driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
-
-  # Certbot “on-demand”
-  # Primeira emissão (exemplo):
-  # docker compose -f docker-compose.prod.yml run --rm certbot certonly --webroot -w /var/www/certbot \
-  #   -d gigflowagenda.com.br -d www.gigflowagenda.com.br -d api.gigflowagenda.com.br \
-  #   --email SEU_EMAIL --agree-tos --no-eff-email --non-interactive
-  #
-  # Renovação:
-  # docker compose -f docker-compose.prod.yml run --rm certbot renew
-  certbot:
-    image: certbot/certbot:latest
-    entrypoint: ["certbot"]
-    volumes:
-      - ./deploy/certbot/conf:/etc/letsencrypt
-      - ./deploy/certbot/www:/var/www/certbot
-    networks: [internal]
 
   nginx:
     image: nginx:1.27-alpine
@@ -126,32 +99,37 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      # Confs do nginx (default.conf, etc)
       - ./deploy/nginx:/etc/nginx/conf.d:ro
-
-      # Static/media do Django servidos pelo Nginx
       - staticfiles:/staticfiles:ro
       - media:/media:ro
-
-      # Webroot do desafio ACME (HTTP-01)
       - ./deploy/certbot/www:/var/www/certbot:ro
-
-      # Certificados (somente leitura no Nginx)
       - ./deploy/certbot/conf:/etc/letsencrypt:ro
     depends_on:
       - backend
       - frontend
       - payment-service
     restart: unless-stopped
-    networks: [internal]
+    networks:
+      - internal
     logging:
       driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
 
+  certbot:
+    image: certbot/certbot:latest
+    profiles: ["certbot"]
+    entrypoint: ["certbot"]
+    volumes:
+      - ./deploy/certbot/conf:/etc/letsencrypt
+      - ./deploy/certbot/www:/var/www/certbot
+    networks:
+      - internal
+
 networks:
   internal:
+    driver: bridge
 
 volumes:
   postgres_data:
