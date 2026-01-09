@@ -51,12 +51,13 @@ services:
           --timeout 120 \
           --access-logfile - \
           --error-logfile -
+    # ✅ Healthcheck por socket (não depende de Host/ALLOWED_HOSTS e não precisa curl)
     healthcheck:
-      test: ["CMD-SHELL", "python - <<'PY'\nimport urllib.request\nurllib.request.urlopen('http://127.0.0.1:8000/api/', timeout=3)\nprint('ok')\nPY"]
+      test: ["CMD-SHELL", "python -c \"import socket; s=socket.create_connection(('127.0.0.1',8000),3); s.close(); print('ok')\""]
       interval: 10s
       timeout: 5s
       retries: 15
-      start_period: 30s
+      start_period: 90s
     restart: unless-stopped
     networks: [internal]
     logging:
@@ -71,19 +72,12 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL:-/api}
-        # IMPORTANTÍSSIMO: não deixar o bundle com localhost:3001
+        # evita bundle com localhost:3001
         VITE_PAYMENT_API_URL: ${VITE_PAYMENT_API_URL:-/payments/api}
     expose:
       - "80"
     depends_on:
-      backend:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "python - <<'PY'\nimport http.client\nc=http.client.HTTPConnection('127.0.0.1',8000,timeout=3)\nc.request('GET','/healthz/')\nr=c.getresponse()\nprint(r.status)\nraise SystemExit(0 if r.status==200 else 1)\nPY"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
-      start_period: 15s
+      - backend
     restart: unless-stopped
     networks: [internal]
     logging:
@@ -101,14 +95,7 @@ services:
     expose:
       - "3001"
     depends_on:
-      backend:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:3001/ >/dev/null || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
-      start_period: 15s
+      - backend
     restart: unless-stopped
     networks: [internal]
     logging:
@@ -117,6 +104,14 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  # Certbot “on-demand”
+  # Primeira emissão (exemplo):
+  # docker compose -f docker-compose.prod.yml run --rm certbot certonly --webroot -w /var/www/certbot \
+  #   -d gigflowagenda.com.br -d www.gigflowagenda.com.br -d api.gigflowagenda.com.br \
+  #   --email SEU_EMAIL --agree-tos --no-eff-email --non-interactive
+  #
+  # Renovação:
+  # docker compose -f docker-compose.prod.yml run --rm certbot renew
   certbot:
     image: certbot/certbot:latest
     entrypoint: ["certbot"]
@@ -131,18 +126,22 @@ services:
       - "80:80"
       - "443:443"
     volumes:
+      # Confs do nginx (default.conf, etc)
       - ./deploy/nginx:/etc/nginx/conf.d:ro
+
+      # Static/media do Django servidos pelo Nginx
       - staticfiles:/staticfiles:ro
       - media:/media:ro
+
+      # Webroot do desafio ACME (HTTP-01)
       - ./deploy/certbot/www:/var/www/certbot:ro
+
+      # Certificados (somente leitura no Nginx)
       - ./deploy/certbot/conf:/etc/letsencrypt:ro
     depends_on:
-      backend:
-        condition: service_healthy
-      frontend:
-        condition: service_healthy
-      payment-service:
-        condition: service_healthy
+      - backend
+      - frontend
+      - payment-service
     restart: unless-stopped
     networks: [internal]
     logging:
