@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { CheckCircle, CreditCard, Shield, AlertCircle, Loader2, Sparkles, Star, ArrowLeft } from 'lucide-react';
-import { paymentService } from '../services/api';
+import { paymentService, registrationService } from '../services/api';
 import { showToast } from '../utils/toast';
 
 type PlanType = 'monthly' | 'annual';
@@ -50,11 +50,31 @@ const Plans: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('monthly');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [registrationComplete, setRegistrationComplete] = useState(false);
+  const [completedUser, setCompletedUser] = useState<{email?: string; first_name?: string} | null>(null);
+  const [checkingStatus, setCheckingStatus] = useState(true);
 
   useEffect(() => {
-    if (!paymentToken) {
-      setError('Token de pagamento não encontrado. Volte ao email e clique no link novamente.');
-    }
+    const checkToken = async () => {
+      if (!paymentToken) {
+        setError('Token de pagamento não encontrado. Volte ao email e clique no link novamente.');
+        setCheckingStatus(false);
+        return;
+      }
+
+      // Verificar status do registro
+      try {
+        const status = await registrationService.getStatus(paymentToken);
+        if (status.status === 'completed' || status.payment_completed) {
+          setRegistrationComplete(true);
+          setCompletedUser({ email: status.email, first_name: status.first_name });
+        }
+      } catch {
+        // Token invalido - manter erro original
+      }
+      setCheckingStatus(false);
+    };
+    checkToken();
   }, [paymentToken]);
 
   const handleSubscribe = async () => {
@@ -85,6 +105,41 @@ const Plans: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Loading enquanto verifica status
+  if (checkingStatus) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 text-white animate-spin" />
+      </div>
+    );
+  }
+
+  // Cadastro já foi completado - mostrar sucesso
+  if (registrationComplete) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
+          <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Cadastro Concluído!</h2>
+          <p className="text-gray-600 mb-6">
+            Bem-vindo à <strong>GigFlow</strong>!
+            Sua conta está ativa e pronta para uso.
+          </p>
+          {completedUser && (
+            <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+              <p className="text-sm text-gray-600">
+                <strong>Email:</strong> {completedUser.email}
+              </p>
+            </div>
+          )}
+          <Link to="/login" className="btn-primary w-full block text-center">
+            Fazer Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (error && !paymentToken) {
     return (
