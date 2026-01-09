@@ -57,6 +57,7 @@ USE_X_FORWARDED_HOST = True
 # Só ligue se VOCÊ quer que o Django force redirect (muitos deixam o Nginx fazer isso)
 SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=False, cast=bool)
 
+# Cookie secure controlado por env (você já usa no auth_views.py)
 COOKIE_SECURE = config("COOKIE_SECURE", default=(not DEBUG), cast=bool)
 
 
@@ -213,9 +214,12 @@ CSRF_COOKIE_HTTPONLY = False
 # =========================================================
 # DRF / JWT
 # =========================================================
+# ✅ AQUI é o ponto do bug: JWTAuthentication padrão NÃO lê cookie.
 DEFAULT_AUTH_CLASSES = [
-    "rest_framework_simplejwt.authentication.JWTAuthentication",
+    "config.authentication.CookieOrHeaderJWTAuthentication",
 ]
+
+# Em debug, você pode manter SessionAuthentication para navegar no DRF Browsable API
 if DEBUG:
     DEFAULT_AUTH_CLASSES.append("rest_framework.authentication.SessionAuthentication")
 
@@ -250,7 +254,7 @@ if not DEBUG:
 
 
 # =========================================================
-# CORS (subdomínio API sendo chamado do site)
+# CORS (seu front chama /api no mesmo domínio, então é tranquilo)
 # =========================================================
 CORS_ALLOWED_ORIGINS = env_csv("CORS_ALLOWED_ORIGINS", default="")
 
@@ -258,11 +262,10 @@ CORS_ALLOWED_ORIGINS = env_csv("CORS_ALLOWED_ORIGINS", default="")
 # CORS_ALLOW_ALL_ORIGINS=True (NÃO use em produção real)
 CORS_ALLOW_ALL_ORIGINS = config("CORS_ALLOW_ALL_ORIGINS", default=False, cast=bool)
 
-# Como você usa Bearer token, não precisa de cookies cross-site.
-# Pode deixar False. Se for usar cookies/sessão via browser, aí vira True.
+# ✅ Se você for usar cookies cross-origin (ex: api. subdomain separado),
+# precisa True + frontend fetch com credentials: "include".
 CORS_ALLOW_CREDENTIALS = config("CORS_ALLOW_CREDENTIALS", default=False, cast=bool)
 
-# Limitar CORS só para endpoints de API (recomendado)
 CORS_URLS_REGEX = r"^/api/.*$"
 
 
