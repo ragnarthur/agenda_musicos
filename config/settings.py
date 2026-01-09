@@ -123,7 +123,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
             ],
         },
-    },
+    }
 ]
 
 WSGI_APPLICATION = "config.wsgi.application"
@@ -214,7 +214,7 @@ CSRF_COOKIE_HTTPONLY = False
 # =========================================================
 # DRF / JWT
 # =========================================================
-# ✅ AQUI é o ponto do bug: JWTAuthentication padrão NÃO lê cookie.
+# ✅ JWTAuthentication padrão NÃO lê cookie.
 DEFAULT_AUTH_CLASSES = [
     "config.authentication.CookieOrHeaderJWTAuthentication",
 ]
@@ -232,10 +232,16 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.ScopedRateThrottle",
     ),
     "DEFAULT_THROTTLE_RATES": {
+        # Auth
         "login": config("THROTTLE_LOGIN", default="30/min"),
         "token_obtain_pair": config("THROTTLE_LOGIN", default="30/min"),
         "token_refresh": config("THROTTLE_TOKEN_REFRESH", default="60/min"),
         "refresh": config("THROTTLE_TOKEN_REFRESH", default="60/min"),
+
+        # ✅ FIX DO BUG:
+        # Algumas views (ex.: password-reset) usam throttle_scope = "burst".
+        # Se não existir rate aqui, o DRF levanta ImproperlyConfigured e devolve 500.
+        "burst": config("THROTTLE_BURST", default="10/min"),
     },
 }
 
