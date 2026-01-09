@@ -13,6 +13,7 @@ import {
   X,
   Bell,
   UserCheck,
+  Settings,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { eventService } from '../../services/api';
@@ -23,6 +24,12 @@ const Navbar: React.FC = () => {
   const [pendingMyResponse, setPendingMyResponse] = useState(0);
   const [pendingApproval, setPendingApproval] = useState(0);
   const [openMore, setOpenMore] = useState(false);
+  const subscriptionInfo = user?.subscription_info;
+  const showPlanShortcut = Boolean(
+    subscriptionInfo &&
+    (subscriptionInfo.is_trial || subscriptionInfo.status === 'expired') &&
+    !subscriptionInfo.has_active_subscription
+  );
 
   const formatInstrument = () => {
     if (!user) return '';
@@ -130,6 +137,18 @@ const Navbar: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
+              {showPlanShortcut && (
+                <Link
+                  to="/planos"
+                  className="hidden md:flex items-center gap-1 text-slate-300 hover:text-white transition-colors"
+                  title="Assinar plano (Trial)"
+                >
+                  <Settings className="h-5 w-5" />
+                  <span className="text-[10px] font-bold uppercase tracking-wide bg-amber-500/20 text-amber-200 px-1.5 py-0.5 rounded-full border border-amber-300/40">
+                    Trial
+                  </span>
+                </Link>
+              )}
               <button
                 onClick={handleLogout}
                 className="hidden md:flex items-center space-x-1 text-slate-300 hover:text-red-400 transition-colors"
@@ -253,6 +272,21 @@ const Navbar: React.FC = () => {
                   </span>
                 )}
               </Link>
+              {showPlanShortcut && (
+                <Link
+                  to="/planos"
+                  onClick={() => setOpenMore(false)}
+                  className="flex items-center justify-between gap-3 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  <span className="flex items-center gap-3">
+                    <Settings className="h-5 w-5" />
+                    <span className="text-sm">Assinar plano</span>
+                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-wide bg-amber-500/20 text-amber-200 px-2 py-0.5 rounded-full border border-amber-300/40">
+                    Trial
+                  </span>
+                </Link>
+              )}
               <div className="border-t border-white/10 pt-2 mt-2">
                 <button
                   onClick={() => {
