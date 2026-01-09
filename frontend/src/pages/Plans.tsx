@@ -31,6 +31,8 @@ const plans: Array<{
 ];
 
 const Plans: React.FC = () => {
+  const useStripe = import.meta.env.VITE_USE_STRIPE === 'true';
+  const allowFakePayment = import.meta.env.VITE_ALLOW_FAKE_PAYMENT === 'true';
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const paymentToken = searchParams.get('token');
@@ -44,6 +46,14 @@ const Plans: React.FC = () => {
   const [completedUser, setCompletedUser] = useState<{email?: string; first_name?: string} | null>(null);
   const [checkingStatus, setCheckingStatus] = useState(true);
   const [upgradeMode, setUpgradeMode] = useState(false);
+  const [showFakeCheckout, setShowFakeCheckout] = useState(false);
+  const [upgradeSuccess, setUpgradeSuccess] = useState(false);
+  const [formData, setFormData] = useState({
+    card_number: '',
+    card_holder: '',
+    card_expiry: '',
+    card_cvv: '',
+  });
 
   useEffect(() => {
     const checkToken = async () => {
@@ -75,8 +85,40 @@ const Plans: React.FC = () => {
     checkToken();
   }, [paymentToken, authLoading, subscriptionInfo]);
 
+  const formatCardNumber = (value: string) => {
+    const nums = value.replace(/\D/g, '').slice(0, 16);
+    return nums.replace(/(\d{4})(?=\d)/g, '$1 ');
+  };
+
+  const formatExpiry = (value: string) => {
+    const nums = value.replace(/\D/g, '').slice(0, 4);
+    if (nums.length > 2) {
+      return `${nums.slice(0, 2)}/${nums.slice(2)}`;
+    }
+    return nums;
+  };
+
+  const handleCardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    if (name === 'card_number') {
+      setFormData(prev => ({ ...prev, card_number: formatCardNumber(value) }));
+    } else if (name === 'card_expiry') {
+      setFormData(prev => ({ ...prev, card_expiry: formatExpiry(value) }));
+    } else if (name === 'card_cvv') {
+      setFormData(prev => ({ ...prev, card_cvv: value.replace(/\D/g, '').slice(0, 4) }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
   const handleSubscribe = async () => {
     if (!paymentToken && !upgradeMode) return;
+
+    if (!useStripe || allowFakePayment) {
+      setShowFakeCheckout(true);
+      return;
+    }
 
     setLoading(true);
     setError('');
@@ -105,6 +147,67 @@ const Plans: React.FC = () => {
     } catch (err: unknown) {
       const apiError = err as { response?: { data?: { error?: string } } };
       const message = apiError.response?.data?.error || 'Não foi possível iniciar o pagamento.';
+      setError(message);
+      showToast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFakePayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const cardNum = formData.card_number.replace(/\s/g, '');
+    if (cardNum.length < 13) {
+      showToast.error('Número do cartão inválido');
+      return;
+    }
+
+    if (!formData.card_holder.trim()) {
+      showToast.error('Nome do titular é obrigatório');
+      return;
+    }
+
+    if (formData.card_expiry.length < 5) {
+      showToast.error('Data de validade inválida');
+      return;
+    }
+
+    if (formData.card_cvv.length < 3) {
+      showToast.error('CVV inválido');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      if (upgradeMode) {
+        await billingService.activateFakeSubscription({ plan: selectedPlan });
+        setUpgradeSuccess(true);
+        showToast.success('Assinatura ativada com sucesso!');
+        return;
+      }
+
+      if (!paymentToken) {
+        setError('Token de pagamento não encontrado. Volte ao email e clique no link novamente.');
+        return;
+      }
+
+      const response = await registrationService.processPayment({
+        payment_token: paymentToken,
+        card_number: cardNum,
+        card_holder: formData.card_holder,
+        card_expiry: formData.card_expiry,
+        card_cvv: formData.card_cvv,
+      });
+
+      setRegistrationComplete(true);
+      setCompletedUser({ email: response.email });
+      showToast.success('Pagamento aprovado! Cadastro concluído.');
+    } catch (err: unknown) {
+      const apiError = err as { response?: { data?: { error?: string } } };
+      const message = apiError.response?.data?.error || 'Erro ao processar pagamento.';
       setError(message);
       showToast.error(message);
     } finally {
@@ -141,6 +244,23 @@ const Plans: React.FC = () => {
           )}
           <Link to="/login" className="btn-primary w-full block text-center">
             Fazer Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (upgradeSuccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
+          <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Assinatura ativada!</h2>
+          <p className="text-gray-600 mb-6">
+            Seu plano mensal está ativo e o acesso total foi liberado.
+          </p>
+          <Link to="/" className="btn-primary w-full block text-center">
+            Ir para o app
           </Link>
         </div>
       </div>
@@ -238,7 +358,7 @@ const Plans: React.FC = () => {
             <div className="mt-6">
               <button
                 onClick={handleSubscribe}
-                disabled={loading || !paymentToken}
+                disabled={loading || (!paymentToken && !upgradeMode)}
                 className="w-full btn-primary flex items-center justify-center gap-2 py-3 disabled:opacity-60"
               >
                 {loading ? (
@@ -249,14 +369,77 @@ const Plans: React.FC = () => {
                 ) : (
                   <>
                     <CreditCard className="h-5 w-5" />
-                    Continuar com Stripe
+                    {useStripe && !allowFakePayment ? 'Continuar com Stripe' : 'Continuar para pagamento'}
                   </>
                 )}
               </button>
               <p className="text-xs text-gray-500 text-center mt-2">
-                Você será redirecionado para um checkout seguro Stripe.
+                {useStripe && !allowFakePayment
+                  ? 'Você será redirecionado para um checkout seguro Stripe.'
+                  : 'Use os dados fictícios para concluir o teste.'}
               </p>
             </div>
+
+            {showFakeCheckout && (!useStripe || allowFakePayment) && (
+              <form onSubmit={handleFakePayment} className="mt-6 space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Número do cartão</label>
+                  <input
+                    name="card_number"
+                    value={formData.card_number}
+                    onChange={handleCardChange}
+                    placeholder="4242 4242 4242 4242"
+                    className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Nome no cartão</label>
+                  <input
+                    name="card_holder"
+                    value={formData.card_holder}
+                    onChange={handleCardChange}
+                    placeholder="Nome completo"
+                    className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Validade</label>
+                    <input
+                      name="card_expiry"
+                      value={formData.card_expiry}
+                      onChange={handleCardChange}
+                      placeholder="MM/AA"
+                      className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">CVV</label>
+                    <input
+                      name="card_cvv"
+                      value={formData.card_cvv}
+                      onChange={handleCardChange}
+                      placeholder="123"
+                      className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      required
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full btn-primary py-3 disabled:opacity-60"
+                >
+                  {loading ? 'Processando pagamento...' : 'Finalizar pagamento mensal'}
+                </button>
+                <p className="text-xs text-gray-500 text-center">
+                  Use qualquer cartão, exceto números iniciando com 0000.
+                </p>
+              </form>
+            )}
           </div>
 
           <div className="bg-white/10 backdrop-blur rounded-3xl p-6 text-white border border-white/20">

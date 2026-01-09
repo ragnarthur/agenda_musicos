@@ -848,6 +848,65 @@ class SubscriptionActivateView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+class SubscriptionActivateFakeView(APIView):
+    """
+    POST /api/subscription-activate-fake/
+    Ativa assinatura via pagamento fictício para usuários logados.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        allow_fake = getattr(settings, 'ALLOW_FAKE_PAYMENT', False)
+        use_stripe = getattr(settings, 'USE_STRIPE', False)
+
+        if use_stripe and not allow_fake:
+            return Response(
+                {'error': 'Pagamento fictício desativado.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        plan = request.data.get('plan', 'monthly')
+        if plan not in ['monthly', 'annual']:
+            return Response(
+                {'error': 'Plano inválido.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        musician = getattr(request.user, 'musician_profile', None)
+        if not musician:
+            return Response(
+                {'error': 'Perfil de músico não encontrado.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if musician.has_active_subscription() and not musician.is_on_trial():
+            return Response(
+                {'error': 'Sua assinatura já está ativa.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        musician.subscription_status = 'active'
+        musician.subscription_plan = plan
+        musician.subscription_ends_at = None
+        musician.trial_started_at = None
+        musician.trial_ends_at = None
+        musician.save()
+
+        org = Organization.objects.filter(owner=request.user).first()
+        if not org:
+            org = Organization.objects.filter(memberships__user=request.user).first()
+        if org:
+            org.subscription_status = 'active'
+            org.save()
+            Membership.objects.filter(user=request.user, organization=org).update(status='active')
+
+        logger.info(f'Fake subscription activated for user {request.user.username}')
+
+        return Response({
+            'success': True,
+        }, status=status.HTTP_200_OK)
+
+
 class PaymentCallbackView(APIView):
     """
     POST /api/payment-callback/
