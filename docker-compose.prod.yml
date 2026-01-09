@@ -52,11 +52,11 @@ services:
           --access-logfile - \
           --error-logfile -
     healthcheck:
-      test: ["CMD-SHELL", "code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/api/); [ \"$code\" = \"200\" ] || [ \"$code\" = \"401\" ] || [ \"$code\" = \"403\" ] || [ \"$code\" = \"405\" ]"]
+      test: ["CMD-SHELL", "python - <<'PY'\nimport urllib.request\nurllib.request.urlopen('http://127.0.0.1:8000/api/', timeout=3)\nprint('ok')\nPY"]
       interval: 10s
       timeout: 5s
-      retries: 20
-      start_period: 25s
+      retries: 15
+      start_period: 30s
     restart: unless-stopped
     networks: [internal]
     logging:
