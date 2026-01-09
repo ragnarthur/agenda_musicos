@@ -507,6 +507,17 @@ export interface SessionStatusResponse {
   subscription_id: string;
 }
 
+export interface UpgradeCheckoutRequest {
+  plan: 'monthly' | 'annual';
+  success_url: string;
+  cancel_url: string;
+}
+
+export interface UpgradeCheckoutResponse {
+  session_id: string;
+  checkout_url: string;
+}
+
 // Payment Service (comunicação com microserviço Node.js)
 export const paymentService = {
   createCheckoutSession: async (data: CheckoutSessionRequest): Promise<CheckoutSessionResponse> => {
@@ -540,6 +551,14 @@ export const paymentService = {
     }
 
     return response.json();
+  },
+};
+
+// Billing (backend autenticado)
+export const billingService = {
+  createUpgradeSession: async (data: UpgradeCheckoutRequest): Promise<UpgradeCheckoutResponse> => {
+    const response = await api.post('/subscription-checkout/', data);
+    return response.data;
   },
 };
 

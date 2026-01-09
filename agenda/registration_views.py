@@ -10,6 +10,7 @@ Fluxo:
 import secrets
 import logging
 from datetime import timedelta
+import requests
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -25,7 +26,7 @@ from django.conf import settings
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from .models import PendingRegistration, Musician, Organization, Membership
 from .throttles import BurstRateThrottle
@@ -690,6 +691,161 @@ Equipe Agenda Músicos
             recipient_list=[user.email],
             fail_silently=True,
         )
+
+
+class SubscriptionCheckoutView(APIView):
+    """
+    POST /api/subscription-checkout/
+    Cria sessão de checkout para usuários logados (upgrade do trial).
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        plan = request.data.get('plan')
+        success_url = request.data.get('success_url')
+        cancel_url = request.data.get('cancel_url')
+
+        if plan not in ['monthly', 'annual']:
+            return Response(
+                {'error': 'Plano inválido.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not success_url or not cancel_url:
+            return Response(
+                {'error': 'URLs de retorno são obrigatórias.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        musician = getattr(request.user, 'musician_profile', None)
+        if not musician:
+            return Response(
+                {'error': 'Perfil de músico não encontrado.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if musician.has_active_subscription() and not musician.is_on_trial():
+            return Response(
+                {'error': 'Sua assinatura já está ativa.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        payment_service_url = getattr(settings, 'PAYMENT_SERVICE_URL', '')
+        service_secret = getattr(settings, 'PAYMENT_SERVICE_SECRET', '')
+
+        if not payment_service_url or not service_secret:
+            return Response(
+                {'error': 'Serviço de pagamento não configurado.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        payload = {
+            'user_id': request.user.id,
+            'email': request.user.email,
+            'customer_name': request.user.first_name or request.user.username,
+            'plan': plan,
+            'success_url': success_url,
+            'cancel_url': cancel_url,
+        }
+
+        try:
+            response = requests.post(
+                f'{payment_service_url}/checkout/create-user-session',
+                json=payload,
+                headers={'X-Service-Secret': service_secret},
+                timeout=15,
+            )
+        except requests.RequestException as e:
+            logger.error(f'Erro ao contatar payment-service: {e}')
+            return Response(
+                {'error': 'Não foi possível iniciar o checkout.'},
+                status=status.HTTP_502_BAD_GATEWAY
+            )
+
+        if response.status_code >= 400:
+            try:
+                data = response.json()
+            except ValueError:
+                data = {'error': 'Erro ao iniciar checkout.'}
+            return Response(data, status=response.status_code)
+
+        return Response(response.json(), status=status.HTTP_200_OK)
+
+
+class SubscriptionActivateView(APIView):
+    """
+    POST /api/subscription-activate/
+    Chamado pelo Payment Service após checkout concluído para usuários existentes.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        service_secret = request.headers.get('X-Service-Secret')
+        expected_secret = getattr(settings, 'PAYMENT_SERVICE_SECRET', None)
+
+        if not expected_secret or service_secret != expected_secret:
+            logger.warning('Subscription activate with invalid service secret')
+            return Response(
+                {'error': 'Unauthorized'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        user_id = request.data.get('user_id')
+        stripe_customer_id = request.data.get('stripe_customer_id')
+        stripe_subscription_id = request.data.get('stripe_subscription_id')
+        plan = request.data.get('plan')
+
+        if not all([user_id, stripe_customer_id, stripe_subscription_id, plan]):
+            return Response(
+                {'error': 'Missing required fields'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if plan not in ['monthly', 'annual']:
+            return Response(
+                {'error': 'Invalid plan'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {'error': 'User not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        try:
+            musician = user.musician_profile
+        except Musician.DoesNotExist:
+            return Response(
+                {'error': 'Musician not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        musician.stripe_customer_id = stripe_customer_id
+        musician.stripe_subscription_id = stripe_subscription_id
+        musician.subscription_plan = plan
+        musician.subscription_status = 'active'
+        musician.subscription_ends_at = None
+        musician.trial_started_at = None
+        musician.trial_ends_at = None
+        musician.save()
+
+        org = Organization.objects.filter(owner=user).first()
+        if not org:
+            org = Organization.objects.filter(memberships__user=user).first()
+        if org:
+            org.subscription_status = 'active'
+            org.save()
+            Membership.objects.filter(user=user, organization=org).update(status='active')
+
+        logger.info(f'Subscription activated for user {user.username}')
+
+        return Response({
+            'success': True,
+            'user_id': user.id,
+        }, status=status.HTTP_200_OK)
 
 
 class PaymentCallbackView(APIView):

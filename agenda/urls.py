@@ -16,6 +16,8 @@ from .registration_views import (
     ProcessPaymentView,
     ResendVerificationView,
     StartTrialView,
+    SubscriptionCheckoutView,
+    SubscriptionActivateView,
     PaymentCallbackView,
     SubscriptionStatusUpdateView,
 )
@@ -44,9 +46,11 @@ urlpatterns = [
     path('process-payment/', ProcessPaymentView.as_view(), name='process-payment'),
     path('resend-verification/', ResendVerificationView.as_view(), name='resend-verification'),
     path('start-trial/', StartTrialView.as_view(), name='start-trial'),
+    path('subscription-checkout/', SubscriptionCheckoutView.as_view(), name='subscription-checkout'),
     path('password-reset/', PasswordResetRequestView.as_view(), name='password-reset'),
     path('password-reset-confirm/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
     # Callbacks do Payment Service (chamados pelo microserviço)
+    path('subscription-activate/', SubscriptionActivateView.as_view(), name='subscription-activate'),
     path('payment-callback/', PaymentCallbackView.as_view(), name='payment-callback'),
     path('subscription-status-update/', SubscriptionStatusUpdateView.as_view(), name='subscription-status-update'),
 ]

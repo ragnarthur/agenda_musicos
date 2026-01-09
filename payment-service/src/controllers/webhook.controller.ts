@@ -64,11 +64,7 @@ export async function handleStripeWebhook(
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
   const paymentToken = session.metadata?.payment_token;
   const plan = session.metadata?.plan as 'monthly' | 'annual';
-
-  if (!paymentToken) {
-    logger.error({ sessionId: session.id }, 'Missing payment_token in session metadata');
-    return;
-  }
+  const userId = session.metadata?.user_id || session.client_reference_id;
 
   const customerId = typeof session.customer === 'string'
     ? session.customer
@@ -84,9 +80,37 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promis
   }
 
   try {
-    // Notify Django to complete registration
-    await djangoService.notifyPaymentCompleted({
-      payment_token: paymentToken,
+    if (paymentToken) {
+      // Notify Django to complete registration
+      await djangoService.notifyPaymentCompleted({
+        payment_token: paymentToken,
+        stripe_customer_id: customerId,
+        stripe_subscription_id: subscriptionId,
+        plan: plan || 'monthly',
+      });
+
+      logger.info({
+        sessionId: session.id,
+        paymentToken,
+        customerId,
+        subscriptionId,
+      }, 'Checkout completed and Django notified');
+      return;
+    }
+
+    if (!userId) {
+      logger.error({ sessionId: session.id }, 'Missing payment_token or user_id in session metadata');
+      return;
+    }
+
+    const parsedUserId = Number(userId);
+    if (!Number.isFinite(parsedUserId)) {
+      logger.error({ sessionId: session.id, userId }, 'Invalid user_id in session metadata');
+      return;
+    }
+
+    await djangoService.activateSubscription({
+      user_id: parsedUserId,
       stripe_customer_id: customerId,
       stripe_subscription_id: subscriptionId,
       plan: plan || 'monthly',
@@ -94,10 +118,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promis
 
     logger.info({
       sessionId: session.id,
-      paymentToken,
+      userId: parsedUserId,
       customerId,
       subscriptionId,
-    }, 'Checkout completed and Django notified');
+    }, 'Upgrade checkout completed and Django notified');
   } catch (error) {
     logger.error({ error, sessionId: session.id }, 'Failed to notify Django of checkout completion');
     // Don't throw - Stripe will retry the webhook

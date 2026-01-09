@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { stripeService } from '../services/stripe.service.js';
 import { djangoService } from '../services/django.service.js';
-import { createCheckoutSessionSchema, type CheckoutSessionResponse } from '../types/index.js';
+import { createCheckoutSessionSchema, createUserCheckoutSessionSchema, type CheckoutSessionResponse } from '../types/index.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { logger } from '../utils/logger.js';
+import { env } from '../config/env.js';
 
 export async function createCheckoutSession(
   req: Request,
@@ -49,6 +50,46 @@ export async function createCheckoutSession(
       sessionId: session.id,
       plan: data.plan,
     }, 'Checkout session created successfully');
+
+    res.json(response);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function createUserCheckoutSession(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const serviceSecret = req.headers['x-service-secret'];
+
+    if (!serviceSecret || serviceSecret !== env.django.serviceSecret) {
+      throw new AppError('Unauthorized', 401, 'unauthorized');
+    }
+
+    const data = createUserCheckoutSessionSchema.parse(req.body);
+
+    const session = await stripeService.createUserCheckoutSession({
+      userId: data.user_id,
+      email: data.email,
+      customerName: data.customer_name,
+      plan: data.plan,
+      successUrl: data.success_url,
+      cancelUrl: data.cancel_url,
+    });
+
+    const response: CheckoutSessionResponse = {
+      session_id: session.id,
+      checkout_url: session.url!,
+    };
+
+    logger.info({
+      userId: data.user_id,
+      sessionId: session.id,
+      plan: data.plan,
+    }, 'User checkout session created successfully');
 
     res.json(response);
   } catch (error) {

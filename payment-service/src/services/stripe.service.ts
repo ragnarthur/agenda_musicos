@@ -70,6 +70,73 @@ class StripeService {
   }
 
   /**
+   * Cria uma sessão de checkout para usuário existente (upgrade/trial)
+   */
+  async createUserCheckoutSession(params: {
+    userId: number;
+    email: string;
+    customerName: string;
+    plan: PlanType;
+    successUrl: string;
+    cancelUrl: string;
+  }): Promise<Stripe.Checkout.Session> {
+    const priceId = PRICE_IDS[params.plan];
+
+    try {
+      const customer = await stripe.customers.create({
+        email: params.email,
+        name: params.customerName,
+        metadata: {
+          user_id: String(params.userId),
+        },
+      });
+
+      logger.info({ customerId: customer.id, userId: params.userId }, 'Customer created for upgrade');
+
+      const session = await stripe.checkout.sessions.create({
+        mode: 'subscription',
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price: priceId,
+            quantity: 1,
+          },
+        ],
+        customer: customer.id,
+        client_reference_id: String(params.userId),
+        metadata: {
+          user_id: String(params.userId),
+          plan: params.plan,
+          source: 'upgrade',
+        },
+        subscription_data: {
+          metadata: {
+            user_id: String(params.userId),
+            plan: params.plan,
+            source: 'upgrade',
+          },
+        },
+        success_url: `${params.successUrl}?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: params.cancelUrl,
+        locale: 'pt-BR',
+        allow_promotion_codes: true,
+        billing_address_collection: 'required',
+      });
+
+      logger.info({
+        sessionId: session.id,
+        userId: params.userId,
+        plan: params.plan,
+      }, 'Upgrade checkout session created');
+
+      return session;
+    } catch (error) {
+      logger.error({ error, params }, 'Failed to create upgrade checkout session');
+      throw new AppError('Failed to create checkout session', 500, 'stripe_session_error');
+    }
+  }
+
+  /**
    * Recupera uma sessão de checkout
    */
   async getCheckoutSession(sessionId: string): Promise<Stripe.Checkout.Session> {

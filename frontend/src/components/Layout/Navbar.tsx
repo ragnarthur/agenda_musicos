@@ -27,9 +27,12 @@ const Navbar: React.FC = () => {
   const subscriptionInfo = user?.subscription_info;
   const showPlanShortcut = Boolean(
     subscriptionInfo &&
-    (subscriptionInfo.is_trial || subscriptionInfo.status === 'expired') &&
-    !subscriptionInfo.has_active_subscription
+    (subscriptionInfo.is_trial || subscriptionInfo.status === 'expired')
   );
+  const planStatusLabel = subscriptionInfo?.is_trial ? 'Trial' : 'Expirado';
+  const planStatusDetail = subscriptionInfo?.is_trial
+    ? `Trial · ${subscriptionInfo.trial_days_remaining} dias restantes`
+    : 'Plano expirado';
 
   const formatInstrument = () => {
     if (!user) return '';
@@ -141,11 +144,11 @@ const Navbar: React.FC = () => {
                 <Link
                   to="/planos"
                   className="hidden md:flex items-center gap-1 text-slate-300 hover:text-white transition-colors"
-                  title="Assinar plano (Trial)"
+                  title={`Assinar plano (${planStatusDetail})`}
                 >
                   <Settings className="h-5 w-5" />
                   <span className="text-[10px] font-bold uppercase tracking-wide bg-amber-500/20 text-amber-200 px-1.5 py-0.5 rounded-full border border-amber-300/40">
-                    Trial
+                    {planStatusLabel}
                   </span>
                 </Link>
               )}
@@ -283,7 +286,7 @@ const Navbar: React.FC = () => {
                     <span className="text-sm">Assinar plano</span>
                   </span>
                   <span className="text-[10px] font-bold uppercase tracking-wide bg-amber-500/20 text-amber-200 px-2 py-0.5 rounded-full border border-amber-300/40">
-                    Trial
+                    {planStatusLabel}
                   </span>
                 </Link>
               )}
