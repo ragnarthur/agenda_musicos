@@ -242,6 +242,10 @@ REST_FRAMEWORK = {
         # Algumas views (ex.: password-reset) usam throttle_scope = "burst".
         # Se não existir rate aqui, o DRF levanta ImproperlyConfigured e devolve 500.
         "burst": config("THROTTLE_BURST", default="10/min"),
+
+        # Eventos
+        "create_event": config("THROTTLE_CREATE_EVENT", default="30/min"),
+        "preview_conflicts": config("THROTTLE_PREVIEW_CONFLICTS", default="60/min"),
     },
 }
 
