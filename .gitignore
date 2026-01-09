@@ -61,3 +61,4 @@ coverage.xml
 .pytest_cache/
 .env.docker
 payment-service/.env.docker
+payment-service/.env.prod
