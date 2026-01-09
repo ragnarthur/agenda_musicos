@@ -79,7 +79,7 @@ services:
       backend:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost/ >/dev/null || exit 1"]
+      test: ["CMD-SHELL", "python - <<'PY'\nimport http.client\nc=http.client.HTTPConnection('127.0.0.1',8000,timeout=3)\nc.request('GET','/healthz/')\nr=c.getresponse()\nprint(r.status)\nraise SystemExit(0 if r.status==200 else 1)\nPY"]
       interval: 10s
       timeout: 5s
       retries: 20
