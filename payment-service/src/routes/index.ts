@@ -1,6 +1,7 @@
 import { Router, raw } from 'express';
 import {
   createCheckoutSession,
+  createUserCheckoutSession,
   getSessionStatus,
 } from '../controllers/checkout.controller.js';
 import { handleStripeWebhook } from '../controllers/webhook.controller.js';
@@ -21,6 +22,7 @@ router.get('/health', (_req, res) => {
 
 // Checkout routes
 router.post('/checkout/create-session', checkoutLimiter, createCheckoutSession);
+router.post('/checkout/create-user-session', checkoutLimiter, createUserCheckoutSession);
 router.get('/checkout/session/:session_id', getSessionStatus);
 
 // Webhook route (needs raw body for signature verification)

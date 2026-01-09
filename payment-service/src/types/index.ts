@@ -8,6 +8,15 @@ export const createCheckoutSessionSchema = z.object({
   cancel_url: z.string().url(),
 });
 
+export const createUserCheckoutSessionSchema = z.object({
+  user_id: z.number().int().positive(),
+  email: z.string().email(),
+  customer_name: z.string().min(1),
+  plan: z.enum(['monthly', 'annual']),
+  success_url: z.string().url(),
+  cancel_url: z.string().url(),
+});
+
 export const cancelSubscriptionSchema = z.object({
   subscription_id: z.string().min(1),
 });
@@ -19,6 +28,7 @@ export const createPortalSessionSchema = z.object({
 
 // Types
 export type CreateCheckoutSessionRequest = z.infer<typeof createCheckoutSessionSchema>;
+export type CreateUserCheckoutSessionRequest = z.infer<typeof createUserCheckoutSessionSchema>;
 export type CancelSubscriptionRequest = z.infer<typeof cancelSubscriptionSchema>;
 export type CreatePortalSessionRequest = z.infer<typeof createPortalSessionSchema>;
 
@@ -47,6 +57,13 @@ export interface DjangoRegistrationStatus {
 
 export interface DjangoPaymentCallbackPayload {
   payment_token: string;
+  stripe_customer_id: string;
+  stripe_subscription_id: string;
+  plan: 'monthly' | 'annual';
+}
+
+export interface DjangoSubscriptionActivatePayload {
+  user_id: number;
   stripe_customer_id: string;
   stripe_subscription_id: string;
   plan: 'monthly' | 'annual';

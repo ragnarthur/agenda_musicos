@@ -28,7 +28,6 @@ const PlanSuccess = lazy(() => import('./pages/PlanSuccess'));
 
 const useStripe = import.meta.env.VITE_USE_STRIPE === 'true';
 const allowFakePayment = import.meta.env.VITE_ALLOW_FAKE_PAYMENT === 'true';
-const PlanSelection = lazy(() => import('./pages/PlanSelection'));
 const PaymentSuccess = lazy(() => import('./pages/PaymentSuccess'));
 const NotificationSettings = lazy(() => import('./pages/NotificationSettings'));
 
@@ -103,7 +102,6 @@ function AppRoutes() {
         {(!useStripe || allowFakePayment) && <Route path="/pagamento" element={<Payment />} />}
         <Route path="/planos" element={<Plans />} />
         <Route path="/planos/sucesso" element={<PlanSuccess />} />
-        <Route path="/planos" element={<PlanSelection />} />
         <Route path="/pagamento/sucesso" element={<PaymentSuccess />} />
 
         <Route

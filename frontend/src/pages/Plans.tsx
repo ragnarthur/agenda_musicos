@@ -2,8 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { CheckCircle, CreditCard, Shield, AlertCircle, Loader2, Sparkles, Star, ArrowLeft } from 'lucide-react';
-import { paymentService, registrationService } from '../services/api';
+import { paymentService, registrationService, billingService } from '../services/api';
 import { showToast } from '../utils/toast';
+import { useAuth } from '../contexts/AuthContext';
 
 type PlanType = 'monthly' | 'annual';
 
@@ -46,6 +47,8 @@ const Plans: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const paymentToken = searchParams.get('token');
+  const { user, loading: authLoading } = useAuth();
+  const subscriptionInfo = user?.subscription_info;
 
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('monthly');
   const [loading, setLoading] = useState(false);
@@ -53,11 +56,19 @@ const Plans: React.FC = () => {
   const [registrationComplete, setRegistrationComplete] = useState(false);
   const [completedUser, setCompletedUser] = useState<{email?: string; first_name?: string} | null>(null);
   const [checkingStatus, setCheckingStatus] = useState(true);
+  const [upgradeMode, setUpgradeMode] = useState(false);
 
   useEffect(() => {
     const checkToken = async () => {
       if (!paymentToken) {
-        setError('Token de pagamento não encontrado. Volte ao email e clique no link novamente.');
+        if (authLoading) {
+          return;
+        }
+        if (subscriptionInfo && (subscriptionInfo.is_trial || subscriptionInfo.status === 'expired')) {
+          setUpgradeMode(true);
+        } else {
+          setError('Token de pagamento não encontrado. Volte ao email e clique no link novamente.');
+        }
         setCheckingStatus(false);
         return;
       }
@@ -75,10 +86,10 @@ const Plans: React.FC = () => {
       setCheckingStatus(false);
     };
     checkToken();
-  }, [paymentToken]);
+  }, [paymentToken, authLoading, subscriptionInfo]);
 
   const handleSubscribe = async () => {
-    if (!paymentToken) return;
+    if (!paymentToken && !upgradeMode) return;
 
     setLoading(true);
     setError('');
@@ -86,14 +97,22 @@ const Plans: React.FC = () => {
     try {
       const origin = window.location.origin;
       const successUrl = `${origin}/planos/sucesso`;
-      const cancelUrl = `${origin}/planos?token=${paymentToken}`;
+      const cancelUrl = upgradeMode
+        ? `${origin}/planos`
+        : `${origin}/planos?token=${paymentToken}`;
 
-      const session = await paymentService.createCheckoutSession({
-        payment_token: paymentToken,
-        plan: selectedPlan,
-        success_url: successUrl,
-        cancel_url: cancelUrl,
-      });
+      const session = upgradeMode
+        ? await billingService.createUpgradeSession({
+          plan: selectedPlan,
+          success_url: successUrl,
+          cancel_url: cancelUrl,
+        })
+        : await paymentService.createCheckoutSession({
+          payment_token: paymentToken as string,
+          plan: selectedPlan,
+          success_url: successUrl,
+          cancel_url: cancelUrl,
+        });
 
       window.location.href = session.checkout_url;
     } catch (err: unknown) {
@@ -141,7 +160,7 @@ const Plans: React.FC = () => {
     );
   }
 
-  if (error && !paymentToken) {
+  if (error && !paymentToken && !upgradeMode) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
@@ -182,6 +201,15 @@ const Plans: React.FC = () => {
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
                 {error}
+              </div>
+            )}
+
+            {upgradeMode && subscriptionInfo && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg mb-4">
+                <strong>Status atual:</strong>{' '}
+                {subscriptionInfo.is_trial
+                  ? `Trial · ${subscriptionInfo.trial_days_remaining} dias restantes`
+                  : 'Plano expirado'}
               </div>
             )}
 

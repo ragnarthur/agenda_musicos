@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
-import type { DjangoRegistrationStatus, DjangoPaymentCallbackPayload } from '../types/index.js';
+import type { DjangoRegistrationStatus, DjangoPaymentCallbackPayload, DjangoSubscriptionActivatePayload } from '../types/index.js';
 
 class DjangoService {
   private client: AxiosInstance;
@@ -42,6 +42,20 @@ class DjangoService {
       return response.data;
     } catch (error) {
       logger.error({ error, payload }, 'Failed to notify Django of payment completion');
+      throw error;
+    }
+  }
+
+  /**
+   * Notifica Django para ativar assinatura de usuário existente
+   */
+  async activateSubscription(payload: DjangoSubscriptionActivatePayload): Promise<{ success: boolean; user_id: number }> {
+    try {
+      const response = await this.client.post('/subscription-activate/', payload);
+      logger.info({ payload, response: response.data }, 'Subscription activate sent to Django');
+      return response.data;
+    } catch (error) {
+      logger.error({ error, payload }, 'Failed to notify Django of subscription activation');
       throw error;
     }
   }
