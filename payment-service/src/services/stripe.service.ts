@@ -18,6 +18,17 @@ class StripeService {
     const priceId = PRICE_IDS[params.plan];
 
     try {
+      // Criar customer primeiro (requerido pelo Stripe Accounts V2)
+      const customer = await stripe.customers.create({
+        email: params.email,
+        name: params.customerName,
+        metadata: {
+          payment_token: params.paymentToken,
+        },
+      });
+
+      logger.info({ customerId: customer.id, email: params.email }, 'Customer created');
+
       const session = await stripe.checkout.sessions.create({
         mode: 'subscription',
         payment_method_types: ['card'],
@@ -27,7 +38,7 @@ class StripeService {
             quantity: 1,
           },
         ],
-        customer_email: params.email,
+        customer: customer.id,
         metadata: {
           payment_token: params.paymentToken,
           plan: params.plan,
