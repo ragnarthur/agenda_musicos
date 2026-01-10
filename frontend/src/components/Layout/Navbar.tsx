@@ -112,7 +112,9 @@ const Navbar: React.FC = () => {
           {/* Usuário e Logout */}
           <div className="flex items-center space-x-4 min-w-fit md:min-w-0">
             <div className="hidden md:block text-right">
-              <p className="text-sm font-medium text-slate-100 leading-snug max-w-[240px]">{user?.full_name}</p>
+              <p className="text-sm font-medium text-slate-100 leading-snug max-w-[240px] truncate whitespace-nowrap">
+                {user?.full_name}
+              </p>
             </div>
 
             <div className="flex items-center gap-2">
