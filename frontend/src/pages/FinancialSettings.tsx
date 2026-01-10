@@ -34,6 +34,23 @@ const parseDecimal = (value: string): number | null => {
   return Number.isFinite(num) ? Number(num.toFixed(2)) : null;
 };
 
+const formatCurrencyMask = (value: string | number | null | undefined): string => {
+  if (value === null || value === undefined || value === '') return '';
+  const parsed = parseDecimal(String(value));
+  if (parsed === null) return '';
+  return parsed.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+const handleCurrencyChange = (setter: (val: string) => void) => (event: React.ChangeEvent<HTMLInputElement>) => {
+  const cleaned = event.target.value.replace(/[^\d.,]/g, '');
+  setter(cleaned);
+};
+
+const handleCurrencyBlur = (setter: (val: string) => void) => (event: React.FocusEvent<HTMLInputElement>) => {
+  const masked = formatCurrencyMask(event.target.value);
+  setter(masked);
+};
+
 const FinancialSettings: React.FC = () => {
   const { refreshUser } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -43,14 +60,14 @@ const FinancialSettings: React.FC = () => {
   const [equipmentRows, setEquipmentRows] = useState<EquipmentRow[]>(DEFAULT_EQUIPMENTS);
 
   const hydrateForm = useCallback((musician: Musician) => {
-    setBaseFee(toInputString(musician.base_fee ?? ''));
-    setTravelFee(toInputString(musician.travel_fee_per_km ?? ''));
+    setBaseFee(formatCurrencyMask(musician.base_fee ?? ''));
+    setTravelFee(formatCurrencyMask(musician.travel_fee_per_km ?? ''));
 
     const rows =
       musician.equipment_items && musician.equipment_items.length > 0
         ? musician.equipment_items.map((item: EquipmentItem) => ({
             name: item.name || '',
-            price: toInputString(item.price ?? ''),
+            price: formatCurrencyMask(item.price ?? ''),
           }))
         : DEFAULT_EQUIPMENTS;
     setEquipmentRows(rows);
@@ -175,31 +192,31 @@ const FinancialSettings: React.FC = () => {
               <label className="block">
                 <span className="text-sm text-slate-300">Cachê (R$)</span>
                 <input
-                  type="number"
+                  type="text"
                   inputMode="decimal"
-                  min={0}
-                  step="0.01"
                   value={baseFee}
-                  onChange={(e) => setBaseFee(e.target.value)}
-                  placeholder="Ex: 800"
+                  onChange={handleCurrencyChange(setBaseFee)}
+                  onBlur={handleCurrencyBlur(setBaseFee)}
+                  placeholder="Ex: 800,00"
                   className="mt-1 w-full rounded-lg bg-slate-900/70 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-white px-3 py-2"
                 />
+                <p className="text-xs text-slate-500 mt-1">Formato: 0,00 (R$)</p>
               </label>
               <label className="block">
                 <span className="text-sm text-slate-300">Valor por km (R$)</span>
                 <div className="flex items-center gap-2 mt-1">
                   <input
-                    type="number"
+                    type="text"
                     inputMode="decimal"
-                    min={0}
-                    step="0.01"
                     value={travelFee}
-                    onChange={(e) => setTravelFee(e.target.value)}
+                    onChange={handleCurrencyChange(setTravelFee)}
+                    onBlur={handleCurrencyBlur(setTravelFee)}
                     placeholder="Ex: 2,50"
                     className="flex-1 rounded-lg bg-slate-900/70 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-white px-3 py-2"
                   />
                   <CarFront className="h-5 w-5 text-slate-400" />
                 </div>
+                <p className="text-xs text-slate-500 mt-1">Use vírgula para centavos (ex: 1,50).</p>
               </label>
             </div>
           </div>
@@ -245,13 +262,12 @@ const FinancialSettings: React.FC = () => {
                   <div className="sm:col-span-4">
                     <label className="text-sm text-slate-300">Valor (R$)</label>
                     <input
-                      type="number"
+                      type="text"
                       inputMode="decimal"
-                      min={0}
-                      step="0.01"
                       value={item.price}
                       onChange={(e) => handleEquipmentChange(index, 'price', e.target.value)}
-                      placeholder="Ex: 500"
+                      onBlur={(e) => handleEquipmentChange(index, 'price', formatCurrencyMask(e.target.value))}
+                      placeholder="Ex: 500,00"
                       className="mt-1 w-full rounded-lg bg-slate-950/60 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-white px-3 py-2"
                     />
                   </div>

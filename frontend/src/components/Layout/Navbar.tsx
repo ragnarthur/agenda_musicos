@@ -94,7 +94,7 @@ const Navbar: React.FC = () => {
           </Link>
 
           {/* Links de Navegação */}
-          <div className="hidden md:flex md:flex-wrap lg:flex-nowrap items-center gap-3 md:-ml-1 min-w-0">
+          <div className="hidden md:flex md:flex-wrap lg:flex-nowrap items-center gap-3 md:-ml-1 min-w-0 flex-1">
             <AppNavLink to="/eventos" icon={<Calendar className="h-5 w-5" />} label="Eventos" badge={pendingMyResponse} />
             <AppNavLink to="/musicos" icon={<Users className="h-5 w-5" />} label="Músicos" />
             <AppNavLink to="/conexoes" icon={<HeartHandshake className="h-5 w-5" />} label="Rede & Badges" />
@@ -111,7 +111,7 @@ const Navbar: React.FC = () => {
           </div>
 
           {/* Usuário e Logout */}
-          <div className="flex items-center space-x-4 min-w-fit md:min-w-0">
+          <div className="flex items-center space-x-3 min-w-fit md:min-w-0 flex-shrink-0">
             <div className="hidden md:block text-right">
               <p className="text-sm font-medium text-slate-100 leading-snug max-w-[240px] truncate whitespace-nowrap">
                 {user?.full_name}
