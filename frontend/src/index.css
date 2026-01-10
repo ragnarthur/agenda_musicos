@@ -176,59 +176,12 @@
 .owl-mascot {
   width: 100%;
   height: 100%;
+  display: block;
   filter: drop-shadow(0 6px 10px rgba(15, 23, 42, 0.35));
-}
-
-.owl-mascot .owl-bob {
-  transform-origin: center;
-  animation: owlBob 4.8s ease-in-out infinite;
-}
-
-.owl-mascot .owl-eye {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: owlBlink 7.2s ease-in-out infinite;
-}
-
-.owl-mascot .owl-eye-left {
-  animation-delay: 0.15s;
-}
-
-.owl-mascot .owl-eye-right {
-  animation-delay: 0.35s;
-}
-
-.owl-mascot .owl-baton {
-  transform-box: fill-box;
-  transform-origin: 20% 80%;
-  animation: owlBaton 3.2s ease-in-out infinite;
-}
-
-@keyframes owlBob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-1.6px); }
-}
-
-@keyframes owlBlink {
-  0%, 88%, 100% { transform: scaleY(1); }
-  90%, 92% { transform: scaleY(0.05); }
-  94% { transform: scaleY(1); }
-  96%, 98% { transform: scaleY(0.15); }
-}
-
-@keyframes owlBaton {
-  0%, 100% { transform: rotate(-8deg); }
-  50% { transform: rotate(6deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .logo-animated {
-    animation: none !important;
-  }
-
-  .owl-mascot .owl-bob,
-  .owl-mascot .owl-eye,
-  .owl-mascot .owl-baton {
     animation: none !important;
   }
 }
