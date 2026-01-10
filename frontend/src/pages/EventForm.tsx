@@ -24,6 +24,7 @@ import { showToast } from '../utils/toast';
 import type { Event, EventCreate, AvailableMusician, Musician } from '../types';
 import { format, parseISO } from 'date-fns';
 import InstrumentIcon from '../components/common/InstrumentIcon';
+import { INSTRUMENT_LABELS as BASE_INSTRUMENT_LABELS } from '../utils/formatting';
 
 interface ConflictInfo {
   loading: boolean;
@@ -33,12 +34,17 @@ interface ConflictInfo {
 }
 
 const instrumentLabels: Record<string, string> = {
-  vocal: 'Vocal',
-  guitar: 'Guitarra/Violão',
-  bass: 'Baixo',
-  drums: 'Bateria',
-  keyboard: 'Teclado',
+  ...BASE_INSTRUMENT_LABELS,
+  guitar: 'Guitarra',
   percussion: 'Percussão/Outros',
+};
+
+const resolveInstrumentLabel = (instrument: string): string => {
+  if (!instrument) return 'Instrumento';
+  const label = instrumentLabels[instrument];
+  if (label) return label;
+  const pretty = instrument.replace(/_/g, ' ');
+  return pretty.charAt(0).toUpperCase() + pretty.slice(1);
 };
 
 const EventForm: React.FC = () => {
@@ -109,7 +115,7 @@ const EventForm: React.FC = () => {
           musician_id: musician.id,
           musician_name: musician.full_name,
           instrument: musician.instrument,
-          instrument_display: instrumentLabels[musician.instrument] || musician.instrument,
+          instrument_display: resolveInstrumentLabel(musician.instrument),
           has_availability: false,
           availability_id: null,
           start_time: null,
@@ -144,7 +150,7 @@ const EventForm: React.FC = () => {
     });
     const options = Object.keys(counts).map((instrument) => ({
       value: instrument,
-      label: instrumentLabels[instrument] || instrument,
+      label: resolveInstrumentLabel(instrument),
       count: counts[instrument],
     }));
     if (!instrumentQuery.trim()) return options;
@@ -155,9 +161,9 @@ const EventForm: React.FC = () => {
   const filteredMusicians = useMemo(() => {
     return availableMusicians.filter((m) => {
       const byFilter = instrumentFilter === 'all' ? true : m.instrument === instrumentFilter;
-      const label = instrumentLabels[m.instrument] || m.instrument || '';
+      const label = resolveInstrumentLabel(m.instrument);
       const byQuery = instrumentQuery.trim()
-        ? label.toLowerCase().includes(instrumentQuery.toLowerCase())
+        ? `${label} ${m.instrument}`.toLowerCase().includes(instrumentQuery.toLowerCase())
         : true;
       return byFilter && byQuery;
     });
