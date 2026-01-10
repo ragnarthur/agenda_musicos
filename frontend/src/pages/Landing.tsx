@@ -30,7 +30,7 @@ const Landing: React.FC = () => {
 
           {/* Título */}
           <motion.h1
-            className="relative z-20 text-5xl md:text-7xl font-bold text-white mb-5 pb-1 leading-[1.12] logo-animated"
+            className="relative z-20 text-5xl md:text-7xl font-bold text-white mb-5 pb-1 md:pb-2 leading-[1.12] md:leading-[1.1] logo-animated"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
