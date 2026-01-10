@@ -348,8 +348,39 @@ export const connectionService = {
 };
 
 // Badges Service
+export interface BadgeProgress {
+  slug: string;
+  name: string;
+  description: string;
+  icon: string;
+  current: number;
+  required: number;
+  percentage: number;
+  extra_condition?: string;
+}
+
+export interface BadgeProgressResponse {
+  earned: Array<{
+    id: number;
+    slug: string;
+    name: string;
+    description: string;
+    icon: string;
+    awarded_at: string;
+  }>;
+  available: BadgeProgress[];
+}
+
 export const badgeService = {
   getMine: async (): Promise<MusicianBadge[]> => {
+    const response = await api.get('/badges/');
+    // Compatibilidade: se retornar nova estrutura, extrai apenas earned
+    if (response.data.earned) {
+      return response.data.earned;
+    }
+    return response.data;
+  },
+  getProgress: async (): Promise<BadgeProgressResponse> => {
     const response = await api.get('/badges/');
     return response.data;
   },

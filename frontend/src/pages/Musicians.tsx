@@ -51,13 +51,33 @@ const Musicians: React.FC = () => {
   const getInstrumentLabel = (instrument: string) => {
     const displayMap: Record<string, string> = {
       vocal: 'Vocalista',
-      guitar: 'Guitarrista/Violão',
+      guitar: 'Guitarrista',
+      acoustic_guitar: 'Violonista',
       bass: 'Baixista',
       drums: 'Baterista',
       keyboard: 'Tecladista',
+      piano: 'Pianista',
+      synth: 'Sintetizador',
       percussion: 'Percussionista',
+      cajon: 'Cajón',
+      violin: 'Violinista',
+      viola: 'Viola',
+      cello: 'Violoncelista',
+      double_bass: 'Contrabaixista',
+      saxophone: 'Saxofonista',
+      trumpet: 'Trompetista',
+      trombone: 'Trombonista',
+      flute: 'Flautista',
+      clarinet: 'Clarinetista',
+      harmonica: 'Gaitista',
+      ukulele: 'Ukulele',
+      banjo: 'Banjo',
+      mandolin: 'Bandolinista',
+      dj: 'DJ',
+      producer: 'Produtor(a)',
     };
-    return displayMap[instrument] || 'Músico(a)';
+    // Se não encontrar no mapa, capitaliza o próprio valor (para instrumentos customizados)
+    return displayMap[instrument] || instrument.charAt(0).toUpperCase() + instrument.slice(1);
   };
 
   return (
@@ -154,9 +174,17 @@ const Musicians: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Badge de Papel */}
-                  <div className="mt-4">
-                    <span className="status-chip default">{instrumentLabel}</span>
+                  {/* Badges de Instrumentos */}
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {musician.instruments && musician.instruments.length > 0 ? (
+                      musician.instruments.map((inst) => (
+                        <span key={inst} className="status-chip default">
+                          {getInstrumentLabel(inst)}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="status-chip default">{instrumentLabel}</span>
+                    )}
                   </div>
                 </div>
               );

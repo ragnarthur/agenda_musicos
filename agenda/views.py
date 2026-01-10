@@ -1048,7 +1048,7 @@ class ConnectionViewSet(viewsets.ModelViewSet):
 
 class BadgeViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Lista badges do músico logado. Recalcula antes de retornar.
+    Lista badges do músico logado com progresso para badges não conquistadas.
     """
     serializer_class = MusicianBadgeSerializer
     permission_classes = [IsAuthenticated]
@@ -1061,6 +1061,18 @@ class BadgeViewSet(viewsets.ReadOnlyModelViewSet):
 
         award_badges_for_musician(musician)
         return MusicianBadge.objects.filter(musician=musician)
+
+    def list(self, request, *args, **kwargs):
+        """Retorna badges conquistadas e disponíveis com progresso."""
+        from .utils import get_badge_progress
+
+        try:
+            musician = request.user.musician_profile
+        except Musician.DoesNotExist:
+            return Response({'earned': [], 'available': []})
+
+        data = get_badge_progress(musician)
+        return Response(data)
 
 class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
     """

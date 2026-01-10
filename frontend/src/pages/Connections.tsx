@@ -5,20 +5,22 @@ import { motion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { StatCard } from '../components/ui/StatCard';
-import { badgeService, connectionService, musicianService } from '../services/api';
-import type { Connection, ConnectionType, Musician, MusicianBadge } from '../types';
+import { badgeService, connectionService, musicianService, type BadgeProgressResponse } from '../services/api';
+import type { Connection, ConnectionType, Musician } from '../types';
 import { INSTRUMENT_LABELS } from '../utils/formatting';
 
-const connectionLabels: Record<ConnectionType, string> = {
+const connectionLabels: Record<string, string> = {
   follow: 'Seguir',
-  call_later: 'Ligar',
   recommend: 'Indicar',
   played_with: 'Já toquei',
 };
 
+// Tipos de conexão ativos (sem call_later)
+const activeConnectionTypes = ['follow', 'recommend', 'played_with'] as const;
+
 const Connections: React.FC = () => {
   const [connections, setConnections] = useState<Connection[]>([]);
-  const [badges, setBadges] = useState<MusicianBadge[]>([]);
+  const [badgeData, setBadgeData] = useState<BadgeProgressResponse>({ earned: [], available: [] });
   const [musicians, setMusicians] = useState<Musician[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingAction, setLoadingAction] = useState(false);
@@ -31,11 +33,11 @@ const Connections: React.FC = () => {
         setLoading(true);
         const [conn, bgs, mus] = await Promise.all([
           connectionService.getAll(),
-          badgeService.getMine(),
+          badgeService.getProgress(),
           musicianService.getAll(),
         ]);
         setConnections(Array.isArray(conn) ? conn : []);
-        setBadges(Array.isArray(bgs) ? bgs : []);
+        setBadgeData(bgs || { earned: [], available: [] });
         setMusicians(Array.isArray(mus) ? mus : []);
       } catch (error) {
         console.error('Erro ao carregar conexões/badges:', error);
@@ -61,9 +63,11 @@ const Connections: React.FC = () => {
   }, [musicians, search, instrumentFilter]);
 
   const stats = useMemo(() => {
-    const totals: Record<ConnectionType, number> = { follow: 0, call_later: 0, recommend: 0, played_with: 0 };
+    const totals: Record<string, number> = { follow: 0, recommend: 0, played_with: 0 };
     (connections || []).forEach((c) => {
-      totals[c.connection_type] = (totals[c.connection_type] || 0) + 1;
+      if (c.connection_type in totals) {
+        totals[c.connection_type] = (totals[c.connection_type] || 0) + 1;
+      }
     });
     return totals;
   }, [connections]);
@@ -78,8 +82,12 @@ const Connections: React.FC = () => {
   }, [connections]);
 
   const grouped = useMemo(() => {
-    const groups: Record<ConnectionType, Connection[]> = { follow: [], call_later: [], recommend: [], played_with: [] };
-    (connections || []).forEach((c) => groups[c.connection_type].push(c));
+    const groups: Record<string, Connection[]> = { follow: [], recommend: [], played_with: [] };
+    (connections || []).forEach((c) => {
+      if (c.connection_type in groups) {
+        groups[c.connection_type].push(c);
+      }
+    });
     return groups;
   }, [connections]);
 
@@ -135,8 +143,8 @@ const Connections: React.FC = () => {
           </div>
 
           {/* Stats: SEM ícones - apenas números grandes com micro-interações */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-            {(Object.keys(stats) as ConnectionType[]).map((key) => (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {activeConnectionTypes.map((key) => (
               <StatCard
                 key={key}
                 label={connectionLabels[key]}
@@ -145,7 +153,7 @@ const Connections: React.FC = () => {
             ))}
             <StatCard
               label="Badges"
-              value={badges.length}
+              value={badgeData.earned.length}
               accent
             />
           </div>
@@ -230,14 +238,14 @@ const Connections: React.FC = () => {
                       </div>
 
                       {/* Botões SEM ícones - hierarquia por cor */}
-                      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
-                        {(Object.keys(connectionLabels) as ConnectionType[]).map((type) => {
+                      <div className="grid grid-cols-3 gap-2">
+                        {activeConnectionTypes.map((type) => {
                           const isOn = Boolean(active[type]);
                           const isAccent = type === 'played_with';
                           return (
                             <motion.button
                               key={type}
-                              onClick={() => handleToggle(m.id, type)}
+                              onClick={() => handleToggle(m.id, type as ConnectionType)}
                               className={`connection-pill ${isOn ? 'active' : ''} ${isAccent && !isOn ? 'accent' : ''}`}
                               disabled={loadingAction}
                               whileTap={{ scale: 0.95 }}
@@ -257,8 +265,8 @@ const Connections: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-4">
-              {(Object.keys(grouped) as ConnectionType[]).map((type) => (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mt-4">
+              {activeConnectionTypes.map((type) => (
                 <div key={type} className="rounded-xl border border-gray-200 bg-white/95 p-4 shadow-sm">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-sm font-semibold text-gray-800">
@@ -298,62 +306,120 @@ const Connections: React.FC = () => {
           </div>
 
           {/* Badges */}
-          <div className="card">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                <Star className="h-5 w-5 text-amber-600" />
+          <div className="space-y-4">
+            {/* Badges Conquistadas */}
+            <div className="card">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                  <Star className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Badges conquistadas ({badgeData.earned.length})
+                  </h2>
+                  <p className="text-sm text-gray-600">Suas conquistas</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">Badges conquistadas</h2>
-                <p className="text-sm text-gray-600">Conquistas automáticas</p>
-              </div>
-            </div>
-            {badges.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-8"
-              >
-                <p className="text-4xl mb-3">🎯</p>
-                <p className="text-sm text-gray-500">Nenhum badge ainda. Toque eventos e interaja para desbloquear!</p>
-              </motion.div>
-            ) : (
-              <div className="space-y-3">
-                {badges.map((badge, index) => (
-                  <motion.div
-                    key={badge.id}
-                    className="rounded-xl border border-amber-100 bg-amber-50 p-4"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                    whileHover={{
-                      scale: 1.02,
-                      boxShadow: '0 4px 12px rgba(251, 191, 36, 0.2)',
-                      transition: { duration: 0.2 }
-                    }}
-                  >
-                    <div className="flex items-start gap-3">
-                      <motion.span
-                        className="text-3xl"
-                        whileHover={{ scale: 1.2, rotate: 10 }}
-                        transition={{ type: 'spring', stiffness: 300 }}
-                      >
-                        {badge.icon || '🏅'}
-                      </motion.span>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-amber-900 mb-1">{badge.name}</p>
-                        {badge.description && (
-                          <p className="text-sm text-amber-800 leading-relaxed">{badge.description}</p>
-                        )}
-                        <p className="text-xs text-amber-600 mt-2">
+              {badgeData.earned.length === 0 ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-6"
+                >
+                  <p className="text-3xl mb-2">🎯</p>
+                  <p className="text-sm text-gray-500">Nenhum badge ainda</p>
+                </motion.div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  {badgeData.earned.map((badge, index) => (
+                    <motion.div
+                      key={badge.id}
+                      className="rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-3"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                      whileHover={{
+                        scale: 1.05,
+                        boxShadow: '0 4px 12px rgba(251, 191, 36, 0.3)',
+                      }}
+                    >
+                      <div className="text-center">
+                        <motion.span
+                          className="text-3xl block mb-1"
+                          whileHover={{ scale: 1.2, rotate: 10 }}
+                        >
+                          {badge.icon || '🏅'}
+                        </motion.span>
+                        <p className="font-semibold text-amber-900 text-sm truncate">{badge.name}</p>
+                        <p className="text-xs text-amber-600 mt-1">
                           {new Date(badge.awarded_at).toLocaleDateString('pt-BR')}
                         </p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Badges Disponíveis (com progresso) */}
+            <div className="card">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                  <span className="text-xl">🔒</span>
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Próximas conquistas</h2>
+                  <p className="text-sm text-gray-600">Continue progredindo!</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {badgeData.available.map((badge, index) => (
+                  <motion.div
+                    key={badge.slug}
+                    className="rounded-xl border border-gray-200 bg-gray-50 p-4"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl grayscale opacity-60">{badge.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="font-semibold text-gray-700">{badge.name}</p>
+                          <span className="text-sm font-bold text-primary-600">{badge.percentage}%</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mb-2">{badge.description}</p>
+
+                        {/* Barra de progresso */}
+                        <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <motion.div
+                            className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary-500 to-primary-400 rounded-full"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${badge.percentage}%` }}
+                            transition={{ duration: 0.8, delay: index * 0.1 }}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="text-xs text-gray-500">
+                            {badge.current}/{badge.required}
+                          </span>
+                          {badge.extra_condition && (
+                            <span className="text-xs text-gray-400">{badge.extra_condition}</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </motion.div>
                 ))}
+                {badgeData.available.length === 0 && (
+                  <div className="text-center py-6">
+                    <p className="text-3xl mb-2">🏆</p>
+                    <p className="text-sm text-gray-500">Todas as badges conquistadas!</p>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
