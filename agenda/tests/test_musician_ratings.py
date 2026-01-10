@@ -111,7 +111,7 @@ class MusicianRatingAPITest(APITestCase):
         response = self.client.get(f'/api/events/{self.future_event.id}/can_rate/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data['can_rate'])
-        self.assertIn('após a data', response.data['reason'])
+        self.assertIn('término do evento', response.data['reason'])
 
     def test_can_rate_returns_false_for_non_creator(self):
         """Não criador não pode avaliar"""
