@@ -364,8 +364,8 @@ const Register: React.FC = () => {
         {/* Logo e Título */}
         <div className="text-center mb-6">
           <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 sm:h-20 sm:w-20">
-              <OwlMascot className="h-16 w-16 sm:h-20 sm:w-20" />
+            <div className="h-20 w-20 sm:h-24 sm:w-24">
+              <OwlMascot className="h-20 w-20 sm:h-24 sm:w-24" />
             </div>
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Criar Conta</h1>

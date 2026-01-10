@@ -92,8 +92,8 @@ const PaymentSuccess: React.FC = () => {
         {/* Logo */}
         <div className="text-center mb-6">
           <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 sm:h-20 sm:w-20">
-              <OwlMascot className="h-16 w-16 sm:h-20 sm:w-20" />
+            <div className="h-20 w-20 sm:h-24 sm:w-24">
+              <OwlMascot className="h-20 w-20 sm:h-24 sm:w-24" />
             </div>
           </div>
         </div>
