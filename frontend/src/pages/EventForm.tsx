@@ -111,17 +111,26 @@ const EventForm: React.FC = () => {
       setLoadingMusicians(true);
       try {
         const musicians: Musician[] = await musicianService.getAll();
-        const mapped = musicians.map(musician => ({
-          musician_id: musician.id,
-          musician_name: musician.full_name,
-          instrument: musician.instrument,
-          instrument_display: resolveInstrumentLabel(musician.instrument),
-          has_availability: false,
-          availability_id: null,
-          start_time: null,
-          end_time: null,
-          notes: null,
-        }));
+        const mapped = musicians.map((musician) => {
+          const instruments = (musician.instruments && musician.instruments.length > 0)
+            ? musician.instruments
+            : musician.instrument
+              ? [musician.instrument]
+              : [];
+          const primary = instruments[0] || musician.instrument;
+          return {
+            musician_id: musician.id,
+            musician_name: musician.full_name,
+            instrument: primary,
+            instrument_display: resolveInstrumentLabel(primary),
+            instruments,
+            has_availability: false,
+            availability_id: null,
+            start_time: null,
+            end_time: null,
+            notes: null,
+          };
+        });
 
         if (!cancelled) {
           setAvailableMusicians(mapped);
@@ -146,7 +155,10 @@ const EventForm: React.FC = () => {
   const instrumentOptions = useMemo(() => {
     const counts: Record<string, number> = {};
     availableMusicians.forEach((m) => {
-      counts[m.instrument] = (counts[m.instrument] || 0) + 1;
+      const list = m.instruments && m.instruments.length > 0 ? m.instruments : [m.instrument];
+      list.forEach((inst) => {
+        counts[inst] = (counts[inst] || 0) + 1;
+      });
     });
     const options = Object.keys(counts).map((instrument) => ({
       value: instrument,
@@ -160,10 +172,11 @@ const EventForm: React.FC = () => {
 
   const filteredMusicians = useMemo(() => {
     return availableMusicians.filter((m) => {
-      const byFilter = instrumentFilter === 'all' ? true : m.instrument === instrumentFilter;
-      const label = resolveInstrumentLabel(m.instrument);
+      const list = m.instruments && m.instruments.length > 0 ? m.instruments : [m.instrument];
+      const byFilter = instrumentFilter === 'all' ? true : list.includes(instrumentFilter);
+      const labelsConcat = list.map(resolveInstrumentLabel).join(' ').toLowerCase();
       const byQuery = instrumentQuery.trim()
-        ? `${label} ${m.instrument}`.toLowerCase().includes(instrumentQuery.toLowerCase())
+        ? `${labelsConcat} ${list.join(' ')}`.includes(instrumentQuery.toLowerCase())
         : true;
       return byFilter && byQuery;
     });
