@@ -260,7 +260,7 @@ const Plans: React.FC = () => {
           <p className="text-gray-600 mb-6">
             Seu plano mensal está ativo e o acesso total foi liberado.
           </p>
-          <Link to="/" className="btn-primary w-full block text-center">
+          <Link to="/dashboard" className="btn-primary w-full block text-center">
             Ir para o app
           </Link>
         </div>

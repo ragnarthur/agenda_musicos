@@ -99,7 +99,7 @@ const Navbar: React.FC = () => {
         <div className="flex items-center justify-between min-h-[64px] py-2 gap-3">
           {/* Logo e Nome */}
           <Link
-            to="/"
+            to="/dashboard"
             className="flex items-center space-x-3 hover:scale-[1.01] transition-transform min-w-fit"
           >
             <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary-500 via-indigo-500 to-emerald-400 flex items-center justify-center shadow-lg logo-glow">

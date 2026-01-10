@@ -23,7 +23,7 @@ const Login: React.FC = () => {
     try {
       await login({ username, password });
       showToast.success('Login realizado com sucesso!');
-      navigate('/');
+      navigate('/dashboard');
     } catch (err: unknown) {
       const error = err as { response?: { status?: number } };
       if (error.response?.status === 401) {
