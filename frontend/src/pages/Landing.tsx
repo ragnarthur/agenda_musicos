@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Music, Calendar, Users, Award, Megaphone } from 'lucide-react';
+import { Calendar, Users, Award, Megaphone } from 'lucide-react';
 import { motion } from 'framer-motion';
+import OwlMascot from '../components/ui/OwlMascot';
 
 const Landing: React.FC = () => {
   return (
@@ -22,8 +23,8 @@ const Landing: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="p-6 rounded-full bg-gradient-to-br from-primary-500 via-indigo-500 to-emerald-400 shadow-2xl">
-              <Music className="h-16 w-16 text-white" />
+            <div className="p-6 rounded-full bg-gradient-to-br from-amber-400 via-primary-500 to-emerald-400 shadow-2xl">
+              <OwlMascot className="h-16 w-16" />
             </div>
           </motion.div>
 

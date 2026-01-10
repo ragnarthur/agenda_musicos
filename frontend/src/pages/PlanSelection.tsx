@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import {
-  Music,
   Check,
   Loader2,
   AlertCircle,
@@ -14,6 +13,7 @@ import {
 } from 'lucide-react';
 import { registrationService, paymentService, type RegistrationStatus } from '../services/api';
 import { showToast } from '../utils/toast';
+import OwlMascot from '../components/ui/OwlMascot';
 
 interface Plan {
   id: 'monthly' | 'annual';
@@ -159,8 +159,8 @@ const PlanSelection: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <div className="bg-white p-3 rounded-full shadow-lg">
-              <Music className="h-8 w-8 text-primary-600" />
+            <div className="bg-gradient-to-br from-amber-200 via-primary-100 to-emerald-100 p-3 rounded-full shadow-lg">
+              <OwlMascot className="h-8 w-8" />
             </div>
             <div>
               <p className="text-sm text-primary-100 uppercase tracking-wide">GigFlow</p>

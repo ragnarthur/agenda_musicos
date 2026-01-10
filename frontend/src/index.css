@@ -173,8 +173,138 @@
   100% { background-position: 0% 50%; }
 }
 
+.owl-mascot {
+  width: 100%;
+  height: 100%;
+  --owl-body: #fbbf24;
+  --owl-body-deep: #f59e0b;
+  --owl-face: #fff7ed;
+  --owl-ink: #0f172a;
+  --owl-brow: #b45309;
+  --owl-baton: #f8fafc;
+  --owl-baton-tip: #fde68a;
+  --owl-beak: #fb923c;
+  --owl-tux: #0f172a;
+  --owl-tux-highlight: #1f2937;
+  filter: drop-shadow(0 6px 12px rgba(15, 23, 42, 0.35));
+}
+
+.owl-mascot .owl-ear {
+  fill: var(--owl-body-deep);
+}
+
+.owl-mascot .owl-body {
+  fill: var(--owl-body);
+}
+
+.owl-mascot .owl-body-shine {
+  fill: #ffffff;
+  opacity: 0.25;
+}
+
+.owl-mascot .owl-face {
+  fill: var(--owl-face);
+}
+
+.owl-mascot .owl-brow {
+  stroke: var(--owl-brow);
+  stroke-width: 2;
+  stroke-linecap: round;
+  fill: none;
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: owlBrow 3.4s ease-in-out infinite;
+}
+
+.owl-mascot .owl-eye-white {
+  fill: #ffffff;
+}
+
+.owl-mascot .owl-eye-pupil {
+  fill: var(--owl-ink);
+}
+
+.owl-mascot .owl-eye-highlight {
+  fill: #e2e8f0;
+}
+
+.owl-mascot .owl-beak {
+  fill: var(--owl-beak);
+}
+
+.owl-mascot .owl-tux {
+  fill: var(--owl-tux);
+}
+
+.owl-mascot .owl-tux-highlight {
+  fill: var(--owl-tux-highlight);
+}
+
+.owl-mascot .owl-baton-stick {
+  fill: var(--owl-baton);
+}
+
+.owl-mascot .owl-baton-tip {
+  fill: var(--owl-baton-tip);
+}
+
+.owl-mascot .owl-bob {
+  transform-origin: center;
+  animation: owlBob 4.2s ease-in-out infinite;
+}
+
+.owl-mascot .owl-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: owlBlink 6.4s ease-in-out infinite;
+}
+
+.owl-mascot .owl-eye-left {
+  animation-delay: 0.15s;
+}
+
+.owl-mascot .owl-eye-right {
+  animation-delay: 0.35s;
+}
+
+.owl-mascot .owl-baton {
+  transform-box: fill-box;
+  transform-origin: 20% 80%;
+  animation: owlBaton 2.8s ease-in-out infinite;
+}
+
+@keyframes owlBob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-2px) rotate(-1.5deg); }
+}
+
+@keyframes owlBlink {
+  0%, 44%, 100% { transform: scaleY(1); }
+  46%, 48% { transform: scaleY(0.1); }
+  78% { transform: scaleY(1); }
+  80%, 82% { transform: scaleY(0.2); }
+  84% { transform: scaleY(1); }
+}
+
+@keyframes owlBaton {
+  0%, 100% { transform: rotate(-12deg); }
+  50% { transform: rotate(10deg); }
+}
+
+@keyframes owlBrow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-0.8px); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .logo-animated {
+    animation: none !important;
+  }
+
+  .owl-mascot .owl-bob,
+  .owl-mascot .owl-eye,
+  .owl-mascot .owl-baton,
+  .owl-mascot .owl-brow {
     animation: none !important;
   }
 }

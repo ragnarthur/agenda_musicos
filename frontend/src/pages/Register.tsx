@@ -1,9 +1,10 @@
 // pages/Register.tsx
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Music, UserPlus, Eye, EyeOff, Mail, User, Phone, FileText, CheckCircle } from 'lucide-react';
+import { UserPlus, Eye, EyeOff, Mail, User, Phone, FileText, CheckCircle } from 'lucide-react';
 import { registrationService, type RegisterData } from '../services/api';
 import { showToast } from '../utils/toast';
+import OwlMascot from '../components/ui/OwlMascot';
 
 const BASE_INSTRUMENTS = [
   { value: 'vocal', label: 'Vocal' },
@@ -363,8 +364,8 @@ const Register: React.FC = () => {
         {/* Logo e Título */}
         <div className="text-center mb-6">
           <div className="flex justify-center mb-4">
-            <div className="p-4 rounded-full shadow-lg logo-glow bg-gradient-to-br from-primary-500 via-indigo-500 to-emerald-400">
-              <Music className="h-10 w-10 text-white" />
+            <div className="p-4 rounded-full shadow-lg logo-glow bg-gradient-to-br from-amber-400 via-primary-500 to-emerald-400">
+              <OwlMascot className="h-10 w-10" />
             </div>
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Criar Conta</h1>

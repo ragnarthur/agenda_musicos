@@ -1,9 +1,10 @@
 // pages/Login.tsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Music, LogIn, Eye, EyeOff } from 'lucide-react';
+import { LogIn, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { showToast } from '../utils/toast';
+import OwlMascot from '../components/ui/OwlMascot';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -42,8 +43,8 @@ const Login: React.FC = () => {
         {/* Logo e Título */}
         <div className="text-center mb-6">
           <div className="flex justify-center mb-5">
-            <div className="p-5 rounded-full shadow-lg logo-glow bg-gradient-to-br from-primary-500 via-indigo-500 to-emerald-400">
-              <Music className="h-12 w-12 text-white drop-shadow-lg" />
+            <div className="p-5 rounded-full shadow-lg logo-glow bg-gradient-to-br from-amber-400 via-primary-500 to-emerald-400">
+              <OwlMascot className="h-12 w-12 drop-shadow-lg" />
             </div>
           </div>
           <h1 className="text-5xl font-bold text-white mb-3 logo-animated drop-shadow-xl leading-tight">GigFlow</h1>
