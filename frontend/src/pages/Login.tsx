@@ -43,8 +43,8 @@ const Login: React.FC = () => {
         {/* Logo e Título */}
         <div className="text-center mb-6">
           <div className="flex justify-center mb-5">
-            <div className="p-5 rounded-full shadow-lg logo-glow bg-gradient-to-br from-amber-400 via-primary-500 to-emerald-400">
-              <OwlMascot className="h-12 w-12 drop-shadow-lg" />
+            <div className="h-14 w-14 sm:h-16 sm:w-16">
+              <OwlMascot className="h-14 w-14 sm:h-16 sm:w-16" />
             </div>
           </div>
           <h1 className="text-5xl font-bold text-white mb-3 logo-animated drop-shadow-xl leading-tight">GigFlow</h1>

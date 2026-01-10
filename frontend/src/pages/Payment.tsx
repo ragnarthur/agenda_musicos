@@ -222,8 +222,8 @@ const Payment: React.FC = () => {
           {/* Coluna da esquerda - Benefícios */}
           <div className="bg-white/10 backdrop-blur rounded-2xl p-6 text-white">
             <div className="flex items-center gap-3 mb-6">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-amber-400 via-primary-500 to-emerald-400 flex items-center justify-center shadow-lg logo-glow">
-                <OwlMascot className="h-7 w-7" />
+              <div className="h-9 w-9 flex items-center justify-center">
+                <OwlMascot className="h-9 w-9" />
               </div>
               <h2 className="text-2xl font-bold logo-animated">GigFlow</h2>
             </div>
