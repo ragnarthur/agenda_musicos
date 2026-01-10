@@ -182,6 +182,11 @@ const EventForm: React.FC = () => {
     });
   }, [availableMusicians, instrumentFilter, instrumentQuery]);
 
+  const getInstrumentDisplay = (musician: AvailableMusician): string => {
+    const list = musician.instruments && musician.instruments.length > 0 ? musician.instruments : [musician.instrument];
+    return list.map(resolveInstrumentLabel).join(' · ');
+  };
+
   const toggleMusicianSelection = (musicianId: number) => {
     setSelectedMusicians(prev =>
       prev.includes(musicianId)
@@ -657,7 +662,7 @@ const EventForm: React.FC = () => {
                                 )}
                               </p>
                               <p className="text-xs text-gray-500">
-                                {musician.instrument_display}
+                                {getInstrumentDisplay(musician)}
                                 {musician.has_availability && musician.start_time && musician.end_time && (
                                   <span className="text-green-600"> • {musician.start_time} às {musician.end_time}</span>
                                 )}
