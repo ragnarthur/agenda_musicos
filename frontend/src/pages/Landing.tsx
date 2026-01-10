@@ -18,13 +18,13 @@ const Landing: React.FC = () => {
         <section className="container mx-auto px-4 py-20 text-center">
           {/* Logo */}
           <motion.div
-            className="flex justify-center mb-3"
+            className="flex justify-center mb-1"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="h-40 w-40 sm:h-50 sm:w-50">
-              <OwlMascot className="h-40 w-40 sm:h-50 sm:w-50" />
+            <div className="h-48 w-48 sm:h-56 sm:w-56">
+              <OwlMascot className="h-48 w-48 sm:h-56 sm:w-56" />
             </div>
           </motion.div>
 
