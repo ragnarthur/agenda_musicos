@@ -39,6 +39,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      const currentUser = await musicianService.getMe();
+      setUser(currentUser);
+    } catch (error) {
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      if (status !== 401) {
+        console.error('Erro ao atualizar sessão do usuário:', error);
+      }
+      if (status === 401) {
+        setUser(null);
+      }
+    }
+  };
+
   const logout = async () => {
     try {
       await authService.logout();
@@ -53,6 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     login,
     logout,
+    refreshUser,
     isAuthenticated: !!user,
     loading,
   };
