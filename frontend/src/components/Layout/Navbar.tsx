@@ -119,7 +119,7 @@ const Navbar: React.FC = () => {
   return (
     <nav className="bg-gradient-to-r from-slate-950/90 via-slate-900/85 to-slate-950/90 backdrop-blur-xl shadow-lg shadow-black/30 sticky top-0 z-50 border-b border-white/10 overflow-hidden">
       <div className="container mx-auto px-3 sm:px-4">
-        <div className="flex items-center justify-between min-h-[64px] py-2 gap-3">
+        <div className="flex flex-wrap md:flex-nowrap items-center justify-between min-h-[64px] py-2 gap-x-3 gap-y-2">
           {/* Logo e Nome */}
           <Link
             to="/dashboard"
@@ -137,7 +137,7 @@ const Navbar: React.FC = () => {
           </Link>
 
           {/* Links de Navegação */}
-          <div className="hidden md:flex items-center gap-4 md:-ml-2">
+          <div className="hidden md:flex md:flex-wrap lg:flex-nowrap items-center gap-3 md:-ml-1 min-w-0">
             <AppNavLink to="/eventos" icon={<Calendar className="h-5 w-5" />} label="Eventos" badge={pendingMyResponse} />
             <AppNavLink to="/musicos" icon={<Users className="h-5 w-5" />} label="Músicos" />
             <AppNavLink to="/conexoes" icon={<HeartHandshake className="h-5 w-5" />} label="Rede & Badges" />
@@ -154,7 +154,7 @@ const Navbar: React.FC = () => {
           </div>
 
           {/* Usuário e Logout */}
-          <div className="flex items-center space-x-4 min-w-fit">
+          <div className="flex items-center space-x-4 min-w-fit md:min-w-0">
             <div className="hidden md:block text-right">
               <p className="text-sm font-medium text-slate-100 truncate max-w-[200px]">{user?.full_name}</p>
               <p className="text-xs text-slate-300 truncate max-w-[220px]">
