@@ -34,52 +34,8 @@ const Navbar: React.FC = () => {
     ? `Trial · ${subscriptionInfo.trial_days_remaining} dias restantes`
     : 'Plano expirado';
 
-  const formatInstrument = () => {
-    if (!user) return '';
-
-    const displayMap: Record<string, string> = {
-      vocal: 'Vocalista',
-      guitar: 'Guitarrista',
-      acoustic_guitar: 'Violonista',
-      bass: 'Baixista',
-      drums: 'Baterista',
-      keyboard: 'Tecladista',
-      piano: 'Pianista',
-      synth: 'Sintetizador',
-      percussion: 'Percussionista',
-      cajon: 'Cajón',
-      violin: 'Violinista',
-      viola: 'Viola',
-      cello: 'Violoncelista',
-      double_bass: 'Contrabaixista',
-      saxophone: 'Saxofonista',
-      trumpet: 'Trompetista',
-      trombone: 'Trombonista',
-      flute: 'Flautista',
-      clarinet: 'Clarinetista',
-      harmonica: 'Gaitista',
-      ukulele: 'Ukulele',
-      banjo: 'Banjo',
-      mandolin: 'Bandolinista',
-      dj: 'DJ',
-      producer: 'Produtor(a)',
-    };
-
-    // Usa o array de instrumentos se disponível
-    if (user.instruments && user.instruments.length > 0) {
-      const labels = user.instruments.map(
-        (inst) => displayMap[inst] || inst.charAt(0).toUpperCase() + inst.slice(1)
-      );
-      return labels.join(', ');
-    }
-
-    // Fallback para instrumento singular
-    return displayMap[user.instrument] || user.instrument;
-  };
-
   const displayName =
     user?.full_name || user?.user?.first_name || user?.user?.username || 'Conta';
-  const instrumentLabel = formatInstrument();
 
   const loadNotifications = useCallback(async () => {
     const [pendingResult, approvalResult] = await Promise.allSettled([
@@ -157,9 +113,6 @@ const Navbar: React.FC = () => {
           <div className="flex items-center space-x-4 min-w-fit md:min-w-0">
             <div className="hidden md:block text-right">
               <p className="text-sm font-medium text-slate-100 leading-snug max-w-[240px]">{user?.full_name}</p>
-              <p className="text-[11px] text-slate-300 mt-1 leading-tight whitespace-normal break-words max-w-[280px]">
-                {formatInstrument()}
-              </p>
             </div>
 
             <div className="flex items-center gap-2">
@@ -239,9 +192,6 @@ const Navbar: React.FC = () => {
             >
               <div className="rounded-xl border border-white/10 bg-slate-900/70 px-3 py-2">
                 <p className="text-sm font-semibold text-slate-100 truncate">{displayName}</p>
-                {instrumentLabel && (
-                  <p className="text-xs text-slate-300 truncate">{instrumentLabel}</p>
-                )}
               </div>
               <Link
                 to="/musicos"
