@@ -23,14 +23,14 @@ const Landing: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="h-32 w-32 sm:h-36 sm:w-36">
-              <OwlMascot className="h-32 w-32 sm:h-36 sm:w-36" />
+            <div className="h-36 w-36 sm:h-44 sm:w-44">
+              <OwlMascot className="h-36 w-36 sm:h-44 sm:w-44" />
             </div>
           </motion.div>
 
           {/* Título */}
           <motion.h1
-            className="text-5xl md:text-7xl font-bold text-white mb-4 logo-animated"
+            className="relative z-20 text-5xl md:text-7xl font-bold text-white mb-4 logo-animated"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
