@@ -23,8 +23,8 @@ const Landing: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="h-16 w-16 sm:h-20 sm:w-20">
-              <OwlMascot className="h-16 w-16 sm:h-20 sm:w-20" />
+            <div className="h-20 w-20 sm:h-24 sm:w-24">
+              <OwlMascot className="h-20 w-20 sm:h-24 sm:w-24" />
             </div>
           </motion.div>
 
