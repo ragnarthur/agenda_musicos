@@ -36,7 +36,7 @@ const Plans: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const paymentToken = searchParams.get('token');
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, refreshUser } = useAuth();
   const subscriptionInfo = user?.subscription_info;
 
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('monthly');
@@ -184,6 +184,7 @@ const Plans: React.FC = () => {
     try {
       if (upgradeMode) {
         await billingService.activateFakeSubscription({ plan: selectedPlan });
+        await refreshUser();
         setUpgradeSuccess(true);
         showToast.success('Assinatura ativada com sucesso!');
         return;
