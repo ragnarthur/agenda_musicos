@@ -1,8 +1,9 @@
 // pages/PaymentSuccess.tsx
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { CheckCircle, Loader2, Music, AlertCircle } from 'lucide-react';
+import { CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { paymentService } from '../services/api';
+import OwlMascot from '../components/ui/OwlMascot';
 
 const PaymentSuccess: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -91,8 +92,8 @@ const PaymentSuccess: React.FC = () => {
         {/* Logo */}
         <div className="text-center mb-6">
           <div className="flex justify-center mb-4">
-            <div className="p-4 rounded-full shadow-lg logo-glow bg-gradient-to-br from-primary-500 via-indigo-500 to-emerald-400">
-              <Music className="h-10 w-10 text-white" />
+            <div className="p-4 rounded-full shadow-lg logo-glow bg-gradient-to-br from-amber-400 via-primary-500 to-emerald-400">
+              <OwlMascot className="h-10 w-10" />
             </div>
           </div>
         </div>

@@ -1,9 +1,10 @@
 // pages/VerifyEmail.tsx
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { Music, CheckCircle, XCircle, Loader2, CreditCard, AlertCircle, Clock, Sparkles } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, CreditCard, AlertCircle, Clock, Sparkles } from 'lucide-react';
 import { registrationService } from '../services/api';
 import { showToast } from '../utils/toast';
+import OwlMascot from '../components/ui/OwlMascot';
 
 const VerifyEmail: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -92,8 +93,8 @@ const VerifyEmail: React.FC = () => {
         {/* Logo */}
         <div className="text-center mb-6">
           <div className="flex justify-center mb-4">
-            <div className="p-4 rounded-full shadow-lg logo-glow bg-gradient-to-br from-primary-500 via-indigo-500 to-emerald-400">
-              <Music className="h-10 w-10 text-white" />
+            <div className="p-4 rounded-full shadow-lg logo-glow bg-gradient-to-br from-amber-400 via-primary-500 to-emerald-400">
+              <OwlMascot className="h-10 w-10" />
             </div>
           </div>
           <h1 className="text-2xl font-bold logo-animated">GigFlow</h1>
