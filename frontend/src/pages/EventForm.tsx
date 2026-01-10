@@ -14,7 +14,7 @@ import {
   Sparkles,
   Users,
   UserPlus,
-  Music,
+  Search,
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import ConflictPreview from '../components/event/ConflictPreview';
@@ -23,6 +23,7 @@ import { eventService, musicianService } from '../services/api';
 import { showToast } from '../utils/toast';
 import type { Event, EventCreate, AvailableMusician, Musician } from '../types';
 import { format, parseISO } from 'date-fns';
+import InstrumentIcon from '../components/common/InstrumentIcon';
 
 interface ConflictInfo {
   loading: boolean;
@@ -51,6 +52,7 @@ const EventForm: React.FC = () => {
   const [selectedMusicians, setSelectedMusicians] = useState<number[]>([]);
   const [loadingMusicians, setLoadingMusicians] = useState(false);
   const [instrumentFilter, setInstrumentFilter] = useState<string>('all');
+  const [instrumentQuery, setInstrumentQuery] = useState<string>('');
   const dateInputRef = useRef<HTMLInputElement | null>(null);
   const [conflictInfo, setConflictInfo] = useState<ConflictInfo>({
     loading: false,
@@ -140,17 +142,26 @@ const EventForm: React.FC = () => {
     availableMusicians.forEach((m) => {
       counts[m.instrument] = (counts[m.instrument] || 0) + 1;
     });
-    return Object.keys(counts).map((instrument) => ({
+    const options = Object.keys(counts).map((instrument) => ({
       value: instrument,
       label: instrumentLabels[instrument] || instrument,
       count: counts[instrument],
     }));
-  }, [availableMusicians]);
+    if (!instrumentQuery.trim()) return options;
+    const query = instrumentQuery.toLowerCase();
+    return options.filter((opt) => opt.label.toLowerCase().includes(query));
+  }, [availableMusicians, instrumentQuery]);
 
   const filteredMusicians = useMemo(() => {
-    if (instrumentFilter === 'all') return availableMusicians;
-    return availableMusicians.filter((m) => m.instrument === instrumentFilter);
-  }, [availableMusicians, instrumentFilter]);
+    return availableMusicians.filter((m) => {
+      const byFilter = instrumentFilter === 'all' ? true : m.instrument === instrumentFilter;
+      const label = instrumentLabels[m.instrument] || m.instrument || '';
+      const byQuery = instrumentQuery.trim()
+        ? label.toLowerCase().includes(instrumentQuery.toLowerCase())
+        : true;
+      return byFilter && byQuery;
+    });
+  }, [availableMusicians, instrumentFilter, instrumentQuery]);
 
   const toggleMusicianSelection = (musicianId: number) => {
     setSelectedMusicians(prev =>
@@ -500,6 +511,40 @@ const EventForm: React.FC = () => {
                   </h3>
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-[1fr,240px] gap-2 md:items-end mb-3">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700 mb-1 block">
+                      Buscar instrumento
+                    </label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <input
+                        type="text"
+                        value={instrumentQuery}
+                        onChange={(e) => setInstrumentQuery(e.target.value)}
+                        placeholder="Digite violão, teclado, bateria..."
+                        className="input-field pl-9"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 md:justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setInstrumentFilter('all');
+                        setInstrumentQuery('');
+                      }}
+                      className={`px-3 py-1.5 rounded-full text-sm border transition ${
+                        instrumentFilter === 'all' && !instrumentQuery
+                          ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300'
+                      }`}
+                    >
+                      Limpar filtros
+                    </button>
+                  </div>
+                </div>
+
                 {instrumentOptions.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-3">
                     <button
@@ -518,13 +563,17 @@ const EventForm: React.FC = () => {
                         key={opt.value}
                         type="button"
                         onClick={() => setInstrumentFilter(opt.value)}
-                        className={`px-3 py-1.5 rounded-full text-sm border transition ${
+                        className={`px-3 py-1.5 rounded-full text-sm border transition inline-flex items-center gap-2 ${
                           instrumentFilter === opt.value
                             ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
                             : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300'
                         }`}
                       >
-                        {opt.label} <span className="text-xs text-gray-500 ml-1">({opt.count})</span>
+                        <span className="flex items-center gap-1">
+                          <InstrumentIcon instrument={opt.value} size={16} />
+                          {opt.label}
+                        </span>
+                        <span className="text-xs text-gray-500 ml-1">({opt.count})</span>
                       </button>
                     ))}
                   </div>
@@ -567,14 +616,16 @@ const EventForm: React.FC = () => {
                           }`}
                         >
                           <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${
-                              selectedMusicians.includes(musician.musician_id)
-                                ? 'bg-purple-500 text-white'
-                                : musician.has_availability
-                                  ? 'bg-green-100 text-green-600'
-                                  : 'bg-gray-100 text-gray-600'
-                            }`}>
-                              <Music className="h-4 w-4" />
+                            <div
+                              className={`p-2 rounded-lg ${
+                                selectedMusicians.includes(musician.musician_id)
+                                  ? 'bg-purple-500 text-white'
+                                  : musician.has_availability
+                                    ? 'bg-green-100 text-green-600'
+                                    : 'bg-gray-100 text-gray-600'
+                              }`}
+                            >
+                              <InstrumentIcon instrument={musician.instrument} size={18} />
                             </div>
                             <div>
                               <p className="font-medium text-gray-900">
