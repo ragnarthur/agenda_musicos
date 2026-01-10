@@ -14,7 +14,7 @@ def healthz(_request):
     return JsonResponse({"status": "ok"})
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('gf-secure-admin/', admin.site.urls),
     path('api/', include('agenda.urls')),
     path('api/marketplace/', include('marketplace.urls')),
     path('api/notifications/', include('notifications.urls')),

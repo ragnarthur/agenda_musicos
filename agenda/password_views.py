@@ -4,6 +4,8 @@ import logging
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.mail import send_mail
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
@@ -126,9 +128,9 @@ class PasswordResetConfirmView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if not new_password or len(str(new_password)) < 6:
+        if not new_password:
             return Response(
-                {'new_password': 'A nova senha deve ter pelo menos 6 caracteres.'},
+                {'new_password': 'A nova senha é obrigatória.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -144,6 +146,15 @@ class PasswordResetConfirmView(APIView):
         if not token_generator.check_token(user, token):
             return Response(
                 {'error': 'Link expirado ou inválido. Solicite uma nova redefinição.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Validação de força de senha usando validators do Django
+        try:
+            validate_password(new_password, user=user)
+        except DjangoValidationError as e:
+            return Response(
+                {'new_password': list(e.messages)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
