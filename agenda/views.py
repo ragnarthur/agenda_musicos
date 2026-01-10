@@ -30,6 +30,7 @@ from .models import (
 )
 from .serializers import (
     MusicianSerializer,
+    MusicianUpdateSerializer,
     EventListSerializer,
     EventDetailSerializer,
     EventCreateSerializer,
@@ -72,21 +73,34 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
             )
         return queryset
     
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get', 'patch'])
     def me(self, request):
         """
         GET /musicians/me/
-        Retorna o perfil do músico logado
+        Retorna ou atualiza o perfil do músico logado
         """
         try:
             musician = request.user.musician_profile
-            serializer = self.get_serializer(musician)
-            return Response(serializer.data)
         except Musician.DoesNotExist:
             return Response(
                 {'detail': 'Usuário não possui perfil de músico.'},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+        if request.method.lower() == 'patch':
+            serializer = MusicianUpdateSerializer(
+                musician,
+                data=request.data,
+                partial=True,
+                context={'request': request}
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            output = MusicianSerializer(musician, context={'request': request})
+            return Response(output.data)
+
+        serializer = self.get_serializer(musician)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def instruments(self, request):

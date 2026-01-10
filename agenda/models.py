@@ -99,6 +99,27 @@ class Musician(models.Model):
     bio = models.TextField(blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     instagram = models.CharField(max_length=100, blank=True, null=True)
+    base_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0, message='Valor do cachê não pode ser negativo.')],
+        help_text='Valor base de cachê do músico'
+    )
+    travel_fee_per_km = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0, message='Valor por km não pode ser negativo.')],
+        help_text='Valor cobrado por km deslocado'
+    )
+    equipment_items = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='Lista de equipamentos/serviços com valores'
+    )
     is_active = models.BooleanField(default=True)
 
     # Campos de rating (agregados/cached)
