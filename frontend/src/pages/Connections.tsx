@@ -18,6 +18,21 @@ const connectionLabels: Record<string, string> = {
 // Tipos de conexão ativos (sem call_later)
 const activeConnectionTypes = ['follow', 'recommend', 'played_with'] as const;
 
+const getMusicianInstruments = (musician: Musician): string[] => {
+  if (musician.instruments && musician.instruments.length > 0) {
+    return musician.instruments;
+  }
+  return musician.instrument ? [musician.instrument] : [];
+};
+
+const getInstrumentLabel = (instrument: string): string => {
+  if (INSTRUMENT_LABELS[instrument]) return INSTRUMENT_LABELS[instrument];
+  return instrument
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+};
+
 const Connections: React.FC = () => {
   const [connections, setConnections] = useState<Connection[]>([]);
   const [badgeData, setBadgeData] = useState<BadgeProgressResponse>({ earned: [], available: [] });
@@ -50,14 +65,19 @@ const Connections: React.FC = () => {
 
   const filteredMusicians = useMemo(() => {
     return musicians
-      .filter((m) => (instrumentFilter === 'all' ? true : m.instrument === instrumentFilter))
+      .filter((m) => {
+        const instruments = getMusicianInstruments(m);
+        if (instrumentFilter === 'all') return true;
+        return instruments.includes(instrumentFilter);
+      })
       .filter((m) => {
         const term = search.toLowerCase();
         if (!term) return true;
+        const instruments = getMusicianInstruments(m);
         return (
           m.full_name.toLowerCase().includes(term) ||
           m.user.username.toLowerCase().includes(term) ||
-          (m.instrument && INSTRUMENT_LABELS[m.instrument]?.toLowerCase().includes(term))
+          instruments.some((inst) => getInstrumentLabel(inst).toLowerCase().includes(term))
         );
       });
   }, [musicians, search, instrumentFilter]);
@@ -206,6 +226,8 @@ const Connections: React.FC = () => {
 
               <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 mt-4">
                 {filteredMusicians.map((m, index) => {
+                  const instruments = getMusicianInstruments(m);
+                  const primaryInstrument = instruments[0] || m.instrument;
                   const active = connectionMap[m.id] || {};
                   return (
                     <motion.div
@@ -227,13 +249,26 @@ const Connections: React.FC = () => {
                           whileHover={{ scale: 1.1, rotate: 5 }}
                           transition={{ type: 'spring', stiffness: 300 }}
                         >
-                          {getInstrumentEmoji(m.instrument)}
+                          {getInstrumentEmoji(primaryInstrument)}
                         </motion.div>
                         <div className="min-w-0 flex-1">
                           <p className="font-semibold text-gray-900 truncate">{m.full_name}</p>
                           <p className="text-sm text-gray-600 truncate">
-                            {INSTRUMENT_LABELS[m.instrument] || m.instrument}
+                            {instruments.map(getInstrumentLabel).join(' · ')}
                           </p>
+                          {instruments.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {instruments.map((inst) => (
+                                <span
+                                  key={inst}
+                                  className="inline-flex items-center gap-1 rounded-full border border-primary-100 bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700"
+                                >
+                                  <span>{getInstrumentEmoji(inst)}</span>
+                                  <span>{getInstrumentLabel(inst)}</span>
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
 
