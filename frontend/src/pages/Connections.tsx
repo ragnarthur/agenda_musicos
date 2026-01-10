@@ -467,6 +467,7 @@ function getInstrumentEmoji(instrument: string): string {
   const emojis: Record<string, string> = {
     vocal: '🎤',
     guitar: '🎸',
+    acoustic_guitar: '🎸',
     bass: '🎸',
     drums: '🥁',
     keyboard: '🎹',
