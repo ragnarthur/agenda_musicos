@@ -25,9 +25,14 @@ services:
       SECRET_KEY: "dev-secret-key"
       ALLOWED_HOSTS: "localhost,127.0.0.1,backend"
       CORS_ALLOWED_ORIGINS: "http://localhost:5174"
+      FRONTEND_URL: "http://localhost:5174"
       DATABASE_URL: "postgresql://agenda:agenda@db:5432/agenda"
       CSP_HEADER: "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'"
       DEFAULT_FROM_EMAIL: "Agenda Musicos <noreply@localhost>"
+      USE_STRIPE: "False"
+      ALLOW_FAKE_PAYMENT: "True"
+      PAYMENT_SERVICE_URL: "http://payment-service:3001"
+      PAYMENT_SERVICE_SECRET: "dev-payment-secret"
     volumes:
       - ./:/app
     ports:
@@ -46,6 +51,9 @@ services:
       dockerfile: Dockerfile.dev
     environment:
       VITE_API_URL: "http://localhost:8001/api"
+      VITE_PAYMENT_SERVICE_URL: "http://localhost:3002/api"
+      VITE_USE_STRIPE: "false"
+      VITE_ALLOW_FAKE_PAYMENT: "true"
     volumes:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules

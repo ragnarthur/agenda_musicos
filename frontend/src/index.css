@@ -49,18 +49,39 @@
   }
 
   .card {
-    @apply bg-white/90 backdrop-blur rounded-2xl p-6 border border-white/70 shadow-lg;
-    box-shadow: var(--shadow-strong);
+    @apply bg-white/95 rounded-2xl p-6 border border-gray-200 shadow-md;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
 
   .card-contrast {
-    @apply bg-white/95 backdrop-blur-lg rounded-2xl p-6 border border-white/60 shadow-xl;
-    box-shadow: 0 25px 80px rgba(67, 56, 202, 0.12);
+    @apply bg-white/95 rounded-2xl p-6 border border-gray-200 shadow-lg;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   }
 
   .hero-panel {
-    @apply relative overflow-hidden rounded-3xl border border-white/40 bg-white/85 backdrop-blur p-6 shadow-2xl;
-    box-shadow: 0 30px 90px rgba(15, 23, 42, 0.18);
+    @apply relative overflow-hidden rounded-2xl border border-gray-200 bg-white/95 p-6 shadow-lg;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  .hero-section {
+    @apply bg-gradient-to-br from-white/95 to-gray-50/90
+           rounded-2xl p-8 border border-gray-200 shadow-sm;
+  }
+
+  .connection-pill {
+    @apply px-4 py-2 rounded-full text-sm font-medium
+           border border-gray-200 bg-white text-gray-700
+           hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700
+           transition-all duration-150 active:scale-95;
+  }
+
+  .connection-pill.active {
+    @apply border-primary-500 bg-primary-600 text-white hover:bg-primary-700 shadow-sm;
+  }
+
+  .connection-pill.accent {
+    @apply border-indigo-200 bg-indigo-50 text-indigo-700
+           hover:border-indigo-400 hover:bg-indigo-100;
   }
 
   .badge {
@@ -118,17 +139,6 @@
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
 }
 
-.spotlight {
-  position: absolute;
-  inset: -40%;
-  background: radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.18), transparent 36%),
-    radial-gradient(circle at 70% 10%, rgba(6, 182, 212, 0.18), transparent 32%),
-    radial-gradient(circle at 50% 70%, rgba(34, 197, 94, 0.16), transparent 30%);
-  filter: blur(32px);
-  opacity: 0.6;
-  animation: spotlight 12s ease-in-out infinite alternate;
-}
-
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -144,67 +154,6 @@
   0% { transform: translateY(0px); }
   50% { transform: translateY(-8px); }
   100% { transform: translateY(0px); }
-}
-
-@keyframes spotlight {
-  0% { transform: translate3d(-6%, -4%, 0) scale(1); }
-  50% { transform: translate3d(4%, 6%, 0) scale(1.05); }
-  100% { transform: translate3d(2%, -6%, 0) scale(1); }
-}
-
-.animated-bg {
-  position: fixed;
-  inset: -20%;
-  background: linear-gradient(120deg,
-    rgba(67, 56, 202, 0.2),
-    rgba(6, 182, 212, 0.18),
-    rgba(249, 115, 22, 0.14),
-    rgba(34, 197, 94, 0.18),
-    rgba(236, 72, 153, 0.16));
-  background-size: 240% 240%;
-  animation:
-    gradientShift 24s ease-in-out infinite,
-    hueShift 32s linear infinite;
-  filter: blur(55px);
-  transform: scale(1.08);
-  opacity: 0.55;
-  will-change: transform, background-position, filter;
-  pointer-events: none;
-  z-index: -30;
-}
-
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-@keyframes hueShift {
-  0% { filter: blur(70px) hue-rotate(0deg); }
-  50% { filter: blur(70px) hue-rotate(30deg); }
-  100% { filter: blur(70px) hue-rotate(-20deg); }
-}
-
-.hero-animated {
-  position: absolute;
-  inset: -12%;
-  background: linear-gradient(135deg,
-    rgba(99, 102, 241, 0.18),
-    rgba(6, 182, 212, 0.16),
-    rgba(236, 72, 153, 0.12),
-    rgba(34, 197, 94, 0.14));
-  background-size: 220% 220%;
-  animation: heroShift 16s ease-in-out infinite;
-  filter: blur(32px);
-  opacity: 0.35;
-  pointer-events: none;
-  z-index: -12;
-}
-
-@keyframes heroShift {
-  0% { background-position: 0% 40%; transform: scale(1); }
-  50% { background-position: 100% 60%; transform: scale(1.03); }
-  100% { background-position: 0% 40%; transform: scale(1); }
 }
 
 /* Logo animated gradient */
@@ -224,36 +173,8 @@
   100% { background-position: 0% 50%; }
 }
 
-/* Glow pulsante para ícone/logo */
-.logo-glow {
-  position: relative;
-}
-
-.logo-glow::after {
-  content: '';
-  position: absolute;
-  inset: -8px;
-  border-radius: 999px;
-  background: radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.25), transparent 55%),
-              radial-gradient(circle at 70% 70%, rgba(16, 185, 129, 0.22), transparent 60%);
-  filter: blur(12px);
-  opacity: 0.75;
-  animation: glowPulse 5s ease-in-out infinite;
-  z-index: -1;
-}
-
-@keyframes glowPulse {
-  0%, 100% { transform: scale(0.98); opacity: 0.65; }
-  50% { transform: scale(1.04); opacity: 0.95; }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .animated-bg,
-  .hero-animated,
-  .spotlight {
+  .logo-animated {
     animation: none !important;
-    filter: blur(30px);
-    opacity: 0.3;
-    transform: none;
   }
 }
