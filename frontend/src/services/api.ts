@@ -17,6 +17,7 @@ import type {
   RatingInput,
   Connection,
   MusicianBadge,
+  MusicianUpdatePayload,
 } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
@@ -147,6 +148,11 @@ export const musicianService = {
 
   getMe: async (): Promise<Musician> => {
     const response = await api.get('/musicians/me/');
+    return response.data;
+  },
+
+  updateMe: async (payload: Partial<MusicianUpdatePayload>): Promise<Musician> => {
+    const response = await api.patch('/musicians/me/', payload);
     return response.data;
   },
 

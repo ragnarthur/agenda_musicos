@@ -19,20 +19,39 @@ export interface SubscriptionInfo {
   subscription_ends_at: string | null;
 }
 
+export interface EquipmentItem {
+  name: string;
+  price: number | string | null;
+}
+
 export interface Musician {
   id: number;
   user: User;
   full_name: string;
   instrument: 'vocal' | 'guitar' | 'bass' | 'drums' | 'keyboard' | 'percussion' | string;
-   instruments?: string[];
+  instruments?: string[];
   role: 'member';
   bio?: string;
   phone?: string;
   instagram?: string;
   public_email?: string | null;
+  base_fee?: number | string | null;
+  travel_fee_per_km?: number | string | null;
+  equipment_items?: EquipmentItem[];
   is_active: boolean;
   created_at: string;
   subscription_info?: SubscriptionInfo;
+}
+
+export interface MusicianUpdatePayload {
+  instrument?: string;
+  instruments?: string[];
+  bio?: string;
+  phone?: string;
+  instagram?: string;
+  base_fee?: number | string | null;
+  travel_fee_per_km?: number | string | null;
+  equipment_items?: EquipmentItem[];
 }
 
 export interface Availability {
