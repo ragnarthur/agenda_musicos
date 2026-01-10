@@ -63,3 +63,4 @@ coverage.xml
 .env.docker
 payment-service/.env.docker
 payment-service/.env.prod
+payment-service/.env.prod.example.bak
