@@ -156,7 +156,7 @@ const EventForm: React.FC = () => {
     const counts: Record<string, number> = {};
     availableMusicians.forEach((m) => {
       const list = m.instruments && m.instruments.length > 0 ? m.instruments : [m.instrument];
-      list.forEach((inst) => {
+      list.forEach((inst: string) => {
         counts[inst] = (counts[inst] || 0) + 1;
       });
     });
