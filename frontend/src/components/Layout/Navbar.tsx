@@ -32,10 +32,21 @@ const Navbar: React.FC = () => {
     subscriptionInfo &&
     (subscriptionInfo.is_trial || subscriptionInfo.status === 'expired')
   );
-  const planStatusLabel = subscriptionInfo?.is_trial ? 'Trial' : 'Expirado';
+  const planStatusLabel = subscriptionInfo?.is_trial
+    ? 'Trial'
+    : subscriptionInfo?.status === 'active'
+      ? 'Premium'
+      : 'Expirado';
   const planStatusDetail = subscriptionInfo?.is_trial
     ? `Trial · ${subscriptionInfo.trial_days_remaining} dias restantes`
-    : 'Plano expirado';
+    : subscriptionInfo?.status === 'active'
+      ? 'Plano ativo'
+      : 'Plano expirado';
+  const planHighlightClass = subscriptionInfo?.is_trial
+    ? 'bg-amber-500/15 border-amber-400/30 text-amber-100'
+    : subscriptionInfo?.status === 'active'
+      ? 'bg-emerald-500/15 border-emerald-400/30 text-emerald-100'
+      : 'bg-slate-800/70 border-white/10 text-slate-200';
 
   const displayName =
     user?.full_name || user?.user?.first_name || user?.user?.username || 'Conta';
@@ -128,20 +139,19 @@ const Navbar: React.FC = () => {
                   ref={desktopMoreRef}
                   className="absolute right-0 mt-2 w-60 rounded-xl bg-slate-950/95 border border-white/10 shadow-2xl shadow-black/40 p-2 z-50"
                 >
-                  <div className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 mb-2">
-                    <p className="text-xs text-slate-300 uppercase tracking-wide">Plano</p>
-                    <p className="text-sm text-white font-semibold">
-                      {subscriptionInfo?.is_trial ? 'Trial ativo' : planStatusDetail}
+                  <div className={`px-3 py-2 rounded-lg mb-2 border ${planHighlightClass}`}>
+                    <p className="text-[11px] uppercase tracking-wide opacity-80">Plano</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold">{planStatusLabel}</p>
+                      {subscriptionInfo?.is_trial && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 border border-white/20">
+                          {subscriptionInfo.trial_days_remaining}d
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] opacity-80">
+                      {planStatusDetail}
                     </p>
-                    {subscriptionInfo?.trial_days_remaining ? (
-                      <p className="text-[11px] text-slate-400">
-                        {subscriptionInfo.trial_days_remaining} dia(s) restantes
-                      </p>
-                    ) : (
-                      <p className="text-[11px] text-slate-400">
-                        Status: {subscriptionInfo?.status || '—'}
-                      </p>
-                    )}
                   </div>
                   <RouterNavLink
                     to="/configuracoes/notificacoes"
@@ -291,20 +301,17 @@ const Navbar: React.FC = () => {
               <div className="rounded-xl border border-white/10 bg-slate-900/70 px-3 py-2">
                 <p className="text-sm font-semibold text-slate-100 truncate">{displayName}</p>
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-                <p className="text-xs text-slate-300 uppercase tracking-wide mb-1">Plano</p>
-                <p className="text-sm text-white font-semibold">
-                  {subscriptionInfo?.is_trial ? 'Trial ativo' : planStatusDetail}
+              <div className={`rounded-xl px-3 py-2 border ${planHighlightClass}`}>
+                <p className="text-xs uppercase tracking-wide mb-1 opacity-80">Plano</p>
+                <p className="text-sm font-semibold flex items-center gap-2">
+                  {planStatusLabel}
+                  {subscriptionInfo?.is_trial && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 border border-white/20">
+                      {subscriptionInfo.trial_days_remaining}d
+                    </span>
+                  )}
                 </p>
-                {subscriptionInfo?.trial_days_remaining ? (
-                  <p className="text-[11px] text-slate-400">
-                    {subscriptionInfo.trial_days_remaining} dia(s) restantes
-                  </p>
-                ) : (
-                  <p className="text-[11px] text-slate-400">
-                    Status: {subscriptionInfo?.status || '—'}
-                  </p>
-                )}
+                <p className="text-[11px] opacity-80">{planStatusDetail}</p>
               </div>
               <Link
                 to="/musicos"
