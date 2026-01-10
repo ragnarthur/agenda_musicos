@@ -34,9 +34,16 @@ const formatCurrencyMask = (value: string | number | null | undefined): string =
   return parsed.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
+const maskCurrencyInput = (raw: string): string => {
+  const digits = raw.replace(/\D/g, '');
+  if (!digits) return '';
+  const num = Number(digits) / 100;
+  return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
 const handleCurrencyChange = (setter: (val: string) => void) => (event: React.ChangeEvent<HTMLInputElement>) => {
-  const cleaned = event.target.value.replace(/[^\d.,]/g, '');
-  setter(cleaned);
+  const masked = maskCurrencyInput(event.target.value);
+  setter(masked);
 };
 
 const handleCurrencyBlur = (setter: (val: string) => void) => (event: React.FocusEvent<HTMLInputElement>) => {
@@ -258,7 +265,7 @@ const FinancialSettings: React.FC = () => {
                       type="text"
                       inputMode="decimal"
                       value={item.price}
-                      onChange={(e) => handleEquipmentChange(index, 'price', e.target.value)}
+                      onChange={(e) => handleEquipmentChange(index, 'price', maskCurrencyInput(e.target.value))}
                       onBlur={(e) => handleEquipmentChange(index, 'price', formatCurrencyMask(e.target.value))}
                       placeholder="Ex: 500,00"
                       className="mt-1 w-full rounded-lg bg-slate-950/60 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-white px-3 py-2"
