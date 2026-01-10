@@ -121,6 +121,7 @@ export interface AvailableMusician {
   musician_name: string;
   instrument: string;
   instrument_display: string;
+  instruments?: string[];
   has_availability: boolean;
   availability_id: number | null;
   start_time: string | null;
