@@ -132,6 +132,7 @@ export const STATUS_LABELS: Record<string, string> = {
 export const INSTRUMENT_LABELS: Record<string, string> = {
   vocal: 'Vocal',
   guitar: 'Guitarra',
+  acoustic_guitar: 'Violão',
   bass: 'Baixo',
   drums: 'Bateria',
   keyboard: 'Teclado',
