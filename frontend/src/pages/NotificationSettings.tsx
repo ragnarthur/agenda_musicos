@@ -161,7 +161,7 @@ const NotificationSettings: React.FC = () => {
         {/* Header */}
         <div className="mb-6">
           <Link
-            to="/"
+            to="/dashboard"
             className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-4"
           >
             <ChevronLeft className="h-4 w-4" />

@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Loading from './components/common/Loading';
 
 // Lazy load de páginas para otimizar o bundle inicial
+const Landing = lazy(() => import('./pages/Landing'));
 const Login = lazy(() => import('./pages/Login'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const EventsList = lazy(() => import('./pages/EventsList'));
@@ -57,13 +58,35 @@ const PublicRoute: React.FC<{ children: React.ReactElement }> = ({ children }) =
     return <PageLoader />;
   }
 
-  return !isAuthenticated ? children : <Navigate to="/" replace />;
+  return !isAuthenticated ? children : <Navigate to="/dashboard" replace />;
+};
+
+// Componente para Landing (redireciona se autenticado)
+const LandingRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return <PageLoader />;
+  }
+
+  // Se autenticado, redireciona para dashboard
+  return !isAuthenticated ? children : <Navigate to="/dashboard" replace />;
 };
 
 function AppRoutes() {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
+        {/* Landing Page - Nova rota raiz */}
+        <Route
+          path="/"
+          element={
+            <LandingRoute>
+              <Landing />
+            </LandingRoute>
+          }
+        />
+
         {/* Rotas Públicas */}
         <Route
           path="/login"
@@ -113,9 +136,9 @@ function AppRoutes() {
           }
         />
 
-        {/* Rotas Protegidas */}
+        {/* Dashboard - Nova rota protegida */}
         <Route
-          path="/"
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <Dashboard />

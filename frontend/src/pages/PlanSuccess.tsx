@@ -93,7 +93,7 @@ const PlanSuccess: React.FC = () => {
           <Link to="/login" className="btn-primary w-full text-center">
             Voltar para login
           </Link>
-          <Link to="/" className="btn-secondary w-full text-center">
+          <Link to="/dashboard" className="btn-secondary w-full text-center">
             Ir para dashboard
           </Link>
         </div>
