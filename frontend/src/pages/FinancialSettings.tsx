@@ -20,13 +20,6 @@ const DEFAULT_EQUIPMENTS: EquipmentRow[] = [
   { name: 'Microfones', price: '' },
 ];
 
-const toInputString = (value: number | string | null | undefined): string => {
-  if (value === null || value === undefined) return '';
-  const num = typeof value === 'string' ? Number(value) : value;
-  if (Number.isNaN(num)) return '';
-  return num.toString();
-};
-
 const parseDecimal = (value: string): number | null => {
   if (!value) return null;
   const sanitized = value.replace(/\./g, '').replace(',', '.');
