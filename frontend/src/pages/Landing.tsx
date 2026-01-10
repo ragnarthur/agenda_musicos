@@ -23,8 +23,8 @@ const Landing: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="p-6 rounded-full bg-gradient-to-br from-amber-400 via-primary-500 to-emerald-400 shadow-2xl">
-              <OwlMascot className="h-16 w-16" />
+            <div className="h-16 w-16 sm:h-20 sm:w-20">
+              <OwlMascot className="h-16 w-16 sm:h-20 sm:w-20" />
             </div>
           </motion.div>
 
