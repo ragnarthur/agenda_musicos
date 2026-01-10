@@ -36,21 +36,44 @@ const Navbar: React.FC = () => {
 
   const formatInstrument = () => {
     if (!user) return '';
-    const fullName = user.full_name.toLowerCase();
-
-    // Regras customizadas
-    if (fullName.includes('sara')) return 'Vocalista e violonista';
-    if (fullName.includes('arthur')) return 'Vocalista, violonista e guitarrista';
-    if (fullName.includes('roberto')) return 'Baterista';
 
     const displayMap: Record<string, string> = {
-      vocal: 'Vocal',
-      guitar: 'Guitarra',
-      bass: 'Baixo',
-      drums: 'Bateria',
-      keyboard: 'Teclado',
-      percussion: 'Percussão',
+      vocal: 'Vocalista',
+      guitar: 'Guitarrista',
+      acoustic_guitar: 'Violonista',
+      bass: 'Baixista',
+      drums: 'Baterista',
+      keyboard: 'Tecladista',
+      piano: 'Pianista',
+      synth: 'Sintetizador',
+      percussion: 'Percussionista',
+      cajon: 'Cajón',
+      violin: 'Violinista',
+      viola: 'Viola',
+      cello: 'Violoncelista',
+      double_bass: 'Contrabaixista',
+      saxophone: 'Saxofonista',
+      trumpet: 'Trompetista',
+      trombone: 'Trombonista',
+      flute: 'Flautista',
+      clarinet: 'Clarinetista',
+      harmonica: 'Gaitista',
+      ukulele: 'Ukulele',
+      banjo: 'Banjo',
+      mandolin: 'Bandolinista',
+      dj: 'DJ',
+      producer: 'Produtor(a)',
     };
+
+    // Usa o array de instrumentos se disponível
+    if (user.instruments && user.instruments.length > 0) {
+      const labels = user.instruments.map(
+        (inst) => displayMap[inst] || inst.charAt(0).toUpperCase() + inst.slice(1)
+      );
+      return labels.join(', ');
+    }
+
+    // Fallback para instrumento singular
     return displayMap[user.instrument] || user.instrument;
   };
 

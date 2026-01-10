@@ -173,3 +173,111 @@ def award_badges_for_musician(musician):
             pass
 
     return awarded
+
+
+def get_badge_progress(musician):
+    """
+    Retorna badges conquistadas e disponíveis com progresso.
+    """
+    from .models import MusicianBadge, Availability, Connection
+
+    now = timezone.now()
+    today = now.date()
+    last_30 = today - timedelta(days=30)
+
+    # Calcula métricas
+    played_events = Availability.objects.filter(
+        musician=musician,
+        response='available',
+        event__event_date__lte=today
+    )
+    total_played = played_events.count()
+    played_last_30 = played_events.filter(event__event_date__gte=last_30).count()
+    connections_count = Connection.objects.filter(follower=musician).count()
+
+    # Primeiro, garante que badges sejam concedidas
+    award_badges_for_musician(musician)
+
+    # Busca badges conquistadas
+    earned = MusicianBadge.objects.filter(musician=musician)
+    earned_slugs = set(earned.values_list('slug', flat=True))
+
+    # Definições de badges com progresso
+    badges_definitions = [
+        {
+            'slug': 'first_show',
+            'name': '🎸 Primeiro Show',
+            'description': 'Completou o primeiro evento',
+            'icon': '🎸',
+            'current': total_played,
+            'required': 1,
+        },
+        {
+            'slug': 'five_stars',
+            'name': '⭐ 5 Estrelas',
+            'description': 'Manteve média 5.0 com 5+ avaliações',
+            'icon': '⭐',
+            'current': musician.total_ratings,
+            'required': 5,
+            'extra_condition': f'Média atual: {musician.average_rating or 0:.1f}/5.0',
+        },
+        {
+            'slug': 'hot_month',
+            'name': '🔥 Em Alta',
+            'description': '10 shows no último mês',
+            'icon': '🔥',
+            'current': played_last_30,
+            'required': 10,
+        },
+        {
+            'slug': 'top_musician',
+            'name': '👑 Top Músico',
+            'description': '10+ avaliações com média 4.5+',
+            'icon': '👑',
+            'current': musician.total_ratings,
+            'required': 10,
+            'extra_condition': f'Média atual: {musician.average_rating or 0:.1f}/4.5',
+        },
+        {
+            'slug': 'networking',
+            'name': '🤝 Networking',
+            'description': '50 conexões criadas',
+            'icon': '🤝',
+            'current': connections_count,
+            'required': 50,
+        },
+        {
+            'slug': 'busy_calendar',
+            'name': '📅 Agenda Cheia',
+            'description': '20 shows em 30 dias',
+            'icon': '📅',
+            'current': played_last_30,
+            'required': 20,
+        },
+    ]
+
+    # Separa conquistadas e disponíveis
+    available = []
+    for badge_def in badges_definitions:
+        if badge_def['slug'] not in earned_slugs:
+            current = badge_def['current']
+            required = badge_def['required']
+            percentage = min(100, round((current / required) * 100)) if required > 0 else 0
+            available.append({
+                'slug': badge_def['slug'],
+                'name': badge_def['name'],
+                'description': badge_def['description'],
+                'icon': badge_def['icon'],
+                'current': current,
+                'required': required,
+                'percentage': percentage,
+                'extra_condition': badge_def.get('extra_condition'),
+            })
+
+    # Ordena por porcentagem (mais próximos primeiro)
+    available.sort(key=lambda x: -x['percentage'])
+
+    return {
+        'earned': list(earned.values('id', 'slug', 'name', 'description', 'icon', 'awarded_at')),
+        'available': available,
+    }
