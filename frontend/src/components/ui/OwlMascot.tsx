@@ -12,6 +12,7 @@ const OwlMascot: React.FC<OwlMascotProps> = ({ className }) => (
     loop
     autoplay
     className={`owl-mascot ${className ?? ''}`}
+    style={{ width: '100%', height: '100%' }}
     aria-hidden="true"
   />
 );
