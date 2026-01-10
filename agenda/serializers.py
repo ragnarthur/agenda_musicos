@@ -1,5 +1,6 @@
 ﻿# agenda/serializers.py
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -51,7 +52,8 @@ class MusicianSerializer(serializers.ModelSerializer):
         model = Musician
         fields = [
             'id', 'user', 'full_name', 'instrument', 'instruments', 'role',
-            'bio', 'phone', 'instagram', 'public_email', 'is_active',
+            'bio', 'phone', 'instagram', 'base_fee', 'travel_fee_per_km',
+            'equipment_items', 'public_email', 'is_active',
             'average_rating', 'total_ratings', 'created_at', 'subscription_info'
         ]
         read_only_fields = ['id', 'average_rating', 'total_ratings', 'created_at', 'subscription_info']
@@ -73,6 +75,76 @@ class MusicianSerializer(serializers.ModelSerializer):
         if request and request.user == obj.user:
             return obj.get_subscription_info()
         return None
+
+
+class MusicianUpdateSerializer(serializers.ModelSerializer):
+    """Serializer para atualização do próprio perfil de músico"""
+
+    class Meta:
+        model = Musician
+        fields = [
+            'instrument', 'instruments', 'bio', 'phone', 'instagram',
+            'base_fee', 'travel_fee_per_km', 'equipment_items'
+        ]
+
+    def validate_base_fee(self, value):
+        if value is None:
+            return value
+        try:
+            decimal_value = Decimal(str(value))
+        except (InvalidOperation, TypeError):
+            raise serializers.ValidationError('Valor do cachê inválido.')
+        if decimal_value < 0:
+            raise serializers.ValidationError('Valor do cachê não pode ser negativo.')
+        return decimal_value
+
+    def validate_travel_fee_per_km(self, value):
+        if value is None:
+            return value
+        try:
+            decimal_value = Decimal(str(value))
+        except (InvalidOperation, TypeError):
+            raise serializers.ValidationError('Valor por km inválido.')
+        if decimal_value < 0:
+            raise serializers.ValidationError('Valor por km não pode ser negativo.')
+        return decimal_value
+
+    def validate_equipment_items(self, value):
+        if value in [None, '']:
+            return []
+        if not isinstance(value, list):
+            raise serializers.ValidationError('Equipamentos devem ser enviados como lista.')
+
+        cleaned_items = []
+        for item in value:
+            if not isinstance(item, dict):
+                raise serializers.ValidationError('Cada equipamento deve ser um objeto com nome e valor.')
+
+            name = str(item.get('name', '')).strip()
+            if not name:
+                # Ignora itens vazios
+                continue
+            if len(name) > 80:
+                raise serializers.ValidationError('Nome de equipamento deve ter no máximo 80 caracteres.')
+
+            raw_price = item.get('price')
+            if raw_price in [None, '']:
+                price_decimal = None
+            else:
+                try:
+                    price_decimal = Decimal(str(raw_price))
+                except (InvalidOperation, TypeError):
+                    raise serializers.ValidationError(f'Valor inválido para o equipamento {name}.')
+
+                if price_decimal < 0:
+                    raise serializers.ValidationError(f'O valor de {name} não pode ser negativo.')
+
+            cleaned_items.append({
+                'name': name,
+                'price': price_decimal if price_decimal is None else float(price_decimal.quantize(Decimal('0.01'))),
+            })
+
+        return cleaned_items
 
 
 class AvailabilitySerializer(serializers.ModelSerializer):

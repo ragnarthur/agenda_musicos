@@ -13,6 +13,7 @@ import {
   Bell,
   UserCheck,
   Settings,
+  Wallet,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { eventService } from '../../services/api';
@@ -118,6 +119,13 @@ const Navbar: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
+              <Link
+                to="/configuracoes/financeiro"
+                className="hidden md:inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-200 hover:text-white bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 transition-colors"
+              >
+                <Wallet className="h-4 w-4" />
+                Valores
+              </Link>
               {showPlanShortcut && (
                 <Link
                   to="/planos"
@@ -234,6 +242,14 @@ const Navbar: React.FC = () => {
               >
                 <Bell className="h-5 w-5" />
                 <span className="text-sm">Notificacoes</span>
+              </Link>
+              <Link
+                to="/configuracoes/financeiro"
+                onClick={() => setOpenMore(false)}
+                className="flex items-center gap-3 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
+              >
+                <Wallet className="h-5 w-5" />
+                <span className="text-sm">Valores e equipamentos</span>
               </Link>
               <Link
                 to="/aprovacoes"

@@ -26,6 +26,7 @@ const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const Payment = lazy(() => import('./pages/Payment'));
 const Plans = lazy(() => import('./pages/Plans'));
 const PlanSuccess = lazy(() => import('./pages/PlanSuccess'));
+const FinancialSettings = lazy(() => import('./pages/FinancialSettings'));
 
 const useStripe = import.meta.env.VITE_USE_STRIPE === 'true';
 const allowFakePayment = import.meta.env.VITE_ALLOW_FAKE_PAYMENT === 'true';
@@ -206,6 +207,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <NotificationSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/configuracoes/financeiro"
+          element={
+            <ProtectedRoute>
+              <FinancialSettings />
             </ProtectedRoute>
           }
         />
