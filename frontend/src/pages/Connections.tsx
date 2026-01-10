@@ -150,7 +150,7 @@ const Connections: React.FC = () => {
 
   return (
     <Layout>
-      <div className="space-y-8">
+      <div className="space-y-8 overflow-x-hidden">
         <div className="hero-section fade-in-up">
           <div className="flex items-center gap-4 mb-6">
             {/* ÚNICO ícone grande e destacado */}
@@ -225,7 +225,7 @@ const Connections: React.FC = () => {
                 </div>
               </div>
 
-              <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 mt-4">
+              <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 sm:pr-2 mt-4">
                 {filteredMusicians.map((m, index) => {
                   const instruments = getMusicianInstruments(m);
                   const primaryInstrument = instruments[0] || m.instrument;
@@ -253,7 +253,7 @@ const Connections: React.FC = () => {
                         </motion.div>
                         <div className="min-w-0 flex-1">
                           <p className="font-semibold text-gray-900 truncate">{m.full_name}</p>
-                          <p className="text-sm text-gray-600 truncate">
+                          <p className="text-sm text-gray-600 break-words">
                             {instruments.map(getInstrumentLabel).join(' · ')}
                           </p>
                           {instruments.length > 0 && (
@@ -273,7 +273,7 @@ const Connections: React.FC = () => {
                       </div>
 
                       {/* Botões SEM ícones - hierarquia por cor */}
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                         {activeConnectionTypes.map((type) => {
                           const isOn = Boolean(active[type]);
                           const isAccent = type === 'played_with';
