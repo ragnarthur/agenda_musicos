@@ -25,6 +25,7 @@ const Navbar: React.FC = () => {
   const [pendingMyResponse, setPendingMyResponse] = useState(0);
   const [pendingApproval, setPendingApproval] = useState(0);
   const [openMore, setOpenMore] = useState(false);
+  const [openDesktopMore, setOpenDesktopMore] = useState(false);
   const subscriptionInfo = user?.subscription_info;
   const showPlanShortcut = Boolean(
     subscriptionInfo &&
@@ -100,14 +101,65 @@ const Navbar: React.FC = () => {
             <AppNavLink to="/conexoes" icon={<HeartHandshake className="h-5 w-5" />} label="Rede & Badges" />
             <AppNavLink to="/disponibilidades" icon={<Clock className="h-5 w-5" />} label="Datas Disponíveis" />
             <AppNavLink to="/marketplace" icon={<Megaphone className="h-5 w-5" />} label="Vagas" />
-            <AppNavLink to="/configuracoes/notificacoes" icon={<Bell className="h-5 w-5" />} label="Notificações" />
-            <AppNavLink
-              to="/aprovacoes"
-              icon={<UserCheck className="h-5 w-5" />}
-              label="Convites"
-              badge={pendingApproval}
-              accent
-            />
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setOpenDesktopMore((prev) => !prev)}
+                className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-slate-200 hover:text-white hover:bg-white/10 transition-colors border border-white/5"
+                aria-expanded={openDesktopMore}
+                aria-haspopup="true"
+              >
+                <Menu className="h-4 w-4" />
+                <span>Mais</span>
+              </button>
+              {openDesktopMore && (
+                <div className="absolute right-0 mt-2 w-52 rounded-xl bg-slate-950/95 border border-white/10 shadow-2xl shadow-black/40 p-2 z-50">
+                  <RouterNavLink
+                    to="/configuracoes/notificacoes"
+                    onClick={() => setOpenDesktopMore(false)}
+                    className={({ isActive }) =>
+                      `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                        isActive ? 'bg-white/10 text-white' : 'text-slate-200 hover:bg-white/5'
+                      }`
+                    }
+                  >
+                    <Bell className="h-4 w-4" />
+                    Notificações
+                  </RouterNavLink>
+                  <RouterNavLink
+                    to="/aprovacoes"
+                    onClick={() => setOpenDesktopMore(false)}
+                    className={({ isActive }) =>
+                      `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                        isActive ? 'bg-amber-500/10 text-amber-100' : 'text-slate-200 hover:bg-white/5'
+                      }`
+                    }
+                  >
+                    <div className="relative">
+                      <UserCheck className="h-4 w-4" />
+                      {pendingApproval > 0 && (
+                        <span className="absolute -top-2 -right-2 bg-yellow-500 text-white text-[10px] font-bold rounded-full h-4 min-w-4 px-1 flex items-center justify-center">
+                          {pendingApproval}
+                        </span>
+                      )}
+                    </div>
+                    <span>Convites</span>
+                  </RouterNavLink>
+                  <RouterNavLink
+                    to="/configuracoes/financeiro"
+                    onClick={() => setOpenDesktopMore(false)}
+                    className={({ isActive }) =>
+                      `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                        isActive ? 'bg-emerald-500/10 text-emerald-100' : 'text-slate-200 hover:bg-white/5'
+                      }`
+                    }
+                  >
+                    <Wallet className="h-4 w-4" />
+                    Valores e equipamentos
+                  </RouterNavLink>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Usuário e Logout */}
@@ -119,13 +171,6 @@ const Navbar: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <Link
-                to="/configuracoes/financeiro"
-                className="hidden md:inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-200 hover:text-white bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 transition-colors"
-              >
-                <Wallet className="h-4 w-4" />
-                Valores
-              </Link>
               {showPlanShortcut && (
                 <Link
                   to="/planos"
