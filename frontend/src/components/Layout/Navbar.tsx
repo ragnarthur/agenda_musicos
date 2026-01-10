@@ -1,5 +1,5 @@
 // components/Layout/Navbar.tsx
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, NavLink as RouterNavLink, useNavigate } from 'react-router-dom';
 import {
   Calendar,
@@ -26,6 +26,7 @@ const Navbar: React.FC = () => {
   const [pendingApproval, setPendingApproval] = useState(0);
   const [openMore, setOpenMore] = useState(false);
   const [openDesktopMore, setOpenDesktopMore] = useState(false);
+  const desktopMoreRef = useRef<HTMLDivElement | null>(null);
   const subscriptionInfo = user?.subscription_info;
   const showPlanShortcut = Boolean(
     subscriptionInfo &&
@@ -74,8 +75,18 @@ const Navbar: React.FC = () => {
     navigate('/login');
   };
 
+  useEffect(() => {
+    const onClickOutside = (event: MouseEvent) => {
+      if (desktopMoreRef.current && !desktopMoreRef.current.contains(event.target as Node)) {
+        setOpenDesktopMore(false);
+      }
+    };
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, []);
+
   return (
-    <nav className="bg-gradient-to-r from-slate-950/90 via-slate-900/85 to-slate-950/90 backdrop-blur-xl shadow-lg shadow-black/30 sticky top-0 z-50 border-b border-white/10 overflow-visible md:overflow-hidden">
+    <nav className="bg-gradient-to-r from-slate-950/90 via-slate-900/85 to-slate-950/90 backdrop-blur-xl shadow-lg shadow-black/30 sticky top-0 z-50 border-b border-white/10 overflow-visible">
       <div className="container mx-auto px-3 sm:px-4">
         <div className="flex flex-wrap md:flex-nowrap items-center justify-between min-h-[64px] py-2 gap-x-3 gap-y-2">
           {/* Logo e Nome */}
@@ -113,7 +124,25 @@ const Navbar: React.FC = () => {
                 <span>Mais</span>
               </button>
               {openDesktopMore && (
-                <div className="absolute right-0 mt-2 w-52 rounded-xl bg-slate-950/95 border border-white/10 shadow-2xl shadow-black/40 p-2 z-50">
+                <div
+                  ref={desktopMoreRef}
+                  className="absolute right-0 mt-2 w-60 rounded-xl bg-slate-950/95 border border-white/10 shadow-2xl shadow-black/40 p-2 z-50"
+                >
+                  <div className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 mb-2">
+                    <p className="text-xs text-slate-300 uppercase tracking-wide">Plano</p>
+                    <p className="text-sm text-white font-semibold">
+                      {subscriptionInfo?.is_trial ? 'Trial ativo' : planStatusDetail}
+                    </p>
+                    {subscriptionInfo?.trial_days_remaining ? (
+                      <p className="text-[11px] text-slate-400">
+                        {subscriptionInfo.trial_days_remaining} dia(s) restantes
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-slate-400">
+                        Status: {subscriptionInfo?.status || '—'}
+                      </p>
+                    )}
+                  </div>
                   <RouterNavLink
                     to="/configuracoes/notificacoes"
                     onClick={() => setOpenDesktopMore(false)}
@@ -157,6 +186,20 @@ const Navbar: React.FC = () => {
                     <Wallet className="h-4 w-4" />
                     Valores e equipamentos
                   </RouterNavLink>
+                  {showPlanShortcut && (
+                    <RouterNavLink
+                      to="/planos"
+                      onClick={() => setOpenDesktopMore(false)}
+                      className={({ isActive }) =>
+                        `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                          isActive ? 'bg-amber-500/10 text-amber-100' : 'text-slate-200 hover:bg-white/5'
+                        }`
+                      }
+                    >
+                      <Settings className="h-4 w-4" />
+                      Escolher plano
+                    </RouterNavLink>
+                  )}
                 </div>
               )}
             </div>
@@ -248,6 +291,21 @@ const Navbar: React.FC = () => {
               <div className="rounded-xl border border-white/10 bg-slate-900/70 px-3 py-2">
                 <p className="text-sm font-semibold text-slate-100 truncate">{displayName}</p>
               </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                <p className="text-xs text-slate-300 uppercase tracking-wide mb-1">Plano</p>
+                <p className="text-sm text-white font-semibold">
+                  {subscriptionInfo?.is_trial ? 'Trial ativo' : planStatusDetail}
+                </p>
+                {subscriptionInfo?.trial_days_remaining ? (
+                  <p className="text-[11px] text-slate-400">
+                    {subscriptionInfo.trial_days_remaining} dia(s) restantes
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-400">
+                    Status: {subscriptionInfo?.status || '—'}
+                  </p>
+                )}
+              </div>
               <Link
                 to="/musicos"
                 onClick={() => setOpenMore(false)}
@@ -296,6 +354,16 @@ const Navbar: React.FC = () => {
                 <Wallet className="h-5 w-5" />
                 <span className="text-sm">Valores e equipamentos</span>
               </Link>
+              {showPlanShortcut && (
+                <Link
+                  to="/planos"
+                  onClick={() => setOpenMore(false)}
+                  className="flex items-center gap-3 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  <Settings className="h-5 w-5" />
+                  <span className="text-sm">Planos</span>
+                </Link>
+              )}
               <Link
                 to="/aprovacoes"
                 onClick={() => setOpenMore(false)}
