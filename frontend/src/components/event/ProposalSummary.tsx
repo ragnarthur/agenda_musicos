@@ -85,16 +85,16 @@ const ProposalSummary: React.FC<ProposalSummaryProps> = ({
         </div>
         <ul className="space-y-3 text-gray-700">
           <li>
-            <strong className="text-gray-900">Convide músicos:</strong> selecione qualquer músico da
-            banda diretamente na lista de convidados.
+            <strong className="text-gray-900">Escolha por instrumento:</strong> filtre e convide quem toca exatamente o que você precisa.
           </li>
           <li>
-            <strong className="text-gray-900">Confirmação:</strong> o evento só é confirmado quando
-            todos os músicos convidados aceitarem o convite.
+            <strong className="text-gray-900">Confirmação:</strong> o evento confirma quando todos aceitarem; acompanhe no box ao lado.
           </li>
           <li>
-            <strong className="text-gray-900">Show solo:</strong> marque esta opção se você for tocar
-            sozinho. O evento é confirmado automaticamente.
+            <strong className="text-gray-900">Buffer inteligente:</strong> o sistema bloqueia janelas próximas (±40min) para evitar choque de agenda.
+          </li>
+          <li>
+            <strong className="text-gray-900">Show solo:</strong> marque se for sozinho — confirma automaticamente sem aguardar outros músicos.
           </li>
         </ul>
       </div>
