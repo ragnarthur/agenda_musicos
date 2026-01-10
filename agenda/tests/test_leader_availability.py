@@ -125,6 +125,11 @@ class LeaderAvailabilityAPITest(APITestCase):
 
         self.list_url = reverse('leader-availability-list')
 
+    def _extract_results(self, response):
+        """Suporta respostas com ou sem paginação."""
+        data = response.data
+        return data if isinstance(data, list) else data.get('results', data)
+
     def test_create_availability(self):
         """Testa criação de disponibilidade via API"""
         data = {
@@ -173,7 +178,7 @@ class LeaderAvailabilityAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # Deve retornar apenas as 2 do usuário logado
-        results = response.data.get('results', response.data)
+        results = self._extract_results(response)
         self.assertEqual(len(results), 2)
 
     def test_list_public_availabilities(self):
@@ -201,7 +206,7 @@ class LeaderAvailabilityAPITest(APITestCase):
         response = self.client.get(self.list_url, {'public': 'true'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        results = response.data.get('results', response.data)
+        results = self._extract_results(response)
         # Deve ter apenas a pública
         public_results = [r for r in results if r['is_public']]
         self.assertGreaterEqual(len(public_results), 1)
@@ -229,7 +234,7 @@ class LeaderAvailabilityAPITest(APITestCase):
         response = self.client.get(self.list_url, {'mine': 'true', 'upcoming': 'true'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        results = response.data.get('results', response.data)
+        results = self._extract_results(response)
         for r in results:
             self.assertGreaterEqual(r['date'], date.today().isoformat())
 
@@ -261,7 +266,7 @@ class LeaderAvailabilityAPITest(APITestCase):
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        results = response.data.get('results', response.data)
+        results = self._extract_results(response)
         for r in results:
             self.assertEqual(r['leader_instrument'], 'drums')
 
@@ -283,7 +288,7 @@ class LeaderAvailabilityAPITest(APITestCase):
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        results = response.data.get('results', response.data)
+        results = self._extract_results(response)
         self.assertGreaterEqual(len(results), 1)
         self.assertIn('Bruno', results[0]['leader_name'])
 
@@ -370,7 +375,7 @@ class LeaderAvailabilityAPITest(APITestCase):
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        results = response.data.get('results', response.data)
+        results = self._extract_results(response)
         for r in results:
             self.assertEqual(r['leader'], self.musician.id)
 
