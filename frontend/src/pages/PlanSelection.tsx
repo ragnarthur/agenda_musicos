@@ -159,8 +159,8 @@ const PlanSelection: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 flex items-center justify-center">
-              <OwlMascot className="h-12 w-12" />
+            <div className="h-14 w-14 flex items-center justify-center">
+              <OwlMascot className="h-14 w-14" />
             </div>
             <div>
               <p className="text-sm text-primary-100 uppercase tracking-wide">GigFlow</p>

@@ -102,8 +102,8 @@ const Navbar: React.FC = () => {
             to="/dashboard"
             className="flex items-center space-x-3 hover:scale-[1.01] transition-transform min-w-fit"
           >
-            <div className="h-11 w-11 flex items-center justify-center">
-              <OwlMascot className="h-11 w-11" />
+            <div className="h-12 w-12 flex items-center justify-center">
+              <OwlMascot className="h-12 w-12" />
             </div>
             <div className="flex flex-col leading-tight">
               <span className="text-lg sm:text-xl font-bold logo-animated">
