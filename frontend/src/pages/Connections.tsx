@@ -8,6 +8,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { badgeService, connectionService, musicianService, type BadgeProgressResponse } from '../services/api';
 import type { Connection, ConnectionType, Musician } from '../types';
 import { INSTRUMENT_LABELS } from '../utils/formatting';
+import InstrumentIcon from '../components/common/InstrumentIcon';
 
 const connectionLabels: Record<string, string> = {
   follow: 'Seguir',
@@ -243,13 +244,12 @@ const Connections: React.FC = () => {
                       }}
                     >
                       <div className="flex items-center gap-3 mb-4">
-                        {/* Emoji do instrumento (sem ícone lucide) */}
                         <motion.div
-                          className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center text-xl flex-shrink-0"
+                          className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0"
                           whileHover={{ scale: 1.1, rotate: 5 }}
                           transition={{ type: 'spring', stiffness: 300 }}
                         >
-                          {getInstrumentEmoji(primaryInstrument)}
+                          <InstrumentIcon instrument={primaryInstrument} />
                         </motion.div>
                         <div className="min-w-0 flex-1">
                           <p className="font-semibold text-gray-900 truncate">{m.full_name}</p>
@@ -263,7 +263,7 @@ const Connections: React.FC = () => {
                                   key={inst}
                                   className="inline-flex items-center gap-1 rounded-full border border-primary-100 bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700"
                                 >
-                                  <span>{getInstrumentEmoji(inst)}</span>
+                                  <InstrumentIcon instrument={inst} size={16} />
                                   <span>{getInstrumentLabel(inst)}</span>
                                 </span>
                               ))}
@@ -461,19 +461,5 @@ const Connections: React.FC = () => {
     </Layout>
   );
 };
-
-// Helper function para emojis de instrumentos
-function getInstrumentEmoji(instrument: string): string {
-  const emojis: Record<string, string> = {
-    vocal: '🎤',
-    guitar: '🎸',
-    acoustic_guitar: '🎸',
-    bass: '🎸',
-    drums: '🥁',
-    keyboard: '🎹',
-    percussion: '🥁',
-  };
-  return emojis[instrument] || '🎵';
-}
 
 export default Connections;
