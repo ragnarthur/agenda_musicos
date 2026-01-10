@@ -1,25 +1,19 @@
 // pages/Connections.tsx
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Users, Star, Sparkles, HeartHandshake, Filter, UserCheck, Bookmark, PhoneCall } from 'lucide-react';
+import { Users, Star, Filter } from 'lucide-react';
+import { motion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
+import { StatCard } from '../components/ui/StatCard';
 import { badgeService, connectionService, musicianService } from '../services/api';
 import type { Connection, ConnectionType, Musician, MusicianBadge } from '../types';
 import { INSTRUMENT_LABELS } from '../utils/formatting';
 
 const connectionLabels: Record<ConnectionType, string> = {
   follow: 'Seguir',
-  call_later: 'Ligar depois',
+  call_later: 'Ligar',
   recommend: 'Indicar',
   played_with: 'Já toquei',
-};
-
-const connectionIcons: Record<ConnectionType, React.ReactNode> = {
-  follow: <Sparkles className="h-4 w-4" />,
-  call_later: <PhoneCall className="h-4 w-4" />,
-  recommend: <Bookmark className="h-4 w-4" />,
-  played_with: <HeartHandshake className="h-4 w-4" />,
 };
 
 const Connections: React.FC = () => {
@@ -128,40 +122,32 @@ const Connections: React.FC = () => {
   return (
     <Layout>
       <div className="space-y-8">
-        <div className="hero-panel">
-          <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.12),_transparent_35%)]" />
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="hero-section fade-in-up">
+          <div className="flex items-center gap-4 mb-6">
+            {/* ÚNICO ícone grande e destacado */}
+            <div className="h-16 w-16 rounded-2xl bg-primary-600/10 flex items-center justify-center border border-primary-500/20">
+              <Users className="h-8 w-8 text-primary-600" />
+            </div>
             <div>
-              <p className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-indigo-700 shadow-sm">
-                <HeartHandshake className="h-4 w-4" /> Rede Profissional
-              </p>
-              <h1 className="mt-2 text-3xl font-bold text-gray-900">Conexões profissionais</h1>
-              <p className="mt-1 text-gray-700">
-                Construa sua rede, indique músicos para oportunidades e acompanhe conquistas em tempo real.
-              </p>
+              <h1 className="text-3xl font-bold text-gray-900">Conexões profissionais</h1>
+              <p className="text-gray-600">Construa sua rede e gerencie relacionamentos</p>
             </div>
-            <Link to="/musicos" className="btn-primary inline-flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              <span>Explorar músicos</span>
-            </Link>
           </div>
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+
+          {/* Stats: SEM ícones - apenas números grandes com micro-interações */}
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             {(Object.keys(stats) as ConnectionType[]).map((key) => (
-              <div key={key} className="rounded-2xl border border-white/60 bg-white/80 p-4 shadow-lg">
-                <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
-                  {connectionIcons[key]}
-                  {connectionLabels[key]}
-                </div>
-                <p className="mt-1 text-2xl font-bold text-indigo-700">{stats[key] || 0}</p>
-              </div>
+              <StatCard
+                key={key}
+                label={connectionLabels[key]}
+                value={stats[key] || 0}
+              />
             ))}
-            <div className="rounded-2xl border border-white/60 bg-white/80 p-4 shadow-lg">
-              <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
-                <Star className="h-4 w-4 text-amber-500" />
-                Badges
-              </div>
-              <p className="mt-1 text-2xl font-bold text-amber-600">{badges.length}</p>
-            </div>
+            <StatCard
+              label="Badges"
+              value={badges.length}
+              accent
+            />
           </div>
         </div>
 
@@ -170,35 +156,37 @@ const Connections: React.FC = () => {
           <div className="card space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <Users className="h-4 w-4 text-indigo-600" /> Minhas conexões
-                </p>
-                <p className="text-xs text-gray-500">
-                  Acompanhe favoritos, indique profissionais e registre colaborações anteriores.
+                <h2 className="text-lg font-semibold text-gray-900">Gerenciar conexões</h2>
+                <p className="text-sm text-gray-600">
+                  Acompanhe favoritos e registre colaborações
                 </p>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-gray-100 bg-gray-50/70 p-4">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
+            <div className="bg-gray-50 rounded-xl p-4">
+              <div className="flex flex-col md:flex-row gap-3">
                 <div className="flex-1">
-                  <label className="text-xs font-semibold text-gray-600">Buscar músico</label>
+                  <label className="text-xs font-semibold text-gray-700 mb-1 block">
+                    Buscar
+                  </label>
                   <div className="relative">
                     <input
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      className="input-field mt-1 pl-10"
-                      placeholder="Nome, @username ou instrumento"
+                      className="input-field pl-10"
+                      placeholder="Nome ou @username"
                     />
-                    <Filter className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
+                    <Filter className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   </div>
                 </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-600">Instrumento</label>
+                <div className="w-full md:w-48">
+                  <label className="text-xs font-semibold text-gray-700 mb-1 block">
+                    Instrumento
+                  </label>
                   <select
                     value={instrumentFilter}
                     onChange={(e) => setInstrumentFilter(e.target.value)}
-                    className="mt-1 input-field"
+                    className="input-field"
                   >
                     <option value="all">Todos</option>
                     {Object.entries(INSTRUMENT_LABELS).map(([key, label]) => (
@@ -208,39 +196,59 @@ const Connections: React.FC = () => {
                 </div>
               </div>
 
-              <div className="mt-3 grid grid-cols-1 gap-3 max-h-[500px] overflow-auto pr-1">
-                {filteredMusicians.map((m) => {
+              <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 mt-4">
+                {filteredMusicians.map((m, index) => {
                   const active = connectionMap[m.id] || {};
                   return (
-                    <div key={m.id} className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold text-gray-900">{m.full_name}</p>
-                          <p className="text-xs text-gray-500">{INSTRUMENT_LABELS[m.instrument] || m.instrument}</p>
+                    <motion.div
+                      key={m.id}
+                      className="bg-white border border-gray-200 rounded-xl p-4"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      whileHover={{
+                        y: -2,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                        transition: { duration: 0.2 }
+                      }}
+                    >
+                      <div className="flex items-center gap-3 mb-4">
+                        {/* Emoji do instrumento (sem ícone lucide) */}
+                        <motion.div
+                          className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center text-xl flex-shrink-0"
+                          whileHover={{ scale: 1.1, rotate: 5 }}
+                          transition={{ type: 'spring', stiffness: 300 }}
+                        >
+                          {getInstrumentEmoji(m.instrument)}
+                        </motion.div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-gray-900 truncate">{m.full_name}</p>
+                          <p className="text-sm text-gray-600 truncate">
+                            {INSTRUMENT_LABELS[m.instrument] || m.instrument}
+                          </p>
                         </div>
-                        <UserCheck className="h-5 w-5 text-indigo-600" />
                       </div>
-                      <div className="mt-2 flex flex-wrap gap-2">
+
+                      {/* Botões SEM ícones - hierarquia por cor */}
+                      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
                         {(Object.keys(connectionLabels) as ConnectionType[]).map((type) => {
                           const isOn = Boolean(active[type]);
+                          const isAccent = type === 'played_with';
                           return (
-                            <button
+                            <motion.button
                               key={type}
                               onClick={() => handleToggle(m.id, type)}
-                              className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
-                                isOn
-                                  ? 'border-indigo-500 bg-indigo-600 text-white shadow'
-                                  : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-indigo-300'
-                              }`}
+                              className={`connection-pill ${isOn ? 'active' : ''} ${isAccent && !isOn ? 'accent' : ''}`}
                               disabled={loadingAction}
+                              whileTap={{ scale: 0.95 }}
+                              whileHover={{ scale: 1.02 }}
                             >
-                              {connectionIcons[type]}
                               {connectionLabels[type]}
-                            </button>
+                            </motion.button>
                           );
                         })}
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
                 {filteredMusicians.length === 0 && (
@@ -249,14 +257,13 @@ const Connections: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-4">
               {(Object.keys(grouped) as ConnectionType[]).map((type) => (
-                <div key={type} className="rounded-2xl border border-white/70 bg-white/90 p-4 shadow-lg">
+                <div key={type} className="rounded-xl border border-gray-200 bg-white/95 p-4 shadow-sm">
                   <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
-                      {connectionIcons[type]}
+                    <h3 className="text-sm font-semibold text-gray-800">
                       {connectionLabels[type]}
-                    </div>
+                    </h3>
                     <span className="text-xs text-gray-500">{grouped[type].length} conexão(ões)</span>
                   </div>
                   {grouped[type].length === 0 ? (
@@ -291,29 +298,59 @@ const Connections: React.FC = () => {
           </div>
 
           {/* Badges */}
-          <div className="card space-y-4">
-            <div className="flex items-center justify-between">
+          <div className="card">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                <Star className="h-5 w-5 text-amber-600" />
+              </div>
               <div>
-                <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <Star className="h-4 w-4 text-amber-500" /> Badges conquistadas
-                </p>
-                <p className="text-xs text-gray-500">Conquistas automáticas baseadas em shows, notas e networking.</p>
+                <h2 className="text-lg font-semibold text-gray-900">Badges conquistadas</h2>
+                <p className="text-sm text-gray-600">Conquistas automáticas</p>
               </div>
             </div>
             {badges.length === 0 ? (
-              <p className="text-sm text-gray-500">Nenhum badge ainda. Toque eventos e interaja para desbloquear!</p>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-8"
+              >
+                <p className="text-4xl mb-3">🎯</p>
+                <p className="text-sm text-gray-500">Nenhum badge ainda. Toque eventos e interaja para desbloquear!</p>
+              </motion.div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {badges.map((badge) => (
-                  <div key={badge.id} className="rounded-2xl border border-amber-100 bg-amber-50/70 p-3 shadow-inner">
-                    <p className="text-lg font-semibold text-amber-700 flex items-center gap-2">
-                      {badge.icon || '🏅'} {badge.name}
-                    </p>
-                    {badge.description && <p className="text-sm text-amber-800 mt-1">{badge.description}</p>}
-                    <p className="text-[11px] text-amber-600 mt-1">
-                      Conquistado em {new Date(badge.awarded_at).toLocaleDateString('pt-BR')}
-                    </p>
-                  </div>
+              <div className="space-y-3">
+                {badges.map((badge, index) => (
+                  <motion.div
+                    key={badge.id}
+                    className="rounded-xl border border-amber-100 bg-amber-50 p-4"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                    whileHover={{
+                      scale: 1.02,
+                      boxShadow: '0 4px 12px rgba(251, 191, 36, 0.2)',
+                      transition: { duration: 0.2 }
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <motion.span
+                        className="text-3xl"
+                        whileHover={{ scale: 1.2, rotate: 10 }}
+                        transition={{ type: 'spring', stiffness: 300 }}
+                      >
+                        {badge.icon || '🏅'}
+                      </motion.span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-amber-900 mb-1">{badge.name}</p>
+                        {badge.description && (
+                          <p className="text-sm text-amber-800 leading-relaxed">{badge.description}</p>
+                        )}
+                        <p className="text-xs text-amber-600 mt-2">
+                          {new Date(badge.awarded_at).toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
                 ))}
               </div>
             )}
@@ -323,5 +360,18 @@ const Connections: React.FC = () => {
     </Layout>
   );
 };
+
+// Helper function para emojis de instrumentos
+function getInstrumentEmoji(instrument: string): string {
+  const emojis: Record<string, string> = {
+    vocal: '🎤',
+    guitar: '🎸',
+    bass: '🎸',
+    drums: '🥁',
+    keyboard: '🎹',
+    percussion: '🥁',
+  };
+  return emojis[instrument] || '🎵';
+}
 
 export default Connections;
