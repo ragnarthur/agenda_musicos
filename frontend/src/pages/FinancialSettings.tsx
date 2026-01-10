@@ -190,30 +190,36 @@ const FinancialSettings: React.FC = () => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <label className="block">
-                <span className="text-sm text-slate-300">Cachê (R$)</span>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={baseFee}
-                  onChange={handleCurrencyChange(setBaseFee)}
-                  onBlur={handleCurrencyBlur(setBaseFee)}
-                  placeholder="Ex: 800,00"
-                  className="mt-1 w-full rounded-lg bg-slate-900/70 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-white px-3 py-2"
-                />
-                <p className="text-xs text-slate-500 mt-1">Formato: 0,00 (R$)</p>
+                <span className="text-sm text-slate-300">Cachê</span>
+                <div className="mt-1 relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">R$</span>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={baseFee}
+                    onChange={handleCurrencyChange(setBaseFee)}
+                    onBlur={handleCurrencyBlur(setBaseFee)}
+                    placeholder="0,00"
+                    className="w-full rounded-lg bg-slate-900/70 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-white px-8 py-2"
+                  />
+                </div>
+                <p className="text-xs text-slate-500 mt-1">Formato: R$ 0,00</p>
               </label>
               <label className="block">
                 <span className="text-sm text-slate-300">Valor por km (R$)</span>
                 <div className="flex items-center gap-2 mt-1">
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={travelFee}
-                    onChange={handleCurrencyChange(setTravelFee)}
-                    onBlur={handleCurrencyBlur(setTravelFee)}
-                    placeholder="Ex: 2,50"
-                    className="flex-1 rounded-lg bg-slate-900/70 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-white px-3 py-2"
-                  />
+                  <div className="flex-1 relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">R$</span>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={travelFee}
+                      onChange={handleCurrencyChange(setTravelFee)}
+                      onBlur={handleCurrencyBlur(setTravelFee)}
+                      placeholder="0,00"
+                      className="w-full rounded-lg bg-slate-900/70 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-white px-8 py-2"
+                    />
+                  </div>
                   <CarFront className="h-5 w-5 text-slate-400" />
                 </div>
                 <p className="text-xs text-slate-500 mt-1">Use vírgula para centavos (ex: 1,50).</p>
@@ -261,15 +267,18 @@ const FinancialSettings: React.FC = () => {
                   </div>
                   <div className="sm:col-span-4">
                     <label className="text-sm text-slate-300">Valor (R$)</label>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={item.price}
-                      onChange={(e) => handleEquipmentChange(index, 'price', maskCurrencyInput(e.target.value))}
-                      onBlur={(e) => handleEquipmentChange(index, 'price', formatCurrencyMask(e.target.value))}
-                      placeholder="Ex: 500,00"
-                      className="mt-1 w-full rounded-lg bg-slate-950/60 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-white px-3 py-2"
-                    />
+                    <div className="mt-1 relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">R$</span>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={item.price}
+                        onChange={(e) => handleEquipmentChange(index, 'price', maskCurrencyInput(e.target.value))}
+                        onBlur={(e) => handleEquipmentChange(index, 'price', formatCurrencyMask(e.target.value))}
+                        placeholder="0,00"
+                        className="w-full rounded-lg bg-slate-950/60 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-white px-8 py-2"
+                      />
+                    </div>
                   </div>
                   <div className="sm:col-span-1 flex items-end">
                     <button
