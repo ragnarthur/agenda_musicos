@@ -60,6 +60,14 @@ SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=False, cast=bool)
 # Cookie secure controlado por env (você já usa no auth_views.py)
 COOKIE_SECURE = config("COOKIE_SECURE", default=(not DEBUG), cast=bool)
 
+# Security Headers (aplicados automaticamente em produção)
+if not DEBUG:
+    SECURE_HSTS_SECONDS = 31536000  # 1 ano
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
 
 # =========================================================
 # Apps
@@ -94,6 +102,9 @@ MIDDLEWARE = [
 
     # CORS precisa ficar o mais alto possível, antes do CommonMiddleware
     "corsheaders.middleware.CorsMiddleware",
+
+    # CSP header para proteção contra XSS
+    "config.middleware.CSPMiddleware",
 
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
