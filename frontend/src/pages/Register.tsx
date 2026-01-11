@@ -361,6 +361,7 @@ const Register: React.FC = () => {
                     instrumentOther: '',
                     isMultiInstrumentist: false,
                     bio: '',
+                    city: '',
                   });
                 }}
                 className="block w-full btn-secondary text-center"
