@@ -1,5 +1,5 @@
 // pages/Register.tsx
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { UserPlus, Eye, EyeOff, Mail, User, Phone, FileText, CheckCircle, MapPin } from 'lucide-react';
 import { registrationService, type RegisterData } from '../services/api';
@@ -64,6 +64,8 @@ const Register: React.FC = () => {
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [resending, setResending] = useState(false);
+  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
+  const [filteredCities, setFilteredCities] = useState<string[]>([]);
 
   const [formData, setFormData] = useState<RegisterData & { confirmPassword: string; instrumentOther: string; instruments: string[]; isMultiInstrumentist: boolean; city: string }>({
     email: '',
@@ -80,6 +82,42 @@ const Register: React.FC = () => {
     bio: '',
     city: '',
   });
+
+  const cityInputRef = useRef<HTMLDivElement>(null);
+
+  // Fechar dropdown de cidades ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (cityInputRef.current && !cityInputRef.current.contains(event.target as Node)) {
+        setShowCitySuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleCityChange = (value: string) => {
+    setFormData(prev => ({ ...prev, city: value }));
+
+    // Filtrar cidades baseado no input
+    if (value.trim().length > 0) {
+      const filtered = BRAZILIAN_CITIES.filter(city =>
+        city.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredCities(filtered);
+      setShowCitySuggestions(true);
+    } else {
+      setFilteredCities([]);
+      setShowCitySuggestions(false);
+    }
+  };
+
+  const selectCity = (city: string) => {
+    setFormData(prev => ({ ...prev, city }));
+    setShowCitySuggestions(false);
+    setFilteredCities([]);
+  };
 
   const formatPhone = (value: string) => {
     const digits = value.replace(/\D/g, '').slice(0, 11);
@@ -699,31 +737,66 @@ const Register: React.FC = () => {
             </div>
 
             {/* Cidade */}
-            <div>
+            <div ref={cityInputRef}>
               <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
                 Cidade
               </label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                <MapPin className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 z-10" />
                 <input
                   id="city"
                   name="city"
                   type="text"
-                  list="cities-list"
                   value={formData.city}
-                  onChange={handleChange}
-                  className="input-field pl-10"
-                  placeholder="Digite ou selecione sua cidade"
+                  onChange={(e) => handleCityChange(e.target.value)}
+                  onFocus={() => {
+                    if (formData.city.trim().length > 0) {
+                      const filtered = BRAZILIAN_CITIES.filter(city =>
+                        city.toLowerCase().includes(formData.city.toLowerCase())
+                      );
+                      setFilteredCities(filtered);
+                      setShowCitySuggestions(true);
+                    }
+                  }}
+                  className="input-field pl-10 relative z-10"
+                  placeholder="Digite sua cidade"
                   autoComplete="off"
                 />
-                <datalist id="cities-list">
-                  {BRAZILIAN_CITIES.map(city => (
-                    <option key={city} value={city} />
-                  ))}
-                </datalist>
+
+                {/* Dropdown de Sugestões */}
+                {showCitySuggestions && filteredCities.length > 0 && (
+                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                    {filteredCities.slice(0, 10).map((city) => (
+                      <button
+                        key={city}
+                        type="button"
+                        onClick={() => selectCity(city)}
+                        className="w-full text-left px-4 py-2 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center gap-2"
+                      >
+                        <MapPin className="h-4 w-4 text-gray-400" />
+                        <span>{city}</span>
+                      </button>
+                    ))}
+                    {filteredCities.length > 10 && (
+                      <div className="px-4 py-2 text-xs text-gray-500 border-t">
+                        +{filteredCities.length - 10} cidades... continue digitando
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Mensagem quando não há resultados */}
+                {showCitySuggestions && filteredCities.length === 0 && formData.city.trim().length > 0 && (
+                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-3">
+                    <p className="text-sm text-gray-500">Nenhuma cidade encontrada</p>
+                    <p className="text-xs text-gray-400 mt-1">Você pode digitar qualquer cidade</p>
+                  </div>
+                )}
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Comece a digitar para ver sugestões de cidades
+                {filteredCities.length > 0
+                  ? `${filteredCities.length} cidade(s) encontrada(s)`
+                  : 'Digite para buscar cidades brasileiras'}
               </p>
             </div>
 
