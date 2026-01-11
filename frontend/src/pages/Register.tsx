@@ -1,7 +1,7 @@
 // pages/Register.tsx
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { UserPlus, Eye, EyeOff, Mail, User, Phone, FileText, CheckCircle } from 'lucide-react';
+import { UserPlus, Eye, EyeOff, Mail, User, Phone, FileText, CheckCircle, MapPin } from 'lucide-react';
 import { registrationService, type RegisterData } from '../services/api';
 import { showToast } from '../utils/toast';
 import OwlMascot from '../components/ui/OwlMascot';
@@ -41,6 +41,21 @@ const SELECT_INSTRUMENT_OPTIONS = [
   ...INSTRUMENTS,
 ];
 
+const BRAZILIAN_CITIES = [
+  'São Paulo', 'Rio de Janeiro', 'Brasília', 'Salvador', 'Fortaleza',
+  'Belo Horizonte', 'Manaus', 'Curitiba', 'Recife', 'Goiânia',
+  'Porto Alegre', 'Belém', 'Guarulhos', 'Campinas', 'São Luís',
+  'São Gonçalo', 'Maceió', 'Duque de Caxias', 'Natal', 'Teresina',
+  'Campo Grande', 'Nova Iguaçu', 'São Bernardo do Campo', 'João Pessoa',
+  'Santo André', 'Osasco', 'São José dos Campos', 'Ribeirão Preto',
+  'Uberlândia', 'Sorocaba', 'Contagem', 'Aracaju', 'Feira de Santana',
+  'Cuiabá', 'Joinville', 'Juiz de Fora', 'Londrina', 'Aparecida de Goiânia',
+  'Niterói', 'Caxias do Sul', 'Florianópolis', 'Vila Velha', 'Santos',
+  'Mauá', 'Carapicuíba', 'Olinda', 'São João de Meriti', 'Campos dos Goytacazes',
+  'Betim', 'Diadema', 'Jundiaí', 'Montes Claros', 'Piracicaba',
+  'Bauru', 'Porto Velho', 'Vitória', 'Pelotas', 'Canoas'
+].sort();
+
 const Register: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -50,7 +65,7 @@ const Register: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [resending, setResending] = useState(false);
 
-  const [formData, setFormData] = useState<RegisterData & { confirmPassword: string; instrumentOther: string; instruments: string[]; isMultiInstrumentist: boolean }>({
+  const [formData, setFormData] = useState<RegisterData & { confirmPassword: string; instrumentOther: string; instruments: string[]; isMultiInstrumentist: boolean; city: string }>({
     email: '',
     username: '',
     password: '',
@@ -63,6 +78,7 @@ const Register: React.FC = () => {
     instrumentOther: '',
     isMultiInstrumentist: false,
     bio: '',
+    city: '',
   });
 
   const formatPhone = (value: string) => {
@@ -679,6 +695,35 @@ const Register: React.FC = () => {
                   placeholder="Conte um pouco sobre sua experiência musical..."
                 />
               </div>
+            </div>
+
+            {/* Cidade */}
+            <div>
+              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
+                Cidade
+              </label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                <input
+                  id="city"
+                  name="city"
+                  type="text"
+                  list="cities-list"
+                  value={formData.city}
+                  onChange={handleChange}
+                  className="input-field pl-10"
+                  placeholder="Digite ou selecione sua cidade"
+                  autoComplete="off"
+                />
+                <datalist id="cities-list">
+                  {BRAZILIAN_CITIES.map(city => (
+                    <option key={city} value={city} />
+                  ))}
+                </datalist>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Comece a digitar para ver sugestões de cidades
+              </p>
             </div>
 
             {/* Botão Submit */}
