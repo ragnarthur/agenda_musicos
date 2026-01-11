@@ -16,6 +16,7 @@ const EventDetail = lazy(() => import('./pages/EventDetail'));
 const EventBoard = lazy(() => import('./pages/EventBoard'));
 const Approvals = lazy(() => import('./pages/Approvals'));
 const Musicians = lazy(() => import('./pages/Musicians'));
+const MusicianProfile = lazy(() => import('./pages/MusicianProfile'));
 const LeaderAvailability = lazy(() => import('./pages/LeaderAvailability'));
 const Marketplace = lazy(() => import('./pages/Marketplace'));
 const Connections = lazy(() => import('./pages/Connections'));
@@ -148,6 +149,14 @@ function AppRoutes() {
         />
 
         {/* Rotas específicas ANTES das rotas dinâmicas */}
+        <Route
+          path="/musicos/:id"
+          element={
+            <ProtectedRoute>
+              <MusicianProfile />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/musicos"
           element={

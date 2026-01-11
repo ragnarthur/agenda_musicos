@@ -1,5 +1,6 @@
 // pages/Musicians.tsx
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Users, Music, Phone, Mail, Instagram } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
@@ -127,7 +128,11 @@ const Musicians: React.FC = () => {
               const contactEmail = musician.public_email || musician.user.email;
               const instrumentLabel = getInstrumentLabel(musician.instrument);
               return (
-                <div key={musician.id} className="card-contrast hover:shadow-2xl transition-all">
+                <Link
+                  key={musician.id}
+                  to={`/musicos/${musician.id}`}
+                  className="card-contrast hover:shadow-2xl transition-all block cursor-pointer"
+                >
                   {/* Header do Card */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center space-x-3">
@@ -186,7 +191,7 @@ const Musicians: React.FC = () => {
                       <span className="status-chip default">{instrumentLabel}</span>
                     )}
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
