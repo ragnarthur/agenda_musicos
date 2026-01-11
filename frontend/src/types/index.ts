@@ -40,6 +40,8 @@ export interface Musician {
   travel_fee_per_km?: number | string | null;
   equipment_items?: EquipmentItem[];
   is_active: boolean;
+  average_rating?: number;
+  total_ratings?: number;
   created_at: string;
   subscription_info?: SubscriptionInfo;
 }
