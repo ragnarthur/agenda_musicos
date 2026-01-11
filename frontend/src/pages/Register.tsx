@@ -53,7 +53,9 @@ const BRAZILIAN_CITIES = [
   'Niterói', 'Caxias do Sul', 'Florianópolis', 'Vila Velha', 'Santos',
   'Mauá', 'Carapicuíba', 'Olinda', 'São João de Meriti', 'Campos dos Goytacazes',
   'Betim', 'Diadema', 'Jundiaí', 'Montes Claros', 'Piracicaba',
-  'Bauru', 'Porto Velho', 'Vitória', 'Pelotas', 'Canoas'
+  'Bauru', 'Porto Velho', 'Vitória', 'Pelotas', 'Canoas',
+  'Monte Carmelo', 'Santa Rita do Sapucaí', 'Barra do Garças', 'Santa Maria',
+  'Ponta Grossa', 'Foz do Iguaçu', 'Praia Grande', 'Governador Valadares'
 ].sort();
 
 const Register: React.FC = () => {
@@ -100,11 +102,22 @@ const Register: React.FC = () => {
   const handleCityChange = (value: string) => {
     setFormData(prev => ({ ...prev, city: value }));
 
-    // Filtrar cidades baseado no input
+    // Filtrar cidades baseado no input - busca por palavras individuais
     if (value.trim().length > 0) {
-      const filtered = BRAZILIAN_CITIES.filter(city =>
-        city.toLowerCase().includes(value.toLowerCase())
-      );
+      // Divide o input em palavras (por espaços)
+      const searchWords = value.toLowerCase().trim().split(/\s+/);
+
+      const filtered = BRAZILIAN_CITIES.filter(city => {
+        // Divide o nome da cidade em palavras (por espaços e hífens)
+        const cityWords = city.toLowerCase().split(/[\s-]+/);
+
+        // Cada palavra do input deve corresponder a pelo menos uma palavra da cidade
+        // Exemplo: "Monte" encontra "Monte Carmelo", "Carmelo" também encontra "Monte Carmelo"
+        return searchWords.every(searchWord =>
+          cityWords.some(cityWord => cityWord.includes(searchWord))
+        );
+      });
+
       setFilteredCities(filtered);
       setShowCitySuggestions(true);
     } else {
