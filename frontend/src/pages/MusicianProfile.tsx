@@ -123,7 +123,7 @@ const MusicianProfile: React.FC = () => {
           )}
 
           {/* Avaliações */}
-          {musician.total_ratings > 0 && (
+          {(musician.total_ratings ?? 0) > 0 && (
             <div className="mb-6">
               <h2 className="text-sm font-medium text-gray-700 mb-2">Avaliações</h2>
               <div className="flex items-center gap-2">
@@ -132,7 +132,7 @@ const MusicianProfile: React.FC = () => {
                     <svg
                       key={i}
                       className={`h-5 w-5 ${
-                        i < Math.round(Number(musician.average_rating))
+                        i < Math.round(Number(musician.average_rating ?? 0))
                           ? 'text-yellow-400'
                           : 'text-gray-300'
                       }`}
@@ -144,7 +144,7 @@ const MusicianProfile: React.FC = () => {
                   ))}
                 </div>
                 <span className="text-gray-600 text-sm">
-                  {Number(musician.average_rating).toFixed(1)} ({musician.total_ratings}{' '}
+                  {Number(musician.average_rating ?? 0).toFixed(1)} ({musician.total_ratings}{' '}
                   {musician.total_ratings === 1 ? 'avaliação' : 'avaliações'})
                 </span>
               </div>
