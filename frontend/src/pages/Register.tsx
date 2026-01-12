@@ -219,10 +219,15 @@ const Register: React.FC = () => {
     } else if (step === 2) {
       // Step 2: Personal Info
       if (!formData.first_name) return false;
+      if (!formData.city.trim()) return false;
       return true;
     } else if (step === 3) {
       // Step 3: Musical Profile
       const extraInstrument = formData.instrumentOther.trim();
+      const bioTrimmed = formData.bio.trim();
+
+      // Bio é obrigatória
+      if (!bioTrimmed || bioTrimmed.length > BIO_MAX_LENGTH) return false;
 
       if (formData.isMultiInstrumentist) {
         const selectedInstruments = formData.instruments
