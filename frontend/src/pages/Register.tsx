@@ -104,6 +104,8 @@ const Register: React.FC = () => {
     first_name: '',
     last_name: '',
     phone: '',
+    instagram: '',
+    whatsapp: '',
     instrument: '',
     instruments: [],
     instrumentOther: '',
@@ -156,6 +158,13 @@ const Register: React.FC = () => {
     return end ? `(${area}) ${mid}-${end}` : `(${area}) ${digits.slice(2)}`;
   };
 
+  const formatWhatsApp = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 2) return numbers;
+    if (numbers.length <= 7) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+  };
+
   type FieldChangeEvent =
     | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     | { target: { name: string; value: string } };
@@ -164,6 +173,8 @@ const Register: React.FC = () => {
     const { name, value } = e.target;
     if (name === 'phone') {
       setFormData(prev => ({ ...prev, phone: formatPhone(value) }));
+    } else if (name === 'whatsapp') {
+      setFormData(prev => ({ ...prev, whatsapp: formatWhatsApp(value) }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }

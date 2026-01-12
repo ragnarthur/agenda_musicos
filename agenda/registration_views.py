@@ -70,6 +70,13 @@ class RegisterView(APIView):
             )
         last_name = data.get('last_name', '').strip()
         phone = data.get('phone', '').strip()
+        instagram = data.get('instagram', '').strip()
+        whatsapp = data.get('whatsapp', '').strip()
+
+        # Validar formato do Instagram (deve começar com @)
+        if instagram and not instagram.startswith('@'):
+            instagram = f'@{instagram}'
+
         instrument = str(data.get('instrument', '') or '').strip()
         instruments_raw = data.get('instruments', [])
         instruments = []
@@ -148,6 +155,8 @@ class RegisterView(APIView):
             first_name=first_name,
             last_name=last_name,
             phone=phone,
+            instagram=instagram,
+            whatsapp=whatsapp,
             instrument=instrument,
             instruments=instruments,
             bio=bio,

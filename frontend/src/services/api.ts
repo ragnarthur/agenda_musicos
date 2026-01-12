@@ -450,6 +450,8 @@ export interface RegisterData {
   first_name: string;
   last_name?: string;
   phone?: string;
+  instagram?: string;
+  whatsapp?: string;
   instrument?: string;
   instruments?: string[];
   bio?: string;

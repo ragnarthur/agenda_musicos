@@ -34,6 +34,7 @@ export interface Musician {
   bio?: string;
   phone?: string;
   instagram?: string;
+  whatsapp?: string;
   city?: string;
   state?: string;
   public_email?: string | null;
@@ -53,6 +54,7 @@ export interface MusicianUpdatePayload {
   bio?: string;
   phone?: string;
   instagram?: string;
+  whatsapp?: string;
   city?: string;
   state?: string;
   base_fee?: number | string | null;

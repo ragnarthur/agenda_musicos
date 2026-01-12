@@ -99,6 +99,7 @@ class Musician(models.Model):
     bio = models.TextField(blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     instagram = models.CharField(max_length=100, blank=True, null=True)
+    whatsapp = models.CharField(max_length=20, blank=True, null=True, help_text='WhatsApp com máscara (11) 99999-9999')
     base_fee = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -855,6 +856,8 @@ class PendingRegistration(models.Model):
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150, blank=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
+    instagram = models.CharField(max_length=100, blank=True, null=True)
+    whatsapp = models.CharField(max_length=20, blank=True, null=True)
     instrument = models.CharField(max_length=50, blank=True, null=True)
     instruments = models.JSONField(default=list, blank=True)
     bio = models.TextField(blank=True, null=True)
@@ -924,6 +927,8 @@ class PendingRegistration(models.Model):
         musician = Musician.objects.create(
             user=user,
             phone=self.phone or '',
+            instagram=self.instagram or '',
+            whatsapp=self.whatsapp or '',
             instrument=self.instrument or '',
             instruments=instruments,
             bio=self.bio or '',
