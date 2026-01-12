@@ -225,7 +225,7 @@ const MusicProfileStep: React.FC<MusicProfileStepProps> = ({
         {/* Bio */}
         <div>
           <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
-            Sobre você <span className="text-gray-400 text-xs">(opcional)</span>
+            Sobre você <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <div className="absolute left-3 top-2.5 pointer-events-none">
@@ -237,13 +237,17 @@ const MusicProfileStep: React.FC<MusicProfileStepProps> = ({
               value={formData.bio}
               onChange={onChange}
               rows={4}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent resize-none"
-              placeholder="Conte um pouco sobre sua experiência musical..."
+              maxLength={240}
+              className={`w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent resize-none ${
+                errors.bio ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="Conte um pouco sobre sua experiência musical (até 240 caracteres)..."
             />
           </div>
           <p className="mt-1 text-xs text-gray-500">
-            Máximo de 500 caracteres
+            Mini-bio obrigatória. Máximo de 240 caracteres.
           </p>
+          {errors.bio && <p className="mt-1 text-sm text-red-600">{errors.bio}</p>}
         </div>
       </div>
     </div>

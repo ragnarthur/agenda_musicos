@@ -85,6 +85,7 @@ const Register: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 3;
   const stepNames = ['Segurança da Conta', 'Informações Pessoais', 'Perfil Musical'];
+  const BIO_MAX_LENGTH = 240;
 
   // Form state
   const [loading, setLoading] = useState(false);
@@ -285,9 +286,26 @@ const Register: React.FC = () => {
       if (!formData.first_name) {
         newErrors.first_name = 'Nome é obrigatório';
       }
+
+       const cityTrimmed = formData.city.trim();
+       if (!cityTrimmed) {
+         newErrors.city = 'Cidade é obrigatória';
+       } else if (cityTrimmed.length > 60) {
+         newErrors.city = 'Cidade deve ter no máximo 60 caracteres';
+       }
+       if (formData.state && formData.state.length > 3) {
+         newErrors.state = 'Estado deve ter no máximo 3 caracteres';
+       }
     } else if (step === 3) {
       // Step 3: Musical Profile
       const extraInstrument = formData.instrumentOther.trim();
+      const bioTrimmed = formData.bio.trim();
+
+      if (!bioTrimmed) {
+        newErrors.bio = 'Mini-bio é obrigatória';
+      } else if (bioTrimmed.length > BIO_MAX_LENGTH) {
+        newErrors.bio = `Mini-bio deve ter no máximo ${BIO_MAX_LENGTH} caracteres`;
+      }
 
       if (formData.isMultiInstrumentist) {
         const selectedInstruments = formData.instruments
@@ -374,11 +392,13 @@ const Register: React.FC = () => {
       }
 
       const primaryInstrument = allInstruments[0] || '';
+      const sanitizedBio = formData.bio.trim().slice(0, BIO_MAX_LENGTH);
 
       const payload = {
         ...data,
         instrument: primaryInstrument,
         instruments: allInstruments,
+        bio: sanitizedBio,
       };
 
       const response = await registrationService.register(payload);

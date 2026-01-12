@@ -28,9 +28,7 @@ const PaymentSuccess: React.FC = () => {
         setError('Pagamento ainda não foi confirmado. Aguarde alguns instantes.');
       }
     } catch {
-      // Mesmo se falhar a verificação, mostramos sucesso
-      // pois o webhook já pode ter processado
-      setSessionData({ customer_email: '', status: 'paid' });
+      setError('Não foi possível confirmar o pagamento agora. Tente novamente em instantes.');
     } finally {
       setLoading(false);
     }

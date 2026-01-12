@@ -131,7 +131,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
         {/* City with Autocomplete */}
         <div ref={cityInputRef}>
           <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
-            Cidade <span className="text-gray-400 text-xs">(opcional)</span>
+            Cidade <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
@@ -157,7 +157,9 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                   handleCityChange(formData.city.replace(/ - [A-Z]{2}$/, ''));
                 }
               }}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent relative z-10"
+              className={`w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent relative z-10 ${
+                errors.city ? 'border-red-500' : 'border-gray-300'
+              }`}
               placeholder="Digite sua cidade"
               autoComplete="off"
             />
@@ -190,6 +192,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
           <p className="mt-1 text-xs text-gray-500">
             Ajuda outros músicos da sua região a te encontrar
           </p>
+          {errors.city && <p className="mt-1 text-sm text-red-600">{errors.city}</p>}
         </div>
       </div>
     </div>
