@@ -467,6 +467,8 @@ const Register: React.FC = () => {
               first_name: formData.first_name,
               last_name: formData.last_name || '',
               phone: formData.phone || '',
+              instagram: formData.instagram || '',
+              whatsapp: formData.whatsapp || '',
               city: formData.city,
               state: formData.state,
             }}
