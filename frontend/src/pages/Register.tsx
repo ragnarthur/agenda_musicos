@@ -1,45 +1,15 @@
 // pages/Register.tsx
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { UserPlus, Eye, EyeOff, Mail, User, Phone, FileText, CheckCircle, MapPin } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import { registrationService, type RegisterData } from '../services/api';
 import { showToast } from '../utils/toast';
 import OwlMascot from '../components/ui/OwlMascot';
-
-const BASE_INSTRUMENTS = [
-  { value: 'vocal', label: 'Vocal' },
-  { value: 'guitar', label: 'Guitarra' },
-  { value: 'acoustic_guitar', label: 'Violão' },
-  { value: 'bass', label: 'Baixo' },
-  { value: 'drums', label: 'Bateria' },
-  { value: 'keyboard', label: 'Teclado' },
-  { value: 'piano', label: 'Piano' },
-  { value: 'synth', label: 'Sintetizador' },
-  { value: 'percussion', label: 'Percussão' },
-  { value: 'cajon', label: 'Cajón' },
-  { value: 'violin', label: 'Violino' },
-  { value: 'viola', label: 'Viola' },
-  { value: 'cello', label: 'Violoncelo' },
-  { value: 'double_bass', label: 'Contrabaixo acústico' },
-  { value: 'saxophone', label: 'Saxofone' },
-  { value: 'trumpet', label: 'Trompete' },
-  { value: 'trombone', label: 'Trombone' },
-  { value: 'flute', label: 'Flauta' },
-  { value: 'clarinet', label: 'Clarinete' },
-  { value: 'harmonica', label: 'Gaita' },
-  { value: 'ukulele', label: 'Ukulele' },
-  { value: 'banjo', label: 'Banjo' },
-  { value: 'mandolin', label: 'Bandolim' },
-  { value: 'dj', label: 'DJ' },
-  { value: 'producer', label: 'Produtor(a)' },
-];
-
-const INSTRUMENTS = [...BASE_INSTRUMENTS, { value: 'other', label: 'Outro (digite)' }];
-
-const SELECT_INSTRUMENT_OPTIONS = [
-  { value: '', label: 'Selecione um instrumento principal' },
-  ...INSTRUMENTS,
-];
+import ProgressIndicator from '../components/Registration/ProgressIndicator';
+import StepNavigation from '../components/Registration/StepNavigation';
+import AccountStep from '../components/Registration/AccountStep';
+import PersonalInfoStep from '../components/Registration/PersonalInfoStep';
+import MusicProfileStep from '../components/Registration/MusicProfileStep';
 
 const BRAZILIAN_CITIES = [
   { city: 'São Paulo', state: 'SP' },
@@ -111,9 +81,13 @@ const BRAZILIAN_CITIES = [
 ].sort((a, b) => a.city.localeCompare(b.city));
 
 const Register: React.FC = () => {
+  // Multi-step state
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 3;
+  const stepNames = ['Segurança da Conta', 'Informações Pessoais', 'Perfil Musical'];
+
+  // Form state
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [success, setSuccess] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -138,39 +112,18 @@ const Register: React.FC = () => {
     state: '',
   });
 
-  const cityInputRef = useRef<HTMLDivElement>(null);
-
-  // Fechar dropdown de cidades ao clicar fora
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (cityInputRef.current && !cityInputRef.current.contains(event.target as Node)) {
-        setShowCitySuggestions(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
+  // City autocomplete logic
   const handleCityChange = (value: string) => {
     setFormData(prev => ({ ...prev, city: value }));
 
-    // Filtrar cidades baseado no input - busca por palavras individuais
     if (value.trim().length > 0) {
-      // Divide o input em palavras (por espaços)
       const searchWords = value.toLowerCase().trim().split(/\s+/);
-
       const filtered = BRAZILIAN_CITIES.filter(cityObj => {
-        // Divide o nome da cidade em palavras (por espaços e hífens)
         const cityWords = cityObj.city.toLowerCase().split(/[\s-]+/);
-
-        // Cada palavra do input deve corresponder a pelo menos uma palavra da cidade
-        // Exemplo: "Monte" encontra "Monte Carmelo", "Carmelo" também encontra "Monte Carmelo"
         return searchWords.every(searchWord =>
           cityWords.some(cityWord => cityWord.includes(searchWord))
         );
       });
-
       setFilteredCities(filtered);
       setShowCitySuggestions(true);
     } else {
@@ -198,27 +151,6 @@ const Register: React.FC = () => {
     return end ? `(${area}) ${mid}-${end}` : `(${area}) ${digits.slice(2)}`;
   };
 
-  const getPasswordStrength = (password: string) => {
-    let score = 0;
-    if (password.length >= 6) score += 1;
-    if (password.length >= 8) score += 1;
-    if (/[A-Z]/.test(password)) score += 1;
-    if (/[a-z]/.test(password)) score += 1;
-    if (/\d/.test(password)) score += 1;
-    if (/[^A-Za-z0-9]/.test(password)) score += 1;
-
-    const levels = [
-      { label: 'Muito fraca', color: 'bg-red-400' },
-      { label: 'Fraca', color: 'bg-orange-400' },
-      { label: 'Média', color: 'bg-yellow-400' },
-      { label: 'Boa', color: 'bg-emerald-500' },
-      { label: 'Forte', color: 'bg-emerald-600' },
-    ];
-
-    const idx = Math.min(levels.length - 1, Math.max(0, score - 1));
-    return { score, ...levels[idx] };
-  };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name === 'phone') {
@@ -226,7 +158,7 @@ const Register: React.FC = () => {
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
-    // Limpa erro do campo quando usuário digita
+    // Clear errors when user types
     if (errors[name] || name === 'instrument' || name === 'instrumentOther') {
       setErrors(prev => ({ ...prev, [name]: '', instrument: '' }));
     }
@@ -239,7 +171,6 @@ const Register: React.FC = () => {
         ? prev.instruments.filter((inst) => inst !== value)
         : [...prev.instruments, value];
 
-      // Se desmarca "Outro", limpa o campo de texto
       if (!instruments.includes('other')) {
         instruments = instruments.filter((inst) => inst !== 'other');
       }
@@ -259,7 +190,6 @@ const Register: React.FC = () => {
     setFormData((prev) => ({
       ...prev,
       isMultiInstrumentist: value,
-      // se desligar o modo multi, limpa seleção múltipla e "outro"
       instruments: value ? prev.instruments : [],
       instrumentOther: value ? prev.instrumentOther : '',
     }));
@@ -268,72 +198,78 @@ const Register: React.FC = () => {
     }
   };
 
-  const validate = (): boolean => {
+  // Validate individual steps
+  const validateStep = (step: number): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.email) {
-      newErrors.email = 'Email é obrigatório';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Email inválido';
-    }
+    if (step === 1) {
+      // Step 1: Account Security
+      if (!formData.email) {
+        newErrors.email = 'Email é obrigatório';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        newErrors.email = 'Email inválido';
+      }
 
-    if (!formData.username) {
-      newErrors.username = 'Nome de usuário é obrigatório';
-    } else if (formData.username.length < 3) {
-      newErrors.username = 'Mínimo de 3 caracteres';
-    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
-      newErrors.username = 'Apenas letras, números e underscore';
-    }
+      if (!formData.username) {
+        newErrors.username = 'Nome de usuário é obrigatório';
+      } else if (formData.username.length < 3) {
+        newErrors.username = 'Mínimo de 3 caracteres';
+      } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+        newErrors.username = 'Apenas letras, números e underscore';
+      }
 
-    if (!formData.password) {
-      newErrors.password = 'Senha é obrigatória';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Mínimo de 6 caracteres';
-    }
+      if (!formData.password) {
+        newErrors.password = 'Senha é obrigatória';
+      } else if (formData.password.length < 6) {
+        newErrors.password = 'Mínimo de 6 caracteres';
+      }
 
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Senhas não conferem';
-    }
+      if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = 'Senhas não conferem';
+      }
+    } else if (step === 2) {
+      // Step 2: Personal Info
+      if (!formData.first_name) {
+        newErrors.first_name = 'Nome é obrigatório';
+      }
+    } else if (step === 3) {
+      // Step 3: Musical Profile
+      const extraInstrument = formData.instrumentOther.trim();
 
-    if (!formData.first_name) {
-      newErrors.first_name = 'Nome é obrigatório';
-    }
+      if (formData.isMultiInstrumentist) {
+        const selectedInstruments = formData.instruments
+          .filter((inst) => inst !== 'other')
+          .map((inst) => inst.trim())
+          .filter(Boolean);
 
-    const extraInstrument = formData.instrumentOther.trim();
+        const includeOther = formData.instruments.includes('other');
 
-    if (formData.isMultiInstrumentist) {
-      const selectedInstruments = formData.instruments
-        .filter((inst) => inst !== 'other')
-        .map((inst) => inst.trim())
-        .filter(Boolean);
-
-      const includeOther = formData.instruments.includes('other');
-
-      if (includeOther) {
-        if (!extraInstrument) {
-          newErrors.instrument = 'Informe o instrumento em "Outro"';
-        } else if (extraInstrument.length < 3) {
-          newErrors.instrument = 'Use pelo menos 3 caracteres para o instrumento adicional';
-        } else {
-          selectedInstruments.push(extraInstrument);
+        if (includeOther) {
+          if (!extraInstrument) {
+            newErrors.instrument = 'Informe o instrumento em "Outro"';
+          } else if (extraInstrument.length < 3) {
+            newErrors.instrument = 'Use pelo menos 3 caracteres para o instrumento adicional';
+          } else {
+            selectedInstruments.push(extraInstrument);
+          }
         }
-      }
 
-      if (!selectedInstruments.length && !newErrors.instrument) {
-        newErrors.instrument = 'Selecione ou informe pelo menos um instrumento';
-      } else if (selectedInstruments.some((inst) => inst.length > 50) && !newErrors.instrument) {
-        newErrors.instrument = 'Instrumento deve ter no máximo 50 caracteres';
-      }
-    } else {
-      const primary =
-        formData.instrument === 'other' ? extraInstrument : (formData.instrument || '').trim();
+        if (!selectedInstruments.length && !newErrors.instrument) {
+          newErrors.instrument = 'Selecione ou informe pelo menos um instrumento';
+        } else if (selectedInstruments.some((inst) => inst.length > 50) && !newErrors.instrument) {
+          newErrors.instrument = 'Instrumento deve ter no máximo 50 caracteres';
+        }
+      } else {
+        const primary =
+          formData.instrument === 'other' ? extraInstrument : (formData.instrument || '').trim();
 
-      if (!primary) {
-        newErrors.instrument = 'Instrumento é obrigatório';
-      } else if (primary.length > 50) {
-        newErrors.instrument = 'Instrumento deve ter no máximo 50 caracteres';
-      } else if (formData.instrument === 'other' && primary.length < 3) {
-        newErrors.instrument = 'Use pelo menos 3 caracteres para o instrumento';
+        if (!primary) {
+          newErrors.instrument = 'Instrumento é obrigatório';
+        } else if (primary.length > 50) {
+          newErrors.instrument = 'Instrumento deve ter no máximo 50 caracteres';
+        } else if (formData.instrument === 'other' && primary.length < 3) {
+          newErrors.instrument = 'Use pelo menos 3 caracteres para o instrumento';
+        }
       }
     }
 
@@ -341,10 +277,21 @@ const Register: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Navigation handlers
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep(prev => Math.min(prev + 1, totalSteps));
+      setErrors({});
+    }
+  };
 
-    if (!validate()) return;
+  const handleBack = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+    setErrors({});
+  };
+
+  const handleFinalSubmit = async () => {
+    if (!validateStep(3)) return;
 
     setLoading(true);
     setErrors({});
@@ -378,6 +325,7 @@ const Register: React.FC = () => {
         instrument: primaryInstrument,
         instruments: allInstruments,
       };
+
       const response = await registrationService.register(payload);
       setRegisteredEmail(response.email);
       setSuccess(true);
@@ -390,6 +338,12 @@ const Register: React.FC = () => {
           apiErrors[key] = Array.isArray(value) ? value[0] : String(value);
         }
         setErrors(apiErrors);
+        // If there are errors in earlier steps, navigate back to them
+        if (apiErrors.email || apiErrors.username || apiErrors.password || apiErrors.confirmPassword) {
+          setCurrentStep(1);
+        } else if (apiErrors.first_name) {
+          setCurrentStep(2);
+        }
       } else {
         showToast.error('Erro ao fazer cadastro. Tente novamente.');
       }
@@ -398,7 +352,66 @@ const Register: React.FC = () => {
     }
   };
 
-  // Tela de sucesso
+  // Render appropriate step
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <AccountStep
+            formData={{
+              email: formData.email,
+              username: formData.username,
+              password: formData.password,
+              confirmPassword: formData.confirmPassword,
+            }}
+            onChange={handleChange}
+            errors={errors}
+          />
+        );
+
+      case 2:
+        return (
+          <PersonalInfoStep
+            formData={{
+              first_name: formData.first_name,
+              last_name: formData.last_name || '',
+              phone: formData.phone || '',
+              city: formData.city,
+              state: formData.state,
+            }}
+            onChange={handleChange}
+            errors={errors}
+            filteredCities={filteredCities}
+            showCitySuggestions={showCitySuggestions}
+            handleCityChange={handleCityChange}
+            selectCity={selectCity}
+            setShowCitySuggestions={setShowCitySuggestions}
+          />
+        );
+
+      case 3:
+        return (
+          <MusicProfileStep
+            formData={{
+              isMultiInstrumentist: formData.isMultiInstrumentist,
+              instrument: formData.instrument || '',
+              instruments: formData.instruments,
+              instrumentOther: formData.instrumentOther,
+              bio: formData.bio ?? '',
+            }}
+            onChange={handleChange}
+            errors={errors}
+            toggleMultiInstrumentist={toggleMultiInstrumentist}
+            toggleInstrument={toggleInstrument}
+          />
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  // Success screen
   if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center px-4">
@@ -447,15 +460,13 @@ const Register: React.FC = () => {
               {resending ? 'Reenviando...' : 'Reenviar email de verificação'}
             </button>
             <div className="space-y-3">
-              <Link
-                to="/login"
-                className="block w-full btn-primary text-center"
-              >
+              <Link to="/login" className="block w-full btn-primary text-center">
                 Ir para Login
               </Link>
               <button
                 onClick={() => {
                   setSuccess(false);
+                  setCurrentStep(1);
                   setFormData({
                     email: '',
                     username: '',
@@ -484,10 +495,11 @@ const Register: React.FC = () => {
     );
   }
 
+  // Main registration form (multi-step)
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center px-4 py-8">
-      <div className="max-w-3xl w-full">
-        {/* Logo e Título */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4 py-8">
+      <div className="max-w-2xl w-full">
+        {/* Logo and Title */}
         <div className="text-center mb-6">
           <div className="flex justify-center mb-2">
             <div className="h-24 w-24 sm:h-28 sm:w-28">
@@ -495,432 +507,55 @@ const Register: React.FC = () => {
             </div>
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Criar Conta</h1>
-          <p className="text-primary-100">Cadastre-se para gerenciar sua agenda e oportunidades profissionais</p>
+          <p className="text-gray-300">Cadastre-se para gerenciar sua agenda e oportunidades profissionais</p>
         </div>
 
-        {/* Card de Registro */}
+        {/* Progress Indicator */}
+        <div className="mb-8">
+          <ProgressIndicator
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+            stepNames={stepNames}
+          />
+        </div>
+
+        {/* Form Card */}
         <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Nome e Sobrenome */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Nome{errors.first_name && <span className="text-red-500 ml-1">*</span>}
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                  <input
-                    id="first_name"
-                    name="first_name"
-                    type="text"
-                    value={formData.first_name}
-                    onChange={handleChange}
-                    className={`input-field pl-10 ${errors.first_name ? 'border-red-500' : ''}`}
-                    placeholder="Seu nome"
-                  />
-                </div>
-                {errors.first_name && <p className="text-red-500 text-xs mt-1">{errors.first_name}</p>}
-              </div>
-              <div>
-                <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Sobrenome
-                </label>
-                <input
-                  id="last_name"
-                  name="last_name"
-                  type="text"
-                  value={formData.last_name}
-                  onChange={handleChange}
-                  className="input-field"
-                  placeholder="Seu sobrenome"
-                />
-              </div>
-            </div>
+          {/* Step Title */}
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            {stepNames[currentStep - 1]}
+          </h2>
 
-            {/* Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email{errors.email && <span className="text-red-500 ml-1">*</span>}
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className={`input-field pl-10 ${errors.email ? 'border-red-500' : ''}`}
-                  placeholder="seu@email.com"
-                />
-              </div>
-              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-            </div>
-
-            {/* Username */}
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                Nome de usuário <span className="text-xs text-gray-500">(usado para login)</span>
-                {errors.username && <span className="text-red-500 ml-1">*</span>}
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-2.5 text-gray-400">@</span>
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  value={formData.username}
-                  onChange={handleChange}
-                  className={`input-field pl-8 ${errors.username ? 'border-red-500' : ''}`}
-                  placeholder="usuario123"
-                />
-              </div>
-              {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
-              {!errors.username && formData.username && (
-                <p className="text-xs text-gray-500 mt-1">Seu login será @{formData.username}</p>
-              )}
-            </div>
-
-            {/* Senhas */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Senha{errors.password && <span className="text-red-500 ml-1">*</span>}
-                </label>
-                <div className="relative">
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={formData.password}
-                    onChange={handleChange}
-                    className={`input-field pr-10 ${errors.password ? 'border-red-500' : ''}`}
-                    placeholder="Min. 6 caracteres"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(prev => !prev)}
-                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
-                  </button>
-                </div>
-                {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
-                {!errors.password && formData.password && (
-                  <div className="mt-2">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="flex-1 h-2 rounded-full bg-gray-200 overflow-hidden">
-                        <div
-                          className={`${getPasswordStrength(formData.password).color} h-2 transition-all`}
-                          style={{ width: `${(getPasswordStrength(formData.password).score / 6) * 100}%` }}
-                        />
-                      </div>
-                      <span className="text-xs text-gray-600">{getPasswordStrength(formData.password).label}</span>
-                    </div>
-                    <p className="text-[11px] text-gray-500">
-                      Use letras maiúsculas/minúsculas, números e símbolos para fortalecer sua senha.
-                    </p>
-                  </div>
-                )}
-              </div>
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                  Confirmar senha{errors.confirmPassword && <span className="text-red-500 ml-1">*</span>}
-                </label>
-                <div className="relative">
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className={`input-field pr-10 ${errors.confirmPassword ? 'border-red-500' : ''}`}
-                    placeholder="Repita a senha"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(prev => !prev)}
-                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-                  >
-                    {showConfirmPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
-                  </button>
-                </div>
-                {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
-              </div>
-            </div>
-
-            {/* Telefone e Instrumentos */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                  Telefone
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                  <input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="input-field pl-10"
-                    placeholder="(11) 99999-9999"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Você é multi-instrumentista?
-                </label>
-                <div className="inline-flex rounded-xl border border-gray-200 bg-white overflow-hidden">
-                  <button
-                    type="button"
-                    className={`px-4 py-2 text-sm font-semibold transition-colors ${!formData.isMultiInstrumentist ? 'bg-primary-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}
-                    onClick={() => toggleMultiInstrumentist(false)}
-                  >
-                    Não
-                  </button>
-                  <button
-                    type="button"
-                    className={`px-4 py-2 text-sm font-semibold transition-colors ${formData.isMultiInstrumentist ? 'bg-primary-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}
-                    onClick={() => toggleMultiInstrumentist(true)}
-                  >
-                    Sim
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Instrumentos */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {!formData.isMultiInstrumentist ? (
-                <div>
-                  <label htmlFor="instrument" className="block text-sm font-medium text-gray-700 mb-1">
-                    Instrumento principal{errors.instrument && <span className="text-red-500 ml-1">*</span>}
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="instrument"
-                      name="instrument"
-                      value={formData.instrument}
-                      onChange={handleChange}
-                      className={`input-field ${errors.instrument ? 'border-red-500' : ''}`}
-                    >
-                      {SELECT_INSTRUMENT_OPTIONS.map((inst) => (
-                        <option key={inst.value} value={inst.value}>
-                          {inst.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {formData.instrument === 'other' && (
-                    <div className="mt-3">
-                      <label htmlFor="instrumentOther" className="block text-sm font-medium text-gray-700 mb-1">
-                        Qual instrumento?
-                      </label>
-                      <input
-                        id="instrumentOther"
-                        name="instrumentOther"
-                        type="text"
-                        value={formData.instrumentOther}
-                        onChange={handleChange}
-                        className={`input-field ${errors.instrument ? 'border-red-500' : ''}`}
-                        placeholder="Ex.: Violino, Trompete, Flauta..."
-                      />
-                    </div>
-                  )}
-                  {errors.instrument && <p className="text-red-500 text-xs mt-1">{errors.instrument}</p>}
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Selecione os instrumentos{errors.instrument && <span className="text-red-500 ml-1">*</span>}
-                    </label>
-                    <p className="text-xs text-gray-500">Marque todos que você toca/canta.</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {INSTRUMENTS.map((inst) => {
-                      const checked = formData.instruments.includes(inst.value);
-                      return (
-                        <label
-                          key={inst.value}
-                          className={`flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer transition-colors ${
-                            checked ? 'border-primary-300 bg-primary-50 text-primary-800' : 'border-gray-200 hover:border-primary-200'
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => toggleInstrument(inst.value)}
-                            className="sr-only"
-                          />
-                          <span
-                            className={`h-4 w-4 rounded border flex items-center justify-center text-[10px] ${
-                              checked ? 'bg-primary-600 border-primary-600 text-white' : 'border-gray-300 text-transparent'
-                            }`}
-                          >
-                            ✓
-                          </span>
-                          <span className="text-sm font-medium">{inst.label}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                  {formData.instruments.includes('other') && (
-                    <div className="mt-2">
-                      <label htmlFor="instrumentOther" className="block text-sm font-medium text-gray-700 mb-1">
-                        Outro instrumento (opcional)
-                      </label>
-                      <input
-                        id="instrumentOther"
-                        name="instrumentOther"
-                        type="text"
-                        value={formData.instrumentOther}
-                        onChange={handleChange}
-                        className={`input-field ${errors.instrument ? 'border-red-500' : ''}`}
-                        placeholder="Ex.: Violino, Trompete, Flauta..."
-                      />
-                    </div>
-                  )}
-                  {errors.instrument && <p className="text-red-500 text-xs mt-1">{errors.instrument}</p>}
-                </div>
-              )}
-            </div>
-
-            {/* Bio */}
-            <div>
-              <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
-                Sobre você
-              </label>
-              <div className="relative">
-                <FileText className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                <textarea
-                  id="bio"
-                  name="bio"
-                  value={formData.bio}
-                  onChange={handleChange}
-                  rows={3}
-                  className="input-field pl-10 resize-none"
-                  placeholder="Conte um pouco sobre sua experiência musical..."
-                />
-              </div>
-            </div>
-
-            {/* Cidade */}
-            <div ref={cityInputRef}>
-              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
-                Cidade
-              </label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 z-10" />
-                <input
-                  id="city"
-                  name="city"
-                  type="text"
-                  value={formData.city && formData.state ? `${formData.city} - ${formData.state}` : formData.city}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (!value.trim()) {
-                      setFormData(prev => ({ ...prev, city: '', state: '' }));
-                      setFilteredCities([]);
-                      setShowCitySuggestions(false);
-                    } else {
-                      handleCityChange(value.replace(/ - [A-Z]{2}$/, ''));
-                    }
-                  }}
-                  onFocus={() => {
-                    if (formData.city.trim().length > 0) {
-                      const searchValue = formData.city.replace(/ - [A-Z]{2}$/, '');
-                      const searchWords = searchValue.toLowerCase().trim().split(/\s+/);
-                      const filtered = BRAZILIAN_CITIES.filter(cityObj => {
-                        const cityWords = cityObj.city.toLowerCase().split(/[\s-]+/);
-                        return searchWords.every(searchWord =>
-                          cityWords.some(cityWord => cityWord.includes(searchWord))
-                        );
-                      });
-                      setFilteredCities(filtered);
-                      setShowCitySuggestions(true);
-                    }
-                  }}
-                  className="input-field pl-10 relative z-10"
-                  placeholder="Digite sua cidade"
-                  autoComplete="off"
-                />
-
-                {/* Dropdown de Sugestões */}
-                {showCitySuggestions && filteredCities.length > 0 && (
-                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-                    {filteredCities.slice(0, 10).map((cityObj) => (
-                      <button
-                        key={`${cityObj.city}-${cityObj.state}`}
-                        type="button"
-                        onClick={() => selectCity(cityObj)}
-                        className="w-full text-left px-4 py-2 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center justify-between"
-                      >
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-gray-400" />
-                          <span>{cityObj.city}</span>
-                        </div>
-                        <span className="text-sm text-gray-500">{cityObj.state}</span>
-                      </button>
-                    ))}
-                    {filteredCities.length > 10 && (
-                      <div className="px-4 py-2 text-xs text-gray-500 border-t">
-                        +{filteredCities.length - 10} cidades... continue digitando
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Mensagem quando não há resultados */}
-                {showCitySuggestions && filteredCities.length === 0 && formData.city.trim().length > 0 && (
-                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-3">
-                    <p className="text-sm text-gray-500">Nenhuma cidade encontrada</p>
-                    <p className="text-xs text-gray-400 mt-1">Você pode digitar qualquer cidade</p>
-                  </div>
-                )}
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                {filteredCities.length > 0
-                  ? `${filteredCities.length} cidade(s) encontrada(s)`
-                  : 'Digite para buscar cidades brasileiras'}
-              </p>
-            </div>
-
-            {/* Botão Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full btn-primary flex items-center justify-center space-x-2 disabled:opacity-50"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>Cadastrando...</span>
-                </>
-              ) : (
-                <>
-                  <UserPlus className="h-5 w-5" />
-                  <span>Criar Conta</span>
-                </>
-              )}
-            </button>
-          </form>
-
-          {/* Link para Login */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Já tem uma conta?{' '}
-              <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
-                Fazer login
-              </Link>
-            </p>
+          {/* Current Step Content */}
+          <div className="mb-8">
+            {renderStep()}
           </div>
 
-          <div className="mt-4 text-center text-xs text-gray-500">
-            Powered by <span className="font-semibold text-primary-600">DXM Tech</span>
-          </div>
+          {/* Navigation Buttons */}
+          <StepNavigation
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+            onNext={handleNext}
+            onBack={handleBack}
+            onSubmit={handleFinalSubmit}
+            isValid={validateStep(currentStep)}
+            isLoading={loading}
+          />
+        </div>
+
+        {/* Login Link */}
+        <div className="mt-6 text-center">
+          <p className="text-gray-300">
+            Já tem conta?{' '}
+            <Link to="/login" className="text-sky-400 hover:text-sky-300 font-medium">
+              Entrar
+            </Link>
+          </p>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-4 text-center text-xs text-gray-400">
+          Powered by <span className="font-semibold text-sky-400">DXM Tech</span>
         </div>
       </div>
     </div>
