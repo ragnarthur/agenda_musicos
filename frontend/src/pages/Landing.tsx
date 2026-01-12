@@ -154,7 +154,7 @@ const Landing: React.FC = () => {
           </div>
 
           <p className="text-gray-400 text-sm mt-8">
-            © 2024 GigFlow. Todos os direitos reservados.
+            © 2026 DXM Tech. Todos os direitos reservados.
           </p>
         </section>
       </div>

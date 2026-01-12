@@ -195,8 +195,9 @@ const EventForm: React.FC = () => {
     );
   };
 
+  const { event_date, start_time, end_time } = formData;
+
   useEffect(() => {
-    const { event_date, start_time, end_time } = formData;
     if (!event_date || !start_time || !end_time) {
       setConflictInfo(prev => ({ ...prev, hasConflicts: false, conflicts: [] }));
       return;
@@ -227,7 +228,7 @@ const EventForm: React.FC = () => {
       cancelled = true;
       clearTimeout(timeout);
     };
-  }, [formData.event_date, formData.start_time, formData.end_time]);
+  }, [event_date, start_time, end_time]);
 
   const formatPhone = (value: string): string => {
     const numbers = value.replace(/\D/g, '');

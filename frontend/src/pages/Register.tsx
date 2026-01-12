@@ -1,5 +1,5 @@
 // pages/Register.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
 import { registrationService, type RegisterData } from '../services/api';
@@ -111,6 +111,10 @@ const Register: React.FC = () => {
     city: '',
     state: '',
   });
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  }, []);
 
   // City autocomplete logic
   const handleCityChange = (value: string) => {

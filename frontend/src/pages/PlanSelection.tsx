@@ -1,5 +1,5 @@
 // pages/PlanSelection.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import {
   Check,
@@ -66,17 +66,7 @@ const PlanSelection: React.FC = () => {
   const [error, setError] = useState('');
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('monthly');
 
-  useEffect(() => {
-    if (!token) {
-      setError('Token de pagamento não fornecido.');
-      setLoading(false);
-      return;
-    }
-
-    loadStatus();
-  }, [token]);
-
-  const loadStatus = async () => {
+  const loadStatus = useCallback(async () => {
     if (!token) return;
 
     try {
@@ -96,7 +86,17 @@ const PlanSelection: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate, token]);
+
+  useEffect(() => {
+    if (!token) {
+      setError('Token de pagamento não fornecido.');
+      setLoading(false);
+      return;
+    }
+
+    void loadStatus();
+  }, [token, loadStatus]);
 
   const handleSelectPlan = async () => {
     if (!token) return;

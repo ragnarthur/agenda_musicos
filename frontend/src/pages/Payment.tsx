@@ -1,5 +1,5 @@
 // pages/Payment.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import {
   CreditCard,
@@ -34,17 +34,7 @@ const Payment: React.FC = () => {
     card_cvv: '',
   });
 
-  useEffect(() => {
-    if (!token) {
-      setError('Token de pagamento não fornecido.');
-      setLoading(false);
-      return;
-    }
-
-    loadStatus();
-  }, [token]);
-
-  const loadStatus = async () => {
+  const loadStatus = useCallback(async () => {
     if (!token) return;
 
     try {
@@ -63,7 +53,17 @@ const Payment: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) {
+      setError('Token de pagamento não fornecido.');
+      setLoading(false);
+      return;
+    }
+
+    void loadStatus();
+  }, [token, loadStatus]);
 
   const formatCardNumber = (value: string) => {
     const nums = value.replace(/\D/g, '').slice(0, 16);

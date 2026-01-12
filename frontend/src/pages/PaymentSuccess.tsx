@@ -1,5 +1,5 @@
 // pages/PaymentSuccess.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { paymentService } from '../services/api';
@@ -16,17 +16,7 @@ const PaymentSuccess: React.FC = () => {
     status: string;
   } | null>(null);
 
-  useEffect(() => {
-    if (!sessionId) {
-      setError('ID da sessão não encontrado.');
-      setLoading(false);
-      return;
-    }
-
-    verifySession();
-  }, [sessionId]);
-
-  const verifySession = async () => {
+  const verifySession = useCallback(async () => {
     try {
       const data = await paymentService.getSessionStatus(sessionId!);
       setSessionData({
@@ -44,7 +34,17 @@ const PaymentSuccess: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [sessionId]);
+
+  useEffect(() => {
+    if (!sessionId) {
+      setError('ID da sessão não encontrado.');
+      setLoading(false);
+      return;
+    }
+
+    void verifySession();
+  }, [sessionId, verifySession]);
 
   if (loading) {
     return (
