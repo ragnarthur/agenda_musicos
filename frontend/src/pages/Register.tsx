@@ -96,7 +96,7 @@ const Register: React.FC = () => {
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const [filteredCities, setFilteredCities] = useState<Array<{ city: string; state: string }>>([]);
 
-  const [formData, setFormData] = useState<RegisterData & { confirmPassword: string; instrumentOther: string; instruments: string[]; isMultiInstrumentist: boolean; city: string; state: string }>({
+  const [formData, setFormData] = useState<RegisterData & { confirmPassword: string; instrumentOther: string; instruments: string[]; isMultiInstrumentist: boolean; city: string; state: string; bio: string }>({
     email: '',
     username: '',
     password: '',
