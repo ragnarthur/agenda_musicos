@@ -4,6 +4,8 @@ URL configuration for config project.
 from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from config.auth_views import (
     CookieTokenObtainPairView,
     CookieTokenRefreshView,
@@ -23,3 +25,7 @@ urlpatterns = [
     path("healthz/", healthz),
     path('api/token/logout/', CookieTokenLogoutView.as_view(), name='token_logout'),
 ]
+
+# Serve media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

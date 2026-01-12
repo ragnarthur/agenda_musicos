@@ -47,13 +47,16 @@ class MusicianSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
     public_email = serializers.SerializerMethodField()
     subscription_info = serializers.SerializerMethodField()
+    avatar_url = serializers.SerializerMethodField()
+    cover_image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Musician
         fields = [
             'id', 'user', 'full_name', 'instrument', 'instruments', 'role',
-            'bio', 'phone', 'instagram', 'whatsapp', 'city', 'state', 'base_fee', 'travel_fee_per_km',
-            'equipment_items', 'public_email', 'is_active',
+            'bio', 'phone', 'instagram', 'whatsapp', 'city', 'state',
+            'avatar_url', 'cover_image_url',
+            'base_fee', 'travel_fee_per_km', 'equipment_items', 'public_email', 'is_active',
             'average_rating', 'total_ratings', 'created_at', 'subscription_info'
         ]
         read_only_fields = ['id', 'average_rating', 'total_ratings', 'created_at', 'subscription_info']
@@ -67,6 +70,24 @@ class MusicianSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             if request.user.id == obj.user.id:
                 return obj.user.email
+        return None
+
+    def get_avatar_url(self, obj):
+        """Retorna URL completa do avatar"""
+        if obj.avatar:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.avatar.url)
+            return obj.avatar.url
+        return None
+
+    def get_cover_image_url(self, obj):
+        """Retorna URL completa da imagem de capa"""
+        if obj.cover_image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.cover_image.url)
+            return obj.cover_image.url
         return None
 
     def get_subscription_info(self, obj):
@@ -642,13 +663,16 @@ class MusicianRatingSerializer(serializers.ModelSerializer):
     """Serializer para avaliações de músicos"""
     musician_name = serializers.SerializerMethodField()
     rated_by_name = serializers.SerializerMethodField()
+    rated_by_avatar = serializers.SerializerMethodField()
     event_title = serializers.SerializerMethodField()
+    time_ago = serializers.SerializerMethodField()
 
     class Meta:
         model = MusicianRating
         fields = [
             'id', 'event', 'event_title', 'musician', 'musician_name',
-            'rating', 'comment', 'rated_by', 'rated_by_name', 'created_at'
+            'rating', 'comment', 'rated_by', 'rated_by_name', 'rated_by_avatar',
+            'time_ago', 'created_at'
         ]
         read_only_fields = ['id', 'rated_by', 'created_at']
 
@@ -657,6 +681,19 @@ class MusicianRatingSerializer(serializers.ModelSerializer):
 
     def get_rated_by_name(self, obj):
         return obj.rated_by.get_full_name() or obj.rated_by.username
+
+    def get_rated_by_avatar(self, obj):
+        """Retorna avatar do avaliador se ele tiver perfil de músico"""
+        if hasattr(obj.rated_by, 'musician_profile') and obj.rated_by.musician_profile.avatar:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.rated_by.musician_profile.avatar.url)
+        return None
+
+    def get_time_ago(self, obj):
+        """Retorna tempo decorrido desde a criação em formato legível"""
+        from django.utils.timesince import timesince
+        return timesince(obj.created_at)
 
     def get_event_title(self, obj):
         return obj.event.title

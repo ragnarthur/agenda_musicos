@@ -100,6 +100,8 @@ class Musician(models.Model):
     phone = models.CharField(max_length=20, blank=True, null=True)
     instagram = models.CharField(max_length=100, blank=True, null=True)
     whatsapp = models.CharField(max_length=20, blank=True, null=True, help_text='WhatsApp com máscara (11) 99999-9999')
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True, help_text='Foto de perfil do músico')
+    cover_image = models.ImageField(upload_to='covers/', blank=True, null=True, help_text='Imagem de capa do perfil')
     base_fee = models.DecimalField(
         max_digits=10,
         decimal_places=2,

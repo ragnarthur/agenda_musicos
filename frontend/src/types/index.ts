@@ -35,6 +35,8 @@ export interface Musician {
   phone?: string;
   instagram?: string;
   whatsapp?: string;
+  avatar_url?: string | null;
+  cover_image_url?: string | null;
   city?: string;
   state?: string;
   public_email?: string | null;

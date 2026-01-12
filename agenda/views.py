@@ -1388,3 +1388,159 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         result.sort(key=lambda x: (not x['has_availability'], x['musician_name']))
 
         return Response(result)
+
+
+# Image upload endpoints
+from rest_framework.decorators import api_view, permission_classes
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def upload_avatar(request):
+    """
+    POST /api/musicians/upload-avatar/
+    Upload de foto de perfil do músico
+    """
+    try:
+        musician = request.user.musician_profile
+        if 'avatar' not in request.FILES:
+            return Response(
+                {'error': 'Nenhuma imagem enviada'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Deletar avatar antigo se existir
+        if musician.avatar:
+            musician.avatar.delete(save=False)
+
+        musician.avatar = request.FILES['avatar']
+        musician.save()
+
+        return Response({
+            'avatar': request.build_absolute_uri(musician.avatar.url)
+        }, status=status.HTTP_200_OK)
+
+    except Musician.DoesNotExist:
+        return Response(
+            {'error': 'Perfil não encontrado'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        logging.exception("Erro ao fazer upload de avatar")
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def upload_cover(request):
+    """
+    POST /api/musicians/upload-cover/
+    Upload de imagem de capa do perfil
+    """
+    try:
+        musician = request.user.musician_profile
+        if 'cover_image' not in request.FILES:
+            return Response(
+                {'error': 'Nenhuma imagem enviada'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Deletar capa antiga se existir
+        if musician.cover_image:
+            musician.cover_image.delete(save=False)
+
+        musician.cover_image = request.FILES['cover_image']
+        musician.save()
+
+        return Response({
+            'cover_image': request.build_absolute_uri(musician.cover_image.url)
+        }, status=status.HTTP_200_OK)
+
+    except Musician.DoesNotExist:
+        return Response(
+            {'error': 'Perfil não encontrado'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        logging.exception("Erro ao fazer upload de imagem de capa")
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+def get_musician_connections(request, musician_id):
+    """
+    GET /api/musicians/<id>/connections/
+    Retorna conexões do músico (usuários que ele segue)
+    """
+    try:
+        # Verifica se o músico existe
+        musician = Musician.objects.get(id=musician_id, is_active=True)
+
+        # Busca conexões onde o músico é o follower
+        connections = Connection.objects.filter(
+            follower=musician
+        ).select_related('target__user').order_by('-created_at')[:6]
+
+        # Serializar os músicos conectados (targets)
+        connected_musicians = []
+        for conn in connections:
+            target = conn.target
+            connected_musicians.append({
+                'id': target.id,
+                'full_name': target.user.get_full_name() or target.user.username,
+                'instrument': target.instrument,
+                'avatar': request.build_absolute_uri(target.avatar.url) if target.avatar else None
+            })
+
+        return Response({
+            'total': connections.count(),
+            'connections': connected_musicians
+        }, status=status.HTTP_200_OK)
+
+    except Musician.DoesNotExist:
+        return Response(
+            {'error': 'Músico não encontrado'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        logging.exception("Erro ao buscar conexões")
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+def get_musician_reviews(request, musician_id):
+    """
+    GET /api/musicians/<id>/reviews/
+    Retorna avaliações recebidas pelo músico
+    """
+    try:
+        # Verifica se o músico existe
+        musician = Musician.objects.get(id=musician_id, is_active=True)
+
+        # Busca avaliações do músico (10 mais recentes)
+        reviews = MusicianRating.objects.filter(
+            musician=musician
+        ).select_related('rated_by', 'event').order_by('-created_at')[:10]
+
+        serializer = MusicianRatingSerializer(reviews, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    except Musician.DoesNotExist:
+        return Response(
+            {'error': 'Músico não encontrado'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        logging.exception("Erro ao buscar avaliações")
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

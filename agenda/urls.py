@@ -8,6 +8,10 @@ from .views import (
     LeaderAvailabilityViewSet,
     ConnectionViewSet,
     BadgeViewSet,
+    upload_avatar,
+    upload_cover,
+    get_musician_connections,
+    get_musician_reviews,
 )
 from .registration_views import (
     RegisterView,
@@ -55,6 +59,12 @@ urlpatterns = [
     path('subscription-activate-fake/', SubscriptionActivateFakeView.as_view(), name='subscription-activate-fake'),
     path('payment-callback/', PaymentCallbackView.as_view(), name='payment-callback'),
     path('subscription-status-update/', SubscriptionStatusUpdateView.as_view(), name='subscription-status-update'),
+    # Image uploads
+    path('musicians/upload-avatar/', upload_avatar, name='upload-avatar'),
+    path('musicians/upload-cover/', upload_cover, name='upload-cover'),
+    # Musician connections and reviews
+    path('musicians/<int:musician_id>/connections/', get_musician_connections, name='musician-connections'),
+    path('musicians/<int:musician_id>/reviews/', get_musician_reviews, name='musician-reviews'),
 ]
 
 """
