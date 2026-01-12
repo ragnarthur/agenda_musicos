@@ -1,5 +1,6 @@
 import React from 'react';
 import { MapPin, Star, Camera } from 'lucide-react';
+import { motion } from 'framer-motion';
 import type { Musician } from '../../types';
 
 interface ProfileHeaderProps {
@@ -29,22 +30,30 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <div className="w-full h-full bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600" />
         )}
 
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20 dark:to-black/40" />
+
         {isOwnProfile && (
           <button
             onClick={onUploadCover}
-            className="absolute top-4 right-4 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+            className="absolute top-4 right-4 backdrop-blur-md bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 p-2 rounded-full shadow-lg transition-all hover:scale-110"
           >
-            <Camera className="h-5 w-5 text-gray-700" />
+            <Camera className="h-5 w-5 text-gray-700 dark:text-gray-200" />
           </button>
         )}
       </div>
 
       {/* Avatar + Info */}
       <div className="relative px-8 pb-6">
-        <div className="flex flex-col md:flex-row items-start md:items-end gap-6 -mt-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col md:flex-row items-start md:items-end gap-6 -mt-20"
+        >
           {/* Avatar */}
           <div className="relative">
-            <div className="w-40 h-40 rounded-full border-4 border-white bg-white shadow-xl overflow-hidden">
+            <div className="w-40 h-40 rounded-full border-4 border-white dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl overflow-hidden ring-4 ring-blue-500/20 dark:ring-blue-400/20 hover:ring-blue-500/40 dark:hover:ring-blue-400/40 transition-all">
               {musician.avatar_url ? (
                 <img
                   src={musician.avatar_url}
@@ -52,8 +61,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                  <span className="text-5xl font-bold text-gray-500">
+                <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
+                  <span className="text-5xl font-bold text-gray-500 dark:text-gray-300">
                     {musician.full_name[0]}
                   </span>
                 </div>
@@ -61,22 +70,24 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             </div>
 
             {isOwnProfile && (
-              <button
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={onUploadAvatar}
-                className="absolute bottom-2 right-2 bg-sky-600 hover:bg-sky-700 p-2 rounded-full shadow-lg transition-colors"
+                className="absolute bottom-2 right-2 bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 p-2 rounded-full shadow-lg transition-colors"
               >
                 <Camera className="h-4 w-4 text-white" />
-              </button>
+              </motion.button>
             )}
           </div>
 
           {/* Name & Info */}
           <div className="flex-1 md:mb-4">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
               {musician.full_name}
             </h1>
 
-            <div className="flex flex-wrap items-center gap-4 text-gray-600 mb-3">
+            <div className="flex flex-wrap items-center gap-4 text-gray-600 dark:text-gray-400 mb-3">
               {musician.city && (
                 <div className="flex items-center gap-1">
                   <MapPin className="h-4 w-4" />
@@ -87,12 +98,18 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               <div className="flex flex-wrap gap-2">
                 {musician.instruments && musician.instruments.length > 0 ? (
                   musician.instruments.slice(0, 3).map((inst, idx) => (
-                    <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                    <motion.span
+                      key={idx}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className="px-3 py-1 backdrop-blur-sm bg-blue-500/20 dark:bg-blue-400/10 text-blue-800 dark:text-blue-300 rounded-full text-sm border border-blue-200/30 dark:border-blue-400/20 hover:bg-blue-500/30 dark:hover:bg-blue-400/20 transition-colors"
+                    >
                       {inst}
-                    </span>
+                    </motion.span>
                   ))
                 ) : musician.instrument && (
-                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                  <span className="px-3 py-1 backdrop-blur-sm bg-blue-500/20 dark:bg-blue-400/10 text-blue-800 dark:text-blue-300 rounded-full text-sm border border-blue-200/30 dark:border-blue-400/20">
                     {musician.instrument}
                   </span>
                 )}
@@ -106,18 +123,18 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`h-5 w-5 ${
+                      className={`h-5 w-5 transition-all ${
                         i < Math.round(Number(musician.average_rating ?? 0))
-                          ? 'text-yellow-400 fill-yellow-400'
-                          : 'text-gray-300'
+                          ? 'text-yellow-400 fill-yellow-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]'
+                          : 'text-gray-300 dark:text-gray-600'
                       }`}
                     />
                   ))}
                 </div>
-                <span className="font-semibold text-gray-900">
+                <span className="font-semibold text-gray-900 dark:text-white">
                   {Number(musician.average_rating ?? 0).toFixed(1)}
                 </span>
-                <span className="text-gray-500 text-sm">
+                <span className="text-gray-500 dark:text-gray-400 text-sm">
                   ({musician.total_ratings} {musician.total_ratings === 1 ? 'avaliação' : 'avaliações'})
                 </span>
               </div>
@@ -127,18 +144,30 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           {/* Action Buttons */}
           {!isOwnProfile && (
             <div className="flex gap-3 md:mb-4">
-              <button className="px-6 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-medium transition-colors">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-6 py-2 bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 text-white rounded-lg font-medium transition-colors shadow-lg hover:shadow-sky-500/50"
+              >
                 Seguir
-              </button>
-              <button className="px-6 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-lg font-medium transition-colors">
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-6 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg font-medium transition-all"
+              >
                 Mensagem
-              </button>
-              <button className="px-6 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-lg font-medium transition-colors">
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-6 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg font-medium transition-all"
+              >
                 Contratar
-              </button>
+              </motion.button>
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
     </div>
   );

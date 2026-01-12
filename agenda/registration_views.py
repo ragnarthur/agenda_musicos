@@ -72,6 +72,8 @@ class RegisterView(APIView):
         phone = data.get('phone', '').strip()
         instagram = data.get('instagram', '').strip()
         whatsapp = data.get('whatsapp', '').strip()
+        city = str(data.get('city', '') or '').strip()
+        state = str(data.get('state', '') or '').strip().upper()
 
         # Validar formato do Instagram (deve começar com @)
         if instagram and not instagram.startswith('@'):
@@ -97,11 +99,22 @@ class RegisterView(APIView):
                         break
                     instruments.append(value.lower())
 
-        bio = data.get('bio', '').strip()
+        bio = str(data.get('bio', '') or '').strip()
 
         # Validação de tamanho do bio para evitar payload abuse
-        if len(bio) > 1000:
-            errors['bio'] = 'Bio deve ter no máximo 1000 caracteres.'
+        if not bio:
+            errors['bio'] = 'Mini-bio é obrigatória.'
+        elif len(bio) > 240:
+            errors['bio'] = 'Mini-bio deve ter no máximo 240 caracteres.'
+
+        # Cidade e estado (obrigatórios/limites)
+        if not city:
+            errors['city'] = 'Cidade é obrigatória.'
+        elif len(city) > 60:
+            errors['city'] = 'Cidade deve ter no máximo 60 caracteres.'
+
+        if state and len(state) > 2:
+            errors['state'] = 'Estado deve ter no máximo 2 caracteres (UF).'
 
         # Remove duplicados preservando ordem
         if instruments:
@@ -159,7 +172,9 @@ class RegisterView(APIView):
             whatsapp=whatsapp,
             instrument=instrument,
             instruments=instruments,
-            bio=bio,
+            bio=bio[:240],
+            city=city,
+            state=state,
             email_token=email_token,
             expires_at=expires_at,
             status='pending_email',

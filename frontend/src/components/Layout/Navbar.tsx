@@ -18,6 +18,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { eventService } from '../../services/api';
 import OwlMascot from '../ui/OwlMascot';
+import ThemeToggle from './ThemeToggle';
 
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
@@ -224,6 +225,7 @@ const Navbar: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
+              <ThemeToggle />
               {showPlanShortcut && (
                 <Link
                   to="/planos"
@@ -402,6 +404,10 @@ const Navbar: React.FC = () => {
                 </Link>
               )}
               <div className="border-t border-white/10 pt-2 mt-2">
+                <div className="flex items-center justify-between px-3 py-2 mb-2">
+                  <span className="text-sm text-slate-300">Tema</span>
+                  <ThemeToggle />
+                </div>
                 <button
                   onClick={() => {
                     setOpenMore(false);

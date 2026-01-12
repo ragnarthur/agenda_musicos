@@ -71,7 +71,7 @@ const MusicianProfile: React.FC = () => {
     return (
       <Layout>
         <div className="max-w-6xl mx-auto px-4 py-8">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-700 dark:text-red-400">
             {error || 'Músico não encontrado'}
           </div>
         </div>
@@ -85,19 +85,19 @@ const MusicianProfile: React.FC = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
         <div className="max-w-6xl mx-auto px-4 py-8">
           {/* Back Button */}
           <Link
             to="/musicos"
-            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6 transition-colors"
+            className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-6 transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
             Voltar para músicos
           </Link>
 
           {/* Profile Card */}
-          <div className="bg-white rounded-2xl shadow-lg mb-8 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg mb-8 overflow-hidden transition-colors duration-200">
             <ProfileHeader
               musician={musician}
               isOwnProfile={isOwnProfile}
@@ -140,24 +140,24 @@ const MusicianProfile: React.FC = () => {
             <div className="lg:col-span-2 space-y-8">
               {/* About Section */}
               {musician.bio && (
-                <div className="bg-white rounded-xl shadow-md p-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-4">Sobre</h2>
-                  <p className="text-gray-700 whitespace-pre-wrap">{musician.bio}</p>
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Sobre</h2>
+                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{musician.bio}</p>
                 </div>
               )}
 
               {/* Equipment Section */}
               {musician.equipment_items && musician.equipment_items.length > 0 && (
-                <div className="bg-white rounded-xl shadow-md p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
                   <div className="flex items-center gap-2 mb-4">
-                    <Package className="h-5 w-5 text-gray-600" />
-                    <h2 className="text-xl font-bold text-gray-900">Equipamentos e Serviços</h2>
+                    <Package className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Equipamentos e Serviços</h2>
                   </div>
                   <ul className="space-y-3">
                     {musician.equipment_items.map((item, idx) => (
-                      <li key={idx} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
-                        <span className="text-gray-700">{item.name}</span>
-                        <span className="font-semibold text-gray-900">R$ {item.price}</span>
+                      <li key={idx} className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                        <span className="text-gray-700 dark:text-gray-300">{item.name}</span>
+                        <span className="font-semibold text-gray-900 dark:text-white">R$ {item.price}</span>
                       </li>
                     ))}
                   </ul>
@@ -166,10 +166,10 @@ const MusicianProfile: React.FC = () => {
 
               {/* Reviews Section */}
               {reviews.length > 0 && (
-                <div className="bg-white rounded-xl shadow-md p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
                   <div className="flex items-center gap-2 mb-6">
-                    <MessageCircle className="h-5 w-5 text-gray-600" />
-                    <h2 className="text-xl font-bold text-gray-900">Avaliações ({reviews.length})</h2>
+                    <MessageCircle className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Avaliações ({reviews.length})</h2>
                   </div>
                   <div className="space-y-4">
                     {reviews.map((review) => (
@@ -183,16 +183,16 @@ const MusicianProfile: React.FC = () => {
             {/* Right Column (1/3 width) */}
             <div className="space-y-8">
               {/* Contact Section */}
-              <div className="bg-white rounded-xl shadow-md p-6">
-                <h2 className="text-lg font-bold text-gray-900 mb-4">Contato</h2>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Contato</h2>
                 <div className="space-y-3">
                   {musician.phone && (
                     <a
                       href={`tel:${musician.phone}`}
-                      className="flex items-center gap-3 text-gray-700 hover:text-blue-600 transition-colors"
+                      className="flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                     >
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                        <Phone className="h-5 w-5 text-blue-600" />
+                      <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                        <Phone className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                       </div>
                       <span>{musician.phone}</span>
                     </a>
@@ -202,9 +202,9 @@ const MusicianProfile: React.FC = () => {
                       href={`https://wa.me/55${musician.whatsapp.replace(/\D/g, '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 text-gray-700 hover:text-green-600 transition-colors"
+                      className="flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors"
                     >
-                      <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                         💬
                       </div>
                       <span>WhatsApp</span>
@@ -215,9 +215,9 @@ const MusicianProfile: React.FC = () => {
                       href={`https://instagram.com/${musician.instagram.replace('@', '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 text-gray-700 hover:text-pink-600 transition-colors"
+                      className="flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors"
                     >
-                      <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
                         📷
                       </div>
                       <span>@{musician.instagram.replace('@', '')}</span>
@@ -228,12 +228,12 @@ const MusicianProfile: React.FC = () => {
 
               {/* Connections Section */}
               {connections.length > 0 && (
-                <div className="bg-white rounded-xl shadow-md p-6">
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">Conexões</h2>
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Conexões</h2>
                   <div className="grid grid-cols-3 gap-3">
                     {connections.map((conn) => (
-                      <Link key={conn.id} to={`/musicos/${conn.id}`} className="text-center">
-                        <div className="w-16 h-16 rounded-full bg-gray-200 mx-auto mb-2 overflow-hidden">
+                      <Link key={conn.id} to={`/musicos/${conn.id}`} className="text-center hover:scale-105 transition-transform">
+                        <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-2 overflow-hidden ring-2 ring-blue-500/10 dark:ring-blue-400/10">
                           {conn.avatar ? (
                             <img src={conn.avatar} alt={conn.full_name} className="w-full h-full object-cover" />
                           ) : (
@@ -242,7 +242,7 @@ const MusicianProfile: React.FC = () => {
                             </div>
                           )}
                         </div>
-                        <p className="text-xs text-gray-700 truncate">{conn.full_name}</p>
+                        <p className="text-xs text-gray-700 dark:text-gray-300 truncate">{conn.full_name}</p>
                       </Link>
                     ))}
                   </div>

@@ -103,7 +103,6 @@ const Register: React.FC = () => {
     confirmPassword: '',
     first_name: '',
     last_name: '',
-    phone: '',
     instagram: '',
     whatsapp: '',
     instrument: '',
@@ -149,15 +148,6 @@ const Register: React.FC = () => {
     setFilteredCities([]);
   };
 
-  const formatPhone = (value: string) => {
-    const digits = value.replace(/\D/g, '').slice(0, 11);
-    if (digits.length <= 2) return digits;
-    const area = digits.slice(0, 2);
-    const mid = digits.slice(2, 7);
-    const end = digits.slice(7);
-    return end ? `(${area}) ${mid}-${end}` : `(${area}) ${digits.slice(2)}`;
-  };
-
   const formatWhatsApp = (value: string) => {
     const numbers = value.replace(/\D/g, '');
     if (numbers.length <= 2) return numbers;
@@ -171,9 +161,7 @@ const Register: React.FC = () => {
 
   const handleChange = (e: FieldChangeEvent) => {
     const { name, value } = e.target;
-    if (name === 'phone') {
-      setFormData(prev => ({ ...prev, phone: formatPhone(value) }));
-    } else if (name === 'whatsapp') {
+    if (name === 'whatsapp') {
       setFormData(prev => ({ ...prev, whatsapp: formatWhatsApp(value) }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -466,7 +454,6 @@ const Register: React.FC = () => {
             formData={{
               first_name: formData.first_name,
               last_name: formData.last_name || '',
-              phone: formData.phone || '',
               instagram: formData.instagram || '',
               whatsapp: formData.whatsapp || '',
               city: formData.city,
@@ -567,7 +554,6 @@ const Register: React.FC = () => {
                     confirmPassword: '',
                     first_name: '',
                     last_name: '',
-                    phone: '',
                     instrument: '',
                     instruments: [],
                     instrumentOther: '',
