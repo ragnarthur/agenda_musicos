@@ -453,6 +453,8 @@ export interface RegisterData {
   instrument?: string;
   instruments?: string[];
   bio?: string;
+  city?: string;
+  state?: string;
 }
 
 export interface RegistrationStatus {

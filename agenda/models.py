@@ -126,6 +126,12 @@ class Musician(models.Model):
         null=True,
         help_text='Cidade onde o músico reside'
     )
+    state = models.CharField(
+        max_length=2,
+        blank=True,
+        null=True,
+        help_text='UF (sigla do estado)'
+    )
     is_active = models.BooleanField(default=True)
 
     # Campos de rating (agregados/cached)
@@ -853,6 +859,7 @@ class PendingRegistration(models.Model):
     instruments = models.JSONField(default=list, blank=True)
     bio = models.TextField(blank=True, null=True)
     city = models.CharField(max_length=100, blank=True, null=True)
+    state = models.CharField(max_length=2, blank=True, null=True)
 
     # Status e tokens
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending_email')
@@ -921,6 +928,7 @@ class PendingRegistration(models.Model):
             instruments=instruments,
             bio=self.bio or '',
             city=self.city or '',
+            state=self.state or '',
             role='member',
             is_active=True,
         )

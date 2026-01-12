@@ -84,7 +84,9 @@ const MusicianProfile: React.FC = () => {
           {musician.city && (
             <div className="flex items-center gap-2 text-gray-600 mb-6">
               <MapPin className="h-5 w-5 text-blue-500" />
-              <span className="text-lg">{musician.city}</span>
+              <span className="text-lg">
+                {musician.city}{musician.state ? `, ${musician.state}` : ''}
+              </span>
             </div>
           )}
 

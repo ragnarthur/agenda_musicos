@@ -42,21 +42,73 @@ const SELECT_INSTRUMENT_OPTIONS = [
 ];
 
 const BRAZILIAN_CITIES = [
-  'São Paulo', 'Rio de Janeiro', 'Brasília', 'Salvador', 'Fortaleza',
-  'Belo Horizonte', 'Manaus', 'Curitiba', 'Recife', 'Goiânia',
-  'Porto Alegre', 'Belém', 'Guarulhos', 'Campinas', 'São Luís',
-  'São Gonçalo', 'Maceió', 'Duque de Caxias', 'Natal', 'Teresina',
-  'Campo Grande', 'Nova Iguaçu', 'São Bernardo do Campo', 'João Pessoa',
-  'Santo André', 'Osasco', 'São José dos Campos', 'Ribeirão Preto',
-  'Uberlândia', 'Sorocaba', 'Contagem', 'Aracaju', 'Feira de Santana',
-  'Cuiabá', 'Joinville', 'Juiz de Fora', 'Londrina', 'Aparecida de Goiânia',
-  'Niterói', 'Caxias do Sul', 'Florianópolis', 'Vila Velha', 'Santos',
-  'Mauá', 'Carapicuíba', 'Olinda', 'São João de Meriti', 'Campos dos Goytacazes',
-  'Betim', 'Diadema', 'Jundiaí', 'Montes Claros', 'Piracicaba',
-  'Bauru', 'Porto Velho', 'Vitória', 'Pelotas', 'Canoas',
-  'Monte Carmelo', 'Santa Rita do Sapucaí', 'Barra do Garças', 'Santa Maria',
-  'Ponta Grossa', 'Foz do Iguaçu', 'Praia Grande', 'Governador Valadares'
-].sort();
+  { city: 'São Paulo', state: 'SP' },
+  { city: 'Rio de Janeiro', state: 'RJ' },
+  { city: 'Brasília', state: 'DF' },
+  { city: 'Salvador', state: 'BA' },
+  { city: 'Fortaleza', state: 'CE' },
+  { city: 'Belo Horizonte', state: 'MG' },
+  { city: 'Manaus', state: 'AM' },
+  { city: 'Curitiba', state: 'PR' },
+  { city: 'Recife', state: 'PE' },
+  { city: 'Goiânia', state: 'GO' },
+  { city: 'Porto Alegre', state: 'RS' },
+  { city: 'Belém', state: 'PA' },
+  { city: 'Guarulhos', state: 'SP' },
+  { city: 'Campinas', state: 'SP' },
+  { city: 'São Luís', state: 'MA' },
+  { city: 'São Gonçalo', state: 'RJ' },
+  { city: 'Maceió', state: 'AL' },
+  { city: 'Duque de Caxias', state: 'RJ' },
+  { city: 'Natal', state: 'RN' },
+  { city: 'Teresina', state: 'PI' },
+  { city: 'Campo Grande', state: 'MS' },
+  { city: 'Nova Iguaçu', state: 'RJ' },
+  { city: 'São Bernardo do Campo', state: 'SP' },
+  { city: 'João Pessoa', state: 'PB' },
+  { city: 'Santo André', state: 'SP' },
+  { city: 'Osasco', state: 'SP' },
+  { city: 'São José dos Campos', state: 'SP' },
+  { city: 'Ribeirão Preto', state: 'SP' },
+  { city: 'Uberlândia', state: 'MG' },
+  { city: 'Sorocaba', state: 'SP' },
+  { city: 'Contagem', state: 'MG' },
+  { city: 'Aracaju', state: 'SE' },
+  { city: 'Feira de Santana', state: 'BA' },
+  { city: 'Cuiabá', state: 'MT' },
+  { city: 'Joinville', state: 'SC' },
+  { city: 'Juiz de Fora', state: 'MG' },
+  { city: 'Londrina', state: 'PR' },
+  { city: 'Aparecida de Goiânia', state: 'GO' },
+  { city: 'Niterói', state: 'RJ' },
+  { city: 'Caxias do Sul', state: 'RS' },
+  { city: 'Florianópolis', state: 'SC' },
+  { city: 'Vila Velha', state: 'ES' },
+  { city: 'Santos', state: 'SP' },
+  { city: 'Mauá', state: 'SP' },
+  { city: 'Carapicuíba', state: 'SP' },
+  { city: 'Olinda', state: 'PE' },
+  { city: 'São João de Meriti', state: 'RJ' },
+  { city: 'Campos dos Goytacazes', state: 'RJ' },
+  { city: 'Betim', state: 'MG' },
+  { city: 'Diadema', state: 'SP' },
+  { city: 'Jundiaí', state: 'SP' },
+  { city: 'Montes Claros', state: 'MG' },
+  { city: 'Piracicaba', state: 'SP' },
+  { city: 'Bauru', state: 'SP' },
+  { city: 'Porto Velho', state: 'RO' },
+  { city: 'Vitória', state: 'ES' },
+  { city: 'Pelotas', state: 'RS' },
+  { city: 'Canoas', state: 'RS' },
+  { city: 'Monte Carmelo', state: 'MG' },
+  { city: 'Santa Rita do Sapucaí', state: 'MG' },
+  { city: 'Barra do Garças', state: 'MT' },
+  { city: 'Santa Maria', state: 'RS' },
+  { city: 'Ponta Grossa', state: 'PR' },
+  { city: 'Foz do Iguaçu', state: 'PR' },
+  { city: 'Praia Grande', state: 'SP' },
+  { city: 'Governador Valadares', state: 'MG' },
+].sort((a, b) => a.city.localeCompare(b.city));
 
 const Register: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -67,9 +119,9 @@ const Register: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [resending, setResending] = useState(false);
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
-  const [filteredCities, setFilteredCities] = useState<string[]>([]);
+  const [filteredCities, setFilteredCities] = useState<Array<{ city: string; state: string }>>([]);
 
-  const [formData, setFormData] = useState<RegisterData & { confirmPassword: string; instrumentOther: string; instruments: string[]; isMultiInstrumentist: boolean; city: string }>({
+  const [formData, setFormData] = useState<RegisterData & { confirmPassword: string; instrumentOther: string; instruments: string[]; isMultiInstrumentist: boolean; city: string; state: string }>({
     email: '',
     username: '',
     password: '',
@@ -83,6 +135,7 @@ const Register: React.FC = () => {
     isMultiInstrumentist: false,
     bio: '',
     city: '',
+    state: '',
   });
 
   const cityInputRef = useRef<HTMLDivElement>(null);
@@ -107,9 +160,9 @@ const Register: React.FC = () => {
       // Divide o input em palavras (por espaços)
       const searchWords = value.toLowerCase().trim().split(/\s+/);
 
-      const filtered = BRAZILIAN_CITIES.filter(city => {
+      const filtered = BRAZILIAN_CITIES.filter(cityObj => {
         // Divide o nome da cidade em palavras (por espaços e hífens)
-        const cityWords = city.toLowerCase().split(/[\s-]+/);
+        const cityWords = cityObj.city.toLowerCase().split(/[\s-]+/);
 
         // Cada palavra do input deve corresponder a pelo menos uma palavra da cidade
         // Exemplo: "Monte" encontra "Monte Carmelo", "Carmelo" também encontra "Monte Carmelo"
@@ -126,8 +179,12 @@ const Register: React.FC = () => {
     }
   };
 
-  const selectCity = (city: string) => {
-    setFormData(prev => ({ ...prev, city }));
+  const selectCity = (cityObj: { city: string; state: string }) => {
+    setFormData(prev => ({
+      ...prev,
+      city: cityObj.city,
+      state: cityObj.state
+    }));
     setShowCitySuggestions(false);
     setFilteredCities([]);
   };
@@ -413,6 +470,7 @@ const Register: React.FC = () => {
                     isMultiInstrumentist: false,
                     bio: '',
                     city: '',
+                    state: '',
                   });
                 }}
                 className="block w-full btn-secondary text-center"
@@ -760,13 +818,27 @@ const Register: React.FC = () => {
                   id="city"
                   name="city"
                   type="text"
-                  value={formData.city}
-                  onChange={(e) => handleCityChange(e.target.value)}
+                  value={formData.city && formData.state ? `${formData.city} - ${formData.state}` : formData.city}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (!value.trim()) {
+                      setFormData(prev => ({ ...prev, city: '', state: '' }));
+                      setFilteredCities([]);
+                      setShowCitySuggestions(false);
+                    } else {
+                      handleCityChange(value.replace(/ - [A-Z]{2}$/, ''));
+                    }
+                  }}
                   onFocus={() => {
                     if (formData.city.trim().length > 0) {
-                      const filtered = BRAZILIAN_CITIES.filter(city =>
-                        city.toLowerCase().includes(formData.city.toLowerCase())
-                      );
+                      const searchValue = formData.city.replace(/ - [A-Z]{2}$/, '');
+                      const searchWords = searchValue.toLowerCase().trim().split(/\s+/);
+                      const filtered = BRAZILIAN_CITIES.filter(cityObj => {
+                        const cityWords = cityObj.city.toLowerCase().split(/[\s-]+/);
+                        return searchWords.every(searchWord =>
+                          cityWords.some(cityWord => cityWord.includes(searchWord))
+                        );
+                      });
                       setFilteredCities(filtered);
                       setShowCitySuggestions(true);
                     }
@@ -779,15 +851,18 @@ const Register: React.FC = () => {
                 {/* Dropdown de Sugestões */}
                 {showCitySuggestions && filteredCities.length > 0 && (
                   <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-                    {filteredCities.slice(0, 10).map((city) => (
+                    {filteredCities.slice(0, 10).map((cityObj) => (
                       <button
-                        key={city}
+                        key={`${cityObj.city}-${cityObj.state}`}
                         type="button"
-                        onClick={() => selectCity(city)}
-                        className="w-full text-left px-4 py-2 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center gap-2"
+                        onClick={() => selectCity(cityObj)}
+                        className="w-full text-left px-4 py-2 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center justify-between"
                       >
-                        <MapPin className="h-4 w-4 text-gray-400" />
-                        <span>{city}</span>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-gray-400" />
+                          <span>{cityObj.city}</span>
+                        </div>
+                        <span className="text-sm text-gray-500">{cityObj.state}</span>
                       </button>
                     ))}
                     {filteredCities.length > 10 && (

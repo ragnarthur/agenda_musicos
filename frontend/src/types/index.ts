@@ -35,6 +35,7 @@ export interface Musician {
   phone?: string;
   instagram?: string;
   city?: string;
+  state?: string;
   public_email?: string | null;
   base_fee?: number | string | null;
   travel_fee_per_km?: number | string | null;
@@ -53,6 +54,7 @@ export interface MusicianUpdatePayload {
   phone?: string;
   instagram?: string;
   city?: string;
+  state?: string;
   base_fee?: number | string | null;
   travel_fee_per_km?: number | string | null;
   equipment_items?: EquipmentItem[];

@@ -52,7 +52,7 @@ class MusicianSerializer(serializers.ModelSerializer):
         model = Musician
         fields = [
             'id', 'user', 'full_name', 'instrument', 'instruments', 'role',
-            'bio', 'phone', 'instagram', 'city', 'base_fee', 'travel_fee_per_km',
+            'bio', 'phone', 'instagram', 'city', 'state', 'base_fee', 'travel_fee_per_km',
             'equipment_items', 'public_email', 'is_active',
             'average_rating', 'total_ratings', 'created_at', 'subscription_info'
         ]
@@ -83,7 +83,7 @@ class MusicianUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Musician
         fields = [
-            'instrument', 'instruments', 'bio', 'phone', 'instagram', 'city',
+            'instrument', 'instruments', 'bio', 'phone', 'instagram', 'city', 'state',
             'base_fee', 'travel_fee_per_km', 'equipment_items'
         ]
 
