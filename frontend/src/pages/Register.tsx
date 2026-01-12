@@ -198,7 +198,52 @@ const Register: React.FC = () => {
     }
   };
 
-  // Validate individual steps
+  // Check if current step is valid (without setting errors)
+  const isStepValid = (step: number): boolean => {
+    if (step === 1) {
+      // Step 1: Account Security
+      if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return false;
+      if (!formData.username || formData.username.length < 3 || !/^[a-zA-Z0-9_]+$/.test(formData.username)) return false;
+      if (!formData.password || formData.password.length < 6) return false;
+      if (formData.password !== formData.confirmPassword) return false;
+      return true;
+    } else if (step === 2) {
+      // Step 2: Personal Info
+      if (!formData.first_name) return false;
+      return true;
+    } else if (step === 3) {
+      // Step 3: Musical Profile
+      const extraInstrument = formData.instrumentOther.trim();
+
+      if (formData.isMultiInstrumentist) {
+        const selectedInstruments = formData.instruments
+          .filter((inst) => inst !== 'other')
+          .map((inst) => inst.trim())
+          .filter(Boolean);
+
+        const includeOther = formData.instruments.includes('other');
+
+        if (includeOther) {
+          if (!extraInstrument || extraInstrument.length < 3) return false;
+          selectedInstruments.push(extraInstrument);
+        }
+
+        if (!selectedInstruments.length) return false;
+        if (selectedInstruments.some((inst) => inst.length > 50)) return false;
+      } else {
+        const primary =
+          formData.instrument === 'other' ? extraInstrument : (formData.instrument || '').trim();
+
+        if (!primary) return false;
+        if (primary.length > 50) return false;
+        if (formData.instrument === 'other' && primary.length < 3) return false;
+      }
+      return true;
+    }
+    return false;
+  };
+
+  // Validate individual steps (with error messages)
   const validateStep = (step: number): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -538,7 +583,7 @@ const Register: React.FC = () => {
             onNext={handleNext}
             onBack={handleBack}
             onSubmit={handleFinalSubmit}
-            isValid={validateStep(currentStep)}
+            isValid={isStepValid(currentStep)}
             isLoading={loading}
           />
         </div>
