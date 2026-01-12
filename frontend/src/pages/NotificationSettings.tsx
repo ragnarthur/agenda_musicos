@@ -132,6 +132,7 @@ const NotificationSettings: React.FC = () => {
         toast('Aguardando conexao...', { icon: '⏳' });
       }
     } catch (error) {
+      console.error('Erro ao verificar status:', error);
       toast.error('Erro ao verificar status');
     } finally {
       setCheckingStatus(false);

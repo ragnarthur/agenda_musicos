@@ -1,5 +1,5 @@
 // pages/PlanSuccess.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { CheckCircle, Loader2, AlertTriangle, CreditCard } from 'lucide-react';
 import { paymentService } from '../services/api';
@@ -9,20 +9,14 @@ const PlanSuccess: React.FC = () => {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
 
-  const [status, setStatus] = useState<'loading' | 'success' | 'processing' | 'error'>('loading');
-  const [message, setMessage] = useState('Estamos confirmando seu pagamento...');
+  const [status, setStatus] = useState<'loading' | 'success' | 'processing' | 'error'>(() =>
+    sessionId ? 'loading' : 'error'
+  );
+  const [message, setMessage] = useState(() =>
+    sessionId ? 'Estamos confirmando seu pagamento...' : 'Sessão de pagamento não encontrada.'
+  );
 
-  useEffect(() => {
-    if (!sessionId) {
-      setStatus('error');
-      setMessage('Sessão de pagamento não encontrada.');
-      return;
-    }
-
-    checkStatus(sessionId);
-  }, [sessionId]);
-
-  const checkStatus = async (id: string) => {
+  const checkStatus = useCallback(async (id: string) => {
     setStatus('loading');
     try {
       const result = await paymentService.getSessionStatus(id);
@@ -38,11 +32,19 @@ const PlanSuccess: React.FC = () => {
         setStatus('error');
         setMessage('Não foi possível confirmar o pagamento. Verifique sua fatura.');
       }
-    } catch (err) {
+    } catch {
       setStatus('error');
       setMessage('Erro ao consultar status do pagamento.');
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    const timeout = setTimeout(() => {
+      checkStatus(sessionId);
+    }, 0);
+    return () => clearTimeout(timeout);
+  }, [sessionId, checkStatus]);
 
   const renderContent = () => {
     if (status === 'loading' || status === 'processing') {

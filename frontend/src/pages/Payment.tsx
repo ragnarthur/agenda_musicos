@@ -58,7 +58,7 @@ const Payment: React.FC = () => {
       } else if (data.is_expired) {
         setError('Este cadastro expirou. Faça o cadastro novamente.');
       }
-    } catch (err) {
+    } catch {
       setError('Cadastro não encontrado ou expirado.');
     } finally {
       setLoading(false);

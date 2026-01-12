@@ -54,6 +54,24 @@ const Plans: React.FC = () => {
     card_expiry: '',
     card_cvv: '',
   });
+  const selectedPlanInfo = plans.find(plan => plan.id === selectedPlan);
+  const isTestMode = !useStripe || allowFakePayment;
+  const flowSteps = [
+    {
+      title: 'Escolha do plano',
+      description: 'Selecione a assinatura que acompanha sua rotina.',
+    },
+    {
+      title: 'Pagamento seguro',
+      description: isTestMode
+        ? 'Checkout guiado em ambiente de teste e sem risco.'
+        : 'Checkout protegido no Stripe (PCI).',
+    },
+    {
+      title: 'Acesso imediato',
+      description: 'Liberação do app e da agenda em segundos.',
+    },
+  ];
 
   useEffect(() => {
     const checkToken = async () => {
@@ -284,79 +302,216 @@ const Plans: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 px-4 py-10 flex items-center justify-center">
-      <div className="w-full max-w-5xl">
-        <div className="mb-6">
+    <div className="min-h-screen bg-slate-950 text-white">
+      <div className="max-w-6xl mx-auto px-4 py-10 space-y-8">
+        <div className="flex items-center justify-between gap-3 text-sm">
           <button
             onClick={() => navigate(-1)}
-            className="text-white/80 hover:text-white inline-flex items-center gap-2 text-sm"
+            className="text-white/80 hover:text-white inline-flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </button>
+          <span className="hidden sm:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-white/70">
+            <Shield className="h-4 w-4" />
+            Suporte humano em horário comercial
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white rounded-3xl shadow-2xl p-6 sm:p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <Sparkles className="h-6 w-6 text-primary-600" />
-              <div>
-                <p className="text-sm text-gray-500">GigFlow · para músicos</p>
-                <h1 className="text-2xl font-bold text-gray-900">Acesse tudo na GigFlow</h1>
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-primary-500/10 via-slate-900 to-slate-950 p-6 md:p-8">
+          <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-primary-500/20 blur-3xl" />
+          <div className="absolute -left-10 bottom-0 h-32 w-32 rounded-full bg-emerald-400/10 blur-2xl" />
+
+          <div className="relative grid gap-6 md:grid-cols-3 items-start">
+            <div className="md:col-span-2 space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs uppercase tracking-wide text-primary-100">
+                <Sparkles className="h-4 w-4" />
+                Nova experiência de checkout
+              </div>
+              <div className="space-y-2">
+                <h1 className="text-3xl md:text-4xl font-bold leading-tight">
+                  Ative sua assinatura com um fluxo mais claro
+                </h1>
+                <p className="text-white/70 max-w-2xl">
+                  Organize agendas, convites e pagamentos num só lugar. Escolha o plano, finalize o pagamento e entre
+                  direto no painel.
+                </p>
+              </div>
+
+              <div className="grid sm:grid-cols-3 gap-3">
+                {flowSteps.map(step => (
+                  <div key={step.title} className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                    <p className="text-xs text-primary-200 font-semibold uppercase">{step.title}</p>
+                    <p className="text-sm text-white/80 mt-1 leading-relaxed">{step.description}</p>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-                {error}
+            <div className="bg-white text-slate-900 rounded-2xl shadow-2xl p-5 space-y-3 border border-white/20">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-semibold text-primary-600 uppercase">Plano selecionado</p>
+                {upgradeMode ? (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200">
+                    Upgrade
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                    {isTestMode ? 'Modo de teste' : 'Stripe seguro'}
+                  </span>
+                )}
               </div>
-            )}
-
-            {upgradeMode && subscriptionInfo && (
-              <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg mb-4">
-                <strong>Status atual:</strong>{' '}
-                {subscriptionInfo.is_trial
-                  ? `Trial · ${subscriptionInfo.trial_days_remaining} dias restantes`
-                  : 'Plano expirado'}
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold">{selectedPlanInfo?.price ?? 'R$ --'}</span>
+                <span className="text-sm text-slate-600">{selectedPlanInfo?.per}</span>
               </div>
-            )}
+              <p className="text-sm text-slate-600">
+                {selectedPlanInfo?.name} com acesso completo a agenda, convites e marketplace.
+              </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {plans.map(plan => (
-                <div
-                  key={plan.id}
-                  className={`rounded-2xl border p-5 cursor-pointer transition-all ${
-                    selectedPlan === plan.id
-                      ? 'border-primary-500 ring-2 ring-primary-200 shadow-lg'
-                      : 'border-gray-200 hover:border-primary-200'
-                  } ${plan.highlight ? 'bg-gradient-to-br from-primary-50 to-purple-50' : 'bg-white'}`}
-                  onClick={() => setSelectedPlan(plan.id)}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900">{plan.name}</h3>
-                    {plan.highlight && (
-                      <span className="text-xs font-semibold text-primary-700 bg-primary-100 px-2 py-1 rounded-full">
-                        Mais vantajoso
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-baseline gap-2 mb-3">
-                    <span className="text-3xl font-bold text-gray-900">{plan.price}</span>
-                    <span className="text-gray-500">{plan.per}</span>
-                  </div>
-                  <ul className="space-y-2 text-sm text-gray-700">
-                    {plan.features.map(feature => (
-                      <li key={feature} className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-primary-600" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
+              {upgradeMode && subscriptionInfo && (
+                <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
+                  Status atual:{' '}
+                  {subscriptionInfo.is_trial
+                    ? `trial com ${subscriptionInfo.trial_days_remaining} dias restantes`
+                    : 'plano expirado'}
+                  .
                 </div>
-              ))}
+              )}
+
+              <div className="flex items-center gap-2 text-sm text-slate-700">
+                <CheckCircle className="h-4 w-4 text-emerald-500" />
+                Cancelamento simples, sem multa.
+              </div>
+              <div className="flex items-center gap-2 text-sm text-slate-700">
+                <CheckCircle className="h-4 w-4 text-emerald-500" />
+                Confirmação por email após o pagamento.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-6 items-start">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white text-slate-900 rounded-3xl shadow-2xl p-6 md:p-7 border border-white/5">
+              <div className="flex items-start justify-between gap-4 mb-6">
+                <div>
+                  <p className="text-sm text-slate-500">Planos simples, sem surpresa</p>
+                  <h2 className="text-xl font-semibold text-slate-900">Escolha o plano ideal</h2>
+                </div>
+                <span className="px-3 py-1 rounded-full bg-slate-100 text-xs font-semibold text-slate-700 border border-slate-200">
+                  Sem fidelidade
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {plans.map(plan => (
+                  <div
+                    key={plan.id}
+                    className={`rounded-2xl border p-5 cursor-pointer transition-all bg-gradient-to-br ${
+                      selectedPlan === plan.id
+                        ? 'from-primary-50 to-white border-primary-200 ring-2 ring-primary-100 shadow-lg'
+                        : 'from-white to-slate-50 border-slate-200 hover:border-primary-200'
+                    }`}
+                    onClick={() => setSelectedPlan(plan.id)}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-slate-500">Plano</p>
+                        <h3 className="text-lg font-semibold text-slate-900">{plan.name}</h3>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-primary-50 text-primary-700 border border-primary-100">
+                        Acesso total
+                      </span>
+                    </div>
+                    <div className="flex items-baseline gap-2 mb-3">
+                      <span className="text-3xl font-bold text-slate-900">{plan.price}</span>
+                      <span className="text-sm text-slate-500">{plan.per}</span>
+                    </div>
+                    <ul className="space-y-2 text-sm text-slate-700">
+                      {plan.features.map(feature => (
+                        <li key={feature} className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-primary-600" />
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="flex items-start gap-3 rounded-2xl bg-slate-50 border border-slate-200 p-3">
+                  <Star className="h-5 w-5 text-amber-500 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Visibilidade extra</p>
+                    <p className="text-sm text-slate-600">Apareça no marketplace e receba convites mais rápido.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 rounded-2xl bg-slate-50 border border-slate-200 p-3">
+                  <Shield className="h-5 w-5 text-emerald-600 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Pagamento protegido</p>
+                    <p className="text-sm text-slate-600">Checkout com autenticação e dados criptografados.</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="mt-6">
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+              <div className="flex items-center gap-3">
+                <Star className="h-6 w-6 text-amber-300" />
+                <div>
+                  <p className="text-sm text-white/70">Benefícios da assinatura</p>
+                  <h3 className="text-lg font-semibold text-white">Pensado para líderes e músicos</h3>
+                </div>
+              </div>
+              <ul className="mt-4 grid sm:grid-cols-2 gap-3 text-white/80 text-sm">
+                <li className="flex gap-2">
+                  <CheckCircle className="h-5 w-5 text-emerald-300 mt-0.5" />
+                  <span>Agenda com convites, confirmações e buffers de segurança.</span>
+                </li>
+                <li className="flex gap-2">
+                  <CheckCircle className="h-5 w-5 text-emerald-300 mt-0.5" />
+                  <span>Disponibilidades cruzadas para evitar conflitos e atrasos.</span>
+                </li>
+                <li className="flex gap-2">
+                  <CheckCircle className="h-5 w-5 text-emerald-300 mt-0.5" />
+                  <span>Marketplace para divulgar gigs e encontrar talentos.</span>
+                </li>
+                <li className="flex gap-2">
+                  <CheckCircle className="h-5 w-5 text-emerald-300 mt-0.5" />
+                  <span>Suporte dedicado para ajustes de agenda e pagamentos.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="bg-white text-slate-900 rounded-3xl shadow-2xl p-6 border border-white/5">
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div>
+                  <p className="text-sm text-slate-500">Pagamento</p>
+                  <h3 className="text-xl font-semibold text-slate-900">Finalize agora</h3>
+                  <p className="text-sm text-slate-600">Tempo médio: menos de 2 minutos.</p>
+                </div>
+                <div className="px-3 py-1 rounded-full bg-slate-100 text-xs font-semibold text-slate-700 border border-slate-200">
+                  {isTestMode ? 'Ambiente de teste' : 'Stripe Checkout'}
+                </div>
+              </div>
+
+              {error && (
+                <div className="bg-rose-50 border border-rose-200 text-rose-700 px-3 py-2 rounded-lg mb-3 text-sm">
+                  {error}
+                </div>
+              )}
+
+              {upgradeMode && (
+                <div className="bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 py-2 rounded-lg mb-3 text-sm">
+                  Upgrade rápido: mantemos seus dados e liberamos o plano completo após o pagamento.
+                </div>
+              )}
+
               <button
                 onClick={handleSubscribe}
                 disabled={loading || (!paymentToken && !upgradeMode)}
@@ -370,105 +525,105 @@ const Plans: React.FC = () => {
                 ) : (
                   <>
                     <CreditCard className="h-5 w-5" />
-                    {useStripe && !allowFakePayment ? 'Continuar com Stripe' : 'Continuar para pagamento'}
+                    {isTestMode ? 'Abrir checkout de teste' : 'Ir para checkout seguro'}
                   </>
                 )}
               </button>
-              <p className="text-xs text-gray-500 text-center mt-2">
-                {useStripe && !allowFakePayment
-                  ? 'Você será redirecionado para um checkout seguro Stripe.'
-                  : 'Use os dados fictícios para concluir o teste.'}
+              <p className="text-xs text-slate-500 text-center mt-2">
+                {isTestMode
+                  ? 'Use dados fictícios para validar o fluxo sem custos.'
+                  : 'Você será redirecionado para o Stripe com toda a segurança.'}
               </p>
+
+              {showFakeCheckout && isTestMode && (
+                <form onSubmit={handleFakePayment} className="mt-5 space-y-4 border-t border-slate-200 pt-4">
+                  <div className="grid gap-3">
+                    <label className="text-sm font-medium text-slate-800">Número do cartão</label>
+                    <input
+                      name="card_number"
+                      value={formData.card_number}
+                      onChange={handleCardChange}
+                      placeholder="4242 4242 4242 4242"
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-3">
+                    <label className="text-sm font-medium text-slate-800">Nome no cartão</label>
+                    <input
+                      name="card_holder"
+                      value={formData.card_holder}
+                      onChange={handleCardChange}
+                      placeholder="Nome completo"
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      required
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-3">
+                      <label className="text-sm font-medium text-slate-800">Validade</label>
+                      <input
+                        name="card_expiry"
+                        value={formData.card_expiry}
+                        onChange={handleCardChange}
+                        placeholder="MM/AA"
+                        className="w-full rounded-xl border border-slate-200 px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-3">
+                      <label className="text-sm font-medium text-slate-800">CVV</label>
+                      <input
+                        name="card_cvv"
+                        value={formData.card_cvv}
+                        onChange={handleCardChange}
+                        placeholder="123"
+                        className="w-full rounded-xl border border-slate-200 px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full btn-primary py-3 disabled:opacity-60"
+                  >
+                    {loading ? 'Processando pagamento...' : 'Finalizar pagamento mensal'}
+                  </button>
+                  <p className="text-xs text-slate-500 text-center">
+                    Evite cartões começando com 0000; qualquer outro número funciona para teste.
+                  </p>
+                </form>
+              )}
             </div>
 
-            {showFakeCheckout && (!useStripe || allowFakePayment) && (
-              <form onSubmit={handleFakePayment} className="mt-6 space-y-4">
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-white">
+              <div className="flex items-center gap-3 mb-4">
+                <Shield className="h-6 w-6" />
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Número do cartão</label>
-                  <input
-                    name="card_number"
-                    value={formData.card_number}
-                    onChange={handleCardChange}
-                    placeholder="4242 4242 4242 4242"
-                    className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    required
-                  />
+                  <p className="text-sm text-white/80">Segurança</p>
+                  <h3 className="text-lg font-semibold">Pagamento protegido</h3>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Nome no cartão</label>
-                  <input
-                    name="card_holder"
-                    value={formData.card_holder}
-                    onChange={handleCardChange}
-                    placeholder="Nome completo"
-                    className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Validade</label>
-                    <input
-                      name="card_expiry"
-                      value={formData.card_expiry}
-                      onChange={handleCardChange}
-                      placeholder="MM/AA"
-                      className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">CVV</label>
-                    <input
-                      name="card_cvv"
-                      value={formData.card_cvv}
-                      onChange={handleCardChange}
-                      placeholder="123"
-                      className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      required
-                    />
-                  </div>
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full btn-primary py-3 disabled:opacity-60"
-                >
-                  {loading ? 'Processando pagamento...' : 'Finalizar pagamento mensal'}
-                </button>
-                <p className="text-xs text-gray-500 text-center">
-                  Use qualquer cartão, exceto números iniciando com 0000.
-                </p>
-              </form>
-            )}
-          </div>
-
-          <div className="bg-white/10 backdrop-blur rounded-3xl p-6 text-white border border-white/20">
-            <div className="flex items-center gap-3 mb-4">
-              <Shield className="h-6 w-6" />
-              <div>
-                <p className="text-sm text-white/80">Segurança</p>
-                <h3 className="text-lg font-semibold">Pagamento Protegido</h3>
               </div>
+              <ul className="space-y-3 text-sm text-white/80">
+                <li className="flex gap-2">
+                  <CheckCircle className="h-5 w-5 text-emerald-300 mt-0.5" />
+                  <span>Checkout hospedado pelo Stripe (PCI DSS).</span>
+                </li>
+                <li className="flex gap-2">
+                  <CheckCircle className="h-5 w-5 text-emerald-300 mt-0.5" />
+                  <span>Sem salvar dados de cartão na GigFlow.</span>
+                </li>
+                <li className="flex gap-2">
+                  <CheckCircle className="h-5 w-5 text-emerald-300 mt-0.5" />
+                  <span>Cancelamento a qualquer momento.</span>
+                </li>
+                <li className="flex gap-2">
+                  <Star className="h-5 w-5 text-amber-200 mt-0.5" />
+                  <span>Suporte prioritário para assinantes.</span>
+                </li>
+              </ul>
             </div>
-            <ul className="space-y-3 text-sm text-white/80">
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-emerald-300 mt-0.5" />
-                <span>Checkout hospedado pelo Stripe (PCI DSS).</span>
-              </li>
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-emerald-300 mt-0.5" />
-                <span>Sem salvar dados de cartão na GigFlow.</span>
-              </li>
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-emerald-300 mt-0.5" />
-                <span>Cancelamento a qualquer momento.</span>
-              </li>
-              <li className="flex gap-2">
-                <Star className="h-5 w-5 text-amber-200 mt-0.5" />
-                <span>Suporte prioritário para assinantes.</span>
-              </li>
-            </ul>
           </div>
         </div>
       </div>

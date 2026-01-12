@@ -151,7 +151,11 @@ const Register: React.FC = () => {
     return end ? `(${area}) ${mid}-${end}` : `(${area}) ${digits.slice(2)}`;
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  type FieldChangeEvent =
+    | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    | { target: { name: string; value: string } };
+
+  const handleChange = (e: FieldChangeEvent) => {
     const { name, value } = e.target;
     if (name === 'phone') {
       setFormData(prev => ({ ...prev, phone: formatPhone(value) }));
@@ -342,7 +346,9 @@ const Register: React.FC = () => {
     setErrors({});
 
     try {
-      const { confirmPassword, instrumentOther, instruments, isMultiInstrumentist, ...data } = formData;
+      const { confirmPassword, ...restFormData } = formData;
+      void confirmPassword;
+      const { instrumentOther, instruments, isMultiInstrumentist, ...data } = restFormData;
       const customInstrument = instrumentOther.trim();
 
       let allInstruments: string[] = [];

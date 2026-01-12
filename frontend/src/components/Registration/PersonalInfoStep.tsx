@@ -2,6 +2,10 @@
 import React, { useRef, useEffect } from 'react';
 import { User, Phone, MapPin } from 'lucide-react';
 
+type InputChange =
+  | React.ChangeEvent<HTMLInputElement>
+  | { target: { name: string; value: string } };
+
 interface PersonalInfoStepProps {
   formData: {
     first_name: string;
@@ -10,7 +14,7 @@ interface PersonalInfoStepProps {
     city: string;
     state: string;
   };
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (e: InputChange) => void;
   errors: Record<string, string>;
   filteredCities: Array<{ city: string; state: string }>;
   showCitySuggestions: boolean;
@@ -30,6 +34,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
   setShowCitySuggestions,
 }) => {
   const cityInputRef = useRef<HTMLDivElement>(null);
+  const emitChange = (name: string, value: string) => onChange({ target: { name, value } });
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -140,8 +145,8 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
               onChange={(e) => {
                 const value = e.target.value;
                 if (!value.trim()) {
-                  onChange({ target: { name: 'city', value: '' } } as any);
-                  onChange({ target: { name: 'state', value: '' } } as any);
+                  emitChange('city', '');
+                  emitChange('state', '');
                   setShowCitySuggestions(false);
                 } else {
                   handleCityChange(value.replace(/ - [A-Z]{2}$/, ''));

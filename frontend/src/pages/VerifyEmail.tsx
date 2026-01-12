@@ -1,5 +1,5 @@
 // pages/VerifyEmail.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { CheckCircle, XCircle, Loader2, CreditCard, AlertCircle, Clock, Sparkles } from 'lucide-react';
 import { registrationService } from '../services/api';
@@ -13,23 +13,17 @@ const VerifyEmail: React.FC = () => {
   const useStripe = import.meta.env.VITE_USE_STRIPE === 'true';
   const allowFake = import.meta.env.VITE_ALLOW_FAKE_PAYMENT === 'true';
 
-  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'already_verified' | 'starting_trial'>('loading');
-  const [message, setMessage] = useState('');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'already_verified' | 'starting_trial'>(() =>
+    token ? 'loading' : 'error'
+  );
+  const [message, setMessage] = useState(() =>
+    token ? '' : 'Token de verificação não fornecido.'
+  );
   const [paymentToken, setPaymentToken] = useState<string | null>(null);
   const [userData, setUserData] = useState<{ email: string; first_name: string } | null>(null);
   const [trialStarted, setTrialStarted] = useState(false);
 
-  useEffect(() => {
-    if (!token) {
-      setStatus('error');
-      setMessage('Token de verificação não fornecido.');
-      return;
-    }
-
-    verifyEmail();
-  }, [token]);
-
-  const verifyEmail = async () => {
+  const verifyEmail = useCallback(async () => {
     if (!token) return;
 
     try {
@@ -56,7 +50,15 @@ const VerifyEmail: React.FC = () => {
       setStatus('error');
       setMessage(error.response?.data?.error || 'Erro ao verificar email.');
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    const timeout = setTimeout(() => {
+      verifyEmail();
+    }, 0);
+    return () => clearTimeout(timeout);
+  }, [token, verifyEmail]);
 
   const handleContinueToPayment = () => {
     if (paymentToken) {
