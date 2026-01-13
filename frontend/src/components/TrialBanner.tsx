@@ -11,39 +11,68 @@ const TrialBanner: React.FC = () => {
   // Não mostra se não há usuário ou subscription_info
   if (!user?.subscription_info) return null;
 
-  const { is_trial, trial_days_remaining, has_active_subscription, status } = user.subscription_info;
+  const { is_trial, trial_days_remaining, status, subscription_ends_at } = user.subscription_info;
 
   // Não mostra se foi dispensado nesta sessão
   if (dismissed) return null;
 
-  // Não mostra se tem assinatura ativa (não trial)
-  if (has_active_subscription && !is_trial) return null;
+  const renewalWindowDays = 5;
+  const paidDaysRemaining = subscription_ends_at
+    ? Math.ceil((new Date(subscription_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null;
+  const isPaidExpiringSoon =
+    status === 'active' &&
+    !is_trial &&
+    paidDaysRemaining !== null &&
+    paidDaysRemaining <= renewalWindowDays &&
+    paidDaysRemaining >= 0;
+  const isPaidExpired =
+    !is_trial &&
+    (status === 'expired' ||
+      status === 'past_due' ||
+      (paidDaysRemaining !== null && paidDaysRemaining < 0));
 
-  // Não mostra se não está em trial e não expirou
-  if (!is_trial && status !== 'expired') return null;
+  // Não mostra se não está em trial e não está expirando/expirado
+  if (!is_trial && !isPaidExpiringSoon && !isPaidExpired) return null;
 
   // Determina estilo e mensagem baseado nos dias restantes
-  const isUrgent = trial_days_remaining <= 2;
-  const isExpired = status === 'expired' || trial_days_remaining === 0;
+  const isTrialUrgent = is_trial && trial_days_remaining <= 2;
+  const isTrialEndingToday = is_trial && trial_days_remaining <= 0;
+  const isExpired = isPaidExpired;
+  const isWarning = isPaidExpiringSoon || isTrialUrgent || isTrialEndingToday;
 
   const bannerClasses = isExpired
     ? 'bg-red-600 text-white'
-    : isUrgent
+    : isWarning
     ? 'bg-amber-500 text-white'
     : 'bg-primary-600 text-white';
 
   const getMessage = () => {
-    if (isExpired) {
-      return 'Seu período gratuito terminou. Assine agora para continuar usando a plataforma.';
+    if (isPaidExpiringSoon) {
+      if (paidDaysRemaining === 0) {
+        return 'Seu plano vence hoje. Renove para manter o acesso.';
+      }
+      if (paidDaysRemaining === 1) {
+        return 'Seu plano vence amanhã. Renove para manter o acesso.';
+      }
+      return `Seu plano vence em ${paidDaysRemaining} dias. Renove agora para manter o acesso.`;
+    }
+    if (isPaidExpired) {
+      return 'Seu acesso expirou. Renove para continuar usando a plataforma.';
+    }
+    if (isTrialEndingToday) {
+      return 'Seu período gratuito termina hoje. Assine agora para continuar com acesso.';
     }
     if (trial_days_remaining === 1) {
       return 'Seu período gratuito termina amanhã! Assine agora para não perder acesso.';
     }
-    if (isUrgent) {
+    if (isTrialUrgent) {
       return `Restam apenas ${trial_days_remaining} dias do seu período gratuito.`;
     }
     return `Você está no período gratuito. Restam ${trial_days_remaining} dias.`;
   };
+
+  const actionLabel = isPaidExpiringSoon || isPaidExpired ? 'Renovar agora' : 'Assinar agora';
 
   return (
     <div className={`${bannerClasses} px-4 py-2 relative`}>
@@ -59,14 +88,14 @@ const TrialBanner: React.FC = () => {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
               isExpired
                 ? 'bg-white text-red-600 hover:bg-red-50'
-                : isUrgent
+                : isWarning
                 ? 'bg-white text-amber-600 hover:bg-amber-50'
                 : 'bg-white/20 hover:bg-white/30'
             }`}
           >
             <CreditCard className="h-4 w-4" />
-            <span className="hidden sm:inline">Assinar Agora</span>
-            <span className="sm:hidden">Assinar</span>
+            <span className="hidden sm:inline">{actionLabel}</span>
+            <span className="sm:hidden">{isPaidExpiringSoon || isPaidExpired ? 'Renovar' : 'Assinar'}</span>
           </Link>
 
           {!isExpired && (

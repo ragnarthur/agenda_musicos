@@ -50,6 +50,11 @@ const Plans: React.FC = () => {
   const paymentToken = searchParams.get('token');
   const { user, loading: authLoading, refreshUser } = useAuth();
   const subscriptionInfo = user?.subscription_info;
+  const renewalWindowDays = 5;
+  const paidDaysRemaining = subscriptionInfo?.subscription_ends_at
+    ? Math.ceil((new Date(subscriptionInfo.subscription_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null;
+  const upgradeBadgeLabel = subscriptionInfo?.is_trial ? 'Upgrade' : 'Renovação';
 
   const selectedPlan: PlanType = 'monthly';
   const [loading, setLoading] = useState(false);
@@ -89,7 +94,23 @@ const Plans: React.FC = () => {
         if (authLoading) {
           return;
         }
-        if (subscriptionInfo && (subscriptionInfo.is_trial || subscriptionInfo.status === 'expired')) {
+        const renewalDaysRemaining = subscriptionInfo?.subscription_ends_at
+          ? Math.ceil((new Date(subscriptionInfo.subscription_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+          : null;
+        const isRenewalWindow =
+          subscriptionInfo?.status === 'active' &&
+          !subscriptionInfo.is_trial &&
+          renewalDaysRemaining !== null &&
+          renewalDaysRemaining <= renewalWindowDays &&
+          renewalDaysRemaining >= 0;
+
+        if (
+          subscriptionInfo &&
+          (subscriptionInfo.is_trial ||
+            subscriptionInfo.status === 'expired' ||
+            subscriptionInfo.status === 'past_due' ||
+            isRenewalWindow)
+        ) {
           setUpgradeMode(true);
         } else {
           setError('Token de pagamento não encontrado. Volte ao email e clique no link novamente.');
@@ -386,7 +407,7 @@ const Plans: React.FC = () => {
                 <p className="text-xs font-semibold text-primary-600 uppercase">Plano mensal</p>
                 {upgradeMode ? (
                   <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200">
-                    Upgrade
+                    {upgradeBadgeLabel}
                   </span>
                 ) : (
                   <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
@@ -407,7 +428,15 @@ const Plans: React.FC = () => {
                   Status atual:{' '}
                   {subscriptionInfo.is_trial
                     ? `período gratuito com ${subscriptionInfo.trial_days_remaining} dias restantes`
-                    : 'plano expirado'}
+                    : subscriptionInfo.status === 'expired'
+                    ? 'plano expirado'
+                    : subscriptionInfo.status === 'past_due'
+                    ? 'pagamento pendente'
+                    : paidDaysRemaining !== null
+                    ? paidDaysRemaining === 1
+                      ? 'plano vence em 1 dia'
+                      : `plano vence em ${Math.max(paidDaysRemaining, 0)} dias`
+                    : 'plano ativo'}
                   .
                 </div>
               )}
@@ -559,7 +588,7 @@ const Plans: React.FC = () => {
 
               {upgradeMode && (
                 <div className="bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 py-2 rounded-lg mb-3 text-sm">
-                  Upgrade rápido: mantemos seus dados e liberamos o plano completo após o pagamento.
+                  Reativação rápida: mantemos seus dados e liberamos o plano completo após o pagamento.
                 </div>
               )}
 
