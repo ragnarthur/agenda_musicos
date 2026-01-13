@@ -1,9 +1,9 @@
 // components/ui/CardBrandRow.tsx
 import React from 'react';
 
-const logoClassName = 'h-4 w-auto max-w-[30px]';
+const logoClassName = 'h-5 w-auto max-w-[34px]';
 const badgeClassName =
-  'inline-flex h-8 w-10 items-center justify-center rounded-lg border border-white/60 bg-white shadow-sm';
+  'inline-flex h-9 w-12 items-center justify-center rounded-lg border border-white/60 bg-white shadow-sm';
 
 const VisaLogo = () => (
   <svg viewBox="0 0 64 24" className={logoClassName} aria-hidden="true">
