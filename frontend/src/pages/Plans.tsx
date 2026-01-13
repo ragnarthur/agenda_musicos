@@ -34,12 +34,12 @@ const plans: Array<{
 
 const revealParent = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.12 } },
+  show: { opacity: 1, transition: { staggerChildren: 0.14, delayChildren: 0.2 } },
 };
 
 const revealItem = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.45 } },
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6 } },
 };
 
 const shimmerTransition: Transition = {
@@ -361,7 +361,7 @@ const Plans: React.FC = () => {
         </motion.div>
 
         <motion.section
-          variants={revealItem}
+          variants={revealParent}
           className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-primary-500/10 via-slate-900 to-slate-950 p-6 md:p-8"
         >
           <div
@@ -383,13 +383,13 @@ const Plans: React.FC = () => {
           />
 
           <div className="relative grid gap-6 md:grid-cols-3 items-start">
-            <div className="md:col-span-2 space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs uppercase tracking-wide text-primary-100">
+            <motion.div variants={revealParent} className="md:col-span-2 space-y-4">
+              <motion.div variants={revealItem} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs uppercase tracking-wide text-primary-100">
                 <Sparkles className="h-4 w-4" />
                 Nova experiência de checkout
-              </div>
-              <div className="space-y-2">
-                <h1 className="text-3xl md:text-4xl font-bold leading-tight">
+              </motion.div>
+              <motion.div variants={revealParent} className="space-y-2">
+                <motion.h1 variants={revealItem} className="text-3xl md:text-4xl font-bold leading-tight">
                   <motion.span
                     className="bg-gradient-to-r from-white via-primary-200 to-white bg-[length:200%_100%] text-transparent bg-clip-text"
                     animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
@@ -397,14 +397,14 @@ const Plans: React.FC = () => {
                   >
                     Ative sua assinatura com um fluxo mais claro
                   </motion.span>
-                </h1>
-                <p className="text-white/70 max-w-2xl">
+                </motion.h1>
+                <motion.p variants={revealItem} className="text-white/70 max-w-2xl">
                   Organize agendas, convites e pagamentos num só lugar. Escolha o plano, finalize o pagamento e entre
                   direto no painel.
-                </p>
-              </div>
+                </motion.p>
+              </motion.div>
 
-              <div className="grid sm:grid-cols-3 gap-3">
+              <motion.div variants={revealParent} className="grid sm:grid-cols-3 gap-3">
                 {flowSteps.map(step => (
                   <motion.div
                     key={step.title}
@@ -415,11 +415,11 @@ const Plans: React.FC = () => {
                     <p className="text-sm text-white/80 mt-1 leading-relaxed">{step.description}</p>
                   </motion.div>
                 ))}
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
 
-            <motion.div variants={revealItem} className="bg-white text-slate-900 rounded-2xl shadow-2xl p-5 space-y-3 border border-white/20">
-              <div className="flex items-center justify-between gap-3">
+            <motion.div variants={revealParent} className="bg-white text-slate-900 rounded-2xl shadow-2xl p-5 space-y-3 border border-white/20">
+              <motion.div variants={revealItem} className="flex items-center justify-between gap-3">
                 <p className="text-xs font-semibold text-primary-600 uppercase">Plano mensal</p>
                 {upgradeMode ? (
                   <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200">
@@ -430,17 +430,17 @@ const Plans: React.FC = () => {
                     Checkout seguro
                   </span>
                 )}
-              </div>
-              <div className="flex items-baseline gap-2">
+              </motion.div>
+              <motion.div variants={revealItem} className="flex items-baseline gap-2">
                 <span className="text-3xl font-bold">{selectedPlanInfo?.price ?? 'R$ --'}</span>
                 <span className="text-sm text-slate-600">{selectedPlanInfo?.per}</span>
-              </div>
-              <p className="text-sm text-slate-600">
+              </motion.div>
+              <motion.p variants={revealItem} className="text-sm text-slate-600">
                 {selectedPlanInfo?.name} com acesso completo a agenda, convites e marketplace.
-              </p>
+              </motion.p>
 
               {upgradeMode && subscriptionInfo && (
-                <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
+                <motion.div variants={revealItem} className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
                   Status atual:{' '}
                   {subscriptionInfo.is_trial
                     ? `período gratuito com ${subscriptionInfo.trial_days_remaining} dias restantes`
@@ -454,25 +454,25 @@ const Plans: React.FC = () => {
                       : `plano vence em ${Math.max(paidDaysRemaining, 0)} dias`
                     : 'plano ativo'}
                   .
-                </div>
+                </motion.div>
               )}
 
-              <div className="flex items-center gap-2 text-sm text-slate-700">
+              <motion.div variants={revealItem} className="flex items-center gap-2 text-sm text-slate-700">
                 <CheckCircle className="h-4 w-4 text-emerald-500" />
                 Cancelamento simples, sem multa.
-              </div>
-              <div className="flex items-center gap-2 text-sm text-slate-700">
+              </motion.div>
+              <motion.div variants={revealItem} className="flex items-center gap-2 text-sm text-slate-700">
                 <CheckCircle className="h-4 w-4 text-emerald-500" />
                 Confirmação por email após o pagamento.
-              </div>
+              </motion.div>
             </motion.div>
           </div>
         </motion.section>
 
-        <motion.div variants={revealItem} className="grid lg:grid-cols-3 gap-6 items-start">
-          <div className="lg:col-span-2 space-y-6">
-            <motion.div variants={revealItem} className="bg-white text-slate-900 rounded-3xl shadow-2xl p-6 md:p-7 border border-white/5">
-              <div className="flex items-start justify-between gap-4 mb-6">
+        <motion.div variants={revealParent} className="grid lg:grid-cols-3 gap-6 items-start">
+          <motion.div variants={revealParent} className="lg:col-span-2 space-y-6">
+            <motion.div variants={revealParent} className="bg-white text-slate-900 rounded-3xl shadow-2xl p-6 md:p-7 border border-white/5">
+              <motion.div variants={revealItem} className="flex items-start justify-between gap-4 mb-6">
                 <div>
                   <p className="text-sm text-slate-500">Plano simples, sem surpresa</p>
                   <h2 className="text-xl font-semibold text-slate-900">Plano mensal disponível</h2>
@@ -480,9 +480,9 @@ const Plans: React.FC = () => {
                 <span className="px-3 py-1 rounded-full bg-slate-100 text-xs font-semibold text-slate-700 border border-slate-200">
                   Único plano
                 </span>
-              </div>
+              </motion.div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <motion.div variants={revealParent} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {plans.map(plan => (
                   <motion.div
                     key={plan.id}
@@ -534,28 +534,28 @@ const Plans: React.FC = () => {
                     </div>
                   </motion.div>
                 ))}
-              </div>
+              </motion.div>
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <div className="flex items-start gap-3 rounded-2xl bg-slate-50 border border-slate-200 p-3">
+              <motion.div variants={revealParent} className="mt-5 grid gap-3 sm:grid-cols-2">
+                <motion.div variants={revealItem} className="flex items-start gap-3 rounded-2xl bg-slate-50 border border-slate-200 p-3">
                   <Star className="h-5 w-5 text-amber-500 mt-0.5" />
                   <div>
                     <p className="text-sm font-semibold text-slate-900">Visibilidade extra</p>
                     <p className="text-sm text-slate-600">Apareça no marketplace e receba convites mais rápido.</p>
                   </div>
-                </div>
-                <div className="flex items-start gap-3 rounded-2xl bg-slate-50 border border-slate-200 p-3">
+                </motion.div>
+                <motion.div variants={revealItem} className="flex items-start gap-3 rounded-2xl bg-slate-50 border border-slate-200 p-3">
                   <Shield className="h-5 w-5 text-emerald-600 mt-0.5" />
                   <div>
                     <p className="text-sm font-semibold text-slate-900">Pagamento protegido</p>
                     <p className="text-sm text-slate-600">Checkout com autenticação e dados criptografados.</p>
                   </div>
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             </motion.div>
 
-            <motion.div variants={revealItem} className="rounded-3xl border border-white/10 bg-white/5 p-6">
-              <div className="flex items-center gap-3">
+            <motion.div variants={revealParent} className="rounded-3xl border border-white/10 bg-white/5 p-6">
+              <motion.div variants={revealItem} className="flex items-center gap-3">
                 <Star className="h-6 w-6 text-amber-300" />
                 <div>
                   <p className="text-sm text-white/70">Benefícios da assinatura</p>
@@ -569,31 +569,31 @@ const Plans: React.FC = () => {
                     </motion.span>
                   </h3>
                 </div>
-              </div>
-              <ul className="mt-4 grid sm:grid-cols-2 gap-3 text-white/80 text-sm">
-                <li className="flex gap-2">
+              </motion.div>
+              <motion.ul variants={revealParent} className="mt-4 grid sm:grid-cols-2 gap-3 text-white/80 text-sm">
+                <motion.li variants={revealItem} className="flex gap-2">
                   <CheckCircle className="h-5 w-5 text-emerald-300 mt-0.5" />
                   <span>Agenda com convites, confirmações e buffers de segurança.</span>
-                </li>
-                <li className="flex gap-2">
+                </motion.li>
+                <motion.li variants={revealItem} className="flex gap-2">
                   <CheckCircle className="h-5 w-5 text-emerald-300 mt-0.5" />
                   <span>Disponibilidades cruzadas para evitar conflitos e atrasos.</span>
-                </li>
-                <li className="flex gap-2">
+                </motion.li>
+                <motion.li variants={revealItem} className="flex gap-2">
                   <CheckCircle className="h-5 w-5 text-emerald-300 mt-0.5" />
                   <span>Marketplace para divulgar gigs e encontrar talentos.</span>
-                </li>
-                <li className="flex gap-2">
+                </motion.li>
+                <motion.li variants={revealItem} className="flex gap-2">
                   <CheckCircle className="h-5 w-5 text-emerald-300 mt-0.5" />
                   <span>Suporte dedicado para ajustes de agenda e pagamentos.</span>
-                </li>
-              </ul>
+                </motion.li>
+              </motion.ul>
             </motion.div>
-          </div>
+          </motion.div>
 
-          <div className="space-y-6">
-            <motion.div variants={revealItem} className="bg-white text-slate-900 rounded-3xl shadow-2xl p-6 border border-white/5">
-              <div className="flex items-start justify-between gap-3 mb-4">
+          <motion.div variants={revealParent} className="space-y-6">
+            <motion.div variants={revealParent} className="bg-white text-slate-900 rounded-3xl shadow-2xl p-6 border border-white/5">
+              <motion.div variants={revealItem} className="flex items-start justify-between gap-3 mb-4">
                 <div>
                   <p className="text-sm text-slate-500">Pagamento</p>
                   <h3 className="text-xl font-semibold text-slate-900">Finalize agora</h3>
@@ -602,22 +602,22 @@ const Plans: React.FC = () => {
                 <div className="px-3 py-1 rounded-full bg-slate-100 text-xs font-semibold text-slate-700 border border-slate-200">
                   Checkout seguro
                 </div>
-              </div>
+              </motion.div>
 
               {error && (
-                <div className="bg-rose-50 border border-rose-200 text-rose-700 px-3 py-2 rounded-lg mb-3 text-sm">
+                <motion.div variants={revealItem} className="bg-rose-50 border border-rose-200 text-rose-700 px-3 py-2 rounded-lg mb-3 text-sm">
                   {error}
-                </div>
+                </motion.div>
               )}
 
               {upgradeMode && (
-                <div className="bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 py-2 rounded-lg mb-3 text-sm">
+                <motion.div variants={revealItem} className="bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 py-2 rounded-lg mb-3 text-sm">
                   Reativação rápida: mantemos seus dados e liberamos o plano completo após o pagamento.
-                </div>
+                </motion.div>
               )}
 
               {showPaymentMethodSelector && (
-                <div className="mb-4">
+                <motion.div variants={revealItem} className="mb-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                     Forma de pagamento
                   </p>
@@ -649,10 +649,11 @@ const Plans: React.FC = () => {
                       Pix
                     </button>
                   </div>
-                </div>
+                </motion.div>
               )}
 
-              <button
+              <motion.button
+                variants={revealItem}
                 onClick={handleSubscribe}
                 disabled={loading || (!paymentToken && !upgradeMode)}
                 className="w-full btn-primary flex items-center justify-center gap-2 py-3 disabled:opacity-60"
@@ -668,10 +669,10 @@ const Plans: React.FC = () => {
                     Continuar para pagamento
                   </>
                 )}
-              </button>
-              <p className="text-xs text-slate-500 text-center mt-2">
+              </motion.button>
+              <motion.p variants={revealItem} className="text-xs text-slate-500 text-center mt-2">
                 Pagamento protegido com confirmação imediata.
-              </p>
+              </motion.p>
 
               {showFakeCheckout && isTestMode && (
                 <motion.form
@@ -747,34 +748,34 @@ const Plans: React.FC = () => {
               )}
             </motion.div>
 
-            <motion.div variants={revealItem} className="rounded-3xl border border-white/10 bg-white/5 p-6 text-white">
-              <div className="flex items-center gap-3 mb-4">
+            <motion.div variants={revealParent} className="rounded-3xl border border-white/10 bg-white/5 p-6 text-white">
+              <motion.div variants={revealItem} className="flex items-center gap-3 mb-4">
                 <Shield className="h-6 w-6" />
                 <div>
                   <p className="text-sm text-white/80">Segurança</p>
                   <h3 className="text-lg font-semibold">Pagamento protegido</h3>
                 </div>
-              </div>
-              <ul className="space-y-3 text-sm text-white/80">
-                <li className="flex gap-2">
+              </motion.div>
+              <motion.ul variants={revealParent} className="space-y-3 text-sm text-white/80">
+                <motion.li variants={revealItem} className="flex gap-2">
                   <CheckCircle className="h-5 w-5 text-emerald-300 mt-0.5" />
                   <span>Checkout hospedado pelo Stripe (PCI DSS).</span>
-                </li>
-                <li className="flex gap-2">
+                </motion.li>
+                <motion.li variants={revealItem} className="flex gap-2">
                   <CheckCircle className="h-5 w-5 text-emerald-300 mt-0.5" />
                   <span>Sem salvar dados de cartão na GigFlow.</span>
-                </li>
-                <li className="flex gap-2">
+                </motion.li>
+                <motion.li variants={revealItem} className="flex gap-2">
                   <CheckCircle className="h-5 w-5 text-emerald-300 mt-0.5" />
                   <span>Cancelamento a qualquer momento.</span>
-                </li>
-                <li className="flex gap-2">
+                </motion.li>
+                <motion.li variants={revealItem} className="flex gap-2">
                   <Star className="h-5 w-5 text-amber-200 mt-0.5" />
                   <span>Suporte prioritário para assinantes.</span>
-                </li>
-              </ul>
+                </motion.li>
+              </motion.ul>
             </motion.div>
-          </div>
+          </motion.div>
         </motion.div>
       </motion.div>
     </div>

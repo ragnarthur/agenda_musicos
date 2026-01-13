@@ -20,7 +20,7 @@ import CardBrandRow from '../components/ui/CardBrandRow';
 
 const revealParent = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.12 } },
+  show: { opacity: 1, transition: { staggerChildren: 0.14, delayChildren: 0.2 } },
 };
 
 const revealItem = {
@@ -243,7 +243,7 @@ const Payment: React.FC = () => {
           animate="show"
         >
           {/* Coluna da esquerda - Benefícios */}
-          <motion.div variants={revealItem} className="bg-white/10 backdrop-blur rounded-2xl p-6 text-white">
+          <motion.div variants={revealParent} className="bg-white/10 backdrop-blur rounded-2xl p-6 text-white">
             <motion.div variants={revealItem} className="flex items-center gap-3 mb-6">
               <div className="h-12 w-12 flex items-center justify-center">
                 <OwlMascot className="h-12 w-12" />
@@ -269,8 +269,8 @@ const Payment: React.FC = () => {
               <p className="text-white/70 text-sm mt-1">Cancele quando quiser</p>
             </motion.div>
 
-            <motion.div variants={revealItem} className="space-y-4">
-              <div className="flex items-start gap-3">
+            <motion.div variants={revealParent} className="space-y-4">
+              <motion.div variants={revealItem} className="flex items-start gap-3">
                 <div className="bg-white/20 p-2 rounded-lg">
                   <Calendar className="h-5 w-5" />
                 </div>
@@ -278,9 +278,9 @@ const Payment: React.FC = () => {
                   <h4 className="font-medium">Gestão de Agenda</h4>
                   <p className="text-white/70 text-sm">Organize seus shows e disponibilidades</p>
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="flex items-start gap-3">
+              <motion.div variants={revealItem} className="flex items-start gap-3">
                 <div className="bg-white/20 p-2 rounded-lg">
                   <Users className="h-5 w-5" />
                 </div>
@@ -288,9 +288,9 @@ const Payment: React.FC = () => {
                   <h4 className="font-medium">Rede de Músicos</h4>
                   <p className="text-white/70 text-sm">Amplie sua rede com profissionais da música</p>
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="flex items-start gap-3">
+              <motion.div variants={revealItem} className="flex items-start gap-3">
                 <div className="bg-white/20 p-2 rounded-lg">
                   <Star className="h-5 w-5" />
                 </div>
@@ -298,9 +298,9 @@ const Payment: React.FC = () => {
                   <h4 className="font-medium">Vagas de Shows</h4>
                   <p className="text-white/70 text-sm">Acesse oportunidades de shows com transparência</p>
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="flex items-start gap-3">
+              <motion.div variants={revealItem} className="flex items-start gap-3">
                 <div className="bg-white/20 p-2 rounded-lg">
                   <Shield className="h-5 w-5" />
                 </div>
@@ -308,7 +308,7 @@ const Payment: React.FC = () => {
                   <h4 className="font-medium">Proteção de Dados</h4>
                   <p className="text-white/70 text-sm">Suas informações seguras e privadas</p>
                 </div>
-              </div>
+              </motion.div>
             </motion.div>
 
             <motion.div variants={revealItem} className="mt-8 pt-6 border-t border-white/20">
@@ -320,7 +320,7 @@ const Payment: React.FC = () => {
           </motion.div>
 
           {/* Coluna da direita - Formulário de Pagamento */}
-          <motion.div variants={revealItem} className="bg-white rounded-2xl shadow-2xl p-6">
+          <motion.div variants={revealParent} className="bg-white rounded-2xl shadow-2xl p-6">
             <motion.div variants={revealItem} className="flex items-center gap-2 mb-6">
               <CreditCard className="h-6 w-6 text-primary-600" />
               <h3 className="text-xl font-semibold text-gray-900">
@@ -335,22 +335,22 @@ const Payment: React.FC = () => {
             </motion.div>
 
             {status && (
-              <div className="bg-gray-50 rounded-lg p-3 mb-6">
+              <motion.div variants={revealItem} className="bg-gray-50 rounded-lg p-3 mb-6">
                 <p className="text-sm text-gray-600">
                   Cadastrando: <strong>{status.first_name}</strong>
                 </p>
                 <p className="text-sm text-gray-500">{status.email}</p>
-              </div>
+              </motion.div>
             )}
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
+              <motion.div variants={revealItem} className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
                 {error}
-              </div>
+              </motion.div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
+            <motion.form variants={revealParent} onSubmit={handleSubmit} className="space-y-4">
+              <motion.div variants={revealItem}>
                 <label htmlFor="card_number" className="block text-sm font-medium text-gray-700 mb-1">
                   Número do cartão
                 </label>
@@ -364,9 +364,9 @@ const Payment: React.FC = () => {
                   placeholder="0000 0000 0000 0000"
                   autoComplete="cc-number"
                 />
-              </div>
+              </motion.div>
 
-              <div>
+              <motion.div variants={revealItem}>
                 <label htmlFor="card_holder" className="block text-sm font-medium text-gray-700 mb-1">
                   Nome no cartão
                 </label>
@@ -380,9 +380,9 @@ const Payment: React.FC = () => {
                   placeholder="NOME COMO NO CARTÃO"
                   autoComplete="cc-name"
                 />
-              </div>
+              </motion.div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <motion.div variants={revealItem} className="grid grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="card_expiry" className="block text-sm font-medium text-gray-700 mb-1">
                     Validade
@@ -413,9 +413,10 @@ const Payment: React.FC = () => {
                     autoComplete="cc-csc"
                   />
                 </div>
-              </div>
+              </motion.div>
 
-              <button
+              <motion.button
+                variants={revealItem}
                 type="submit"
                 disabled={processing}
                 className="w-full btn-primary flex items-center justify-center gap-2 py-3"
@@ -431,12 +432,12 @@ const Payment: React.FC = () => {
                     Pagar R$ 29,90
                   </>
                 )}
-              </button>
-            </form>
+              </motion.button>
+            </motion.form>
 
-            <div className="mt-6 rounded-2xl border border-slate-900/70 bg-slate-950 px-3 py-2 shadow-sm">
+            <motion.div variants={revealItem} className="mt-6 rounded-2xl border border-slate-900/70 bg-slate-950 px-3 py-2 shadow-sm">
               <CardBrandRow />
-            </div>
+            </motion.div>
           </motion.div>
         </motion.div>
       </div>
