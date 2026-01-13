@@ -327,10 +327,6 @@ const Plans: React.FC = () => {
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </button>
-          <span className="hidden sm:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-white/70">
-            <Shield className="h-4 w-4" />
-            Suporte humano em horário comercial
-          </span>
         </motion.div>
 
         <motion.section
