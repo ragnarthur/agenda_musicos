@@ -45,7 +45,7 @@ const revealItem = {
 const shimmerTransition = {
   duration: 9,
   repeat: Infinity,
-  ease: 'linear',
+  ease: [0, 0, 1, 1],
 };
 
 const Plans: React.FC = () => {

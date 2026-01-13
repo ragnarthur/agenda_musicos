@@ -31,7 +31,7 @@ const revealItem = {
 const shimmerTransition = {
   duration: 8,
   repeat: Infinity,
-  ease: 'linear',
+  ease: [0, 0, 1, 1],
 };
 
 const Payment: React.FC = () => {
