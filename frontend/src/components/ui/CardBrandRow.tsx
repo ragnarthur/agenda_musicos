@@ -1,7 +1,9 @@
 // components/ui/CardBrandRow.tsx
 import React from 'react';
 
-const logoClassName = 'h-4 w-auto';
+const logoClassName = 'h-4 w-auto max-w-[28px]';
+const badgeClassName =
+  'inline-flex h-7 w-10 items-center justify-center rounded-md border border-slate-200/70 bg-white/90 shadow-sm';
 
 const VisaLogo = () => (
   <svg viewBox="0 0 64 24" className={logoClassName} aria-hidden="true">
@@ -162,12 +164,12 @@ type CardBrandRowProps = {
 
 const CardBrandRow: React.FC<CardBrandRowProps> = ({ className = '' }) => {
   return (
-    <div className={`flex flex-wrap items-center justify-center gap-1.5 ${className}`.trim()}>
+    <div className={`flex flex-wrap items-center justify-center gap-2 ${className}`.trim()}>
       <span
         role="img"
         aria-label="Visa"
         title="Visa"
-        className="inline-flex h-6 w-[58px] items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm"
+        className={badgeClassName}
       >
         <VisaLogo />
       </span>
@@ -175,7 +177,7 @@ const CardBrandRow: React.FC<CardBrandRowProps> = ({ className = '' }) => {
         role="img"
         aria-label="Mastercard"
         title="Mastercard"
-        className="inline-flex h-6 w-[58px] items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm"
+        className={badgeClassName}
       >
         <MastercardLogo />
       </span>
@@ -183,7 +185,7 @@ const CardBrandRow: React.FC<CardBrandRowProps> = ({ className = '' }) => {
         role="img"
         aria-label="Elo"
         title="Elo"
-        className="inline-flex h-6 w-[58px] items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm"
+        className={badgeClassName}
       >
         <EloLogo />
       </span>
@@ -191,7 +193,7 @@ const CardBrandRow: React.FC<CardBrandRowProps> = ({ className = '' }) => {
         role="img"
         aria-label="American Express"
         title="American Express"
-        className="inline-flex h-6 w-[58px] items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm"
+        className={badgeClassName}
       >
         <AmexLogo />
       </span>
@@ -199,7 +201,7 @@ const CardBrandRow: React.FC<CardBrandRowProps> = ({ className = '' }) => {
         role="img"
         aria-label="Hipercard"
         title="Hipercard"
-        className="inline-flex h-6 w-[58px] items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm"
+        className={badgeClassName}
       >
         <HipercardLogo />
       </span>
@@ -207,7 +209,7 @@ const CardBrandRow: React.FC<CardBrandRowProps> = ({ className = '' }) => {
         role="img"
         aria-label="Diners Club"
         title="Diners Club"
-        className="inline-flex h-6 w-[58px] items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm"
+        className={badgeClassName}
       >
         <DinersLogo />
       </span>
@@ -215,7 +217,7 @@ const CardBrandRow: React.FC<CardBrandRowProps> = ({ className = '' }) => {
         role="img"
         aria-label="Discover"
         title="Discover"
-        className="inline-flex h-6 w-[58px] items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm"
+        className={badgeClassName}
       >
         <DiscoverLogo />
       </span>
@@ -223,7 +225,7 @@ const CardBrandRow: React.FC<CardBrandRowProps> = ({ className = '' }) => {
         role="img"
         aria-label="Maestro"
         title="Maestro"
-        className="inline-flex h-6 w-[58px] items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm"
+        className={badgeClassName}
       >
         <MaestroLogo />
       </span>
