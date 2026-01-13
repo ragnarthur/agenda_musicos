@@ -518,7 +518,7 @@ const Plans: React.FC = () => {
                 <Star className="h-6 w-6 text-amber-300" />
                 <div>
                   <p className="text-sm text-white/70">Benefícios da assinatura</p>
-                  <h3 className="text-lg font-semibold text-white">Pensado para líderes e músicos</h3>
+                  <h3 className="text-lg font-semibold text-white">Mais visibilidade, mais gigs, mais resultado</h3>
                 </div>
               </div>
               <ul className="mt-4 grid sm:grid-cols-2 gap-3 text-white/80 text-sm">
