@@ -376,10 +376,11 @@ const Payment: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm">
-                <p className="text-yellow-800">
-                  Pagamento protegido com criptografia e confirmação imediata após a aprovação.
-                </p>
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-sm">
+                <div className="flex items-start gap-2 text-emerald-800">
+                  <Shield className="h-4 w-4 mt-0.5" />
+                  <p>Site seguro e protegido com criptografia de dados durante o pagamento.</p>
+                </div>
               </div>
 
               <button

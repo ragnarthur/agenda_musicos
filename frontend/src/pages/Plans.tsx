@@ -554,6 +554,11 @@ const Plans: React.FC = () => {
                 </div>
               </div>
 
+              <div className="flex items-start gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 mb-4">
+                <Shield className="h-4 w-4 mt-0.5" />
+                <p>Site seguro e protegido com criptografia de dados durante o pagamento.</p>
+              </div>
+
               {error && (
                 <div className="bg-rose-50 border border-rose-200 text-rose-700 px-3 py-2 rounded-lg mb-3 text-sm">
                   {error}
