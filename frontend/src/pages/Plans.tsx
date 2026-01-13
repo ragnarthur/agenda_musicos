@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { CheckCircle, CreditCard, Shield, AlertCircle, Loader2, Sparkles, Star, ArrowLeft, QrCode } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, type Transition } from 'framer-motion';
 import { paymentService, registrationService, billingService } from '../services/api';
 import { showToast } from '../utils/toast';
 import { useAuth } from '../contexts/AuthContext';
@@ -42,10 +42,10 @@ const revealItem = {
   show: { opacity: 1, y: 0, transition: { duration: 0.45 } },
 };
 
-const shimmerTransition = {
+const shimmerTransition: Transition = {
   duration: 9,
   repeat: Infinity,
-  ease: [0, 0, 1, 1],
+  ease: 'easeInOut',
 };
 
 const Plans: React.FC = () => {

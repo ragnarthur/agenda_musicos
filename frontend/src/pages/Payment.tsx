@@ -12,7 +12,7 @@ import {
   Users,
   Calendar,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, type Transition } from 'framer-motion';
 import { registrationService, type RegistrationStatus } from '../services/api';
 import { showToast } from '../utils/toast';
 import OwlMascot from '../components/ui/OwlMascot';
@@ -28,10 +28,10 @@ const revealItem = {
   show: { opacity: 1, y: 0, transition: { duration: 0.45 } },
 };
 
-const shimmerTransition = {
+const shimmerTransition: Transition = {
   duration: 8,
   repeat: Infinity,
-  ease: [0, 0, 1, 1],
+  ease: 'easeInOut',
 };
 
 const Payment: React.FC = () => {
