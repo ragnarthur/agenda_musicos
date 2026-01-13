@@ -20,10 +20,145 @@
 
 @layer base {
   body {
-    @apply text-gray-900;
+    @apply text-gray-900 dark:text-slate-100;
     font-family: var(--font-sans);
     background: transparent;
   }
+
+  .dark .text-gray-900 { @apply text-slate-100; }
+  .dark .text-gray-800 { @apply text-slate-200; }
+  .dark .text-gray-700 { @apply text-slate-300; }
+  .dark .text-gray-600 { @apply text-slate-400; }
+  .dark .text-gray-500 { @apply text-slate-500; }
+  .dark .text-gray-400 { @apply text-slate-500; }
+  .dark .text-gray-300 { @apply text-slate-400; }
+  .dark .text-slate-900 { @apply text-slate-100; }
+  .dark .text-slate-800 { @apply text-slate-200; }
+  .dark .text-slate-700 { @apply text-slate-300; }
+  .dark .text-slate-600 { @apply text-slate-400; }
+
+  .dark .bg-white { @apply bg-slate-900; }
+  .dark .bg-white\/95 { @apply bg-slate-900/90; }
+  .dark .bg-white\/90 { @apply bg-slate-900/85; }
+  .dark .bg-white\/85 { @apply bg-slate-900/80; }
+  .dark .bg-white\/80 { @apply bg-slate-900/75; }
+  .dark .bg-white\/60 { @apply bg-slate-900/60; }
+
+  .dark .bg-gray-50 { @apply bg-slate-800/60; }
+  .dark .bg-gray-50\/50 { @apply bg-slate-800/50; }
+  .dark .bg-gray-100 { @apply bg-slate-800; }
+  .dark .bg-gray-200 { @apply bg-slate-700; }
+  .dark .bg-gray-300 { @apply bg-slate-600; }
+
+  .dark .bg-slate-50 { @apply bg-slate-800/60; }
+  .dark .bg-slate-100 { @apply bg-slate-800; }
+
+  .dark .border-gray-100 { @apply border-slate-800; }
+  .dark .border-gray-200 { @apply border-slate-700; }
+  .dark .border-gray-300 { @apply border-slate-600; }
+  .dark .border-slate-100 { @apply border-slate-800; }
+  .dark .border-slate-200 { @apply border-slate-700; }
+
+  .dark .hover\:bg-gray-50:hover { @apply bg-slate-800; }
+  .dark .hover\:bg-gray-100:hover { @apply bg-slate-800; }
+  .dark .hover\:bg-gray-200:hover { @apply bg-slate-700; }
+  .dark .hover\:bg-white:hover { @apply bg-slate-800; }
+  .dark .hover\:text-primary-700:hover { @apply text-primary-300; }
+  .dark .hover\:text-primary-800:hover { @apply text-primary-200; }
+  .dark .hover\:bg-blue-50:hover { @apply bg-blue-900/30; }
+  .dark .hover\:bg-red-50:hover { @apply bg-red-900/30; }
+  .dark .hover\:bg-amber-50:hover { @apply bg-amber-900/30; }
+  .dark .hover\:bg-purple-50\/50:hover { @apply bg-purple-900/25; }
+  .dark .hover\:bg-orange-50:hover { @apply bg-orange-900/30; }
+  .dark .hover\:bg-amber-200:hover { @apply bg-amber-900/40; }
+  .dark .hover\:text-blue-700:hover { @apply text-blue-200; }
+  .dark .hover\:text-blue-600:hover { @apply text-blue-300; }
+  .dark .hover\:text-red-700:hover { @apply text-red-200; }
+  .dark .hover\:text-red-600:hover { @apply text-red-300; }
+  .dark .hover\:text-amber-600:hover { @apply text-amber-300; }
+  .dark .hover\:text-orange-600:hover { @apply text-orange-300; }
+  .dark .focus\:bg-white:focus { @apply bg-slate-800; }
+
+  .dark .bg-red-50 { @apply bg-red-900/30; }
+  .dark .bg-red-50\/70 { @apply bg-red-900/30; }
+  .dark .bg-red-50\/80 { @apply bg-red-900/30; }
+  .dark .bg-green-50 { @apply bg-green-900/30; }
+  .dark .bg-green-50\/30 { @apply bg-green-900/20; }
+  .dark .bg-blue-50 { @apply bg-blue-900/30; }
+  .dark .bg-indigo-50 { @apply bg-indigo-900/30; }
+  .dark .bg-amber-50 { @apply bg-amber-900/30; }
+  .dark .bg-amber-50\/90 { @apply bg-amber-900/30; }
+  .dark .bg-rose-50 { @apply bg-rose-900/30; }
+  .dark .bg-cyan-50 { @apply bg-cyan-900/30; }
+  .dark .bg-purple-50 { @apply bg-purple-900/30; }
+  .dark .bg-purple-50\/50 { @apply bg-purple-900/25; }
+  .dark .bg-emerald-50 { @apply bg-emerald-900/30; }
+  .dark .bg-sky-50 { @apply bg-sky-900/30; }
+  .dark .bg-yellow-50 { @apply bg-yellow-900/30; }
+  .dark .bg-orange-50 { @apply bg-orange-900/30; }
+  .dark .bg-violet-50 { @apply bg-violet-900/30; }
+
+  .dark .bg-amber-100 { @apply bg-amber-900/40; }
+  .dark .bg-blue-100 { @apply bg-blue-900/40; }
+  .dark .bg-cyan-100 { @apply bg-cyan-900/40; }
+  .dark .bg-green-100 { @apply bg-green-900/40; }
+  .dark .bg-emerald-100 { @apply bg-emerald-900/40; }
+  .dark .bg-indigo-100 { @apply bg-indigo-900/40; }
+  .dark .bg-rose-100 { @apply bg-rose-900/40; }
+  .dark .bg-red-100 { @apply bg-red-900/40; }
+  .dark .bg-pink-100 { @apply bg-pink-900/40; }
+  .dark .bg-primary-50 { @apply bg-primary-900/30; }
+  .dark .bg-primary-100 { @apply bg-primary-900/40; }
+  .dark .bg-yellow-100 { @apply bg-yellow-900/40; }
+
+  .dark .text-red-700 { @apply text-red-200; }
+  .dark .text-red-600 { @apply text-red-300; }
+  .dark .text-red-800 { @apply text-red-200; }
+  .dark .text-green-700 { @apply text-green-200; }
+  .dark .text-green-600 { @apply text-green-300; }
+  .dark .text-green-800 { @apply text-green-200; }
+  .dark .text-blue-700 { @apply text-blue-200; }
+  .dark .text-blue-600 { @apply text-blue-300; }
+  .dark .text-blue-800 { @apply text-blue-200; }
+  .dark .text-amber-700 { @apply text-amber-200; }
+  .dark .text-amber-600 { @apply text-amber-300; }
+  .dark .text-amber-800 { @apply text-amber-200; }
+  .dark .text-indigo-700 { @apply text-indigo-200; }
+  .dark .text-indigo-600 { @apply text-indigo-300; }
+  .dark .text-indigo-800 { @apply text-indigo-200; }
+  .dark .text-rose-700 { @apply text-rose-200; }
+  .dark .text-rose-600 { @apply text-rose-300; }
+  .dark .text-cyan-700 { @apply text-cyan-200; }
+  .dark .text-cyan-800 { @apply text-cyan-200; }
+  .dark .text-purple-800 { @apply text-purple-200; }
+  .dark .text-emerald-700 { @apply text-emerald-200; }
+  .dark .text-emerald-800 { @apply text-emerald-200; }
+  .dark .text-sky-800 { @apply text-sky-200; }
+  .dark .text-yellow-800 { @apply text-yellow-200; }
+  .dark .text-yellow-700 { @apply text-yellow-200; }
+  .dark .text-yellow-600 { @apply text-yellow-300; }
+  .dark .text-orange-600 { @apply text-orange-300; }
+  .dark .text-primary-900 { @apply text-primary-200; }
+  .dark .text-primary-800 { @apply text-primary-200; }
+  .dark .text-primary-700 { @apply text-primary-300; }
+  .dark .text-primary-600 { @apply text-primary-400; }
+
+  .dark .border-red-200 { @apply border-red-800/60; }
+  .dark .border-green-200 { @apply border-green-800/60; }
+  .dark .border-blue-200 { @apply border-blue-800/60; }
+  .dark .border-amber-200 { @apply border-amber-800/60; }
+  .dark .border-amber-100 { @apply border-amber-800/50; }
+  .dark .border-indigo-200 { @apply border-indigo-800/60; }
+  .dark .border-rose-200 { @apply border-rose-800/60; }
+  .dark .border-cyan-200 { @apply border-cyan-800/60; }
+  .dark .border-purple-200 { @apply border-purple-800/60; }
+  .dark .border-emerald-200 { @apply border-emerald-800/60; }
+  .dark .border-sky-300 { @apply border-sky-700/60; }
+  .dark .border-primary-100 { @apply border-primary-800/60; }
+  .dark .border-primary-200 { @apply border-primary-700/60; }
+  .dark .border-yellow-200 { @apply border-yellow-800/60; }
+  .dark .border-orange-200 { @apply border-orange-800/60; }
+  .dark .border-violet-200 { @apply border-violet-800/60; }
 
   ::selection {
     background: var(--color-primary-light);
@@ -37,7 +172,8 @@
   }
 
   .btn-secondary {
-    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200
+           dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-100;
   }
 
   .btn-danger {
@@ -45,7 +181,8 @@
   }
 
   .input-field {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+           bg-white text-gray-900 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700;
   }
 
   .card {
@@ -65,6 +202,7 @@
 
   .hero-section {
     @apply bg-gradient-to-br from-white/95 to-gray-50/90
+           dark:from-slate-900/90 dark:to-slate-800/80
            rounded-2xl p-8 border border-gray-200 shadow-sm;
   }
 
@@ -72,6 +210,8 @@
     @apply px-4 py-2 rounded-full text-sm font-medium
            border border-gray-200 bg-white text-gray-700
            hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700
+           dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200
+           dark:hover:border-primary-400/60 dark:hover:bg-slate-800/70 dark:hover:text-primary-300
            transition-all duration-150 active:scale-95;
   }
 
@@ -88,19 +228,20 @@
     @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
   }
 
-  .badge-pending { @apply bg-amber-100 text-amber-800 border border-amber-200; }
-  .badge-available { @apply bg-green-100 text-green-800 border border-green-200; }
-  .badge-unavailable { @apply bg-red-100 text-red-800 border border-red-200; }
-  .badge-maybe { @apply bg-blue-100 text-blue-800 border border-blue-200; }
-  .badge-proposed { @apply bg-amber-100 text-amber-800 border border-amber-200; }
-  .badge-approved { @apply bg-cyan-100 text-cyan-800 border border-cyan-200; }
-  .badge-rejected { @apply bg-rose-100 text-rose-800 border border-rose-200; }
-  .badge-confirmed { @apply bg-cyan-100 text-cyan-800 border border-cyan-200; }
-  .badge-cancelled { @apply bg-gray-100 text-gray-700 border border-gray-200; }
-  .badge-completed { @apply bg-indigo-100 text-indigo-800 border border-indigo-200; }
+  .badge-pending { @apply bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-800/60; }
+  .badge-available { @apply bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-200 dark:border-green-800/60; }
+  .badge-unavailable { @apply bg-red-100 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-200 dark:border-red-800/60; }
+  .badge-maybe { @apply bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-800/60; }
+  .badge-proposed { @apply bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-800/60; }
+  .badge-approved { @apply bg-cyan-100 text-cyan-800 border border-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-200 dark:border-cyan-800/60; }
+  .badge-rejected { @apply bg-rose-100 text-rose-800 border border-rose-200 dark:bg-rose-900/30 dark:text-rose-200 dark:border-rose-800/60; }
+  .badge-confirmed { @apply bg-cyan-100 text-cyan-800 border border-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-200 dark:border-cyan-800/60; }
+  .badge-cancelled { @apply bg-gray-100 text-gray-700 border border-gray-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700; }
+  .badge-completed { @apply bg-indigo-100 text-indigo-800 border border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-200 dark:border-indigo-800/60; }
 
   .pill-date {
-    @apply inline-flex items-center gap-2 rounded-full bg-white/80 border border-white/60 px-3 py-1 text-xs font-semibold text-gray-700 backdrop-blur;
+    @apply inline-flex items-center gap-2 rounded-full bg-white/80 border border-white/60 px-3 py-1 text-xs font-semibold text-gray-700 backdrop-blur
+           dark:bg-slate-900/70 dark:border-white/10 dark:text-slate-200;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
   }
 
@@ -109,14 +250,14 @@
     letter-spacing: 0.02em;
   }
 
-  .status-chip.approved { @apply bg-blue-100 text-blue-700 border border-blue-200; }
-  .status-chip.confirmed { @apply bg-emerald-100 text-emerald-700 border border-emerald-200; }
-  .status-chip.proposed { @apply bg-amber-100 text-amber-800 border border-amber-200; }
-  .status-chip.pending { @apply bg-amber-100 text-amber-800 border border-amber-200; }
-  .status-chip.rejected { @apply bg-rose-100 text-rose-700 border border-rose-200; }
-  .status-chip.cancelled { @apply bg-gray-100 text-gray-700 border border-gray-200; }
-  .status-chip.completed { @apply bg-indigo-100 text-indigo-800 border border-indigo-200; }
-  .status-chip.default { @apply bg-slate-100 text-slate-700 border border-slate-200; }
+  .status-chip.approved { @apply bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-800/60; }
+  .status-chip.confirmed { @apply bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-200 dark:border-emerald-800/60; }
+  .status-chip.proposed { @apply bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-800/60; }
+  .status-chip.pending { @apply bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-800/60; }
+  .status-chip.rejected { @apply bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-900/30 dark:text-rose-200 dark:border-rose-800/60; }
+  .status-chip.cancelled { @apply bg-gray-100 text-gray-700 border border-gray-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700; }
+  .status-chip.completed { @apply bg-indigo-100 text-indigo-800 border border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-200 dark:border-indigo-800/60; }
+  .status-chip.default { @apply bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700; }
 
   .no-scrollbar {
     -ms-overflow-style: none;

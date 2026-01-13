@@ -211,7 +211,7 @@ const Dashboard: React.FC = () => {
             </div>
 
             {nextEvent && (
-              <div className="w-full md:w-80 rounded-2xl p-[1px] bg-gradient-to-br from-indigo-200 via-white to-cyan-200 shadow-xl">
+              <div className="w-full md:w-80 rounded-2xl p-[1px] bg-gradient-to-br from-indigo-200 via-white to-cyan-200 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 shadow-xl">
                 <TiltCard className="rounded-[18px] border border-white/60 bg-white/85 backdrop-blur px-4 py-3 shadow-inner flex flex-col justify-between h-full">
                   <div className="flex items-center gap-2 text-xs font-semibold text-primary-700 uppercase">
                     <Zap className="h-4 w-4" />

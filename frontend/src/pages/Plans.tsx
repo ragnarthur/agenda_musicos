@@ -288,7 +288,7 @@ const Plans: React.FC = () => {
 
   if (error && !paymentToken && !upgradeMode) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 dark:from-slate-950 dark:to-slate-800 flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro</h2>
@@ -410,8 +410,8 @@ const Plans: React.FC = () => {
                     key={plan.id}
                     className={`rounded-2xl border p-5 cursor-pointer transition-all bg-gradient-to-br ${
                       selectedPlan === plan.id
-                        ? 'from-primary-50 to-white border-primary-200 ring-2 ring-primary-100 shadow-lg'
-                        : 'from-white to-slate-50 border-slate-200 hover:border-primary-200'
+                        ? 'from-primary-50 to-white border-primary-200 ring-2 ring-primary-100 shadow-lg dark:from-slate-900 dark:to-slate-800 dark:border-primary-500/50 dark:ring-primary-400/30'
+                        : 'from-white to-slate-50 border-slate-200 hover:border-primary-200 dark:from-slate-900 dark:to-slate-800/80 dark:border-slate-700 dark:hover:border-primary-400/60'
                     }`}
                     onClick={() => setSelectedPlan(plan.id)}
                   >

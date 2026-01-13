@@ -506,7 +506,7 @@ const EventForm: React.FC = () => {
             </div>
 
             {/* Show Solo */}
-            <div className="flex items-start space-x-3 rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 via-white to-indigo-50 p-4">
+            <div className="flex items-start space-x-3 rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 via-white to-indigo-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 p-4">
               <input
                 type="checkbox"
                 id="is_solo"
@@ -528,7 +528,7 @@ const EventForm: React.FC = () => {
 
             {/* Seleção de Músicos para Convite */}
             {!formData.is_solo && (
-              <div className="rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-50 via-white to-indigo-50 p-4">
+              <div className="rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-50 via-white to-indigo-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Users className="h-5 w-5 text-purple-600" />
                   <h3 className="text-sm font-semibold text-gray-900">

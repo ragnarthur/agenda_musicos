@@ -159,7 +159,7 @@ const VerifyEmail: React.FC = () => {
                       </p>
 
                       {/* Opção Trial - Destacada */}
-                      <div className="bg-gradient-to-r from-primary-50 to-purple-50 border-2 border-primary-200 rounded-lg p-4 mb-4">
+                      <div className="bg-gradient-to-r from-primary-50 to-purple-50 dark:from-slate-900 dark:to-slate-800 border-2 border-primary-200 rounded-lg p-4 mb-4">
                         <div className="flex items-center gap-2 mb-2">
                           <Clock className="h-5 w-5 text-primary-600" />
                           <span className="text-sm font-semibold text-primary-700 bg-primary-100 px-2 py-0.5 rounded">
