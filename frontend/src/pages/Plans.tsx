@@ -377,7 +377,7 @@ const Plans: React.FC = () => {
                   <motion.div
                     key={step.title}
                     variants={revealItem}
-                    className="rounded-2xl border border-white/10 bg-white/5 p-3"
+                    className="rounded-2xl border border-white/10 bg-white/5 p-3 transition-all duration-300 hover:-translate-y-1 hover:border-primary-400/40 hover:bg-white/10"
                   >
                     <p className="text-xs text-primary-200 font-semibold uppercase">{step.title}</p>
                     <p className="text-sm text-white/80 mt-1 leading-relaxed">{step.description}</p>
@@ -447,11 +447,16 @@ const Plans: React.FC = () => {
                   <motion.div
                     key={plan.id}
                     variants={revealItem}
-                    whileHover={{ y: -6, scale: 1.01 }}
+                    whileHover={{ y: -8, scale: 1.015 }}
                     whileTap={{ scale: 0.98 }}
+                    transition={{ type: 'spring', stiffness: 260, damping: 18 }}
                     onClick={() => setSelectedPlan(plan.id)}
                     className="group relative cursor-pointer"
                   >
+                    <span className="pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-r from-primary-400/30 via-emerald-300/20 to-sky-300/20 opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-100" />
+                    <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
+                      <span className="absolute -left-1/2 top-0 h-full w-1/2 bg-gradient-to-r from-transparent via-white/45 to-transparent opacity-0 transition-all duration-700 group-hover:opacity-100 group-hover:translate-x-[180%]" />
+                    </span>
                     <div
                       className={`absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 pointer-events-none ${
                         selectedPlan === plan.id ? 'opacity-100' : 'group-hover:opacity-100'
@@ -469,22 +474,26 @@ const Plans: React.FC = () => {
                     }`}
                     >
                       <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <p className="text-xs uppercase tracking-wide text-slate-500">Plano</p>
-                        <h3 className="text-lg font-semibold text-slate-900">{plan.name}</h3>
-                      </div>
-                      <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-primary-50 text-primary-700 border border-primary-100">
-                        Acesso total
-                      </span>
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-slate-500">Plano</p>
+                          <h3 className="text-lg font-semibold text-slate-900 transition-colors duration-300 group-hover:text-primary-700">
+                            {plan.name}
+                          </h3>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-primary-50 text-primary-700 border border-primary-100 transition-transform duration-300 group-hover:-translate-y-0.5">
+                          Acesso total
+                        </span>
                       </div>
                       <div className="flex items-baseline gap-2 mb-3">
-                        <span className="text-3xl font-bold text-slate-900">{plan.price}</span>
+                        <span className="text-3xl font-bold text-slate-900 transition-transform duration-300 group-hover:-translate-y-0.5">
+                          {plan.price}
+                        </span>
                         <span className="text-sm text-slate-500">{plan.per}</span>
                       </div>
                       <ul className="space-y-2 text-sm text-slate-700">
                         {plan.features.map(feature => (
                           <li key={feature} className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-primary-600" />
+                            <CheckCircle className="h-4 w-4 text-primary-600 transition-transform duration-300 group-hover:scale-110" />
                             <span>{feature}</span>
                           </li>
                         ))}
