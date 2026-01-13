@@ -12,10 +12,27 @@ import {
   Users,
   Calendar,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { registrationService, type RegistrationStatus } from '../services/api';
 import { showToast } from '../utils/toast';
 import OwlMascot from '../components/ui/OwlMascot';
 import CardBrandRow from '../components/ui/CardBrandRow';
+
+const revealParent = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.12 } },
+};
+
+const revealItem = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45 } },
+};
+
+const shimmerTransition = {
+  duration: 8,
+  repeat: Infinity,
+  ease: 'linear',
+};
 
 const Payment: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -219,27 +236,40 @@ const Payment: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center px-4 py-8">
       <div className="max-w-4xl w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <motion.div
+          className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+          variants={revealParent}
+          initial="hidden"
+          animate="show"
+        >
           {/* Coluna da esquerda - Benefícios */}
-          <div className="bg-white/10 backdrop-blur rounded-2xl p-6 text-white">
-            <div className="flex items-center gap-3 mb-6">
+          <motion.div variants={revealItem} className="bg-white/10 backdrop-blur rounded-2xl p-6 text-white">
+            <motion.div variants={revealItem} className="flex items-center gap-3 mb-6">
               <div className="h-12 w-12 flex items-center justify-center">
                 <OwlMascot className="h-12 w-12" />
               </div>
               <h2 className="text-2xl font-bold logo-animated">GigFlow</h2>
-            </div>
+            </motion.div>
 
-            <h3 className="text-xl font-semibold mb-4">Plano Profissional</h3>
+            <motion.h3 variants={revealItem} className="text-xl font-semibold mb-4">
+              <motion.span
+                className="bg-gradient-to-r from-white via-primary-200 to-white bg-[length:200%_100%] text-transparent bg-clip-text"
+                animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
+                transition={shimmerTransition}
+              >
+                Plano Profissional
+              </motion.span>
+            </motion.h3>
 
-            <div className="mb-6">
+            <motion.div variants={revealItem} className="mb-6">
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-bold">R$ 29,90</span>
                 <span className="text-white/70">/mês</span>
               </div>
               <p className="text-white/70 text-sm mt-1">Cancele quando quiser</p>
-            </div>
+            </motion.div>
 
-            <div className="space-y-4">
+            <motion.div variants={revealItem} className="space-y-4">
               <div className="flex items-start gap-3">
                 <div className="bg-white/20 p-2 rounded-lg">
                   <Calendar className="h-5 w-5" />
@@ -279,22 +309,30 @@ const Payment: React.FC = () => {
                   <p className="text-white/70 text-sm">Suas informações seguras e privadas</p>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
-            <div className="mt-8 pt-6 border-t border-white/20">
+            <motion.div variants={revealItem} className="mt-8 pt-6 border-t border-white/20">
               <div className="flex items-center gap-2 text-white/70 text-sm">
                 <Lock className="h-4 w-4" />
                 <span>Pagamento seguro e criptografado</span>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           {/* Coluna da direita - Formulário de Pagamento */}
-          <div className="bg-white rounded-2xl shadow-2xl p-6">
-            <div className="flex items-center gap-2 mb-6">
+          <motion.div variants={revealItem} className="bg-white rounded-2xl shadow-2xl p-6">
+            <motion.div variants={revealItem} className="flex items-center gap-2 mb-6">
               <CreditCard className="h-6 w-6 text-primary-600" />
-              <h3 className="text-xl font-semibold text-gray-900">Dados do Cartão</h3>
-            </div>
+              <h3 className="text-xl font-semibold text-gray-900">
+                <motion.span
+                  className="bg-gradient-to-r from-slate-900 via-primary-600 to-slate-900 bg-[length:200%_100%] text-transparent bg-clip-text"
+                  animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
+                  transition={shimmerTransition}
+                >
+                  Dados do Cartão
+                </motion.span>
+              </h3>
+            </motion.div>
 
             {status && (
               <div className="bg-gray-50 rounded-lg p-3 mb-6">
@@ -399,8 +437,8 @@ const Payment: React.FC = () => {
             <div className="mt-6 rounded-2xl border border-slate-900/70 bg-slate-950 px-3 py-2 shadow-sm">
               <CardBrandRow />
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </div>
   );

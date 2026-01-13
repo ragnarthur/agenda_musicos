@@ -42,6 +42,12 @@ const revealItem = {
   show: { opacity: 1, y: 0, transition: { duration: 0.45 } },
 };
 
+const shimmerTransition = {
+  duration: 9,
+  repeat: Infinity,
+  ease: 'linear',
+};
+
 const Plans: React.FC = () => {
   const useStripe = import.meta.env.VITE_USE_STRIPE === 'true';
   const allowFakePayment = import.meta.env.VITE_ALLOW_FAKE_PAYMENT === 'true';
@@ -384,7 +390,13 @@ const Plans: React.FC = () => {
               </div>
               <div className="space-y-2">
                 <h1 className="text-3xl md:text-4xl font-bold leading-tight">
-                  Ative sua assinatura com um fluxo mais claro
+                  <motion.span
+                    className="bg-gradient-to-r from-white via-primary-200 to-white bg-[length:200%_100%] text-transparent bg-clip-text"
+                    animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
+                    transition={shimmerTransition}
+                  >
+                    Ative sua assinatura com um fluxo mais claro
+                  </motion.span>
                 </h1>
                 <p className="text-white/70 max-w-2xl">
                   Organize agendas, convites e pagamentos num só lugar. Escolha o plano, finalize o pagamento e entre
@@ -547,7 +559,15 @@ const Plans: React.FC = () => {
                 <Star className="h-6 w-6 text-amber-300" />
                 <div>
                   <p className="text-sm text-white/70">Benefícios da assinatura</p>
-                  <h3 className="text-lg font-semibold text-white">Mais visibilidade, mais gigs, mais resultado</h3>
+                  <h3 className="text-lg font-semibold text-white">
+                    <motion.span
+                      className="bg-gradient-to-r from-white via-amber-200 to-white bg-[length:200%_100%] text-transparent bg-clip-text"
+                      animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
+                      transition={shimmerTransition}
+                    >
+                      Mais visibilidade, mais gigs, mais resultado
+                    </motion.span>
+                  </h3>
                 </div>
               </div>
               <ul className="mt-4 grid sm:grid-cols-2 gap-3 text-white/80 text-sm">
