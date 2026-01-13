@@ -3,6 +3,11 @@ import { stripe, PRICE_IDS, type PlanType } from '../config/stripe.js';
 import { logger } from '../utils/logger.js';
 import { AppError } from '../middleware/errorHandler.js';
 
+const PLAN_LABELS: Record<PlanType, string> = {
+  monthly: 'Assinatura Mensal',
+  annual: 'Assinatura Anual',
+};
+
 class StripeService {
   /**
    * Cria uma sessão de checkout do Stripe
@@ -14,8 +19,10 @@ class StripeService {
     plan: PlanType;
     successUrl: string;
     cancelUrl: string;
+    paymentMethod?: 'card' | 'pix';
   }): Promise<Stripe.Checkout.Session> {
     const priceId = PRICE_IDS[params.plan];
+    const paymentMethod = params.paymentMethod ?? 'card';
 
     try {
       // Criar customer primeiro (requerido pelo Stripe Accounts V2)
@@ -28,6 +35,55 @@ class StripeService {
       });
 
       logger.info({ customerId: customer.id, email: params.email }, 'Customer created');
+
+      if (paymentMethod === 'pix') {
+        const price = await stripe.prices.retrieve(priceId);
+        if (price.unit_amount == null || !price.currency) {
+          throw new AppError('Invalid price configuration for Pix', 500, 'pix_price_error');
+        }
+
+        const session = await stripe.checkout.sessions.create({
+          mode: 'payment',
+          payment_method_types: ['pix'],
+          line_items: [
+            {
+              price_data: {
+                currency: price.currency,
+                unit_amount: price.unit_amount,
+                product_data: {
+                  name: PLAN_LABELS[params.plan],
+                },
+              },
+              quantity: 1,
+            },
+          ],
+          customer: customer.id,
+          metadata: {
+            payment_token: params.paymentToken,
+            plan: params.plan,
+            payment_method: 'pix',
+          },
+          payment_intent_data: {
+            metadata: {
+              payment_token: params.paymentToken,
+              plan: params.plan,
+              payment_method: 'pix',
+            },
+          },
+          success_url: `${params.successUrl}?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: params.cancelUrl,
+          locale: 'pt-BR',
+        });
+
+        logger.info({
+          sessionId: session.id,
+          paymentToken: params.paymentToken,
+          plan: params.plan,
+          paymentMethod: 'pix',
+        }, 'Pix checkout session created');
+
+        return session;
+      }
 
       const session = await stripe.checkout.sessions.create({
         mode: 'subscription',
@@ -79,8 +135,10 @@ class StripeService {
     plan: PlanType;
     successUrl: string;
     cancelUrl: string;
+    paymentMethod?: 'card' | 'pix';
   }): Promise<Stripe.Checkout.Session> {
     const priceId = PRICE_IDS[params.plan];
+    const paymentMethod = params.paymentMethod ?? 'card';
 
     try {
       const customer = await stripe.customers.create({
@@ -92,6 +150,58 @@ class StripeService {
       });
 
       logger.info({ customerId: customer.id, userId: params.userId }, 'Customer created for upgrade');
+
+      if (paymentMethod === 'pix') {
+        const price = await stripe.prices.retrieve(priceId);
+        if (price.unit_amount == null || !price.currency) {
+          throw new AppError('Invalid price configuration for Pix', 500, 'pix_price_error');
+        }
+
+        const session = await stripe.checkout.sessions.create({
+          mode: 'payment',
+          payment_method_types: ['pix'],
+          line_items: [
+            {
+              price_data: {
+                currency: price.currency,
+                unit_amount: price.unit_amount,
+                product_data: {
+                  name: PLAN_LABELS[params.plan],
+                },
+              },
+              quantity: 1,
+            },
+          ],
+          customer: customer.id,
+          client_reference_id: String(params.userId),
+          metadata: {
+            user_id: String(params.userId),
+            plan: params.plan,
+            source: 'upgrade',
+            payment_method: 'pix',
+          },
+          payment_intent_data: {
+            metadata: {
+              user_id: String(params.userId),
+              plan: params.plan,
+              source: 'upgrade',
+              payment_method: 'pix',
+            },
+          },
+          success_url: `${params.successUrl}?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: params.cancelUrl,
+          locale: 'pt-BR',
+        });
+
+        logger.info({
+          sessionId: session.id,
+          userId: params.userId,
+          plan: params.plan,
+          paymentMethod: 'pix',
+        }, 'Pix upgrade checkout session created');
+
+        return session;
+      }
 
       const session = await stripe.checkout.sessions.create({
         mode: 'subscription',

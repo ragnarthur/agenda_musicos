@@ -6,6 +6,7 @@ export const createCheckoutSessionSchema = z.object({
   plan: z.enum(['monthly', 'annual']),
   success_url: z.string().url(),
   cancel_url: z.string().url(),
+  payment_method: z.enum(['card', 'pix']).optional(),
 });
 
 export const createUserCheckoutSessionSchema = z.object({
@@ -15,6 +16,7 @@ export const createUserCheckoutSessionSchema = z.object({
   plan: z.enum(['monthly', 'annual']),
   success_url: z.string().url(),
   cancel_url: z.string().url(),
+  payment_method: z.enum(['card', 'pix']).optional(),
 });
 
 export const cancelSubscriptionSchema = z.object({
@@ -58,13 +60,17 @@ export interface DjangoRegistrationStatus {
 export interface DjangoPaymentCallbackPayload {
   payment_token: string;
   stripe_customer_id: string;
-  stripe_subscription_id: string;
+  stripe_subscription_id?: string | null;
   plan: 'monthly' | 'annual';
+  payment_method?: 'card' | 'pix';
+  subscription_ends_at?: string | null;
 }
 
 export interface DjangoSubscriptionActivatePayload {
   user_id: number;
   stripe_customer_id: string;
-  stripe_subscription_id: string;
+  stripe_subscription_id?: string | null;
   plan: 'monthly' | 'annual';
+  payment_method?: 'card' | 'pix';
+  subscription_ends_at?: string | null;
 }

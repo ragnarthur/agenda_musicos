@@ -534,6 +534,7 @@ export interface CheckoutSessionRequest {
   plan: 'monthly' | 'annual';
   success_url: string;
   cancel_url: string;
+  payment_method?: 'card' | 'pix';
 }
 
 export interface CheckoutSessionResponse {
@@ -545,13 +546,14 @@ export interface SessionStatusResponse {
   status: string;
   payment_status: string;
   customer_email: string;
-  subscription_id: string;
+  subscription_id: string | null;
 }
 
 export interface UpgradeCheckoutRequest {
   plan: 'monthly' | 'annual';
   success_url: string;
   cancel_url: string;
+  payment_method?: 'card' | 'pix';
 }
 
 export interface UpgradeCheckoutResponse {

@@ -32,6 +32,14 @@ export async function handleStripeWebhook(
         await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
         break;
 
+      case 'checkout.session.async_payment_succeeded':
+        await handleCheckoutAsyncSuccess(event.data.object as Stripe.Checkout.Session);
+        break;
+
+      case 'checkout.session.async_payment_failed':
+        await handleCheckoutAsyncFailed(event.data.object as Stripe.Checkout.Session);
+        break;
+
       case 'invoice.paid':
         await handleInvoicePaid(event.data.object as Stripe.Invoice);
         break;
@@ -65,6 +73,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promis
   const paymentToken = session.metadata?.payment_token;
   const plan = session.metadata?.plan as 'monthly' | 'annual';
   const userId = session.metadata?.user_id || session.client_reference_id;
+  const paymentMethod = (session.metadata?.payment_method as 'card' | 'pix') || 'card';
 
   const customerId = typeof session.customer === 'string'
     ? session.customer
@@ -73,6 +82,15 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promis
   const subscriptionId = typeof session.subscription === 'string'
     ? session.subscription
     : session.subscription?.id;
+
+  if (session.mode === 'payment') {
+    if (session.payment_status !== 'paid') {
+      logger.info({ sessionId: session.id, paymentStatus: session.payment_status }, 'Checkout payment pending');
+      return;
+    }
+    await handleCheckoutPaidSession(session, paymentMethod);
+    return;
+  }
 
   if (!customerId || !subscriptionId) {
     logger.error({ sessionId: session.id }, 'Missing customer or subscription ID');
@@ -87,6 +105,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promis
         stripe_customer_id: customerId,
         stripe_subscription_id: subscriptionId,
         plan: plan || 'monthly',
+        payment_method: paymentMethod,
       });
 
       logger.info({
@@ -114,6 +133,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promis
       stripe_customer_id: customerId,
       stripe_subscription_id: subscriptionId,
       plan: plan || 'monthly',
+      payment_method: paymentMethod,
     });
 
     logger.info({
@@ -126,6 +146,83 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promis
     logger.error({ error, sessionId: session.id }, 'Failed to notify Django of checkout completion');
     // Don't throw - Stripe will retry the webhook
   }
+}
+
+async function handleCheckoutPaidSession(
+  session: Stripe.Checkout.Session,
+  paymentMethod: 'card' | 'pix'
+): Promise<void> {
+  const paymentToken = session.metadata?.payment_token;
+  const plan = session.metadata?.plan as 'monthly' | 'annual';
+  const userId = session.metadata?.user_id || session.client_reference_id;
+  const customerId = typeof session.customer === 'string'
+    ? session.customer
+    : session.customer?.id;
+
+  if (!customerId) {
+    logger.error({ sessionId: session.id }, 'Missing customer ID for payment session');
+    return;
+  }
+
+  try {
+    if (paymentToken) {
+      await djangoService.notifyPaymentCompleted({
+        payment_token: paymentToken,
+        stripe_customer_id: customerId,
+        stripe_subscription_id: null,
+        plan: plan || 'monthly',
+        payment_method: paymentMethod,
+      });
+
+      logger.info({
+        sessionId: session.id,
+        paymentToken,
+        customerId,
+        paymentMethod,
+      }, 'Pix payment completed and Django notified');
+      return;
+    }
+
+    if (!userId) {
+      logger.error({ sessionId: session.id }, 'Missing user_id in session metadata');
+      return;
+    }
+
+    const parsedUserId = Number(userId);
+    if (!Number.isFinite(parsedUserId)) {
+      logger.error({ sessionId: session.id, userId }, 'Invalid user_id in session metadata');
+      return;
+    }
+
+    await djangoService.activateSubscription({
+      user_id: parsedUserId,
+      stripe_customer_id: customerId,
+      stripe_subscription_id: null,
+      plan: plan || 'monthly',
+      payment_method: paymentMethod,
+    });
+
+    logger.info({
+      sessionId: session.id,
+      userId: parsedUserId,
+      customerId,
+      paymentMethod,
+    }, 'Pix upgrade checkout completed and Django notified');
+  } catch (error) {
+    logger.error({ error, sessionId: session.id }, 'Failed to notify Django of Pix checkout completion');
+  }
+}
+
+async function handleCheckoutAsyncSuccess(session: Stripe.Checkout.Session): Promise<void> {
+  const paymentMethod = (session.metadata?.payment_method as 'card' | 'pix') || 'pix';
+  await handleCheckoutPaidSession(session, paymentMethod);
+}
+
+async function handleCheckoutAsyncFailed(session: Stripe.Checkout.Session): Promise<void> {
+  logger.warn(
+    { sessionId: session.id, paymentStatus: session.payment_status },
+    'Checkout async payment failed'
+  );
 }
 
 /**

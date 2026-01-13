@@ -1,7 +1,7 @@
 // pages/Plans.tsx
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { CheckCircle, CreditCard, Shield, AlertCircle, Loader2, Sparkles, Star, ArrowLeft } from 'lucide-react';
+import { CheckCircle, CreditCard, Shield, AlertCircle, Loader2, Sparkles, Star, ArrowLeft, QrCode } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { paymentService, registrationService, billingService } from '../services/api';
 import { showToast } from '../utils/toast';
@@ -65,6 +65,7 @@ const Plans: React.FC = () => {
   const [upgradeMode, setUpgradeMode] = useState(false);
   const [showFakeCheckout, setShowFakeCheckout] = useState(false);
   const [upgradeSuccess, setUpgradeSuccess] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'pix'>('card');
   const [formData, setFormData] = useState({
     card_number: '',
     card_holder: '',
@@ -73,6 +74,7 @@ const Plans: React.FC = () => {
   });
   const selectedPlanInfo = plans.find(plan => plan.id === selectedPlan);
   const isTestMode = !useStripe || allowFakePayment;
+  const showPaymentMethodSelector = useStripe && !allowFakePayment;
   const flowSteps = [
     {
       title: 'Plano mensal',
@@ -184,12 +186,14 @@ const Plans: React.FC = () => {
           plan: selectedPlan,
           success_url: successUrl,
           cancel_url: cancelUrl,
+          payment_method: paymentMethod,
         })
         : await paymentService.createCheckoutSession({
           payment_token: paymentToken as string,
           plan: selectedPlan,
           success_url: successUrl,
           cancel_url: cancelUrl,
+          payment_method: paymentMethod,
         });
 
       window.location.href = session.checkout_url;
@@ -589,6 +593,42 @@ const Plans: React.FC = () => {
               {upgradeMode && (
                 <div className="bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 py-2 rounded-lg mb-3 text-sm">
                   Reativação rápida: mantemos seus dados e liberamos o plano completo após o pagamento.
+                </div>
+              )}
+
+              {showPaymentMethodSelector && (
+                <div className="mb-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Forma de pagamento
+                  </p>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('card')}
+                      className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                        paymentMethod === 'card'
+                          ? 'border-primary-500 bg-primary-50 text-primary-700'
+                          : 'border-slate-200 bg-white text-slate-600 hover:border-primary-300'
+                      }`}
+                      aria-pressed={paymentMethod === 'card'}
+                    >
+                      <CreditCard className="h-4 w-4" />
+                      Cartão
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('pix')}
+                      className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                        paymentMethod === 'pix'
+                          ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                          : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-300'
+                      }`}
+                      aria-pressed={paymentMethod === 'pix'}
+                    >
+                      <QrCode className="h-4 w-4" />
+                      Pix
+                    </button>
+                  </div>
                 </div>
               )}
 

@@ -38,6 +38,7 @@ export async function createCheckoutSession(
       plan: data.plan,
       successUrl: data.success_url,
       cancelUrl: data.cancel_url,
+      paymentMethod: data.payment_method,
     });
 
     const response: CheckoutSessionResponse = {
@@ -78,6 +79,7 @@ export async function createUserCheckoutSession(
       plan: data.plan,
       successUrl: data.success_url,
       cancelUrl: data.cancel_url,
+      paymentMethod: data.payment_method,
     });
 
     const response: CheckoutSessionResponse = {

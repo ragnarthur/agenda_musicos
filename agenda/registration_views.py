@@ -726,6 +726,7 @@ class SubscriptionCheckoutView(APIView):
         plan = request.data.get('plan')
         success_url = request.data.get('success_url')
         cancel_url = request.data.get('cancel_url')
+        payment_method = request.data.get('payment_method', 'card')
 
         if plan not in ['monthly', 'annual']:
             return Response(
@@ -768,6 +769,7 @@ class SubscriptionCheckoutView(APIView):
             'plan': plan,
             'success_url': success_url,
             'cancel_url': cancel_url,
+            'payment_method': payment_method,
         }
 
         try:
@@ -816,10 +818,21 @@ class SubscriptionActivateView(APIView):
         stripe_customer_id = request.data.get('stripe_customer_id')
         stripe_subscription_id = request.data.get('stripe_subscription_id')
         plan = request.data.get('plan')
+        payment_method = request.data.get('payment_method', 'card')
 
-        if not all([user_id, stripe_customer_id, stripe_subscription_id, plan]):
+        if not all([user_id, stripe_customer_id, plan]):
             return Response(
                 {'error': 'Missing required fields'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if payment_method not in ['card', 'pix', 'boleto']:
+            return Response(
+                {'error': 'Invalid payment method'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if payment_method == 'card' and not stripe_subscription_id:
+            return Response(
+                {'error': 'Missing subscription id for card payment'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -846,10 +859,14 @@ class SubscriptionActivateView(APIView):
             )
 
         musician.stripe_customer_id = stripe_customer_id
-        musician.stripe_subscription_id = stripe_subscription_id
+        musician.stripe_subscription_id = stripe_subscription_id or None
         musician.subscription_plan = plan
         musician.subscription_status = 'active'
-        musician.subscription_ends_at = None
+        if payment_method in ['pix', 'boleto']:
+            days = 30 if plan == 'monthly' else 365
+            musician.subscription_ends_at = timezone.now() + timedelta(days=days)
+        else:
+            musician.subscription_ends_at = None
         musician.trial_started_at = None
         musician.trial_ends_at = None
         musician.save()
@@ -952,10 +969,21 @@ class PaymentCallbackView(APIView):
         stripe_customer_id = request.data.get('stripe_customer_id')
         stripe_subscription_id = request.data.get('stripe_subscription_id')
         plan = request.data.get('plan')  # 'monthly' ou 'annual'
+        payment_method = request.data.get('payment_method', 'card')
 
-        if not all([payment_token, stripe_customer_id, stripe_subscription_id, plan]):
+        if not all([payment_token, stripe_customer_id, plan]):
             return Response(
                 {'error': 'Missing required fields'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if payment_method not in ['card', 'pix', 'boleto']:
+            return Response(
+                {'error': 'Invalid payment method'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if payment_method == 'card' and not stripe_subscription_id:
+            return Response(
+                {'error': 'Missing subscription id for card payment'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -1003,9 +1031,16 @@ class PaymentCallbackView(APIView):
                 # Salvar IDs do Stripe no Musician
                 musician = user.musician_profile
                 musician.stripe_customer_id = stripe_customer_id
-                musician.stripe_subscription_id = stripe_subscription_id
+                musician.stripe_subscription_id = stripe_subscription_id or None
                 musician.subscription_plan = plan
                 musician.subscription_status = 'active'
+                if payment_method in ['pix', 'boleto']:
+                    days = 30 if plan == 'monthly' else 365
+                    musician.subscription_ends_at = timezone.now() + timedelta(days=days)
+                else:
+                    musician.subscription_ends_at = None
+                musician.trial_started_at = None
+                musician.trial_ends_at = None
                 musician.save()
 
                 logger.info(f'Payment callback completed for user {user.username}')
