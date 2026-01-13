@@ -655,9 +655,11 @@ const Plans: React.FC = () => {
                 </motion.form>
               )}
 
-              <div className="mt-4 flex items-center justify-center">
-                <CardBrandRow />
-              </div>
+              {showFakeCheckout && isTestMode && (
+                <div className="mt-4 flex items-center justify-center">
+                  <CardBrandRow />
+                </div>
+              )}
             </motion.div>
 
             <motion.div variants={revealItem} className="rounded-3xl border border-white/10 bg-white/5 p-6 text-white">
