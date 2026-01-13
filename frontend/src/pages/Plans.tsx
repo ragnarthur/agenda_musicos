@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { CheckCircle, CreditCard, Shield, AlertCircle, Loader2, Sparkles, Star, ArrowLeft } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { paymentService, registrationService, billingService } from '../services/api';
 import { showToast } from '../utils/toast';
 import { useAuth } from '../contexts/AuthContext';
@@ -29,6 +30,16 @@ const plans: Array<{
     ],
   },
 ];
+
+const revealParent = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.12 } },
+};
+
+const revealItem = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45 } },
+};
 
 const Plans: React.FC = () => {
   const useStripe = import.meta.env.VITE_USE_STRIPE === 'true';
@@ -303,8 +314,13 @@ const Plans: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
-      <div className="max-w-6xl mx-auto px-4 py-10 space-y-8">
-        <div className="flex items-center justify-between gap-3 text-sm">
+      <motion.div
+        className="max-w-6xl mx-auto px-4 py-10 space-y-8"
+        variants={revealParent}
+        initial="hidden"
+        animate="show"
+      >
+        <motion.div variants={revealItem} className="flex items-center justify-between gap-3 text-sm">
           <button
             onClick={() => navigate(-1)}
             className="text-white/80 hover:text-white inline-flex items-center gap-2"
@@ -316,11 +332,29 @@ const Plans: React.FC = () => {
             <Shield className="h-4 w-4" />
             Suporte humano em horário comercial
           </span>
-        </div>
+        </motion.div>
 
-        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-primary-500/10 via-slate-900 to-slate-950 p-6 md:p-8">
-          <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-primary-500/20 blur-3xl" />
-          <div className="absolute -left-10 bottom-0 h-32 w-32 rounded-full bg-emerald-400/10 blur-2xl" />
+        <motion.section
+          variants={revealItem}
+          className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-primary-500/10 via-slate-900 to-slate-950 p-6 md:p-8"
+        >
+          <div
+            className="pointer-events-none absolute inset-0 opacity-35"
+            style={{
+              backgroundImage:
+                'radial-gradient(circle at 10% 20%, rgba(99,102,241,0.35), transparent 40%), radial-gradient(circle at 85% 15%, rgba(16,185,129,0.35), transparent 42%), radial-gradient(circle at 70% 80%, rgba(14,165,233,0.25), transparent 45%)',
+            }}
+          />
+          <motion.div
+            className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-primary-500/20 blur-3xl"
+            animate={{ y: [0, -10, 0], x: [0, 6, 0] }}
+            transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.div
+            className="absolute -left-10 bottom-0 h-32 w-32 rounded-full bg-emerald-400/10 blur-2xl"
+            animate={{ y: [0, 8, 0], x: [0, -6, 0] }}
+            transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+          />
 
           <div className="relative grid gap-6 md:grid-cols-3 items-start">
             <div className="md:col-span-2 space-y-4">
@@ -340,15 +374,19 @@ const Plans: React.FC = () => {
 
               <div className="grid sm:grid-cols-3 gap-3">
                 {flowSteps.map(step => (
-                  <div key={step.title} className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                  <motion.div
+                    key={step.title}
+                    variants={revealItem}
+                    className="rounded-2xl border border-white/10 bg-white/5 p-3"
+                  >
                     <p className="text-xs text-primary-200 font-semibold uppercase">{step.title}</p>
                     <p className="text-sm text-white/80 mt-1 leading-relaxed">{step.description}</p>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-white text-slate-900 rounded-2xl shadow-2xl p-5 space-y-3 border border-white/20">
+            <motion.div variants={revealItem} className="bg-white text-slate-900 rounded-2xl shadow-2xl p-5 space-y-3 border border-white/20">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-xs font-semibold text-primary-600 uppercase">Plano selecionado</p>
                 {upgradeMode ? (
@@ -387,13 +425,13 @@ const Plans: React.FC = () => {
                 <CheckCircle className="h-4 w-4 text-emerald-500" />
                 Confirmação por email após o pagamento.
               </div>
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.section>
 
-        <div className="grid lg:grid-cols-3 gap-6 items-start">
+        <motion.div variants={revealItem} className="grid lg:grid-cols-3 gap-6 items-start">
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white text-slate-900 rounded-3xl shadow-2xl p-6 md:p-7 border border-white/5">
+            <motion.div variants={revealItem} className="bg-white text-slate-900 rounded-3xl shadow-2xl p-6 md:p-7 border border-white/5">
               <div className="flex items-start justify-between gap-4 mb-6">
                 <div>
                   <p className="text-sm text-slate-500">Planos simples, sem surpresa</p>
@@ -406,16 +444,31 @@ const Plans: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {plans.map(plan => (
-                  <div
+                  <motion.div
                     key={plan.id}
-                    className={`rounded-2xl border p-5 cursor-pointer transition-all bg-gradient-to-br ${
+                    variants={revealItem}
+                    whileHover={{ y: -6, scale: 1.01 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setSelectedPlan(plan.id)}
+                    className="group relative cursor-pointer"
+                  >
+                    <div
+                      className={`absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 pointer-events-none ${
+                        selectedPlan === plan.id ? 'opacity-100' : 'group-hover:opacity-100'
+                      }`}
+                      style={{
+                        background:
+                          'linear-gradient(135deg, rgba(59,130,246,0.25), rgba(16,185,129,0.15), transparent 70%)',
+                      }}
+                    />
+                    <div
+                      className={`relative rounded-2xl border p-5 transition-all bg-gradient-to-br ${
                       selectedPlan === plan.id
                         ? 'from-primary-50 to-white border-primary-200 ring-2 ring-primary-100 shadow-lg dark:from-slate-900 dark:to-slate-800 dark:border-primary-500/50 dark:ring-primary-400/30'
                         : 'from-white to-slate-50 border-slate-200 hover:border-primary-200 dark:from-slate-900 dark:to-slate-800/80 dark:border-slate-700 dark:hover:border-primary-400/60'
                     }`}
-                    onClick={() => setSelectedPlan(plan.id)}
-                  >
-                    <div className="flex items-center justify-between mb-2">
+                    >
+                      <div className="flex items-center justify-between mb-2">
                       <div>
                         <p className="text-xs uppercase tracking-wide text-slate-500">Plano</p>
                         <h3 className="text-lg font-semibold text-slate-900">{plan.name}</h3>
@@ -423,20 +476,21 @@ const Plans: React.FC = () => {
                       <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-primary-50 text-primary-700 border border-primary-100">
                         Acesso total
                       </span>
+                      </div>
+                      <div className="flex items-baseline gap-2 mb-3">
+                        <span className="text-3xl font-bold text-slate-900">{plan.price}</span>
+                        <span className="text-sm text-slate-500">{plan.per}</span>
+                      </div>
+                      <ul className="space-y-2 text-sm text-slate-700">
+                        {plan.features.map(feature => (
+                          <li key={feature} className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-primary-600" />
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                    <div className="flex items-baseline gap-2 mb-3">
-                      <span className="text-3xl font-bold text-slate-900">{plan.price}</span>
-                      <span className="text-sm text-slate-500">{plan.per}</span>
-                    </div>
-                    <ul className="space-y-2 text-sm text-slate-700">
-                      {plan.features.map(feature => (
-                        <li key={feature} className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-primary-600" />
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
 
@@ -456,9 +510,9 @@ const Plans: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+            <motion.div variants={revealItem} className="rounded-3xl border border-white/10 bg-white/5 p-6">
               <div className="flex items-center gap-3">
                 <Star className="h-6 w-6 text-amber-300" />
                 <div>
@@ -484,11 +538,11 @@ const Plans: React.FC = () => {
                   <span>Suporte dedicado para ajustes de agenda e pagamentos.</span>
                 </li>
               </ul>
-            </div>
+            </motion.div>
           </div>
 
           <div className="space-y-6">
-            <div className="bg-white text-slate-900 rounded-3xl shadow-2xl p-6 border border-white/5">
+            <motion.div variants={revealItem} className="bg-white text-slate-900 rounded-3xl shadow-2xl p-6 border border-white/5">
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div>
                   <p className="text-sm text-slate-500">Pagamento</p>
@@ -536,7 +590,13 @@ const Plans: React.FC = () => {
               </p>
 
               {showFakeCheckout && isTestMode && (
-                <form onSubmit={handleFakePayment} className="mt-5 space-y-4 border-t border-slate-200 pt-4">
+                <motion.form
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35 }}
+                  onSubmit={handleFakePayment}
+                  className="mt-5 space-y-4 border-t border-slate-200 pt-4"
+                >
                   <div className="grid gap-3">
                     <label className="text-sm font-medium text-slate-800">Número do cartão</label>
                     <input
@@ -593,11 +653,11 @@ const Plans: React.FC = () => {
                   <p className="text-xs text-slate-500 text-center">
                     Evite cartões começando com 0000; qualquer outro número funciona para teste.
                   </p>
-                </form>
+                </motion.form>
               )}
-            </div>
+            </motion.div>
 
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-white">
+            <motion.div variants={revealItem} className="rounded-3xl border border-white/10 bg-white/5 p-6 text-white">
               <div className="flex items-center gap-3 mb-4">
                 <Shield className="h-6 w-6" />
                 <div>
@@ -623,10 +683,10 @@ const Plans: React.FC = () => {
                   <span>Suporte prioritário para assinantes.</span>
                 </li>
               </ul>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };
