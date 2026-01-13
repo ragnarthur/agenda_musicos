@@ -555,16 +555,6 @@ const Plans: React.FC = () => {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-3 py-2 text-xs text-slate-600 mb-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-emerald-500" />
-                    <span>Pagamento seguro com criptografia.</span>
-                  </div>
-                  <CardBrandRow />
-                </div>
-              </div>
-
               {error && (
                 <div className="bg-rose-50 border border-rose-200 text-rose-700 px-3 py-2 rounded-lg mb-3 text-sm">
                   {error}
@@ -664,6 +654,10 @@ const Plans: React.FC = () => {
                   </p>
                 </motion.form>
               )}
+
+              <div className="mt-4 flex items-center justify-center">
+                <CardBrandRow />
+              </div>
             </motion.div>
 
             <motion.div variants={revealItem} className="rounded-3xl border border-white/10 bg-white/5 p-6 text-white">

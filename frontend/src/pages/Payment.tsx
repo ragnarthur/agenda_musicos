@@ -377,16 +377,6 @@ const Payment: React.FC = () => {
                 </div>
               </div>
 
-              <div className="rounded-lg border border-gray-200 bg-white/70 px-3 py-2 text-xs text-gray-600">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-emerald-500" />
-                    <span>Pagamento seguro com criptografia.</span>
-                  </div>
-                  <CardBrandRow />
-                </div>
-              </div>
-
               <button
                 type="submit"
                 disabled={processing}
@@ -406,11 +396,8 @@ const Payment: React.FC = () => {
               </button>
             </form>
 
-            <div className="mt-6 flex items-center justify-center gap-4 text-gray-400 text-sm">
-              <Lock className="h-4 w-4" />
-              <span>SSL Seguro</span>
-              <span>|</span>
-              <span>PCI Compliant</span>
+            <div className="mt-6 flex items-center justify-center">
+              <CardBrandRow />
             </div>
           </div>
         </div>
