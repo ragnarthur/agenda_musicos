@@ -50,7 +50,7 @@ const Plans: React.FC = () => {
   const { user, loading: authLoading, refreshUser } = useAuth();
   const subscriptionInfo = user?.subscription_info;
 
-  const [selectedPlan, setSelectedPlan] = useState<PlanType>('monthly');
+  const selectedPlan: PlanType = 'monthly';
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [registrationComplete, setRegistrationComplete] = useState(false);
@@ -69,8 +69,8 @@ const Plans: React.FC = () => {
   const isTestMode = !useStripe || allowFakePayment;
   const flowSteps = [
     {
-      title: 'Escolha do plano',
-      description: 'Selecione a assinatura que acompanha sua rotina.',
+      title: 'Plano mensal',
+      description: 'Assinatura única com acesso completo ao app.',
     },
     {
       title: 'Pagamento seguro',
@@ -388,7 +388,7 @@ const Plans: React.FC = () => {
 
             <motion.div variants={revealItem} className="bg-white text-slate-900 rounded-2xl shadow-2xl p-5 space-y-3 border border-white/20">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-xs font-semibold text-primary-600 uppercase">Plano selecionado</p>
+                <p className="text-xs font-semibold text-primary-600 uppercase">Plano mensal</p>
                 {upgradeMode ? (
                   <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200">
                     Upgrade
@@ -434,11 +434,11 @@ const Plans: React.FC = () => {
             <motion.div variants={revealItem} className="bg-white text-slate-900 rounded-3xl shadow-2xl p-6 md:p-7 border border-white/5">
               <div className="flex items-start justify-between gap-4 mb-6">
                 <div>
-                  <p className="text-sm text-slate-500">Planos simples, sem surpresa</p>
-                  <h2 className="text-xl font-semibold text-slate-900">Escolha o plano ideal</h2>
+                  <p className="text-sm text-slate-500">Plano simples, sem surpresa</p>
+                  <h2 className="text-xl font-semibold text-slate-900">Plano mensal disponível</h2>
                 </div>
                 <span className="px-3 py-1 rounded-full bg-slate-100 text-xs font-semibold text-slate-700 border border-slate-200">
-                  Sem fidelidade
+                  Único plano
                 </span>
               </div>
 
@@ -450,28 +450,21 @@ const Plans: React.FC = () => {
                     whileHover={{ y: -8, scale: 1.015 }}
                     whileTap={{ scale: 0.98 }}
                     transition={{ type: 'spring', stiffness: 260, damping: 18 }}
-                    onClick={() => setSelectedPlan(plan.id)}
-                    className="group relative cursor-pointer"
+                    className="group relative cursor-default"
                   >
                     <span className="pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-r from-primary-400/30 via-emerald-300/20 to-sky-300/20 opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-100" />
                     <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
                       <span className="absolute -left-1/2 top-0 h-full w-1/2 bg-gradient-to-r from-transparent via-white/45 to-transparent opacity-0 transition-all duration-700 group-hover:opacity-100 group-hover:translate-x-[180%]" />
                     </span>
                     <div
-                      className={`absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 pointer-events-none ${
-                        selectedPlan === plan.id ? 'opacity-100' : 'group-hover:opacity-100'
-                      }`}
+                      className="absolute inset-0 rounded-2xl opacity-100 transition-opacity duration-300 pointer-events-none"
                       style={{
                         background:
                           'linear-gradient(135deg, rgba(59,130,246,0.25), rgba(16,185,129,0.15), transparent 70%)',
                       }}
                     />
                     <div
-                      className={`relative rounded-2xl border p-5 transition-all bg-gradient-to-br ${
-                      selectedPlan === plan.id
-                        ? 'from-primary-50 to-white border-primary-200 ring-2 ring-primary-100 shadow-lg dark:from-slate-900 dark:to-slate-800 dark:border-primary-500/50 dark:ring-primary-400/30'
-                        : 'from-white to-slate-50 border-slate-200 hover:border-primary-200 dark:from-slate-900 dark:to-slate-800/80 dark:border-slate-700 dark:hover:border-primary-400/60'
-                    }`}
+                      className="relative rounded-2xl border p-5 transition-all bg-gradient-to-br from-primary-50 to-white border-primary-200 ring-2 ring-primary-100 shadow-lg dark:from-slate-900 dark:to-slate-800 dark:border-primary-500/50 dark:ring-primary-400/30"
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div>
@@ -481,7 +474,7 @@ const Plans: React.FC = () => {
                           </h3>
                         </div>
                         <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-primary-50 text-primary-700 border border-primary-100 transition-transform duration-300 group-hover:-translate-y-0.5">
-                          Acesso total
+                          Plano único
                         </span>
                       </div>
                       <div className="flex items-baseline gap-2 mb-3">
