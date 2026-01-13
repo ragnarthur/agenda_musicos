@@ -80,12 +80,12 @@ const VerifyEmail: React.FC = () => {
       const response = await registrationService.startTrial(paymentToken);
       setTrialStarted(true);
       setStatus('success');
-      showToast.success(`Período de teste iniciado! Você tem ${response.trial_days} dias grátis.`);
+      showToast.success(`Período gratuito iniciado! Você tem ${response.trial_days} dias grátis.`);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { error?: string } } };
       setStatus('error');
-      setMessage(error.response?.data?.error || 'Erro ao iniciar período de teste.');
-      showToast.error('Erro ao iniciar período de teste.');
+      setMessage(error.response?.data?.error || 'Erro ao iniciar período gratuito.');
+      showToast.error('Erro ao iniciar período gratuito.');
     }
   };
 
@@ -124,9 +124,9 @@ const VerifyEmail: React.FC = () => {
 
               {trialStarted ? (
                 <>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Período de Teste Ativado!</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Período gratuito ativado!</h2>
                   <p className="text-gray-600 mb-4">
-                    Olá <strong>{userData?.first_name}</strong>, seu período de teste de 7 dias começou!
+                    Olá <strong>{userData?.first_name}</strong>, seu período gratuito de 7 dias começou!
                   </p>
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
                     <div className="flex items-start gap-3">
@@ -166,7 +166,7 @@ const VerifyEmail: React.FC = () => {
                             Recomendado
                           </span>
                         </div>
-                        <h3 className="font-semibold text-gray-900 mb-1">Teste Grátis por 7 Dias</h3>
+                        <h3 className="font-semibold text-gray-900 mb-1">Período gratuito por 7 dias</h3>
                         <p className="text-sm text-gray-600 mb-3">
                           Acesse todas as funcionalidades sem compromisso. Sem cartão de crédito.
                         </p>
@@ -175,7 +175,7 @@ const VerifyEmail: React.FC = () => {
                           className="w-full btn-primary flex items-center justify-center gap-2"
                         >
                           <Sparkles className="h-5 w-5" />
-                          Começar Teste Grátis
+                          Começar período gratuito
                         </button>
                       </div>
 
@@ -224,7 +224,7 @@ const VerifyEmail: React.FC = () => {
               <div className="flex justify-center mb-6">
                 <Loader2 className="h-16 w-16 text-primary-600 animate-spin" />
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">Ativando seu período de teste...</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Ativando seu período gratuito...</h2>
               <p className="text-gray-600">Aguarde um momento</p>
             </div>
           )}

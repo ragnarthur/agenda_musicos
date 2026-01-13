@@ -378,8 +378,7 @@ const Payment: React.FC = () => {
 
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm">
                 <p className="text-yellow-800">
-                  <strong>Ambiente de teste:</strong> Use qualquer número de cartão válido.
-                  Para simular recusa, use número começando com 0000.
+                  Pagamento protegido com criptografia e confirmação imediata após a aprovação.
                 </p>
               </div>
 

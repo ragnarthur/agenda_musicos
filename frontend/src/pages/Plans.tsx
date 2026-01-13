@@ -74,9 +74,7 @@ const Plans: React.FC = () => {
     },
     {
       title: 'Pagamento seguro',
-      description: isTestMode
-        ? 'Checkout guiado em ambiente de teste e sem risco.'
-        : 'Checkout protegido no Stripe (PCI).',
+      description: 'Checkout protegido com autenticação e criptografia.',
     },
     {
       title: 'Acesso imediato',
@@ -395,7 +393,7 @@ const Plans: React.FC = () => {
                   </span>
                 ) : (
                   <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                    {isTestMode ? 'Modo de teste' : 'Stripe seguro'}
+                    Checkout seguro
                   </span>
                 )}
               </div>
@@ -411,7 +409,7 @@ const Plans: React.FC = () => {
                 <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
                   Status atual:{' '}
                   {subscriptionInfo.is_trial
-                    ? `trial com ${subscriptionInfo.trial_days_remaining} dias restantes`
+                    ? `período gratuito com ${subscriptionInfo.trial_days_remaining} dias restantes`
                     : 'plano expirado'}
                   .
                 </div>
@@ -552,7 +550,7 @@ const Plans: React.FC = () => {
                   <p className="text-sm text-slate-600">Tempo médio: menos de 2 minutos.</p>
                 </div>
                 <div className="px-3 py-1 rounded-full bg-slate-100 text-xs font-semibold text-slate-700 border border-slate-200">
-                  {isTestMode ? 'Ambiente de teste' : 'Stripe Checkout'}
+                  Checkout seguro
                 </div>
               </div>
 
@@ -581,14 +579,12 @@ const Plans: React.FC = () => {
                 ) : (
                   <>
                     <CreditCard className="h-5 w-5" />
-                    {isTestMode ? 'Abrir checkout de teste' : 'Ir para checkout seguro'}
+                    Continuar para pagamento
                   </>
                 )}
               </button>
               <p className="text-xs text-slate-500 text-center mt-2">
-                {isTestMode
-                  ? 'Use dados fictícios para validar o fluxo sem custos.'
-                  : 'Você será redirecionado para o Stripe com toda a segurança.'}
+                Pagamento protegido com confirmação imediata.
               </p>
 
               {showFakeCheckout && isTestMode && (
@@ -653,7 +649,7 @@ const Plans: React.FC = () => {
                     {loading ? 'Processando pagamento...' : 'Finalizar pagamento mensal'}
                   </button>
                   <p className="text-xs text-slate-500 text-center">
-                    Evite cartões começando com 0000; qualquer outro número funciona para teste.
+                    Após confirmar, o acesso mensal será liberado automaticamente.
                   </p>
                 </motion.form>
               )}

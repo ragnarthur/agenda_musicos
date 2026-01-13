@@ -34,15 +34,15 @@ const TrialBanner: React.FC = () => {
 
   const getMessage = () => {
     if (isExpired) {
-      return 'Seu período de teste expirou. Assine agora para continuar usando a plataforma.';
+      return 'Seu período gratuito terminou. Assine agora para continuar usando a plataforma.';
     }
     if (trial_days_remaining === 1) {
-      return 'Seu período de teste termina amanhã! Assine agora para não perder acesso.';
+      return 'Seu período gratuito termina amanhã! Assine agora para não perder acesso.';
     }
     if (isUrgent) {
-      return `Restam apenas ${trial_days_remaining} dias do seu período de teste.`;
+      return `Restam apenas ${trial_days_remaining} dias do seu período gratuito.`;
     }
-    return `Você está no período de teste gratuito. Restam ${trial_days_remaining} dias.`;
+    return `Você está no período gratuito. Restam ${trial_days_remaining} dias.`;
   };
 
   return (

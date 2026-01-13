@@ -34,12 +34,12 @@ const Navbar: React.FC = () => {
     (subscriptionInfo.is_trial || subscriptionInfo.status === 'expired')
   );
   const planStatusLabel = subscriptionInfo?.is_trial
-    ? 'Trial'
+    ? 'Gratuito'
     : subscriptionInfo?.status === 'active'
       ? 'Premium'
       : 'Expirado';
   const planStatusDetail = subscriptionInfo?.is_trial
-    ? `Trial · ${subscriptionInfo.trial_days_remaining} dias restantes`
+    ? `Acesso gratuito · ${subscriptionInfo.trial_days_remaining} dias restantes`
     : subscriptionInfo?.status === 'active'
       ? 'Plano ativo'
       : 'Plano expirado';
