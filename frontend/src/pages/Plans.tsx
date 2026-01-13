@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { paymentService, registrationService, billingService } from '../services/api';
 import { showToast } from '../utils/toast';
 import { useAuth } from '../contexts/AuthContext';
+import CardBrandRow from '../components/ui/CardBrandRow';
 
 type PlanType = 'monthly';
 
@@ -554,9 +555,14 @@ const Plans: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-start gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 mb-4">
-                <Shield className="h-4 w-4 mt-0.5" />
-                <p>Site seguro e protegido com criptografia de dados durante o pagamento.</p>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-3 py-2 text-xs text-slate-600 mb-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-emerald-500" />
+                    <span>Pagamento seguro com criptografia.</span>
+                  </div>
+                  <CardBrandRow />
+                </div>
               </div>
 
               {error && (

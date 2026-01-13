@@ -15,6 +15,7 @@ import {
 import { registrationService, type RegistrationStatus } from '../services/api';
 import { showToast } from '../utils/toast';
 import OwlMascot from '../components/ui/OwlMascot';
+import CardBrandRow from '../components/ui/CardBrandRow';
 
 const Payment: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -376,10 +377,13 @@ const Payment: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-sm">
-                <div className="flex items-start gap-2 text-emerald-800">
-                  <Shield className="h-4 w-4 mt-0.5" />
-                  <p>Site seguro e protegido com criptografia de dados durante o pagamento.</p>
+              <div className="rounded-lg border border-gray-200 bg-white/70 px-3 py-2 text-xs text-gray-600">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-emerald-500" />
+                    <span>Pagamento seguro com criptografia.</span>
+                  </div>
+                  <CardBrandRow />
                 </div>
               </div>
 
