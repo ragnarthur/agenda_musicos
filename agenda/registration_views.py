@@ -69,7 +69,6 @@ class RegisterView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         last_name = data.get('last_name', '').strip()
-        phone = data.get('phone', '').strip()
         instagram = data.get('instagram', '').strip()
         whatsapp = data.get('whatsapp', '').strip()
         city = str(data.get('city', '') or '').strip()
@@ -167,7 +166,6 @@ class RegisterView(APIView):
             password_hash=make_password(password),
             first_name=first_name,
             last_name=last_name,
-            phone=phone,
             instagram=instagram,
             whatsapp=whatsapp,
             instrument=instrument,
