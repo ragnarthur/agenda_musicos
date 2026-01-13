@@ -656,7 +656,7 @@ const Plans: React.FC = () => {
               )}
 
               {showFakeCheckout && isTestMode && (
-                <div className="mt-4 rounded-2xl border border-slate-200/70 bg-slate-50/80 px-3 py-2 shadow-sm">
+                <div className="mt-4 rounded-2xl border border-slate-900/70 bg-slate-950 px-3 py-2 shadow-sm">
                   <CardBrandRow />
                 </div>
               )}

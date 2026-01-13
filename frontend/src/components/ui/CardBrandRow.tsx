@@ -1,9 +1,9 @@
 // components/ui/CardBrandRow.tsx
 import React from 'react';
 
-const logoClassName = 'h-4 w-auto max-w-[28px]';
+const logoClassName = 'h-4 w-auto max-w-[30px]';
 const badgeClassName =
-  'inline-flex h-7 w-10 items-center justify-center rounded-md border border-slate-200/70 bg-white/90 shadow-sm';
+  'inline-flex h-8 w-10 items-center justify-center rounded-lg border border-white/60 bg-white shadow-sm';
 
 const VisaLogo = () => (
   <svg viewBox="0 0 64 24" className={logoClassName} aria-hidden="true">
@@ -164,7 +164,7 @@ type CardBrandRowProps = {
 
 const CardBrandRow: React.FC<CardBrandRowProps> = ({ className = '' }) => {
   return (
-    <div className={`flex flex-wrap items-center justify-center gap-2 ${className}`.trim()}>
+    <div className={`grid grid-cols-4 gap-2 place-items-center ${className}`.trim()}>
       <span
         role="img"
         aria-label="Visa"

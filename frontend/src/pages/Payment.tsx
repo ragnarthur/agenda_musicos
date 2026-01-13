@@ -396,7 +396,7 @@ const Payment: React.FC = () => {
               </button>
             </form>
 
-            <div className="mt-6 rounded-2xl border border-gray-200/70 bg-gray-50/80 px-3 py-2 shadow-sm">
+            <div className="mt-6 rounded-2xl border border-slate-900/70 bg-slate-950 px-3 py-2 shadow-sm">
               <CardBrandRow />
             </div>
           </div>
