@@ -1411,11 +1411,21 @@ def _process_profile_image(uploaded_file, *, max_bytes, max_size, crop_square, q
 
     try:
         image = Image.open(uploaded_file)
+        image_format = (image.format or '').upper()
         image = ImageOps.exif_transpose(image)
     except (UnidentifiedImageError, Image.DecompressionBombError) as exc:
         raise ValueError('Arquivo inválido. Envie uma imagem JPG, PNG ou WEBP.') from exc
 
-    if image.format not in {'JPEG', 'PNG', 'WEBP'}:
+    if not image_format:
+        content_type = getattr(uploaded_file, 'content_type', '') or ''
+        if content_type.lower() in ('image/jpeg', 'image/jpg'):
+            image_format = 'JPEG'
+        elif content_type.lower() == 'image/png':
+            image_format = 'PNG'
+        elif content_type.lower() == 'image/webp':
+            image_format = 'WEBP'
+
+    if image_format not in {'JPEG', 'PNG', 'WEBP'}:
         raise ValueError('Formato não suportado. Use JPG, PNG ou WEBP.')
 
     if image.width * image.height > MAX_IMAGE_PIXELS:
