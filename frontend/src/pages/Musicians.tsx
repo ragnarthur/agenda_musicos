@@ -149,17 +149,22 @@ const Musicians: React.FC = () => {
                   variants={cardItem}
                   whileHover={{ y: -6, scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
+                  className="group relative"
                 >
+                  <span className="pointer-events-none absolute -inset-px rounded-3xl bg-gradient-to-r from-primary-500/20 via-emerald-400/10 to-sky-400/20 opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-100" />
                   <Link
                     to={`/musicos/${musician.id}`}
-                    className="card-contrast hover:shadow-2xl transition-all block cursor-pointer"
+                    className="relative card-contrast hover:shadow-2xl transition-all block cursor-pointer overflow-hidden"
                   >
+                    <span className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                      <span className="absolute -left-1/2 top-0 h-full w-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-60 transition-transform duration-700 group-hover:translate-x-[180%]" />
+                    </span>
                     {/* Header do Card */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center space-x-3">
-                        <div className="bg-primary-100 p-3 rounded-full">
-                          <span className="text-2xl">{emoji}</span>
-                        </div>
+                      <div className="bg-primary-100 p-3 rounded-full transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-105">
+                        <span className="text-2xl">{emoji}</span>
+                      </div>
                         <div>
                           <h3 className="font-semibold text-gray-900 flex items-center space-x-2">
                             <span>{musician.full_name}</span>
@@ -173,28 +178,28 @@ const Musicians: React.FC = () => {
                     <div className="space-y-3">
                       {musician.bio && (
                         <div className="flex items-center space-x-2 text-gray-700">
-                          <Music className="h-4 w-4 text-primary-600" />
+                          <Music className="h-4 w-4 text-primary-600 transition-transform duration-300 group-hover:scale-110" />
                           <span className="text-sm font-medium">{musician.bio}</span>
                         </div>
                       )}
 
                       {musician.phone && (
                         <div className="flex items-center space-x-2 text-gray-600">
-                          <Phone className="h-4 w-4" />
+                        <Phone className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
                           <span className="text-sm">{musician.phone}</span>
                         </div>
                       )}
 
                       {contactEmail && (
                         <div className="flex items-center space-x-2 text-gray-600">
-                          <Mail className="h-4 w-4" />
+                        <Mail className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
                           <span className="text-sm">{contactEmail}</span>
                         </div>
                       )}
 
                       {musician.instagram && (
                         <div className="flex items-center space-x-2 text-gray-600">
-                          <Instagram className="h-4 w-4" />
+                        <Instagram className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
                           <span className="text-sm">{musician.instagram}</span>
                         </div>
                       )}
@@ -204,12 +209,14 @@ const Musicians: React.FC = () => {
                     <div className="mt-4 flex flex-wrap gap-2">
                       {musician.instruments && musician.instruments.length > 0 ? (
                         musician.instruments.map((inst) => (
-                          <span key={inst} className="status-chip default">
+                          <span key={inst} className="status-chip default transition-transform duration-300 group-hover:-translate-y-0.5">
                             {getInstrumentLabel(inst)}
                           </span>
                         ))
                       ) : (
-                        <span className="status-chip default">{instrumentLabel}</span>
+                        <span className="status-chip default transition-transform duration-300 group-hover:-translate-y-0.5">
+                          {instrumentLabel}
+                        </span>
                       )}
                     </div>
                   </Link>
