@@ -132,6 +132,12 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               </div>
             </div>
 
+            {isOwnProfile && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 hidden sm:block">
+                Formatos aceitos: JPG, PNG ou WEBP • Avatar até 2MB • Capa até 5MB
+              </p>
+            )}
+
             {/* Rating */}
             {(musician.total_ratings ?? 0) > 0 && (
               <div className="flex items-center gap-2">
