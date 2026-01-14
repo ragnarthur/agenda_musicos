@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Music, Phone, Mail, Instagram } from 'lucide-react';
+import { motion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { musicianService } from '../services/api';
@@ -81,6 +82,16 @@ const Musicians: React.FC = () => {
     return displayMap[instrument] || instrument.charAt(0).toUpperCase() + instrument.slice(1);
   };
 
+  const cardGrid = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.12, delayChildren: 0.08 } },
+  };
+
+  const cardItem = {
+    hidden: { opacity: 0, y: 16 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -121,80 +132,91 @@ const Musicians: React.FC = () => {
             <p className="text-gray-600">Nenhum músico cadastrado</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            variants={cardGrid}
+            initial="hidden"
+            animate="show"
+          >
             {musicians.map((musician) => {
               const emoji = getInstrumentEmoji(musician.instrument, musician.bio);
               const username = musician.instagram || musician.user.username;
               const contactEmail = musician.public_email || musician.user.email;
               const instrumentLabel = getInstrumentLabel(musician.instrument);
               return (
-                <Link
+                <motion.div
                   key={musician.id}
-                  to={`/musicos/${musician.id}`}
-                  className="card-contrast hover:shadow-2xl transition-all block cursor-pointer"
+                  variants={cardItem}
+                  whileHover={{ y: -6, scale: 1.01 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  {/* Header do Card */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-primary-100 p-3 rounded-full">
-                        <span className="text-2xl">{emoji}</span>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900 flex items-center space-x-2">
-                          <span>{musician.full_name}</span>
-                        </h3>
-                        {username && <p className="text-sm text-gray-600">@{username.replace('@', '')}</p>}
+                  <Link
+                    to={`/musicos/${musician.id}`}
+                    className="card-contrast hover:shadow-2xl transition-all block cursor-pointer"
+                  >
+                    {/* Header do Card */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="bg-primary-100 p-3 rounded-full">
+                          <span className="text-2xl">{emoji}</span>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-900 flex items-center space-x-2">
+                            <span>{musician.full_name}</span>
+                          </h3>
+                          {username && <p className="text-sm text-gray-600">@{username.replace('@', '')}</p>}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Informações */}
-                  <div className="space-y-3">
-                    {musician.bio && (
-                      <div className="flex items-center space-x-2 text-gray-700">
-                        <Music className="h-4 w-4 text-primary-600" />
-                        <span className="text-sm font-medium">{musician.bio}</span>
-                      </div>
-                    )}
+                    {/* Informações */}
+                    <div className="space-y-3">
+                      {musician.bio && (
+                        <div className="flex items-center space-x-2 text-gray-700">
+                          <Music className="h-4 w-4 text-primary-600" />
+                          <span className="text-sm font-medium">{musician.bio}</span>
+                        </div>
+                      )}
 
-                    {musician.phone && (
-                      <div className="flex items-center space-x-2 text-gray-600">
-                        <Phone className="h-4 w-4" />
-                        <span className="text-sm">{musician.phone}</span>
-                      </div>
-                    )}
+                      {musician.phone && (
+                        <div className="flex items-center space-x-2 text-gray-600">
+                          <Phone className="h-4 w-4" />
+                          <span className="text-sm">{musician.phone}</span>
+                        </div>
+                      )}
 
-                    {contactEmail && (
-                      <div className="flex items-center space-x-2 text-gray-600">
-                        <Mail className="h-4 w-4" />
-                        <span className="text-sm">{contactEmail}</span>
-                      </div>
-                    )}
+                      {contactEmail && (
+                        <div className="flex items-center space-x-2 text-gray-600">
+                          <Mail className="h-4 w-4" />
+                          <span className="text-sm">{contactEmail}</span>
+                        </div>
+                      )}
 
-                    {musician.instagram && (
-                      <div className="flex items-center space-x-2 text-gray-600">
-                        <Instagram className="h-4 w-4" />
-                        <span className="text-sm">{musician.instagram}</span>
-                      </div>
-                    )}
-                  </div>
+                      {musician.instagram && (
+                        <div className="flex items-center space-x-2 text-gray-600">
+                          <Instagram className="h-4 w-4" />
+                          <span className="text-sm">{musician.instagram}</span>
+                        </div>
+                      )}
+                    </div>
 
-                  {/* Badges de Instrumentos */}
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {musician.instruments && musician.instruments.length > 0 ? (
-                      musician.instruments.map((inst) => (
-                        <span key={inst} className="status-chip default">
-                          {getInstrumentLabel(inst)}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="status-chip default">{instrumentLabel}</span>
-                    )}
-                  </div>
-                </Link>
+                    {/* Badges de Instrumentos */}
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {musician.instruments && musician.instruments.length > 0 ? (
+                        musician.instruments.map((inst) => (
+                          <span key={inst} className="status-chip default">
+                            {getInstrumentLabel(inst)}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="status-chip default">{instrumentLabel}</span>
+                      )}
+                    </div>
+                  </Link>
+                </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         )}
 
         {/* Informação */}
