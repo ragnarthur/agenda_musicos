@@ -151,18 +151,18 @@ const Musicians: React.FC = () => {
                   whileTap={{ scale: 0.98 }}
                   className="group relative"
                 >
-                  <span className="pointer-events-none absolute -inset-px rounded-3xl bg-gradient-to-r from-primary-500/20 via-emerald-400/10 to-sky-400/20 opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-100" />
+                  <span className="pointer-events-none absolute -inset-px rounded-3xl bg-gradient-to-r from-primary-500/10 via-emerald-400/5 to-sky-400/10 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
                   <Link
                     to={`/musicos/${musician.id}`}
                     className="relative card-contrast hover:shadow-2xl transition-all block cursor-pointer overflow-hidden"
                   >
-                    <span className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                      <span className="absolute -left-1/2 top-0 h-full w-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-60 transition-transform duration-700 group-hover:translate-x-[180%]" />
+                    <span className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
+                      <span className="absolute -left-1/2 top-0 h-full w-1/2 bg-gradient-to-r from-transparent via-white/15 to-transparent opacity-40 transition-transform duration-900 group-hover:translate-x-[180%]" />
                     </span>
                     {/* Header do Card */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center space-x-3">
-                      <div className="bg-primary-100 p-3 rounded-full transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-105">
+                      <div className="bg-primary-100 p-3 rounded-full transition-transform duration-400 group-hover:-translate-y-0.5 group-hover:scale-105">
                         <span className="text-2xl">{emoji}</span>
                       </div>
                         <div>
@@ -178,28 +178,28 @@ const Musicians: React.FC = () => {
                     <div className="space-y-3">
                       {musician.bio && (
                         <div className="flex items-center space-x-2 text-gray-700">
-                          <Music className="h-4 w-4 text-primary-600 transition-transform duration-300 group-hover:scale-110" />
+                          <Music className="h-4 w-4 text-primary-600 transition-transform duration-400 group-hover:scale-105" />
                           <span className="text-sm font-medium">{musician.bio}</span>
                         </div>
                       )}
 
                       {musician.phone && (
                         <div className="flex items-center space-x-2 text-gray-600">
-                        <Phone className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
+                        <Phone className="h-4 w-4 transition-transform duration-400 group-hover:scale-105" />
                           <span className="text-sm">{musician.phone}</span>
                         </div>
                       )}
 
                       {contactEmail && (
                         <div className="flex items-center space-x-2 text-gray-600">
-                        <Mail className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
+                        <Mail className="h-4 w-4 transition-transform duration-400 group-hover:scale-105" />
                           <span className="text-sm">{contactEmail}</span>
                         </div>
                       )}
 
                       {musician.instagram && (
                         <div className="flex items-center space-x-2 text-gray-600">
-                        <Instagram className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
+                        <Instagram className="h-4 w-4 transition-transform duration-400 group-hover:scale-105" />
                           <span className="text-sm">{musician.instagram}</span>
                         </div>
                       )}
@@ -209,12 +209,12 @@ const Musicians: React.FC = () => {
                     <div className="mt-4 flex flex-wrap gap-2">
                       {musician.instruments && musician.instruments.length > 0 ? (
                         musician.instruments.map((inst) => (
-                          <span key={inst} className="status-chip default transition-transform duration-300 group-hover:-translate-y-0.5">
+                          <span key={inst} className="status-chip default transition-transform duration-400 group-hover:-translate-y-0.5">
                             {getInstrumentLabel(inst)}
                           </span>
                         ))
                       ) : (
-                        <span className="status-chip default transition-transform duration-300 group-hover:-translate-y-0.5">
+                        <span className="status-chip default transition-transform duration-400 group-hover:-translate-y-0.5">
                           {instrumentLabel}
                         </span>
                       )}
