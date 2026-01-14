@@ -1,5 +1,6 @@
 // components/Layout/Layout.tsx
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import TrialBanner from '../TrialBanner';
 
@@ -8,6 +9,32 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const location = useLocation();
+  const mainRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const root = mainRef.current;
+    if (!root) return;
+
+    const selector = 'h1,h2,h3,h4,h5,h6,p,li,label,small,button';
+    const elements = Array.from(root.querySelectorAll<HTMLElement>(selector));
+
+    elements.forEach((el) => {
+      el.classList.remove('cascade-reveal');
+      el.style.removeProperty('--cascade-index');
+    });
+
+    requestAnimationFrame(() => {
+      let index = 0;
+      elements.forEach((el) => {
+        if (el.closest('[data-cascade-ignore]')) return;
+        el.style.setProperty('--cascade-index', String(index));
+        el.classList.add('cascade-reveal');
+        index += 1;
+      });
+    });
+  }, [location.pathname, location.search]);
+
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
       {/* Blurs simplificados - apenas 2 sutis */}
@@ -19,7 +46,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <Navbar />
 
       <div className="relative z-10 flex min-h-screen flex-col pt-6 sm:pt-8">
-        <main className="container mx-auto flex-1 max-w-6xl px-3 sm:px-4 pb-16 lg:px-8">
+        <main ref={mainRef} className="container mx-auto flex-1 max-w-6xl px-3 sm:px-4 pb-16 lg:px-8">
           {children}
         </main>
 
