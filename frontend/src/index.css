@@ -167,6 +167,11 @@
 }
 
 @layer components {
+  .parallax-blob {
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+  }
+
   .cascade-reveal {
     opacity: 0;
     transform: translateY(18px);
