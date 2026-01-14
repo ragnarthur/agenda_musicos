@@ -159,14 +159,18 @@ export const musicianService = {
   uploadAvatar: async (file: File): Promise<{ avatar: string }> => {
     const formData = new FormData();
     formData.append('avatar', file);
-    const response = await api.post('/musicians/upload-avatar/', formData);
+    const formHeaders = { ...api.defaults.headers.common };
+    delete formHeaders['Content-Type'];
+    const response = await api.post('/musicians/upload-avatar/', formData, { headers: formHeaders });
     return response.data;
   },
 
   uploadCover: async (file: File): Promise<{ cover_image: string }> => {
     const formData = new FormData();
     formData.append('cover_image', file);
-    const response = await api.post('/musicians/upload-cover/', formData);
+    const formHeaders = { ...api.defaults.headers.common };
+    delete formHeaders['Content-Type'];
+    const response = await api.post('/musicians/upload-cover/', formData, { headers: formHeaders });
     return response.data;
   },
 

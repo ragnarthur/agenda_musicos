@@ -42,7 +42,6 @@ router.register('connections', ConnectionViewSet, basename='connection')
 router.register('badges', BadgeViewSet, basename='badge')
 
 urlpatterns = [
-    path('', include(router.urls)),
     # Registro de novos usuários (público)
     path('register/', RegisterView.as_view(), name='register'),
     path('verify-email/', VerifyEmailView.as_view(), name='verify-email'),
@@ -65,6 +64,7 @@ urlpatterns = [
     # Musician connections and reviews
     path('musicians/<int:musician_id>/connections/', get_musician_connections, name='musician-connections'),
     path('musicians/<int:musician_id>/reviews/', get_musician_reviews, name='musician-reviews'),
+    path('', include(router.urls)),
 ]
 
 """
