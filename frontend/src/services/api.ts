@@ -32,6 +32,12 @@ export const api = axios.create({
   },
 });
 
+// Instância dedicada para uploads (sem Content-Type fixo)
+export const uploadApi = axios.create({
+  baseURL: API_URL,
+  withCredentials: true,
+});
+
 let refreshingPromise: Promise<void> | null = null;
 
 const refreshAuthToken = async (): Promise<void> => {
@@ -159,18 +165,14 @@ export const musicianService = {
   uploadAvatar: async (file: File): Promise<{ avatar: string }> => {
     const formData = new FormData();
     formData.append('avatar', file);
-    const formHeaders = { ...api.defaults.headers.common };
-    delete formHeaders['Content-Type'];
-    const response = await api.post('/musicians/upload-avatar/', formData, { headers: formHeaders });
+    const response = await uploadApi.post('/musicians/upload-avatar/', formData);
     return response.data;
   },
 
   uploadCover: async (file: File): Promise<{ cover_image: string }> => {
     const formData = new FormData();
     formData.append('cover_image', file);
-    const formHeaders = { ...api.defaults.headers.common };
-    delete formHeaders['Content-Type'];
-    const response = await api.post('/musicians/upload-cover/', formData, { headers: formHeaders });
+    const response = await uploadApi.post('/musicians/upload-cover/', formData);
     return response.data;
   },
 
