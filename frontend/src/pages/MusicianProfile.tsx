@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Users, Star, Calendar, DollarSign, Package, MessageCircle, Phone } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
@@ -7,6 +7,8 @@ import ProfileHeader from '../components/Profile/ProfileHeader';
 import StatCard from '../components/Profile/StatCard';
 import ReviewCard from '../components/Profile/ReviewCard';
 import { musicianService } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import { showToast } from '../utils/toast';
 import type { Musician } from '../types';
 
 interface Connection {
@@ -32,6 +34,11 @@ const MusicianProfile: React.FC = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const { user, refreshUser } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -81,7 +88,63 @@ const MusicianProfile: React.FC = () => {
 
   // Mock data for events (replace with real data later)
   const totalEvents = 42;
-  const isOwnProfile = false; // Replace with real auth logic
+  const isOwnProfile = Boolean(user && (user.id === musician.id || user.user?.id === musician.user?.id));
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast.error('Envie uma imagem válida (JPG, PNG ou WEBP).');
+      return;
+    }
+
+    setUploadingAvatar(true);
+    const uploadPromise = musicianService.uploadAvatar(file);
+    showToast.promise(uploadPromise, {
+      loading: 'Atualizando foto de perfil...',
+      success: 'Foto de perfil atualizada!',
+      error: 'Não foi possível atualizar a foto de perfil.',
+    });
+
+    try {
+      const response = await uploadPromise;
+      setMusician((prev) => (prev ? { ...prev, avatar_url: response.avatar } : prev));
+      await refreshUser();
+    } catch {
+      // Erro já tratado pelo toast
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleCoverUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast.error('Envie uma imagem válida (JPG, PNG ou WEBP).');
+      return;
+    }
+
+    setUploadingCover(true);
+    const uploadPromise = musicianService.uploadCover(file);
+    showToast.promise(uploadPromise, {
+      loading: 'Atualizando imagem de capa...',
+      success: 'Imagem de capa atualizada!',
+      error: 'Não foi possível atualizar a imagem de capa.',
+    });
+
+    try {
+      const response = await uploadPromise;
+      setMusician((prev) => (prev ? { ...prev, cover_image_url: response.cover_image } : prev));
+      await refreshUser();
+    } catch {
+      // Erro já tratado pelo toast
+    } finally {
+      setUploadingCover(false);
+    }
+  };
 
   return (
     <Layout>
@@ -101,9 +164,29 @@ const MusicianProfile: React.FC = () => {
             <ProfileHeader
               musician={musician}
               isOwnProfile={isOwnProfile}
-              onUploadAvatar={() => {/* TODO: implement upload */}}
-              onUploadCover={() => {/* TODO: implement upload */}}
+              onUploadAvatar={isOwnProfile ? () => avatarInputRef.current?.click() : undefined}
+              onUploadCover={isOwnProfile ? () => coverInputRef.current?.click() : undefined}
+              uploadingAvatar={uploadingAvatar}
+              uploadingCover={uploadingCover}
             />
+            {isOwnProfile && (
+              <>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                />
+                <input
+                  ref={coverInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCoverUpload}
+                  className="hidden"
+                />
+              </>
+            )}
           </div>
 
           {/* Stats Grid */}

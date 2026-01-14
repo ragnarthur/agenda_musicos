@@ -156,6 +156,20 @@ export const musicianService = {
     return response.data;
   },
 
+  uploadAvatar: async (file: File): Promise<{ avatar: string }> => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const response = await api.post('/musicians/upload-avatar/', formData);
+    return response.data;
+  },
+
+  uploadCover: async (file: File): Promise<{ cover_image: string }> => {
+    const formData = new FormData();
+    formData.append('cover_image', file);
+    const response = await api.post('/musicians/upload-cover/', formData);
+    return response.data;
+  },
+
   getById: async (id: number): Promise<Musician> => {
     const response = await api.get(`/musicians/${id}/`);
     return response.data;

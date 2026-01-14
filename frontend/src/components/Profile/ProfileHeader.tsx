@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Star, Camera } from 'lucide-react';
+import { MapPin, Star, Camera, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Musician } from '../../types';
 
@@ -8,13 +8,17 @@ interface ProfileHeaderProps {
   isOwnProfile: boolean;
   onUploadAvatar?: () => void;
   onUploadCover?: () => void;
+  uploadingAvatar?: boolean;
+  uploadingCover?: boolean;
 }
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   musician,
   isOwnProfile,
   onUploadAvatar,
-  onUploadCover
+  onUploadCover,
+  uploadingAvatar = false,
+  uploadingCover = false,
 }) => {
   return (
     <div className="relative">
@@ -36,9 +40,15 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         {isOwnProfile && (
           <button
             onClick={onUploadCover}
-            className="absolute top-4 right-4 backdrop-blur-md bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 p-2 rounded-full shadow-lg transition-all hover:scale-110"
+            disabled={uploadingCover}
+            className="absolute top-4 right-4 backdrop-blur-md bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 p-2 rounded-full shadow-lg transition-all hover:scale-110 disabled:opacity-70 disabled:cursor-not-allowed"
+            aria-label="Alterar imagem de capa"
           >
-            <Camera className="h-5 w-5 text-gray-700 dark:text-gray-200" />
+            {uploadingCover ? (
+              <Loader2 className="h-5 w-5 text-gray-700 dark:text-gray-200 animate-spin" />
+            ) : (
+              <Camera className="h-5 w-5 text-gray-700 dark:text-gray-200" />
+            )}
           </button>
         )}
       </div>
@@ -74,9 +84,15 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onUploadAvatar}
-                className="absolute bottom-2 right-2 bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 p-2 rounded-full shadow-lg transition-colors"
+                disabled={uploadingAvatar}
+                className="absolute bottom-2 right-2 bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 p-2 rounded-full shadow-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                aria-label="Alterar foto de perfil"
               >
-                <Camera className="h-4 w-4 text-white" />
+                {uploadingAvatar ? (
+                  <Loader2 className="h-4 w-4 text-white animate-spin" />
+                ) : (
+                  <Camera className="h-4 w-4 text-white" />
+                )}
               </motion.button>
             )}
           </div>

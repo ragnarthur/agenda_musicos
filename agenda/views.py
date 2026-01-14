@@ -1,5 +1,7 @@
 # agenda/views.py
 import logging
+from io import BytesIO
+from uuid import uuid4
 from datetime import timedelta, datetime, time, date
 
 from django.db import models, transaction
@@ -11,6 +13,8 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django.core.files.base import ContentFile
+from PIL import Image, ImageOps, UnidentifiedImageError
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
 from .throttles import CreateEventRateThrottle, PreviewConflictsRateThrottle, BurstRateThrottle
@@ -1391,6 +1395,42 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
 
 
 # Image upload endpoints
+MAX_AVATAR_BYTES = 2 * 1024 * 1024
+MAX_COVER_BYTES = 5 * 1024 * 1024
+MAX_AVATAR_SIZE = 512
+MAX_COVER_SIZE = (1600, 900)
+MAX_IMAGE_PIXELS = 12_000_000
+
+
+def _process_profile_image(uploaded_file, *, max_bytes, max_size, crop_square, quality, prefix):
+    if uploaded_file.size > max_bytes:
+        size_mb = max_bytes // (1024 * 1024)
+        raise ValueError(f'Arquivo muito grande. Tamanho máximo: {size_mb}MB.')
+
+    try:
+        image = Image.open(uploaded_file)
+        image = ImageOps.exif_transpose(image)
+    except (UnidentifiedImageError, Image.DecompressionBombError) as exc:
+        raise ValueError('Arquivo inválido. Envie uma imagem JPG, PNG ou WEBP.') from exc
+
+    if image.format not in {'JPEG', 'PNG', 'WEBP'}:
+        raise ValueError('Formato não suportado. Use JPG, PNG ou WEBP.')
+
+    if image.width * image.height > MAX_IMAGE_PIXELS:
+        raise ValueError('Imagem muito grande. Reduza a resolução.')
+
+    has_alpha = image.mode in ('RGBA', 'LA') or (image.mode == 'P' and 'transparency' in image.info)
+    image = image.convert('RGBA' if has_alpha else 'RGB')
+
+    if crop_square:
+        image = ImageOps.fit(image, (max_size, max_size), method=Image.LANCZOS)
+    else:
+        image.thumbnail(max_size, Image.LANCZOS)
+
+    buffer = BytesIO()
+    image.save(buffer, format='WEBP', quality=quality, method=6)
+    buffer.seek(0)
+    return ContentFile(buffer.getvalue(), name=f'{prefix}-{uuid4().hex}.webp')
 from rest_framework.decorators import api_view, permission_classes
 
 @api_view(['POST'])
@@ -1408,11 +1448,20 @@ def upload_avatar(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Deletar avatar antigo se existir
+        avatar_file = request.FILES['avatar']
+        processed_file = _process_profile_image(
+            avatar_file,
+            max_bytes=MAX_AVATAR_BYTES,
+            max_size=MAX_AVATAR_SIZE,
+            crop_square=True,
+            quality=82,
+            prefix='avatar',
+        )
+
         if musician.avatar:
             musician.avatar.delete(save=False)
 
-        musician.avatar = request.FILES['avatar']
+        musician.avatar = processed_file
         musician.save()
 
         return Response({
@@ -1423,6 +1472,11 @@ def upload_avatar(request):
         return Response(
             {'error': 'Perfil não encontrado'},
             status=status.HTTP_404_NOT_FOUND
+        )
+    except ValueError as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_400_BAD_REQUEST
         )
     except Exception as e:
         logging.exception("Erro ao fazer upload de avatar")
@@ -1447,11 +1501,20 @@ def upload_cover(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Deletar capa antiga se existir
+        cover_file = request.FILES['cover_image']
+        processed_file = _process_profile_image(
+            cover_file,
+            max_bytes=MAX_COVER_BYTES,
+            max_size=MAX_COVER_SIZE,
+            crop_square=False,
+            quality=80,
+            prefix='cover',
+        )
+
         if musician.cover_image:
             musician.cover_image.delete(save=False)
 
-        musician.cover_image = request.FILES['cover_image']
+        musician.cover_image = processed_file
         musician.save()
 
         return Response({
@@ -1462,6 +1525,11 @@ def upload_cover(request):
         return Response(
             {'error': 'Perfil não encontrado'},
             status=status.HTTP_404_NOT_FOUND
+        )
+    except ValueError as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_400_BAD_REQUEST
         )
     except Exception as e:
         logging.exception("Erro ao fazer upload de imagem de capa")
