@@ -435,7 +435,7 @@ const Payment: React.FC = () => {
               </motion.button>
             </motion.form>
 
-            <motion.div variants={revealItem} className="mt-6 rounded-2xl border border-slate-900/70 bg-slate-950 px-3 py-2 shadow-sm">
+            <motion.div variants={revealItem} className="mt-6 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 shadow-sm">
               <CardBrandRow />
             </motion.div>
           </motion.div>
