@@ -14,7 +14,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.files.base import ContentFile
-from PIL import Image, ImageOps, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError, features
+
+logger = logging.getLogger(__name__)
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
 from .throttles import CreateEventRateThrottle, PreviewConflictsRateThrottle, BurstRateThrottle
@@ -1428,9 +1430,30 @@ def _process_profile_image(uploaded_file, *, max_bytes, max_size, crop_square, q
         image.thumbnail(max_size, Image.LANCZOS)
 
     buffer = BytesIO()
-    image.save(buffer, format='WEBP', quality=quality, method=6)
+    if features.check('webp'):
+        output_format = 'WEBP'
+        output_ext = 'webp'
+    elif has_alpha:
+        output_format = 'PNG'
+        output_ext = 'png'
+    else:
+        output_format = 'JPEG'
+        output_ext = 'jpg'
+
+    if output_format == 'JPEG' and image.mode != 'RGB':
+        image = image.convert('RGB')
+
+    save_kwargs = {'format': output_format}
+    if output_format == 'WEBP':
+        save_kwargs.update({'quality': quality, 'method': 6})
+    elif output_format == 'JPEG':
+        save_kwargs.update({'quality': quality, 'optimize': True})
+    elif output_format == 'PNG':
+        save_kwargs.update({'optimize': True, 'compress_level': 6})
+
+    image.save(buffer, **save_kwargs)
     buffer.seek(0)
-    return ContentFile(buffer.getvalue(), name=f'{prefix}-{uuid4().hex}.webp')
+    return ContentFile(buffer.getvalue(), name=f'{prefix}-{uuid4().hex}.{output_ext}')
 from rest_framework.decorators import api_view, permission_classes
 
 @api_view(['POST'])
@@ -1443,6 +1466,10 @@ def upload_avatar(request):
     try:
         musician = request.user.musician_profile
         if 'avatar' not in request.FILES:
+            logger.warning(
+                'Upload de avatar sem arquivo | user_id=%s',
+                getattr(request.user, 'id', None),
+            )
             return Response(
                 {'error': 'Nenhuma imagem enviada'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -1469,17 +1496,33 @@ def upload_avatar(request):
         }, status=status.HTTP_200_OK)
 
     except Musician.DoesNotExist:
+        logger.warning(
+            'Upload de avatar sem perfil de músico | user_id=%s',
+            getattr(request.user, 'id', None),
+        )
         return Response(
             {'error': 'Perfil não encontrado'},
             status=status.HTTP_404_NOT_FOUND
         )
     except ValueError as e:
+        logger.warning(
+            'Upload de avatar inválido | user_id=%s | arquivo=%s | tamanho=%s | content_type=%s | erro=%s',
+            getattr(request.user, 'id', None),
+            getattr(avatar_file, 'name', None),
+            getattr(avatar_file, 'size', None),
+            getattr(avatar_file, 'content_type', None),
+            str(e),
+        )
         return Response(
             {'error': str(e)},
             status=status.HTTP_400_BAD_REQUEST
         )
     except Exception as e:
-        logging.exception("Erro ao fazer upload de avatar")
+        logger.exception(
+            'Erro inesperado no upload de avatar | user_id=%s | arquivo=%s',
+            getattr(request.user, 'id', None),
+            getattr(avatar_file, 'name', None),
+        )
         return Response(
             {'error': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -1496,6 +1539,10 @@ def upload_cover(request):
     try:
         musician = request.user.musician_profile
         if 'cover_image' not in request.FILES:
+            logger.warning(
+                'Upload de capa sem arquivo | user_id=%s',
+                getattr(request.user, 'id', None),
+            )
             return Response(
                 {'error': 'Nenhuma imagem enviada'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -1522,17 +1569,33 @@ def upload_cover(request):
         }, status=status.HTTP_200_OK)
 
     except Musician.DoesNotExist:
+        logger.warning(
+            'Upload de capa sem perfil de músico | user_id=%s',
+            getattr(request.user, 'id', None),
+        )
         return Response(
             {'error': 'Perfil não encontrado'},
             status=status.HTTP_404_NOT_FOUND
         )
     except ValueError as e:
+        logger.warning(
+            'Upload de capa inválido | user_id=%s | arquivo=%s | tamanho=%s | content_type=%s | erro=%s',
+            getattr(request.user, 'id', None),
+            getattr(cover_file, 'name', None),
+            getattr(cover_file, 'size', None),
+            getattr(cover_file, 'content_type', None),
+            str(e),
+        )
         return Response(
             {'error': str(e)},
             status=status.HTTP_400_BAD_REQUEST
         )
     except Exception as e:
-        logging.exception("Erro ao fazer upload de imagem de capa")
+        logger.exception(
+            'Erro inesperado no upload de capa | user_id=%s | arquivo=%s',
+            getattr(request.user, 'id', None),
+            getattr(cover_file, 'name', None),
+        )
         return Response(
             {'error': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
