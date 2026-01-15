@@ -38,18 +38,23 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20 dark:to-black/40" />
 
         {isOwnProfile && (
-          <button
-            onClick={onUploadCover}
-            disabled={uploadingCover}
-            className="absolute top-4 right-4 backdrop-blur-md bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 p-2 rounded-full shadow-lg transition-all hover:scale-110 disabled:opacity-70 disabled:cursor-not-allowed"
-            aria-label="Alterar imagem de capa"
-          >
-            {uploadingCover ? (
-              <Loader2 className="h-5 w-5 text-gray-700 dark:text-gray-200 animate-spin" />
-            ) : (
-              <Camera className="h-5 w-5 text-gray-700 dark:text-gray-200" />
-            )}
-          </button>
+          <div className="absolute top-4 right-4 group">
+            <button
+              onClick={onUploadCover}
+              disabled={uploadingCover}
+              className="backdrop-blur-md bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 p-2 rounded-full shadow-lg transition-all hover:scale-110 disabled:opacity-70 disabled:cursor-not-allowed"
+              aria-label="Alterar imagem de capa"
+            >
+              {uploadingCover ? (
+                <Loader2 className="h-5 w-5 text-gray-700 dark:text-gray-200 animate-spin" />
+              ) : (
+                <Camera className="h-5 w-5 text-gray-700 dark:text-gray-200" />
+              )}
+            </button>
+            <span className="pointer-events-none absolute right-0 mt-2 w-max max-w-[260px] rounded-lg border border-white/10 bg-gray-900/90 px-3 py-1.5 text-xs text-white opacity-0 shadow-lg backdrop-blur-md transition-opacity duration-200 group-hover:opacity-100">
+              Capa: JPG, PNG ou WEBP • até 5MB
+            </span>
+          </div>
         )}
       </div>
 
@@ -85,7 +90,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 whileTap={{ scale: 0.95 }}
                 onClick={onUploadAvatar}
                 disabled={uploadingAvatar}
-                className="absolute bottom-2 right-2 bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 p-2 rounded-full shadow-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                className="absolute bottom-2 right-2 bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 p-2 rounded-full shadow-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed group"
                 aria-label="Alterar foto de perfil"
               >
                 {uploadingAvatar ? (
@@ -93,6 +98,9 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 ) : (
                   <Camera className="h-4 w-4 text-white" />
                 )}
+                <span className="pointer-events-none absolute -top-9 right-0 w-max max-w-[220px] rounded-lg border border-white/10 bg-gray-900/90 px-3 py-1.5 text-xs text-white opacity-0 shadow-lg backdrop-blur-md transition-opacity duration-200 group-hover:opacity-100">
+                  Avatar: JPG, PNG ou WEBP • até 2MB
+                </span>
               </motion.button>
             )}
           </div>
@@ -131,12 +139,6 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 )}
               </div>
             </div>
-
-            {isOwnProfile && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 hidden sm:block">
-                Formatos aceitos: JPG, PNG ou WEBP • Avatar até 2MB • Capa até 5MB
-              </p>
-            )}
 
             {/* Rating */}
             {(musician.total_ratings ?? 0) > 0 && (
