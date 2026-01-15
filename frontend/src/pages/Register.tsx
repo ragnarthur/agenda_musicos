@@ -10,6 +10,7 @@ import StepNavigation from '../components/Registration/StepNavigation';
 import AccountStep from '../components/Registration/AccountStep';
 import PersonalInfoStep from '../components/Registration/PersonalInfoStep';
 import MusicProfileStep from '../components/Registration/MusicProfileStep';
+import FullscreenBackground from '../components/Layout/FullscreenBackground';
 
 const BRAZILIAN_CITIES = [
   { city: 'São Paulo', state: 'SP' },
@@ -494,7 +495,10 @@ const Register: React.FC = () => {
   // Success screen
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 dark:from-slate-950 dark:to-slate-800 flex items-center justify-center px-4">
+      <FullscreenBackground
+        className="bg-gradient-to-br from-primary-500 to-primary-700 dark:from-slate-950 dark:to-slate-800 px-4"
+        contentClassName="flex items-center justify-center"
+      >
         <div className="max-w-md w-full">
           <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
             <div className="flex justify-center mb-6">
@@ -570,13 +574,16 @@ const Register: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </FullscreenBackground>
     );
   }
 
   // Main registration form (multi-step)
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4 py-8">
+    <FullscreenBackground
+      className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4 py-8"
+      contentClassName="flex items-center justify-center"
+    >
       <div className="max-w-2xl w-full">
         {/* Logo and Title */}
         <div className="text-center mb-6">
@@ -637,7 +644,7 @@ const Register: React.FC = () => {
           Powered by <span className="font-semibold text-sky-400">DXM Tech</span>
         </div>
       </div>
-    </div>
+    </FullscreenBackground>
   );
 };
 

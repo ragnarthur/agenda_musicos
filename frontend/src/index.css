@@ -172,14 +172,18 @@
     will-change: transform;
   }
 
+  .animated-bg {
+    isolation: isolate;
+  }
+
   .fabric-wave {
     position: absolute;
     inset: -10%;
     width: 120%;
     height: 120%;
-    opacity: 0.6;
-    mix-blend-mode: soft-light;
-    filter: saturate(130%);
+    opacity: 0.78;
+    mix-blend-mode: normal;
+    filter: saturate(140%) contrast(1.08);
     animation: fabric-drift 24s ease-in-out infinite;
     z-index: 1;
   }
@@ -188,23 +192,23 @@
     position: absolute;
     inset: 0;
     background-image:
-      radial-gradient(rgba(255, 255, 255, 0.2) 1px, transparent 2px),
-      radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 2px),
-      radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 3px);
-    background-size: 140px 140px, 240px 240px, 320px 320px;
-    background-position: 0 0, 80px 40px, 140px 120px;
-    opacity: 0.28;
+      radial-gradient(rgba(255, 255, 255, 0.38) 1.2px, transparent 3px),
+      radial-gradient(rgba(255, 255, 255, 0.22) 1px, transparent 3px),
+      radial-gradient(rgba(255, 255, 255, 0.16) 1.4px, transparent 4px);
+    background-size: 180px 180px, 260px 260px, 360px 360px;
+    background-position: 0 0, 90px 60px, 160px 140px;
+    opacity: 0.34;
     mix-blend-mode: screen;
     filter: blur(0.2px);
-    animation: dust-drift 36s linear infinite;
+    animation: dust-drift 32s linear infinite;
     z-index: 2;
   }
 
   .dust-layer--secondary {
-    opacity: 0.18;
-    background-size: 200px 200px, 360px 360px, 520px 520px;
-    background-position: -60px 20px, 120px 200px, 260px 40px;
-    animation-duration: 54s;
+    opacity: 0.22;
+    background-size: 240px 240px, 420px 420px, 560px 560px;
+    background-position: -80px 40px, 150px 220px, 280px 60px;
+    animation-duration: 46s;
   }
 
   .cascade-reveal {
@@ -239,13 +243,13 @@
 
   @keyframes dust-drift {
     0% {
-      background-position: 0 0, 120px 40px, 200px 140px;
+      background-position: 0 0, 120px 40px, 220px 160px;
     }
     50% {
-      background-position: 160px -120px, 260px 220px, 420px -80px;
+      background-position: 220px -140px, 320px 260px, 520px -120px;
     }
     100% {
-      background-position: 280px -240px, 420px 320px, 620px -180px;
+      background-position: 380px -280px, 520px 360px, 780px -220px;
     }
   }
 

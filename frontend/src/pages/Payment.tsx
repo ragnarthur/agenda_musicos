@@ -17,6 +17,7 @@ import { registrationService, type RegistrationStatus } from '../services/api';
 import { showToast } from '../utils/toast';
 import OwlMascot from '../components/ui/OwlMascot';
 import CardBrandRow from '../components/ui/CardBrandRow';
+import FullscreenBackground from '../components/Layout/FullscreenBackground';
 
 const revealParent = {
   hidden: { opacity: 0 },
@@ -167,16 +168,22 @@ const Payment: React.FC = () => {
   // Loading
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 dark:from-slate-950 dark:to-slate-800 flex items-center justify-center">
+      <FullscreenBackground
+        className="bg-gradient-to-br from-primary-500 to-primary-700 dark:from-slate-950 dark:to-slate-800"
+        contentClassName="flex items-center justify-center"
+      >
         <Loader2 className="h-12 w-12 text-white animate-spin" />
-      </div>
+      </FullscreenBackground>
     );
   }
 
   // Sucesso
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center px-4">
+      <FullscreenBackground
+        className="bg-gradient-to-br from-green-500 to-green-700 px-4"
+        contentClassName="flex items-center justify-center"
+      >
         <div className="max-w-md w-full">
           <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
             <div className="flex justify-center mb-6">
@@ -207,14 +214,17 @@ const Payment: React.FC = () => {
             </Link>
           </div>
         </div>
-      </div>
+      </FullscreenBackground>
     );
   }
 
   // Erro
   if (error && !status) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 dark:from-slate-950 dark:to-slate-800 flex items-center justify-center px-4">
+      <FullscreenBackground
+        className="bg-gradient-to-br from-primary-500 to-primary-700 dark:from-slate-950 dark:to-slate-800 px-4"
+        contentClassName="flex items-center justify-center"
+      >
         <div className="max-w-md w-full">
           <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
             <div className="flex justify-center mb-6">
@@ -229,12 +239,15 @@ const Payment: React.FC = () => {
             </Link>
           </div>
         </div>
-      </div>
+      </FullscreenBackground>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center px-4 py-8">
+    <FullscreenBackground
+      className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 px-4 py-8"
+      contentClassName="flex items-center justify-center"
+    >
       <div className="max-w-4xl w-full">
         <motion.div
           className="grid grid-cols-1 lg:grid-cols-2 gap-6"
@@ -441,7 +454,7 @@ const Payment: React.FC = () => {
           </motion.div>
         </motion.div>
       </div>
-    </div>
+    </FullscreenBackground>
   );
 };
 

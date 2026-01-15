@@ -5,6 +5,7 @@ import { LogIn, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { showToast } from '../utils/toast';
 import OwlMascot from '../components/ui/OwlMascot';
+import FullscreenBackground from '../components/Layout/FullscreenBackground';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -38,7 +39,10 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center px-4">
+    <FullscreenBackground
+      className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 px-4"
+      contentClassName="flex items-center justify-center"
+    >
       <div className="w-full max-w-xl">
         {/* Logo e Título */}
         <div className="text-center mb-6">
@@ -141,7 +145,7 @@ const Login: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </FullscreenBackground>
   );
 };
 

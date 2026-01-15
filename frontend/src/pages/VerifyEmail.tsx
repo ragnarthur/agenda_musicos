@@ -5,6 +5,7 @@ import { CheckCircle, XCircle, Loader2, CreditCard, AlertCircle, Clock, Sparkles
 import { registrationService } from '../services/api';
 import { showToast } from '../utils/toast';
 import OwlMascot from '../components/ui/OwlMascot';
+import FullscreenBackground from '../components/Layout/FullscreenBackground';
 
 const VerifyEmail: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -90,7 +91,10 @@ const VerifyEmail: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center px-4">
+    <FullscreenBackground
+      className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 px-4"
+      contentClassName="flex items-center justify-center"
+    >
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-6">
@@ -265,7 +269,7 @@ const VerifyEmail: React.FC = () => {
           )}
         </div>
       </div>
-    </div>
+    </FullscreenBackground>
   );
 };
 

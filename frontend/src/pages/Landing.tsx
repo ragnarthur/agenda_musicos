@@ -3,16 +3,11 @@ import { Link } from 'react-router-dom';
 import { Calendar, Users, Award, Megaphone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import OwlMascot from '../components/ui/OwlMascot';
+import FullscreenBackground from '../components/Layout/FullscreenBackground';
 
 const Landing: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-      {/* Blurs de fundo */}
-      <div className="pointer-events-none absolute inset-0 z-0 opacity-40">
-        <div className="absolute top-20 -left-20 h-96 w-96 rounded-full bg-primary-500/20 blur-[100px]" />
-        <div className="absolute bottom-20 right-0 h-80 w-80 rounded-full bg-indigo-500/15 blur-[80px]" />
-      </div>
-
+    <FullscreenBackground className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
       <div className="relative z-10">
         {/* Hero Section */}
         <section className="container mx-auto px-4 py-20 text-center">
@@ -158,7 +153,7 @@ const Landing: React.FC = () => {
           </p>
         </section>
       </div>
-    </div>
+    </FullscreenBackground>
   );
 };
 

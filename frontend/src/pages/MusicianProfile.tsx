@@ -148,7 +148,7 @@ const MusicianProfile: React.FC = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+      <div className="min-h-screen bg-transparent transition-colors duration-200">
         <div className="max-w-6xl mx-auto px-4 py-8">
           {/* Back Button */}
           <Link

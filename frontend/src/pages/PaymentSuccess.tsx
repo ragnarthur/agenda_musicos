@@ -4,6 +4,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { paymentService } from '../services/api';
 import OwlMascot from '../components/ui/OwlMascot';
+import FullscreenBackground from '../components/Layout/FullscreenBackground';
 
 const PaymentSuccess: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -46,18 +47,24 @@ const PaymentSuccess: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center">
+      <FullscreenBackground
+        className="bg-gradient-to-br from-green-500 to-green-700"
+        contentClassName="flex items-center justify-center"
+      >
         <div className="text-center">
           <Loader2 className="h-12 w-12 text-white animate-spin mx-auto mb-4" />
           <p className="text-white text-lg">Confirmando pagamento...</p>
         </div>
-      </div>
+      </FullscreenBackground>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-500 to-yellow-700 flex items-center justify-center px-4">
+      <FullscreenBackground
+        className="bg-gradient-to-br from-yellow-500 to-yellow-700 px-4"
+        contentClassName="flex items-center justify-center"
+      >
         <div className="max-w-md w-full">
           <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
             <div className="flex justify-center mb-6">
@@ -80,12 +87,15 @@ const PaymentSuccess: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </FullscreenBackground>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center px-4">
+    <FullscreenBackground
+      className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 px-4"
+      contentClassName="flex items-center justify-center"
+    >
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-6">
@@ -134,7 +144,7 @@ const PaymentSuccess: React.FC = () => {
           </p>
         </div>
       </div>
-    </div>
+    </FullscreenBackground>
   );
 };
 

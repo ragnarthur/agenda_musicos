@@ -7,6 +7,7 @@ import { paymentService, registrationService, billingService } from '../services
 import { showToast } from '../utils/toast';
 import { useAuth } from '../contexts/AuthContext';
 import CardBrandRow from '../components/ui/CardBrandRow';
+import FullscreenBackground from '../components/Layout/FullscreenBackground';
 
 type PlanType = 'monthly';
 
@@ -278,16 +279,22 @@ const Plans: React.FC = () => {
   // Loading enquanto verifica status
   if (checkingStatus) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center">
+      <FullscreenBackground
+        className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800"
+        contentClassName="flex items-center justify-center"
+      >
         <Loader2 className="h-8 w-8 text-white animate-spin" />
-      </div>
+      </FullscreenBackground>
     );
   }
 
   // Cadastro já foi completado - mostrar sucesso
   if (registrationComplete) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center px-4">
+      <FullscreenBackground
+        className="bg-gradient-to-br from-green-500 to-green-700 px-4"
+        contentClassName="flex items-center justify-center"
+      >
         <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
           <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Cadastro Concluído!</h2>
@@ -306,13 +313,16 @@ const Plans: React.FC = () => {
             Fazer Login
           </Link>
         </div>
-      </div>
+      </FullscreenBackground>
     );
   }
 
   if (upgradeSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center px-4">
+      <FullscreenBackground
+        className="bg-gradient-to-br from-green-500 to-green-700 px-4"
+        contentClassName="flex items-center justify-center"
+      >
         <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
           <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Assinatura ativada!</h2>
@@ -323,13 +333,16 @@ const Plans: React.FC = () => {
             Ir para o app
           </Link>
         </div>
-      </div>
+      </FullscreenBackground>
     );
   }
 
   if (error && !paymentToken && !upgradeMode) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 dark:from-slate-950 dark:to-slate-800 flex items-center justify-center px-4">
+      <FullscreenBackground
+        className="bg-gradient-to-br from-primary-500 to-primary-700 dark:from-slate-950 dark:to-slate-800 px-4"
+        contentClassName="flex items-center justify-center"
+      >
         <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro</h2>
@@ -338,12 +351,12 @@ const Plans: React.FC = () => {
             Fazer novo cadastro
           </Link>
         </div>
-      </div>
+      </FullscreenBackground>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <FullscreenBackground className="bg-slate-950 text-white">
       <motion.div
         className="max-w-6xl mx-auto px-4 py-10 space-y-8"
         variants={revealParent}
@@ -778,7 +791,7 @@ const Plans: React.FC = () => {
           </motion.div>
         </motion.div>
       </motion.div>
-    </div>
+    </FullscreenBackground>
   );
 };
 
