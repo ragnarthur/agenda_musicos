@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import useLowPowerMode from '../../hooks/useLowPowerMode';
+import DustParticles3D from './DustParticles3D';
 
 interface AnimatedBackgroundProps {
   className?: string;
@@ -106,8 +107,7 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ className = '',
             <rect width="1200" height="1200" fill="url(#fabricGradient)" filter="url(#fabricDisplace)" />
             <rect width="1200" height="1200" fill="url(#fabricSheen)" filter="url(#fabricDisplace)" opacity="0.45" />
           </svg>
-          <div className="dust-layer" />
-          <div className="dust-layer dust-layer--secondary" />
+          <DustParticles3D />
 
           <div
             ref={blobPrimaryRef}
