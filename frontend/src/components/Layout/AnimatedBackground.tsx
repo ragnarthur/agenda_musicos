@@ -79,19 +79,25 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
         >
           <defs>
             <linearGradient id="blueWaveGradient" x1="100%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#03060f" />
-              <stop offset="45%" stopColor="#061225" />
-              <stop offset="100%" stopColor="#02040a" />
+              <stop offset="0%" stopColor="#04152d" />
+              <stop offset="45%" stopColor="#0a2f61" />
+              <stop offset="100%" stopColor="#030912" />
             </linearGradient>
             <linearGradient id="blueWaveSheen" x1="100%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1c4f96" stopOpacity="0.6" />
-              <stop offset="50%" stopColor="#2d63b8" stopOpacity="0.72" />
-              <stop offset="100%" stopColor="#0a2146" stopOpacity="0.6" />
+              <stop offset="0%" stopColor="#2a67c7" stopOpacity="0.62" />
+              <stop offset="50%" stopColor="#3a7fe0" stopOpacity="0.78" />
+              <stop offset="100%" stopColor="#0c2a58" stopOpacity="0.62" />
             </linearGradient>
             <linearGradient id="blueWaveMaskGradient" x1="100%" y1="100%" x2="0%" y2="0%">
               <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
               <stop offset="55%" stopColor="#ffffff" stopOpacity="0.7" />
               <stop offset="100%" stopColor="#ffffff" stopOpacity="0.1" />
+            </linearGradient>
+            <linearGradient id="blueWaveBandGradient" x1="100%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#7fb6ff" stopOpacity="0" />
+              <stop offset="45%" stopColor="#7fb6ff" stopOpacity="0.45" />
+              <stop offset="55%" stopColor="#7fb6ff" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#7fb6ff" stopOpacity="0" />
             </linearGradient>
             <mask id="blueWaveMask">
               <rect width="1200" height="1200" fill="url(#blueWaveMaskGradient)" />
@@ -99,41 +105,44 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
             <filter id="blueWaveDisplace" x="-20%" y="-20%" width="140%" height="140%">
               <feTurbulence
                 type="fractalNoise"
-                baseFrequency="0.0025 0.012"
+                baseFrequency="0.002 0.01"
                 numOctaves="1"
                 seed="3"
                 result="noise"
               >
                 <animate
                   attributeName="baseFrequency"
-                  dur="26s"
-                  values="0.0025 0.01;0.004 0.014;0.0025 0.01"
+                  dur="30s"
+                  values="0.002 0.009;0.003 0.012;0.002 0.009"
                   repeatCount="indefinite"
                 />
               </feTurbulence>
-              <feDisplacementMap in="SourceGraphic" in2="noise" scale="70" xChannelSelector="R" yChannelSelector="G">
-                <animate attributeName="scale" dur="22s" values="54;80;54" repeatCount="indefinite" />
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="48" xChannelSelector="R" yChannelSelector="G">
+                <animate attributeName="scale" dur="26s" values="36;58;36" repeatCount="indefinite" />
               </feDisplacementMap>
             </filter>
             <filter id="blueWaveLight" x="-20%" y="-20%" width="140%" height="140%">
               <feTurbulence
                 type="fractalNoise"
-                baseFrequency="0.003 0.014"
+                baseFrequency="0.0025 0.012"
                 numOctaves="1"
                 seed="7"
                 result="heightMap"
               >
                 <animate
                   attributeName="baseFrequency"
-                  dur="28s"
-                  values="0.003 0.012;0.005 0.016;0.003 0.012"
+                  dur="32s"
+                  values="0.0025 0.011;0.004 0.014;0.0025 0.011"
                   repeatCount="indefinite"
                 />
               </feTurbulence>
-              <feDiffuseLighting in="heightMap" lightingColor="#9ac6ff" surfaceScale="44" result="light">
-                <feDistantLight azimuth="225" elevation="54" />
+              <feDiffuseLighting in="heightMap" lightingColor="#b5d6ff" surfaceScale="46" result="light">
+                <feDistantLight azimuth="225" elevation="56" />
               </feDiffuseLighting>
               <feComposite in="light" in2="SourceGraphic" operator="in" />
+            </filter>
+            <filter id="blueWaveBandBlur" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="18" />
             </filter>
           </defs>
           <rect width="1200" height="1200" fill="url(#blueWaveGradient)" filter="url(#blueWaveDisplace)" />
@@ -143,8 +152,25 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
             fill="url(#blueWaveSheen)"
             filter="url(#blueWaveLight)"
             mask="url(#blueWaveMask)"
-            opacity="0.78"
+            opacity="0.84"
           />
+          <path
+            d="M 1400 1300 C 1040 980 780 760 440 480 C 200 280 40 140 -240 -80"
+            fill="none"
+            stroke="url(#blueWaveBandGradient)"
+            strokeWidth="260"
+            strokeLinecap="round"
+            filter="url(#blueWaveBandBlur)"
+            opacity="0.85"
+          >
+            <animateTransform
+              attributeName="transform"
+              type="translate"
+              dur="22s"
+              values="120 120;-140 -140;120 120"
+              repeatCount="indefinite"
+            />
+          </path>
         </svg>
       )}
       {enableBlueWaves && !enableEffects && <div className="blue-wave-static" aria-hidden="true" />}

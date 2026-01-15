@@ -181,9 +181,9 @@
     inset: -10%;
     width: 120%;
     height: 120%;
-    opacity: 0.9;
+    opacity: 0.93;
     z-index: 0;
-    filter: saturate(140%) contrast(1.28) brightness(1.12);
+    filter: saturate(175%) contrast(1.38) brightness(1.08);
     mix-blend-mode: screen;
   }
 
@@ -194,7 +194,7 @@
     height: 120%;
     opacity: 0.92;
     z-index: 0;
-    background: linear-gradient(135deg, #03060f 0%, #061225 55%, #02040a 100%);
+    background: linear-gradient(135deg, #04152d 0%, #0a2f61 55%, #030912 100%);
   }
 
   .fabric-wave {
