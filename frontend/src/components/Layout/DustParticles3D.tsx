@@ -8,6 +8,7 @@ type Cluster = {
   driftY: number;
   flow: number;
   phase: number;
+  anchor: number;
 };
 
 type Particle = {
@@ -51,20 +52,25 @@ const DustParticles3D: React.FC = () => {
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
 
-      area.x = width * 0.4;
-      area.y = height * 0.22;
-      area.w = width * 0.6;
-      area.h = height * 0.5;
+      area.x = 0;
+      area.y = 0;
+      area.w = width;
+      area.h = height;
     };
 
-    const makeCluster = () => ({
-      baseX: area.x + area.w * (0.7 + Math.random() * 0.2),
-      baseY: area.y + area.h * (0.35 + Math.random() * 0.25),
-      driftX: area.w * (0.02 + Math.random() * 0.02),
-      driftY: area.h * (0.02 + Math.random() * 0.03),
-      flow: area.w * (0.02 + Math.random() * 0.01),
-      phase: Math.random() * Math.PI * 2,
-    });
+    const anchors = [0.25, 0.5, 0.75];
+    const makeCluster = (index: number) => {
+      const anchor = anchors[index % anchors.length] ?? 0.5;
+      return {
+        anchor,
+        baseX: area.x + area.w * (0.7 + Math.random() * 0.3),
+        baseY: area.y + area.h * (anchor + (Math.random() - 0.5) * 0.12),
+        driftX: area.w * (0.03 + Math.random() * 0.03),
+        driftY: area.h * (0.03 + Math.random() * 0.04),
+        flow: area.w * (0.025 + Math.random() * 0.015),
+        phase: Math.random() * Math.PI * 2,
+      };
+    };
 
     const init = () => {
       resetArea();
@@ -72,7 +78,7 @@ const DustParticles3D: React.FC = () => {
       particles.length = 0;
 
       for (let i = 0; i < CLUSTER_COUNT; i += 1) {
-        clusters.push(makeCluster());
+        clusters.push(makeCluster(i));
       }
 
       for (let i = 0; i < CLUSTER_COUNT; i += 1) {
@@ -100,11 +106,6 @@ const DustParticles3D: React.FC = () => {
       ctx.clearRect(0, 0, width, height);
       ctx.globalCompositeOperation = 'lighter';
 
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(area.x, area.y, area.w, area.h);
-      ctx.clip();
-
       clusters.forEach((cluster) => {
         const wave = Math.sin(time * 0.00035 + cluster.phase);
         const sway = Math.cos(time * 0.0003 + cluster.phase * 1.3);
@@ -114,13 +115,13 @@ const DustParticles3D: React.FC = () => {
         cluster.baseX -= cluster.flow * delta * (0.75 + pulse * 0.25);
         cluster.baseY += sway * cluster.driftY * delta * 6 * flutter;
 
-        if (cluster.baseX < area.x + area.w * 0.35) {
-          cluster.baseX = area.x + area.w * (0.78 + Math.random() * 0.18);
-          cluster.baseY = area.y + area.h * (0.35 + Math.random() * 0.25);
+        if (cluster.baseX < area.x - area.w * 0.12) {
+          cluster.baseX = area.x + area.w * (0.92 + Math.random() * 0.12);
+          cluster.baseY = area.y + area.h * (cluster.anchor + (Math.random() - 0.5) * 0.12);
         }
 
-        cluster.baseX = Math.min(Math.max(cluster.baseX, area.x + area.w * 0.45), area.x + area.w * 0.95);
-        cluster.baseY = Math.min(Math.max(cluster.baseY, area.y + area.h * 0.25), area.y + area.h * 0.75);
+        cluster.baseX = Math.min(Math.max(cluster.baseX, area.x - area.w * 0.2), area.x + area.w * 1.1);
+        cluster.baseY = Math.min(Math.max(cluster.baseY, area.y + area.h * 0.1), area.y + area.h * 0.9);
         cluster.driftX = cluster.driftX * 0.995 + cluster.driftX * wave * 0.0004;
       });
 
@@ -148,8 +149,6 @@ const DustParticles3D: React.FC = () => {
         ctx.arc(x, y, size, 0, Math.PI * 2);
         ctx.fill();
       });
-
-      ctx.restore();
       rafId = requestAnimationFrame(render);
     };
 
