@@ -316,40 +316,40 @@
 
   @keyframes dust-chaos {
     0% {
-      background-position: 150px 120px, 170px 145px, 135px 165px, 190px 110px, 125px 135px;
+      background-position: 140px 120px, 160px 135px, 130px 150px, 175px 110px, 120px 140px;
     }
     20% {
-      background-position: 110px 132px, 150px 118px, 95px 170px, 160px 98px, 105px 150px;
+      background-position: 125px 110px, 150px 145px, 115px 160px, 165px 125px, 110px 150px;
     }
     40% {
-      background-position: 70px 110px, 120px 160px, 65px 140px, 140px 125px, 85px 175px;
+      background-position: 110px 130px, 135px 120px, 105px 165px, 150px 100px, 120px 155px;
     }
     60% {
-      background-position: 30px 140px, 90px 115px, 40px 175px, 100px 95px, 55px 150px;
+      background-position: 90px 145px, 120px 130px, 95px 170px, 135px 115px, 105px 160px;
     }
     80% {
-      background-position: -20px 118px, 70px 165px, -10px 145px, 80px 120px, 15px 175px;
+      background-position: 70px 135px, 105px 150px, 80px 165px, 115px 120px, 90px 155px;
     }
     100% {
-      background-position: -60px 130px, 50px 150px, -40px 165px, 70px 105px, -5px 145px;
+      background-position: 55px 145px, 95px 135px, 70px 170px, 105px 110px, 85px 160px;
     }
   }
 
   @keyframes dust-chaos-secondary {
     0% {
-      background-position: 190px 170px, 210px 150px, 175px 195px, 230px 130px;
+      background-position: 165px 165px, 190px 150px, 150px 185px;
     }
     25% {
-      background-position: 150px 150px, 175px 185px, 135px 165px, 200px 120px;
+      background-position: 145px 175px, 175px 160px, 135px 195px;
     }
     50% {
-      background-position: 110px 190px, 145px 145px, 105px 170px, 170px 155px;
+      background-position: 125px 165px, 155px 190px, 120px 200px;
     }
     75% {
-      background-position: 60px 165px, 115px 205px, 80px 150px, 140px 135px;
+      background-position: 105px 185px, 135px 160px, 95px 205px;
     }
     100% {
-      background-position: 20px 185px, 90px 160px, 50px 200px, 110px 145px;
+      background-position: 85px 175px, 120px 190px, 80px 210px;
     }
   }
 
@@ -375,42 +375,47 @@
     .dust-layer {
       position: fixed;
       inset: auto;
-      right: -4%;
-      bottom: -8%;
+      right: -2%;
+      bottom: -6%;
       left: auto;
       top: auto;
-      width: 48%;
-      height: 44%;
+      width: 38%;
+      height: 32%;
       background-image:
-        radial-gradient(rgba(255, 255, 255, 0.62) 1px, transparent 2.6px),
-        radial-gradient(rgba(255, 255, 255, 0.56) 0.9px, transparent 2.4px),
-        radial-gradient(rgba(255, 255, 255, 0.6) 0.95px, transparent 2.5px);
-      background-size: 320px 320px;
-      background-position: 160px 120px, 210px 180px, 120px 200px;
-      opacity: 0.28;
-      animation: dust-chaos 14s linear infinite;
-      mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 60%, rgba(0, 0, 0, 0) 82%);
-      -webkit-mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 60%, rgba(0, 0, 0, 0) 82%);
+        radial-gradient(rgba(255, 255, 255, 0.72) 1.2px, transparent 2.4px),
+        radial-gradient(rgba(255, 255, 255, 0.64) 1.05px, transparent 2.2px),
+        radial-gradient(rgba(255, 255, 255, 0.68) 1.1px, transparent 2.3px),
+        radial-gradient(rgba(255, 255, 255, 0.58) 0.95px, transparent 2.1px),
+        radial-gradient(rgba(255, 255, 255, 0.66) 1px, transparent 2.5px);
+      background-size: 220px 220px;
+      background-position: 140px 120px, 160px 135px, 130px 150px, 175px 110px, 120px 140px;
+      background-repeat: no-repeat;
+      opacity: 0.32;
+      animation: dust-chaos 10s linear infinite;
+      mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 62%, rgba(0, 0, 0, 0) 80%);
+      -webkit-mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 62%, rgba(0, 0, 0, 0) 80%);
     }
 
     .dust-layer--secondary {
       position: fixed;
       inset: auto;
-      right: -6%;
-      bottom: -10%;
+      right: -4%;
+      bottom: -8%;
       left: auto;
       top: auto;
-      width: 52%;
-      height: 48%;
+      width: 40%;
+      height: 34%;
       background-image:
-        radial-gradient(rgba(255, 255, 255, 0.54) 0.95px, transparent 2.6px),
-        radial-gradient(rgba(255, 255, 255, 0.5) 0.85px, transparent 2.4px);
-      background-size: 360px 360px;
-      background-position: 200px 170px, 120px 210px;
-      opacity: 0.22;
-      animation: dust-chaos-secondary 16s linear infinite;
-      mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 62%, rgba(0, 0, 0, 0) 84%);
-      -webkit-mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 62%, rgba(0, 0, 0, 0) 84%);
+        radial-gradient(rgba(255, 255, 255, 0.58) 1px, transparent 2.6px),
+        radial-gradient(rgba(255, 255, 255, 0.52) 0.9px, transparent 2.4px),
+        radial-gradient(rgba(255, 255, 255, 0.55) 0.95px, transparent 2.5px);
+      background-size: 240px 240px;
+      background-position: 165px 165px, 190px 150px, 150px 185px;
+      background-repeat: no-repeat;
+      opacity: 0.24;
+      animation: dust-chaos-secondary 12s linear infinite;
+      mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 64%, rgba(0, 0, 0, 0) 82%);
+      -webkit-mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 64%, rgba(0, 0, 0, 0) 82%);
     }
   }
   .btn-primary {
