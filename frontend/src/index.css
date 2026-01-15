@@ -181,9 +181,9 @@
     inset: -10%;
     width: 120%;
     height: 120%;
-    opacity: 0.78;
-    mix-blend-mode: normal;
-    filter: saturate(140%) contrast(1.08);
+    opacity: 0.92;
+    mix-blend-mode: screen;
+    filter: saturate(150%) contrast(1.18) brightness(1.08);
     animation: fabric-drift 24s ease-in-out infinite;
     z-index: 1;
   }
@@ -191,23 +191,26 @@
   .dust-layer {
     position: absolute;
     inset: 0;
-    background-image:
-      radial-gradient(rgba(255, 255, 255, 0.28) 1.1px, transparent 3px),
-      radial-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 3px);
-    background-size: 220px 220px, 360px 360px;
-    background-position: 0 0, 140px 120px;
-    opacity: 0.22;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.48) 0.7px, transparent 3px);
+    background-size: 320px 320px;
+    background-position: -120px -120px;
+    background-repeat: repeat;
+    opacity: 0.26;
     mix-blend-mode: screen;
     filter: blur(0.2px);
-    animation: dust-drift 40s linear infinite;
+    animation: dust-drift 46s linear infinite;
     z-index: 2;
+    mask-image: radial-gradient(circle at 0% 0%, rgba(0, 0, 0, 1) 0 40%, rgba(0, 0, 0, 0) 70%);
+    -webkit-mask-image: radial-gradient(circle at 0% 0%, rgba(0, 0, 0, 1) 0 40%, rgba(0, 0, 0, 0) 70%);
   }
 
   .dust-layer--secondary {
-    opacity: 0.14;
-    background-size: 360px 360px, 560px 560px;
-    background-position: -120px 80px, 220px 260px;
-    animation-duration: 54s;
+    opacity: 0.18;
+    background-size: 380px 380px;
+    background-position: calc(100% + 140px) calc(100% + 140px);
+    animation-duration: 58s;
+    mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 40%, rgba(0, 0, 0, 0) 70%);
+    -webkit-mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 40%, rgba(0, 0, 0, 0) 70%);
   }
 
   .cascade-reveal {
@@ -242,13 +245,13 @@
 
   @keyframes dust-drift {
     0% {
-      background-position: 0 0, 160px 120px;
+      background-position: -120px -120px;
     }
     50% {
-      background-position: 180px -120px, 320px 260px;
+      background-position: -40px -200px;
     }
     100% {
-      background-position: 320px -240px, 520px 360px;
+      background-position: 40px -280px;
     }
   }
 
@@ -261,12 +264,12 @@
 
   @media (max-width: 768px) {
     .dust-layer {
-      opacity: 0.12;
-      animation-duration: 60s;
+      opacity: 0.16;
+      animation-duration: 70s;
     }
 
     .dust-layer--secondary {
-      opacity: 0.08;
+      opacity: 0.12;
     }
   }
   .btn-primary {

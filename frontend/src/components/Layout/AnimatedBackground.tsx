@@ -81,20 +81,20 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ className = '',
           <filter id="fabricDisplace" x="-20%" y="-20%" width="140%" height="140%">
             <feTurbulence
               type="fractalNoise"
-              baseFrequency="0.015 0.04"
+              baseFrequency="0.02 0.05"
               numOctaves="3"
               seed="2"
               result="noise"
             >
               <animate
                 attributeName="baseFrequency"
-                dur="20s"
-                values="0.012 0.03;0.02 0.05;0.012 0.03"
+                dur="18s"
+                values="0.015 0.04;0.03 0.06;0.015 0.04"
                 repeatCount="indefinite"
               />
             </feTurbulence>
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale="30" xChannelSelector="R" yChannelSelector="G">
-              <animate attributeName="scale" dur="14s" values="22;38;22" repeatCount="indefinite" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="40" xChannelSelector="R" yChannelSelector="G">
+              <animate attributeName="scale" dur="12s" values="28;48;28" repeatCount="indefinite" />
             </feDisplacementMap>
           </filter>
         </defs>
