@@ -316,22 +316,22 @@
 
   @keyframes dust-chaos {
     0% {
-      background-position: 200px 120px, 270px 160px, 150px 210px, 300px 100px, 120px 170px, 240px 230px, 90px 140px;
+      background-position: 200px 120px, 270px 160px, 150px 210px, 300px 100px, 120px 170px, 240px 230px, 90px 140px, 320px 180px;
     }
     20% {
-      background-position: 180px 140px, 240px 120px, 140px 230px, 280px 130px, 100px 190px, 210px 200px, 120px 160px;
+      background-position: 180px 140px, 240px 120px, 140px 230px, 280px 130px, 100px 190px, 210px 200px, 120px 160px, 300px 150px;
     }
     40% {
-      background-position: 160px 160px, 220px 200px, 120px 190px, 260px 180px, 90px 210px, 230px 240px, 110px 150px;
+      background-position: 160px 160px, 220px 200px, 120px 190px, 260px 180px, 90px 210px, 230px 240px, 110px 150px, 280px 170px;
     }
     60% {
-      background-position: 140px 190px, 200px 150px, 110px 220px, 230px 120px, 80px 200px, 200px 210px, 130px 170px;
+      background-position: 140px 190px, 200px 150px, 110px 220px, 230px 120px, 80px 200px, 200px 210px, 130px 170px, 260px 140px;
     }
     80% {
-      background-position: 120px 170px, 180px 210px, 130px 190px, 210px 200px, 70px 220px, 180px 240px, 100px 150px;
+      background-position: 120px 170px, 180px 210px, 130px 190px, 210px 200px, 70px 220px, 180px 240px, 100px 150px, 240px 160px;
     }
     100% {
-      background-position: 110px 180px, 160px 190px, 100px 220px, 190px 150px, 60px 210px, 160px 230px, 90px 160px;
+      background-position: 110px 180px, 160px 190px, 100px 220px, 190px 150px, 60px 210px, 160px 230px, 90px 160px, 220px 170px;
     }
   }
 
@@ -376,7 +376,7 @@
       position: fixed;
       inset: auto;
       right: -1%;
-      bottom: 8%;
+      bottom: 12%;
       left: auto;
       top: auto;
       width: 58%;
@@ -386,9 +386,12 @@
         radial-gradient(rgba(255, 255, 255, 0.64) 1.05px, transparent 2.2px),
         radial-gradient(rgba(255, 255, 255, 0.68) 1.1px, transparent 2.3px),
         radial-gradient(rgba(255, 255, 255, 0.58) 0.95px, transparent 2.1px),
-        radial-gradient(rgba(255, 255, 255, 0.66) 1px, transparent 2.5px);
+        radial-gradient(rgba(255, 255, 255, 0.66) 1px, transparent 2.5px),
+        radial-gradient(rgba(255, 255, 255, 0.6) 0.9px, transparent 2.2px),
+        radial-gradient(rgba(255, 255, 255, 0.7) 1.05px, transparent 2.6px),
+        radial-gradient(rgba(255, 255, 255, 0.56) 0.85px, transparent 2.1px);
       background-size: 420px 420px;
-      background-position: 200px 120px, 270px 160px, 150px 210px, 300px 100px, 120px 170px, 240px 230px, 90px 140px;
+      background-position: 200px 120px, 270px 160px, 150px 210px, 300px 100px, 120px 170px, 240px 230px, 90px 140px, 320px 180px;
       background-repeat: no-repeat;
       opacity: 0.32;
       animation: dust-chaos 10s linear infinite;
@@ -400,7 +403,7 @@
       position: fixed;
       inset: auto;
       right: -2%;
-      bottom: 6%;
+      bottom: 10%;
       left: auto;
       top: auto;
       width: 56%;
@@ -408,7 +411,9 @@
       background-image:
         radial-gradient(rgba(255, 255, 255, 0.58) 1px, transparent 2.6px),
         radial-gradient(rgba(255, 255, 255, 0.52) 0.9px, transparent 2.4px),
-        radial-gradient(rgba(255, 255, 255, 0.55) 0.95px, transparent 2.5px);
+        radial-gradient(rgba(255, 255, 255, 0.55) 0.95px, transparent 2.5px),
+        radial-gradient(rgba(255, 255, 255, 0.5) 0.85px, transparent 2.2px),
+        radial-gradient(rgba(255, 255, 255, 0.6) 1px, transparent 2.7px);
       background-size: 440px 440px;
       background-position: 240px 200px, 170px 230px, 280px 150px, 210px 260px, 140px 180px;
       background-repeat: no-repeat;
