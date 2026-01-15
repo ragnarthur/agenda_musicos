@@ -3,7 +3,6 @@ import React, { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import TrialBanner from '../TrialBanner';
-import AnimatedBackground from './AnimatedBackground';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -38,7 +37,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-      <AnimatedBackground />
       <TrialBanner />
       <Navbar />
 

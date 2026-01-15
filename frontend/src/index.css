@@ -192,23 +192,22 @@
     position: absolute;
     inset: 0;
     background-image:
-      radial-gradient(rgba(255, 255, 255, 0.38) 1.2px, transparent 3px),
-      radial-gradient(rgba(255, 255, 255, 0.22) 1px, transparent 3px),
-      radial-gradient(rgba(255, 255, 255, 0.16) 1.4px, transparent 4px);
-    background-size: 180px 180px, 260px 260px, 360px 360px;
-    background-position: 0 0, 90px 60px, 160px 140px;
-    opacity: 0.34;
+      radial-gradient(rgba(255, 255, 255, 0.28) 1.1px, transparent 3px),
+      radial-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 3px);
+    background-size: 220px 220px, 360px 360px;
+    background-position: 0 0, 140px 120px;
+    opacity: 0.22;
     mix-blend-mode: screen;
     filter: blur(0.2px);
-    animation: dust-drift 32s linear infinite;
+    animation: dust-drift 40s linear infinite;
     z-index: 2;
   }
 
   .dust-layer--secondary {
-    opacity: 0.22;
-    background-size: 240px 240px, 420px 420px, 560px 560px;
-    background-position: -80px 40px, 150px 220px, 280px 60px;
-    animation-duration: 46s;
+    opacity: 0.14;
+    background-size: 360px 360px, 560px 560px;
+    background-position: -120px 80px, 220px 260px;
+    animation-duration: 54s;
   }
 
   .cascade-reveal {
@@ -243,13 +242,13 @@
 
   @keyframes dust-drift {
     0% {
-      background-position: 0 0, 120px 40px, 220px 160px;
+      background-position: 0 0, 160px 120px;
     }
     50% {
-      background-position: 220px -140px, 320px 260px, 520px -120px;
+      background-position: 180px -120px, 320px 260px;
     }
     100% {
-      background-position: 380px -280px, 520px 360px, 780px -220px;
+      background-position: 320px -240px, 520px 360px;
     }
   }
 
@@ -257,6 +256,17 @@
     .fabric-wave,
     .dust-layer {
       animation: none;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dust-layer {
+      opacity: 0.12;
+      animation-duration: 60s;
+    }
+
+    .dust-layer--secondary {
+      opacity: 0.08;
     }
   }
   .btn-primary {

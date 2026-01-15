@@ -4,7 +4,6 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff, Lock, ArrowLeft } from 'lucide-react';
 import { authService } from '../services/api';
 import { showToast } from '../utils/toast';
-import FullscreenBackground from '../components/Layout/FullscreenBackground';
 
 const ResetPassword: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -57,10 +56,7 @@ const ResetPassword: React.FC = () => {
   };
 
   return (
-    <FullscreenBackground
-      className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 px-4"
-      contentClassName="flex items-center justify-center"
-    >
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center px-4">
       <div className="w-full max-w-lg">
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="mb-6">
@@ -153,7 +149,7 @@ const ResetPassword: React.FC = () => {
           )}
         </div>
       </div>
-    </FullscreenBackground>
+    </div>
   );
 };
 
