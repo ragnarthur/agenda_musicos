@@ -188,6 +188,17 @@
     z-index: 1;
   }
 
+  .fabric-static {
+    position: absolute;
+    inset: -10%;
+    width: 120%;
+    height: 120%;
+    opacity: 0.7;
+    background: linear-gradient(135deg, #0b1220 0%, #0f1b2d 45%, #111827 100%);
+    filter: saturate(120%) contrast(1.1) brightness(1.05);
+    z-index: 1;
+  }
+
   .dust-layer {
     position: absolute;
     inset: 0;
@@ -453,6 +464,10 @@
   max-height: 100%;
   overflow: hidden;
   filter: drop-shadow(0 4px 8px rgba(15, 23, 42, 0.35));
+}
+
+.owl-mascot--static {
+  filter: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
