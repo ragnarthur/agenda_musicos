@@ -181,9 +181,10 @@
     inset: -10%;
     width: 120%;
     height: 120%;
-    opacity: 0.86;
+    opacity: 0.9;
     z-index: 0;
-    filter: saturate(140%) contrast(1.08) brightness(1.05);
+    filter: saturate(140%) contrast(1.28) brightness(1.12);
+    mix-blend-mode: screen;
   }
 
   .blue-wave-static {

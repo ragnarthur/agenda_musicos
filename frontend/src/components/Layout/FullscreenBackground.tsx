@@ -11,7 +11,7 @@ interface FullscreenBackgroundProps {
 const FullscreenBackground: React.FC<FullscreenBackgroundProps> = ({
   className = '',
   contentClassName = '',
-  enableBlueWaves = false,
+  enableBlueWaves = true,
   children,
 }) => {
   return (

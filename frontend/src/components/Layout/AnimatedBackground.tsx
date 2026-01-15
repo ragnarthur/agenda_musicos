@@ -84,9 +84,9 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
               <stop offset="100%" stopColor="#02040a" />
             </linearGradient>
             <linearGradient id="blueWaveSheen" x1="100%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#0f2f5c" stopOpacity="0.42" />
-              <stop offset="50%" stopColor="#1a4178" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="#061226" stopOpacity="0.42" />
+              <stop offset="0%" stopColor="#1c4f96" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#2d63b8" stopOpacity="0.72" />
+              <stop offset="100%" stopColor="#0a2146" stopOpacity="0.6" />
             </linearGradient>
             <linearGradient id="blueWaveMaskGradient" x1="100%" y1="100%" x2="0%" y2="0%">
               <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
@@ -130,7 +130,7 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
                   repeatCount="indefinite"
                 />
               </feTurbulence>
-              <feDiffuseLighting in="heightMap" lightingColor="#4c6fab" surfaceScale="38" result="light">
+              <feDiffuseLighting in="heightMap" lightingColor="#9ac6ff" surfaceScale="44" result="light">
                 <feDistantLight azimuth="225" elevation="54" />
               </feDiffuseLighting>
               <feComposite in="light" in2="SourceGraphic" operator="in" />
@@ -143,7 +143,7 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
             fill="url(#blueWaveSheen)"
             filter="url(#blueWaveLight)"
             mask="url(#blueWaveMask)"
-            opacity="0.6"
+            opacity="0.78"
           />
         </svg>
       )}
