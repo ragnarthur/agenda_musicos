@@ -37,18 +37,24 @@ const useLowPowerMode = () => {
 
     const onChange = () => evaluate();
     const addListener = (query: MediaQueryList) => {
-      if ('addEventListener' in query) {
+      if (typeof query.addEventListener === 'function') {
         query.addEventListener('change', onChange);
-      } else {
-        query.addListener(onChange);
+        return;
       }
+      const legacyQuery = query as MediaQueryList & {
+        addListener: (listener: (event: MediaQueryListEvent) => void) => void;
+      };
+      legacyQuery.addListener(onChange);
     };
     const removeListener = (query: MediaQueryList) => {
-      if ('removeEventListener' in query) {
+      if (typeof query.removeEventListener === 'function') {
         query.removeEventListener('change', onChange);
-      } else {
-        query.removeListener(onChange);
+        return;
       }
+      const legacyQuery = query as MediaQueryList & {
+        removeListener: (listener: (event: MediaQueryListEvent) => void) => void;
+      };
+      legacyQuery.removeListener(onChange);
     };
 
     evaluate();
