@@ -177,10 +177,11 @@
     inset: -10%;
     width: 120%;
     height: 120%;
-    opacity: 0.45;
-    mix-blend-mode: screen;
-    filter: saturate(110%);
-    animation: fabric-drift 22s ease-in-out infinite;
+    opacity: 0.6;
+    mix-blend-mode: soft-light;
+    filter: saturate(130%);
+    animation: fabric-drift 24s ease-in-out infinite;
+    z-index: 1;
   }
 
   .dust-layer {
@@ -192,17 +193,18 @@
       radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 3px);
     background-size: 140px 140px, 240px 240px, 320px 320px;
     background-position: 0 0, 80px 40px, 140px 120px;
-    opacity: 0.25;
+    opacity: 0.28;
     mix-blend-mode: screen;
     filter: blur(0.2px);
-    animation: dust-drift 30s linear infinite;
+    animation: dust-drift 36s linear infinite;
+    z-index: 2;
   }
 
   .dust-layer--secondary {
-    opacity: 0.16;
+    opacity: 0.18;
     background-size: 200px 200px, 360px 360px, 520px 520px;
     background-position: -60px 20px, 120px 200px, 260px 40px;
-    animation-duration: 48s;
+    animation-duration: 54s;
   }
 
   .cascade-reveal {
@@ -237,13 +239,13 @@
 
   @keyframes dust-drift {
     0% {
-      transform: translate3d(0, 0, 0);
+      background-position: 0 0, 120px 40px, 200px 140px;
     }
     50% {
-      transform: translate3d(12px, -18px, 0);
+      background-position: 160px -120px, 260px 220px, 420px -80px;
     }
     100% {
-      transform: translate3d(0, 0, 0);
+      background-position: 280px -240px, 420px 320px, 620px -180px;
     }
   }
 

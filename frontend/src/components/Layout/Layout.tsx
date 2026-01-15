@@ -102,25 +102,33 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <stop offset="45%" stopColor="#0f1b2d" />
               <stop offset="100%" stopColor="#111827" />
             </linearGradient>
+            <linearGradient id="fabricSheen" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1f2937" />
+              <stop offset="45%" stopColor="#243b55" />
+              <stop offset="100%" stopColor="#111827" />
+            </linearGradient>
             <filter id="fabricDisplace" x="-20%" y="-20%" width="140%" height="140%">
               <feTurbulence
                 type="fractalNoise"
-                baseFrequency="0.012 0.03"
-                numOctaves="2"
+                baseFrequency="0.015 0.04"
+                numOctaves="3"
                 seed="2"
                 result="noise"
               >
                 <animate
                   attributeName="baseFrequency"
-                  dur="18s"
-                  values="0.012 0.03;0.02 0.04;0.012 0.03"
+                  dur="20s"
+                  values="0.012 0.03;0.02 0.05;0.012 0.03"
                   repeatCount="indefinite"
                 />
               </feTurbulence>
-              <feDisplacementMap in="SourceGraphic" in2="noise" scale="24" xChannelSelector="R" yChannelSelector="G" />
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="30" xChannelSelector="R" yChannelSelector="G">
+                <animate attributeName="scale" dur="14s" values="22;38;22" repeatCount="indefinite" />
+              </feDisplacementMap>
             </filter>
           </defs>
           <rect width="1200" height="1200" fill="url(#fabricGradient)" filter="url(#fabricDisplace)" />
+          <rect width="1200" height="1200" fill="url(#fabricSheen)" filter="url(#fabricDisplace)" opacity="0.45" />
         </svg>
         <div className="dust-layer dust-layer--primary" />
         <div className="dust-layer dust-layer--secondary" />
