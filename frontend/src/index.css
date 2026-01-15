@@ -296,6 +296,24 @@
     }
   }
 
+  @keyframes dust-sweep-left {
+    0% {
+      background-position: 160px 140px;
+    }
+    100% {
+      background-position: -220px 120px;
+    }
+  }
+
+  @keyframes dust-sweep-left-secondary {
+    0% {
+      background-position: 200px 180px;
+    }
+    100% {
+      background-position: -260px 160px;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .fabric-wave,
     .dust-layer {
@@ -316,23 +334,35 @@
 
   @media (min-width: 1024px) {
     .dust-layer {
+      right: -6%;
+      bottom: -10%;
+      left: auto;
+      top: auto;
+      width: 62%;
+      height: 52%;
       background-image: radial-gradient(rgba(255, 255, 255, 0.68) 0.9px, transparent 3px);
-      background-size: 260px 260px;
-      background-position: -220px -220px;
-      opacity: 0.34;
-      animation: dust-orbit 34s ease-in-out infinite;
-      mask-image: radial-gradient(circle at 0% 0%, rgba(0, 0, 0, 1) 0 55%, rgba(0, 0, 0, 0) 82%);
-      -webkit-mask-image: radial-gradient(circle at 0% 0%, rgba(0, 0, 0, 1) 0 55%, rgba(0, 0, 0, 0) 82%);
+      background-size: 240px 240px;
+      background-position: 160px 140px;
+      opacity: 0.35;
+      animation: dust-sweep-left 32s linear infinite;
+      mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 68%, rgba(0, 0, 0, 0) 95%);
+      -webkit-mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 68%, rgba(0, 0, 0, 0) 95%);
     }
 
     .dust-layer--secondary {
+      right: -4%;
+      bottom: -12%;
+      left: auto;
+      top: auto;
+      width: 56%;
+      height: 46%;
       background-image: radial-gradient(rgba(255, 255, 255, 0.6) 0.9px, transparent 3.2px);
-      background-size: 320px 320px;
-      background-position: calc(100% + 220px) calc(100% + 220px);
+      background-size: 280px 280px;
+      background-position: 200px 180px;
       opacity: 0.26;
-      animation: dust-orbit-reverse 38s ease-in-out infinite;
-      mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 55%, rgba(0, 0, 0, 0) 82%);
-      -webkit-mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 55%, rgba(0, 0, 0, 0) 82%);
+      animation: dust-sweep-left-secondary 38s linear infinite;
+      mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 68%, rgba(0, 0, 0, 0) 95%);
+      -webkit-mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 68%, rgba(0, 0, 0, 0) 95%);
     }
   }
   .btn-primary {
