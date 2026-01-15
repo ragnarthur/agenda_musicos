@@ -283,6 +283,26 @@
       opacity: 0.12;
     }
   }
+
+  @media (min-width: 1024px) {
+    .dust-layer {
+      background-image: radial-gradient(rgba(255, 255, 255, 0.7) 0.8px, transparent 3.4px);
+      background-size: 420px 420px;
+      background-position: -220px -220px;
+      opacity: 0.3;
+      mask-image: radial-gradient(circle at 0% 0%, rgba(0, 0, 0, 1) 0 55%, rgba(0, 0, 0, 0) 82%);
+      -webkit-mask-image: radial-gradient(circle at 0% 0%, rgba(0, 0, 0, 1) 0 55%, rgba(0, 0, 0, 0) 82%);
+    }
+
+    .dust-layer--secondary {
+      background-image: radial-gradient(rgba(255, 255, 255, 0.62) 0.8px, transparent 3.6px);
+      background-size: 520px 520px;
+      background-position: calc(100% + 220px) calc(100% + 220px);
+      opacity: 0.22;
+      mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 55%, rgba(0, 0, 0, 0) 82%);
+      -webkit-mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 55%, rgba(0, 0, 0, 0) 82%);
+    }
+  }
   .btn-primary {
     @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
   }
