@@ -88,6 +88,14 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
               <stop offset="50%" stopColor="#1a4178" stopOpacity="0.5" />
               <stop offset="100%" stopColor="#061226" stopOpacity="0.42" />
             </linearGradient>
+            <linearGradient id="blueWaveMaskGradient" x1="100%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+              <stop offset="55%" stopColor="#ffffff" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.1" />
+            </linearGradient>
+            <mask id="blueWaveMask">
+              <rect width="1200" height="1200" fill="url(#blueWaveMaskGradient)" />
+            </mask>
             <filter id="blueWaveDisplace" x="-20%" y="-20%" width="140%" height="140%">
               <feTurbulence
                 type="fractalNoise"
@@ -122,23 +130,21 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
                   repeatCount="indefinite"
                 />
               </feTurbulence>
-              <feDiffuseLighting in="heightMap" lightingColor="#4c6fab" surfaceScale="36" result="light">
+              <feDiffuseLighting in="heightMap" lightingColor="#4c6fab" surfaceScale="38" result="light">
                 <feDistantLight azimuth="225" elevation="54" />
               </feDiffuseLighting>
               <feComposite in="light" in2="SourceGraphic" operator="in" />
             </filter>
           </defs>
-          <g>
-            <animateTransform
-              attributeName="transform"
-              type="translate"
-              dur="30s"
-              values="140 140;-140 -140;140 140"
-              repeatCount="indefinite"
-            />
-            <rect width="1200" height="1200" fill="url(#blueWaveGradient)" filter="url(#blueWaveDisplace)" />
-            <rect width="1200" height="1200" fill="url(#blueWaveSheen)" filter="url(#blueWaveLight)" opacity="0.45" />
-          </g>
+          <rect width="1200" height="1200" fill="url(#blueWaveGradient)" filter="url(#blueWaveDisplace)" />
+          <rect
+            width="1200"
+            height="1200"
+            fill="url(#blueWaveSheen)"
+            filter="url(#blueWaveLight)"
+            mask="url(#blueWaveMask)"
+            opacity="0.6"
+          />
         </svg>
       )}
       {enableBlueWaves && !enableEffects && <div className="blue-wave-static" aria-hidden="true" />}

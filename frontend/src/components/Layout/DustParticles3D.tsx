@@ -28,7 +28,7 @@ const DustParticles3D: React.FC = () => {
     let height = 0;
     let dpr = window.devicePixelRatio || 1;
     const particles: Particle[] = [];
-    const density = { min: 70, max: 160, factor: 0.00005 };
+    const density = { min: 40, max: 90, factor: 0.000035 };
 
     const resetArea = () => {
       width = window.innerWidth;
@@ -54,9 +54,9 @@ const DustParticles3D: React.FC = () => {
           x: Math.random() * width,
           y: Math.random() * height,
           z: depth,
-          size: 0.7 + depth * 1.2,
-          speed: 6 + depth * 14,
-          sway: 10 + depth * 18,
+          size: 0.8 + depth * 1.3,
+          speed: 5 + depth * 12,
+          sway: 12 + depth * 20,
           phase: Math.random() * Math.PI * 2,
         });
       }
@@ -97,9 +97,9 @@ const DustParticles3D: React.FC = () => {
         const depth = particle.z;
         const scale = 0.6 + depth * 0.7;
         const size = particle.size * scale;
-        const alpha = 0.12 + depth * 0.26;
+        const alpha = 0.16 + depth * 0.34;
 
-        ctx.shadowBlur = 8 + depth * 14;
+        ctx.shadowBlur = 12 + depth * 22;
         ctx.shadowColor = `rgba(255, 255, 255, ${alpha})`;
         ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
         ctx.beginPath();
