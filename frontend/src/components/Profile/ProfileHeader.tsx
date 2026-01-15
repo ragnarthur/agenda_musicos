@@ -1,5 +1,5 @@
-import React from 'react';
-import { MapPin, Star, Camera, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { MapPin, Star, Camera, Loader2, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Musician } from '../../types';
 
@@ -20,6 +20,9 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   uploadingAvatar = false,
   uploadingCover = false,
 }) => {
+  const [showAvatarHint, setShowAvatarHint] = useState(false);
+  const [showCoverHint, setShowCoverHint] = useState(false);
+
   return (
     <div className="relative">
       {/* Cover Image */}
@@ -38,7 +41,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20 dark:to-black/40" />
 
         {isOwnProfile && (
-          <div className="absolute top-4 right-4 group">
+          <div className="absolute top-4 right-4 relative flex items-center gap-2 group">
             <button
               onClick={onUploadCover}
               disabled={uploadingCover}
@@ -51,7 +54,19 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 <Camera className="h-5 w-5 text-gray-700 dark:text-gray-200" />
               )}
             </button>
-            <span className="pointer-events-none absolute right-0 mt-2 w-max max-w-[260px] rounded-lg border border-white/10 bg-gray-900/90 px-3 py-1.5 text-xs text-white opacity-0 shadow-lg backdrop-blur-md transition-opacity duration-200 group-hover:opacity-100">
+            <button
+              type="button"
+              onClick={() => setShowCoverHint((prev) => !prev)}
+              className="sm:hidden rounded-full border border-white/10 bg-gray-900/70 p-2 text-white shadow-lg"
+              aria-label="Informacoes sobre o upload da capa"
+            >
+              <Info className="h-4 w-4" />
+            </button>
+            <span
+              className={`pointer-events-none absolute right-0 mt-2 w-max max-w-[260px] rounded-lg border border-white/10 bg-gray-900/90 px-3 py-1.5 text-xs text-white shadow-lg backdrop-blur-md transition-opacity duration-200 ${
+                showCoverHint ? 'opacity-100' : 'opacity-0 sm:group-hover:opacity-100'
+              }`}
+            >
               Capa: JPG, PNG ou WEBP • até 5MB
             </span>
           </div>
@@ -85,23 +100,37 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             </div>
 
             {isOwnProfile && (
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={onUploadAvatar}
-                disabled={uploadingAvatar}
-                className="absolute bottom-2 right-2 bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 p-2 rounded-full shadow-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed group"
-                aria-label="Alterar foto de perfil"
-              >
-                {uploadingAvatar ? (
-                  <Loader2 className="h-4 w-4 text-white animate-spin" />
-                ) : (
-                  <Camera className="h-4 w-4 text-white" />
-                )}
-                <span className="pointer-events-none absolute -top-9 right-0 w-max max-w-[220px] rounded-lg border border-white/10 bg-gray-900/90 px-3 py-1.5 text-xs text-white opacity-0 shadow-lg backdrop-blur-md transition-opacity duration-200 group-hover:opacity-100">
+              <div className="absolute bottom-2 right-2 relative flex items-center gap-2 group">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={onUploadAvatar}
+                  disabled={uploadingAvatar}
+                  className="bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 p-2 rounded-full shadow-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                  aria-label="Alterar foto de perfil"
+                >
+                  {uploadingAvatar ? (
+                    <Loader2 className="h-4 w-4 text-white animate-spin" />
+                  ) : (
+                    <Camera className="h-4 w-4 text-white" />
+                  )}
+                </motion.button>
+                <button
+                  type="button"
+                  onClick={() => setShowAvatarHint((prev) => !prev)}
+                  className="sm:hidden rounded-full border border-white/10 bg-gray-900/70 p-2 text-white shadow-lg"
+                  aria-label="Informacoes sobre o upload do avatar"
+                >
+                  <Info className="h-4 w-4" />
+                </button>
+                <span
+                  className={`pointer-events-none absolute -top-9 right-0 w-max max-w-[220px] rounded-lg border border-white/10 bg-gray-900/90 px-3 py-1.5 text-xs text-white shadow-lg backdrop-blur-md transition-opacity duration-200 ${
+                    showAvatarHint ? 'opacity-100' : 'opacity-0 sm:group-hover:opacity-100'
+                  }`}
+                >
                   Avatar: JPG, PNG ou WEBP • até 2MB
                 </span>
-              </motion.button>
+              </div>
             )}
           </div>
 
