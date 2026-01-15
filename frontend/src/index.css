@@ -316,40 +316,40 @@
 
   @keyframes dust-chaos {
     0% {
-      background-position: 140px 120px, 160px 135px, 130px 150px, 175px 110px, 120px 140px;
+      background-position: 180px 130px, 240px 170px, 140px 220px, 260px 110px, 110px 190px;
     }
     20% {
-      background-position: 125px 110px, 150px 145px, 115px 160px, 165px 125px, 110px 150px;
+      background-position: 160px 150px, 210px 120px, 130px 250px, 240px 140px, 90px 210px;
     }
     40% {
-      background-position: 110px 130px, 135px 120px, 105px 165px, 150px 100px, 120px 155px;
+      background-position: 130px 170px, 200px 210px, 120px 180px, 230px 190px, 70px 230px;
     }
     60% {
-      background-position: 90px 145px, 120px 130px, 95px 170px, 135px 115px, 105px 160px;
+      background-position: 110px 200px, 180px 160px, 90px 240px, 210px 130px, 60px 210px;
     }
     80% {
-      background-position: 70px 135px, 105px 150px, 80px 165px, 115px 120px, 90px 155px;
+      background-position: 90px 160px, 160px 230px, 110px 200px, 190px 210px, 50px 240px;
     }
     100% {
-      background-position: 55px 145px, 95px 135px, 70px 170px, 105px 110px, 85px 160px;
+      background-position: 70px 180px, 140px 190px, 80px 230px, 170px 150px, 40px 220px;
     }
   }
 
   @keyframes dust-chaos-secondary {
     0% {
-      background-position: 165px 165px, 190px 150px, 150px 185px;
+      background-position: 220px 210px, 160px 250px, 260px 160px;
     }
     25% {
-      background-position: 145px 175px, 175px 160px, 135px 195px;
+      background-position: 200px 180px, 140px 220px, 230px 230px;
     }
     50% {
-      background-position: 125px 165px, 155px 190px, 120px 200px;
+      background-position: 170px 240px, 120px 200px, 210px 190px;
     }
     75% {
-      background-position: 105px 185px, 135px 160px, 95px 205px;
+      background-position: 150px 210px, 110px 260px, 190px 150px;
     }
     100% {
-      background-position: 85px 175px, 120px 190px, 80px 210px;
+      background-position: 130px 230px, 100px 190px, 170px 210px;
     }
   }
 
@@ -379,16 +379,16 @@
       bottom: -6%;
       left: auto;
       top: auto;
-      width: 38%;
-      height: 32%;
+      width: 52%;
+      height: 44%;
       background-image:
         radial-gradient(rgba(255, 255, 255, 0.72) 1.2px, transparent 2.4px),
         radial-gradient(rgba(255, 255, 255, 0.64) 1.05px, transparent 2.2px),
         radial-gradient(rgba(255, 255, 255, 0.68) 1.1px, transparent 2.3px),
         radial-gradient(rgba(255, 255, 255, 0.58) 0.95px, transparent 2.1px),
         radial-gradient(rgba(255, 255, 255, 0.66) 1px, transparent 2.5px);
-      background-size: 220px 220px;
-      background-position: 140px 120px, 160px 135px, 130px 150px, 175px 110px, 120px 140px;
+      background-size: 360px 360px;
+      background-position: 180px 130px, 240px 170px, 140px 220px, 260px 110px, 110px 190px;
       background-repeat: no-repeat;
       opacity: 0.32;
       animation: dust-chaos 10s linear infinite;
@@ -403,14 +403,14 @@
       bottom: -8%;
       left: auto;
       top: auto;
-      width: 40%;
-      height: 34%;
+      width: 50%;
+      height: 42%;
       background-image:
         radial-gradient(rgba(255, 255, 255, 0.58) 1px, transparent 2.6px),
         radial-gradient(rgba(255, 255, 255, 0.52) 0.9px, transparent 2.4px),
         radial-gradient(rgba(255, 255, 255, 0.55) 0.95px, transparent 2.5px);
-      background-size: 240px 240px;
-      background-position: 165px 165px, 190px 150px, 150px 185px;
+      background-size: 380px 380px;
+      background-position: 220px 210px, 160px 250px, 260px 160px;
       background-repeat: no-repeat;
       opacity: 0.24;
       animation: dust-chaos-secondary 12s linear infinite;
