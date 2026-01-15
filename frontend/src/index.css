@@ -382,15 +382,13 @@
       width: 48%;
       height: 44%;
       background-image:
-        radial-gradient(rgba(255, 255, 255, 0.78) 1.1px, transparent 2.4px),
-        radial-gradient(rgba(255, 255, 255, 0.68) 0.95px, transparent 2.2px),
-        radial-gradient(rgba(255, 255, 255, 0.74) 1px, transparent 2.3px),
-        radial-gradient(rgba(255, 255, 255, 0.62) 0.85px, transparent 2px),
-        radial-gradient(rgba(255, 255, 255, 0.7) 1px, transparent 2.5px);
-      background-size: 200px 200px;
-      background-position: 150px 120px, 170px 145px, 135px 165px, 190px 110px, 125px 135px;
-      opacity: 0.38;
-      animation: dust-chaos 22s linear infinite;
+        radial-gradient(rgba(255, 255, 255, 0.62) 1px, transparent 2.6px),
+        radial-gradient(rgba(255, 255, 255, 0.56) 0.9px, transparent 2.4px),
+        radial-gradient(rgba(255, 255, 255, 0.6) 0.95px, transparent 2.5px);
+      background-size: 320px 320px;
+      background-position: 160px 120px, 210px 180px, 120px 200px;
+      opacity: 0.28;
+      animation: dust-chaos 14s linear infinite;
       mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 60%, rgba(0, 0, 0, 0) 82%);
       -webkit-mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 60%, rgba(0, 0, 0, 0) 82%);
     }
@@ -405,14 +403,12 @@
       width: 52%;
       height: 48%;
       background-image:
-        radial-gradient(rgba(255, 255, 255, 0.68) 1px, transparent 2.6px),
-        radial-gradient(rgba(255, 255, 255, 0.6) 0.9px, transparent 2.2px),
-        radial-gradient(rgba(255, 255, 255, 0.64) 0.95px, transparent 2.4px),
-        radial-gradient(rgba(255, 255, 255, 0.58) 0.85px, transparent 2.1px);
-      background-size: 220px 220px;
-      background-position: 190px 170px, 210px 150px, 175px 195px, 230px 130px;
-      opacity: 0.28;
-      animation: dust-chaos-secondary 26s linear infinite;
+        radial-gradient(rgba(255, 255, 255, 0.54) 0.95px, transparent 2.6px),
+        radial-gradient(rgba(255, 255, 255, 0.5) 0.85px, transparent 2.4px);
+      background-size: 360px 360px;
+      background-position: 200px 170px, 120px 210px;
+      opacity: 0.22;
+      animation: dust-chaos-secondary 16s linear infinite;
       mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 62%, rgba(0, 0, 0, 0) 84%);
       -webkit-mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 62%, rgba(0, 0, 0, 0) 84%);
     }
