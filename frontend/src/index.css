@@ -316,40 +316,40 @@
 
   @keyframes dust-chaos {
     0% {
-      background-position: 180px 130px, 240px 170px, 140px 220px, 260px 110px, 110px 190px;
+      background-position: 200px 120px, 270px 160px, 150px 210px, 300px 100px, 120px 170px, 240px 230px, 90px 140px;
     }
     20% {
-      background-position: 160px 150px, 210px 120px, 130px 250px, 240px 140px, 90px 210px;
+      background-position: 180px 140px, 240px 120px, 140px 230px, 280px 130px, 100px 190px, 210px 200px, 120px 160px;
     }
     40% {
-      background-position: 130px 170px, 200px 210px, 120px 180px, 230px 190px, 70px 230px;
+      background-position: 160px 160px, 220px 200px, 120px 190px, 260px 180px, 90px 210px, 230px 240px, 110px 150px;
     }
     60% {
-      background-position: 110px 200px, 180px 160px, 90px 240px, 210px 130px, 60px 210px;
+      background-position: 140px 190px, 200px 150px, 110px 220px, 230px 120px, 80px 200px, 200px 210px, 130px 170px;
     }
     80% {
-      background-position: 90px 160px, 160px 230px, 110px 200px, 190px 210px, 50px 240px;
+      background-position: 120px 170px, 180px 210px, 130px 190px, 210px 200px, 70px 220px, 180px 240px, 100px 150px;
     }
     100% {
-      background-position: 70px 180px, 140px 190px, 80px 230px, 170px 150px, 40px 220px;
+      background-position: 110px 180px, 160px 190px, 100px 220px, 190px 150px, 60px 210px, 160px 230px, 90px 160px;
     }
   }
 
   @keyframes dust-chaos-secondary {
     0% {
-      background-position: 220px 210px, 160px 250px, 260px 160px;
+      background-position: 240px 200px, 170px 230px, 280px 150px, 210px 260px, 140px 180px;
     }
     25% {
-      background-position: 200px 180px, 140px 220px, 230px 230px;
+      background-position: 210px 180px, 150px 210px, 250px 220px, 190px 240px, 160px 170px;
     }
     50% {
-      background-position: 170px 240px, 120px 200px, 210px 190px;
+      background-position: 190px 220px, 130px 190px, 230px 180px, 170px 250px, 150px 160px;
     }
     75% {
-      background-position: 150px 210px, 110px 260px, 190px 150px;
+      background-position: 170px 230px, 120px 240px, 210px 160px, 150px 260px, 140px 180px;
     }
     100% {
-      background-position: 130px 230px, 100px 190px, 170px 210px;
+      background-position: 150px 210px, 110px 200px, 190px 190px, 130px 240px, 120px 170px;
     }
   }
 
@@ -375,20 +375,20 @@
     .dust-layer {
       position: fixed;
       inset: auto;
-      right: -2%;
-      bottom: -6%;
+      right: -1%;
+      bottom: 8%;
       left: auto;
       top: auto;
-      width: 52%;
-      height: 44%;
+      width: 58%;
+      height: 48%;
       background-image:
         radial-gradient(rgba(255, 255, 255, 0.72) 1.2px, transparent 2.4px),
         radial-gradient(rgba(255, 255, 255, 0.64) 1.05px, transparent 2.2px),
         radial-gradient(rgba(255, 255, 255, 0.68) 1.1px, transparent 2.3px),
         radial-gradient(rgba(255, 255, 255, 0.58) 0.95px, transparent 2.1px),
         radial-gradient(rgba(255, 255, 255, 0.66) 1px, transparent 2.5px);
-      background-size: 360px 360px;
-      background-position: 180px 130px, 240px 170px, 140px 220px, 260px 110px, 110px 190px;
+      background-size: 420px 420px;
+      background-position: 200px 120px, 270px 160px, 150px 210px, 300px 100px, 120px 170px, 240px 230px, 90px 140px;
       background-repeat: no-repeat;
       opacity: 0.32;
       animation: dust-chaos 10s linear infinite;
@@ -399,18 +399,18 @@
     .dust-layer--secondary {
       position: fixed;
       inset: auto;
-      right: -4%;
-      bottom: -8%;
+      right: -2%;
+      bottom: 6%;
       left: auto;
       top: auto;
-      width: 50%;
-      height: 42%;
+      width: 56%;
+      height: 46%;
       background-image:
         radial-gradient(rgba(255, 255, 255, 0.58) 1px, transparent 2.6px),
         radial-gradient(rgba(255, 255, 255, 0.52) 0.9px, transparent 2.4px),
         radial-gradient(rgba(255, 255, 255, 0.55) 0.95px, transparent 2.5px);
-      background-size: 380px 380px;
-      background-position: 220px 210px, 160px 250px, 260px 160px;
+      background-size: 440px 440px;
+      background-position: 240px 200px, 170px 230px, 280px 150px, 210px 260px, 140px 180px;
       background-repeat: no-repeat;
       opacity: 0.24;
       animation: dust-chaos-secondary 12s linear infinite;
