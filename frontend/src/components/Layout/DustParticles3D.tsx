@@ -28,7 +28,7 @@ const DustParticles3D: React.FC = () => {
     let height = 0;
     let dpr = window.devicePixelRatio || 1;
     const particles: Particle[] = [];
-    const density = { min: 60, max: 140, factor: 0.00005 };
+    const density = { min: 70, max: 160, factor: 0.00005 };
 
     const resetArea = () => {
       width = window.innerWidth;
@@ -55,8 +55,8 @@ const DustParticles3D: React.FC = () => {
           y: Math.random() * height,
           z: depth,
           size: 0.7 + depth * 1.2,
-          speed: 10 + depth * 24,
-          sway: 8 + depth * 14,
+          speed: 6 + depth * 14,
+          sway: 10 + depth * 18,
           phase: Math.random() * Math.PI * 2,
         });
       }
@@ -73,25 +73,31 @@ const DustParticles3D: React.FC = () => {
       ctx.clearRect(0, 0, width, height);
       ctx.globalCompositeOperation = 'lighter';
 
-      const wind = -14 - 6 * Math.sin(time * 0.00012);
       particles.forEach((particle) => {
-        const sway = Math.sin(time * 0.0011 + particle.phase) * particle.sway;
-        particle.x += (wind * (0.5 + particle.z * 0.6) + sway) * delta;
-        particle.y += particle.speed * delta;
+        const driftX = Math.sin(time * 0.0006 + particle.phase) * particle.sway;
+        const driftY = Math.cos(time * 0.0005 + particle.phase * 1.3) * particle.sway;
+        const flowX = Math.sin(time * 0.00022 + particle.phase * 1.1) * particle.speed;
+        const flowY = Math.cos(time * 0.00018 + particle.phase * 0.9) * particle.speed;
 
-        if (particle.y > height + 20) {
-          particle.y = -20;
-          particle.x = Math.random() * width;
-        }
+        particle.x += (flowX + driftX) * delta;
+        particle.y += (flowY + driftY) * delta;
 
         if (particle.x < -40) {
           particle.x = width + 40;
+        } else if (particle.x > width + 40) {
+          particle.x = -40;
+        }
+
+        if (particle.y < -40) {
+          particle.y = height + 40;
+        } else if (particle.y > height + 40) {
+          particle.y = -40;
         }
 
         const depth = particle.z;
         const scale = 0.6 + depth * 0.7;
         const size = particle.size * scale;
-        const alpha = 0.12 + depth * 0.28;
+        const alpha = 0.12 + depth * 0.26;
 
         ctx.shadowBlur = 8 + depth * 14;
         ctx.shadowColor = `rgba(255, 255, 255, ${alpha})`;

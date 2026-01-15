@@ -79,51 +79,51 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
         >
           <defs>
             <linearGradient id="blueWaveGradient" x1="100%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#050914" />
-              <stop offset="45%" stopColor="#071528" />
-              <stop offset="100%" stopColor="#040812" />
+              <stop offset="0%" stopColor="#03060f" />
+              <stop offset="45%" stopColor="#061225" />
+              <stop offset="100%" stopColor="#02040a" />
             </linearGradient>
             <linearGradient id="blueWaveSheen" x1="100%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#123a73" stopOpacity="0.45" />
-              <stop offset="50%" stopColor="#1f4f93" stopOpacity="0.55" />
-              <stop offset="100%" stopColor="#081b3c" stopOpacity="0.45" />
+              <stop offset="0%" stopColor="#0f2f5c" stopOpacity="0.42" />
+              <stop offset="50%" stopColor="#1a4178" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#061226" stopOpacity="0.42" />
             </linearGradient>
             <filter id="blueWaveDisplace" x="-20%" y="-20%" width="140%" height="140%">
               <feTurbulence
                 type="fractalNoise"
-                baseFrequency="0.004 0.018"
+                baseFrequency="0.0025 0.012"
                 numOctaves="1"
                 seed="3"
                 result="noise"
               >
                 <animate
                   attributeName="baseFrequency"
-                  dur="20s"
-                  values="0.004 0.016;0.007 0.022;0.004 0.016"
+                  dur="26s"
+                  values="0.0025 0.01;0.004 0.014;0.0025 0.01"
                   repeatCount="indefinite"
                 />
               </feTurbulence>
-              <feDisplacementMap in="SourceGraphic" in2="noise" scale="52" xChannelSelector="R" yChannelSelector="G">
-                <animate attributeName="scale" dur="18s" values="38;60;38" repeatCount="indefinite" />
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="70" xChannelSelector="R" yChannelSelector="G">
+                <animate attributeName="scale" dur="22s" values="54;80;54" repeatCount="indefinite" />
               </feDisplacementMap>
             </filter>
             <filter id="blueWaveLight" x="-20%" y="-20%" width="140%" height="140%">
               <feTurbulence
                 type="fractalNoise"
-                baseFrequency="0.006 0.022"
+                baseFrequency="0.003 0.014"
                 numOctaves="1"
                 seed="7"
                 result="heightMap"
               >
                 <animate
                   attributeName="baseFrequency"
-                  dur="22s"
-                  values="0.006 0.02;0.009 0.024;0.006 0.02"
+                  dur="28s"
+                  values="0.003 0.012;0.005 0.016;0.003 0.012"
                   repeatCount="indefinite"
                 />
               </feTurbulence>
-              <feDiffuseLighting in="heightMap" lightingColor="#5f89cf" surfaceScale="30" result="light">
-                <feDistantLight azimuth="225" elevation="52" />
+              <feDiffuseLighting in="heightMap" lightingColor="#4c6fab" surfaceScale="36" result="light">
+                <feDistantLight azimuth="225" elevation="54" />
               </feDiffuseLighting>
               <feComposite in="light" in2="SourceGraphic" operator="in" />
             </filter>
@@ -132,8 +132,8 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
             <animateTransform
               attributeName="transform"
               type="translate"
-              dur="24s"
-              values="80 80;-80 -80;80 80"
+              dur="30s"
+              values="140 140;-140 -140;140 140"
               repeatCount="indefinite"
             />
             <rect width="1200" height="1200" fill="url(#blueWaveGradient)" filter="url(#blueWaveDisplace)" />
