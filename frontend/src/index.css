@@ -334,35 +334,39 @@
 
   @media (min-width: 1024px) {
     .dust-layer {
+      position: fixed;
+      inset: auto;
+      right: -4%;
+      bottom: -8%;
+      left: auto;
+      top: auto;
+      width: 48%;
+      height: 44%;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.74) 1.1px, transparent 2.4px);
+      background-size: 200px 200px;
+      background-position: 160px 120px;
+      opacity: 0.38;
+      animation: dust-sweep-left 26s linear infinite;
+      mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 60%, rgba(0, 0, 0, 0) 82%);
+      -webkit-mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 60%, rgba(0, 0, 0, 0) 82%);
+    }
+
+    .dust-layer--secondary {
+      position: fixed;
+      inset: auto;
       right: -6%;
       bottom: -10%;
       left: auto;
       top: auto;
-      width: 62%;
-      height: 52%;
-      background-image: radial-gradient(rgba(255, 255, 255, 0.68) 0.9px, transparent 3px);
+      width: 52%;
+      height: 48%;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.65) 1.1px, transparent 2.6px);
       background-size: 240px 240px;
-      background-position: 160px 140px;
-      opacity: 0.35;
-      animation: dust-sweep-left 32s linear infinite;
-      mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 68%, rgba(0, 0, 0, 0) 95%);
-      -webkit-mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 68%, rgba(0, 0, 0, 0) 95%);
-    }
-
-    .dust-layer--secondary {
-      right: -4%;
-      bottom: -12%;
-      left: auto;
-      top: auto;
-      width: 56%;
-      height: 46%;
-      background-image: radial-gradient(rgba(255, 255, 255, 0.6) 0.9px, transparent 3.2px);
-      background-size: 280px 280px;
-      background-position: 200px 180px;
-      opacity: 0.26;
-      animation: dust-sweep-left-secondary 38s linear infinite;
-      mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 68%, rgba(0, 0, 0, 0) 95%);
-      -webkit-mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 68%, rgba(0, 0, 0, 0) 95%);
+      background-position: 200px 160px;
+      opacity: 0.28;
+      animation: dust-sweep-left-secondary 30s linear infinite;
+      mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 62%, rgba(0, 0, 0, 0) 84%);
+      -webkit-mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 62%, rgba(0, 0, 0, 0) 84%);
     }
   }
   .btn-primary {
