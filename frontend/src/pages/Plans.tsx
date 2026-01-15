@@ -282,6 +282,7 @@ const Plans: React.FC = () => {
       <FullscreenBackground
         className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800"
         contentClassName="flex items-center justify-center"
+        enableBlueWaves
       >
         <Loader2 className="h-8 w-8 text-white animate-spin" />
       </FullscreenBackground>
@@ -294,6 +295,7 @@ const Plans: React.FC = () => {
       <FullscreenBackground
         className="bg-gradient-to-br from-green-500 to-green-700 px-4"
         contentClassName="flex items-center justify-center"
+        enableBlueWaves
       >
         <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
           <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
@@ -322,6 +324,7 @@ const Plans: React.FC = () => {
       <FullscreenBackground
         className="bg-gradient-to-br from-green-500 to-green-700 px-4"
         contentClassName="flex items-center justify-center"
+        enableBlueWaves
       >
         <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
           <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
@@ -342,6 +345,7 @@ const Plans: React.FC = () => {
       <FullscreenBackground
         className="bg-gradient-to-br from-primary-500 to-primary-700 dark:from-slate-950 dark:to-slate-800 px-4"
         contentClassName="flex items-center justify-center"
+        enableBlueWaves
       >
         <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
@@ -356,7 +360,7 @@ const Plans: React.FC = () => {
   }
 
   return (
-    <FullscreenBackground className="bg-slate-950 text-white">
+    <FullscreenBackground className="bg-slate-950 text-white" enableBlueWaves>
       <motion.div
         className="max-w-6xl mx-auto px-4 py-10 space-y-8"
         variants={revealParent}

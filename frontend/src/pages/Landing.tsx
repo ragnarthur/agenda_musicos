@@ -7,7 +7,10 @@ import FullscreenBackground from '../components/Layout/FullscreenBackground';
 
 const Landing: React.FC = () => {
   return (
-    <FullscreenBackground className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
+    <FullscreenBackground
+      className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800"
+      enableBlueWaves
+    >
       <div className="relative z-10">
         {/* Hero Section */}
         <section className="container mx-auto px-4 py-20 text-center">

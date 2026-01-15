@@ -42,6 +42,7 @@ const Login: React.FC = () => {
     <FullscreenBackground
       className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 px-4"
       contentClassName="flex items-center justify-center"
+      enableBlueWaves
     >
       <div className="w-full max-w-xl">
         {/* Logo e Título */}
