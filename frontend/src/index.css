@@ -266,6 +266,36 @@
     }
   }
 
+  @keyframes dust-orbit {
+    0% {
+      background-position: -220px -220px;
+    }
+    33% {
+      background-position: -140px -260px;
+    }
+    66% {
+      background-position: -260px -140px;
+    }
+    100% {
+      background-position: -220px -220px;
+    }
+  }
+
+  @keyframes dust-orbit-reverse {
+    0% {
+      background-position: calc(100% + 220px) calc(100% + 220px);
+    }
+    33% {
+      background-position: calc(100% + 140px) calc(100% + 260px);
+    }
+    66% {
+      background-position: calc(100% + 260px) calc(100% + 140px);
+    }
+    100% {
+      background-position: calc(100% + 220px) calc(100% + 220px);
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .fabric-wave,
     .dust-layer {
@@ -286,19 +316,21 @@
 
   @media (min-width: 1024px) {
     .dust-layer {
-      background-image: radial-gradient(rgba(255, 255, 255, 0.7) 0.8px, transparent 3.4px);
-      background-size: 420px 420px;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.68) 0.9px, transparent 3px);
+      background-size: 260px 260px;
       background-position: -220px -220px;
-      opacity: 0.3;
+      opacity: 0.34;
+      animation: dust-orbit 34s ease-in-out infinite;
       mask-image: radial-gradient(circle at 0% 0%, rgba(0, 0, 0, 1) 0 55%, rgba(0, 0, 0, 0) 82%);
       -webkit-mask-image: radial-gradient(circle at 0% 0%, rgba(0, 0, 0, 1) 0 55%, rgba(0, 0, 0, 0) 82%);
     }
 
     .dust-layer--secondary {
-      background-image: radial-gradient(rgba(255, 255, 255, 0.62) 0.8px, transparent 3.6px);
-      background-size: 520px 520px;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.6) 0.9px, transparent 3.2px);
+      background-size: 320px 320px;
       background-position: calc(100% + 220px) calc(100% + 220px);
-      opacity: 0.22;
+      opacity: 0.26;
+      animation: dust-orbit-reverse 38s ease-in-out infinite;
       mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 55%, rgba(0, 0, 0, 0) 82%);
       -webkit-mask-image: radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 1) 0 55%, rgba(0, 0, 0, 0) 82%);
     }
