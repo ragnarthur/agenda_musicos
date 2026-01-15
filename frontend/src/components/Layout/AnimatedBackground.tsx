@@ -78,58 +78,67 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
           aria-hidden="true"
         >
           <defs>
-            <linearGradient id="blueWaveGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#081126" />
-              <stop offset="50%" stopColor="#0a2348" />
-              <stop offset="100%" stopColor="#081833" />
+            <linearGradient id="blueWaveGradient" x1="100%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#050914" />
+              <stop offset="45%" stopColor="#071528" />
+              <stop offset="100%" stopColor="#040812" />
             </linearGradient>
-            <linearGradient id="blueWaveSheen" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#1a4a8f" stopOpacity="0.5" />
-              <stop offset="50%" stopColor="#2f62b4" stopOpacity="0.65" />
-              <stop offset="100%" stopColor="#0a2b5a" stopOpacity="0.5" />
+            <linearGradient id="blueWaveSheen" x1="100%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#123a73" stopOpacity="0.45" />
+              <stop offset="50%" stopColor="#1f4f93" stopOpacity="0.55" />
+              <stop offset="100%" stopColor="#081b3c" stopOpacity="0.45" />
             </linearGradient>
             <filter id="blueWaveDisplace" x="-20%" y="-20%" width="140%" height="140%">
               <feTurbulence
                 type="fractalNoise"
-                baseFrequency="0.006 0.024"
-                numOctaves="2"
+                baseFrequency="0.004 0.018"
+                numOctaves="1"
                 seed="3"
                 result="noise"
               >
                 <animate
                   attributeName="baseFrequency"
-                  dur="18s"
-                  values="0.006 0.022;0.01 0.03;0.006 0.022"
+                  dur="20s"
+                  values="0.004 0.016;0.007 0.022;0.004 0.016"
                   repeatCount="indefinite"
                 />
               </feTurbulence>
-              <feDisplacementMap in="SourceGraphic" in2="noise" scale="36" xChannelSelector="R" yChannelSelector="G">
-                <animate attributeName="scale" dur="16s" values="24;42;24" repeatCount="indefinite" />
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="52" xChannelSelector="R" yChannelSelector="G">
+                <animate attributeName="scale" dur="18s" values="38;60;38" repeatCount="indefinite" />
               </feDisplacementMap>
             </filter>
             <filter id="blueWaveLight" x="-20%" y="-20%" width="140%" height="140%">
               <feTurbulence
                 type="fractalNoise"
-                baseFrequency="0.008 0.03"
-                numOctaves="2"
+                baseFrequency="0.006 0.022"
+                numOctaves="1"
                 seed="7"
                 result="heightMap"
               >
                 <animate
                   attributeName="baseFrequency"
-                  dur="20s"
-                  values="0.008 0.026;0.012 0.032;0.008 0.026"
+                  dur="22s"
+                  values="0.006 0.02;0.009 0.024;0.006 0.02"
                   repeatCount="indefinite"
                 />
               </feTurbulence>
-              <feDiffuseLighting in="heightMap" lightingColor="#7aa7ea" surfaceScale="24" result="light">
-                <feDistantLight azimuth="215" elevation="50" />
+              <feDiffuseLighting in="heightMap" lightingColor="#5f89cf" surfaceScale="30" result="light">
+                <feDistantLight azimuth="225" elevation="52" />
               </feDiffuseLighting>
               <feComposite in="light" in2="SourceGraphic" operator="in" />
             </filter>
           </defs>
-          <rect width="1200" height="1200" fill="url(#blueWaveGradient)" filter="url(#blueWaveDisplace)" />
-          <rect width="1200" height="1200" fill="url(#blueWaveSheen)" filter="url(#blueWaveLight)" opacity="0.5" />
+          <g>
+            <animateTransform
+              attributeName="transform"
+              type="translate"
+              dur="24s"
+              values="80 80;-80 -80;80 80"
+              repeatCount="indefinite"
+            />
+            <rect width="1200" height="1200" fill="url(#blueWaveGradient)" filter="url(#blueWaveDisplace)" />
+            <rect width="1200" height="1200" fill="url(#blueWaveSheen)" filter="url(#blueWaveLight)" opacity="0.45" />
+          </g>
         </svg>
       )}
       {enableBlueWaves && !enableEffects && <div className="blue-wave-static" aria-hidden="true" />}
