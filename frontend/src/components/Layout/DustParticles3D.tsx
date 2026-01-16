@@ -57,8 +57,8 @@ const DustParticles3D: React.FC = memo(() => {
             y: Math.random() * height,
             z: 0.3,
             size: 1.0,
-            speed: 4,
-            sway: 8,
+            speed: 8,
+            sway: 14,
             phase: Math.random() * Math.PI * 2,
           });
         }
@@ -111,10 +111,10 @@ const DustParticles3D: React.FC = memo(() => {
       particles.forEach((particle) => {
         if (isSmallScreen) {
           // Mobile: partículas menores com movimento mais rápido
-          const driftX = Math.sin(time * 0.0004 + particle.phase) * particle.sway;
-          const driftY = Math.cos(time * 0.00035 + particle.phase * 1.3) * particle.sway;
-          const flowX = Math.sin(time * 0.00025 + particle.phase * 1.1) * particle.speed;
-          const flowY = Math.cos(time * 0.0002 + particle.phase * 0.9) * particle.speed;
+          const driftX = Math.sin(time * 0.0008 + particle.phase) * particle.sway;
+          const driftY = Math.cos(time * 0.0007 + particle.phase * 1.3) * particle.sway;
+          const flowX = Math.sin(time * 0.0005 + particle.phase * 1.1) * particle.speed;
+          const flowY = Math.cos(time * 0.00045 + particle.phase * 0.9) * particle.speed;
 
           particle.x += (flowX + driftX) * delta;
           particle.y += (flowY + driftY) * delta;
