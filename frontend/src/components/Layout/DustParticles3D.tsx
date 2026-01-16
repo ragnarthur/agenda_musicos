@@ -82,9 +82,9 @@ const DustParticles3D: React.FC = memo(() => {
           x: Math.random() * width,
           y: Math.random() * height,
           z: depth,
-          size: 0.6 + depth * 0.9,
-          speed: 5 + depth * 12,
-          sway: 10 + depth * 16,
+          size: 0.8 + depth * 1.2,
+          speed: 12 + depth * 24,
+          sway: 18 + depth * 28,
           phase: Math.random() * Math.PI * 2,
         });
       }
@@ -132,11 +132,11 @@ const DustParticles3D: React.FC = memo(() => {
           ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
           ctx.fill();
         } else {
-          // Desktop: movimento complexo completo
-          const driftX = Math.sin(time * 0.0006 + particle.phase) * particle.sway;
-          const driftY = Math.cos(time * 0.0005 + particle.phase * 1.3) * particle.sway;
-          const flowX = Math.sin(time * 0.00022 + particle.phase * 1.1) * particle.speed;
-          const flowY = Math.cos(time * 0.00018 + particle.phase * 0.9) * particle.speed;
+          // Desktop: movimento complexo completo (velocidade aumentada)
+          const driftX = Math.sin(time * 0.0012 + particle.phase) * particle.sway;
+          const driftY = Math.cos(time * 0.001 + particle.phase * 1.3) * particle.sway;
+          const flowX = Math.sin(time * 0.00045 + particle.phase * 1.1) * particle.speed;
+          const flowY = Math.cos(time * 0.00038 + particle.phase * 0.9) * particle.speed;
 
           particle.x += (flowX + driftX) * delta;
           particle.y += (flowY + driftY) * delta;
@@ -154,12 +154,12 @@ const DustParticles3D: React.FC = memo(() => {
           }
 
           const depth = particle.z;
-          const scale = 0.6 + depth * 0.7;
+          const scale = 0.7 + depth * 0.8;
           const size = particle.size * scale;
-          const alpha = 0.16 + depth * 0.3;
+          const alpha = 0.35 + depth * 0.45;
 
-          ctx.shadowBlur = 10 + depth * 20;
-          ctx.shadowColor = `rgba(255, 255, 255, ${alpha})`;
+          ctx.shadowBlur = 18 + depth * 32;
+          ctx.shadowColor = `rgba(255, 255, 255, ${alpha * 1.2})`;
           ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
           ctx.beginPath();
           ctx.arc(particle.x, particle.y, size, 0, Math.PI * 2);
