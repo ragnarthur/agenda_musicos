@@ -79,25 +79,19 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
         >
           <defs>
             <linearGradient id="blueWaveGradient" x1="100%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#04152d" />
-              <stop offset="45%" stopColor="#0a2f61" />
-              <stop offset="100%" stopColor="#030912" />
+              <stop offset="0%" stopColor="#020612" />
+              <stop offset="45%" stopColor="#04162f" />
+              <stop offset="100%" stopColor="#010307" />
             </linearGradient>
             <linearGradient id="blueWaveSheen" x1="100%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#2a67c7" stopOpacity="0.62" />
-              <stop offset="50%" stopColor="#3a7fe0" stopOpacity="0.78" />
-              <stop offset="100%" stopColor="#0c2a58" stopOpacity="0.62" />
+              <stop offset="0%" stopColor="#1f56a8" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#2a6bc7" stopOpacity="0.64" />
+              <stop offset="100%" stopColor="#0a2146" stopOpacity="0.5" />
             </linearGradient>
             <linearGradient id="blueWaveMaskGradient" x1="100%" y1="100%" x2="0%" y2="0%">
               <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
               <stop offset="55%" stopColor="#ffffff" stopOpacity="0.7" />
               <stop offset="100%" stopColor="#ffffff" stopOpacity="0.1" />
-            </linearGradient>
-            <linearGradient id="blueWaveBandGradient" x1="100%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#7fb6ff" stopOpacity="0" />
-              <stop offset="45%" stopColor="#7fb6ff" stopOpacity="0.45" />
-              <stop offset="55%" stopColor="#7fb6ff" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#7fb6ff" stopOpacity="0" />
             </linearGradient>
             <mask id="blueWaveMask">
               <rect width="1200" height="1200" fill="url(#blueWaveMaskGradient)" />
@@ -136,13 +130,10 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
                   repeatCount="indefinite"
                 />
               </feTurbulence>
-              <feDiffuseLighting in="heightMap" lightingColor="#b5d6ff" surfaceScale="46" result="light">
+              <feDiffuseLighting in="heightMap" lightingColor="#a6c8ff" surfaceScale="44" result="light">
                 <feDistantLight azimuth="225" elevation="56" />
               </feDiffuseLighting>
               <feComposite in="light" in2="SourceGraphic" operator="in" />
-            </filter>
-            <filter id="blueWaveBandBlur" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="18" />
             </filter>
           </defs>
           <rect width="1200" height="1200" fill="url(#blueWaveGradient)" filter="url(#blueWaveDisplace)" />
@@ -152,70 +143,14 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
             fill="url(#blueWaveSheen)"
             filter="url(#blueWaveLight)"
             mask="url(#blueWaveMask)"
-            opacity="0.84"
+            opacity="0.78"
           />
-          <path
-            d="M 1400 1300 C 1040 980 780 760 440 480 C 200 280 40 140 -240 -80"
-            fill="none"
-            stroke="url(#blueWaveBandGradient)"
-            strokeWidth="260"
-            strokeLinecap="round"
-            filter="url(#blueWaveBandBlur)"
-            opacity="0.85"
-          >
-            <animateTransform
-              attributeName="transform"
-              type="translate"
-              dur="22s"
-              values="120 120;-140 -140;120 120"
-              repeatCount="indefinite"
-            />
-          </path>
         </svg>
       )}
-      {enableBlueWaves && !enableEffects && <div className="blue-wave-static" aria-hidden="true" />}
+      {!enableEffects && enableBlueWaves && <div className="blue-wave-static" aria-hidden="true" />}
+      {!enableEffects && !enableBlueWaves && <div className="fabric-static" aria-hidden="true" />}
       {enableEffects ? (
         <>
-          <svg
-            className="fabric-wave"
-            viewBox="0 0 1200 1200"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            <defs>
-              <linearGradient id="fabricGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#0b1220" />
-                <stop offset="45%" stopColor="#0f1b2d" />
-                <stop offset="100%" stopColor="#111827" />
-              </linearGradient>
-              <linearGradient id="fabricSheen" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#1f2937" />
-                <stop offset="45%" stopColor="#243b55" />
-                <stop offset="100%" stopColor="#111827" />
-              </linearGradient>
-              <filter id="fabricDisplace" x="-20%" y="-20%" width="140%" height="140%">
-                <feTurbulence
-                  type="fractalNoise"
-                  baseFrequency="0.02 0.05"
-                  numOctaves="3"
-                  seed="2"
-                  result="noise"
-                >
-                  <animate
-                    attributeName="baseFrequency"
-                    dur="18s"
-                    values="0.015 0.04;0.03 0.06;0.015 0.04"
-                    repeatCount="indefinite"
-                  />
-                </feTurbulence>
-                <feDisplacementMap in="SourceGraphic" in2="noise" scale="40" xChannelSelector="R" yChannelSelector="G">
-                  <animate attributeName="scale" dur="12s" values="28;48;28" repeatCount="indefinite" />
-                </feDisplacementMap>
-              </filter>
-            </defs>
-            <rect width="1200" height="1200" fill="url(#fabricGradient)" filter="url(#fabricDisplace)" />
-            <rect width="1200" height="1200" fill="url(#fabricSheen)" filter="url(#fabricDisplace)" opacity="0.45" />
-          </svg>
           <DustParticles3D />
 
           <div
