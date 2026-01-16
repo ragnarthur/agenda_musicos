@@ -17,16 +17,16 @@ const SkyBackground: React.FC = () => (
     <defs>
       {/* Sky gradient */}
       <linearGradient id="sky-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#87CEEB" stopOpacity="0.9" />
-        <stop offset="40%" stopColor="#F0E68C" stopOpacity="0.8" />
-        <stop offset="70%" stopColor="#FFE4B5" stopOpacity="0.6" />
-        <stop offset="100%" stopColor="#FFE1B8" stopOpacity="0.4" />
+        <stop offset="0%" stopColor="#1E3A8A" stopOpacity="0.9" />
+        <stop offset="30%" stopColor="#2E5F8A" stopOpacity="0.8" />
+        <stop offset="60%" stopColor="#3B82F6" stopOpacity="0.7" />
+        <stop offset="100%" stopColor="#4682B4" stopOpacity="0.5" />
       </linearGradient>
       
       {/* Cloud gradient */}
       <radialGradient id="cloud-gradient">
-        <stop offset="0%" stopColor="rgba(255, 255, 255, 0.9)" />
-        <stop offset="100%" stopColor="rgba(255, 255, 255, 0.3)" />
+        <stop offset="0%" stopColor="rgba(224, 247, 250, 0.9)" />
+        <stop offset="100%" stopColor="rgba(186, 230, 253, 0.4)" />
       </radialGradient>
       
       {/* Soft cloud filter */}
