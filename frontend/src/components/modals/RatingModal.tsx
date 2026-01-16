@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Star, X, Send } from 'lucide-react';
 import type { Availability, RatingInput } from '../../types';
+import { formatInstrumentLabel } from '../../utils/formatting';
 
 interface RatingModalProps {
   isOpen: boolean;
@@ -19,15 +20,6 @@ interface MusicianRatingState {
   rating: number;
   comment: string;
 }
-
-const instrumentLabels: Record<string, string> = {
-  vocal: 'Voz',
-  guitar: 'Violão/Guitarra',
-  bass: 'Baixo',
-  drums: 'Bateria',
-  keyboard: 'Teclado',
-  percussion: 'Percussão',
-};
 
 const RatingModal: React.FC<RatingModalProps> = ({
   isOpen,
@@ -48,7 +40,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
         `${a.musician.user?.first_name || ''} ${a.musician.user?.last_name || ''}`.trim() ||
         a.musician.user?.username ||
         'Músico',
-      instrument: instrumentLabels[a.musician.instrument] || a.musician.instrument,
+      instrument: formatInstrumentLabel(a.musician.instrument),
       rating: 0,
       comment: '',
     }));

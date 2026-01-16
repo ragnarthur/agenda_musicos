@@ -7,6 +7,7 @@ import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { musicianService } from '../services/api';
 import type { Musician } from '../types';
+import { formatInstrumentLabel } from '../utils/formatting';
 
 const Musicians: React.FC = () => {
   const [musicians, setMusicians] = useState<Musician[]>([]);
@@ -77,9 +78,9 @@ const Musicians: React.FC = () => {
       mandolin: 'Bandolinista',
       dj: 'DJ',
       producer: 'Produtor(a)',
+      other: 'Outro',
     };
-    // Se não encontrar no mapa, capitaliza o próprio valor (para instrumentos customizados)
-    return displayMap[instrument] || instrument.charAt(0).toUpperCase() + instrument.slice(1);
+    return displayMap[instrument] || formatInstrumentLabel(instrument);
   };
 
   const cardGrid = {

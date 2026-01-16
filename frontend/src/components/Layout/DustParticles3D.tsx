@@ -97,9 +97,9 @@ const DustParticles3D: React.FC = () => {
         const depth = particle.z;
         const scale = 0.6 + depth * 0.7;
         const size = particle.size * scale;
-        const alpha = 0.12 + depth * 0.26;
+        const alpha = 0.16 + depth * 0.3;
 
-        ctx.shadowBlur = 8 + depth * 16;
+        ctx.shadowBlur = 10 + depth * 20;
         ctx.shadowColor = `rgba(255, 255, 255, ${alpha})`;
         ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
         ctx.beginPath();

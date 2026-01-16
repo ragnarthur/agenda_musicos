@@ -596,11 +596,31 @@ class LeaderAvailabilitySerializer(serializers.ModelSerializer):
             return None
         instrument_labels = {
             'vocal': 'Vocal',
-            'guitar': 'Guitarra/Violão',
+            'guitar': 'Guitarra',
+            'acoustic_guitar': 'Violão',
             'bass': 'Baixo',
             'drums': 'Bateria',
             'keyboard': 'Teclado',
-            'percussion': 'Percussão/Outros',
+            'piano': 'Piano',
+            'synth': 'Sintetizador',
+            'percussion': 'Percussão',
+            'cajon': 'Cajón',
+            'violin': 'Violino',
+            'viola': 'Viola',
+            'cello': 'Violoncelo',
+            'double_bass': 'Contrabaixo acústico',
+            'saxophone': 'Saxofone',
+            'trumpet': 'Trompete',
+            'trombone': 'Trombone',
+            'flute': 'Flauta',
+            'clarinet': 'Clarinete',
+            'harmonica': 'Gaita',
+            'ukulele': 'Ukulele',
+            'banjo': 'Banjo',
+            'mandolin': 'Bandolim',
+            'dj': 'DJ',
+            'producer': 'Produtor(a)',
+            'other': 'Outro',
         }
         return instrument_labels.get(obj.leader.instrument, obj.leader.instrument)
 

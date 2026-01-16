@@ -12,24 +12,12 @@ import { format, isToday, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import TiltCard from '../components/common/TiltCard';
 import { getEventComputedStatus } from '../utils/events';
-
-const instrumentLabels: Record<string, string> = {
-  vocal: 'Voz',
-  guitar: 'Violão/Guitarra',
-  bass: 'Baixo',
-  drums: 'Bateria',
-  keyboard: 'Teclado',
-  percussion: 'Percussão',
-};
+import { formatInstrumentLabel, getMusicianDisplayName } from '../utils/formatting';
 
 const formatMusicianLabel = (availability: Availability) => {
   const musician = availability.musician;
-  const name =
-    musician.full_name ||
-    musician.user?.full_name ||
-    `${musician.user?.first_name || ''} ${musician.user?.last_name || ''}`.trim() ||
-    musician.user?.username;
-  const instrument = musician.instrument ? instrumentLabels[musician.instrument] || musician.instrument : '';
+  const name = getMusicianDisplayName(musician);
+  const instrument = formatInstrumentLabel(musician?.instrument);
   return instrument ? `${name} (${instrument})` : name;
 };
 

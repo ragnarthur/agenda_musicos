@@ -10,27 +10,14 @@ import type { Availability, Event } from '../types';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { getEventComputedStatus } from '../utils/events';
+import { formatInstrumentLabel, getMusicianDisplayName } from '../utils/formatting';
 
 type TimeFilter = 'upcoming' | 'past' | 'all';
 
-const instrumentLabels: Record<string, string> = {
-  vocal: 'Voz',
-  guitar: 'Violão/Guitarra',
-  bass: 'Baixo',
-  drums: 'Bateria',
-  keyboard: 'Teclado',
-  percussion: 'Percussão',
-};
-
 const toName = (availability: Availability): string => {
   const musician = availability.musician;
-  const name =
-    musician.full_name ||
-    musician.user?.full_name ||
-    `${musician.user?.first_name || ''} ${musician.user?.last_name || ''}`.trim() ||
-    musician.user?.username ||
-    '';
-  const instrument = musician.instrument ? instrumentLabels[musician.instrument] || musician.instrument : '';
+  const name = getMusicianDisplayName(musician);
+  const instrument = formatInstrumentLabel(musician?.instrument);
   return instrument ? `${name} (${instrument})` : name;
 };
 

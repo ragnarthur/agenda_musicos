@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MapPin, Star, Camera, Loader2, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Musician } from '../../types';
+import { formatInstrumentLabel } from '../../utils/formatting';
 
 interface ProfileHeaderProps {
   musician: Musician;
@@ -82,7 +83,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           className="flex flex-col md:flex-row items-start md:items-end gap-6 -mt-20"
         >
           {/* Avatar */}
-          <div className="relative">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="w-40 h-40 rounded-full border-4 border-white dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl overflow-hidden ring-4 ring-blue-500/20 dark:ring-blue-400/20 hover:ring-blue-500/40 dark:hover:ring-blue-400/40 transition-all">
               {musician.avatar_url ? (
                 <img
@@ -100,31 +101,33 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             </div>
 
             {isOwnProfile && (
-              <div className="absolute bottom-2 right-2 relative flex items-center gap-2 group">
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={onUploadAvatar}
-                  disabled={uploadingAvatar}
-                  className="bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 p-2 rounded-full shadow-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-                  aria-label="Alterar foto de perfil"
-                >
-                  {uploadingAvatar ? (
-                    <Loader2 className="h-4 w-4 text-white animate-spin" />
-                  ) : (
-                    <Camera className="h-4 w-4 text-white" />
-                  )}
-                </motion.button>
-                <button
-                  type="button"
-                  onClick={() => setShowAvatarHint((prev) => !prev)}
-                  className="sm:hidden rounded-full border border-white/10 bg-gray-900/70 p-2 text-white shadow-lg"
-                  aria-label="Informacoes sobre o upload do avatar"
-                >
-                  <Info className="h-4 w-4" />
-                </button>
+              <div className="relative flex flex-col items-start gap-2 group">
+                <div className="flex items-center gap-2">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={onUploadAvatar}
+                    disabled={uploadingAvatar}
+                    className="bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 p-2 rounded-full shadow-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                    aria-label="Alterar foto de perfil"
+                  >
+                    {uploadingAvatar ? (
+                      <Loader2 className="h-4 w-4 text-white animate-spin" />
+                    ) : (
+                      <Camera className="h-4 w-4 text-white" />
+                    )}
+                  </motion.button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAvatarHint((prev) => !prev)}
+                    className="sm:hidden rounded-full border border-white/10 bg-gray-900/70 p-2 text-white shadow-lg"
+                    aria-label="Informacoes sobre o upload do avatar"
+                  >
+                    <Info className="h-4 w-4" />
+                  </button>
+                </div>
                 <span
-                  className={`pointer-events-none absolute -top-9 right-0 w-max max-w-[220px] rounded-lg border border-white/10 bg-gray-900/90 px-3 py-1.5 text-xs text-white shadow-lg backdrop-blur-md transition-opacity duration-200 ${
+                  className={`pointer-events-none w-max max-w-[220px] rounded-lg border border-white/10 bg-gray-900/90 px-3 py-1.5 text-xs text-white shadow-lg backdrop-blur-md transition-opacity duration-200 ${
                     showAvatarHint ? 'opacity-100' : 'opacity-0 sm:group-hover:opacity-100'
                   }`}
                 >
@@ -135,7 +138,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           </div>
 
           {/* Name & Info */}
-          <div className="flex-1 md:mb-4">
+          <div className="flex-1 md:mb-4 md:pl-4">
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
               {musician.full_name}
             </h1>
@@ -158,12 +161,12 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                       transition={{ delay: idx * 0.1 }}
                       className="px-3 py-1 backdrop-blur-sm bg-blue-500/20 dark:bg-blue-400/10 text-blue-800 dark:text-blue-300 rounded-full text-sm border border-blue-200/30 dark:border-blue-400/20 hover:bg-blue-500/30 dark:hover:bg-blue-400/20 transition-colors"
                     >
-                      {inst}
+                      {formatInstrumentLabel(inst)}
                     </motion.span>
                   ))
                 ) : musician.instrument && (
                   <span className="px-3 py-1 backdrop-blur-sm bg-blue-500/20 dark:bg-blue-400/10 text-blue-800 dark:text-blue-300 rounded-full text-sm border border-blue-200/30 dark:border-blue-400/20">
-                    {musician.instrument}
+                    {formatInstrumentLabel(musician.instrument)}
                   </span>
                 )}
               </div>

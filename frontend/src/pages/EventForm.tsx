@@ -35,8 +35,6 @@ interface ConflictInfo {
 
 const instrumentLabels: Record<string, string> = {
   ...BASE_INSTRUMENT_LABELS,
-  guitar: 'Guitarra',
-  percussion: 'Percussão/Outros',
 };
 
 const resolveInstrumentLabel = (instrument: string): string => {

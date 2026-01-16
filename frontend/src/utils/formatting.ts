@@ -27,9 +27,7 @@ export function getMusicianDisplayName(musician: Musician | null | undefined): s
  */
 export function formatMusicianLabel(musician: Musician): string {
   const name = getMusicianDisplayName(musician);
-  const instrument = musician.instrument
-    ? INSTRUMENT_LABELS[musician.instrument] || musician.instrument
-    : '';
+  const instrument = formatInstrumentLabel(musician.instrument);
 
   return instrument ? `${name} (${instrument})` : name;
 }
@@ -136,7 +134,42 @@ export const INSTRUMENT_LABELS: Record<string, string> = {
   bass: 'Baixo',
   drums: 'Bateria',
   keyboard: 'Teclado',
-  percussion: 'Percussão/Outros',
+  piano: 'Piano',
+  synth: 'Sintetizador',
+  percussion: 'Percussão',
+  cajon: 'Cajón',
+  violin: 'Violino',
+  viola: 'Viola',
+  cello: 'Violoncelo',
+  double_bass: 'Contrabaixo acústico',
+  saxophone: 'Saxofone',
+  sax: 'Saxofone',
+  trumpet: 'Trompete',
+  trombone: 'Trombone',
+  flute: 'Flauta',
+  clarinet: 'Clarinete',
+  harmonica: 'Gaita',
+  ukulele: 'Ukulele',
+  banjo: 'Banjo',
+  mandolin: 'Bandolim',
+  dj: 'DJ',
+  producer: 'Produtor(a)',
+  other: 'Outro',
+  'electric guitar': 'Guitarra elétrica',
+  'bass guitar': 'Baixo',
+  singer: 'Cantor(a)',
+  vocalist: 'Vocalista',
+};
+
+export const formatInstrumentLabel = (instrument?: string): string => {
+  if (!instrument) return '';
+  const key = instrument.trim().toLowerCase();
+  const label = INSTRUMENT_LABELS[key];
+  if (label) return label;
+
+  const pretty = key.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!pretty) return instrument;
+  return pretty.replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 /**
