@@ -26,14 +26,29 @@ const Landing: React.FC = () => {
           </motion.div>
 
           {/* Título */}
-          <motion.h1
-            className="relative z-20 text-5xl md:text-7xl font-bold text-white mb-5 pb-1 md:pb-2 leading-[1.12] md:leading-[1.1] logo-animated"
+          <motion.div
+            className="flex items-center justify-center gap-3 mb-5"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            GigFlow
-          </motion.h1>
+            <motion.h1
+              className="relative z-20 text-5xl md:text-7xl font-bold text-white pb-1 md:pb-2 leading-[1.12] md:leading-[1.1] logo-animated"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              GigFlow
+            </motion.h1>
+            <motion.span
+              className="text-[16px] md:text-[18px] px-2 py-1 bg-amber-500/20 text-amber-200 rounded-full border border-amber-300/40 font-medium"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              Beta
+            </motion.span>
+          </motion.div>
 
           <motion.p
             className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto"
@@ -74,7 +89,7 @@ const Landing: React.FC = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            Por que escolher o GigFlow?
+            Por que escolher o <span className="inline-flex items-center gap-2">GigFlow<span className="text-[16px] px-2 py-0.5 bg-amber-500/20 text-amber-200 rounded-full border border-amber-300/40 font-medium">Beta</span></span>?
           </motion.h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">

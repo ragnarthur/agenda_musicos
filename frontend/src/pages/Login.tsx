@@ -52,7 +52,12 @@ const Login: React.FC = () => {
               <OwlMascot className="h-24 w-24 sm:h-28 sm:w-28" />
             </div>
           </div>
-          <h1 className="text-5xl font-bold text-white mb-3 logo-animated drop-shadow-xl leading-tight">GigFlow</h1>
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <h1 className="text-5xl font-bold text-white logo-animated drop-shadow-xl leading-tight">GigFlow</h1>
+            <span className="text-[14px] px-2 py-1 bg-amber-500/20 text-amber-200 rounded-full border border-amber-300/40 font-medium">
+              Beta
+            </span>
+          </div>
           <p className="text-primary-50 font-medium text-base tracking-wide">
             Plataforma profissional de agenda, disponibilidade e oportunidades para músicos
           </p>

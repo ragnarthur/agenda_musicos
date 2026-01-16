@@ -197,7 +197,7 @@ const Payment: React.FC = () => {
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Cadastro Concluído!</h2>
             <p className="text-gray-600 mb-6">
-              Bem-vindo à <strong>GigFlow</strong>!
+              Bem-vindo à <strong>GigFlow<span className="text-[12px] px-1.5 py-0.5 bg-amber-500/20 text-amber-200 rounded-full border border-amber-300/40 font-medium ml-1">Beta</span></strong>!
               <br />
               Sua conta está ativa e pronta para uso.
             </p>
@@ -267,7 +267,12 @@ const Payment: React.FC = () => {
               <div className="h-12 w-12 flex items-center justify-center">
                 <OwlMascot className="h-12 w-12" />
               </div>
-              <h2 className="text-2xl font-bold logo-animated">GigFlow</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-2xl font-bold logo-animated">GigFlow</h2>
+                <span className="text-[12px] px-1.5 py-0.5 bg-amber-500/20 text-amber-200 rounded-full border border-amber-300/40 font-medium">
+                  Beta
+                </span>
+              </div>
             </motion.div>
 
             <motion.h3 variants={revealItem} className="text-xl font-semibold mb-4">

@@ -179,7 +179,12 @@ const PlanSelection: React.FC = () => {
               <OwlMascot className="h-16 w-16" />
             </div>
             <div>
-              <p className="text-sm text-primary-100 uppercase tracking-wide">GigFlow</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-primary-100 uppercase tracking-wide">GigFlow</p>
+                <span className="text-[12px] px-1.5 py-0.5 bg-amber-500/20 text-amber-200 rounded-full border border-amber-300/40 font-medium">
+                  Beta
+                </span>
+              </div>
               <h1 className="text-3xl font-bold text-white leading-tight">Escolha seu plano</h1>
               {status && (
                 <p className="text-primary-100 text-sm">
