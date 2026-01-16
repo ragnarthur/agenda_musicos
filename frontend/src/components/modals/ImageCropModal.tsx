@@ -25,6 +25,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [naturalSize, setNaturalSize] = useState({ width: 0, height: 0 });
   const [cropSize, setCropSize] = useState({ width: 0, height: 0 });
+  const [frameSize, setFrameSize] = useState({ width: 0, height: 0 });
   const [zoom, setZoom] = useState(1);
   const [baseScale, setBaseScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -63,6 +64,22 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     window.addEventListener('resize', updateCropSize);
     return () => window.removeEventListener('resize', updateCropSize);
   }, [isOpen, target]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const updateFrameSize = () => {
+      const maxWidth = Math.min(window.innerWidth * 0.9, 720);
+      const reservedHeight = 240;
+      const maxHeight = Math.max(260, window.innerHeight - reservedHeight);
+      const widthByHeight = maxHeight * aspectRatio;
+      const nextWidth = Math.min(maxWidth, widthByHeight);
+      const nextHeight = nextWidth / aspectRatio;
+      setFrameSize({ width: nextWidth, height: nextHeight });
+    };
+    updateFrameSize();
+    window.addEventListener('resize', updateFrameSize);
+    return () => window.removeEventListener('resize', updateFrameSize);
+  }, [aspectRatio, isOpen]);
 
   useEffect(() => {
     if (!isOpen || !naturalSize.width || !cropSize.width) return;
@@ -165,7 +182,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
       aria-modal="true"
       aria-labelledby="crop-title"
     >
-      <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+      <div className="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <div>
             <h2 id="crop-title" className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -188,7 +205,11 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
           <div
             ref={cropRef}
             className="relative w-[min(90vw,720px)] overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 shadow-inner dark:border-gray-700 dark:bg-gray-800 cursor-grab active:cursor-grabbing"
-            style={{ aspectRatio: `${aspectRatio}` }}
+            style={{
+              aspectRatio: `${aspectRatio}`,
+              width: frameSize.width || undefined,
+              height: frameSize.height || undefined,
+            }}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}

@@ -15,7 +15,6 @@ const useLowPowerMode = () => {
 
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     const dataQuery = window.matchMedia('(prefers-reduced-data: reduce)');
-    const smallQuery = window.matchMedia('(max-width: 768px)');
 
     const evaluate = () => {
       const navigatorWithConnection = navigator as NavigatorWithConnection;
@@ -25,10 +24,11 @@ const useLowPowerMode = () => {
       const lowMemory = typeof deviceMemory === 'number' && deviceMemory <= 2;
       const lowCores = typeof hardwareConcurrency === 'number' && hardwareConcurrency > 0 && hardwareConcurrency <= 2;
 
+      // Eu tirei o tamanho da tela desse cálculo pra não matar efeitos no mobile.
+      // A performance do mobile agora é ajustada onde o efeito acontece.
       setLowPower(
         motionQuery.matches ||
           dataQuery.matches ||
-          smallQuery.matches ||
           saveData ||
           lowMemory ||
           lowCores
@@ -60,12 +60,10 @@ const useLowPowerMode = () => {
     evaluate();
     addListener(motionQuery);
     addListener(dataQuery);
-    addListener(smallQuery);
 
     return () => {
       removeListener(motionQuery);
       removeListener(dataQuery);
-      removeListener(smallQuery);
     };
   }, []);
 

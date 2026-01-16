@@ -168,9 +168,11 @@ const Payment: React.FC = () => {
   // Loading
   if (loading) {
     return (
+      // Carregamento rápido: partículas desligadas pra não gastar GPU.
       <FullscreenBackground
         className="bg-gradient-to-br from-primary-500 to-primary-700 dark:from-slate-950 dark:to-slate-800"
         contentClassName="flex items-center justify-center"
+        enableParticles={false}
       >
         <Loader2 className="h-12 w-12 text-white animate-spin" />
       </FullscreenBackground>
@@ -180,9 +182,11 @@ const Payment: React.FC = () => {
   // Sucesso
   if (success) {
     return (
+      // Sucesso é uma tela rápida, sem partículas.
       <FullscreenBackground
         className="bg-gradient-to-br from-green-500 to-green-700 px-4"
         contentClassName="flex items-center justify-center"
+        enableParticles={false}
       >
         <div className="max-w-md w-full">
           <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
@@ -244,9 +248,11 @@ const Payment: React.FC = () => {
   }
 
   return (
+    // Mantive sem partículas aqui pra não competir com o formulário.
     <FullscreenBackground
-      className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 px-4 py-8"
+      className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 px-4"
       contentClassName="flex items-center justify-center"
+      enableParticles={false}
     >
       <div className="max-w-4xl w-full">
         <motion.div

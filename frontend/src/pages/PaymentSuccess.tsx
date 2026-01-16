@@ -47,9 +47,11 @@ const PaymentSuccess: React.FC = () => {
 
   if (loading) {
     return (
+      // Tela de loading não precisa de partículas, só do gradiente.
       <FullscreenBackground
         className="bg-gradient-to-br from-green-500 to-green-700"
         contentClassName="flex items-center justify-center"
+        enableParticles={false}
       >
         <div className="text-center">
           <Loader2 className="h-12 w-12 text-white animate-spin mx-auto mb-4" />
@@ -61,9 +63,11 @@ const PaymentSuccess: React.FC = () => {
 
   if (error) {
     return (
+      // Aqui também deixo sem partículas pra evitar custo à toa.
       <FullscreenBackground
         className="bg-gradient-to-br from-yellow-500 to-yellow-700 px-4"
         contentClassName="flex items-center justify-center"
+        enableParticles={false}
       >
         <div className="max-w-md w-full">
           <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
@@ -92,9 +96,11 @@ const PaymentSuccess: React.FC = () => {
   }
 
   return (
+    // Tela final também sem partículas pra manter leve no mobile.
     <FullscreenBackground
       className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 px-4"
       contentClassName="flex items-center justify-center"
+      enableParticles={false}
     >
       <div className="max-w-md w-full">
         {/* Logo */}

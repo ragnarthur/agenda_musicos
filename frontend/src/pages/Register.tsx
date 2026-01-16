@@ -5,6 +5,7 @@ import { CheckCircle } from 'lucide-react';
 import { registrationService, type RegisterData } from '../services/api';
 import { showToast } from '../utils/toast';
 import OwlMascot from '../components/ui/OwlMascot';
+import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import ProgressIndicator from '../components/Registration/ProgressIndicator';
 import StepNavigation from '../components/Registration/StepNavigation';
 import AccountStep from '../components/Registration/AccountStep';
@@ -576,7 +577,12 @@ const Register: React.FC = () => {
 
   // Main registration form (multi-step)
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4 py-8">
+    <FullscreenBackground
+      className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4 py-8"
+      contentClassName="flex items-center justify-center"
+      enableBlueWaves
+    >
+      {/* Mantive as partículas no cadastro pra ficar vivo, mas com modo desempenho automático */}
       <div className="max-w-2xl w-full">
         {/* Logo and Title */}
         <div className="text-center mb-6">
@@ -637,7 +643,7 @@ const Register: React.FC = () => {
           Powered by <span className="font-semibold text-sky-400">DXM Tech</span>
         </div>
       </div>
-    </div>
+    </FullscreenBackground>
   );
 };
 

@@ -126,9 +126,11 @@ const PlanSelection: React.FC = () => {
   // Loading
   if (loading) {
     return (
+      // Loading rápido, sem partículas pra deixar leve.
       <FullscreenBackground
         className="bg-gradient-to-br from-primary-500 to-primary-700 dark:from-slate-950 dark:to-slate-800"
         contentClassName="flex items-center justify-center"
+        enableParticles={false}
       >
         <Loader2 className="h-12 w-12 text-white animate-spin" />
       </FullscreenBackground>
@@ -138,9 +140,11 @@ const PlanSelection: React.FC = () => {
   // Erro
   if (error && !status) {
     return (
+      // Erro já é uma tela simples, então deixei sem partículas.
       <FullscreenBackground
         className="bg-gradient-to-br from-primary-500 to-primary-700 dark:from-slate-950 dark:to-slate-800 px-4"
         contentClassName="flex items-center justify-center"
+        enableParticles={false}
       >
         <div className="max-w-md w-full">
           <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
@@ -161,9 +165,11 @@ const PlanSelection: React.FC = () => {
   }
 
   return (
+    // Aqui é uma tela intermediária de escolha, então deixei leve.
     <FullscreenBackground
       className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 px-4 py-8"
       contentClassName="flex items-center justify-center"
+      enableParticles={false}
     >
       <div className="max-w-4xl w-full">
         {/* Header */}

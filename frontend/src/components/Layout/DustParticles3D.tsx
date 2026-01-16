@@ -27,13 +27,16 @@ const DustParticles3D: React.FC = () => {
     let width = 0;
     let height = 0;
     let dpr = window.devicePixelRatio || 1;
+    let isSmallScreen = window.matchMedia('(max-width: 768px)').matches;
     const particles: Particle[] = [];
-    const density = { min: 30, max: 70, factor: 0.00003 };
 
     const resetArea = () => {
       width = window.innerWidth;
       height = window.innerHeight;
-      dpr = window.devicePixelRatio || 1;
+      const rawDpr = window.devicePixelRatio || 1;
+      isSmallScreen = window.matchMedia('(max-width: 768px)').matches;
+      // Mobile continua com o mesmo visual, só que eu limito o DPR pra ficar leve.
+      dpr = isSmallScreen ? Math.min(rawDpr, 1.5) : rawDpr;
       canvas.width = Math.floor(width * dpr);
       canvas.height = Math.floor(height * dpr);
       canvas.style.width = `${width}px`;
@@ -43,6 +46,11 @@ const DustParticles3D: React.FC = () => {
     const init = () => {
       resetArea();
       particles.length = 0;
+      const density = {
+        min: isSmallScreen ? 18 : 30,
+        max: isSmallScreen ? 45 : 70,
+        factor: isSmallScreen ? 0.000018 : 0.00003,
+      };
       const count = Math.min(
         density.max,
         Math.max(density.min, Math.round(width * height * density.factor))
@@ -55,8 +63,8 @@ const DustParticles3D: React.FC = () => {
           y: Math.random() * height,
           z: depth,
           size: 0.6 + depth * 0.9,
-          speed: 5 + depth * 12,
-          sway: 10 + depth * 16,
+          speed: (isSmallScreen ? 4 : 5) + depth * (isSmallScreen ? 10 : 12),
+          sway: (isSmallScreen ? 8 : 10) + depth * (isSmallScreen ? 14 : 16),
           phase: Math.random() * Math.PI * 2,
         });
       }
@@ -66,7 +74,8 @@ const DustParticles3D: React.FC = () => {
 
     let lastTime = performance.now();
     const render = (time: number) => {
-      const delta = Math.min(0.04, (time - lastTime) / 1000);
+      // Eu limito o delta pra manter o movimento suave sem pesar no mobile.
+      const delta = Math.min(isSmallScreen ? 0.033 : 0.04, (time - lastTime) / 1000);
       lastTime = time;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);

@@ -105,9 +105,11 @@ const PlanSuccess: React.FC = () => {
   };
 
   return (
+    // Aqui eu deixei sem partículas pra evitar custo extra numa tela de confirmação simples.
     <FullscreenBackground
       className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 px-4"
       contentClassName="flex items-center justify-center"
+      enableParticles={false}
     >
       <div className="max-w-md w-full">
         <div className="text-center mb-6">

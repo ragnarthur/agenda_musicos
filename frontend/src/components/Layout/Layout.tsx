@@ -19,6 +19,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
     const selector = 'h1,h2,h3,h4,h5,h6,p,li,label,small,button';
     const elements = Array.from(root.querySelectorAll<HTMLElement>(selector));
+    const isSmallScreen = window.matchMedia('(max-width: 768px)').matches;
 
     elements.forEach((el) => {
       el.classList.remove('cascade-reveal');
@@ -27,8 +28,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
     requestAnimationFrame(() => {
       let index = 0;
+      // No mobile eu limito o cascade pra manter o efeito sem pesar no scroll.
+      const maxAnimated = isSmallScreen ? 45 : elements.length;
       elements.forEach((el) => {
         if (el.closest('[data-cascade-ignore]')) return;
+        if (index >= maxAnimated) return;
         el.style.setProperty('--cascade-index', String(index));
         el.classList.add('cascade-reveal');
         index += 1;
@@ -38,7 +42,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-      <AnimatedBackground enableBlueWaves />
+      {/* Aqui eu deixo o fundo estático pra economizar GPU no mobile, mas sem perder identidade */}
+      {/* As partículas ficam só nas telas-chave (login/landing/planos/cadastro). */}
+      <AnimatedBackground enableBlueWaves enableParticles={false} />
       <TrialBanner />
       <Navbar />
 
