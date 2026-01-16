@@ -15,179 +15,117 @@ const SkyBackground: React.FC = () => (
     aria-hidden="true"
   >
     <defs>
-      {/* Sky gradient */}
+      {/* Dark sky gradient */}
       <linearGradient id="sky-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#1E3A8A" stopOpacity="0.9" />
-        <stop offset="30%" stopColor="#2E5F8A" stopOpacity="0.8" />
-        <stop offset="60%" stopColor="#3B82F6" stopOpacity="0.7" />
-        <stop offset="100%" stopColor="#4682B4" stopOpacity="0.5" />
+        <stop offset="0%" stopColor="#0A0E27" stopOpacity="1" />
+        <stop offset="30%" stopColor="#151932" stopOpacity="1" />
+        <stop offset="60%" stopColor="#1A1F3A" stopOpacity="1" />
+        <stop offset="100%" stopColor="#1E293B" stopOpacity="1" />
       </linearGradient>
       
-      {/* Cloud gradient */}
+      {/* Subtle cloud gradient */}
       <radialGradient id="cloud-gradient">
-        <stop offset="0%" stopColor="rgba(224, 247, 250, 0.9)" />
-        <stop offset="100%" stopColor="rgba(186, 230, 253, 0.4)" />
+        <stop offset="0%" stopColor="rgba(30, 41, 59, 0.8)" />
+        <stop offset="100%" stopColor="rgba(30, 41, 59, 0.3)" />
       </radialGradient>
       
-      {/* Soft cloud filter */}
-      <filter id="cloud-blur">
-        <feGaussianBlur stdDeviation="4" />
-      </filter>
-      
-      {/* Subtle atmospheric movement */}
-      <filter id="atmosphere">
+      {/* Interactive scroll-based filter */}
+      <filter id="scroll-atmosphere">
         <feTurbulence
           type="turbulence"
-          baseFrequency="0.001 0.001"
-          numOctaves="1"
-          seed="10"
+          baseFrequency="0.002 0.003"
+          numOctaves="2"
+          seed="15"
           result="turbulence"
         >
           <animate
             attributeName="baseFrequency"
-            dur="60s"
-            values="0.001 0.0015;0.0015 0.002;0.002 0.001"
+            dur="20s"
+            values="0.002 0.003;0.003 0.004;0.004 0.003;0.003 0.002"
             repeatCount="indefinite"
           />
         </feTurbulence>
         <feDisplacementMap
           in="SourceGraphic"
           in2="turbulence"
-          scale="2"
+          scale="3"
           xChannelSelector="R"
           yChannelSelector="G"
         />
       </filter>
     </defs>
     
-    {/* Sky background */}
+    {/* Dark sky background */}
     <rect
       width="100%"
       height="100%"
       fill="url(#sky-gradient)"
     />
     
-    {/* Cloud layers with natural movement */}
-    <g filter="url(#atmosphere)">
-      {/* Background clouds */}
+    {/* Few interactive clouds */}
+    <g filter="url(#scroll-atmosphere)">
+      {/* Large background cloud */}
       <ellipse
-        cx="25%"
-        cy="15%"
-        rx="40%"
-        ry="20%"
+        cx="20%"
+        cy="25%"
+        rx="35%"
+        ry="15%"
         fill="url(#cloud-gradient)"
-        filter="url(#cloud-blur)"
-        opacity="0.6"
+        filter="blur(2px)"
+        opacity="0.3"
       >
         <animate
           attributeName="cx"
-          dur="80s"
-          values="25%;30%;35%;30%;25%"
+          dur="120s"
+          values="20%;28%;35%;28%;20%"
           repeatCount="indefinite"
         />
         <animate
           attributeName="opacity"
-          dur="40s"
-          values="0.6;0.7;0.6;0.5;0.6"
+          dur="80s"
+          values="0.3;0.4;0.3;0.25;0.3"
           repeatCount="indefinite"
         />
       </ellipse>
       
+      {/* Medium cloud */}
       <ellipse
-        cx="70%"
-        cy="25%"
-        rx="35%"
-        ry="18%"
+        cx="75%"
+        cy="40%"
+        rx="25%"
+        ry="12%"
         fill="url(#cloud-gradient)"
-        filter="url(#cloud-blur)"
+        filter="blur(1.5px)"
+        opacity="0.4"
+      >
+        <animate
+          attributeName="cx"
+          dur="150s"
+          values="75%;65%;55%;65%;75%"
+          repeatCount="indefinite"
+        />
+        <animate
+          attributeName="cy"
+          dur="100s"
+          values="40%;35%;30%;35%;40%"
+          repeatCount="indefinite"
+        />
+      </ellipse>
+      
+      {/* Small foreground cloud */}
+      <ellipse
+        cx="50%"
+        cy="70%"
+        rx="20%"
+        ry="8%"
+        fill="url(#cloud-gradient)"
+        filter="blur(1px)"
         opacity="0.5"
       >
         <animate
           attributeName="cx"
           dur="90s"
-          values="70%;65%;60%;65%;70%"
-          repeatCount="indefinite"
-        />
-        <animate
-          attributeName="cy"
-          dur="70s"
-          values="25%;22%;20%;22%;25%"
-          repeatCount="indefinite"
-        />
-      </ellipse>
-      
-      {/* Mid-level clouds */}
-      <ellipse
-        cx="15%"
-        cy="40%"
-        rx="25%"
-        ry="12%"
-        fill="url(#cloud-gradient)"
-        filter="url(#cloud-blur)"
-        opacity="0.4"
-      >
-        <animate
-          attributeName="cx"
-          dur="100s"
-          values="15%;20%;18%;20%;15%"
-          repeatCount="indefinite"
-        />
-      </ellipse>
-      
-      <ellipse
-        cx="80%"
-        cy="45%"
-        rx="30%"
-        ry="15%"
-        fill="url(#cloud-gradient)"
-        filter="url(#cloud-blur)"
-        opacity="0.3"
-      >
-        <animate
-          attributeName="cx"
-          dur="85s"
-          values="80%;75%;70%;75%;80%"
-          repeatCount="indefinite"
-        />
-      </ellipse>
-      
-      {/* Foreground clouds */}
-      <ellipse
-        cx="50%"
-        cy="60%"
-        rx="35%"
-        ry="10%"
-        fill="url(#cloud-gradient)"
-        filter="url(#cloud-blur)"
-        opacity="0.7"
-      >
-        <animate
-          attributeName="cx"
-          dur="60s"
           values="50%;45%;40%;45%;50%"
-          repeatCount="indefinite"
-        />
-        <animate
-          attributeName="opacity"
-          dur="30s"
-          values="0.7;0.5;0.7;0.6;0.7"
-          repeatCount="indefinite"
-        />
-      </ellipse>
-      
-      <ellipse
-        cx="65%"
-        cy="70%"
-        rx="20%"
-        ry="8%"
-        fill="url(#cloud-gradient)"
-        filter="url(#cloud-blur)"
-        opacity="0.5"
-      >
-        <animate
-          attributeName="cx"
-          dur="70s"
-          values="65%;60%;55%;60%;65%"
           repeatCount="indefinite"
         />
       </ellipse>
