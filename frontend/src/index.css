@@ -376,14 +376,39 @@
   }
 
   @media (max-width: 768px) {
+    /* Mobile: simplificar animações para efeito de pluma apenas */
     .dust-layer {
-      opacity: 0.16;
-      animation-duration: 70s;
-    }
-
-    .dust-layer--secondary {
       opacity: 0.12;
     }
+    
+    .fabric-wave {
+      animation-duration: 70s !important;
+    }
+    
+    .dust-drift {
+      animation-duration: 80s !important;
+    }
+    
+    .dust-chaos {
+      animation-duration: 120s !important;
+    }
+    
+    .dust-chaos-secondary {
+      animation-duration: 100s !important;
+    }
+    
+    .logoShift {
+      animation-duration: 30s !important;
+    }
+    
+    .logoGlow {
+      animation-duration: 20s !important;
+    }
+  }
+
+  .dust-layer--secondary {
+    opacity: 0.12;
+  }
   }
 
   .dust-canvas {
@@ -463,7 +488,7 @@
 
   .input-field {
     @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-           bg-white text-gray-900 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700;
+           bg-white text-gray-900 dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700;
   }
 
   .card {
@@ -547,9 +572,8 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
-}
 
-/* Animações utilitárias */
+  /* Animações utilitárias */
 .fade-in-up {
   @apply animate-[fadeInUp_0.4s_ease-out_forwards];
 }

@@ -73,7 +73,8 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
               onChange={onChange}
               className={`
                 w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent
-                ${errors.first_name ? 'border-red-500' : 'border-gray-300'}
+                bg-white text-gray-900 dark:bg-slate-900 dark:text-slate-200
+                ${errors.first_name ? 'border-red-500' : 'border-gray-300 dark:border-slate-700'}
               `}
               placeholder="João"
               autoComplete="given-name"
@@ -97,7 +98,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
               type="text"
               value={formData.last_name}
               onChange={onChange}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent bg-white text-gray-900 dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700"
               placeholder="Silva"
               autoComplete="family-name"
             />
@@ -119,7 +120,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
               type="tel"
               value={formData.whatsapp}
               onChange={onChange}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent bg-white text-gray-900 dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700"
               placeholder="(11) 99999-9999"
               autoComplete="tel"
             />
@@ -150,7 +151,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                 const value = e.target.value.replace('@', '');
                 onChange({ target: { name: 'instagram', value: `@${value}` } });
               }}
-              className="w-full pl-14 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              className="w-full pl-14 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent bg-white text-gray-900 dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700"
               placeholder="nomedousuario"
               autoComplete="off"
             />
@@ -189,8 +190,8 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                   handleCityChange(formData.city.replace(/ - [A-Z]{2}$/, ''));
                 }
               }}
-              className={`w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent relative z-10 ${
-                errors.city ? 'border-red-500' : 'border-gray-300'
+              className={`w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent relative z-10 bg-white text-gray-900 dark:bg-slate-900 dark:text-slate-200 ${
+                errors.city ? 'border-red-500' : 'border-gray-300 dark:border-slate-700'
               }`}
               placeholder="Digite sua cidade"
               autoComplete="off"

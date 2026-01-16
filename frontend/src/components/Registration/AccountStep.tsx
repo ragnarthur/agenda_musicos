@@ -64,7 +64,8 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors })
               onChange={onChange}
               className={`
                 w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent
-                ${errors.email ? 'border-red-500' : 'border-gray-300'}
+                bg-white text-gray-900 dark:bg-slate-900 dark:text-slate-200
+                ${errors.email ? 'border-red-500' : 'border-gray-300 dark:border-slate-700'}
               `}
               placeholder="seu@email.com"
               autoComplete="email"
@@ -90,7 +91,8 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors })
               onChange={onChange}
               className={`
                 w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent
-                ${errors.username ? 'border-red-500' : 'border-gray-300'}
+                bg-white text-gray-900 dark:bg-slate-900 dark:text-slate-200
+                ${errors.username ? 'border-red-500' : 'border-gray-300 dark:border-slate-700'}
               `}
               placeholder="seu_usuario"
               autoComplete="username"
@@ -119,7 +121,8 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors })
               onChange={onChange}
               className={`
                 w-full pl-10 pr-12 py-2 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent
-                ${errors.password ? 'border-red-500' : 'border-gray-300'}
+                bg-white text-gray-900 dark:bg-slate-900 dark:text-slate-200
+                ${errors.password ? 'border-red-500' : 'border-gray-300 dark:border-slate-700'}
               `}
               placeholder="••••••••"
               autoComplete="new-password"
@@ -188,7 +191,8 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors })
               onChange={onChange}
               className={`
                 w-full pl-10 pr-12 py-2 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent
-                ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'}
+                bg-white text-gray-900 dark:bg-slate-900 dark:text-slate-200
+                ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300 dark:border-slate-700'}
               `}
               placeholder="••••••••"
               autoComplete="new-password"

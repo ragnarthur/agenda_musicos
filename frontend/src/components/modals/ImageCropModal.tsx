@@ -44,10 +44,10 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   const zoomMax = target === 'avatar' ? 2.6 : 2.2;
   const isAvatar = target === 'avatar';
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isOpen || !file) {
       setImageUrl(null);
-      return undefined;
+      return;
     }
     const url = URL.createObjectURL(file);
     setImageUrl(url);
@@ -88,13 +88,16 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
       cropSize.width / naturalSize.width,
       cropSize.height / naturalSize.height
     );
-    setBaseScale(nextBaseScale);
-    setZoom(1);
     const scaledWidth = naturalSize.width * nextBaseScale;
     const scaledHeight = naturalSize.height * nextBaseScale;
-    setOffset({
-      x: (cropSize.width - scaledWidth) / 2,
-      y: (cropSize.height - scaledHeight) / 2,
+    
+    requestAnimationFrame(() => {
+      setBaseScale(nextBaseScale);
+      setZoom(1);
+      setOffset({
+        x: (cropSize.width - scaledWidth) / 2,
+        y: (cropSize.height - scaledHeight) / 2,
+      });
     });
   }, [cropSize.height, cropSize.width, isOpen, naturalSize.height, naturalSize.width, target]);
 

@@ -8,18 +8,22 @@ const TrialBanner: React.FC = () => {
   const { user } = useAuth();
   const [dismissed, setDismissed] = React.useState(false);
 
+  const renewalWindowDays = 5;
+  
+  const paidDaysRemaining = React.useMemo(() => {
+    const subscriptionEndsAt = user?.subscription_info?.subscription_ends_at;
+    if (!subscriptionEndsAt) return null;
+    const now = new Date();
+    return Math.ceil((new Date(subscriptionEndsAt).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  }, [user?.subscription_info?.subscription_ends_at]);
+
   // Não mostra se não há usuário ou subscription_info
   if (!user?.subscription_info) return null;
 
-  const { is_trial, trial_days_remaining, status, subscription_ends_at } = user.subscription_info;
+  const { is_trial, trial_days_remaining, status } = user.subscription_info;
 
   // Não mostra se foi dispensado nesta sessão
   if (dismissed) return null;
-
-  const renewalWindowDays = 5;
-  const paidDaysRemaining = subscription_ends_at
-    ? Math.ceil((new Date(subscription_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-    : null;
   const isPaidExpiringSoon =
     status === 'active' &&
     !is_trial &&

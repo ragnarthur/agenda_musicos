@@ -125,11 +125,24 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
   enableParticles = true,
 }) => {
   const isLowPower = useLowPowerMode();
+  const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
   const enableEffects = !isLowPower;
 
   return (
     <div className={`animated-bg pointer-events-none absolute inset-0 z-0 overflow-hidden ${className}`}>
-      {enableBlueWaves && (enableEffects ? <WaveFilter /> : <div className="blue-wave-static" aria-hidden="true" />)}
+      {enableBlueWaves && (
+        enableEffects ? (
+          isMobile ? (
+            // Mobile: gradiente estático com pluma leve (sem animação SVG)
+            <div className="blue-wave-static" aria-hidden="true" />
+          ) : (
+            // Desktop: animação SVG completa
+            <WaveFilter />
+          )
+        ) : (
+          <div className="blue-wave-static" aria-hidden="true" />
+        )
+      )}
       {!enableBlueWaves && <div className="fabric-static" aria-hidden="true" />}
       {enableEffects && enableParticles && <DustParticles3D />}
     </div>
