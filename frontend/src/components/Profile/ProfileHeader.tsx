@@ -42,7 +42,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20 dark:to-black/40" />
 
         {isOwnProfile && (
-          <div className="absolute top-4 right-4 relative flex items-center gap-2 group">
+          <div className="absolute top-4 right-4 z-20 flex items-center gap-2 group">
             <button
               onClick={onUploadCover}
               disabled={uploadingCover}
@@ -64,7 +64,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               <Info className="h-4 w-4" />
             </button>
             <span
-              className={`pointer-events-none absolute right-0 mt-2 w-max max-w-[260px] rounded-lg border border-white/10 bg-gray-900/90 px-3 py-1.5 text-xs text-white shadow-lg backdrop-blur-md transition-opacity duration-200 ${
+              className={`pointer-events-none absolute right-0 top-12 z-30 w-max max-w-[260px] rounded-lg border border-white/10 bg-gray-900/90 px-3 py-1.5 text-xs text-white shadow-lg backdrop-blur-md transition-opacity duration-200 ${
                 showCoverHint ? 'opacity-100' : 'opacity-0 sm:group-hover:opacity-100'
               }`}
             >
@@ -127,7 +127,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   </button>
                 </div>
                 <span
-                  className={`pointer-events-none w-max max-w-[220px] rounded-lg border border-white/10 bg-gray-900/90 px-3 py-1.5 text-xs text-white shadow-lg backdrop-blur-md transition-opacity duration-200 ${
+                  className={`pointer-events-none absolute left-0 -top-10 z-30 w-max max-w-[220px] rounded-lg border border-white/10 bg-gray-900/90 px-3 py-1.5 text-xs text-white shadow-lg backdrop-blur-md transition-opacity duration-200 ${
                     showAvatarHint ? 'opacity-100' : 'opacity-0 sm:group-hover:opacity-100'
                   }`}
                 >
@@ -138,7 +138,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           </div>
 
           {/* Name & Info */}
-          <div className="flex-1 md:mb-4 md:pl-4">
+          <div className="flex-1 md:mb-4 md:pl-2">
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
               {musician.full_name}
             </h1>
