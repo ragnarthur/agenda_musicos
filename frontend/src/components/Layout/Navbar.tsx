@@ -110,10 +110,15 @@ const Navbar: React.FC = () => {
               <OwlMascot className="h-12 w-12" />
             </div>
             <div className="flex flex-col leading-tight">
-              <span className="text-lg sm:text-xl font-bold logo-animated">
-                GigFlow
-              </span>
-              <span className="text-[11px] text-slate-300/80 hidden sm:block">Agenda para músicos</span>
+              <div className="flex items-center gap-2">
+                <span className="text-lg sm:text-xl font-bold logo-animated">
+                  GigFlow
+                </span>
+                <span className="text-[10px] px-1.5 py-0.5 bg-amber-500/20 text-amber-200 rounded-full border border-amber-300/40 font-medium">
+                  Beta
+                </span>
+              </div>
+              <span className="text-[11px] text-slate-300 hidden sm:block">Agenda para músicos</span>
             </div>
           </Link>
 
@@ -203,7 +208,7 @@ const Navbar: React.FC = () => {
                       onClick={() => setOpenDesktopMore(false)}
                       className={({ isActive }) =>
                         `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                          isActive ? 'bg-amber-500/10 text-amber-100' : 'text-slate-200 hover:bg-white/5'
+                          isActive ? 'bg-amber-500/10 text-amber-100' : 'text-slate-100 hover:bg-white/10'
                         }`
                       }
                     >
@@ -229,7 +234,7 @@ const Navbar: React.FC = () => {
               {showPlanShortcut && (
                 <Link
                   to="/planos"
-                  className="hidden md:flex items-center gap-1 text-slate-300 hover:text-white transition-colors"
+                  className="hidden md:flex items-center gap-1 text-slate-100 hover:text-white transition-colors"
                   title={`Assinar plano (${planStatusDetail})`}
                 >
                   <Settings className="h-5 w-5" />
@@ -240,7 +245,7 @@ const Navbar: React.FC = () => {
               )}
               <button
                 onClick={handleLogout}
-                className="hidden md:flex items-center space-x-1 text-slate-300 hover:text-red-400 transition-colors"
+                className="hidden md:flex items-center space-x-1 text-slate-100 hover:text-red-400 transition-colors"
                 title="Sair"
               >
                 <LogOut className="h-5 w-5" />
@@ -435,8 +440,8 @@ const AppNavLink: React.FC<{ to: string; icon: React.ReactNode; label: string; b
       const activeTone = isActive ? (accent ? 'bg-amber-500/10 text-amber-100' : 'bg-white/10 text-white') : '';
       return `group flex items-center space-x-1 transition-all relative rounded-full px-2 py-1 ${hoverTone} ${activeTone} hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
         accent
-          ? 'text-amber-300 hover:text-amber-200'
-          : 'text-slate-200 hover:text-white'
+          ? 'text-amber-200 hover:text-amber-100'
+          : 'text-slate-100 hover:text-white'
       } after:absolute after:left-0 after:-bottom-0.5 after:h-0.5 after:w-full after:rounded-full after:bg-gradient-to-r after:from-primary-400 after:via-indigo-300 after:to-emerald-300 after:transition-transform after:duration-300 after:origin-left after:scale-x-0 group-hover:after:scale-x-100 group-focus-visible:after:scale-x-100 ${isActive ? 'after:scale-x-100' : ''}`;
     }}
   >

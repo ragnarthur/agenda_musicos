@@ -163,7 +163,7 @@ const NotificationSettings: React.FC = () => {
         <div className="mb-6">
           <Link
             to="/dashboard"
-            className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-4"
+            className="inline-flex items-center gap-2 text-slate-300 hover:text-white transition-colors mb-4"
           >
             <ChevronLeft className="h-4 w-4" />
             Voltar
@@ -174,7 +174,7 @@ const NotificationSettings: React.FC = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white">Notificacoes</h1>
-              <p className="text-slate-400">Gerencie como voce recebe alertas de eventos</p>
+              <p className="text-slate-300">Gerencie como voce recebe alertas de eventos</p>
             </div>
           </div>
         </div>
@@ -182,7 +182,7 @@ const NotificationSettings: React.FC = () => {
         {/* Canal Preferido */}
         <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50 mb-6">
           <h2 className="text-lg font-semibold text-white mb-4">Canal Preferido</h2>
-          <p className="text-slate-400 text-sm mb-4">
+          <p className="text-slate-300 text-sm mb-4">
             Escolha como deseja receber as notificacoes de convites e eventos.
           </p>
 
@@ -215,14 +215,14 @@ const NotificationSettings: React.FC = () => {
                     <div className="flex items-center gap-3">
                       <div
                         className={`p-2 rounded-lg ${
-                          isSelected ? 'bg-violet-500/20 text-violet-400' : 'bg-slate-700 text-slate-400'
+                          isSelected ? 'bg-violet-500/20 text-violet-400' : 'bg-slate-700 text-slate-300'
                         }`}
                       >
                         {channelIcons[channel.id]}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <span className={`font-medium ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                          <span className={`font-medium ${isSelected ? 'text-white' : 'text-slate-200'}`}>
                             {channel.name}
                           </span>
                           {isConnected && (
@@ -237,7 +237,7 @@ const NotificationSettings: React.FC = () => {
                           )}
                         </div>
                         {!isConnected && channel.id !== 'telegram' && (
-                          <span className="text-xs text-slate-500">Em breve</span>
+                          <span className="text-xs text-slate-400">Em breve</span>
                         )}
                       </div>
                       {isSelected && <Check className="h-5 w-5 text-violet-400" />}
@@ -257,8 +257,8 @@ const NotificationSettings: React.FC = () => {
                 className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-violet-500 focus:ring-violet-500"
               />
               <div>
-                <span className="text-slate-300">Usar email como fallback</span>
-                <p className="text-xs text-slate-500">Se o canal preferido falhar, enviar por email</p>
+                <span className="text-slate-200">Usar email como fallback</span>
+                <p className="text-xs text-slate-400">Se o canal preferido falhar, enviar por email</p>
               </div>
             </label>
           </div>
@@ -274,14 +274,14 @@ const NotificationSettings: React.FC = () => {
                 </div>
                 <h3 className="text-lg font-semibold text-white">Conectar Telegram</h3>
               </div>
-              <button onClick={() => setTelegramCode(null)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setTelegramCode(null)} className="text-slate-300 hover:text-white">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <div className="space-y-4">
               <div className="bg-slate-900/50 rounded-lg p-4">
-                <p className="text-slate-400 text-sm mb-3">Seu codigo de verificacao:</p>
+                <p className="text-slate-300 text-sm mb-3">Seu codigo de verificacao:</p>
                 <div className="flex items-center gap-3">
                   <code className="text-3xl font-mono font-bold text-white tracking-widest">
                     {telegramCode.code}
@@ -291,15 +291,15 @@ const NotificationSettings: React.FC = () => {
                     className="p-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
                     title="Copiar codigo"
                   >
-                    <Copy className="h-5 w-5 text-slate-300" />
+                    <Copy className="h-5 w-5 text-slate-200" />
                   </button>
                 </div>
-                <p className="text-xs text-slate-500 mt-2">Expira em {telegramCode.expires_in_minutes} minutos</p>
+                <p className="text-xs text-slate-400 mt-2">Expira em {telegramCode.expires_in_minutes} minutos</p>
               </div>
 
               <div className="space-y-2">
-                <p className="text-slate-300 font-medium">Instrucoes:</p>
-                <ol className="text-sm text-slate-400 space-y-2 list-decimal list-inside">
+                <p className="text-slate-200 font-medium">Instrucoes:</p>
+                <ol className="text-sm text-slate-300 space-y-2 list-decimal list-inside">
                   <li>Abra o Telegram no seu celular</li>
                   <li>
                     Busque por{' '}
@@ -341,7 +341,7 @@ const NotificationSettings: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-green-400 font-medium">Telegram conectado</p>
-                  <p className="text-sm text-slate-400">Voce recebera notificacoes no Telegram</p>
+                  <p className="text-sm text-slate-300">Voce recebera notificacoes no Telegram</p>
                 </div>
               </div>
               <button
@@ -358,7 +358,7 @@ const NotificationSettings: React.FC = () => {
         {/* Tipos de Notificacao */}
         <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
           <h2 className="text-lg font-semibold text-white mb-4">Tipos de Notificacao</h2>
-          <p className="text-slate-400 text-sm mb-4">Escolha quais notificacoes deseja receber.</p>
+          <p className="text-slate-300 text-sm mb-4">Escolha quais notificacoes deseja receber.</p>
 
           <div className="space-y-3">
             {[
@@ -402,8 +402,8 @@ const NotificationSettings: React.FC = () => {
                   className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-violet-500 focus:ring-violet-500"
                 />
                 <div className="flex-1">
-                  <span className="text-slate-200">{item.label}</span>
-                  <p className="text-xs text-slate-500">{item.description}</p>
+                  <span className="text-slate-100">{item.label}</span>
+                  <p className="text-xs text-slate-400">{item.description}</p>
                 </div>
               </label>
             ))}

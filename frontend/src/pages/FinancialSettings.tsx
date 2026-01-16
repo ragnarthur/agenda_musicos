@@ -153,7 +153,7 @@ const FinancialSettings: React.FC = () => {
           <div>
             <Link
               to="/dashboard"
-              className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-3"
+              className="inline-flex items-center gap-2 text-slate-300 hover:text-white transition-colors mb-3"
             >
               <ChevronLeft className="h-4 w-4" />
               Voltar
@@ -164,7 +164,7 @@ const FinancialSettings: React.FC = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-white">Valores & Serviços</h1>
-                <p className="text-slate-400">
+                <p className="text-slate-300">
                   Cadastre seu cachê, taxas por deslocamento e pacotes de equipamentos.
                 </p>
               </div>
@@ -183,7 +183,7 @@ const FinancialSettings: React.FC = () => {
               <Coins className="h-5 w-5 text-emerald-300" />
               <div>
                 <h2 className="text-lg font-semibold text-white">Cachê base</h2>
-                <p className="text-slate-400 text-sm">
+                <p className="text-slate-300 text-sm">
                   Valor padrão para um show ou apresentação solo.
                 </p>
               </div>
@@ -203,13 +203,13 @@ const FinancialSettings: React.FC = () => {
                     className="w-full rounded-lg bg-slate-900/70 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-white px-8 py-2"
                   />
                 </div>
-                <p className="text-xs text-slate-500 mt-1">Formato: R$ 0,00</p>
+                <p className="text-xs text-slate-400 mt-1">Formato: R$ 0,00</p>
               </label>
               <label className="block">
-                <span className="text-sm text-slate-300">Valor por km (R$)</span>
+                <span className="text-sm text-slate-200">Valor por km (R$)</span>
                 <div className="flex items-center gap-2 mt-1">
                   <div className="flex-1 relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">R$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-300">R$</span>
                     <input
                       type="text"
                       inputMode="decimal"
@@ -220,9 +220,9 @@ const FinancialSettings: React.FC = () => {
                       className="w-full rounded-lg bg-slate-900/70 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-white px-8 py-2"
                     />
                   </div>
-                  <CarFront className="h-5 w-5 text-slate-400" />
+                  <CarFront className="h-5 w-5 text-slate-300" />
                 </div>
-                <p className="text-xs text-slate-500 mt-1">Use vírgula para centavos (ex: 1,50).</p>
+                <p className="text-xs text-slate-400 mt-1">Use vírgula para centavos (ex: 1,50).</p>
               </label>
             </div>
           </div>
@@ -234,7 +234,7 @@ const FinancialSettings: React.FC = () => {
                 <Sparkles className="h-5 w-5 text-emerald-300" />
                 <div>
                   <h2 className="text-lg font-semibold text-white">Pacotes de equipamentos</h2>
-                  <p className="text-slate-400 text-sm">
+                  <p className="text-slate-300 text-sm">
                     Liste os recursos que você leva (som, mesa, microfones, luz, etc) e seus valores.
                   </p>
                 </div>
@@ -256,7 +256,7 @@ const FinancialSettings: React.FC = () => {
                   className="grid grid-cols-1 sm:grid-cols-12 gap-3 bg-slate-900/50 border border-slate-700/60 rounded-lg p-3"
                 >
                   <div className="sm:col-span-7">
-                    <label className="text-sm text-slate-300">Equipamento/serviço</label>
+                    <label className="text-sm text-slate-200">Equipamento/serviço</label>
                     <input
                       type="text"
                       value={item.name}
@@ -266,9 +266,9 @@ const FinancialSettings: React.FC = () => {
                     />
                   </div>
                   <div className="sm:col-span-4">
-                    <label className="text-sm text-slate-300">Valor (R$)</label>
+                    <label className="text-sm text-slate-200">Valor (R$)</label>
                     <div className="mt-1 relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">R$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-300">R$</span>
                       <input
                         type="text"
                         inputMode="decimal"
@@ -284,7 +284,7 @@ const FinancialSettings: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleRemoveEquipment(index)}
-                      className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-slate-800/70 border border-slate-700 text-slate-300 hover:bg-red-500/20 hover:text-red-200 transition-colors px-3 py-2"
+                      className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-slate-800/70 border border-slate-700 text-slate-200 hover:bg-red-500/20 hover:text-red-200 transition-colors px-3 py-2"
                       aria-label="Remover item"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -293,7 +293,7 @@ const FinancialSettings: React.FC = () => {
                 </div>
               ))}
               {equipmentRows.length === 0 && (
-                <p className="text-sm text-slate-400">Adicione itens para ofertar seus equipamentos.</p>
+                <p className="text-sm text-slate-300">Adicione itens para ofertar seus equipamentos.</p>
               )}
             </div>
           </div>
@@ -302,7 +302,7 @@ const FinancialSettings: React.FC = () => {
           <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h3 className="text-lg font-semibold text-white">Resumo rápido</h3>
-              <p className="text-slate-400 text-sm">
+              <p className="text-slate-300 text-sm">
                 Estas informações ajudam o contratante a entender seu pacote completo.
               </p>
             </div>
