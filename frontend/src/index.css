@@ -226,52 +226,52 @@
 
   /* Blob 1: Azul profundo - canto superior esquerdo */
   .mesh-blob-1 {
-    width: 70%;
-    height: 70%;
-    top: -20%;
-    left: -15%;
+    width: 50%;
+    height: 50%;
+    top: -10%;
+    left: -8%;
     background: radial-gradient(circle at center, #2a4f7a 0%, #1e3a5f 40%, transparent 70%);
-    animation: meshBlob1 60s ease-in-out infinite;
+    animation: meshBlob1 28s ease-in-out infinite;
   }
 
   /* Blob 2: Roxo escuro - canto superior direito */
   .mesh-blob-2 {
-    width: 65%;
-    height: 65%;
-    top: -10%;
-    right: -20%;
+    width: 45%;
+    height: 45%;
+    top: -5%;
+    right: -10%;
     background: radial-gradient(circle at center, #3d2a5e 0%, #2d1b4e 40%, transparent 70%);
-    animation: meshBlob2 70s ease-in-out infinite;
+    animation: meshBlob2 32s ease-in-out infinite;
   }
 
   /* Blob 3: Azul índigo - centro */
   .mesh-blob-3 {
-    width: 75%;
-    height: 75%;
-    top: 30%;
-    left: 20%;
+    width: 55%;
+    height: 55%;
+    top: 35%;
+    left: 25%;
     background: radial-gradient(circle at center, #2a4a7d 0%, #1a365d 40%, transparent 70%);
-    animation: meshBlob3 55s ease-in-out infinite;
+    animation: meshBlob3 25s ease-in-out infinite;
   }
 
   /* Blob 4: Violeta - canto inferior direito */
   .mesh-blob-4 {
-    width: 60%;
-    height: 60%;
-    bottom: -15%;
-    right: -10%;
+    width: 42%;
+    height: 42%;
+    bottom: -8%;
+    right: -5%;
     background: radial-gradient(circle at center, #4a2d6e 0%, #3b1d5e 40%, transparent 70%);
-    animation: meshBlob4 65s ease-in-out infinite;
+    animation: meshBlob4 30s ease-in-out infinite;
   }
 
   /* Blob 5: Azul marinho - canto inferior esquerdo */
   .mesh-blob-5 {
-    width: 65%;
-    height: 65%;
-    bottom: -20%;
-    left: -15%;
+    width: 48%;
+    height: 48%;
+    bottom: -12%;
+    left: -8%;
     background: radial-gradient(circle at center, #1a3654 0%, #0f2744 40%, transparent 70%);
-    animation: meshBlob5 75s ease-in-out infinite;
+    animation: meshBlob5 35s ease-in-out infinite;
   }
 
   /* Static version for mobile (no animation) */
