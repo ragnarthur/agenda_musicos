@@ -360,7 +360,7 @@ const Plans: React.FC = () => {
   }
 
   return (
-    <FullscreenBackground className="bg-slate-950 text-white" enableBlueWaves>
+    <FullscreenBackground className="text-white" enableBlueWaves>
       <motion.div
         className="max-w-6xl mx-auto px-4 py-10 space-y-8"
         variants={revealParent}

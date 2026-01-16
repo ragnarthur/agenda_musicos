@@ -188,11 +188,7 @@
     width: 100%;
     height: 100%;
     z-index: 0;
-    background:
-      radial-gradient(ellipse 120% 80% at 50% 0%, rgba(4, 22, 47, 0.95) 0%, transparent 50%),
-      radial-gradient(ellipse 100% 60% at 30% -10%, rgba(14, 45, 90, 0.75) 0%, transparent 40%),
-      radial-gradient(ellipse 80% 50% at 70% 5%, rgba(6, 30, 60, 0.65) 0%, transparent 35%),
-      linear-gradient(180deg, #020612 0%, #04162f 30%, #010307 100%);
+    background: linear-gradient(180deg, #0a1628 0%, #0d1f3c 25%, #071018 100%);
   }
 
   .blue-wave-static::before {
@@ -200,9 +196,9 @@
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(ellipse 150% 100% at 50% -20%, rgba(20, 60, 120, 0.5) 0%, transparent 60%),
-      radial-gradient(ellipse 80% 40% at 20% 10%, rgba(30, 80, 140, 0.4) 0%, transparent 50%),
-      radial-gradient(ellipse 60% 30% at 80% 15%, rgba(15, 50, 100, 0.35) 0%, transparent 45%);
+      radial-gradient(ellipse 140% 70% at 50% -10%, rgba(30, 80, 160, 0.7) 0%, transparent 55%),
+      radial-gradient(ellipse 100% 50% at 25% 5%, rgba(40, 100, 180, 0.5) 0%, transparent 45%),
+      radial-gradient(ellipse 90% 45% at 75% 10%, rgba(25, 70, 140, 0.45) 0%, transparent 40%);
     animation: aurora-pulse 8s ease-in-out infinite;
   }
 
@@ -211,30 +207,30 @@
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(ellipse 100% 50% at 40% -5%, rgba(40, 90, 160, 0.3) 0%, transparent 40%),
-      radial-gradient(ellipse 70% 35% at 60% 0%, rgba(25, 70, 130, 0.25) 0%, transparent 35%);
+      radial-gradient(ellipse 120% 60% at 40% 0%, rgba(50, 120, 200, 0.4) 0%, transparent 50%),
+      radial-gradient(ellipse 80% 40% at 65% 5%, rgba(35, 90, 170, 0.35) 0%, transparent 40%);
     animation: aurora-drift 12s ease-in-out infinite reverse;
   }
 
   @keyframes aurora-pulse {
     0%, 100% {
-      opacity: 0.7;
+      opacity: 0.8;
       transform: scale(1) translateY(0);
     }
     50% {
       opacity: 1;
-      transform: scale(1.02) translateY(-2%);
+      transform: scale(1.03) translateY(-3%);
     }
   }
 
   @keyframes aurora-drift {
     0%, 100% {
-      opacity: 0.6;
+      opacity: 0.7;
       transform: translateX(0) scale(1);
     }
     50% {
-      opacity: 0.9;
-      transform: translateX(2%) scale(1.03);
+      opacity: 1;
+      transform: translateX(3%) scale(1.04);
     }
   }
 
