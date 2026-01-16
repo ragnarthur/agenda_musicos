@@ -40,6 +40,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
 
   const aspectRatio = target === 'avatar' ? 1 : 16 / 9;
   const zoomMax = target === 'avatar' ? 2.6 : 2.2;
+  const isAvatar = target === 'avatar';
 
   useEffect(() => {
     if (!isOpen || !file) {
@@ -164,7 +165,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
       aria-modal="true"
       aria-labelledby="crop-title"
     >
-      <div className="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+      <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <div>
             <h2 id="crop-title" className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -186,7 +187,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
         <div className="flex flex-col items-center gap-4">
           <div
             ref={cropRef}
-            className="relative w-[min(90vw,720px)] overflow-hidden rounded-xl border border-gray-200 bg-gray-100 shadow-inner dark:border-gray-700 dark:bg-gray-800"
+            className="relative w-[min(90vw,720px)] overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 shadow-inner dark:border-gray-700 dark:bg-gray-800 cursor-grab active:cursor-grabbing"
             style={{ aspectRatio: `${aspectRatio}` }}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
@@ -211,7 +212,19 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                 draggable={false}
               />
             )}
-            <div className="pointer-events-none absolute inset-0 rounded-xl ring-2 ring-white/80 dark:ring-white/20" />
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background: isAvatar
+                  ? 'radial-gradient(circle at center, transparent 0 46%, rgba(0,0,0,0.55) 47%)'
+                  : 'linear-gradient(0deg, rgba(0,0,0,0.18), rgba(0,0,0,0.18))',
+              }}
+            />
+            <div
+              className={`pointer-events-none absolute inset-0 ring-2 ring-white/80 dark:ring-white/20 ${
+                isAvatar ? 'rounded-full' : 'rounded-2xl'
+              }`}
+            />
           </div>
 
           <div className="flex w-full max-w-xl flex-col gap-3">
