@@ -40,7 +40,7 @@ const Login: React.FC = () => {
 
   return (
     <FullscreenBackground
-      className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 px-4"
+      className="px-4"
       contentClassName="flex items-center justify-center"
       enableBlueWaves
     >
