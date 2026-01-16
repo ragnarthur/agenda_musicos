@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 type CropTarget = 'avatar' | 'cover';
 
@@ -174,8 +175,9 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   };
 
   if (!isOpen || !file) return null;
+  if (typeof document === 'undefined') return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4"
       role="dialog"
@@ -273,7 +275,8 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
