@@ -48,17 +48,17 @@ const DustParticles3D: React.FC = memo(() => {
       resetArea();
       particles.length = 0;
       
-      // Mobile: plumas visíveis junto ao novo céu
+      // Mobile: partículas menores e mais rápidas
       if (isSmallScreen) {
-        const featherCount = 12;
+        const featherCount = 8;
         for (let i = 0; i < featherCount; i += 1) {
           particles.push({
             x: Math.random() * width,
             y: Math.random() * height,
             z: 0.3,
-            size: 1.8,
-            speed: 1.5,
-            sway: 4,
+            size: 1.0,
+            speed: 4,
+            sway: 8,
             phase: Math.random() * Math.PI * 2,
           });
         }
@@ -101,7 +101,7 @@ const DustParticles3D: React.FC = memo(() => {
         return;
       }
 
-      const delta = isSmallScreen ? 0.012 : Math.min(0.04, (time - lastTime) / 1000);
+      const delta = isSmallScreen ? 0.025 : Math.min(0.04, (time - lastTime) / 1000);
       lastTime = time;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -110,24 +110,26 @@ const DustParticles3D: React.FC = memo(() => {
 
       particles.forEach((particle) => {
         if (isSmallScreen) {
-          // Mobile: plumas visíveis com movimento suave
-          const driftX = Math.sin(time * 0.0001 + particle.phase) * particle.sway;
-          const driftY = Math.cos(time * 0.00008 + particle.phase * 1.3) * particle.sway;
-          
-          particle.x += driftX * delta;
-          particle.y += driftY * delta;
+          // Mobile: partículas menores com movimento mais rápido
+          const driftX = Math.sin(time * 0.0004 + particle.phase) * particle.sway;
+          const driftY = Math.cos(time * 0.00035 + particle.phase * 1.3) * particle.sway;
+          const flowX = Math.sin(time * 0.00025 + particle.phase * 1.1) * particle.speed;
+          const flowY = Math.cos(time * 0.0002 + particle.phase * 0.9) * particle.speed;
 
-          // Wrap maior para mais visibilidade
-          const margin = 30;
+          particle.x += (flowX + driftX) * delta;
+          particle.y += (flowY + driftY) * delta;
+
+          // Wrap
+          const margin = 20;
           if (particle.x < -margin) particle.x = width + margin;
           if (particle.x > width + margin) particle.x = -margin;
           if (particle.y < -margin) particle.y = height + margin;
           if (particle.y > height + margin) particle.y = -margin;
 
-          // Pluma maior e mais visível
-          ctx.shadowBlur = 3;
-          ctx.shadowColor = 'rgba(147, 197, 253, 0.2)';
-          ctx.fillStyle = 'rgba(147, 197, 253, 0.4)';
+          // Ponto menor e brilhante
+          ctx.shadowBlur = 6;
+          ctx.shadowColor = 'rgba(200, 220, 255, 0.5)';
+          ctx.fillStyle = 'rgba(220, 235, 255, 0.6)';
           ctx.beginPath();
           ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
           ctx.fill();
