@@ -114,7 +114,7 @@ const Navbar: React.FC = () => {
                 <span className="text-lg sm:text-xl font-bold logo-animated">
                   GigFlow
                 </span>
-                <span className="text-[10px] px-1.5 py-0.5 bg-amber-500/20 text-amber-200 rounded-full border border-amber-300/40 font-medium">
+                <span className="text-[9px] px-2 py-0.5 bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-500/10 text-amber-100/80 rounded-full border border-amber-400/20 font-light italic tracking-wider">
                   Beta
                 </span>
               </div>

@@ -54,7 +54,7 @@ const Login: React.FC = () => {
           </div>
           <div className="flex items-center justify-center gap-2 mb-3">
             <h1 className="text-5xl font-bold text-white logo-animated drop-shadow-xl leading-tight">GigFlow</h1>
-            <span className="text-[14px] px-2 py-1 bg-amber-500/20 text-amber-200 rounded-full border border-amber-300/40 font-medium">
+            <span className="text-[12px] px-2 py-0.5 bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-500/10 text-amber-100/80 rounded-full border border-amber-400/20 font-light italic tracking-wider">
               Beta
             </span>
           </div>

@@ -41,7 +41,7 @@ const Landing: React.FC = () => {
               GigFlow
             </motion.h1>
             <motion.span
-              className="text-[16px] md:text-[18px] px-2 py-1 bg-amber-500/20 text-amber-200 rounded-full border border-amber-300/40 font-medium"
+              className="text-[14px] md:text-[16px] px-2 py-0.5 bg-gradient-to-r from-amber-500/8 via-amber-400/12 to-amber-500/8 text-amber-100/70 rounded-full border border-amber-400/15 font-light italic tracking-wider"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.4 }}
@@ -89,7 +89,7 @@ const Landing: React.FC = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            Por que escolher o <span className="inline-flex items-center gap-2">GigFlow<span className="text-[16px] px-2 py-0.5 bg-amber-500/20 text-amber-200 rounded-full border border-amber-300/40 font-medium">Beta</span></span>?
+            Por que escolher o <span className="inline-flex items-center gap-2">GigFlow<span className="text-[14px] px-2 py-0.5 bg-gradient-to-r from-amber-500/8 via-amber-400/12 to-amber-500/8 text-amber-100/70 rounded-full border border-amber-400/15 font-light italic tracking-wider">Beta</span></span>?
           </motion.h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">

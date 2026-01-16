@@ -301,7 +301,7 @@ const Plans: React.FC = () => {
           <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Cadastro Concluído!</h2>
           <p className="text-gray-600 mb-6">
-            Bem-vindo à <strong>GigFlow<span className="text-[12px] px-1.5 py-0.5 bg-amber-500/20 text-amber-200 rounded-full border border-amber-300/40 font-medium ml-1">Beta</span></strong>!
+            Bem-vindo à <strong>GigFlow<span className="text-[11px] px-2 py-0.5 bg-gradient-to-r from-amber-500/8 via-amber-400/12 to-amber-500/8 text-amber-100/70 rounded-full border border-amber-400/15 font-light italic tracking-wider ml-1">Beta</span></strong>!
             Sua conta está ativa e pronta para uso.
           </p>
           {completedUser && (
@@ -780,7 +780,7 @@ const Plans: React.FC = () => {
                 </motion.li>
                 <motion.li variants={revealItem} className="flex gap-2">
                   <CheckCircle className="h-5 w-5 text-emerald-300 mt-0.5" />
-                  <span>Sem salvar dados de cartão na GigFlow<span className="text-[12px] px-1.5 py-0.5 bg-amber-500/20 text-amber-200 rounded-full border border-amber-300/40 font-medium ml-1">Beta</span>.</span>
+                  <span>Sem salvar dados de cartão na GigFlow<span className="text-[11px] px-2 py-0.5 bg-gradient-to-r from-amber-500/8 via-amber-400/12 to-amber-500/8 text-amber-100/70 rounded-full border border-amber-400/15 font-light italic tracking-wider ml-1">Beta</span>.</span>
                 </motion.li>
                 <motion.li variants={revealItem} className="flex gap-2">
                   <CheckCircle className="h-5 w-5 text-emerald-300 mt-0.5" />

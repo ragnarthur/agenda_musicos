@@ -101,7 +101,7 @@ const VerifyEmail: React.FC = () => {
           </div>
           <div className="flex items-center justify-center gap-2">
             <h1 className="text-2xl font-bold logo-animated">GigFlow</h1>
-            <span className="text-[12px] px-1.5 py-0.5 bg-amber-500/20 text-amber-200 rounded-full border border-amber-300/40 font-medium">
+            <span className="text-[10px] px-2 py-0.5 bg-gradient-to-r from-amber-500/8 via-amber-400/12 to-amber-500/8 text-amber-100/70 rounded-full border border-amber-400/15 font-light italic tracking-wider">
               Beta
             </span>
           </div>
