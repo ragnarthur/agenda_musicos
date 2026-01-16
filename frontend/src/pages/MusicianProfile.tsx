@@ -6,6 +6,7 @@ import Loading from '../components/common/Loading';
 import ProfileHeader from '../components/Profile/ProfileHeader';
 import StatCard from '../components/Profile/StatCard';
 import ReviewCard from '../components/Profile/ReviewCard';
+import ImageCropModal from '../components/modals/ImageCropModal';
 import { musicianService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { showToast } from '../utils/toast';
@@ -36,6 +37,9 @@ const MusicianProfile: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [cropFile, setCropFile] = useState<File | null>(null);
+  const [cropTarget, setCropTarget] = useState<'avatar' | 'cover'>('avatar');
+  const [isCropOpen, setIsCropOpen] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const { user, refreshUser } = useAuth();
@@ -90,15 +94,18 @@ const MusicianProfile: React.FC = () => {
   const totalEvents = 42;
   const isOwnProfile = Boolean(user && (user.id === musician.id || user.user?.id === musician.user?.id));
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      showToast.error('Envie uma imagem válida (JPG, PNG ou WEBP).');
-      return;
-    }
+  const openCropper = (file: File, target: 'avatar' | 'cover') => {
+    setCropFile(file);
+    setCropTarget(target);
+    setIsCropOpen(true);
+  };
 
+  const closeCropper = () => {
+    setIsCropOpen(false);
+    setCropFile(null);
+  };
+
+  const uploadAvatarFile = async (file: File) => {
     setUploadingAvatar(true);
     const uploadPromise = musicianService.uploadAvatar(file);
     showToast.promise(uploadPromise, {
@@ -118,15 +125,7 @@ const MusicianProfile: React.FC = () => {
     }
   };
 
-  const handleCoverUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      showToast.error('Envie uma imagem válida (JPG, PNG ou WEBP).');
-      return;
-    }
-
+  const uploadCoverFile = async (file: File) => {
     setUploadingCover(true);
     const uploadPromise = musicianService.uploadCover(file);
     showToast.promise(uploadPromise, {
@@ -143,6 +142,38 @@ const MusicianProfile: React.FC = () => {
       // Erro já tratado pelo toast
     } finally {
       setUploadingCover(false);
+    }
+  };
+
+  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast.error('Envie uma imagem válida (JPG, PNG ou WEBP).');
+      return;
+    }
+    openCropper(file, 'avatar');
+  };
+
+  const handleCoverUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast.error('Envie uma imagem válida (JPG, PNG ou WEBP).');
+      return;
+    }
+    openCropper(file, 'cover');
+  };
+
+  const handleCropConfirm = async (file: File) => {
+    setIsCropOpen(false);
+    setCropFile(null);
+    if (cropTarget === 'avatar') {
+      await uploadAvatarFile(file);
+    } else {
+      await uploadCoverFile(file);
     }
   };
 
@@ -188,6 +219,15 @@ const MusicianProfile: React.FC = () => {
               </>
             )}
           </div>
+          {isOwnProfile && (
+            <ImageCropModal
+              isOpen={isCropOpen}
+              file={cropFile}
+              target={cropTarget}
+              onClose={closeCropper}
+              onConfirm={handleCropConfirm}
+            />
+          )}
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

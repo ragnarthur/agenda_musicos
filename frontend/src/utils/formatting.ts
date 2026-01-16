@@ -155,6 +155,7 @@ export const INSTRUMENT_LABELS: Record<string, string> = {
   dj: 'DJ',
   producer: 'Produtor(a)',
   other: 'Outro',
+  electric_guitar: 'Guitarra elétrica',
   'electric guitar': 'Guitarra elétrica',
   'bass guitar': 'Baixo',
   singer: 'Cantor(a)',
