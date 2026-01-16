@@ -188,55 +188,7 @@
     width: 100%;
     height: 100%;
     z-index: 0;
-    background: linear-gradient(180deg, #0c1929 0%, #0f2540 40%, #081018 100%);
-    overflow: hidden;
-  }
-
-  .blue-wave-static::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background:
-      radial-gradient(ellipse 40% 30% at 30% 30%, rgba(0, 0, 0, 0.6) 0%, transparent 70%),
-      radial-gradient(ellipse 50% 40% at 70% 60%, rgba(0, 0, 0, 0.5) 0%, transparent 70%),
-      radial-gradient(ellipse 35% 25% at 50% 80%, rgba(0, 0, 0, 0.4) 0%, transparent 70%);
-    animation: wave-flow 15s ease-in-out infinite;
-  }
-
-  .blue-wave-static::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background:
-      radial-gradient(ellipse 45% 35% at 60% 20%, rgba(0, 0, 0, 0.5) 0%, transparent 70%),
-      radial-gradient(ellipse 40% 30% at 25% 50%, rgba(0, 0, 0, 0.45) 0%, transparent 70%),
-      radial-gradient(ellipse 50% 35% at 80% 70%, rgba(0, 0, 0, 0.4) 0%, transparent 70%);
-    animation: wave-flow 20s ease-in-out infinite reverse;
-    animation-delay: -5s;
-  }
-
-  @keyframes wave-flow {
-    0% {
-      transform: translate(0%, 0%) rotate(0deg);
-    }
-    25% {
-      transform: translate(5%, 3%) rotate(2deg);
-    }
-    50% {
-      transform: translate(0%, 6%) rotate(0deg);
-    }
-    75% {
-      transform: translate(-5%, 3%) rotate(-2deg);
-    }
-    100% {
-      transform: translate(0%, 0%) rotate(0deg);
-    }
+    background: linear-gradient(180deg, #0f2847 0%, #0a1e3a 30%, #071428 60%, #030a14 100%);
   }
 
   .fabric-wave {
