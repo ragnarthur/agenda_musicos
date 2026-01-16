@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 // contexts/AuthContext.tsx
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import type { AuthContextType, LoginCredentials, Musician } from '../types';
 import { authService, musicianService } from '../services/api';
 
@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     bootstrap();
   }, []);
 
-  const login = async (credentials: LoginCredentials) => {
+  const login = useCallback(async (credentials: LoginCredentials) => {
     try {
       await authService.login(credentials);
       const musician = await musicianService.getMe();
@@ -37,9 +37,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Erro no login:', error);
       throw error;
     }
-  };
+  }, []);
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     try {
       const currentUser = await musicianService.getMe();
       setUser(currentUser);
@@ -52,9 +52,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
       }
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await authService.logout();
     } catch (error) {
@@ -62,16 +62,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setUser(null);
     }
-  };
+  }, []);
 
-  const value: AuthContextType = {
+  const value = useMemo<AuthContextType>(() => ({
     user,
     login,
     logout,
     refreshUser,
     isAuthenticated: !!user,
     loading,
-  };
+  }), [user, login, logout, refreshUser, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

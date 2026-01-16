@@ -1,5 +1,5 @@
 // components/common/TiltCard.tsx
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback, memo } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 
 type Props = {
@@ -9,16 +9,23 @@ type Props = {
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
-const TiltCard: React.FC<Props> = ({ children, className }) => {
+const TiltCard: React.FC<Props> = memo(({ children, className }) => {
   const ref = useRef<HTMLDivElement | null>(null);
+  const lastMoveTime = useRef<number>(0);
   const prefersReducedMotion = useReducedMotion();
   const [style, setStyle] = useState<Record<string, string | number>>({
     transform: 'perspective(800px) rotateX(0deg) rotateY(0deg) translateZ(0)',
     boxShadow: '0 10px 30px rgba(0,0,0,0.12)',
   });
 
-  const handleMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  // Debounce de 16ms no mousemove para melhor performance
+  const handleMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (prefersReducedMotion || !ref.current) return;
+
+    const now = Date.now();
+    if (now - lastMoveTime.current < 16) return;
+    lastMoveTime.current = now;
+
     const rect = ref.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2; // -1 a 1
     const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
@@ -28,15 +35,15 @@ const TiltCard: React.FC<Props> = ({ children, className }) => {
       transform: `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(6px)`,
       boxShadow: `0 15px 35px rgba(0,0,0,0.14), 0 6px 18px rgba(0,0,0,0.08)`,
     });
-  };
+  }, [prefersReducedMotion]);
 
-  const handleLeave = () => {
+  const handleLeave = useCallback(() => {
     if (prefersReducedMotion) return;
     setStyle({
       transform: 'perspective(800px) rotateX(0deg) rotateY(0deg) translateZ(0)',
       boxShadow: '0 10px 30px rgba(0,0,0,0.12)',
     });
-  };
+  }, [prefersReducedMotion]);
 
   return (
     <motion.div
@@ -52,6 +59,7 @@ const TiltCard: React.FC<Props> = ({ children, className }) => {
       {children}
     </motion.div>
   );
-};
+});
+TiltCard.displayName = 'TiltCard';
 
 export default TiltCard;

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, memo } from 'react';
 import useLowPowerMode from '../../hooks/useLowPowerMode';
 
 type Particle = {
@@ -11,7 +11,7 @@ type Particle = {
   phase: number;
 };
 
-const DustParticles3D: React.FC = () => {
+const DustParticles3D: React.FC = memo(() => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const isLowPower = useLowPowerMode();
 
@@ -24,6 +24,7 @@ const DustParticles3D: React.FC = () => {
     if (!ctx) return undefined;
 
     let rafId = 0;
+    let frameCount = 0; // Frame throttling - renderizar a cada 2 frames
     let width = 0;
     let height = 0;
     let dpr = window.devicePixelRatio || 1;
@@ -64,11 +65,11 @@ const DustParticles3D: React.FC = () => {
         return;
       }
       
-      // Desktop: sistema completo de partículas
+      // Desktop: sistema completo de partículas (otimizado para 25 partículas)
       const density = {
-        min: 30,
-        max: 70,
-        factor: 0.00003,
+        min: 20,
+        max: 25,
+        factor: 0.00002,
       };
       const count = Math.min(
         density.max,
@@ -93,6 +94,13 @@ const DustParticles3D: React.FC = () => {
 
     let lastTime = performance.now();
     const render = (time: number) => {
+      // Frame throttling: renderizar a cada 2 frames para melhor performance
+      frameCount += 1;
+      if (frameCount % 2 !== 0) {
+        rafId = requestAnimationFrame(render);
+        return;
+      }
+
       const delta = isSmallScreen ? 0.012 : Math.min(0.04, (time - lastTime) / 1000);
       lastTime = time;
 
@@ -172,7 +180,15 @@ const DustParticles3D: React.FC = () => {
     };
   }, [isLowPower]);
 
-  return <canvas ref={canvasRef} className="dust-canvas" aria-hidden="true" />;
-};
+  return (
+    <canvas
+      ref={canvasRef}
+      className="dust-canvas"
+      aria-hidden="true"
+      style={{ willChange: 'transform' }}
+    />
+  );
+});
+DustParticles3D.displayName = 'DustParticles3D';
 
 export default DustParticles3D;

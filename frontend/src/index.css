@@ -200,12 +200,19 @@
     height: 100%;
     overflow: hidden;
     filter: url(#mesh-goo);
+    /* GPU acceleration otimizations */
+    contain: layout style paint;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 
   .mesh-gradient-base {
     position: absolute;
     inset: 0;
     background: linear-gradient(180deg, #0A0E27 0%, #0f1629 40%, #121a2e 70%, #151d32 100%);
+    /* GPU acceleration */
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
   }
 
   .mesh-blur-filter {
@@ -222,6 +229,9 @@
     opacity: 0.85;
     mix-blend-mode: screen;
     will-change: transform;
+    /* GPU acceleration */
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
   }
 
   /* Blob 1: Azul profundo - canto superior esquerdo */
@@ -601,6 +611,10 @@
     z-index: 2;
     pointer-events: none;
     mix-blend-mode: screen;
+    /* GPU acceleration */
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 
   @media (min-width: 1024px) {

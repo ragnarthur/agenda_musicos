@@ -1,5 +1,5 @@
 // components/Layout/Navbar.tsx
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useTransition, memo } from 'react';
 import { Link, NavLink as RouterNavLink, useNavigate } from 'react-router-dom';
 import {
   Calendar,
@@ -20,7 +20,7 @@ import { eventService } from '../../services/api';
 import OwlMascot from '../ui/OwlMascot';
 import ThemeToggle from './ThemeToggle';
 
-const Navbar: React.FC = () => {
+const Navbar: React.FC = memo(() => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [pendingMyResponse, setPendingMyResponse] = useState(0);
@@ -28,6 +28,8 @@ const Navbar: React.FC = () => {
   const [openMore, setOpenMore] = useState(false);
   const [openDesktopMore, setOpenDesktopMore] = useState(false);
   const desktopMoreRef = useRef<HTMLDivElement | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const [, startTransition] = useTransition();
   const subscriptionInfo = user?.subscription_info;
   const showPlanShortcut = Boolean(
     subscriptionInfo &&
@@ -53,23 +55,38 @@ const Navbar: React.FC = () => {
     user?.full_name || user?.user?.first_name || user?.user?.username || 'Conta';
 
   const loadNotifications = useCallback(async () => {
-    const [pendingResult, approvalResult] = await Promise.allSettled([
-      eventService.getPendingMyResponse(),
-      eventService.getAll({ pending_approval: true }),
-    ]);
-
-    if (pendingResult.status === 'fulfilled') {
-      setPendingMyResponse(pendingResult.value.length);
-    } else {
-      setPendingMyResponse(0);
-      console.error('Erro ao carregar notificações (pendências):', pendingResult.reason);
+    // Cancelar requisição anterior se existir
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
+    abortControllerRef.current = new AbortController();
 
-    if (approvalResult.status === 'fulfilled') {
-      setPendingApproval(approvalResult.value.length);
-    } else {
-      setPendingApproval(0);
-      console.error('Erro ao carregar notificações (convites):', approvalResult.reason);
+    try {
+      const [pendingResult, approvalResult] = await Promise.allSettled([
+        eventService.getPendingMyResponse(),
+        eventService.getAll({ pending_approval: true }),
+      ]);
+
+      // Usar startTransition para updates não-bloqueantes
+      startTransition(() => {
+        if (pendingResult.status === 'fulfilled') {
+          setPendingMyResponse(pendingResult.value.length);
+        } else {
+          setPendingMyResponse(0);
+          console.error('Erro ao carregar notificações (pendências):', pendingResult.reason);
+        }
+
+        if (approvalResult.status === 'fulfilled') {
+          setPendingApproval(approvalResult.value.length);
+        } else {
+          setPendingApproval(0);
+          console.error('Erro ao carregar notificações (convites):', approvalResult.reason);
+        }
+      });
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') {
+        console.error('Erro ao carregar notificações:', error);
+      }
     }
   }, []);
 
@@ -79,13 +96,17 @@ const Navbar: React.FC = () => {
     return () => {
       clearTimeout(timeout);
       clearInterval(interval);
+      // Cancelar requisição pendente ao desmontar
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
     };
   }, [loadNotifications]);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     await logout();
     navigate('/login');
-  };
+  }, [logout, navigate]);
 
   useEffect(() => {
     const onClickOutside = (event: MouseEvent) => {
@@ -430,9 +451,10 @@ const Navbar: React.FC = () => {
       </div>
     </nav>
   );
-};
+});
+Navbar.displayName = 'Navbar';
 
-const AppNavLink: React.FC<{ to: string; icon: React.ReactNode; label: string; badge?: number; accent?: boolean }> = ({ to, icon, label, badge, accent }) => (
+const AppNavLink: React.FC<{ to: string; icon: React.ReactNode; label: string; badge?: number; accent?: boolean }> = memo(({ to, icon, label, badge, accent }) => (
   <RouterNavLink
     to={to}
     className={({ isActive }) => {
@@ -453,6 +475,7 @@ const AppNavLink: React.FC<{ to: string; icon: React.ReactNode; label: string; b
       </span>
     )}
   </RouterNavLink>
-);
+));
+AppNavLink.displayName = 'AppNavLink';
 
 export default Navbar;

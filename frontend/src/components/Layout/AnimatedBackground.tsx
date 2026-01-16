@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, memo } from 'react';
 import useLowPowerMode from '../../hooks/useLowPowerMode';
 import DustParticles3D from './DustParticles3D';
 
@@ -8,8 +8,8 @@ interface AnimatedBackgroundProps {
   enableParticles?: boolean;
 }
 
-// Mesh Gradient animado com blobs de cor
-const MeshGradient: React.FC<{ isStatic?: boolean }> = ({ isStatic = false }) => (
+// Mesh Gradient animado com blobs de cor - memoizado para evitar re-renders
+const MeshGradient = memo<{ isStatic?: boolean }>(({ isStatic = false }) => (
   <div className="mesh-gradient-container" aria-hidden="true">
     {/* Base background gradient */}
     <div className="mesh-gradient-base" />
@@ -37,15 +37,21 @@ const MeshGradient: React.FC<{ isStatic?: boolean }> = ({ isStatic = false }) =>
       </defs>
     </svg>
   </div>
-);
+));
+MeshGradient.displayName = 'MeshGradient';
 
-const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
+const AnimatedBackground: React.FC<AnimatedBackgroundProps> = memo(({
   className = '',
   enableBlueWaves = false,
   enableParticles = true,
 }) => {
   const isLowPower = useLowPowerMode();
-  const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
+
+  // Memoizar resultado do matchMedia para evitar recálculo em cada render
+  const isMobile = useMemo(() => {
+    return typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
+  }, []);
+
   const enableEffects = !isLowPower;
 
   return (
@@ -67,6 +73,7 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
       {enableEffects && enableParticles && <DustParticles3D />}
     </div>
   );
-};
+});
+AnimatedBackground.displayName = 'AnimatedBackground';
 
 export default AnimatedBackground;
