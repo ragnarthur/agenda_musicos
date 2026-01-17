@@ -909,6 +909,13 @@ class PendingRegistration(models.Model):
         Retorna o User criado.
         """
         from django.contrib.auth.models import User
+        from django.core.exceptions import ValidationError
+
+        # Validação de unicidade antes de criar (proteção extra)
+        if User.objects.filter(email=self.email).exists():
+            raise ValidationError(f'Email {self.email} já está cadastrado.')
+        if User.objects.filter(username=self.username).exists():
+            raise ValidationError(f'Username {self.username} já está em uso.')
 
         # Cria o usuário
         user = User.objects.create(

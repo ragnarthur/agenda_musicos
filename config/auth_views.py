@@ -28,11 +28,11 @@ class CookieTokenMixin:
         refresh = tokens.get("refresh")
         cookie_opts = _cookie_settings()
 
+        # Sem max_age = session cookies (expiram ao fechar o navegador)
         if access:
             response.set_cookie(
                 ACCESS_COOKIE,
                 access,
-                max_age=_max_age(settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"]),
                 **cookie_opts,
             )
 
@@ -40,7 +40,6 @@ class CookieTokenMixin:
             response.set_cookie(
                 REFRESH_COOKIE,
                 refresh,
-                max_age=_max_age(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"]),
                 **cookie_opts,
             )
 
