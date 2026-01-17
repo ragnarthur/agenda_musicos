@@ -200,7 +200,7 @@ const FinancialSettings: React.FC = () => {
                     onChange={handleCurrencyChange(setBaseFee)}
                     onBlur={handleCurrencyBlur(setBaseFee)}
                     placeholder="0,00"
-                    className="w-full rounded-lg bg-slate-900/70 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-white px-8 py-2"
+                    className="w-full rounded-lg bg-slate-900 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-slate-100 placeholder:text-slate-500 px-8 py-2"
                   />
                 </div>
                 <p className="text-xs text-slate-400 mt-1">Formato: R$ 0,00</p>
@@ -217,7 +217,7 @@ const FinancialSettings: React.FC = () => {
                       onChange={handleCurrencyChange(setTravelFee)}
                       onBlur={handleCurrencyBlur(setTravelFee)}
                       placeholder="0,00"
-                      className="w-full rounded-lg bg-slate-900/70 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-white px-8 py-2"
+                      className="w-full rounded-lg bg-slate-900 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-slate-100 placeholder:text-slate-500 px-8 py-2"
                     />
                   </div>
                   <CarFront className="h-5 w-5 text-slate-300" />
@@ -262,7 +262,7 @@ const FinancialSettings: React.FC = () => {
                       value={item.name}
                       onChange={(e) => handleEquipmentChange(index, 'name', e.target.value)}
                       placeholder="Ex: Som completo"
-                      className="mt-1 w-full rounded-lg bg-slate-950/60 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-white px-3 py-2"
+                      className="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-slate-100 placeholder:text-slate-500 px-3 py-2"
                     />
                   </div>
                   <div className="sm:col-span-4">
@@ -276,7 +276,7 @@ const FinancialSettings: React.FC = () => {
                         onChange={(e) => handleEquipmentChange(index, 'price', maskCurrencyInput(e.target.value))}
                         onBlur={(e) => handleEquipmentChange(index, 'price', formatCurrencyMask(e.target.value))}
                         placeholder="0,00"
-                        className="w-full rounded-lg bg-slate-950/60 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-white px-8 py-2"
+                        className="w-full rounded-lg bg-slate-900 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-slate-100 placeholder:text-slate-500 px-8 py-2"
                       />
                     </div>
                   </div>
