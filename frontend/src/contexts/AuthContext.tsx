@@ -6,12 +6,31 @@ import { authService, musicianService } from '../services/api';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Chave para marcar sessão ativa no sessionStorage
+// sessionStorage é limpo ao fechar o navegador, garantindo novo login
+const SESSION_KEY = 'gigflow_session_active';
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<Musician | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const bootstrap = async () => {
+      // Verifica se há uma sessão ativa nesta janela do navegador
+      const hasActiveSession = sessionStorage.getItem(SESSION_KEY);
+
+      if (!hasActiveSession) {
+        // Navegador foi fechado e reaberto - limpa cookies e força novo login
+        try {
+          await authService.logout();
+        } catch {
+          // Ignora erro de logout (pode não haver sessão)
+        }
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
       try {
         const currentUser = await musicianService.getMe();
         setUser(currentUser);
@@ -21,6 +40,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.error('Erro ao carregar sessão do usuário:', error);
         }
         setUser(null);
+        // Remove marcador se sessão expirou
+        sessionStorage.removeItem(SESSION_KEY);
       } finally {
         setLoading(false);
       }
@@ -31,6 +52,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = useCallback(async (credentials: LoginCredentials) => {
     try {
       await authService.login(credentials);
+      // Marca sessão ativa no sessionStorage
+      sessionStorage.setItem(SESSION_KEY, 'true');
       const musician = await musicianService.getMe();
       setUser(musician);
     } catch (error) {
@@ -60,6 +83,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Erro ao finalizar sessão:', error);
     } finally {
+      // Remove marcador de sessão
+      sessionStorage.removeItem(SESSION_KEY);
       setUser(null);
     }
   }, []);
