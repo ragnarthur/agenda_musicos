@@ -213,15 +213,15 @@ const EventsList: React.FC = () => {
                 Acompanhe eventos sob sua gestão ou participação.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <div className="rounded-2xl border border-white/70 bg-white/90 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur">
+                <div className="rounded-2xl border border-primary-100/70 bg-gradient-to-br from-primary-50/80 via-white/90 to-white/70 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur dark:border-primary-800/60 dark:from-primary-900/40 dark:via-slate-900/70 dark:to-slate-900/60">
                   <p className="text-xs uppercase tracking-wide text-gray-500">Próximos 30 dias</p>
                   <p className="text-2xl text-primary-700">{statistics.upcoming}</p>
                 </div>
-                <div className="rounded-2xl border border-white/70 bg-white/90 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur">
+                <div className="rounded-2xl border border-emerald-100/70 bg-gradient-to-br from-emerald-50/80 via-white/90 to-white/70 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur dark:border-emerald-800/60 dark:from-emerald-900/40 dark:via-slate-900/70 dark:to-slate-900/60">
                   <p className="text-xs uppercase tracking-wide text-gray-500">Confirmados</p>
                   <p className="text-2xl text-emerald-600">{statistics.confirmed}</p>
                 </div>
-                <div className="rounded-2xl border border-white/70 bg-white/90 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur">
+                <div className="rounded-2xl border border-indigo-100/70 bg-gradient-to-br from-indigo-50/80 via-white/90 to-white/70 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur dark:border-indigo-800/60 dark:from-indigo-900/40 dark:via-slate-900/70 dark:to-slate-900/60">
                   <p className="text-xs uppercase tracking-wide text-gray-500">Apresentações solo</p>
                   <p className="text-2xl text-indigo-600">{statistics.solos}</p>
                 </div>
@@ -321,10 +321,7 @@ const EventsList: React.FC = () => {
                   key={group.dateKey}
                   className={`rounded-xl p-[1px] bg-gradient-to-br ${group.tone.ring} shadow-xl`}
                 >
-                  <div
-                    className={`rounded-[14px] border border-white/70 p-4 shadow-lg backdrop-blur ${group.tone.bg}`}
-                    style={{ backgroundColor: 'rgba(255,255,255,0.9)' }}
-                  >
+                  <div className={`rounded-[14px] border border-white/70 dark:border-white/10 p-4 shadow-lg backdrop-blur ${group.tone.bg}`}>
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <div className="pill-date">
