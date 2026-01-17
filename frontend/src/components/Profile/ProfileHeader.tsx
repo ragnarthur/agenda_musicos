@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
-import { MapPin, Star, Camera, Loader2, Info } from 'lucide-react';
+import { MapPin, Star, Camera, Loader2, Info, UserPlus, UserCheck, MessageCircle, Briefcase } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Musician } from '../../types';
 import { formatInstrumentLabel } from '../../utils/formatting';
 
+interface ConnectionStatus {
+  is_connected: boolean;
+  connection_id: number | null;
+  connection_type: string | null;
+}
+
 interface ProfileHeaderProps {
   musician: Musician;
   isOwnProfile: boolean;
+  connectionStatus?: ConnectionStatus | null;
+  onConnect?: () => void;
+  connectingInProgress?: boolean;
   onUploadAvatar?: () => void;
   onUploadCover?: () => void;
   uploadingAvatar?: boolean;
@@ -16,6 +25,9 @@ interface ProfileHeaderProps {
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   musician,
   isOwnProfile,
+  connectionStatus,
+  onConnect,
+  connectingInProgress = false,
   onUploadAvatar,
   onUploadCover,
   uploadingAvatar = false,
@@ -24,10 +36,19 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const [showAvatarHint, setShowAvatarHint] = useState(false);
   const [showCoverHint, setShowCoverHint] = useState(false);
 
+  const isConnected = connectionStatus?.is_connected ?? false;
+
+  const handleWhatsAppClick = () => {
+    if (musician.whatsapp) {
+      const phone = musician.whatsapp.replace(/\D/g, '');
+      window.open(`https://wa.me/55${phone}?text=Olá ${musician.full_name}, vi seu perfil na Rede Musical!`, '_blank');
+    }
+  };
+
   return (
     <div className="relative">
       {/* Cover Image */}
-      <div className="relative h-64 bg-gradient-to-r from-blue-500 to-purple-600 rounded-t-2xl overflow-hidden">
+      <div className="relative h-48 sm:h-64 bg-gradient-to-r from-blue-500 to-purple-600 rounded-t-2xl overflow-hidden">
         {musician.cover_image_url ? (
           <img
             src={musician.cover_image_url}
@@ -75,16 +96,16 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       </div>
 
       {/* Avatar + Info */}
-      <div className="relative px-8 pb-6">
+      <div className="relative px-4 sm:px-8 pb-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex flex-col md:flex-row items-start md:items-end gap-6 -mt-20"
+          className="flex flex-col md:flex-row items-start md:items-end gap-4 sm:gap-6 -mt-16 sm:-mt-20"
         >
           {/* Avatar */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div className="w-40 h-40 rounded-full border-4 border-white dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl overflow-hidden ring-4 ring-blue-500/20 dark:ring-blue-400/20 hover:ring-blue-500/40 dark:hover:ring-blue-400/40 transition-all">
+            <div className="w-28 h-28 sm:w-40 sm:h-40 rounded-full border-4 border-white dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl overflow-hidden ring-4 ring-blue-500/20 dark:ring-blue-400/20 hover:ring-blue-500/40 dark:hover:ring-blue-400/40 transition-all">
               {musician.avatar_url ? (
                 <img
                   src={musician.avatar_url}
@@ -93,7 +114,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
-                  <span className="text-5xl font-bold text-gray-500 dark:text-gray-300">
+                  <span className="text-4xl sm:text-5xl font-bold text-gray-500 dark:text-gray-300">
                     {musician.full_name[0]}
                   </span>
                 </div>
@@ -139,15 +160,15 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
           {/* Name & Info */}
           <div className="flex-1 md:mb-4 md:pl-2">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
               {musician.full_name}
             </h1>
 
-            <div className="flex flex-wrap items-center gap-4 text-gray-600 dark:text-gray-400 mb-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-gray-600 dark:text-gray-400 mb-3">
               {musician.city && (
                 <div className="flex items-center gap-1">
                   <MapPin className="h-4 w-4" />
-                  <span>{musician.city}{musician.state ? `, ${musician.state}` : ''}</span>
+                  <span className="text-sm sm:text-base">{musician.city}{musician.state ? `, ${musician.state}` : ''}</span>
                 </div>
               )}
 
@@ -159,13 +180,13 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: idx * 0.1 }}
-                      className="px-3 py-1 backdrop-blur-sm bg-blue-500/20 dark:bg-blue-400/10 text-blue-800 dark:text-blue-300 rounded-full text-sm border border-blue-200/30 dark:border-blue-400/20 hover:bg-blue-500/30 dark:hover:bg-blue-400/20 transition-colors"
+                      className="px-2 sm:px-3 py-1 backdrop-blur-sm bg-blue-500/20 dark:bg-blue-400/10 text-blue-800 dark:text-blue-300 rounded-full text-xs sm:text-sm border border-blue-200/30 dark:border-blue-400/20 hover:bg-blue-500/30 dark:hover:bg-blue-400/20 transition-colors"
                     >
                       {formatInstrumentLabel(inst)}
                     </motion.span>
                   ))
                 ) : musician.instrument && (
-                  <span className="px-3 py-1 backdrop-blur-sm bg-blue-500/20 dark:bg-blue-400/10 text-blue-800 dark:text-blue-300 rounded-full text-sm border border-blue-200/30 dark:border-blue-400/20">
+                  <span className="px-2 sm:px-3 py-1 backdrop-blur-sm bg-blue-500/20 dark:bg-blue-400/10 text-blue-800 dark:text-blue-300 rounded-full text-xs sm:text-sm border border-blue-200/30 dark:border-blue-400/20">
                     {formatInstrumentLabel(musician.instrument)}
                   </span>
                 )}
@@ -179,7 +200,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`h-5 w-5 transition-all ${
+                      className={`h-4 w-4 sm:h-5 sm:w-5 transition-all ${
                         i < Math.round(Number(musician.average_rating ?? 0))
                           ? 'text-yellow-400 fill-yellow-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]'
                           : 'text-gray-300 dark:text-gray-600'
@@ -187,10 +208,10 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                     />
                   ))}
                 </div>
-                <span className="font-semibold text-gray-900 dark:text-white">
+                <span className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
                   {Number(musician.average_rating ?? 0).toFixed(1)}
                 </span>
-                <span className="text-gray-500 dark:text-gray-400 text-sm">
+                <span className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
                   ({musician.total_ratings} {musician.total_ratings === 1 ? 'avaliação' : 'avaliações'})
                 </span>
               </div>
@@ -199,27 +220,53 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
           {/* Action Buttons */}
           {!isOwnProfile && (
-            <div className="flex gap-3 md:mb-4">
+            <div className="flex flex-wrap gap-2 sm:gap-3 md:mb-4 w-full md:w-auto">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-6 py-2 bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 text-white rounded-lg font-medium transition-colors shadow-lg hover:shadow-sky-500/50"
+                onClick={onConnect}
+                disabled={connectingInProgress}
+                className={`flex items-center gap-2 px-4 sm:px-6 py-2 rounded-lg font-medium transition-all shadow-lg disabled:opacity-70 disabled:cursor-not-allowed ${
+                  isConnected
+                    ? 'bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white hover:shadow-green-500/50'
+                    : 'bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 text-white hover:shadow-sky-500/50'
+                }`}
               >
-                Seguir
+                {connectingInProgress ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : isConnected ? (
+                  <>
+                    <UserCheck className="h-4 w-4" />
+                    <span className="hidden sm:inline">Seguindo</span>
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="h-4 w-4" />
+                    <span className="hidden sm:inline">Seguir</span>
+                  </>
+                )}
               </motion.button>
+
+              {musician.whatsapp && (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleWhatsAppClick}
+                  className="flex items-center gap-2 px-4 sm:px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-all shadow-lg hover:shadow-green-500/50"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  <span className="hidden sm:inline">WhatsApp</span>
+                </motion.button>
+              )}
+
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-6 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg font-medium transition-all"
+                className="flex items-center gap-2 px-4 sm:px-6 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg font-medium transition-all"
+                title="Em breve"
               >
-                Mensagem
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-6 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg font-medium transition-all"
-              >
-                Contratar
+                <Briefcase className="h-4 w-4" />
+                <span className="hidden sm:inline">Convidar</span>
               </motion.button>
             </div>
           )}

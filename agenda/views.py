@@ -1725,3 +1725,147 @@ def get_musician_reviews(request, musician_id):
             {'error': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_musician_badges(request, musician_id):
+    """
+    GET /api/musicians/<id>/badges/
+    Retorna badges conquistadas pelo músico
+    """
+    try:
+        musician = Musician.objects.get(id=musician_id, is_active=True)
+
+        badges = MusicianBadge.objects.filter(
+            musician=musician
+        ).order_by('-awarded_at')
+
+        badge_data = []
+        for badge in badges:
+            badge_data.append({
+                'id': badge.id,
+                'badge_type': badge.badge_type,
+                'name': badge.get_badge_type_display(),
+                'description': badge.description,
+                'icon': badge.icon,
+                'awarded_at': badge.awarded_at.isoformat() if badge.awarded_at else None,
+            })
+
+        return Response(badge_data, status=status.HTTP_200_OK)
+
+    except Musician.DoesNotExist:
+        return Response(
+            {'error': 'Músico não encontrado'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        logging.exception("Erro ao buscar badges")
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_musician_stats(request, musician_id):
+    """
+    GET /api/musicians/<id>/stats/
+    Retorna estatísticas do músico (total de eventos, como líder, como membro)
+    """
+    try:
+        musician = Musician.objects.get(id=musician_id, is_active=True)
+
+        # Eventos onde o músico participou (tem availability com response='available')
+        total_events = Event.objects.filter(
+            availabilities__musician=musician,
+            availabilities__response='available',
+            status__in=['confirmed', 'approved']
+        ).distinct().count()
+
+        # Eventos criados pelo músico (como líder)
+        events_as_leader = Event.objects.filter(
+            created_by=musician.user,
+            status__in=['confirmed', 'approved']
+        ).count()
+
+        # Eventos onde foi convidado (não é o criador)
+        events_as_member = Event.objects.filter(
+            availabilities__musician=musician,
+            availabilities__response='available',
+            status__in=['confirmed', 'approved']
+        ).exclude(
+            created_by=musician.user
+        ).distinct().count()
+
+        return Response({
+            'total_events': total_events,
+            'events_as_leader': events_as_leader,
+            'events_as_member': events_as_member,
+        }, status=status.HTTP_200_OK)
+
+    except Musician.DoesNotExist:
+        return Response(
+            {'error': 'Músico não encontrado'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        logging.exception("Erro ao buscar estatísticas")
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_musician_connection_status(request, musician_id):
+    """
+    GET /api/musicians/<id>/connection-status/
+    Verifica se o usuário logado segue o músico especificado
+    """
+    try:
+        # Músico alvo
+        target_musician = Musician.objects.get(id=musician_id, is_active=True)
+
+        # Músico do usuário logado
+        try:
+            current_musician = request.user.musician_profile
+        except Musician.DoesNotExist:
+            return Response({
+                'is_connected': False,
+                'connection_id': None,
+                'connection_type': None,
+            }, status=status.HTTP_200_OK)
+
+        # Verifica se existe conexão
+        connection = Connection.objects.filter(
+            follower=current_musician,
+            target=target_musician
+        ).first()
+
+        if connection:
+            return Response({
+                'is_connected': True,
+                'connection_id': connection.id,
+                'connection_type': connection.connection_type,
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'is_connected': False,
+                'connection_id': None,
+                'connection_type': None,
+            }, status=status.HTTP_200_OK)
+
+    except Musician.DoesNotExist:
+        return Response(
+            {'error': 'Músico não encontrado'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        logging.exception("Erro ao verificar conexão")
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

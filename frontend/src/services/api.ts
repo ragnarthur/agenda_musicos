@@ -190,6 +190,31 @@ export const musicianService = {
     const response = await api.get('/musicians/with_availability/', { params });
     return response.data;
   },
+
+  getConnections: async (musicianId: number): Promise<{ connections: Array<{ id: number; full_name: string; instrument: string; avatar: string | null }> }> => {
+    const response = await api.get(`/musicians/${musicianId}/connections/`);
+    return response.data;
+  },
+
+  getReviews: async (musicianId: number): Promise<Array<{ id: number; rated_by_name: string; rated_by_avatar: string | null; rating: number; comment: string; time_ago: string }>> => {
+    const response = await api.get(`/musicians/${musicianId}/reviews/`);
+    return response.data;
+  },
+
+  getBadges: async (musicianId: number): Promise<MusicianBadge[]> => {
+    const response = await api.get(`/musicians/${musicianId}/badges/`);
+    return response.data;
+  },
+
+  getStats: async (musicianId: number): Promise<{ total_events: number; events_as_leader: number; events_as_member: number }> => {
+    const response = await api.get(`/musicians/${musicianId}/stats/`);
+    return response.data;
+  },
+
+  checkConnection: async (musicianId: number): Promise<{ is_connected: boolean; connection_id: number | null; connection_type: string | null }> => {
+    const response = await api.get(`/musicians/${musicianId}/connection-status/`);
+    return response.data;
+  },
 };
 
 // Event Service

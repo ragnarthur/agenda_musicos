@@ -1,16 +1,31 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Star, Calendar, DollarSign, Package, MessageCircle, Phone } from 'lucide-react';
+import {
+  ArrowLeft,
+  Users,
+  Star,
+  Calendar,
+  DollarSign,
+  Package,
+  MessageCircle,
+  Phone,
+  Award,
+  Music,
+  Settings,
+  UserPlus,
+  FileText,
+} from 'lucide-react';
+import { motion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import ProfileHeader from '../components/Profile/ProfileHeader';
 import StatCard from '../components/Profile/StatCard';
 import ReviewCard from '../components/Profile/ReviewCard';
 import ImageCropModal from '../components/modals/ImageCropModal';
-import { musicianService } from '../services/api';
+import { musicianService, connectionService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { showToast } from '../utils/toast';
-import type { Musician } from '../types';
+import type { Musician, MusicianBadge } from '../types';
 
 interface Connection {
   id: number;
@@ -28,13 +43,29 @@ interface Review {
   time_ago: string;
 }
 
+interface MusicianStats {
+  total_events: number;
+  events_as_leader: number;
+  events_as_member: number;
+}
+
+interface ConnectionStatus {
+  is_connected: boolean;
+  connection_id: number | null;
+  connection_type: string | null;
+}
+
 const MusicianProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [musician, setMusician] = useState<Musician | null>(null);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [badges, setBadges] = useState<MusicianBadge[]>([]);
+  const [stats, setStats] = useState<MusicianStats | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [connectingInProgress, setConnectingInProgress] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [cropFile, setCropFile] = useState<File | null>(null);
@@ -44,55 +75,91 @@ const MusicianProfile: React.FC = () => {
   const coverInputRef = useRef<HTMLInputElement>(null);
   const { user, refreshUser } = useAuth();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [musicianData, connectionsResponse, reviewsResponse] = await Promise.all([
-          musicianService.getById(Number(id)),
-          fetch(`/api/musicians/${id}/connections/`).then(r => r.json()),
-          fetch(`/api/musicians/${id}/reviews/`).then(r => r.json()),
-        ]);
+  const isOwnProfile = Boolean(user && (user.id === Number(id) || user.user?.id === Number(id)));
 
-        setMusician(musicianData);
-        setConnections(connectionsResponse.connections || []);
-        setReviews(reviewsResponse || []);
-      } catch (err) {
-        console.error('Error fetching data:', err);
-        setError('Erro ao carregar perfil');
-      } finally {
-        setLoading(false);
+  const fetchData = useCallback(async () => {
+    if (!id) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Fetch principal data
+      const musicianData = await musicianService.getById(Number(id));
+      setMusician(musicianData);
+
+      // Fetch dados secundários em paralelo (com fallbacks)
+      const [connectionsRes, reviewsRes, badgesRes, statsRes] = await Promise.allSettled([
+        musicianService.getConnections(Number(id)),
+        musicianService.getReviews(Number(id)),
+        musicianService.getBadges(Number(id)),
+        musicianService.getStats(Number(id)),
+      ]);
+
+      if (connectionsRes.status === 'fulfilled') {
+        setConnections(connectionsRes.value.connections || []);
       }
-    };
+      if (reviewsRes.status === 'fulfilled') {
+        setReviews(reviewsRes.value || []);
+      }
+      if (badgesRes.status === 'fulfilled') {
+        setBadges(badgesRes.value || []);
+      }
+      if (statsRes.status === 'fulfilled') {
+        setStats(statsRes.value);
+      }
 
-    if (id) fetchData();
-  }, [id]);
+      // Verificar status de conexão (apenas se não for o próprio perfil)
+      if (!isOwnProfile && user) {
+        try {
+          const status = await musicianService.checkConnection(Number(id));
+          setConnectionStatus(status);
+        } catch {
+          setConnectionStatus({ is_connected: false, connection_id: null, connection_type: null });
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError('Erro ao carregar perfil');
+    } finally {
+      setLoading(false);
+    }
+  }, [id, isOwnProfile, user]);
 
-  if (loading) {
-    return (
-      <Layout>
-        <div className="flex justify-center items-center min-h-[400px]">
-          <Loading />
-        </div>
-      </Layout>
-    );
-  }
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-  if (error || !musician) {
-    return (
-      <Layout>
-        <div className="max-w-6xl mx-auto px-4 py-8">
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-700 dark:text-red-400">
-            {error || 'Músico não encontrado'}
-          </div>
-        </div>
-      </Layout>
-    );
-  }
+  const handleConnect = async () => {
+    if (!musician || connectingInProgress) return;
 
-  // Mock data for events (replace with real data later)
-  const totalEvents = 42;
-  const isOwnProfile = Boolean(user && (user.id === musician.id || user.user?.id === musician.user?.id));
+    setConnectingInProgress(true);
+    try {
+      if (connectionStatus?.is_connected && connectionStatus.connection_id) {
+        // Desconectar
+        await connectionService.delete(connectionStatus.connection_id);
+        setConnectionStatus({ is_connected: false, connection_id: null, connection_type: null });
+        showToast.success('Conexão removida');
+      } else {
+        // Conectar
+        const newConnection = await connectionService.create({
+          target_id: musician.id,
+          connection_type: 'follow',
+        });
+        setConnectionStatus({
+          is_connected: true,
+          connection_id: newConnection.id,
+          connection_type: 'follow',
+        });
+        showToast.success(`Você agora segue ${musician.full_name}`);
+      }
+    } catch (err) {
+      console.error('Erro ao conectar:', err);
+      showToast.error('Erro ao processar conexão');
+    } finally {
+      setConnectingInProgress(false);
+    }
+  };
 
   const openCropper = (file: File, target: 'avatar' | 'cover') => {
     setCropFile(file);
@@ -177,24 +244,63 @@ const MusicianProfile: React.FC = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center min-h-[400px]">
+          <Loading />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error || !musician) {
+    return (
+      <Layout>
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-700 dark:text-red-400">
+            {error || 'Músico não encontrado'}
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  const totalEvents = stats?.total_events ?? 0;
+
   return (
     <Layout>
       <div className="min-h-screen bg-transparent transition-colors duration-200">
         <div className="max-w-6xl mx-auto px-4 py-8">
-          {/* Back Button */}
-          <Link
-            to="/musicos"
-            className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-6 transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-            Voltar para músicos
-          </Link>
+          {/* Back Button + Edit Profile */}
+          <div className="flex items-center justify-between mb-6">
+            <Link
+              to="/musicos"
+              className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5" />
+              Voltar para músicos
+            </Link>
+
+            {isOwnProfile && (
+              <Link
+                to="/configuracoes/financeiro"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                <Settings className="h-4 w-4" />
+                Editar Perfil
+              </Link>
+            )}
+          </div>
 
           {/* Profile Card */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg mb-8 overflow-hidden transition-colors duration-200">
             <ProfileHeader
               musician={musician}
               isOwnProfile={isOwnProfile}
+              connectionStatus={connectionStatus}
+              onConnect={handleConnect}
+              connectingInProgress={connectingInProgress}
               onUploadAvatar={isOwnProfile ? () => avatarInputRef.current?.click() : undefined}
               onUploadCover={isOwnProfile ? () => coverInputRef.current?.click() : undefined}
               uploadingAvatar={uploadingAvatar}
@@ -230,7 +336,7 @@ const MusicianProfile: React.FC = () => {
           )}
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <StatCard
               icon={<Users className="h-6 w-6 text-white" />}
               value={connections.length || 0}
@@ -260,56 +366,145 @@ const MusicianProfile: React.FC = () => {
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column (2/3 width) */}
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2 space-y-6">
               {/* About Section */}
-              {musician.bio && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Sobre</h2>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
+                <div className="flex items-center gap-2 mb-4">
+                  <FileText className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Sobre</h2>
+                </div>
+                {musician.bio ? (
                   <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{musician.bio}</p>
+                ) : (
+                  <p className="text-gray-400 dark:text-gray-500 italic">
+                    {isOwnProfile ? 'Adicione uma bio para que outros músicos conheçam você melhor.' : 'Este músico ainda não adicionou uma bio.'}
+                  </p>
+                )}
+              </div>
+
+              {/* Badges Section */}
+              {(badges.length > 0 || isOwnProfile) && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Award className="h-5 w-5 text-amber-500" />
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Conquistas</h2>
+                  </div>
+                  {badges.length > 0 ? (
+                    <div className="flex flex-wrap gap-3">
+                      {badges.map((badge) => (
+                        <motion.div
+                          key={badge.id}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-700/50 rounded-full"
+                        >
+                          <span className="text-xl">{badge.icon || '🏆'}</span>
+                          <div>
+                            <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">{badge.name}</p>
+                            {badge.description && (
+                              <p className="text-xs text-amber-600 dark:text-amber-400">{badge.description}</p>
+                            )}
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-400 dark:text-gray-500 italic">
+                      {isOwnProfile ? 'Continue usando a plataforma para desbloquear conquistas!' : 'Nenhuma conquista ainda.'}
+                    </p>
+                  )}
+                  {isOwnProfile && (
+                    <Link
+                      to="/conexoes"
+                      className="inline-flex items-center gap-1 mt-4 text-sm text-amber-600 dark:text-amber-400 hover:underline"
+                    >
+                      Ver todas as conquistas disponíveis →
+                    </Link>
+                  )}
                 </div>
               )}
 
               {/* Equipment Section */}
-              {musician.equipment_items && musician.equipment_items.length > 0 && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Package className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Equipamentos e Serviços</h2>
-                  </div>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
+                <div className="flex items-center gap-2 mb-4">
+                  <Package className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Equipamentos e Serviços</h2>
+                </div>
+                {musician.equipment_items && musician.equipment_items.length > 0 ? (
                   <ul className="space-y-3">
                     {musician.equipment_items.map((item, idx) => (
                       <li key={idx} className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
                         <span className="text-gray-700 dark:text-gray-300">{item.name}</span>
-                        <span className="font-semibold text-gray-900 dark:text-white">R$ {item.price}</span>
+                        <span className="font-semibold text-gray-900 dark:text-white">
+                          {item.price ? `R$ ${item.price}` : '-'}
+                        </span>
                       </li>
                     ))}
                   </ul>
-                </div>
-              )}
+                ) : (
+                  <p className="text-gray-400 dark:text-gray-500 italic">
+                    {isOwnProfile ? 'Adicione equipamentos e serviços extras que você oferece.' : 'Nenhum equipamento ou serviço adicional.'}
+                  </p>
+                )}
+                {isOwnProfile && (
+                  <Link
+                    to="/configuracoes/financeiro"
+                    className="inline-flex items-center gap-1 mt-4 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    Gerenciar equipamentos →
+                  </Link>
+                )}
+              </div>
 
               {/* Reviews Section */}
-              {reviews.length > 0 && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
-                  <div className="flex items-center gap-2 mb-6">
-                    <MessageCircle className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Avaliações ({reviews.length})</h2>
-                  </div>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
+                <div className="flex items-center gap-2 mb-6">
+                  <MessageCircle className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                    Avaliações {reviews.length > 0 && `(${reviews.length})`}
+                  </h2>
+                </div>
+                {reviews.length > 0 ? (
                   <div className="space-y-4">
                     {reviews.map((review) => (
                       <ReviewCard key={review.id} review={review} />
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-gray-400 dark:text-gray-500 italic">
+                    {isOwnProfile ? 'Suas avaliações aparecerão aqui após participar de eventos.' : 'Este músico ainda não recebeu avaliações.'}
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Right Column (1/3 width) */}
-            <div className="space-y-8">
+            <div className="space-y-6">
+              {/* Genres Section */}
+              {musician.instruments && musician.instruments.length > 0 && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Music className="h-5 w-5 text-indigo-500" />
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">Instrumentos</h2>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {musician.instruments.map((inst, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full text-sm border border-indigo-200 dark:border-indigo-700/50"
+                      >
+                        {inst}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Contact Section */}
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Contato</h2>
                 <div className="space-y-3">
-                  {musician.phone && (
+                  {musician.phone ? (
                     <a
                       href={`tel:${musician.phone}`}
                       className="flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
@@ -319,44 +514,56 @@ const MusicianProfile: React.FC = () => {
                       </div>
                       <span>{musician.phone}</span>
                     </a>
-                  )}
-                  {musician.whatsapp && (
+                  ) : null}
+                  {musician.whatsapp ? (
                     <a
                       href={`https://wa.me/55${musician.whatsapp.replace(/\D/g, '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors"
                     >
-                      <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-lg">
                         💬
                       </div>
                       <span>WhatsApp</span>
                     </a>
-                  )}
-                  {musician.instagram && (
+                  ) : null}
+                  {musician.instagram ? (
                     <a
                       href={`https://instagram.com/${musician.instagram.replace('@', '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors"
                     >
-                      <div className="w-10 h-10 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center text-lg">
                         📷
                       </div>
                       <span>@{musician.instagram.replace('@', '')}</span>
                     </a>
+                  ) : null}
+                  {!musician.phone && !musician.whatsapp && !musician.instagram && (
+                    <p className="text-gray-400 dark:text-gray-500 italic text-sm">
+                      {isOwnProfile ? 'Adicione informações de contato no seu perfil.' : 'Informações de contato não disponíveis.'}
+                    </p>
                   )}
                 </div>
               </div>
 
               {/* Connections Section */}
-              {connections.length > 0 && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Conexões</h2>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">Conexões</h2>
+                  {connections.length > 6 && (
+                    <Link to="/conexoes" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                      Ver todas
+                    </Link>
+                  )}
+                </div>
+                {connections.length > 0 ? (
                   <div className="grid grid-cols-3 gap-3">
-                    {connections.map((conn) => (
+                    {connections.slice(0, 6).map((conn) => (
                       <Link key={conn.id} to={`/musicos/${conn.id}`} className="text-center hover:scale-105 transition-transform">
-                        <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-2 overflow-hidden ring-2 ring-blue-500/10 dark:ring-blue-400/10">
+                        <div className="w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-2 overflow-hidden ring-2 ring-blue-500/10 dark:ring-blue-400/10">
                           {conn.avatar ? (
                             <img src={conn.avatar} alt={conn.full_name} className="w-full h-full object-cover" />
                           ) : (
@@ -365,12 +572,25 @@ const MusicianProfile: React.FC = () => {
                             </div>
                           )}
                         </div>
-                        <p className="text-xs text-gray-700 dark:text-gray-300 truncate">{conn.full_name}</p>
+                        <p className="text-xs text-gray-700 dark:text-gray-300 truncate">{conn.full_name.split(' ')[0]}</p>
                       </Link>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-gray-400 dark:text-gray-500 italic text-sm">
+                    {isOwnProfile ? 'Conecte-se com outros músicos da plataforma!' : 'Nenhuma conexão ainda.'}
+                  </p>
+                )}
+                {isOwnProfile && (
+                  <Link
+                    to="/musicos"
+                    className="inline-flex items-center gap-1 mt-4 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Encontrar músicos
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         </div>
