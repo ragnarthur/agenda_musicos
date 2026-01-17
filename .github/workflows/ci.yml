@@ -1,0 +1,145 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: agenda_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d agenda_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DEBUG: "true"
+      SECRET_KEY: "ci-secret-key"
+      ALLOWED_HOSTS: "localhost,127.0.0.1"
+      DATABASE_URL: "postgres://postgres:postgres@localhost:5432/agenda_test"
+      EMAIL_BACKEND: "django.core.mail.backends.locmem.EmailBackend"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install backend dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run backend tests
+        run: python manage.py test
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Lint frontend
+        run: npm run lint
+        working-directory: frontend
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: frontend
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend]
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: agenda_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d agenda_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DEBUG: "true"
+      SECRET_KEY: "ci-secret-key"
+      ALLOWED_HOSTS: "localhost,127.0.0.1"
+      DATABASE_URL: "postgres://postgres:postgres@localhost:5432/agenda_test"
+      EMAIL_BACKEND: "django.core.mail.backends.locmem.EmailBackend"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install backend dependencies
+        run: pip install -r requirements.txt
+
+      - name: Prepare database
+        run: |
+          python manage.py migrate --noinput
+          python manage.py populate_db
+
+      - name: Run local flow scripts
+        run: |
+          python test_complete_flow.py
+          python test_trial_direct.py
+          python test_auth.py
+          python test_restore_availability.py
+
+      - name: Start backend server
+        run: python manage.py runserver 0.0.0.0:8000 &
+
+      - name: Wait for server
+        run: |
+          python - <<'PY'
+          import socket
+          import time
+          import sys
+
+          host = "127.0.0.1"
+          port = 8000
+          for _ in range(30):
+            sock = socket.socket()
+            try:
+              sock.connect((host, port))
+              sock.close()
+              sys.exit(0)
+            except OSError:
+              time.sleep(1)
+          sys.exit("Server did not start in time")
+          PY
+
+      - name: Run end-to-end workflow test
+        env:
+          BASE_URL: "http://localhost:8000/api"
+        run: |
+          python test_trial_flow.py
+          python test_complete_workflow.py

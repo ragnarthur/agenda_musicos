@@ -48,6 +48,17 @@ cookies*.txt
 .DS_Store
 Thumbs.db
 
+# LLM/Codex/Claude instructions
+AGENTS.md
+*codex*.md
+*claude*.md
+.claude
+
+# Markdown docs (ignore all)
+*.md
+*.MD
+!README.md
+
 # Test coverage
 htmlcov/
 .tox/
