@@ -1,7 +1,7 @@
 // pages/FinancialSettings.tsx
 import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, Coins, Plus, Trash2, Wallet, CarFront, Sparkles, Loader2 } from 'lucide-react';
+import { ChevronLeft, Coins, Plus, Trash2, Wallet, CarFront, Sparkles, Loader2, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Layout from '../components/Layout/Layout';
 import { musicianService } from '../services/api';
@@ -55,11 +55,13 @@ const FinancialSettings: React.FC = () => {
   const { refreshUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [bio, setBio] = useState('');
   const [baseFee, setBaseFee] = useState('');
   const [travelFee, setTravelFee] = useState('');
   const [equipmentRows, setEquipmentRows] = useState<EquipmentRow[]>(DEFAULT_EQUIPMENTS);
 
   const hydrateForm = useCallback((musician: Musician) => {
+    setBio(musician.bio ?? '');
     setBaseFee(formatCurrencyMask(musician.base_fee ?? ''));
     setTravelFee(formatCurrencyMask(musician.travel_fee_per_km ?? ''));
 
@@ -109,6 +111,7 @@ const FinancialSettings: React.FC = () => {
     setSaving(true);
 
     const payload: MusicianUpdatePayload = {
+      bio: bio.trim(),
       base_fee: parseDecimal(baseFee),
       travel_fee_per_km: parseDecimal(travelFee),
       equipment_items: equipmentRows
@@ -177,6 +180,32 @@ const FinancialSettings: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Mini-bio */}
+          <div className="bg-slate-800/50 rounded-xl border border-slate-700/60 p-5 shadow-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <FileText className="h-5 w-5 text-emerald-300" />
+              <div>
+                <h2 className="text-lg font-semibold text-white">Mini-bio</h2>
+                <p className="text-slate-300 text-sm">
+                  Escreva um pouco sobre você e sua experiência musical.
+                </p>
+              </div>
+            </div>
+            <div>
+              <textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                maxLength={350}
+                rows={4}
+                placeholder="Conte um pouco sobre sua experiência musical..."
+                className="w-full rounded-lg bg-slate-900 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-slate-100 placeholder:text-slate-500 px-4 py-3 resize-none"
+              />
+              <p className="text-xs text-slate-400 mt-1">
+                {bio.length}/350 caracteres
+              </p>
+            </div>
+          </div>
+
           {/* Cachê base */}
           <div className="bg-slate-800/50 rounded-xl border border-slate-700/60 p-5 shadow-lg">
             <div className="flex items-center gap-3 mb-4">

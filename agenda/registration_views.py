@@ -103,8 +103,8 @@ class RegisterView(APIView):
         # Validação de tamanho do bio para evitar payload abuse
         if not bio:
             errors['bio'] = 'Mini-bio é obrigatória.'
-        elif len(bio) > 240:
-            errors['bio'] = 'Mini-bio deve ter no máximo 240 caracteres.'
+        elif len(bio) > 350:
+            errors['bio'] = 'Mini-bio deve ter no máximo 350 caracteres.'
 
         # Cidade e estado (obrigatórios/limites)
         if not city:
@@ -170,7 +170,7 @@ class RegisterView(APIView):
             whatsapp=whatsapp,
             instrument=instrument,
             instruments=instruments,
-            bio=bio[:240],
+            bio=bio[:350],
             city=city,
             state=state,
             email_token=email_token,
