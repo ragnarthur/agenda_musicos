@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { MapPin, Star, Camera, Loader2, Info, UserPlus, UserCheck, MessageCircle, Briefcase } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { MapPin, Star, Camera, Loader2, Info, UserPlus, UserCheck, MessageCircle, Briefcase, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Musician } from '../../types';
 import { formatInstrumentLabel } from '../../utils/formatting';
@@ -35,6 +35,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 }) => {
   const [showAvatarHint, setShowAvatarHint] = useState(false);
   const [showCoverHint, setShowCoverHint] = useState(false);
+  const [expandedImage, setExpandedImage] = useState<{ src: string; alt: string } | null>(null);
 
   const isConnected = connectionStatus?.is_connected ?? false;
 
@@ -45,6 +46,17 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (!expandedImage) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setExpandedImage(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [expandedImage]);
+
   return (
     <div className="relative">
       {/* Cover Image */}
@@ -53,14 +65,15 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <img
             src={musician.cover_image_url}
             alt="Capa"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover cursor-zoom-in"
+            onClick={() => setExpandedImage({ src: musician.cover_image_url, alt: 'Capa' })}
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600" />
         )}
 
         {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20 dark:to-black/40" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20 dark:to-black/40 pointer-events-none" />
 
         {isOwnProfile && (
           <div className="absolute top-4 right-4 z-20 flex items-center gap-2 group">
@@ -110,7 +123,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 <img
                   src={musician.avatar_url}
                   alt={musician.full_name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover cursor-zoom-in"
+                  onClick={() => setExpandedImage({ src: musician.avatar_url, alt: musician.full_name })}
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
@@ -272,6 +286,30 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           )}
         </motion.div>
       </div>
+
+      {expandedImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setExpandedImage(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setExpandedImage(null)}
+            className="absolute top-4 right-4 rounded-full bg-black/60 p-2 text-white hover:bg-black/80 transition-colors"
+            aria-label="Fechar imagem"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <img
+            src={expandedImage.src}
+            alt={expandedImage.alt}
+            className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 };
