@@ -282,7 +282,7 @@ class EventAPITest(APITestCase):
 
         self.client.force_authenticate(user=extra_user)
         response = self.client.post(f'/api/events/{event.id}/approve/')
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
     
     def test_set_availability(self):
         """Testa marcar disponibilidade"""
