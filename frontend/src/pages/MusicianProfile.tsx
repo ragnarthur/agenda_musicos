@@ -8,6 +8,7 @@ import {
   DollarSign,
   Package,
   MessageCircle,
+  Instagram,
   Phone,
   Award,
   Music,
@@ -523,8 +524,8 @@ const MusicianProfile: React.FC = () => {
                       rel="noopener noreferrer"
                       className="flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors"
                     >
-                      <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-lg">
-                        💬
+                      <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                        <MessageCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
                       </div>
                       <span>WhatsApp</span>
                     </a>
@@ -536,8 +537,8 @@ const MusicianProfile: React.FC = () => {
                       rel="noopener noreferrer"
                       className="flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors"
                     >
-                      <div className="w-10 h-10 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center text-lg">
-                        📷
+                      <div className="w-10 h-10 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
+                        <Instagram className="h-5 w-5 text-pink-600 dark:text-pink-400" />
                       </div>
                       <span>@{musician.instagram.replace('@', '')}</span>
                     </a>
