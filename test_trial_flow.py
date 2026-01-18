@@ -37,6 +37,9 @@ def test_trial_flow():
         'first_name': 'Trial',
         'last_name': 'Test',
         'instrument': 'guitar',
+        'bio': 'Musico de teste para validacao.',
+        'city': 'Sao Paulo',
+        'state': 'SP',
     })
 
     if response.status_code != 201:
