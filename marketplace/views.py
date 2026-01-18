@@ -94,14 +94,15 @@ class GigViewSet(viewsets.ModelViewSet):
         cover_letter = (request.data.get('cover_letter') or '').strip()
         expected_fee = request.data.get('expected_fee')
 
-        application, created = GigApplication.objects.update_or_create(
+        if GigApplication.objects.filter(gig=gig, musician=musician).exists():
+            return Response({'detail': 'Você já se candidatou para esta vaga.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        application = GigApplication.objects.create(
             gig=gig,
             musician=musician,
-            defaults={
-                'cover_letter': cover_letter,
-                'expected_fee': expected_fee,
-                'status': 'pending',
-            }
+            cover_letter=cover_letter,
+            expected_fee=expected_fee,
+            status='pending',
         )
 
         if gig.status == 'open':
@@ -109,7 +110,7 @@ class GigViewSet(viewsets.ModelViewSet):
             gig.save(update_fields=['status', 'updated_at'])
 
         serializer = GigApplicationSerializer(application)
-        return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['get'])
     def applications(self, request, pk=None):

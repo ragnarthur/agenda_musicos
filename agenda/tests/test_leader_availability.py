@@ -386,6 +386,7 @@ class LeaderAvailabilityInstrumentsTest(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             username='testuser',
+            email='testuser@test.com',
             password='testpass123'
         )
         self.org = Organization.objects.create(
@@ -398,6 +399,7 @@ class LeaderAvailabilityInstrumentsTest(APITestCase):
         for i, instrument in enumerate(['guitar', 'guitar', 'drums', 'bass']):
             u = User.objects.create_user(
                 username=f'user{i}',
+                email=f'user{i}@test.com',
                 password='pass123'
             )
             Membership.objects.create(
@@ -567,6 +569,7 @@ class AvailableMusiciansEndpointTest(APITestCase):
         # Criar terceiro músico (baixista)
         user3 = User.objects.create_user(
             username='carlos',
+            email='carlos@test.com',
             password='pass123',
             first_name='Carlos',
             last_name='Bass'
@@ -589,6 +592,7 @@ class AvailableMusiciansEndpointTest(APITestCase):
         # Criar terceiro músico (baixista) sem disponibilidade
         user3 = User.objects.create_user(
             username='carlos',
+            email='carlos@test.com',
             password='pass123',
             first_name='Carlos',
             last_name='Bass'
@@ -625,6 +629,7 @@ class AvailableMusiciansEndpointTest(APITestCase):
         # Criar terceiro músico (baixista)
         user3 = User.objects.create_user(
             username='carlos',
+            email='carlos@test.com',
             password='pass123',
             first_name='Carlos',
             last_name='Bass'

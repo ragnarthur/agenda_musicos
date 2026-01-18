@@ -135,6 +135,8 @@ class GigAPITest(APITestCase):
             instrument='vocal',
             role='member'
         )
+        self.musician.subscription_status = 'active'
+        self.musician.save(update_fields=['subscription_status'])
         self.client.force_authenticate(user=self.user)
 
     def test_list_gigs(self):
@@ -249,6 +251,8 @@ class GigWorkflowTest(APITestCase):
             instrument='other',
             role='member'
         )
+        self.client_musician.subscription_status = 'active'
+        self.client_musician.save(update_fields=['subscription_status'])
 
         # Músico candidato
         self.candidate_user = User.objects.create_user(

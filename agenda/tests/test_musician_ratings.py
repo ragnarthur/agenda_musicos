@@ -18,17 +18,20 @@ class MusicianRatingAPITest(APITestCase):
         # Criar usuário criador do evento
         self.creator = User.objects.create_user(
             username='arthur',
+            email='arthur@test.com',
             first_name='Arthur',
             password='senha123'
         )
         # Criar músicos para avaliar
         self.musician1_user = User.objects.create_user(
             username='sara',
+            email='sara@test.com',
             first_name='Sara',
             password='senha123'
         )
         self.musician2_user = User.objects.create_user(
             username='roberto',
+            email='roberto@test.com',
             first_name='Roberto',
             password='senha123'
         )
@@ -244,7 +247,7 @@ class MusicianRatingAPITest(APITestCase):
     def test_rating_updates_musician_average(self):
         """Múltiplas avaliações atualizam corretamente a média do músico"""
         # Criar outro evento passado com outro criador
-        other_creator = User.objects.create_user(username='joao', password='senha123')
+        other_creator = User.objects.create_user(username='joao', email='joao@test.com', password='senha123')
         Membership.objects.create(user=other_creator, organization=self.org, role='member')
         Musician.objects.create(user=other_creator, instrument='bass', role='member', organization=self.org)
 

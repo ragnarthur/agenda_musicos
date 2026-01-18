@@ -15,6 +15,9 @@ class RegistrationFlowTests(APITestCase):
             'first_name': 'Teste',
             'last_name': 'User',
             'instrument': 'violin',
+            'bio': 'Violinista com experiencia em eventos.',
+            'city': 'Sao Paulo',
+            'state': 'SP',
         }
         response = self.client.post('/api/register/', payload, format='json')
         self.assertEqual(response.status_code, 201)

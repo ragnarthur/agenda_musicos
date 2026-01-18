@@ -22,8 +22,8 @@ class ConnectionAndBadgeAPITest(APITestCase):
         self.org = Organization.objects.create(name='Org Teste')
 
         # Usuário logado
-        self.user = User.objects.create_user(username='arthur', password='senha123', first_name='Arthur')
-        self.target_user = User.objects.create_user(username='sara', password='senha123', first_name='Sara')
+        self.user = User.objects.create_user(username='arthur', email='arthur@test.com', password='senha123', first_name='Arthur')
+        self.target_user = User.objects.create_user(username='sara', email='sara@test.com', password='senha123', first_name='Sara')
 
         Membership.objects.create(user=self.user, organization=self.org, role='member')
         Membership.objects.create(user=self.target_user, organization=self.org, role='member')

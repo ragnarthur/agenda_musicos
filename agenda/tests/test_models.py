@@ -5,7 +5,7 @@ from django.utils import timezone
 from datetime import date, time, timedelta
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
-from .models import Musician, Event, Availability, LeaderAvailability, EventLog
+from agenda.models import Musician, Event, Availability, LeaderAvailability, EventLog
 from .views import EventViewSet
 
 
@@ -15,6 +15,7 @@ class MusicianModelTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             username='sara',
+            email='sara@test.com',
             first_name='Sara',
             last_name='Silva',
             password='senha123'
@@ -45,8 +46,8 @@ class EventModelTest(TestCase):
     """Testes do modelo Event"""
     
     def setUp(self):
-        self.user = User.objects.create_user(username='arthur', password='senha123')
-        self.other_user = User.objects.create_user(username='carlos', password='senha123')
+        self.user = User.objects.create_user(username='arthur', email='arthur@test.com', password='senha123')
+        self.other_user = User.objects.create_user(username='carlos', email='carlos@test.com', password='senha123')
         
         self.musician = Musician.objects.create(
             user=self.user,
@@ -123,7 +124,7 @@ class LeaderAvailabilityModelTest(TestCase):
     """Testes de disponibilidade do baterista cruzando meia-noite"""
 
     def setUp(self):
-        user = User.objects.create_user(username='roberto', password='senha123')
+        user = User.objects.create_user(username='roberto', email='roberto@test.com', password='senha123')
         self.leader = Musician.objects.create(user=user, instrument='drums', role='member')
 
     def test_leader_availability_crossing_midnight(self):
@@ -172,11 +173,13 @@ class EventAPITest(APITestCase):
         # Criar usuários
         self.sara = User.objects.create_user(
             username='sara',
+            email='sara@test.com',
             first_name='Sara',
             password='senha123'
         )
         self.roberto = User.objects.create_user(
             username='roberto',
+            email='roberto@test.com',
             first_name='Roberto',
             password='senha123'
         )
@@ -221,7 +224,7 @@ class EventAPITest(APITestCase):
 
     def test_create_event_creates_availability_for_invited_musicians(self):
         """Criação de evento deve incluir apenas músicos convidados"""
-        extra_user = User.objects.create_user(username='joao', password='senha123')
+        extra_user = User.objects.create_user(username='joao', email='joao@test.com', password='senha123')
         extra_musician = Musician.objects.create(user=extra_user, instrument='bass', role='member', is_active=True)
 
         self.client.force_authenticate(user=self.sara)
@@ -265,7 +268,7 @@ class EventAPITest(APITestCase):
 
     def test_confirm_event_as_non_invited_forbidden(self):
         """Usuário não convidado não pode confirmar participação"""
-        extra_user = User.objects.create_user(username='joao2', password='senha123')
+        extra_user = User.objects.create_user(username='joao2', email='joao2@test.com', password='senha123')
         Musician.objects.create(user=extra_user, instrument='bass', role='member')
         event = Event.objects.create(
             title='Show',
@@ -372,7 +375,7 @@ class LeaderAvailabilityAPITest(APITestCase):
     """Testes de atualização de disponibilidade do músico com eventos cruzando datas"""
 
     def setUp(self):
-        self.roberto = User.objects.create_user(username='roberto', password='senha123')
+        self.roberto = User.objects.create_user(username='roberto', email='roberto@test.com', password='senha123')
         self.roberto_musician = Musician.objects.create(
             user=self.roberto,
             instrument='drums',
@@ -427,8 +430,8 @@ class EventLogAndPreviewTest(APITestCase):
     """Testes de histórico e preview de conflitos"""
 
     def setUp(self):
-        self.creator = User.objects.create_user(username='sara', password='senha123')
-        self.other_user = User.objects.create_user(username='roberto', password='senha123')
+        self.creator = User.objects.create_user(username='sara', email='sara@test.com', password='senha123')
+        self.other_user = User.objects.create_user(username='roberto', email='roberto@test.com', password='senha123')
         self.creator_musician = Musician.objects.create(user=self.creator, instrument='vocal', role='member')
         self.other_musician = Musician.objects.create(user=self.other_user, instrument='drums', role='member')
         self.client = APIClient()
