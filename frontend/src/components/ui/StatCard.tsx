@@ -1,14 +1,24 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import type { LucideIcon } from 'lucide-react';
 
 interface StatCardProps {
   label: string;
   value: number | string;
   accent?: boolean;
   className?: string;
+  icon?: LucideIcon;
+  iconColor?: string;
 }
 
-export const StatCard: React.FC<StatCardProps> = ({ label, value, accent, className }) => {
+export const StatCard: React.FC<StatCardProps> = ({
+  label,
+  value,
+  accent,
+  className,
+  icon: Icon,
+  iconColor = 'text-primary-500'
+}) => {
   return (
     <motion.div
       className={`
@@ -29,11 +39,22 @@ export const StatCard: React.FC<StatCardProps> = ({ label, value, accent, classN
       }}
       whileTap={{ scale: 0.98 }}
     >
-      <p className={`text-sm font-medium ${accent ? 'text-amber-700' : 'text-gray-600'}`}>
-        {label}
-      </p>
+      <div className="flex items-center justify-between mb-1">
+        <p className={`text-sm font-medium ${accent ? 'text-amber-700' : 'text-gray-600'}`}>
+          {label}
+        </p>
+        {Icon && (
+          <motion.div
+            initial={{ scale: 0, rotate: -45 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 200, delay: 0.15 }}
+          >
+            <Icon className={`h-5 w-5 ${iconColor}`} />
+          </motion.div>
+        )}
+      </div>
       <motion.p
-        className={`text-3xl font-bold mt-1 ${accent ? 'text-amber-600' : 'text-primary-600'}`}
+        className={`text-3xl font-bold ${accent ? 'text-amber-600' : 'text-primary-600'}`}
         initial={{ scale: 0.8 }}
         animate={{ scale: 1 }}
         transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}

@@ -894,3 +894,181 @@
 .glass-strong {
   @apply backdrop-blur-lg bg-white/20 dark:bg-gray-800/50;
 }
+
+/* ========================================
+   Connection Pills Modernos
+   ======================================== */
+.connection-pill-modern {
+  @apply px-4 py-2.5 rounded-full text-sm font-semibold
+         inline-flex items-center gap-2 justify-center
+         border-2 border-gray-200 bg-white text-gray-600
+         hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-600
+         dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300
+         dark:hover:border-primary-500/50 dark:hover:bg-slate-800/70 dark:hover:text-primary-300
+         transition-all duration-200 active:scale-95;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.connection-pill-modern.active {
+  @apply border-transparent text-white;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+
+.connection-pill-modern.active.follow {
+  @apply bg-gradient-to-r from-rose-500 to-pink-500;
+  box-shadow: 0 4px 14px rgba(244, 63, 94, 0.35);
+}
+
+.connection-pill-modern.active.recommend {
+  @apply bg-gradient-to-r from-emerald-500 to-teal-500;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
+.connection-pill-modern.active.played_with {
+  @apply bg-gradient-to-r from-indigo-500 to-purple-500;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+
+/* ========================================
+   Tab Navigation
+   ======================================== */
+.tab-navigation {
+  @apply flex gap-1 p-1 bg-gray-100 rounded-xl
+         dark:bg-slate-800;
+}
+
+.tab-button {
+  @apply flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold
+         text-gray-600 hover:text-gray-900
+         dark:text-slate-400 dark:hover:text-slate-200
+         transition-all duration-200;
+}
+
+.tab-button.active {
+  @apply bg-white text-primary-600 shadow-sm
+         dark:bg-slate-900 dark:text-primary-400;
+}
+
+/* ========================================
+   Musician Card Enhanced
+   ======================================== */
+.musician-card-enhanced {
+  @apply relative bg-white border border-gray-200 rounded-2xl p-5
+         dark:bg-slate-900/80 dark:border-slate-700;
+  transition: all 0.25s ease;
+}
+
+.musician-card-enhanced:hover {
+  @apply border-primary-200 dark:border-primary-700/50;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.musician-card-enhanced::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15));
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+  filter: blur(12px);
+}
+
+.musician-card-enhanced:hover::before {
+  opacity: 1;
+}
+
+/* Shine effect on hover */
+.musician-card-enhanced .shine-effect {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.15),
+    transparent
+  );
+  transition: left 0.5s ease;
+  pointer-events: none;
+}
+
+.musician-card-enhanced:hover .shine-effect {
+  left: 150%;
+}
+
+/* ========================================
+   Hero Panel Animated
+   ======================================== */
+.hero-animated {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-animated::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.08) 0%,
+    rgba(168, 85, 247, 0.06) 25%,
+    rgba(236, 72, 153, 0.04) 50%,
+    rgba(34, 211, 238, 0.06) 75%,
+    rgba(16, 185, 129, 0.08) 100%
+  );
+  background-size: 400% 400%;
+  animation: heroGradient 15s ease-in-out infinite;
+  z-index: 0;
+  border-radius: inherit;
+}
+
+@keyframes heroGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-animated::before {
+    animation: none;
+    background-position: 50% 50%;
+  }
+}
+
+/* ========================================
+   Progress Ring for Badges
+   ======================================== */
+.progress-ring {
+  transform: rotate(-90deg);
+}
+
+.progress-ring__circle {
+  transition: stroke-dashoffset 0.8s ease-out;
+}
+
+/* Badge shake animation */
+@keyframes badgeShake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(8deg); }
+}
+
+.badge-shake:hover {
+  animation: badgeShake 0.4s ease-in-out;
+}
+
+/* Mini avatar for connection list */
+.mini-avatar {
+  @apply h-8 w-8 rounded-full bg-gradient-to-br from-primary-100 to-primary-50
+         flex items-center justify-center flex-shrink-0 overflow-hidden
+         border-2 border-white shadow-sm
+         dark:from-primary-900/40 dark:to-primary-800/40 dark:border-slate-800;
+}
+
+.mini-avatar img {
+  @apply h-full w-full object-cover;
+}
