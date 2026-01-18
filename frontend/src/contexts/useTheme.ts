@@ -1,6 +1,6 @@
 // contexts/useTheme.ts
 import { useContext } from 'react';
-import { ThemeContext } from './ThemeContext';
+import { ThemeContext } from './ThemeContextDef';
 
 // Hook customizado
 export const useTheme = () => {

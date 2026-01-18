@@ -1,5 +1,5 @@
 // pages/Musicians.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Music, Phone, Mail, Instagram, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -18,7 +18,7 @@ const Musicians: React.FC = () => {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ count: 0, next: null as string | null, previous: null as string | null });
 
-  const loadMusicians = async () => {
+  const loadMusicians = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -35,7 +35,7 @@ const Musicians: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, debouncedSearch]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -47,7 +47,7 @@ const Musicians: React.FC = () => {
 
   useEffect(() => {
     loadMusicians();
-  }, [debouncedSearch, page]);
+  }, [loadMusicians]);
 
   const getInstrumentEmoji = (instrument: string, bio?: string) => {
     // Se é vocalista e a bio menciona violão/violonista, mostra emoji combinado
