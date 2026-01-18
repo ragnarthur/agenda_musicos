@@ -66,7 +66,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             src={musician.cover_image_url}
             alt="Capa"
             className="w-full h-full object-cover cursor-zoom-in"
-            onClick={() => setExpandedImage({ src: musician.cover_image_url, alt: 'Capa' })}
+            onClick={() => setExpandedImage({ src: musician.cover_image_url!, alt: 'Capa' })}
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600" />
@@ -124,7 +124,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   src={musician.avatar_url}
                   alt={musician.full_name}
                   className="w-full h-full object-cover cursor-zoom-in"
-                  onClick={() => setExpandedImage({ src: musician.avatar_url, alt: musician.full_name })}
+                  onClick={() => setExpandedImage({ src: musician.avatar_url!, alt: musician.full_name })}
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
