@@ -6,7 +6,6 @@ from datetime import date, time, timedelta
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from agenda.models import Musician, Event, Availability, LeaderAvailability, EventLog
-from .views import EventViewSet
 
 
 class MusicianModelTest(TestCase):

@@ -82,9 +82,11 @@ class ConnectionAndBadgeAPITest(APITestCase):
         url = reverse('badge-list')
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        slugs = [item['slug'] for item in resp.data]
+        payload = resp.data.get('earned', resp.data) if isinstance(resp.data, dict) else resp.data
+        slugs = [item['slug'] for item in payload]
         self.assertIn('first_show', slugs)
 
         # Requisição repetida não duplica badges
         second = self.client.get(url)
-        self.assertEqual(len(second.data), len(resp.data))
+        second_payload = second.data.get('earned', second.data) if isinstance(second.data, dict) else second.data
+        self.assertEqual(len(second_payload), len(payload))
