@@ -56,7 +56,7 @@ const DustParticles3D: React.FC = memo(() => {
             x: Math.random() * width,
             y: Math.random() * height,
             z: 0.3,
-            size: 1.0,
+            size: 0.6,
             speed: 8,
             sway: 14,
             phase: Math.random() * Math.PI * 2,
@@ -82,7 +82,7 @@ const DustParticles3D: React.FC = memo(() => {
           x: Math.random() * width,
           y: Math.random() * height,
           z: depth,
-          size: 0.8 + depth * 1.2,
+          size: 0.5 + depth * 0.7,
           speed: 12 + depth * 24,
           sway: 18 + depth * 28,
           phase: Math.random() * Math.PI * 2,
@@ -127,9 +127,9 @@ const DustParticles3D: React.FC = memo(() => {
           if (particle.y > height + margin) particle.y = -margin;
 
           // Ponto menor e brilhante
-          ctx.shadowBlur = 6;
-          ctx.shadowColor = 'rgba(200, 220, 255, 0.5)';
-          ctx.fillStyle = 'rgba(220, 235, 255, 0.6)';
+          ctx.shadowBlur = 4;
+          ctx.shadowColor = 'rgba(200, 220, 255, 0.35)';
+          ctx.fillStyle = 'rgba(220, 235, 255, 0.45)';
           ctx.beginPath();
           ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
           ctx.fill();
@@ -156,12 +156,12 @@ const DustParticles3D: React.FC = memo(() => {
           }
 
           const depth = particle.z;
-          const scale = 0.7 + depth * 0.8;
+          const scale = 0.65 + depth * 0.7;
           const size = particle.size * scale;
-          const alpha = 0.35 + depth * 0.45;
+          const alpha = 0.25 + depth * 0.35;
 
-          ctx.shadowBlur = 18 + depth * 32;
-          ctx.shadowColor = `rgba(255, 255, 255, ${alpha * 1.2})`;
+          ctx.shadowBlur = 12 + depth * 20;
+          ctx.shadowColor = `rgba(255, 255, 255, ${alpha * 1.1})`;
           ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
           ctx.beginPath();
           ctx.arc(particle.x, particle.y, size, 0, Math.PI * 2);
