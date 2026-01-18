@@ -182,6 +182,9 @@ class TelegramWebhookView(APIView):
         code = text.upper().strip()
         if len(code) == 6:
             self._try_verify_code(chat_id, code, first_name)
+        else:
+            # Mensagem nao e um codigo - verifica se chat esta conectado
+            self._handle_unknown_message(chat_id, text)
 
         return Response({'ok': True})
 
@@ -248,6 +251,35 @@ class TelegramWebhookView(APIView):
                 "/status - Verificar status da conexao"
             )
 
+    def _handle_unknown_message(self, chat_id: str, text: str):
+        """Trata mensagens que nao sao codigos de verificacao"""
+        provider = TelegramProvider()
+        if not provider.is_configured():
+            return
+
+        # Verifica se chat_id ja esta conectado a alguma conta
+        is_connected = NotificationPreference.objects.filter(
+            telegram_chat_id=chat_id,
+            telegram_verified=True
+        ).exists()
+
+        if is_connected:
+            # Usuario conectado enviou mensagem desconhecida - nao faz nada
+            # para nao ser intrusivo
+            return
+
+        # Chat nao conectado - envia instrucoes de como conectar
+        provider.send_message(
+            chat_id,
+            "*Este chat nao esta conectado a nenhuma conta.*\n\n"
+            "Para conectar e receber notificacoes:\n"
+            "1. Acesse o app GigFlow\n"
+            "2. Va em Configuracoes > Notificacoes\n"
+            "3. Clique em 'Conectar Telegram'\n"
+            "4. Envie o codigo de 6 caracteres aqui\n\n"
+            "_Se ja tem um codigo, envie-o agora!_"
+        )
+
     def _send_status(self, chat_id: str):
         """Envia status da conexao"""
         provider = TelegramProvider()
@@ -268,14 +300,20 @@ class TelegramWebhookView(APIView):
                 f"*Status: Conectado*\n\n"
                 f"Conta: {name}\n"
                 f"Email: {user.email}\n\n"
-                f"Voce esta recebendo notificacoes neste chat."
+                f"Voce esta recebendo notificacoes neste chat.\n\n"
+                f"_Se precisar reconectar (ex: banco resetado), va em Configuracoes > Notificacoes no app e clique em 'Reconectar'._"
             )
         except NotificationPreference.DoesNotExist:
             provider.send_message(
                 chat_id,
                 "*Status: Nao conectado*\n\n"
-                "Este chat nao esta vinculado a nenhuma conta.\n"
-                "Use /start para ver como conectar."
+                "Este chat nao esta vinculado a nenhuma conta.\n\n"
+                "*Para conectar ou reconectar:*\n"
+                "1. Acesse o app GigFlow\n"
+                "2. Va em Configuracoes > Notificacoes\n"
+                "3. Clique em 'Conectar Telegram' ou 'Reconectar'\n"
+                "4. Envie o codigo de 6 caracteres aqui\n\n"
+                "_Se voce ja tem um codigo, envie agora!_"
             )
 
 

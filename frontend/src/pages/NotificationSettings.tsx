@@ -40,7 +40,7 @@ const NotificationSettings: React.FC = () => {
       setPreferences(data);
     } catch (error) {
       console.error('Erro ao carregar preferencias:', error);
-      toast.error('Erro ao carregar preferencias de notificacao');
+      toast.error('Erro ao carregar preferências de notificação');
     } finally {
       setLoading(false);
     }
@@ -77,10 +77,10 @@ const NotificationSettings: React.FC = () => {
       setSaving(true);
       const updated = await notificationService.updatePreferences({ [key]: value });
       setPreferences(updated);
-      toast.success('Preferencia atualizada');
+      toast.success('Preferência atualizada');
     } catch (error) {
       console.error('Erro ao atualizar:', error);
-      toast.error('Erro ao atualizar preferencia');
+      toast.error('Erro ao atualizar preferência');
     } finally {
       setSaving(false);
     }
@@ -93,7 +93,7 @@ const NotificationSettings: React.FC = () => {
       setTelegramCode(response);
     } catch (error) {
       console.error('Erro ao iniciar conexao:', error);
-      toast.error('Erro ao gerar codigo de conexao');
+      toast.error('Erro ao gerar código de conexão');
     } finally {
       setConnectingTelegram(false);
     }
@@ -116,7 +116,7 @@ const NotificationSettings: React.FC = () => {
   const handleCopyCode = () => {
     if (telegramCode?.code) {
       navigator.clipboard.writeText(telegramCode.code);
-      toast.success('Codigo copiado!');
+      toast.success('Código copiado!');
     }
   };
 
@@ -129,7 +129,7 @@ const NotificationSettings: React.FC = () => {
         toast.success('Telegram conectado!');
         loadPreferences();
       } else {
-        toast('Aguardando conexao...', { icon: '⏳' });
+        toast('Aguardando conexão...', { icon: '⏳' });
       }
     } catch (error) {
       console.error('Erro ao verificar status:', error);
@@ -173,8 +173,8 @@ const NotificationSettings: React.FC = () => {
               <Bell className="h-6 w-6 text-violet-400" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">Notificacoes</h1>
-              <p className="text-slate-300">Gerencie como voce recebe alertas de eventos</p>
+              <h1 className="text-2xl font-bold text-white">Notificações</h1>
+              <p className="text-slate-300">Gerencie como você recebe alertas de eventos</p>
             </div>
           </div>
         </div>
@@ -183,7 +183,7 @@ const NotificationSettings: React.FC = () => {
         <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50 mb-6">
           <h2 className="text-lg font-semibold text-white mb-4">Canal Preferido</h2>
           <p className="text-slate-300 text-sm mb-4">
-            Escolha como deseja receber as notificacoes de convites e eventos.
+            Escolha como deseja receber as notificações de convites e eventos.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -281,7 +281,7 @@ const NotificationSettings: React.FC = () => {
 
             <div className="space-y-4">
               <div className="bg-slate-900/50 rounded-lg p-4">
-                <p className="text-slate-300 text-sm mb-3">Seu codigo de verificacao:</p>
+                <p className="text-slate-300 text-sm mb-3">Seu código de verificação:</p>
                 <div className="flex items-center gap-3">
                   <code className="text-3xl font-mono font-bold text-white tracking-widest">
                     {telegramCode.code}
@@ -289,7 +289,7 @@ const NotificationSettings: React.FC = () => {
                   <button
                     onClick={handleCopyCode}
                     className="p-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
-                    title="Copiar codigo"
+                    title="Copiar código"
                   >
                     <Copy className="h-5 w-5 text-slate-200" />
                   </button>
@@ -298,7 +298,7 @@ const NotificationSettings: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <p className="text-slate-200 font-medium">Instrucoes:</p>
+                <p className="text-slate-200 font-medium">Instruções:</p>
                 <ol className="text-sm text-slate-300 space-y-2 list-decimal list-inside">
                   <li>Abra o Telegram no seu celular</li>
                   <li>
@@ -325,7 +325,7 @@ const NotificationSettings: React.FC = () => {
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-sky-500/20 hover:bg-sky-500/30 text-sky-400 rounded-lg transition-colors"
               >
                 <RefreshCw className={`h-4 w-4 ${checkingStatus ? 'animate-spin' : ''}`} />
-                {checkingStatus ? 'Verificando...' : 'Ja enviei o codigo'}
+                {checkingStatus ? 'Verificando...' : 'Já enviei o código'}
               </button>
             </div>
           </div>
@@ -341,41 +341,50 @@ const NotificationSettings: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-green-400 font-medium">Telegram conectado</p>
-                  <p className="text-sm text-slate-300">Voce recebera notificacoes no Telegram</p>
+                  <p className="text-sm text-slate-300">Você receberá notificações no Telegram</p>
                 </div>
               </div>
-              <button
-                onClick={handleDisconnectTelegram}
-                disabled={saving}
-                className="px-3 py-1.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
-              >
-                Desconectar
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleConnectTelegram}
+                  disabled={saving}
+                  className="px-3 py-1.5 text-sm text-sky-400 hover:text-sky-300 hover:bg-sky-500/10 rounded-lg transition-colors"
+                >
+                  Reconectar
+                </button>
+                <button
+                  onClick={handleDisconnectTelegram}
+                  disabled={saving}
+                  className="px-3 py-1.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                >
+                  Desconectar
+                </button>
+              </div>
             </div>
           </div>
         )}
 
         {/* Tipos de Notificacao */}
         <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
-          <h2 className="text-lg font-semibold text-white mb-4">Tipos de Notificacao</h2>
-          <p className="text-slate-300 text-sm mb-4">Escolha quais notificacoes deseja receber.</p>
+          <h2 className="text-lg font-semibold text-white mb-4">Tipos de Notificação</h2>
+          <p className="text-slate-300 text-sm mb-4">Escolha quais notificações deseja receber.</p>
 
           <div className="space-y-3">
             {[
               {
                 key: 'notify_event_invites',
                 label: 'Convites para eventos',
-                description: 'Quando alguem te convida para um show',
+                description: 'Quando alguém te convida para um show',
               },
               {
                 key: 'notify_availability_responses',
                 label: 'Respostas de disponibilidade',
-                description: 'Quando um musico responde ao seu convite',
+                description: 'Quando um músico responde ao seu convite',
               },
               {
                 key: 'notify_event_confirmations',
-                label: 'Confirmacoes de eventos',
-                description: 'Quando um evento e confirmado ou cancelado',
+                label: 'Confirmações de eventos',
+                description: 'Quando um evento é confirmado ou cancelado',
               },
               {
                 key: 'notify_event_reminders',
