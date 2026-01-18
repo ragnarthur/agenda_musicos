@@ -21,6 +21,7 @@ import ConflictPreview from '../components/event/ConflictPreview';
 import ProposalSummary from '../components/event/ProposalSummary';
 import { eventService, musicianService } from '../services/api';
 import { showToast } from '../utils/toast';
+import { logError } from '../utils/logger';
 import type { Event, EventCreate, AvailableMusician, Musician } from '../types';
 import { format, parseISO } from 'date-fns';
 import InstrumentIcon from '../components/common/InstrumentIcon';
@@ -135,7 +136,8 @@ const EventForm: React.FC = () => {
           setSelectedMusicians([]);
         }
       } catch (err) {
-        console.error('Erro ao carregar músicos:', err);
+        logError('Erro ao carregar músicos:', err);
+        showToast.apiError(err);
         if (!cancelled) {
           setAvailableMusicians([]);
         }
@@ -216,7 +218,8 @@ const EventForm: React.FC = () => {
         }
       } catch (err) {
         if (!cancelled) {
-          console.error('Erro ao checar conflitos:', err);
+          logError('Erro ao checar conflitos:', err);
+          showToast.apiError(err);
           setConflictInfo(prev => ({ ...prev, loading: false }));
         }
       }

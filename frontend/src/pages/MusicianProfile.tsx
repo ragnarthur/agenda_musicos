@@ -26,6 +26,7 @@ import ImageCropModal from '../components/modals/ImageCropModal';
 import { musicianService, connectionService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { showToast } from '../utils/toast';
+import { logError } from '../utils/logger';
 import { formatInstrumentLabel } from '../utils/formatting';
 import type { Musician, MusicianBadge } from '../types';
 
@@ -121,7 +122,8 @@ const MusicianProfile: React.FC = () => {
         }
       }
     } catch (err) {
-      console.error('Error fetching data:', err);
+      logError('Error fetching data:', err);
+      showToast.apiError(err);
       setError('Erro ao carregar perfil');
     } finally {
       setLoading(false);
@@ -156,8 +158,8 @@ const MusicianProfile: React.FC = () => {
         showToast.success(`Você agora segue ${musician.full_name}`);
       }
     } catch (err) {
-      console.error('Erro ao conectar:', err);
-      showToast.error('Erro ao processar conexão');
+      logError('Erro ao conectar:', err);
+      showToast.apiError(err);
     } finally {
       setConnectingInProgress(false);
     }

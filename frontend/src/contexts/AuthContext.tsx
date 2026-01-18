@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import type { AuthContextType, LoginCredentials, Musician } from '../types';
 import { authService, musicianService } from '../services/api';
+import { logError } from '../utils/logger';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -37,7 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error) {
         const status = (error as { response?: { status?: number } })?.response?.status;
         if (status !== 401) {
-          console.error('Erro ao carregar sessão do usuário:', error);
+          logError('Erro ao carregar sessão do usuário:', error);
         }
         setUser(null);
         // Remove marcador se sessão expirou
@@ -57,7 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const musician = await musicianService.getMe();
       setUser(musician);
     } catch (error) {
-      console.error('Erro no login:', error);
+      logError('Erro no login:', error);
       throw error;
     }
   }, []);
@@ -69,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       const status = (error as { response?: { status?: number } })?.response?.status;
       if (status !== 401) {
-        console.error('Erro ao atualizar sessão do usuário:', error);
+        logError('Erro ao atualizar sessão do usuário:', error);
       }
       if (status === 401) {
         setUser(null);
@@ -81,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await authService.logout();
     } catch (error) {
-      console.error('Erro ao finalizar sessão:', error);
+      logError('Erro ao finalizar sessão:', error);
     } finally {
       // Remove marcador de sessão
       sessionStorage.removeItem(SESSION_KEY);

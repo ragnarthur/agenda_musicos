@@ -8,6 +8,8 @@ import { eventService } from '../services/api';
 import type { Event } from '../types';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { showToast } from '../utils/toast';
+import { logError } from '../utils/logger';
 
 const Approvals: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -23,7 +25,8 @@ const Approvals: React.FC = () => {
       const data = await eventService.getPendingMyResponse();
       setEvents(data);
     } catch (error) {
-      console.error('Erro ao carregar eventos pendentes:', error);
+      logError('Erro ao carregar eventos pendentes:', error);
+      showToast.apiError(error);
     } finally {
       setLoading(false);
     }

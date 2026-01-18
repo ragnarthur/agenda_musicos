@@ -18,6 +18,8 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { eventService } from '../../services/api';
 import OwlMascot from '../ui/OwlMascot';
+import { showToast } from '../../utils/toast';
+import { logError } from '../../utils/logger';
 import ThemeToggle from './ThemeToggle';
 
 const Navbar: React.FC = memo(() => {
@@ -73,19 +75,22 @@ const Navbar: React.FC = memo(() => {
           setPendingMyResponse(pendingResult.value.length);
         } else {
           setPendingMyResponse(0);
-          console.error('Erro ao carregar notificações (pendências):', pendingResult.reason);
+          logError('Erro ao carregar notificações (pendências):', pendingResult.reason);
+          showToast.apiError(pendingResult.reason);
         }
 
         if (approvalResult.status === 'fulfilled') {
           setPendingApproval(approvalResult.value.length);
         } else {
           setPendingApproval(0);
-          console.error('Erro ao carregar notificações (convites):', approvalResult.reason);
+          logError('Erro ao carregar notificações (convites):', approvalResult.reason);
+          showToast.apiError(approvalResult.reason);
         }
       });
     } catch (error) {
       if ((error as Error).name !== 'AbortError') {
-        console.error('Erro ao carregar notificações:', error);
+        logError('Erro ao carregar notificações:', error);
+        showToast.apiError(error);
       }
     }
   }, []);

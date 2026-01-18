@@ -13,6 +13,8 @@ import { ptBR } from 'date-fns/locale';
 import TiltCard from '../components/common/TiltCard';
 import { getEventComputedStatus } from '../utils/events';
 import { formatInstrumentLabel, getMusicianDisplayName } from '../utils/formatting';
+import { showToast } from '../utils/toast';
+import { logError } from '../utils/logger';
 
 const formatMusicianLabel = (availability: Availability) => {
   const musician = availability.musician;
@@ -102,7 +104,8 @@ const Dashboard: React.FC = () => {
         setTodayEvents(eventsResult.value.filter(isEventToday));
         setEvents(sorted.slice(0, 5));
       } else {
-        console.error('Erro ao carregar eventos:', eventsResult.reason);
+        logError('Erro ao carregar eventos:', eventsResult.reason);
+        showToast.apiError(eventsResult.reason);
         setTodayEvents([]);
         setEvents([]);
       }
@@ -110,14 +113,16 @@ const Dashboard: React.FC = () => {
       if (approvalsResult.status === 'fulfilled') {
         setPendingApprovals(approvalsResult.value);
       } else {
-        console.error('Erro ao carregar pendências:', approvalsResult.reason);
+        logError('Erro ao carregar pendências:', approvalsResult.reason);
+        showToast.apiError(approvalsResult.reason);
         setPendingApprovals([]);
       }
 
       if (responsesResult.status === 'fulfilled') {
         setPendingResponses(responsesResult.value);
       } else {
-        console.error('Erro ao carregar respostas pendentes:', responsesResult.reason);
+        logError('Erro ao carregar respostas pendentes:', responsesResult.reason);
+        showToast.apiError(responsesResult.reason);
         setPendingResponses([]);
       }
 

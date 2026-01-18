@@ -6,6 +6,7 @@ import ConfirmModal from '../components/modals/ConfirmModal';
 import { useAuth } from '../contexts/AuthContext';
 import { marketplaceService } from '../services/api';
 import type { MarketplaceGig, MarketplaceApplication } from '../types';
+import { logError } from '../utils/logger';
 
 const statusStyles: Record<string, string> = {
   open: 'bg-emerald-100 text-emerald-800',
@@ -81,7 +82,7 @@ const Marketplace: React.FC = () => {
       setGigs(gigsData);
       setMyApplications(myApplicationsData);
     } catch (err) {
-      console.error(err);
+      logError(err);
       setError('Não foi possível carregar as vagas. Tente novamente.');
     } finally {
       setLoading(false);
@@ -111,7 +112,7 @@ const Marketplace: React.FC = () => {
       setShowCreateModal(false);
       await loadData();
     } catch (err) {
-      console.error(err);
+      logError(err);
       setError(editingGig ? 'Não foi possível atualizar a vaga. Verifique os campos e tente novamente.' : 'Não foi possível criar a vaga. Verifique os campos e tente novamente.');
     } finally {
       setCreating(false);
@@ -139,7 +140,7 @@ const Marketplace: React.FC = () => {
       });
       await loadData();
     } catch (err) {
-      console.error(err);
+      logError(err);
       setError('Não foi possível enviar sua candidatura. Tente novamente.');
     }
   };
@@ -252,7 +253,7 @@ const Marketplace: React.FC = () => {
       setDeleteTarget(null);
       await loadData();
     } catch (err) {
-      console.error(err);
+      logError(err);
       setError('Não foi possível excluir a vaga. Tente novamente.');
     } finally {
       setDeleteLoading(false);

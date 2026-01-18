@@ -10,6 +10,8 @@ import { badgeService, connectionService, musicianService, type BadgeProgressRes
 import type { Connection, ConnectionType, Musician } from '../types';
 import { INSTRUMENT_LABELS } from '../utils/formatting';
 import InstrumentIcon from '../components/common/InstrumentIcon';
+import { showToast } from '../utils/toast';
+import { logError } from '../utils/logger';
 
 const connectionLabels: Record<string, string> = {
   follow: 'Seguir',
@@ -109,7 +111,8 @@ const Connections: React.FC = () => {
         setBadgeData(bgs || { earned: [], available: [] });
         setMusicians(Array.isArray(mus) ? mus : []);
       } catch (error) {
-        console.error('Erro ao carregar conexões/badges:', error);
+        logError('Erro ao carregar conexões/badges:', error);
+        showToast.apiError(error);
       } finally {
         setLoading(false);
       }
@@ -178,7 +181,8 @@ const Connections: React.FC = () => {
         setConnections(Array.isArray(refreshed) ? refreshed : []);
       }
     } catch (error) {
-      console.error('Erro ao alternar conexão:', error);
+      logError('Erro ao alternar conexão:', error);
+      showToast.apiError(error);
     } finally {
       setLoadingAction(false);
     }
@@ -189,14 +193,45 @@ const Connections: React.FC = () => {
       await connectionService.delete(id);
       setConnections((prev) => prev.filter((c) => c.id !== id));
     } catch (error) {
-      console.error('Erro ao remover conexão:', error);
+      logError('Erro ao remover conexão:', error);
+      showToast.apiError(error);
     }
   };
 
   if (loading) {
     return (
       <Layout>
-        <Loading text="Carregando rede e badges..." />
+        <div className="space-y-6">
+          <div className="hero-panel">
+            <div className="h-6 w-48 rounded-full bg-gray-200 animate-pulse" />
+            <div className="mt-3 h-4 w-72 rounded-full bg-gray-200 animate-pulse" />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, idx) => (
+                <div key={`conn-skeleton-${idx}`} className="card-contrast flex items-center gap-4">
+                  <div className="h-14 w-14 rounded-full bg-gray-200 animate-pulse" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-40 rounded-full bg-gray-200 animate-pulse" />
+                    <div className="h-3 w-28 rounded-full bg-gray-200 animate-pulse" />
+                  </div>
+                  <div className="h-8 w-20 rounded-full bg-gray-200 animate-pulse" />
+                </div>
+              ))}
+            </div>
+            <div className="space-y-4">
+              <div className="card-contrast">
+                <div className="h-5 w-36 rounded-full bg-gray-200 animate-pulse" />
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  {Array.from({ length: 4 }).map((_, idx) => (
+                    <div key={`badge-skeleton-${idx}`} className="h-20 rounded-xl bg-gray-200 animate-pulse" />
+                  ))}
+                </div>
+              </div>
+              <Loading text="Carregando rede e badges..." />
+            </div>
+          </div>
+        </div>
       </Layout>
     );
   }
@@ -349,7 +384,7 @@ const Connections: React.FC = () => {
                   const instruments = getMusicianInstruments(m);
                   const primaryInstrument = instruments[0] || m.instrument;
                   const active = connectionMap[m.id] || {};
-                  const profilePhoto = (m as unknown as { profile_photo?: string }).profile_photo;
+                  const profilePhoto = m.avatar_url;
 
                   return (
                     <motion.div
@@ -485,7 +520,7 @@ const Connections: React.FC = () => {
                   ) : (
                     <div className="space-y-2">
                       {grouped[activeTab].map((c, index) => {
-                        const targetPhoto = (c.target as unknown as { profile_photo?: string }).profile_photo;
+                        const targetPhoto = c.target.avatar_url;
                         return (
                           <motion.div
                             key={c.id}

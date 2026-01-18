@@ -6,6 +6,7 @@ import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { eventService } from '../services/api';
 import type { EventCreate } from '../types';
+import { logError } from '../utils/logger';
 
 const EventEditForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -45,7 +46,7 @@ const EventEditForm: React.FC = () => {
         is_solo: event.is_solo ?? false,
       });
     } catch (err) {
-      console.error('Erro ao carregar evento:', err);
+      logError('Erro ao carregar evento:', err);
       setError('Erro ao carregar evento. Redirecionando...');
       setTimeout(() => navigate('/eventos'), 2000);
     } finally {
@@ -127,7 +128,7 @@ const EventEditForm: React.FC = () => {
       await eventService.update(parseInt(id), formData);
       navigate(`/eventos/${id}`);
     } catch (err: unknown) {
-      console.error('Erro ao atualizar evento:', err);
+      logError('Erro ao atualizar evento:', err);
       const error = err as { response?: { data?: unknown } };
       if (error.response?.data) {
         const data = error.response.data;

@@ -22,6 +22,7 @@ import {
   type NotificationPreference,
   type TelegramConnectResponse,
 } from '../services/api';
+import { logError } from '../utils/logger';
 
 const NotificationSettings: React.FC = () => {
   const [preferences, setPreferences] = useState<NotificationPreference | null>(null);
@@ -39,7 +40,7 @@ const NotificationSettings: React.FC = () => {
       const data = await notificationService.getPreferences();
       setPreferences(data);
     } catch (error) {
-      console.error('Erro ao carregar preferencias:', error);
+      logError('Erro ao carregar preferencias:', error);
       toast.error('Erro ao carregar preferências de notificação');
     } finally {
       setLoading(false);
@@ -63,7 +64,7 @@ const NotificationSettings: React.FC = () => {
           loadPreferences();
         }
       } catch (error) {
-        console.error('Erro ao verificar status:', error);
+        logError('Erro ao verificar status:', error);
       }
     }, 3000);
 
@@ -79,7 +80,7 @@ const NotificationSettings: React.FC = () => {
       setPreferences(updated);
       toast.success('Preferência atualizada');
     } catch (error) {
-      console.error('Erro ao atualizar:', error);
+      logError('Erro ao atualizar:', error);
       toast.error('Erro ao atualizar preferência');
     } finally {
       setSaving(false);
@@ -92,7 +93,7 @@ const NotificationSettings: React.FC = () => {
       const response = await notificationService.telegramConnect();
       setTelegramCode(response);
     } catch (error) {
-      console.error('Erro ao iniciar conexao:', error);
+      logError('Erro ao iniciar conexao:', error);
       toast.error('Erro ao gerar código de conexão');
     } finally {
       setConnectingTelegram(false);
@@ -106,7 +107,7 @@ const NotificationSettings: React.FC = () => {
       toast.success('Telegram desconectado');
       loadPreferences();
     } catch (error) {
-      console.error('Erro ao desconectar:', error);
+      logError('Erro ao desconectar:', error);
       toast.error('Erro ao desconectar Telegram');
     } finally {
       setSaving(false);
@@ -132,7 +133,7 @@ const NotificationSettings: React.FC = () => {
         toast('Aguardando conexão...', { icon: '⏳' });
       }
     } catch (error) {
-      console.error('Erro ao verificar status:', error);
+      logError('Erro ao verificar status:', error);
       toast.error('Erro ao verificar status');
     } finally {
       setCheckingStatus(false);

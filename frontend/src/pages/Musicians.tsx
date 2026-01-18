@@ -1,38 +1,53 @@
 // pages/Musicians.tsx
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Music, Phone, Mail, Instagram } from 'lucide-react';
+import { Users, Music, Phone, Mail, Instagram, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
-import Loading from '../components/common/Loading';
 import { musicianService } from '../services/api';
 import type { Musician } from '../types';
 import { formatInstrumentLabel } from '../utils/formatting';
+import { logError } from '../utils/logger';
 
 const Musicians: React.FC = () => {
   const [musicians, setMusicians] = useState<Musician[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    console.log('🎵 Componente Musicians montado');
-    loadMusicians();
-  }, []);
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ count: 0, next: null as string | null, previous: null as string | null });
 
   const loadMusicians = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await musicianService.getAll();
-      console.log('Músicos carregados:', data);
-      setMusicians(data);
+      const params = {
+        page,
+        ...(debouncedSearch ? { search: debouncedSearch } : {}),
+      };
+      const data = await musicianService.getAllPaginated(params);
+      setMusicians(data.results);
+      setPagination({ count: data.count, next: data.next, previous: data.previous });
     } catch (error) {
-      console.error('Erro ao carregar músicos:', error);
+      logError('Erro ao carregar músicos:', error);
       setError('Não foi possível carregar os músicos. Tente novamente.');
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPage(1);
+      setDebouncedSearch(search.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    loadMusicians();
+  }, [debouncedSearch, page]);
 
   const getInstrumentEmoji = (instrument: string, bio?: string) => {
     // Se é vocalista e a bio menciona violão/violonista, mostra emoji combinado
@@ -111,15 +126,46 @@ const Musicians: React.FC = () => {
                 </p>
               </div>
             </div>
-            <div className="text-sm text-gray-600 flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Conecte, convide e organize equipes com agilidade</span>
+            <div className="flex flex-col gap-3 w-full sm:w-auto">
+              <div className="text-sm text-gray-600 flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Conecte, convide e organize equipes com agilidade</span>
+              </div>
+              <div className="relative w-full sm:w-72">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Buscar por nome, usuario ou instrumento"
+                  className="w-full rounded-full border border-gray-200 bg-white/80 py-2 pl-9 pr-3 text-sm text-gray-700 shadow-sm focus:border-primary-300 focus:ring-2 focus:ring-primary-200"
+                />
+              </div>
             </div>
           </div>
         </div>
 
         {loading ? (
-          <Loading text="Carregando músicos..." />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <div key={`musician-skeleton-${idx}`} className="card-contrast space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-full bg-gray-200 animate-pulse" />
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 w-32 rounded-full bg-gray-200 animate-pulse" />
+                    <div className="h-3 w-24 rounded-full bg-gray-200 animate-pulse" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-3 w-full rounded-full bg-gray-200 animate-pulse" />
+                  <div className="h-3 w-5/6 rounded-full bg-gray-200 animate-pulse" />
+                </div>
+                <div className="flex gap-2">
+                  <div className="h-6 w-20 rounded-full bg-gray-200 animate-pulse" />
+                  <div className="h-6 w-24 rounded-full bg-gray-200 animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : error ? (
           <div className="card-contrast bg-red-50/70 border-red-200 text-center">
             <p className="text-red-800 mb-4">{error}</p>
@@ -234,16 +280,39 @@ const Musicians: React.FC = () => {
 
         {/* Informação */}
         {!loading && musicians.length > 0 && (
-          <div className="card-contrast">
+          <div className="card-contrast space-y-3">
             <div className="flex items-start space-x-3">
               <Users className="h-5 w-5 text-primary-600 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-primary-800">
-                  Total: {musicians.length} músico{musicians.length !== 1 ? 's' : ''}
+                  Total: {pagination.count || musicians.length} músico{(pagination.count || musicians.length) !== 1 ? 's' : ''}
                 </p>
                 <p className="text-sm text-primary-700 mt-1">
                   Todos os músicos podem se conectar para formar duos e trios, com contatos disponíveis para combinar diretamente.
                 </p>
+              </div>
+            </div>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <p className="text-sm text-gray-600">
+                Página {page}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                  disabled={!pagination.previous || page === 1}
+                >
+                  Anterior
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => setPage((prev) => prev + 1)}
+                  disabled={!pagination.next}
+                >
+                  Proxima
+                </button>
               </div>
             </div>
           </div>

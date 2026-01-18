@@ -5,6 +5,8 @@ import { Calendar, ArrowLeft, Users, Clock } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { eventService } from '../services/api';
+import { showToast } from '../utils/toast';
+import { logError } from '../utils/logger';
 import { useAuth } from '../contexts/AuthContext';
 import type { Availability, Event } from '../types';
 import { format, parseISO } from 'date-fns';
@@ -89,7 +91,8 @@ const EventBoard: React.FC = () => {
       const data = await eventService.getAll(params);
       setEvents(data);
     } catch (error) {
-      console.error('Erro ao carregar grade de eventos:', error);
+      logError('Erro ao carregar grade de eventos:', error);
+      showToast.apiError(error);
     } finally {
       setLoading(false);
     }

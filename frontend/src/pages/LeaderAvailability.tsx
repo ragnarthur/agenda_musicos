@@ -9,6 +9,7 @@ import { showToast } from '../utils/toast';
 import type { LeaderAvailability, LeaderAvailabilityCreate } from '../types';
 import { format, parseISO } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
+import { logError } from '../utils/logger';
 
 const LeaderAvailabilityPage: React.FC = () => {
   const { user } = useAuth();
@@ -72,7 +73,8 @@ const LeaderAvailabilityPage: React.FC = () => {
       const data = await musicianService.getInstruments();
       setInstruments(data);
     } catch (error) {
-      console.error('Erro ao carregar instrumentos:', error);
+      logError('Erro ao carregar instrumentos:', error);
+      showToast.apiError(error);
     }
   }, []);
 

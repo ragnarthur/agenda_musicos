@@ -152,6 +152,25 @@ export const musicianService = {
     return response.data.results || response.data;
   },
 
+  getAllPaginated: async (params?: { search?: string; page?: number }): Promise<{ results: Musician[]; count: number; next: string | null; previous: string | null }> => {
+    const response = await api.get('/musicians/', { params });
+    const data = response.data;
+    if (Array.isArray(data)) {
+      return {
+        results: data,
+        count: data.length,
+        next: null,
+        previous: null,
+      };
+    }
+    return {
+      results: data.results || [],
+      count: data.count ?? (data.results ? data.results.length : 0),
+      next: data.next ?? null,
+      previous: data.previous ?? null,
+    };
+  },
+
   getMe: async (): Promise<Musician> => {
     const response = await api.get('/musicians/me/');
     return response.data;

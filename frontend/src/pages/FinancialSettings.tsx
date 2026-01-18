@@ -8,6 +8,7 @@ import { musicianService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import type { EquipmentItem, MusicianUpdatePayload, Musician } from '../types';
 import { formatCurrency } from '../utils/formatting';
+import { logError } from '../utils/logger';
 
 type EquipmentRow = {
   name: string;
@@ -82,7 +83,7 @@ const FinancialSettings: React.FC = () => {
       const me = await musicianService.getMe();
       hydrateForm(me);
     } catch (error) {
-      console.error('Erro ao carregar perfil financeiro:', error);
+      logError('Erro ao carregar perfil financeiro:', error);
       toast.error('Não foi possível carregar seus dados.');
     } finally {
       setLoading(false);
@@ -131,7 +132,7 @@ const FinancialSettings: React.FC = () => {
       const userId = user?.id ?? user?.user?.id;
       navigate(userId ? `/musicos/${userId}` : '/musicos');
     } catch (error) {
-      console.error('Erro ao salvar valores:', error);
+      logError('Erro ao salvar valores:', error);
       toast.error('Não foi possível salvar. Tente novamente.');
     } finally {
       setSaving(false);

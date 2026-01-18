@@ -12,13 +12,14 @@ import {
   Filter,
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
-import Loading from '../components/common/Loading';
 import { eventService } from '../services/api';
 import type { Availability, Event } from '../types';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { getEventComputedStatus } from '../utils/events';
 import { formatInstrumentLabel, getMusicianDisplayName } from '../utils/formatting';
+import { showToast } from '../utils/toast';
+import { logError } from '../utils/logger';
 
 type TimeFilter = 'upcoming' | 'past' | 'all';
 
@@ -87,7 +88,8 @@ const EventsList: React.FC = () => {
       const data = await eventService.getAll(params);
       setEvents(data);
     } catch (error) {
-      console.error('Erro ao carregar eventos:', error);
+      logError('Erro ao carregar eventos:', error);
+      showToast.apiError(error);
     } finally {
       setLoading(false);
     }
@@ -303,7 +305,27 @@ const EventsList: React.FC = () => {
         </div>
 
         {loading ? (
-          <Loading text="Carregando eventos..." />
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, groupIndex) => (
+              <div key={`events-skeleton-${groupIndex}`} className="rounded-xl p-[1px] bg-gradient-to-br from-gray-200 to-gray-300">
+                <div className="rounded-[14px] p-4 bg-white/80">
+                  <div className="h-5 w-56 rounded-full bg-gray-200 animate-pulse" />
+                  <div className="mt-4 space-y-3">
+                    {Array.from({ length: 2 }).map((__, cardIndex) => (
+                      <div key={`events-card-skeleton-${groupIndex}-${cardIndex}`} className="card-contrast space-y-3">
+                        <div className="h-4 w-40 rounded-full bg-gray-200 animate-pulse" />
+                        <div className="h-3 w-64 rounded-full bg-gray-200 animate-pulse" />
+                        <div className="flex gap-3">
+                          <div className="h-3 w-20 rounded-full bg-gray-200 animate-pulse" />
+                          <div className="h-3 w-24 rounded-full bg-gray-200 animate-pulse" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : events.length === 0 ? (
           <div className="card-contrast text-center py-12">
             <CalendarIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
