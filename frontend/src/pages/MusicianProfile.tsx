@@ -25,6 +25,7 @@ import ImageCropModal from '../components/modals/ImageCropModal';
 import { musicianService, connectionService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { showToast } from '../utils/toast';
+import { formatInstrumentLabel } from '../utils/formatting';
 import type { Musician, MusicianBadge } from '../types';
 
 interface Connection {
@@ -493,7 +494,7 @@ const MusicianProfile: React.FC = () => {
                         key={idx}
                         className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full text-sm border border-indigo-200 dark:border-indigo-700/50"
                       >
-                        {inst}
+                        {formatInstrumentLabel(inst)}
                       </span>
                     ))}
                   </div>
