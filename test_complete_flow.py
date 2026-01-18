@@ -92,6 +92,8 @@ class FlowTester:
             'phone': '11999999999',
             'instrument': 'guitar',
             'bio': 'Músico de teste para validação',
+            'city': 'Sao Paulo',
+            'state': 'SP',
         }, content_type='application/json')
 
         if response.status_code == 201:
