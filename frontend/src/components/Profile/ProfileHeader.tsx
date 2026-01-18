@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { MapPin, Star, Camera, Loader2, Info, UserPlus, UserCheck, MessageCircle, Briefcase, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Musician } from '../../types';
@@ -55,6 +56,15 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [expandedImage]);
+
+  useEffect(() => {
+    if (!expandedImage) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
   }, [expandedImage]);
 
   return (
@@ -287,29 +297,32 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         </motion.div>
       </div>
 
-      {expandedImage && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setExpandedImage(null)}
-        >
-          <button
-            type="button"
-            onClick={() => setExpandedImage(null)}
-            className="absolute top-4 right-4 rounded-full bg-black/60 p-2 text-white hover:bg-black/80 transition-colors"
-            aria-label="Fechar imagem"
-          >
-            <X className="h-5 w-5" />
-          </button>
-          <img
-            src={expandedImage.src}
-            alt={expandedImage.alt}
-            className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          />
-        </div>
-      )}
+      {expandedImage && typeof document !== 'undefined'
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4"
+              role="dialog"
+              aria-modal="true"
+              onClick={() => setExpandedImage(null)}
+            >
+              <button
+                type="button"
+                onClick={() => setExpandedImage(null)}
+                className="absolute top-4 right-4 rounded-full bg-black/60 p-2 text-white hover:bg-black/80 transition-colors"
+                aria-label="Fechar imagem"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              <img
+                src={expandedImage.src}
+                alt={expandedImage.alt}
+                className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg shadow-2xl"
+                onClick={(event) => event.stopPropagation()}
+              />
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 };
