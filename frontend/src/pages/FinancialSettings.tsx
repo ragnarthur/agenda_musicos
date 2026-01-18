@@ -1,6 +1,6 @@
 // pages/FinancialSettings.tsx
 import React, { useEffect, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Coins, Plus, Trash2, Wallet, CarFront, Sparkles, Loader2, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Layout from '../components/Layout/Layout';
@@ -52,7 +52,8 @@ const handleCurrencyBlur = (setter: (val: string) => void) => (event: React.Focu
 };
 
 const FinancialSettings: React.FC = () => {
-  const { refreshUser } = useAuth();
+  const { refreshUser, user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [bio, setBio] = useState('');
@@ -127,6 +128,8 @@ const FinancialSettings: React.FC = () => {
       hydrateForm(updated);
       await refreshUser();
       toast.success('Valores salvos com sucesso!');
+      const userId = user?.id ?? user?.user?.id;
+      navigate(userId ? `/musicos/${userId}` : '/musicos');
     } catch (error) {
       console.error('Erro ao salvar valores:', error);
       toast.error('Não foi possível salvar. Tente novamente.');
