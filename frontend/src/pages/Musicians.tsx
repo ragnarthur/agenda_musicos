@@ -144,6 +144,7 @@ const Musicians: React.FC = () => {
               const username = musician.instagram || musician.user.username;
               const contactEmail = musician.public_email || musician.user.email;
               const instrumentLabel = getInstrumentLabel(musician.instrument);
+              const avatarUrl = musician.avatar_url;
               return (
                 <motion.div
                   key={musician.id}
@@ -163,8 +164,12 @@ const Musicians: React.FC = () => {
                     {/* Header do Card */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center space-x-3">
-                      <div className="bg-primary-100 p-3 rounded-full transition-transform duration-400 group-hover:-translate-y-0.5 group-hover:scale-105">
-                        <span className="text-2xl">{emoji}</span>
+                      <div className="h-12 w-12 rounded-full overflow-hidden bg-primary-100 transition-transform duration-400 group-hover:-translate-y-0.5 group-hover:scale-105 flex items-center justify-center">
+                        {avatarUrl ? (
+                          <img src={avatarUrl} alt={musician.full_name} className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="text-2xl">{emoji}</span>
+                        )}
                       </div>
                         <div>
                           <h3 className="font-semibold text-gray-900 flex items-center space-x-2">
