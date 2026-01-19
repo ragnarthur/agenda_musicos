@@ -15,7 +15,17 @@ const Landing: React.FC = () => {
       'Conexões com outros músicos',
       'Eventos profissionalmente gerenciados',
       'Networking musical simplificado',
-      'Oportunidades em um clique'
+      'Oportunidades em um clique',
+      'Encontre músicos para seu evento',
+      'Gerencie convites e confirmações',
+      'Conquiste badges e destaque-se',
+      'Marketplace de vagas musicais',
+      'Controle total da sua agenda',
+      'Notificações em tempo real',
+      'Avaliações entre músicos',
+      'Seu próximo show começa aqui',
+      'Construa sua reputação musical',
+      'Disponibilidades sincronizadas',
     ],
     []
   );
