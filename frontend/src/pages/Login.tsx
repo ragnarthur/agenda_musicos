@@ -1,5 +1,5 @@
 // pages/Login.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,6 +8,10 @@ import OwlMascot from '../components/ui/OwlMascot';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 
 const Login: React.FC = () => {
+  const typedSubtitle = useTypewriterOnce(
+    'Plataforma profissional de agenda, disponibilidade e oportunidades para músicos',
+    42
+  );
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -58,8 +62,9 @@ const Login: React.FC = () => {
               Beta
             </span>
           </div>
-          <p className="text-primary-50 font-medium text-base tracking-wide">
-            Plataforma profissional de agenda, disponibilidade e oportunidades para músicos
+          <p className="text-primary-50 font-medium text-base tracking-wide min-h-[1.6em]">
+            {typedSubtitle}
+            <span className="ml-1 inline-block h-[1em] w-[2px] bg-primary-200 align-middle animate-pulse" />
           </p>
         </div>
 
@@ -156,3 +161,22 @@ const Login: React.FC = () => {
 };
 
 export default Login;
+
+const useTypewriterOnce = (text: string, speed = 45) => {
+  const [displayText, setDisplayText] = useState('');
+
+  useEffect(() => {
+    let index = 0;
+    const timer = setInterval(() => {
+      index += 1;
+      setDisplayText(text.slice(0, index));
+      if (index >= text.length) {
+        clearInterval(timer);
+      }
+    }, speed);
+
+    return () => clearInterval(timer);
+  }, [text, speed]);
+
+  return displayText;
+};
