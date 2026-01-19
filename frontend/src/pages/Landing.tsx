@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Users, Award, Megaphone } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -6,6 +6,50 @@ import OwlMascot from '../components/ui/OwlMascot';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 
 const Landing: React.FC = () => {
+  const heroPhrases = useMemo(
+    () => [
+      'Sua Carreira Musical Organizada',
+      'Agenda inteligente para shows',
+      'Conexões com outros músicos',
+      'Eventos profissionalmente gerenciados',
+      'Networking musical simplificado',
+      'Oportunidades em um clique'
+    ],
+    []
+  );
+
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  const [currentText, setCurrentText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showCursor, setShowCursor] = useState(true);
+
+  useEffect(() => {
+    const currentPhrase = heroPhrases[currentPhraseIndex];
+    const typingSpeed = isDeleting ? 50 : 100;
+    
+    const timeout = setTimeout(() => {
+      if (!isDeleting) {
+        if (currentText.length < currentPhrase.length) {
+          setCurrentText(currentPhrase.slice(0, currentText.length + 1));
+        } else {
+          setShowCursor(false);
+          setTimeout(() => {
+            setShowCursor(true);
+            setIsDeleting(true);
+          }, 2000); // Pausa de 2 segundos antes de deletar
+        }
+      } else {
+        if (currentText.length > 0) {
+          setCurrentText(currentText.slice(0, currentText.length - 1));
+        } else {
+          setIsDeleting(false);
+          setCurrentPhraseIndex((prev) => (prev + 1) % heroPhrases.length);
+        }
+      }
+    }, typingSpeed);
+
+    return () => clearTimeout(timeout);
+  }, [currentText, currentPhraseIndex, isDeleting, heroPhrases]);
   return (
     <FullscreenBackground
       enableBlueWaves
@@ -51,12 +95,24 @@ const Landing: React.FC = () => {
           </motion.div>
 
           <motion.p
-            className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto"
+            className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto min-h-[2.8em]"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            Sua Carreira Musical Organizada
+            <span className="relative inline-block">
+              <span className="absolute inset-0 text-gray-500/40">
+                Sua Carreira Musical Organizada
+              </span>
+              <span className="relative">{currentText}</span>
+            </span>
+            <span 
+              className="ml-1 inline-block h-[1em] w-[0.08em] bg-gray-300/80 align-middle"
+              style={{ 
+                opacity: showCursor ? 1 : 0,
+                transition: 'opacity 0.3s ease'
+              }}
+            />
           </motion.p>
 
           {/* CTAs */}
