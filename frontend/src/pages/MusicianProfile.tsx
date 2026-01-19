@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -74,8 +74,6 @@ const MusicianProfile: React.FC = () => {
   const [cropFile, setCropFile] = useState<File | null>(null);
   const [cropTarget, setCropTarget] = useState<'avatar' | 'cover'>('avatar');
   const [isCropOpen, setIsCropOpen] = useState(false);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
-  const coverInputRef = useRef<HTMLInputElement>(null);
   const { user, refreshUser } = useAuth();
 
   const isOwnProfile = Boolean(user && (user.id === Number(id) || user.user?.id === Number(id)));
@@ -305,29 +303,11 @@ const MusicianProfile: React.FC = () => {
               connectionStatus={connectionStatus}
               onConnect={handleConnect}
               connectingInProgress={connectingInProgress}
-              onUploadAvatar={isOwnProfile ? () => avatarInputRef.current?.click() : undefined}
-              onUploadCover={isOwnProfile ? () => coverInputRef.current?.click() : undefined}
+              onAvatarChange={isOwnProfile ? handleAvatarUpload : undefined}
+              onCoverChange={isOwnProfile ? handleCoverUpload : undefined}
               uploadingAvatar={uploadingAvatar}
               uploadingCover={uploadingCover}
             />
-            {isOwnProfile && (
-              <>
-                <input
-                  ref={avatarInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarUpload}
-                  className="hidden"
-                />
-                <input
-                  ref={coverInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleCoverUpload}
-                  className="hidden"
-                />
-              </>
-            )}
           </div>
           {isOwnProfile && (
             <ImageCropModal

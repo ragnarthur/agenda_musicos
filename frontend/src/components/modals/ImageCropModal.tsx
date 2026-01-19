@@ -35,6 +35,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   const [baseScale, setBaseScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [pinchDistance, setPinchDistance] = useState<number | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const cropRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef({
@@ -188,6 +189,36 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     setOffset(clampOffset(nextOffsetX, nextOffsetY, nextScale));
   };
 
+  const getTouchDistance = (touches: React.TouchList) => {
+    return Math.hypot(
+      touches[0].clientX - touches[1].clientX,
+      touches[0].clientY - touches[1].clientY
+    );
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const distance = getTouchDistance(e.touches);
+      setPinchDistance(distance);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && pinchDistance !== null) {
+      e.preventDefault();
+      const newDistance = getTouchDistance(e.touches);
+      const scaleFactor = newDistance / pinchDistance;
+      const newZoom = Math.min(Math.max(zoom * scaleFactor, 1), zoomMax);
+      handleZoomChange(newZoom);
+      setPinchDistance(newDistance);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setPinchDistance(null);
+  };
+
   const handleConfirm = async () => {
     if (!imgRef.current || !file || loadError) return;
     const output = OUTPUT_SIZES[target];
@@ -260,17 +291,21 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
         <div className="flex flex-col items-center gap-4">
           <div
             ref={cropRef}
-            className="relative w-[min(90vw,720px)] overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 shadow-inner dark:border-gray-700 dark:bg-gray-800 cursor-grab active:cursor-grabbing touch-none"
+            className="relative w-[min(90vw,720px)] overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 shadow-inner dark:border-gray-700 dark:bg-gray-800 cursor-grab active:cursor-grabbing"
             style={{
               aspectRatio: `${aspectRatio}`,
               width: frameSize.width || undefined,
               height: frameSize.height || undefined,
+              touchAction: 'none',
             }}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
             onPointerLeave={handlePointerUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
             {imageUrl && (
               <img
@@ -282,7 +317,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                   setNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
                 }}
                 onError={() => setLoadError('Não foi possível abrir esta foto. Use JPG, PNG ou WEBP.')}
-                className="absolute left-0 top-0 select-none touch-none"
+                className="absolute left-0 top-0 select-none pointer-events-none"
                 style={{
                   transform: `translate(${offset.x}px, ${offset.y}px) scale(${baseScale * zoom})`,
                   transformOrigin: 'top left',
@@ -306,9 +341,14 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
             />
           </div>
 
-          <div className="flex w-full max-w-xl flex-col gap-3">
+          <div className="flex w-full max-w-xl flex-col gap-4">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Zoom
+              <span className="flex items-center justify-between mb-2">
+                <span>Zoom</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 sm:hidden">
+                  Use dois dedos para zoom
+                </span>
+              </span>
               <input
                 type="range"
                 min={1}
@@ -316,15 +356,16 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                 step={0.01}
                 value={zoom}
                 onChange={(event) => handleZoomChange(Number(event.target.value))}
-                className="mt-2 w-full accent-sky-600"
+                className="mt-1 w-full h-10 sm:h-6 accent-sky-600 touch-manipulation"
+                style={{ touchAction: 'manipulation' }}
               />
             </label>
-            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={handleConfirm}
                 disabled={!imageUrl || !!loadError || !naturalSize.width}
-                className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-lg bg-sky-600 px-6 py-3 sm:px-4 sm:py-2 text-base sm:text-sm font-semibold text-white hover:bg-sky-700 active:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60 touch-manipulation"
               >
                 Salvar e enviar
               </button>

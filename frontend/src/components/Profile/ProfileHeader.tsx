@@ -17,8 +17,8 @@ interface ProfileHeaderProps {
   connectionStatus?: ConnectionStatus | null;
   onConnect?: () => void;
   connectingInProgress?: boolean;
-  onUploadAvatar?: () => void;
-  onUploadCover?: () => void;
+  onAvatarChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onCoverChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   uploadingAvatar?: boolean;
   uploadingCover?: boolean;
 }
@@ -29,8 +29,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   connectionStatus,
   onConnect,
   connectingInProgress = false,
-  onUploadAvatar,
-  onUploadCover,
+  onAvatarChange,
+  onCoverChange,
   uploadingAvatar = false,
   uploadingCover = false,
 }) => {
@@ -87,10 +87,11 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
         {isOwnProfile && (
           <div className="absolute top-4 right-4 z-20 flex items-center gap-2 group">
-            <button
-              onClick={onUploadCover}
-              disabled={uploadingCover}
-              className="backdrop-blur-md bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 p-2 rounded-full shadow-lg transition-all hover:scale-110 disabled:opacity-70 disabled:cursor-not-allowed"
+            <label
+              htmlFor="cover-upload-input"
+              className={`backdrop-blur-md bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 p-3 sm:p-2 rounded-full shadow-lg transition-all hover:scale-110 cursor-pointer ${
+                uploadingCover ? 'opacity-70 cursor-not-allowed' : ''
+              }`}
               aria-label="Alterar imagem de capa"
             >
               {uploadingCover ? (
@@ -98,7 +99,15 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               ) : (
                 <Camera className="h-5 w-5 text-gray-700 dark:text-gray-200" />
               )}
-            </button>
+            </label>
+            <input
+              id="cover-upload-input"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/heic,image/*"
+              onChange={onCoverChange}
+              disabled={uploadingCover}
+              className="sr-only"
+            />
             <button
               type="button"
               onClick={() => setShowCoverHint((prev) => !prev)}
@@ -148,12 +157,13 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             {isOwnProfile && (
               <div className="relative flex flex-col items-start gap-2 group">
                 <div className="flex items-center gap-2">
-                  <motion.button
+                  <motion.label
+                    htmlFor="avatar-upload-input"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={onUploadAvatar}
-                    disabled={uploadingAvatar}
-                    className="bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 p-2 rounded-full shadow-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                    className={`bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 p-3 sm:p-2 rounded-full shadow-lg transition-colors cursor-pointer ${
+                      uploadingAvatar ? 'opacity-70 cursor-not-allowed' : ''
+                    }`}
                     aria-label="Alterar foto de perfil"
                   >
                     {uploadingAvatar ? (
@@ -161,7 +171,15 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                     ) : (
                       <Camera className="h-4 w-4 text-white" />
                     )}
-                  </motion.button>
+                  </motion.label>
+                  <input
+                    id="avatar-upload-input"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/heic,image/*"
+                    onChange={onAvatarChange}
+                    disabled={uploadingAvatar}
+                    className="sr-only"
+                  />
                   <button
                     type="button"
                     onClick={() => setShowAvatarHint((prev) => !prev)}
