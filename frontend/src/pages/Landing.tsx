@@ -65,9 +65,6 @@ const Landing: React.FC = () => {
           } else {
             // Frase completa - pausa curta antes de deletar
             setPhase('pausing');
-            timeoutRef.current = setTimeout(() => {
-              setPhase('deleting');
-            }, 2200);
           }
           break;
 
@@ -81,16 +78,19 @@ const Landing: React.FC = () => {
           } else {
             // Texto vazio - transição rápida para próxima frase
             setPhase('waiting');
-            timeoutRef.current = setTimeout(() => {
-              setCurrentPhraseIndex((prev) => (prev + 1) % heroPhrases.length);
-              setPhase('typing');
-            }, 300);
           }
           break;
 
         case 'pausing':
+          timeoutRef.current = setTimeout(() => {
+            setPhase('deleting');
+          }, 2200);
+          break;
         case 'waiting':
-          // Estados de espera - nada a fazer
+          timeoutRef.current = setTimeout(() => {
+            setCurrentPhraseIndex((prev) => (prev + 1) % heroPhrases.length);
+            setPhase('typing');
+          }, 300);
           break;
       }
     };
