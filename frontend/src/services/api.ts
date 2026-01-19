@@ -63,6 +63,7 @@ api.interceptors.response.use(
     // Endpoints públicos (não autenticados) não devem redirecionar para login
     const publicAuthPaths = [
       '/register/',
+      '/check-email/',
       '/verify-email/',
       '/registration-status/',
       '/process-payment/',
@@ -534,6 +535,11 @@ export interface RegistrationStatus {
   payment_token?: string;
 }
 
+export interface CheckEmailResponse {
+  available: boolean;
+  reason?: 'already_registered' | 'pending_verification';
+}
+
 export interface PaymentData {
   payment_token: string;
   card_number: string;
@@ -546,6 +552,11 @@ export interface PaymentData {
 export const registrationService = {
   register: async (data: RegisterData): Promise<{ message: string; email: string }> => {
     const response = await api.post('/register/', data);
+    return response.data;
+  },
+
+  checkEmail: async (email: string): Promise<CheckEmailResponse> => {
+    const response = await api.get('/check-email/', { params: { email } });
     return response.data;
   },
 

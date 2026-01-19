@@ -1,5 +1,5 @@
 // pages/Register.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -97,6 +97,12 @@ const Register: React.FC = () => {
   const [resending, setResending] = useState(false);
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const [filteredCities, setFilteredCities] = useState<Array<{ city: string; state: string }>>([]);
+  const [isEmailDuplicate, setIsEmailDuplicate] = useState(false);
+
+  // Callback for email validation from AccountStep
+  const handleEmailValidation = useCallback((isValid: boolean, isDuplicate: boolean) => {
+    setIsEmailDuplicate(isDuplicate);
+  }, []);
 
   const [formData, setFormData] = useState<RegisterData & { confirmPassword: string; instrumentOther: string; instruments: string[]; isMultiInstrumentist: boolean; city: string; state: string; bio: string }>({
     email: '',
@@ -223,6 +229,8 @@ const Register: React.FC = () => {
         missing.push('Preencha o email');
       } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
         missing.push('Email inválido');
+      } else if (isEmailDuplicate) {
+        missing.push('Este email já está cadastrado');
       }
 
       if (!usernameTrimmed) {
@@ -296,6 +304,7 @@ const Register: React.FC = () => {
       const emailTrimmed = normalizeEmail(formData.email);
       const usernameTrimmed = normalizeUsername(formData.username);
       if (!emailTrimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) return false;
+      if (isEmailDuplicate) return false;
       if (!usernameTrimmed || usernameTrimmed.length < 3 || !/^[a-zA-Z0-9_]+$/.test(usernameTrimmed)) return false;
       if (!formData.password || formData.password.length < 6) return false;
       if (formData.password !== formData.confirmPassword) return false;
@@ -538,6 +547,7 @@ const Register: React.FC = () => {
             }}
             onChange={handleChange}
             errors={errors}
+            onEmailValidation={handleEmailValidation}
           />
         );
 

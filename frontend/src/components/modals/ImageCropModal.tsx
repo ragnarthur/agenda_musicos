@@ -15,6 +15,10 @@ const OUTPUT_SIZES = {
   avatar: { width: 512, height: 512 },
   cover: { width: 1600, height: 900 },
 };
+const MAX_OUTPUT_BYTES = {
+  avatar: 2 * 1024 * 1024,
+  cover: 5 * 1024 * 1024,
+};
 
 const ImageCropModal: React.FC<ImageCropModalProps> = ({
   isOpen,
@@ -30,6 +34,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   const [zoom, setZoom] = useState(1);
   const [baseScale, setBaseScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [loadError, setLoadError] = useState<string | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const cropRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef({
@@ -47,10 +52,12 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   React.useEffect(() => {
     if (!isOpen || !file) {
       setImageUrl(null);
+      setLoadError(null);
       return;
     }
     const url = URL.createObjectURL(file);
     setImageUrl(url);
+    setLoadError(null);
     return () => URL.revokeObjectURL(url);
   }, [file, isOpen]);
 
@@ -101,6 +108,35 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     });
   }, [cropSize.height, cropSize.width, isOpen, naturalSize.height, naturalSize.width, target]);
 
+  const canvasToBlob = (canvas: HTMLCanvasElement, type: string, quality: number) =>
+    new Promise<Blob>((resolve, reject) => {
+      if (canvas.toBlob) {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Falha ao processar imagem.'));
+          }
+        }, type, quality);
+        return;
+      }
+      try {
+        const dataUrl = canvas.toDataURL(type, quality);
+        const [header, data] = dataUrl.split(',');
+        const mimeMatch = /data:(.*?);base64/.exec(header || '');
+        const mime = mimeMatch?.[1] || type;
+        const binary = atob(data);
+        const buffer = new ArrayBuffer(binary.length);
+        const bytes = new Uint8Array(buffer);
+        for (let i = 0; i < binary.length; i += 1) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        resolve(new Blob([buffer], { type: mime }));
+      } catch (err) {
+        reject(err);
+      }
+    });
+
   const clampOffset = (x: number, y: number, scale: number) => {
     const scaledWidth = naturalSize.width * scale;
     const scaledHeight = naturalSize.height * scale;
@@ -114,6 +150,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!naturalSize.width) return;
+    if (loadError) setLoadError(null);
     event.preventDefault();
     dragRef.current = {
       active: true,
@@ -146,13 +183,15 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     const centerY = (-offset.y + cropSize.height / 2) / prevScale;
     const nextOffsetX = -(centerX * nextScale - cropSize.width / 2);
     const nextOffsetY = -(centerY * nextScale - cropSize.height / 2);
+    if (loadError) setLoadError(null);
     setZoom(nextZoom);
     setOffset(clampOffset(nextOffsetX, nextOffsetY, nextScale));
   };
 
   const handleConfirm = async () => {
-    if (!imgRef.current || !file) return;
+    if (!imgRef.current || !file || loadError) return;
     const output = OUTPUT_SIZES[target];
+    const maxBytes = MAX_OUTPUT_BYTES[target];
     const scale = baseScale * zoom;
     const sx = Math.max(0, -offset.x / scale);
     const sy = Math.max(0, -offset.y / scale);
@@ -166,15 +205,22 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     if (!ctx) return;
 
     ctx.drawImage(imgRef.current, sx, sy, sw, sh, 0, 0, output.width, output.height);
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) return;
-        const croppedFile = new File([blob], `${target}-crop.jpg`, { type: 'image/jpeg' });
-        onConfirm(croppedFile);
-      },
-      'image/jpeg',
-      0.92
-    );
+    try {
+      let quality = 0.92;
+      let blob = await canvasToBlob(canvas, 'image/jpeg', quality);
+      while (blob.size > maxBytes && quality > 0.7) {
+        quality -= 0.08;
+        blob = await canvasToBlob(canvas, 'image/jpeg', quality);
+      }
+      if (blob.size > maxBytes) {
+        setLoadError('Imagem muito grande. Escolha uma foto menor ou reduza o zoom.');
+        return;
+      }
+      const croppedFile = new File([blob], `${target}-crop.jpg`, { type: 'image/jpeg' });
+      onConfirm(croppedFile);
+    } catch {
+      setLoadError('Não foi possível processar esta imagem. Use JPG, PNG ou WEBP.');
+    }
   };
 
   if (!isOpen || !file) return null;
@@ -196,6 +242,11 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Arraste para posicionar e use o zoom para ajustar.
             </p>
+            {loadError && (
+              <p className="mt-2 text-sm text-red-600">
+                {loadError}
+              </p>
+            )}
           </div>
           <button
             type="button"
@@ -209,7 +260,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
         <div className="flex flex-col items-center gap-4">
           <div
             ref={cropRef}
-            className="relative w-[min(90vw,720px)] overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 shadow-inner dark:border-gray-700 dark:bg-gray-800 cursor-grab active:cursor-grabbing"
+            className="relative w-[min(90vw,720px)] overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 shadow-inner dark:border-gray-700 dark:bg-gray-800 cursor-grab active:cursor-grabbing touch-none"
             style={{
               aspectRatio: `${aspectRatio}`,
               width: frameSize.width || undefined,
@@ -218,6 +269,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
             onPointerLeave={handlePointerUp}
           >
             {imageUrl && (
@@ -229,6 +281,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                   const img = event.currentTarget;
                   setNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
                 }}
+                onError={() => setLoadError('Não foi possível abrir esta foto. Use JPG, PNG ou WEBP.')}
                 className="absolute left-0 top-0 select-none touch-none"
                 style={{
                   transform: `translate(${offset.x}px, ${offset.y}px) scale(${baseScale * zoom})`,
@@ -270,7 +323,8 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
               <button
                 type="button"
                 onClick={handleConfirm}
-                className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
+                disabled={!imageUrl || !!loadError || !naturalSize.width}
+                className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Salvar e enviar
               </button>

@@ -25,7 +25,7 @@ import ReviewCard from '../components/Profile/ReviewCard';
 import ImageCropModal from '../components/modals/ImageCropModal';
 import { musicianService, connectionService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import { showToast } from '../utils/toast';
+import { getErrorMessage, showToast } from '../utils/toast';
 import { logError } from '../utils/logger';
 import { formatInstrumentLabel } from '../utils/formatting';
 import type { Musician, MusicianBadge } from '../types';
@@ -182,7 +182,7 @@ const MusicianProfile: React.FC = () => {
     showToast.promise(uploadPromise, {
       loading: 'Atualizando foto de perfil...',
       success: 'Foto de perfil atualizada!',
-      error: 'Não foi possível atualizar a foto de perfil.',
+      error: (err) => getErrorMessage(err, 'Não foi possível atualizar a foto de perfil.'),
     });
 
     try {
@@ -202,7 +202,7 @@ const MusicianProfile: React.FC = () => {
     showToast.promise(uploadPromise, {
       loading: 'Atualizando imagem de capa...',
       success: 'Imagem de capa atualizada!',
-      error: 'Não foi possível atualizar a imagem de capa.',
+      error: (err) => getErrorMessage(err, 'Não foi possível atualizar a imagem de capa.'),
     });
 
     try {
@@ -220,7 +220,7 @@ const MusicianProfile: React.FC = () => {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
+    if (file.type && !file.type.startsWith('image/')) {
       showToast.error('Envie uma imagem válida (JPG, PNG ou WEBP).');
       return;
     }
@@ -231,7 +231,7 @@ const MusicianProfile: React.FC = () => {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
+    if (file.type && !file.type.startsWith('image/')) {
       showToast.error('Envie uma imagem válida (JPG, PNG ou WEBP).');
       return;
     }

@@ -18,6 +18,7 @@ from .views import (
 )
 from .registration_views import (
     RegisterView,
+    CheckEmailView,
     VerifyEmailView,
     RegistrationStatusView,
     ProcessPaymentView,
@@ -47,6 +48,7 @@ router.register('badges', BadgeViewSet, basename='badge')
 urlpatterns = [
     # Registro de novos usuários (público)
     path('register/', RegisterView.as_view(), name='register'),
+    path('check-email/', CheckEmailView.as_view(), name='check-email'),
     path('verify-email/', VerifyEmailView.as_view(), name='verify-email'),
     path('registration-status/', RegistrationStatusView.as_view(), name='registration-status'),
     # Pagamento fictício só disponível quando Stripe está desativado

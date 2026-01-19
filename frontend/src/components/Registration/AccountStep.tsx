@@ -1,6 +1,9 @@
 // components/Registration/AccountStep.tsx
-import React, { useState } from 'react';
-import { Mail, User, Eye, EyeOff, Lock, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Mail, User, Eye, EyeOff, Lock, Check, X, Loader2, AlertCircle } from 'lucide-react';
+import { registrationService } from '../../services/api';
+
+type EmailStatus = 'idle' | 'checking' | 'available' | 'taken' | 'pending';
 
 interface AccountStepProps {
   formData: {
@@ -11,6 +14,7 @@ interface AccountStepProps {
   };
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   errors: Record<string, string>;
+  onEmailValidation?: (isValid: boolean, isDuplicate: boolean) => void;
 }
 
 const getPasswordStrength = (password: string) => {
@@ -34,13 +38,108 @@ const getPasswordStrength = (password: string) => {
   return { score, ...levels[idx] };
 };
 
-const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors }) => {
+const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors, onEmailValidation }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<EmailStatus>('idle');
   const handleInput = (e: React.FormEvent<HTMLInputElement>) =>
     onChange({ target: { name: e.currentTarget.name, value: e.currentTarget.value } } as React.ChangeEvent<HTMLInputElement>);
 
   const passwordStrength = getPasswordStrength(formData.password);
+
+  // Debounced email verification
+  useEffect(() => {
+    const email = formData.email.trim().toLowerCase();
+    const isValidFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+    if (!email || !isValidFormat) {
+      setEmailStatus('idle');
+      onEmailValidation?.(isValidFormat, false);
+      return;
+    }
+
+    setEmailStatus('checking');
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const response = await registrationService.checkEmail(email);
+        if (response.available) {
+          setEmailStatus('available');
+          onEmailValidation?.(true, false);
+        } else if (response.reason === 'pending_verification') {
+          setEmailStatus('pending');
+          onEmailValidation?.(false, true);
+        } else {
+          setEmailStatus('taken');
+          onEmailValidation?.(false, true);
+        }
+      } catch {
+        // On error, don't block the user - backend will validate on submit
+        setEmailStatus('idle');
+        onEmailValidation?.(true, false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.email, onEmailValidation]);
+
+  const renderEmailFeedback = () => {
+    if (errors.email) {
+      return <p className="mt-1 text-sm text-red-600">{errors.email}</p>;
+    }
+
+    if (!formData.email) return null;
+
+    const isValidFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
+
+    if (!isValidFormat) {
+      return (
+        <p className="mt-1 text-xs text-amber-600">
+          Digite um email válido (ex: nome@email.com)
+        </p>
+      );
+    }
+
+    switch (emailStatus) {
+      case 'checking':
+        return (
+          <p className="mt-1 text-xs text-blue-600 flex items-center gap-1">
+            <Loader2 className="h-3 w-3 animate-spin" /> Verificando disponibilidade...
+          </p>
+        );
+      case 'available':
+        return (
+          <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+            <Check className="h-3 w-3" /> Email disponível
+          </p>
+        );
+      case 'taken':
+        return (
+          <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+            <X className="h-3 w-3" /> Este email já está cadastrado
+          </p>
+        );
+      case 'pending':
+        return (
+          <p className="mt-1 text-xs text-amber-600 flex items-center gap-1">
+            <AlertCircle className="h-3 w-3" /> Email com cadastro pendente de verificação
+          </p>
+        );
+      default:
+        return (
+          <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+            <Check className="h-3 w-3" /> Email válido
+          </p>
+        );
+    }
+  };
+
+  const getEmailInputBorderClass = () => {
+    if (errors.email) return 'border-red-500';
+    if (emailStatus === 'taken' || emailStatus === 'pending') return 'border-red-500';
+    if (emailStatus === 'available') return 'border-green-500';
+    return 'border-gray-300 dark:border-slate-700';
+  };
 
   return (
     <div>
@@ -68,7 +167,7 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors })
               className={`
                 w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent
                 bg-white text-gray-900 dark:bg-slate-900 dark:text-slate-200
-                ${errors.email ? 'border-red-500' : 'border-gray-300 dark:border-slate-700'}
+                ${getEmailInputBorderClass()}
               `}
               placeholder="seu@email.com"
               autoComplete="email"
@@ -77,18 +176,7 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors })
               spellCheck={false}
             />
           </div>
-          {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-          {!errors.email && formData.email && (
-            /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) ? (
-              <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
-                <Check className="h-3 w-3" /> Email válido
-              </p>
-            ) : (
-              <p className="mt-1 text-xs text-amber-600">
-                Digite um email válido (ex: nome@email.com)
-              </p>
-            )
-          )}
+          {renderEmailFeedback()}
         </div>
 
         {/* Username */}

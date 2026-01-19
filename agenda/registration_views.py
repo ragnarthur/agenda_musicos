@@ -263,6 +263,37 @@ Equipe Agenda Músicos
         )
 
 
+class CheckEmailView(APIView):
+    """
+    GET /api/check-email/?email=xxx
+    Verifica disponibilidade do email em tempo real.
+    """
+    permission_classes = [AllowAny]
+    throttle_classes = [BurstRateThrottle]
+
+    def get(self, request):
+        email = request.query_params.get('email', '').lower().strip()
+
+        if not email:
+            return Response(
+                {'error': 'Email não fornecido.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Verifica se existe em User ou PendingRegistration
+        exists_user = User.objects.filter(email=email).exists()
+        exists_pending = PendingRegistration.objects.filter(
+            email=email, expires_at__gt=timezone.now()
+        ).exists()
+
+        if exists_user:
+            return Response({'available': False, 'reason': 'already_registered'})
+        if exists_pending:
+            return Response({'available': False, 'reason': 'pending_verification'})
+
+        return Response({'available': True})
+
+
 class VerifyEmailView(APIView):
     """
     POST /api/verify-email/

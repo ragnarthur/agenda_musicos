@@ -83,7 +83,7 @@ export const showToast = {
     messages: {
       loading: string;
       success: string;
-      error?: string;
+      error?: string | ((error: unknown) => string);
     }
   ) => toast.promise(promise, {
     loading: messages.loading,
