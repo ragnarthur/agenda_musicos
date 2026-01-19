@@ -5,11 +5,12 @@ import { Calendar as CalendarIcon, Clock, Plus, Edit, Trash2, AlertCircle, Info,
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { leaderAvailabilityService, musicianService, type InstrumentOption } from '../services/api';
-import { showToast } from '../utils/toast';
+import { getErrorMessage, showToast } from '../utils/toast';
 import type { LeaderAvailability, LeaderAvailabilityCreate } from '../types';
 import { format, parseISO } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 import { logError } from '../utils/logger';
+import { sanitizeOptionalText } from '../utils/sanitize';
 
 const LeaderAvailabilityPage: React.FC = () => {
   const { user } = useAuth();
@@ -120,10 +121,18 @@ const LeaderAvailabilityPage: React.FC = () => {
       }
 
       if (editingId) {
-        await leaderAvailabilityService.update(editingId, formData);
+        const payload: LeaderAvailabilityCreate = {
+          ...formData,
+          notes: sanitizeOptionalText(formData.notes, 1000),
+        };
+        await leaderAvailabilityService.update(editingId, payload);
         showToast.success('Disponibilidade atualizada!');
       } else {
-        await leaderAvailabilityService.create(formData);
+        const payload: LeaderAvailabilityCreate = {
+          ...formData,
+          notes: sanitizeOptionalText(formData.notes, 1000),
+        };
+        await leaderAvailabilityService.create(payload);
         showToast.availabilityCreated();
       }
 
@@ -132,34 +141,7 @@ const LeaderAvailabilityPage: React.FC = () => {
       resetForm();
       await loadAvailabilities();
     } catch (err: unknown) {
-      const error = err as { response?: { data?: unknown } };
-      if (error.response?.data) {
-        const data = error.response.data;
-        let errorMessage = 'Erro ao salvar disponibilidade. Tente novamente.';
-
-        // Se data é uma string, use diretamente
-        if (typeof data === 'string') {
-          errorMessage = data;
-        }
-        // Se data é um objeto, tente extrair as mensagens
-        else if (typeof data === 'object' && data !== null) {
-          const messages: string[] = [];
-          for (const [key, value] of Object.entries(data)) {
-            if (Array.isArray(value)) {
-              messages.push(`${key}: ${value.join(', ')}`);
-            } else {
-              messages.push(`${key}: ${value}`);
-            }
-          }
-          if (messages.length > 0) {
-            errorMessage = messages.join('; ');
-          }
-        }
-
-        setError(errorMessage);
-      } else {
-        setError('Erro ao salvar disponibilidade. Tente novamente.');
-      }
+      setError(getErrorMessage(err));
     } finally {
       setActionLoading(false);
     }

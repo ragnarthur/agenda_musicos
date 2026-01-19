@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft } from 'lucide-react';
 import { authService } from '../services/api';
-import { showToast } from '../utils/toast';
+import { getErrorMessage, showToast } from '../utils/toast';
 
 const ForgotPassword: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -21,8 +21,7 @@ const ForgotPassword: React.FC = () => {
       setSent(true);
       showToast.success(response.message || 'Confira sua caixa de entrada para redefinir a senha.');
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { email?: string; error?: string } } };
-      setError(error.response?.data?.email || error.response?.data?.error || 'Não foi possível enviar o email.');
+      setError(getErrorMessage(err, 'Não foi possível enviar o email.'));
     } finally {
       setLoading(false);
     }

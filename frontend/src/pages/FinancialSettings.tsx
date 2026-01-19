@@ -9,6 +9,8 @@ import { useAuth } from '../contexts/AuthContext';
 import type { EquipmentItem, MusicianUpdatePayload, Musician } from '../types';
 import { formatCurrency } from '../utils/formatting';
 import { logError } from '../utils/logger';
+import { sanitizeOptionalText, sanitizeText } from '../utils/sanitize';
+import { getErrorMessage } from '../utils/toast';
 
 type EquipmentRow = {
   name: string;
@@ -84,7 +86,7 @@ const FinancialSettings: React.FC = () => {
       hydrateForm(me);
     } catch (error) {
       logError('Erro ao carregar perfil financeiro:', error);
-      toast.error('Não foi possível carregar seus dados.');
+      toast.error(getErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -113,12 +115,12 @@ const FinancialSettings: React.FC = () => {
     setSaving(true);
 
     const payload: MusicianUpdatePayload = {
-      bio: bio.trim(),
+      bio: sanitizeOptionalText(bio, 350) ?? '',
       base_fee: parseDecimal(baseFee),
       travel_fee_per_km: parseDecimal(travelFee),
       equipment_items: equipmentRows
         .map((item) => ({
-          name: item.name.trim(),
+          name: sanitizeText(item.name, 80),
           price: parseDecimal(item.price),
         }))
         .filter((item) => item.name.length > 0),
@@ -133,7 +135,7 @@ const FinancialSettings: React.FC = () => {
       navigate(userId ? `/musicos/${userId}` : '/musicos');
     } catch (error) {
       logError('Erro ao salvar valores:', error);
-      toast.error('Não foi possível salvar. Tente novamente.');
+      toast.error(getErrorMessage(error));
     } finally {
       setSaving(false);
     }

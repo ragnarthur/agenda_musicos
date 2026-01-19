@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from .models import NotificationPreference, NotificationLog, TelegramVerification, NotificationChannel
+from agenda.validators import sanitize_string
 from .serializers import (
     NotificationPreferenceSerializer,
     NotificationLogSerializer,
@@ -69,7 +70,7 @@ class TelegramConnectView(APIView):
         provider = TelegramProvider()
         if not provider.is_configured():
             return Response(
-                {'error': 'Telegram nao configurado no servidor'},
+                {'detail': 'Telegram nao configurado no servidor'},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
 
@@ -160,9 +161,9 @@ class TelegramWebhookView(APIView):
         # Extrai mensagem
         message = data.get('message', {})
         chat_id = str(message.get('chat', {}).get('id', ''))
-        text = message.get('text', '').strip()
-        username = message.get('from', {}).get('username', '')
-        first_name = message.get('from', {}).get('first_name', '')
+        text = sanitize_string(message.get('text', ''), max_length=200, allow_empty=True) or ''
+        username = sanitize_string(message.get('from', {}).get('username', ''), max_length=150, allow_empty=True) or ''
+        first_name = sanitize_string(message.get('from', {}).get('first_name', ''), max_length=150, allow_empty=True) or ''
 
         if not chat_id:
             return Response({'ok': True})
@@ -328,7 +329,7 @@ class TestNotificationView(APIView):
     def post(self, request):
         if not settings.DEBUG:
             return Response(
-                {'error': 'Disponivel apenas em modo debug'},
+                {'detail': 'Disponivel apenas em modo debug'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
@@ -351,6 +352,6 @@ class TestNotificationView(APIView):
 
         return Response({
             'success': result.success,
-            'error': result.error_message,
+            'detail': result.error_message,
             'external_id': result.external_id,
         })

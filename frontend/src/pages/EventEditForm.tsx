@@ -7,6 +7,8 @@ import Loading from '../components/common/Loading';
 import { eventService } from '../services/api';
 import type { EventCreate } from '../types';
 import { logError } from '../utils/logger';
+import { sanitizeOptionalText, sanitizeText } from '../utils/sanitize';
+import { getErrorMessage } from '../utils/toast';
 
 const EventEditForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -125,35 +127,18 @@ const EventEditForm: React.FC = () => {
         return;
       }
 
-      await eventService.update(parseInt(id), formData);
+      const sanitizedPayload: EventCreate = {
+        ...formData,
+        title: sanitizeText(formData.title, 200),
+        location: sanitizeText(formData.location, 300),
+        description: sanitizeOptionalText(formData.description, 5000),
+        venue_contact: sanitizeOptionalText(formData.venue_contact, 200),
+      };
+      await eventService.update(parseInt(id), sanitizedPayload);
       navigate(`/eventos/${id}`);
     } catch (err: unknown) {
       logError('Erro ao atualizar evento:', err);
-      const error = err as { response?: { data?: unknown } };
-      if (error.response?.data) {
-        const data = error.response.data;
-        let errorMessage = 'Erro ao atualizar evento. Tente novamente.';
-
-        if (typeof data === 'string') {
-          errorMessage = data;
-        } else if (typeof data === 'object' && data !== null) {
-          const messages: string[] = [];
-          for (const [key, value] of Object.entries(data)) {
-            if (Array.isArray(value)) {
-              messages.push(`${key}: ${value.join(', ')}`);
-            } else {
-              messages.push(`${key}: ${value}`);
-            }
-          }
-          if (messages.length > 0) {
-            errorMessage = messages.join('; ');
-          }
-        }
-
-        setError(errorMessage);
-      } else {
-        setError('Erro ao atualizar evento. Tente novamente.');
-      }
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

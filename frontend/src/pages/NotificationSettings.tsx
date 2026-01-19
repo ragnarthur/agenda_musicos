@@ -23,6 +23,7 @@ import {
   type TelegramConnectResponse,
 } from '../services/api';
 import { logError } from '../utils/logger';
+import { getErrorMessage } from '../utils/toast';
 
 const NotificationSettings: React.FC = () => {
   const [preferences, setPreferences] = useState<NotificationPreference | null>(null);
@@ -41,7 +42,7 @@ const NotificationSettings: React.FC = () => {
       setPreferences(data);
     } catch (error) {
       logError('Erro ao carregar preferencias:', error);
-      toast.error('Erro ao carregar preferências de notificação');
+      toast.error(getErrorMessage(error, 'Erro ao carregar preferências de notificação'));
     } finally {
       setLoading(false);
     }
@@ -81,7 +82,7 @@ const NotificationSettings: React.FC = () => {
       toast.success('Preferência atualizada');
     } catch (error) {
       logError('Erro ao atualizar:', error);
-      toast.error('Erro ao atualizar preferência');
+      toast.error(getErrorMessage(error, 'Erro ao atualizar preferência'));
     } finally {
       setSaving(false);
     }
@@ -94,7 +95,7 @@ const NotificationSettings: React.FC = () => {
       setTelegramCode(response);
     } catch (error) {
       logError('Erro ao iniciar conexao:', error);
-      toast.error('Erro ao gerar código de conexão');
+      toast.error(getErrorMessage(error, 'Erro ao gerar código de conexão'));
     } finally {
       setConnectingTelegram(false);
     }
@@ -108,7 +109,7 @@ const NotificationSettings: React.FC = () => {
       loadPreferences();
     } catch (error) {
       logError('Erro ao desconectar:', error);
-      toast.error('Erro ao desconectar Telegram');
+      toast.error(getErrorMessage(error, 'Erro ao desconectar Telegram'));
     } finally {
       setSaving(false);
     }
@@ -134,7 +135,7 @@ const NotificationSettings: React.FC = () => {
       }
     } catch (error) {
       logError('Erro ao verificar status:', error);
-      toast.error('Erro ao verificar status');
+      toast.error(getErrorMessage(error, 'Erro ao verificar status'));
     } finally {
       setCheckingStatus(false);
     }

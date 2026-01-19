@@ -3,7 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff, Lock, ArrowLeft } from 'lucide-react';
 import { authService } from '../services/api';
-import { showToast } from '../utils/toast';
+import { getErrorMessage, showToast } from '../utils/toast';
 
 const ResetPassword: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -48,8 +48,7 @@ const ResetPassword: React.FC = () => {
       setSuccess(true);
       showToast.success(response.message || 'Senha atualizada com sucesso!');
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { error?: string; new_password?: string } } };
-      setError(error.response?.data?.new_password || error.response?.data?.error || 'Não foi possível redefinir a senha.');
+      setError(getErrorMessage(err, 'Não foi possível redefinir a senha.'));
     } finally {
       setLoading(false);
     }

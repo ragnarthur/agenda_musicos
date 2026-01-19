@@ -12,7 +12,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { registrationService, paymentService, type RegistrationStatus } from '../services/api';
-import { showToast } from '../utils/toast';
+import { getErrorMessage, showToast } from '../utils/toast';
 import OwlMascot from '../components/ui/OwlMascot';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 
@@ -116,9 +116,9 @@ const PlanSelection: React.FC = () => {
       // Redireciona para o Stripe Checkout
       window.location.href = response.checkout_url;
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || 'Erro ao iniciar checkout.');
-      showToast.error('Erro ao processar. Tente novamente.');
+      const message = getErrorMessage(err);
+      setError(message);
+      showToast.error(message);
       setProcessing(false);
     }
   };

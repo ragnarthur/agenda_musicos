@@ -2,6 +2,29 @@
 from rest_framework import serializers
 
 
+def sanitize_string(value, *, max_length=None, allow_empty=True, to_lower=False, to_upper=False):
+    """
+    Sanitiza uma string: trim, normaliza case e valida tamanho.
+    Retorna None para strings vazias quando allow_empty=True.
+    """
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        return value
+    cleaned = value.strip()
+    if not cleaned:
+        if allow_empty:
+            return None
+        raise serializers.ValidationError('Este campo não pode estar vazio ou conter apenas espaços.')
+    if to_lower:
+        cleaned = cleaned.lower()
+    if to_upper:
+        cleaned = cleaned.upper()
+    if max_length and len(cleaned) > max_length:
+        raise serializers.ValidationError(f'Este campo não pode ter mais de {max_length} caracteres.')
+    return cleaned
+
+
 def validate_not_empty_string(value):
     """
     Valida que a string não é vazia após remover espaços.

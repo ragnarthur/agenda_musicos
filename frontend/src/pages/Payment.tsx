@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { motion, type Transition } from 'framer-motion';
 import { registrationService, type RegistrationStatus } from '../services/api';
-import { showToast } from '../utils/toast';
+import { getErrorMessage, showToast } from '../utils/toast';
 import OwlMascot from '../components/ui/OwlMascot';
 import CardBrandRow from '../components/ui/CardBrandRow';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
@@ -157,9 +157,9 @@ const Payment: React.FC = () => {
       });
       showToast.success('Pagamento aprovado! Cadastro concluído.');
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || 'Erro ao processar pagamento.');
-      showToast.error('Erro ao processar pagamento');
+      const message = getErrorMessage(err);
+      setError(message);
+      showToast.error(message);
     } finally {
       setProcessing(false);
     }

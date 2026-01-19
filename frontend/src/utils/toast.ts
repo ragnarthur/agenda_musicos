@@ -12,7 +12,7 @@ interface ApiErrorResponse {
 /**
  * Extrai mensagem de erro de uma resposta da API
  */
-export const getErrorMessage = (error: unknown): string => {
+export const getErrorMessage = (error: unknown, fallback?: string): string => {
   if (error instanceof AxiosError) {
     const data = error.response?.data as ApiErrorResponse | undefined;
 
@@ -43,7 +43,7 @@ export const getErrorMessage = (error: unknown): string => {
     return error.message;
   }
 
-  return 'Ocorreu um erro inesperado.';
+  return fallback || 'Ocorreu um erro inesperado.';
 };
 
 /**

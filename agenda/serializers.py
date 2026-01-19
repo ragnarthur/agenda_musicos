@@ -15,7 +15,7 @@ from .models import (
     Connection,
     MusicianBadge,
 )
-from .validators import validate_not_empty_string
+from .validators import validate_not_empty_string, sanitize_string
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -135,6 +135,8 @@ class MusicianUpdateSerializer(serializers.ModelSerializer):
             return []
         if not isinstance(value, list):
             raise serializers.ValidationError('Equipamentos devem ser enviados como lista.')
+        if len(value) > 30:
+            raise serializers.ValidationError('Máximo de 30 equipamentos/serviços.')
 
         cleaned_items = []
         for item in value:
@@ -167,6 +169,54 @@ class MusicianUpdateSerializer(serializers.ModelSerializer):
 
         return cleaned_items
 
+    def validate(self, attrs):
+        if 'instrument' in attrs:
+            attrs['instrument'] = sanitize_string(
+                attrs.get('instrument'),
+                max_length=50,
+                allow_empty=False,
+                to_lower=True
+            )
+
+        if 'instruments' in attrs:
+            instruments_raw = attrs.get('instruments') or []
+            if not isinstance(instruments_raw, list):
+                raise serializers.ValidationError({'instruments': 'Instrumentos devem ser enviados como lista.'})
+            if len(instruments_raw) > 10:
+                raise serializers.ValidationError({'instruments': 'Máximo de 10 instrumentos permitidos.'})
+            cleaned = []
+            for item in instruments_raw:
+                cleaned_item = sanitize_string(item, max_length=50, allow_empty=False, to_lower=True)
+                if cleaned_item:
+                    cleaned.append(cleaned_item)
+            cleaned = list(dict.fromkeys(cleaned))
+            attrs['instruments'] = cleaned
+            if attrs.get('instrument') and attrs['instrument'] not in cleaned:
+                attrs['instruments'] = [attrs['instrument'], *cleaned]
+
+        if 'bio' in attrs:
+            attrs['bio'] = sanitize_string(attrs.get('bio'), max_length=350, allow_empty=True)
+
+        if 'phone' in attrs:
+            attrs['phone'] = sanitize_string(attrs.get('phone'), max_length=20, allow_empty=True)
+
+        if 'whatsapp' in attrs:
+            attrs['whatsapp'] = sanitize_string(attrs.get('whatsapp'), max_length=20, allow_empty=True)
+
+        if 'instagram' in attrs:
+            instagram = sanitize_string(attrs.get('instagram'), max_length=100, allow_empty=True)
+            if instagram and not instagram.startswith('@'):
+                instagram = f'@{instagram}'
+            attrs['instagram'] = instagram
+
+        if 'city' in attrs:
+            attrs['city'] = sanitize_string(attrs.get('city'), max_length=100, allow_empty=True)
+
+        if 'state' in attrs:
+            attrs['state'] = sanitize_string(attrs.get('state'), max_length=2, allow_empty=True, to_upper=True)
+
+        return attrs
+
 
 class AvailabilitySerializer(serializers.ModelSerializer):
     """Serializer de disponibilidade com dados do músico"""
@@ -195,6 +245,8 @@ class AvailabilitySerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 'event': 'Não é permitido alterar o evento desta disponibilidade.'
             })
+        if 'notes' in attrs:
+            attrs['notes'] = sanitize_string(attrs.get('notes'), max_length=1000, allow_empty=True)
         return attrs
 
 
@@ -438,6 +490,18 @@ class EventDetailSerializer(serializers.ModelSerializer):
                 except serializers.ValidationError as e:
                     errors[field] = str(e.detail[0])
 
+        optional_limits = {
+            'description': 5000,
+            'venue_contact': 200,
+            'rejection_reason': 2000,
+        }
+        for field, max_len in optional_limits.items():
+            if field in data:
+                try:
+                    data[field] = sanitize_string(data.get(field), max_length=max_len, allow_empty=True)
+                except serializers.ValidationError as e:
+                    errors[field] = str(e.detail[0])
+
         # Valida horários
         # Nota: end_time < start_time é permitido (eventos noturnos que cruzam meia-noite)
         start_time = data.get('start_time')
@@ -539,15 +603,17 @@ class EventCreateSerializer(serializers.ModelSerializer):
 
         # Validação de tamanho máximo para prevenir payload abuse
         max_lengths = {
-            'title': 200,
-            'description': 5000,
-            'location': 300,
-            'venue_contact': 200,
+            'title': (200, False),
+            'description': (5000, True),
+            'location': (300, False),
+            'venue_contact': (200, True),
         }
-        for field, max_len in max_lengths.items():
+        for field, (max_len, allow_empty) in max_lengths.items():
             value = data.get(field, '')
-            if value and len(value) > max_len:
-                errors[field] = f'Máximo de {max_len} caracteres.'
+            try:
+                data[field] = sanitize_string(value, max_length=max_len, allow_empty=allow_empty)
+            except serializers.ValidationError as e:
+                errors[field] = str(e.detail[0])
 
         # Permite end_time < start_time (eventos noturnos), mas não duração zero
         if data.get('end_time') and data.get('start_time'):
@@ -660,6 +726,12 @@ class LeaderAvailabilitySerializer(serializers.ModelSerializer):
         if date and date < timezone.now().date():
             errors['date'] = 'Não é possível cadastrar disponibilidades em datas passadas.'
 
+        if 'notes' in data:
+            try:
+                data['notes'] = sanitize_string(data.get('notes'), max_length=1000, allow_empty=True)
+            except serializers.ValidationError as e:
+                errors['notes'] = str(e.detail[0])
+
         if errors:
             raise serializers.ValidationError(errors)
 
@@ -736,8 +808,26 @@ class RatingSubmitSerializer(serializers.Serializer):
                 raise serializers.ValidationError('Cada avaliação deve conter musician_id.')
             if 'rating' not in item:
                 raise serializers.ValidationError('Cada avaliação deve conter rating.')
-            if not 1 <= item['rating'] <= 5:
+            try:
+                musician_id = int(item['musician_id'])
+            except (TypeError, ValueError):
+                raise serializers.ValidationError('musician_id inválido.')
+            if musician_id <= 0:
+                raise serializers.ValidationError('musician_id inválido.')
+            item['musician_id'] = musician_id
+
+            try:
+                rating = int(item['rating'])
+            except (TypeError, ValueError):
+                raise serializers.ValidationError('Rating inválido.')
+            if not 1 <= rating <= 5:
                 raise serializers.ValidationError('Rating deve ser entre 1 e 5.')
+            item['rating'] = rating
+            if 'comment' in item:
+                try:
+                    item['comment'] = sanitize_string(item.get('comment'), max_length=1000, allow_empty=True)
+                except serializers.ValidationError as e:
+                    raise serializers.ValidationError(str(e.detail[0])) from e
 
         return value
 
@@ -772,6 +862,8 @@ class ConnectionSerializer(serializers.ModelSerializer):
             follower = request.user.musician_profile
             if follower == target:
                 raise serializers.ValidationError('Você não pode criar conexão consigo mesmo.')
+        if 'notes' in attrs:
+            attrs['notes'] = sanitize_string(attrs.get('notes'), max_length=255, allow_empty=True)
         return attrs
 
 

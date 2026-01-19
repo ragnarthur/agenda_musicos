@@ -47,6 +47,7 @@ from .serializers import (
     ConnectionSerializer,
     MusicianBadgeSerializer,
 )
+from .validators import sanitize_string
 from .permissions import IsOwnerOrReadOnly
 from .utils import get_user_organization, split_availability_with_events, award_badges_for_musician
 
@@ -698,12 +699,13 @@ class EventViewSet(viewsets.ModelViewSet):
         previous = Availability.objects.filter(musician=musician, event=event).first()
 
         # Cria ou atualiza a disponibilidade
+        sanitized_notes = sanitize_string(request.data.get('notes', ''), max_length=1000, allow_empty=True)
         availability, created = Availability.objects.update_or_create(
             musician=musician,
             event=event,
             defaults={
                 'response': response_value,
-                'notes': request.data.get('notes', ''),
+                'notes': sanitized_notes,
                 'responded_at': timezone.now() if response_value != 'pending' else None,
             }
         )
@@ -719,7 +721,7 @@ class EventViewSet(viewsets.ModelViewSet):
                 'pending': 'Pendente',
             }
             response_label = response_labels.get(response_value, response_value)
-            if created or prev_response != response_value or prev_notes != request.data.get('notes', ''):
+            if created or prev_response != response_value or prev_notes != (sanitized_notes or ''):
                 self._log_event(
                     event,
                     'availability',
@@ -1521,7 +1523,7 @@ def upload_avatar(request):
                 getattr(request.user, 'id', None),
             )
             return Response(
-                {'error': 'Nenhuma imagem enviada'},
+                {'detail': 'Nenhuma imagem enviada'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -1551,7 +1553,7 @@ def upload_avatar(request):
             getattr(request.user, 'id', None),
         )
         return Response(
-            {'error': 'Perfil não encontrado'},
+            {'detail': 'Perfil não encontrado'},
             status=status.HTTP_404_NOT_FOUND
         )
     except ValueError as e:
@@ -1564,7 +1566,7 @@ def upload_avatar(request):
             str(e),
         )
         return Response(
-            {'error': str(e)},
+            {'detail': str(e)},
             status=status.HTTP_400_BAD_REQUEST
         )
     except Exception as e:
@@ -1574,7 +1576,7 @@ def upload_avatar(request):
             getattr(avatar_file, 'name', None),
         )
         return Response(
-            {'error': str(e)},
+            {'detail': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -1594,7 +1596,7 @@ def upload_cover(request):
                 getattr(request.user, 'id', None),
             )
             return Response(
-                {'error': 'Nenhuma imagem enviada'},
+                {'detail': 'Nenhuma imagem enviada'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -1624,7 +1626,7 @@ def upload_cover(request):
             getattr(request.user, 'id', None),
         )
         return Response(
-            {'error': 'Perfil não encontrado'},
+            {'detail': 'Perfil não encontrado'},
             status=status.HTTP_404_NOT_FOUND
         )
     except ValueError as e:
@@ -1637,7 +1639,7 @@ def upload_cover(request):
             str(e),
         )
         return Response(
-            {'error': str(e)},
+            {'detail': str(e)},
             status=status.HTTP_400_BAD_REQUEST
         )
     except Exception as e:
@@ -1647,7 +1649,7 @@ def upload_cover(request):
             getattr(cover_file, 'name', None),
         )
         return Response(
-            {'error': str(e)},
+            {'detail': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -1685,13 +1687,13 @@ def get_musician_connections(request, musician_id):
 
     except Musician.DoesNotExist:
         return Response(
-            {'error': 'Músico não encontrado'},
+            {'detail': 'Músico não encontrado'},
             status=status.HTTP_404_NOT_FOUND
         )
     except Exception as e:
         logging.exception("Erro ao buscar conexões")
         return Response(
-            {'error': str(e)},
+            {'detail': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -1716,13 +1718,13 @@ def get_musician_reviews(request, musician_id):
 
     except Musician.DoesNotExist:
         return Response(
-            {'error': 'Músico não encontrado'},
+            {'detail': 'Músico não encontrado'},
             status=status.HTTP_404_NOT_FOUND
         )
     except Exception as e:
         logging.exception("Erro ao buscar avaliações")
         return Response(
-            {'error': str(e)},
+            {'detail': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -1756,13 +1758,13 @@ def get_musician_badges(request, musician_id):
 
     except Musician.DoesNotExist:
         return Response(
-            {'error': 'Músico não encontrado'},
+            {'detail': 'Músico não encontrado'},
             status=status.HTTP_404_NOT_FOUND
         )
     except Exception as e:
         logging.exception("Erro ao buscar badges")
         return Response(
-            {'error': str(e)},
+            {'detail': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -1807,13 +1809,13 @@ def get_musician_stats(request, musician_id):
 
     except Musician.DoesNotExist:
         return Response(
-            {'error': 'Músico não encontrado'},
+            {'detail': 'Músico não encontrado'},
             status=status.HTTP_404_NOT_FOUND
         )
     except Exception as e:
         logging.exception("Erro ao buscar estatísticas")
         return Response(
-            {'error': str(e)},
+            {'detail': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -1860,12 +1862,12 @@ def get_musician_connection_status(request, musician_id):
 
     except Musician.DoesNotExist:
         return Response(
-            {'error': 'Músico não encontrado'},
+            {'detail': 'Músico não encontrado'},
             status=status.HTTP_404_NOT_FOUND
         )
     except Exception as e:
         logging.exception("Erro ao verificar conexão")
         return Response(
-            {'error': str(e)},
+            {'detail': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

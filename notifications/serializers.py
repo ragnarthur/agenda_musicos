@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from agenda.validators import sanitize_string
 from .models import NotificationPreference, NotificationLog, NotificationChannel
 
 
@@ -72,6 +73,12 @@ class NotificationPreferenceSerializer(serializers.ModelSerializer):
         ]
 
         return channels
+
+    def validate_whatsapp_number(self, value):
+        return sanitize_string(value, max_length=20, allow_empty=True)
+
+    def validate_preferred_channel(self, value):
+        return sanitize_string(value, max_length=20, allow_empty=False, to_lower=True)
 
 
 class NotificationLogSerializer(serializers.ModelSerializer):

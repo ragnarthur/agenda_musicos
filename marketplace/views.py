@@ -5,8 +5,10 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from decimal import Decimal, InvalidOperation
 
 from agenda.models import Musician
+from agenda.validators import sanitize_string
 from .models import Gig, GigApplication
 from .serializers import GigSerializer, GigApplicationSerializer
 
@@ -91,8 +93,17 @@ class GigViewSet(viewsets.ModelViewSet):
         if gig.status in ['hired', 'closed', 'cancelled']:
             return Response({'detail': 'Esta vaga não aceita mais candidaturas.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        cover_letter = (request.data.get('cover_letter') or '').strip()
+        cover_letter = sanitize_string(request.data.get('cover_letter', ''), max_length=2000, allow_empty=True) or ''
         expected_fee = request.data.get('expected_fee')
+        if expected_fee in [None, '']:
+            expected_fee = None
+        else:
+            try:
+                expected_fee = Decimal(str(expected_fee))
+            except (InvalidOperation, TypeError):
+                return Response({'detail': 'Valor esperado inválido.'}, status=status.HTTP_400_BAD_REQUEST)
+            if expected_fee < 0:
+                return Response({'detail': 'Valor esperado não pode ser negativo.'}, status=status.HTTP_400_BAD_REQUEST)
 
         if GigApplication.objects.filter(gig=gig, musician=musician).exists():
             return Response({'detail': 'Você já se candidatou para esta vaga.'}, status=status.HTTP_400_BAD_REQUEST)

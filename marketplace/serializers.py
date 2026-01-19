@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from decimal import Decimal, InvalidOperation
+from agenda.validators import sanitize_string
 from .models import Gig, GigApplication
 
 
@@ -25,9 +27,18 @@ class GigApplicationSerializer(serializers.ModelSerializer):
 
     def validate_cover_letter(self, value):
         """Limita tamanho da carta de apresentação"""
-        if value and len(value) > 2000:
-            raise serializers.ValidationError('Carta de apresentação deve ter no máximo 2000 caracteres.')
-        return value
+        return sanitize_string(value, max_length=2000, allow_empty=True)
+
+    def validate_expected_fee(self, value):
+        if value in [None, '']:
+            return None
+        try:
+            amount = Decimal(str(value))
+        except (InvalidOperation, TypeError):
+            raise serializers.ValidationError('Valor esperado inválido.')
+        if amount < 0:
+            raise serializers.ValidationError('Valor esperado não pode ser negativo.')
+        return amount
 
 
 class GigSerializer(serializers.ModelSerializer):
@@ -77,17 +88,31 @@ class GigSerializer(serializers.ModelSerializer):
         """Validação de tamanhos máximos para prevenir payload abuse"""
         errors = {}
         max_lengths = {
-            'title': 200,
-            'description': 5000,
-            'city': 100,
-            'location': 200,
-            'contact_name': 100,
-            'genres': 120,
+            'title': (200, False),
+            'description': (5000, True),
+            'city': (100, True),
+            'location': (200, True),
+            'contact_name': (100, True),
+            'genres': (120, True),
+            'contact_phone': (30, True),
         }
-        for field, max_len in max_lengths.items():
-            value = data.get(field, '')
-            if value and len(value) > max_len:
-                errors[field] = f'Máximo de {max_len} caracteres.'
+        for field, (max_len, allow_empty) in max_lengths.items():
+            if field in data:
+                try:
+                    data[field] = sanitize_string(data.get(field), max_length=max_len, allow_empty=allow_empty)
+                except serializers.ValidationError as e:
+                    errors[field] = str(e.detail[0])
+
+        if 'contact_email' in data:
+            try:
+                data['contact_email'] = sanitize_string(
+                    data.get('contact_email'),
+                    max_length=255,
+                    allow_empty=True,
+                    to_lower=True
+                )
+            except serializers.ValidationError as e:
+                errors['contact_email'] = str(e.detail[0])
 
         if errors:
             raise serializers.ValidationError(errors)

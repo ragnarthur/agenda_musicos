@@ -7,6 +7,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { marketplaceService } from '../services/api';
 import type { MarketplaceGig, MarketplaceApplication } from '../types';
 import { logError } from '../utils/logger';
+import { sanitizeOptionalText, sanitizeText } from '../utils/sanitize';
+import { getErrorMessage } from '../utils/toast';
 
 const statusStyles: Record<string, string> = {
   open: 'bg-emerald-100 text-emerald-800',
@@ -83,7 +85,7 @@ const Marketplace: React.FC = () => {
       setMyApplications(myApplicationsData);
     } catch (err) {
       logError(err);
-      setError('Não foi possível carregar as vagas. Tente novamente.');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -100,6 +102,12 @@ const Marketplace: React.FC = () => {
       setCreating(true);
       const payload = {
         ...form,
+        title: sanitizeText(form.title, 200),
+        description: sanitizeOptionalText(form.description, 5000),
+        city: sanitizeOptionalText(form.city, 100),
+        location: sanitizeOptionalText(form.location, 200),
+        genres: sanitizeOptionalText(form.genres, 120),
+        contact_phone: sanitizeOptionalText(form.contact_phone, 30),
         budget: normalizeCurrency(form.budget),
       };
       if (editingGig) {
@@ -113,7 +121,7 @@ const Marketplace: React.FC = () => {
       await loadData();
     } catch (err) {
       logError(err);
-      setError(editingGig ? 'Não foi possível atualizar a vaga. Verifique os campos e tente novamente.' : 'Não foi possível criar a vaga. Verifique os campos e tente novamente.');
+      setError(getErrorMessage(err));
     } finally {
       setCreating(false);
     }
@@ -136,12 +144,13 @@ const Marketplace: React.FC = () => {
     try {
       await marketplaceService.applyToGig(gigId, {
         ...payload,
+        cover_letter: sanitizeOptionalText(payload.cover_letter, 2000) || '',
         expected_fee: normalizeCurrency(payload.expected_fee),
       });
       await loadData();
     } catch (err) {
       logError(err);
-      setError('Não foi possível enviar sua candidatura. Tente novamente.');
+      setError(getErrorMessage(err));
     }
   };
 
@@ -254,7 +263,7 @@ const Marketplace: React.FC = () => {
       await loadData();
     } catch (err) {
       logError(err);
-      setError('Não foi possível excluir a vaga. Tente novamente.');
+      setError(getErrorMessage(err));
     } finally {
       setDeleteLoading(false);
     }

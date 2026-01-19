@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { CheckCircle, XCircle, Loader2, CreditCard, AlertCircle, Clock, Sparkles } from 'lucide-react';
 import { registrationService } from '../services/api';
-import { showToast } from '../utils/toast';
+import { getErrorMessage, showToast } from '../utils/toast';
 import OwlMascot from '../components/ui/OwlMascot';
 
 const VerifyEmail: React.FC = () => {
@@ -46,9 +46,9 @@ const VerifyEmail: React.FC = () => {
         setMessage(response.message);
       }
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { error?: string } } };
+      const errorMessage = getErrorMessage(err, 'Erro ao verificar email.');
       setStatus('error');
-      setMessage(error.response?.data?.error || 'Erro ao verificar email.');
+      setMessage(errorMessage);
     }
   }, [token]);
 
@@ -82,10 +82,10 @@ const VerifyEmail: React.FC = () => {
       setStatus('success');
       showToast.success(`Período gratuito iniciado! Você tem ${response.trial_days} dias grátis.`);
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { error?: string } } };
+      const errorMessage = getErrorMessage(err, 'Erro ao iniciar período gratuito.');
       setStatus('error');
-      setMessage(error.response?.data?.error || 'Erro ao iniciar período gratuito.');
-      showToast.error('Erro ao iniciar período gratuito.');
+      setMessage(errorMessage);
+      showToast.error(errorMessage);
     }
   };
 

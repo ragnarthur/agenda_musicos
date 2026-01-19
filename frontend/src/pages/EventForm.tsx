@@ -20,12 +20,13 @@ import Layout from '../components/Layout/Layout';
 import ConflictPreview from '../components/event/ConflictPreview';
 import ProposalSummary from '../components/event/ProposalSummary';
 import { eventService, musicianService } from '../services/api';
-import { showToast } from '../utils/toast';
+import { getErrorMessage, showToast } from '../utils/toast';
 import { logError } from '../utils/logger';
 import type { Event, EventCreate, AvailableMusician, Musician } from '../types';
 import { format, parseISO } from 'date-fns';
 import InstrumentIcon from '../components/common/InstrumentIcon';
 import { INSTRUMENT_LABELS as BASE_INSTRUMENT_LABELS } from '../utils/formatting';
+import { sanitizeOptionalText, sanitizeText } from '../utils/sanitize';
 
 interface ConflictInfo {
   loading: boolean;
@@ -280,6 +281,10 @@ const EventForm: React.FC = () => {
       // Inclui músicos selecionados se não for solo
       const eventData: EventCreate = {
         ...formData,
+        title: sanitizeText(formData.title, 200),
+        location: sanitizeText(formData.location, 300),
+        description: sanitizeOptionalText(formData.description, 5000),
+        venue_contact: sanitizeOptionalText(formData.venue_contact, 200),
         invited_musicians: formData.is_solo ? [] : selectedMusicians,
       };
 
@@ -287,30 +292,7 @@ const EventForm: React.FC = () => {
       showToast.eventCreated();
       navigate(`/eventos/${event.id}`);
     } catch (err: unknown) {
-      const error = err as { response?: { data?: unknown } };
-      if (error.response?.data) {
-        const data = error.response.data;
-        let errorMessage = 'Erro ao criar evento. Tente novamente.';
-
-        if (typeof data === 'string') {
-          errorMessage = data;
-        } else if (typeof data === 'object' && data !== null) {
-          const messages: string[] = [];
-          for (const [key, value] of Object.entries(data)) {
-            if (Array.isArray(value)) {
-              messages.push(`${key}: ${value.join(', ')}`);
-            } else {
-              messages.push(`${key}: ${value}`);
-            }
-          }
-          if (messages.length > 0) {
-            errorMessage = messages.join('; ');
-          }
-        }
-        setError(errorMessage);
-      } else {
-        setError('Erro ao criar evento. Tente novamente.');
-      }
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

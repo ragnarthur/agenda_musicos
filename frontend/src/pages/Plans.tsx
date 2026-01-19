@@ -4,7 +4,7 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { CheckCircle, CreditCard, Shield, AlertCircle, Loader2, Sparkles, Star, ArrowLeft, QrCode } from 'lucide-react';
 import { motion, type Transition } from 'framer-motion';
 import { paymentService, registrationService, billingService } from '../services/api';
-import { showToast } from '../utils/toast';
+import { getErrorMessage, showToast } from '../utils/toast';
 import { useAuth } from '../contexts/AuthContext';
 import CardBrandRow from '../components/ui/CardBrandRow';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
@@ -205,8 +205,7 @@ const Plans: React.FC = () => {
 
       window.location.href = session.checkout_url;
     } catch (err: unknown) {
-      const apiError = err as { response?: { data?: { error?: string } } };
-      const message = apiError.response?.data?.error || 'Não foi possível iniciar o pagamento.';
+      const message = getErrorMessage(err, 'Não foi possível iniciar o pagamento.');
       setError(message);
       showToast.error(message);
     } finally {
@@ -267,8 +266,7 @@ const Plans: React.FC = () => {
       setCompletedUser({ email: response.email });
       showToast.success('Pagamento aprovado! Cadastro concluído.');
     } catch (err: unknown) {
-      const apiError = err as { response?: { data?: { error?: string } } };
-      const message = apiError.response?.data?.error || 'Erro ao processar pagamento.';
+      const message = getErrorMessage(err, 'Erro ao processar pagamento.');
       setError(message);
       showToast.error(message);
     } finally {
