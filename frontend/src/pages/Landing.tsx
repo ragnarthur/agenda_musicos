@@ -35,17 +35,17 @@ const Landing: React.FC = () => {
   const [phase, setPhase] = useState<TypewriterPhase>('typing');
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Velocidades variáveis para efeito mais natural
+  // Velocidades ajustadas para ciclo de ~4 segundos por frase
   const getTypingDelay = useCallback(() => {
-    // Velocidade base + variação aleatória para parecer humano
-    const baseSpeed = 70;
-    const variation = Math.random() * 60 - 20; // -20 a +40ms
+    // Velocidade rápida com leve variação para parecer humano
+    const baseSpeed = 55;
+    const variation = Math.random() * 30 - 10; // -10 a +20ms
     return Math.max(40, baseSpeed + variation);
   }, []);
 
   const getDeletingDelay = useCallback(() => {
-    // Deletar é mais rápido e mais consistente
-    return 35 + Math.random() * 20;
+    // Deletar bem rápido
+    return 28 + Math.random() * 12;
   }, []);
 
   useEffect(() => {
@@ -55,36 +55,36 @@ const Landing: React.FC = () => {
       switch (phase) {
         case 'typing':
           if (displayText.length < currentPhrase.length) {
-            // Pausa maior depois de pontuação para efeito mais natural
+            // Pausa sutil depois de pontuação
             const isPunctuation = [',', '.', '!', '?'].includes(displayText.slice(-1));
-            const delay = isPunctuation ? getTypingDelay() + 150 : getTypingDelay();
+            const delay = isPunctuation ? getTypingDelay() + 60 : getTypingDelay();
 
             timeoutRef.current = setTimeout(() => {
               setDisplayText(currentPhrase.slice(0, displayText.length + 1));
             }, delay);
           } else {
-            // Frase completa - pausa antes de deletar
+            // Frase completa - pausa curta antes de deletar
             setPhase('pausing');
             timeoutRef.current = setTimeout(() => {
               setPhase('deleting');
-            }, 2500);
+            }, 2200);
           }
           break;
 
         case 'deleting':
           if (displayText.length > 0) {
-            // Remove caracteres mais rápido
-            const charsToDelete = Math.random() > 0.7 ? 2 : 1; // Às vezes deleta 2 de uma vez
+            // Remove caracteres rapidamente, às vezes 2-3 de uma vez
+            const charsToDelete = Math.random() > 0.5 ? (Math.random() > 0.7 ? 3 : 2) : 1;
             timeoutRef.current = setTimeout(() => {
               setDisplayText(displayText.slice(0, Math.max(0, displayText.length - charsToDelete)));
             }, getDeletingDelay());
           } else {
-            // Texto vazio - espera antes da próxima frase
+            // Texto vazio - transição rápida para próxima frase
             setPhase('waiting');
             timeoutRef.current = setTimeout(() => {
               setCurrentPhraseIndex((prev) => (prev + 1) % heroPhrases.length);
               setPhase('typing');
-            }, 400);
+            }, 300);
           }
           break;
 
