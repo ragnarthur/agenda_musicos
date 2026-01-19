@@ -100,7 +100,7 @@ const Register: React.FC = () => {
   const [isEmailDuplicate, setIsEmailDuplicate] = useState(false);
 
   // Callback for email validation from AccountStep
-  const handleEmailValidation = useCallback((isValid: boolean, isDuplicate: boolean) => {
+  const handleEmailValidation = useCallback((_isValid: boolean, isDuplicate: boolean) => {
     setIsEmailDuplicate(isDuplicate);
   }, []);
 
