@@ -129,13 +129,13 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors })
               <p className="mt-1 text-xs text-amber-600">
                 {formData.username.length < 3
                   ? 'Mínimo 3 caracteres'
-                  : 'Apenas letras, números e underscore (_)'}
+                  : 'Use este nome de usuário para login. Apenas letras, números e underscore (_)'}
               </p>
             )
           )}
           {!formData.username && (
             <p className="mt-1 text-xs text-gray-500">
-              Apenas letras, números e underscore
+              Use este nome de usuário para fazer login. Apenas letras, números e underscore.
             </p>
           )}
         </div>
