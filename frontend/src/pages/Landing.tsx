@@ -1,9 +1,11 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Users, Award, Megaphone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import OwlMascot from '../components/ui/OwlMascot';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
+
+type TypewriterPhase = 'typing' | 'pausing' | 'deleting' | 'waiting';
 
 const Landing: React.FC = () => {
   const heroPhrases = useMemo(
@@ -19,37 +21,78 @@ const Landing: React.FC = () => {
   );
 
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
-  const [currentText, setCurrentText] = useState('');
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showCursor, setShowCursor] = useState(true);
+  const [displayText, setDisplayText] = useState('');
+  const [phase, setPhase] = useState<TypewriterPhase>('typing');
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Velocidades variáveis para efeito mais natural
+  const getTypingDelay = useCallback(() => {
+    // Velocidade base + variação aleatória para parecer humano
+    const baseSpeed = 70;
+    const variation = Math.random() * 60 - 20; // -20 a +40ms
+    return Math.max(40, baseSpeed + variation);
+  }, []);
+
+  const getDeletingDelay = useCallback(() => {
+    // Deletar é mais rápido e mais consistente
+    return 35 + Math.random() * 20;
+  }, []);
 
   useEffect(() => {
     const currentPhrase = heroPhrases[currentPhraseIndex];
-    const typingSpeed = isDeleting ? 50 : 100;
-    
-    const timeout = setTimeout(() => {
-      if (!isDeleting) {
-        if (currentText.length < currentPhrase.length) {
-          setCurrentText(currentPhrase.slice(0, currentText.length + 1));
-        } else {
-          setShowCursor(false);
-          setTimeout(() => {
-            setShowCursor(true);
-            setIsDeleting(true);
-          }, 2000); // Pausa de 2 segundos antes de deletar
-        }
-      } else {
-        if (currentText.length > 0) {
-          setCurrentText(currentText.slice(0, currentText.length - 1));
-        } else {
-          setIsDeleting(false);
-          setCurrentPhraseIndex((prev) => (prev + 1) % heroPhrases.length);
-        }
-      }
-    }, typingSpeed);
 
-    return () => clearTimeout(timeout);
-  }, [currentText, currentPhraseIndex, isDeleting, heroPhrases]);
+    const runTypewriter = () => {
+      switch (phase) {
+        case 'typing':
+          if (displayText.length < currentPhrase.length) {
+            // Pausa maior depois de pontuação para efeito mais natural
+            const isPunctuation = [',', '.', '!', '?'].includes(displayText.slice(-1));
+            const delay = isPunctuation ? getTypingDelay() + 150 : getTypingDelay();
+
+            timeoutRef.current = setTimeout(() => {
+              setDisplayText(currentPhrase.slice(0, displayText.length + 1));
+            }, delay);
+          } else {
+            // Frase completa - pausa antes de deletar
+            setPhase('pausing');
+            timeoutRef.current = setTimeout(() => {
+              setPhase('deleting');
+            }, 2500);
+          }
+          break;
+
+        case 'deleting':
+          if (displayText.length > 0) {
+            // Remove caracteres mais rápido
+            const charsToDelete = Math.random() > 0.7 ? 2 : 1; // Às vezes deleta 2 de uma vez
+            timeoutRef.current = setTimeout(() => {
+              setDisplayText(displayText.slice(0, Math.max(0, displayText.length - charsToDelete)));
+            }, getDeletingDelay());
+          } else {
+            // Texto vazio - espera antes da próxima frase
+            setPhase('waiting');
+            timeoutRef.current = setTimeout(() => {
+              setCurrentPhraseIndex((prev) => (prev + 1) % heroPhrases.length);
+              setPhase('typing');
+            }, 400);
+          }
+          break;
+
+        case 'pausing':
+        case 'waiting':
+          // Estados de espera - nada a fazer
+          break;
+      }
+    };
+
+    runTypewriter();
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [displayText, phase, currentPhraseIndex, heroPhrases, getTypingDelay, getDeletingDelay]);
   return (
     <FullscreenBackground
       enableBlueWaves
@@ -94,26 +137,47 @@ const Landing: React.FC = () => {
             </motion.span>
           </motion.div>
 
-          <motion.p
-            className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto min-h-[2.8em]"
+          <motion.div
+            className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto min-h-[2.8em] flex items-center justify-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <span className="relative inline-block">
-              <span className="absolute inset-0 text-gray-500/40">
-                Sua Carreira Musical Organizada
+            <span className="relative">
+              {/* Texto digitado com efeito de gradiente sutil */}
+              <span
+                className="bg-gradient-to-r from-white via-gray-200 to-white bg-clip-text"
+                style={{
+                  display: 'inline-block',
+                  minWidth: displayText.length > 0 ? 'auto' : '0.5em'
+                }}
+              >
+                {displayText}
               </span>
-              <span className="relative">{currentText}</span>
+              {/* Cursor piscante estilo terminal */}
+              <motion.span
+                className="inline-block w-[3px] h-[1.15em] bg-primary-400 ml-0.5 align-middle rounded-sm"
+                animate={{
+                  opacity: phase === 'pausing' ? [1, 0, 1] : 1,
+                  scaleY: phase === 'typing' ? [1, 1.1, 1] : 1,
+                }}
+                transition={{
+                  opacity: {
+                    duration: 0.8,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  },
+                  scaleY: {
+                    duration: 0.15,
+                    repeat: phase === 'typing' ? Infinity : 0,
+                  },
+                }}
+                style={{
+                  boxShadow: '0 0 8px rgba(99, 102, 241, 0.6), 0 0 16px rgba(99, 102, 241, 0.3)',
+                }}
+              />
             </span>
-            <span 
-              className="ml-1 inline-block h-[1em] w-[0.08em] bg-gray-300/80 align-middle"
-              style={{ 
-                opacity: showCursor ? 1 : 0,
-                transition: 'opacity 0.3s ease'
-              }}
-            />
-          </motion.p>
+          </motion.div>
 
           {/* CTAs */}
           <motion.div
