@@ -38,14 +38,14 @@ const Landing: React.FC = () => {
   // Velocidades ajustadas para ciclo de ~4 segundos por frase
   const getTypingDelay = useCallback(() => {
     // Velocidade rápida com leve variação para parecer humano
-    const baseSpeed = 55;
+    const baseSpeed = 65;
     const variation = Math.random() * 30 - 10; // -10 a +20ms
     return Math.max(40, baseSpeed + variation);
   }, []);
 
   const getDeletingDelay = useCallback(() => {
     // Deletar bem rápido
-    return 28 + Math.random() * 12;
+    return 32 + Math.random() * 14;
   }, []);
 
   useEffect(() => {
@@ -84,13 +84,13 @@ const Landing: React.FC = () => {
         case 'pausing':
           timeoutRef.current = setTimeout(() => {
             setPhase('deleting');
-          }, 2200);
+          }, 3200);
           break;
         case 'waiting':
           timeoutRef.current = setTimeout(() => {
             setCurrentPhraseIndex((prev) => (prev + 1) % heroPhrases.length);
             setPhase('typing');
-          }, 300);
+          }, 500);
           break;
       }
     };
