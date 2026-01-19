@@ -1,5 +1,5 @@
 // pages/EventsList.tsx
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Plus,
@@ -12,14 +12,12 @@ import {
   Filter,
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
-import { eventService } from '../services/api';
+import { useEvents } from '../hooks/useEvents';
 import type { Availability, Event } from '../types';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { getEventComputedStatus } from '../utils/events';
 import { formatInstrumentLabel, getMusicianDisplayName } from '../utils/formatting';
-import { showToast } from '../utils/toast';
-import { logError } from '../utils/logger';
 
 type TimeFilter = 'upcoming' | 'past' | 'all';
 
@@ -60,53 +58,37 @@ const getStartDateTime = (event: Event): number => {
 };
 
 const EventsList: React.FC = () => {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [debouncedSearch, setDebouncedSearch] = useState<string>('');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('upcoming');
 
-  const loadEvents = useCallback(async () => {
-    try {
-      setLoading(true);
-      const params: Record<string, string | boolean> = {};
-
-      if (filter !== 'all') {
-        params.status = filter === 'confirmed' ? 'confirmed,approved' : filter;
-      }
-
-      if (searchTerm.trim()) {
-        params.search = searchTerm.trim();
-      }
-
-      if (timeFilter === 'upcoming') {
-        params.upcoming = true;
-      } else if (timeFilter === 'past') {
-        params.past = true;
-      }
-
-      const data = await eventService.getAll(params);
-      setEvents(data);
-    } catch (error) {
-      logError('Erro ao carregar eventos:', error);
-      showToast.apiError(error);
-    } finally {
-      setLoading(false);
-    }
-  }, [filter, searchTerm, timeFilter]);
-
-  useEffect(() => {
-    loadEvents();
-  }, [filter, timeFilter, loadEvents]);
-
-  // Debounce para busca
+  // Debounce search term - single effect, no duplicate calls
   useEffect(() => {
     const timer = setTimeout(() => {
-      loadEvents();
+      setDebouncedSearch(searchTerm.trim());
     }, 300);
-
     return () => clearTimeout(timer);
-  }, [searchTerm, loadEvents]);
+  }, [searchTerm]);
+
+  // Build params for SWR hook
+  const params = useMemo(() => {
+    const p: Record<string, string | boolean> = {};
+    if (filter !== 'all') {
+      p.status = filter === 'confirmed' ? 'confirmed,approved' : filter;
+    }
+    if (debouncedSearch) {
+      p.search = debouncedSearch;
+    }
+    if (timeFilter === 'upcoming') {
+      p.upcoming = true;
+    } else if (timeFilter === 'past') {
+      p.past = true;
+    }
+    return p;
+  }, [filter, debouncedSearch, timeFilter]);
+
+  const { events, isLoading } = useEvents(params);
 
   const groups = useMemo(() => {
     const byDate = new Map<string, Event[]>();
@@ -142,12 +124,10 @@ const EventsList: React.FC = () => {
   }, [events]);
 
   const statistics = useMemo(() => {
-    const now = Date.now();
-    const upcoming = events.filter((ev) => getStartDateTime(ev) >= now);
     const confirmed = events.filter((ev) => ev.status === 'confirmed' || ev.status === 'approved');
     const solos = events.filter((ev) => ev.is_solo);
     return {
-      upcoming: upcoming.length,
+      total: events.length,
       confirmed: confirmed.length,
       solos: solos.length,
     };
@@ -216,8 +196,8 @@ const EventsList: React.FC = () => {
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <div className="rounded-2xl border border-primary-100/70 bg-gradient-to-br from-primary-50/80 via-white/90 to-white/70 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur dark:border-primary-800/60 dark:from-primary-900/40 dark:via-slate-900/70 dark:to-slate-900/60">
-                  <p className="text-xs uppercase tracking-wide text-gray-500">Próximos 30 dias</p>
-                  <p className="text-2xl text-primary-700">{statistics.upcoming}</p>
+                  <p className="text-xs uppercase tracking-wide text-gray-500">Total</p>
+                  <p className="text-2xl text-primary-700">{statistics.total}</p>
                 </div>
                 <div className="rounded-2xl border border-emerald-100/70 bg-gradient-to-br from-emerald-50/80 via-white/90 to-white/70 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur dark:border-emerald-800/60 dark:from-emerald-900/40 dark:via-slate-900/70 dark:to-slate-900/60">
                   <p className="text-xs uppercase tracking-wide text-gray-500">Confirmados</p>
@@ -304,7 +284,7 @@ const EventsList: React.FC = () => {
           </div>
         </div>
 
-        {loading ? (
+        {isLoading ? (
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, groupIndex) => (
               <div key={`events-skeleton-${groupIndex}`} className="rounded-xl p-[1px] bg-gradient-to-br from-gray-200 to-gray-300">

@@ -1,20 +1,19 @@
 // pages/Dashboard.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, CalendarClock, Clock, Plus, Users, ChevronRight, ListChecks, Zap, Briefcase } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { useAuth } from '../contexts/AuthContext';
-import { eventService } from '../services/api';
+import { useUpcomingEvents } from '../hooks/useEvents';
+import { useDashboardNotifications } from '../hooks/useNotifications';
 import type { Availability, Event } from '../types';
 import { format, isToday, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import TiltCard from '../components/common/TiltCard';
 import { getEventComputedStatus } from '../utils/events';
 import { formatInstrumentLabel, getMusicianDisplayName } from '../utils/formatting';
-import { showToast } from '../utils/toast';
-import { logError } from '../utils/logger';
 
 const formatMusicianLabel = (availability: Availability) => {
   const musician = availability.musician;
@@ -41,102 +40,64 @@ const buildLineup = (event: Event): string[] => {
   return lineup.length ? lineup : [event.created_by_name];
 };
 
+const getStartDateTime = (event: Event): number => {
+  try {
+    if (event.start_datetime) return parseISO(event.start_datetime).getTime();
+    if (event.event_date && event.start_time) {
+      return parseISO(`${event.event_date}T${event.start_time}`).getTime();
+    }
+  } catch {
+    return 0;
+  }
+  return 0;
+};
+
+const isEventToday = (event: Event): boolean => {
+  if (event.event_date) {
+    try {
+      return isToday(parseISO(event.event_date));
+    } catch {
+      // continua tentando com start_datetime
+    }
+  }
+
+  if (event.start_datetime) {
+    try {
+      return isToday(parseISO(event.start_datetime));
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
+};
+
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
-  const [events, setEvents] = useState<Event[]>([]);
-  const [pendingApprovals, setPendingApprovals] = useState<Event[]>([]);
-  const [pendingResponses, setPendingResponses] = useState<Event[]>([]);
-  const [todayEvents, setTodayEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-  const nextEvent = events[0];
-  const nextComputedStatus = nextEvent ? getEventComputedStatus(nextEvent) : null;
   const prefersReducedMotion = useReducedMotion();
 
-  const getStartDateTime = (event: Event): number => {
-    try {
-      if (event.start_datetime) return parseISO(event.start_datetime).getTime();
-      if (event.event_date && event.start_time) {
-        return parseISO(`${event.event_date}T${event.start_time}`).getTime();
-      }
-    } catch {
-      return 0;
-    }
-    return 0;
-  };
+  // Use SWR hooks for data fetching with caching
+  const { events: upcomingEvents, isLoading: loadingEvents } = useUpcomingEvents();
+  const { pendingApprovals, pendingResponses, isLoading: loadingNotifications } = useDashboardNotifications();
 
-  const isEventToday = (event: Event): boolean => {
-    if (event.event_date) {
-      try {
-        return isToday(parseISO(event.event_date));
-      } catch {
-        // continua tentando com start_datetime
-      }
-    }
+  const loading = loadingEvents || loadingNotifications;
 
-    if (event.start_datetime) {
-      try {
-        return isToday(parseISO(event.start_datetime));
-      } catch {
-        return false;
-      }
-    }
-
-    return false;
-  };
-
-  const formatTime = (time?: string) => (time ? time.slice(0, 5) : '--:--');
-
-  useEffect(() => {
-    let ignore = false;
-
-    const fetchData = async () => {
-      setLoading(true);
-      const [eventsResult, approvalsResult, responsesResult] = await Promise.allSettled([
-        eventService.getAll({ status: 'proposed,confirmed,approved', upcoming: true }),
-        eventService.getAll({ pending_approval: true }),
-        eventService.getPendingMyResponse(),
-      ]);
-
-      if (ignore) return;
-
-      if (eventsResult.status === 'fulfilled') {
-        const sorted = [...eventsResult.value].sort((a, b) => getStartDateTime(a) - getStartDateTime(b));
-        setTodayEvents(eventsResult.value.filter(isEventToday));
-        setEvents(sorted.slice(0, 5));
-      } else {
-        logError('Erro ao carregar eventos:', eventsResult.reason);
-        showToast.apiError(eventsResult.reason);
-        setTodayEvents([]);
-        setEvents([]);
-      }
-
-      if (approvalsResult.status === 'fulfilled') {
-        setPendingApprovals(approvalsResult.value);
-      } else {
-        logError('Erro ao carregar pendências:', approvalsResult.reason);
-        showToast.apiError(approvalsResult.reason);
-        setPendingApprovals([]);
-      }
-
-      if (responsesResult.status === 'fulfilled') {
-        setPendingResponses(responsesResult.value);
-      } else {
-        logError('Erro ao carregar respostas pendentes:', responsesResult.reason);
-        showToast.apiError(responsesResult.reason);
-        setPendingResponses([]);
-      }
-
-      setLoading(false);
+  // Process events data
+  const { events, todayEvents, nextEvent, nextComputedStatus } = useMemo(() => {
+    const sorted = [...upcomingEvents].sort((a, b) => getStartDateTime(a) - getStartDateTime(b));
+    const today = upcomingEvents.filter(isEventToday);
+    const next = sorted[0];
+    const nextStatus = next ? getEventComputedStatus(next) : null;
+    return {
+      events: sorted.slice(0, 5),
+      todayEvents: today,
+      nextEvent: next,
+      nextComputedStatus: nextStatus,
     };
-
-    fetchData();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
+  }, [upcomingEvents]);
 
   const agendaCount = events.length;
+  const formatTime = (time?: string) => (time ? time.slice(0, 5) : '--:--');
 
   if (loading) {
     return (

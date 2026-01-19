@@ -1,42 +1,19 @@
 // pages/Musicians.tsx
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Music, Phone, Mail, Instagram, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
-import { musicianService } from '../services/api';
+import { useMusiciansPaginated } from '../hooks/useMusicians';
 import type { Musician } from '../types';
 import { formatInstrumentLabel } from '../utils/formatting';
-import { logError } from '../utils/logger';
 
 const Musicians: React.FC = () => {
-  const [musicians, setMusicians] = useState<Musician[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [pagination, setPagination] = useState({ count: 0, next: null as string | null, previous: null as string | null });
 
-  const loadMusicians = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const params = {
-        page,
-        ...(debouncedSearch ? { search: debouncedSearch } : {}),
-      };
-      const data = await musicianService.getAllPaginated(params);
-      setMusicians(data.results);
-      setPagination({ count: data.count, next: data.next, previous: data.previous });
-    } catch (error) {
-      logError('Erro ao carregar músicos:', error);
-      setError('Não foi possível carregar os músicos. Tente novamente.');
-    } finally {
-      setLoading(false);
-    }
-  }, [page, debouncedSearch]);
-
+  // Debounce search and reset page
   useEffect(() => {
     const timer = setTimeout(() => {
       setPage(1);
@@ -45,9 +22,10 @@ const Musicians: React.FC = () => {
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
-    loadMusicians();
-  }, [loadMusicians]);
+  const { musicians, count, hasNext, hasPrevious, isLoading, error, mutate } = useMusiciansPaginated({
+    page,
+    search: debouncedSearch || undefined,
+  });
 
   const getInstrumentEmoji = (instrument: string, bio?: string) => {
     // Se é vocalista e a bio menciona violão/violonista, mostra emoji combinado
@@ -144,7 +122,7 @@ const Musicians: React.FC = () => {
           </div>
         </div>
 
-        {loading ? (
+        {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, idx) => (
               <div key={`musician-skeleton-${idx}`} className="card-contrast space-y-4">
@@ -168,8 +146,8 @@ const Musicians: React.FC = () => {
           </div>
         ) : error ? (
           <div className="card-contrast bg-red-50/70 border-red-200 text-center">
-            <p className="text-red-800 mb-4">{error}</p>
-            <button onClick={loadMusicians} className="btn-primary">
+            <p className="text-red-800 mb-4">Não foi possível carregar os músicos. Tente novamente.</p>
+            <button onClick={() => mutate()} className="btn-primary">
               Tentar Novamente
             </button>
           </div>
@@ -185,7 +163,7 @@ const Musicians: React.FC = () => {
             initial="hidden"
             animate="show"
           >
-            {musicians.map((musician) => {
+            {musicians.map((musician: Musician) => {
               const emoji = getInstrumentEmoji(musician.instrument, musician.bio);
               const username = musician.instagram || musician.user.username;
               const contactEmail = musician.public_email || musician.user.email;
@@ -279,13 +257,13 @@ const Musicians: React.FC = () => {
         )}
 
         {/* Informação */}
-        {!loading && musicians.length > 0 && (
+        {!isLoading && musicians.length > 0 && (
           <div className="card-contrast space-y-3">
             <div className="flex items-start space-x-3">
               <Users className="h-5 w-5 text-primary-600 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-primary-800">
-                  Total: {pagination.count || musicians.length} músico{(pagination.count || musicians.length) !== 1 ? 's' : ''}
+                  Total: {count || musicians.length} músico{(count || musicians.length) !== 1 ? 's' : ''}
                 </p>
                 <p className="text-sm text-primary-700 mt-1">
                   Todos os músicos podem se conectar para formar duos e trios, com contatos disponíveis para combinar diretamente.
@@ -301,7 +279,7 @@ const Musicians: React.FC = () => {
                   type="button"
                   className="btn-secondary"
                   onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                  disabled={!pagination.previous || page === 1}
+                  disabled={!hasPrevious || page === 1}
                 >
                   Anterior
                 </button>
@@ -309,7 +287,7 @@ const Musicians: React.FC = () => {
                   type="button"
                   className="btn-primary"
                   onClick={() => setPage((prev) => prev + 1)}
-                  disabled={!pagination.next}
+                  disabled={!hasNext}
                 >
                   Proxima
                 </button>

@@ -1,12 +1,13 @@
 // pages/Connections.tsx
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Users, Star, Heart, ThumbsUp, Music, Trophy, Search, X, Filter, Trash2, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { StatCard } from '../components/ui/StatCard';
 import TiltCard from '../components/common/TiltCard';
-import { badgeService, connectionService, musicianService, type BadgeProgressResponse } from '../services/api';
+import { connectionService } from '../services/api';
+import { useConnectionsPage } from '../hooks/useConnections';
 import type { Connection, ConnectionType, Musician } from '../types';
 import { INSTRUMENT_LABELS } from '../utils/formatting';
 import InstrumentIcon from '../components/common/InstrumentIcon';
@@ -89,36 +90,19 @@ const ProgressRing: React.FC<{ percentage: number; size?: number; strokeWidth?: 
 };
 
 const Connections: React.FC = () => {
-  const [connections, setConnections] = useState<Connection[]>([]);
-  const [badgeData, setBadgeData] = useState<BadgeProgressResponse>({ earned: [], available: [] });
-  const [musicians, setMusicians] = useState<Musician[]>([]);
-  const [loading, setLoading] = useState(true);
   const [loadingAction, setLoadingAction] = useState(false);
   const [search, setSearch] = useState('');
   const [instrumentFilter, setInstrumentFilter] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<string>('follow');
 
-  useEffect(() => {
-    const loadAll = async () => {
-      try {
-        setLoading(true);
-        const [conn, bgs, mus] = await Promise.all([
-          connectionService.getAll(),
-          badgeService.getProgress(),
-          musicianService.getAll(),
-        ]);
-        setConnections(Array.isArray(conn) ? conn : []);
-        setBadgeData(bgs || { earned: [], available: [] });
-        setMusicians(Array.isArray(mus) ? mus : []);
-      } catch (error) {
-        logError('Erro ao carregar conexões/badges:', error);
-        showToast.apiError(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadAll();
-  }, []);
+  // Use SWR hooks for data fetching
+  const {
+    connections,
+    badgeData,
+    musicians,
+    isLoading,
+    mutateConnections,
+  } = useConnectionsPage();
 
   const filteredMusicians = useMemo(() => {
     return musicians
@@ -174,12 +158,11 @@ const Connections: React.FC = () => {
     try {
       if (existing) {
         await connectionService.delete(existing.id);
-        setConnections((prev) => prev.filter((c) => c.id !== existing.id));
       } else {
         await connectionService.create({ target_id: targetId, connection_type: type });
-        const refreshed = await connectionService.getAll();
-        setConnections(Array.isArray(refreshed) ? refreshed : []);
       }
+      // Revalidate connections cache
+      mutateConnections();
     } catch (error) {
       logError('Erro ao alternar conexão:', error);
       showToast.apiError(error);
@@ -191,14 +174,15 @@ const Connections: React.FC = () => {
   const handleDelete = async (id: number) => {
     try {
       await connectionService.delete(id);
-      setConnections((prev) => prev.filter((c) => c.id !== id));
+      // Revalidate connections cache
+      mutateConnections();
     } catch (error) {
       logError('Erro ao remover conexão:', error);
       showToast.apiError(error);
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Layout>
         <div className="space-y-6">

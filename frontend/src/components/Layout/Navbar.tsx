@@ -1,5 +1,5 @@
 // components/Layout/Navbar.tsx
-import React, { useCallback, useEffect, useRef, useState, useTransition, memo } from 'react';
+import React, { useCallback, useEffect, useRef, useState, memo } from 'react';
 import { Link, NavLink as RouterNavLink, useNavigate } from 'react-router-dom';
 import {
   Calendar,
@@ -16,22 +16,20 @@ import {
   Wallet,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { eventService } from '../../services/api';
+import { useNotifications } from '../../hooks/useNotifications';
 import OwlMascot from '../ui/OwlMascot';
-import { showToast } from '../../utils/toast';
-import { logError } from '../../utils/logger';
 import ThemeToggle from './ThemeToggle';
 
 const Navbar: React.FC = memo(() => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [pendingMyResponse, setPendingMyResponse] = useState(0);
-  const [pendingApproval, setPendingApproval] = useState(0);
   const [openMore, setOpenMore] = useState(false);
   const [openDesktopMore, setOpenDesktopMore] = useState(false);
   const desktopMoreRef = useRef<HTMLDivElement | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const [, startTransition] = useTransition();
+
+  // Use SWR hook for notifications - shared across Navbar and Dashboard
+  const { pendingMyResponse, pendingApproval } = useNotifications();
+
   const subscriptionInfo = user?.subscription_info;
   const showPlanShortcut = Boolean(
     subscriptionInfo &&
@@ -55,58 +53,6 @@ const Navbar: React.FC = memo(() => {
 
   const displayName =
     user?.full_name || user?.user?.first_name || user?.user?.username || 'Conta';
-
-  const loadNotifications = useCallback(async () => {
-    // Cancelar requisição anterior se existir
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    abortControllerRef.current = new AbortController();
-
-    try {
-      const [pendingResult, approvalResult] = await Promise.allSettled([
-        eventService.getPendingMyResponse(),
-        eventService.getAll({ pending_approval: true }),
-      ]);
-
-      // Usar startTransition para updates não-bloqueantes
-      startTransition(() => {
-        if (pendingResult.status === 'fulfilled') {
-          setPendingMyResponse(pendingResult.value.length);
-        } else {
-          setPendingMyResponse(0);
-          logError('Erro ao carregar notificações (pendências):', pendingResult.reason);
-          showToast.apiError(pendingResult.reason);
-        }
-
-        if (approvalResult.status === 'fulfilled') {
-          setPendingApproval(approvalResult.value.length);
-        } else {
-          setPendingApproval(0);
-          logError('Erro ao carregar notificações (convites):', approvalResult.reason);
-          showToast.apiError(approvalResult.reason);
-        }
-      });
-    } catch (error) {
-      if ((error as Error).name !== 'AbortError') {
-        logError('Erro ao carregar notificações:', error);
-        showToast.apiError(error);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => void loadNotifications(), 0);
-    const interval = setInterval(loadNotifications, 30000);
-    return () => {
-      clearTimeout(timeout);
-      clearInterval(interval);
-      // Cancelar requisição pendente ao desmontar
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, [loadNotifications]);
 
   const handleLogout = useCallback(async () => {
     await logout();
