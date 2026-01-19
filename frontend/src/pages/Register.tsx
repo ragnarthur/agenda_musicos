@@ -82,10 +82,6 @@ const BRAZILIAN_CITIES = [
 ].sort((a, b) => a.city.localeCompare(b.city));
 
 const Register: React.FC = () => {
-  const typedSubtitle = useTypewriterOnce(
-    'Cadastre-se para gerenciar sua agenda e oportunidades profissionais',
-    42
-  );
   // Multi-step state
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 3;
@@ -596,10 +592,21 @@ const Register: React.FC = () => {
             </div>
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Criar Conta</h1>
-          <p className="text-gray-300 min-h-[1.6em]">
-            {typedSubtitle}
-            <span className="ml-1 inline-block h-[1em] w-[2px] bg-gray-300/80 align-middle animate-pulse" />
-          </p>
+          <motion.p
+            className="relative text-gray-300"
+            initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+          >
+            Cadastre-se para gerenciar sua agenda e oportunidades profissionais
+            <motion.span
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+              initial={{ x: 0, opacity: 0 }}
+              animate={{ x: '220%', opacity: 1 }}
+              transition={{ duration: 1.6, delay: 0.6, ease: 'easeOut' }}
+            />
+          </motion.p>
         </div>
 
         {/* Progress Indicator */}
@@ -655,22 +662,3 @@ const Register: React.FC = () => {
 };
 
 export default Register;
-
-const useTypewriterOnce = (text: string, speed = 45) => {
-  const [displayText, setDisplayText] = useState('');
-
-  useEffect(() => {
-    let index = 0;
-    const timer = setInterval(() => {
-      index += 1;
-      setDisplayText(text.slice(0, index));
-      if (index >= text.length) {
-        clearInterval(timer);
-      }
-    }, speed);
-
-    return () => clearInterval(timer);
-  }, [text, speed]);
-
-  return displayText;
-};
