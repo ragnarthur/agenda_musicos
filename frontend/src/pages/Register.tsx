@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { registrationService, type RegisterData } from '../services/api';
 import { showToast } from '../utils/toast';
 import OwlMascot from '../components/ui/OwlMascot';
