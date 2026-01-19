@@ -1,6 +1,6 @@
 // components/Registration/StepNavigation.tsx
 import React from 'react';
-import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 
 interface StepNavigationProps {
   currentStep: number;
@@ -10,6 +10,7 @@ interface StepNavigationProps {
   onSubmit: () => void;
   isValid: boolean;
   isLoading: boolean;
+  missingRequirements?: string[];
 }
 
 const StepNavigation: React.FC<StepNavigationProps> = ({
@@ -20,12 +21,33 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
   onSubmit,
   isValid,
   isLoading,
+  missingRequirements = [],
 }) => {
   const isFirstStep = currentStep === 1;
   const isLastStep = currentStep === totalSteps;
 
   return (
-    <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+    <div className="pt-6 border-t border-gray-200">
+      {/* Banner de requisitos faltantes */}
+      {!isValid && missingRequirements.length > 0 && (
+        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-amber-800 mb-1">
+                Para continuar, complete:
+              </p>
+              <ul className="text-sm text-amber-700 list-disc list-inside space-y-0.5">
+                {missingRequirements.map((req, i) => (
+                  <li key={i}>{req}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between">
       {/* Back Button */}
       {!isFirstStep ? (
         <button
@@ -69,6 +91,7 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
           <ArrowRight className="h-4 w-4" />
         </button>
       )}
+      </div>
     </div>
   );
 };

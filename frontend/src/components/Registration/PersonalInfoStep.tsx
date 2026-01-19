@@ -1,6 +1,6 @@
 // components/Registration/PersonalInfoStep.tsx
 import React, { useRef, useEffect } from 'react';
-import { User, MapPin, Instagram, MessageCircle } from 'lucide-react';
+import { User, MapPin, Instagram, MessageCircle, Check } from 'lucide-react';
 
 type InputChange =
   | React.ChangeEvent<HTMLInputElement>
@@ -81,6 +81,11 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
             />
           </div>
           {errors.first_name && <p className="mt-1 text-sm text-red-600">{errors.first_name}</p>}
+          {!errors.first_name && formData.first_name && (
+            <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+              <Check className="h-3 w-3" /> Nome preenchido
+            </p>
+          )}
         </div>
 
         {/* Last Name */}
@@ -222,10 +227,17 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
               </div>
             )}
           </div>
-          <p className="mt-1 text-xs text-gray-500">
-            Ajuda outros músicos da sua região a te encontrar
-          </p>
           {errors.city && <p className="mt-1 text-sm text-red-600">{errors.city}</p>}
+          {!errors.city && formData.city.trim() && (
+            <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+              <Check className="h-3 w-3" /> Cidade informada
+            </p>
+          )}
+          {!formData.city.trim() && (
+            <p className="mt-1 text-xs text-gray-500">
+              Ajuda outros músicos da sua região a te encontrar
+            </p>
+          )}
         </div>
       </div>
     </div>

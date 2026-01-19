@@ -1,6 +1,8 @@
 // components/Registration/MusicProfileStep.tsx
 import React from 'react';
-import { Music, FileText } from 'lucide-react';
+import { Music, FileText, Check } from 'lucide-react';
+
+const BIO_MAX_LENGTH = 340;
 
 const BASE_INSTRUMENTS = [
   { value: 'vocal', label: 'Vocal' },
@@ -149,6 +151,17 @@ const MusicProfileStep: React.FC<MusicProfileStepProps> = ({
             )}
 
             {errors.instrument && <p className="mt-1 text-sm text-red-600">{errors.instrument}</p>}
+            {!errors.instrument && (
+              formData.instrument && formData.instrument !== 'other' ? (
+                <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+                  <Check className="h-3 w-3" /> Instrumento selecionado
+                </p>
+              ) : formData.instrument === 'other' && formData.instrumentOther.trim().length >= 3 ? (
+                <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+                  <Check className="h-3 w-3" /> Instrumento informado
+                </p>
+              ) : null
+            )}
           </div>
         ) : (
           // Multiple Instruments
@@ -221,6 +234,21 @@ const MusicProfileStep: React.FC<MusicProfileStepProps> = ({
             )}
 
             {errors.instrument && <p className="mt-1 text-sm text-red-600">{errors.instrument}</p>}
+            {!errors.instrument && (() => {
+              const selectedCount = formData.instruments.filter((inst) => inst !== 'other').length;
+              const hasOther = formData.instruments.includes('other');
+              const otherValid = hasOther && formData.instrumentOther.trim().length >= 3;
+              const totalValid = selectedCount + (otherValid ? 1 : 0);
+
+              if (totalValid > 0) {
+                return (
+                  <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+                    <Check className="h-3 w-3" /> {totalValid} instrumento{totalValid > 1 ? 's' : ''} selecionado{totalValid > 1 ? 's' : ''}
+                  </p>
+                );
+              }
+              return null;
+            })()}
           </div>
         )}
 
@@ -239,17 +267,25 @@ const MusicProfileStep: React.FC<MusicProfileStepProps> = ({
               value={formData.bio}
               onChange={onChange}
               rows={4}
-              maxLength={350}
+              maxLength={BIO_MAX_LENGTH}
               className={`w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent resize-none bg-white text-gray-900 dark:bg-slate-900 dark:text-slate-200 ${
                 errors.bio ? 'border-red-500' : 'border-gray-300 dark:border-slate-700'
               }`}
-              placeholder="Conte um pouco sobre sua experiência musical (até 350 caracteres)..."
+              placeholder="Conte um pouco sobre sua experiência musical..."
             />
           </div>
-          <p className="mt-1 text-xs text-gray-500">
-            Mini-bio obrigatória. Máximo de 350 caracteres.
-          </p>
           {errors.bio && <p className="mt-1 text-sm text-red-600">{errors.bio}</p>}
+          <p className="mt-1 text-xs text-gray-500 flex justify-between">
+            <span>Mini-bio obrigatória</span>
+            <span className={formData.bio.length > BIO_MAX_LENGTH ? 'text-red-500 font-medium' : formData.bio.trim() ? 'text-green-600' : ''}>
+              {formData.bio.length}/{BIO_MAX_LENGTH}
+            </span>
+          </p>
+          {!errors.bio && formData.bio.trim() && formData.bio.length <= BIO_MAX_LENGTH && (
+            <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+              <Check className="h-3 w-3" /> Bio preenchida
+            </p>
+          )}
         </div>
       </div>
     </div>

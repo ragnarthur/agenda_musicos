@@ -1,6 +1,6 @@
 // components/Registration/AccountStep.tsx
 import React, { useState } from 'react';
-import { Mail, User, Eye, EyeOff, Lock } from 'lucide-react';
+import { Mail, User, Eye, EyeOff, Lock, Check } from 'lucide-react';
 
 interface AccountStepProps {
   formData: {
@@ -37,6 +37,8 @@ const getPasswordStrength = (password: string) => {
 const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const handleInput = (e: React.FormEvent<HTMLInputElement>) =>
+    onChange({ target: { name: e.currentTarget.name, value: e.currentTarget.value } } as React.ChangeEvent<HTMLInputElement>);
 
   const passwordStrength = getPasswordStrength(formData.password);
 
@@ -62,6 +64,7 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors })
               type="email"
               value={formData.email}
               onChange={onChange}
+              onInput={handleInput}
               className={`
                 w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent
                 bg-white text-gray-900 dark:bg-slate-900 dark:text-slate-200
@@ -69,9 +72,23 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors })
               `}
               placeholder="seu@email.com"
               autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
             />
           </div>
           {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+          {!errors.email && formData.email && (
+            /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) ? (
+              <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+                <Check className="h-3 w-3" /> Email válido
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-amber-600">
+                Digite um email válido (ex: nome@email.com)
+              </p>
+            )
+          )}
         </div>
 
         {/* Username */}
@@ -89,6 +106,7 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors })
               type="text"
               value={formData.username}
               onChange={onChange}
+              onInput={handleInput}
               className={`
                 w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent
                 bg-white text-gray-900 dark:bg-slate-900 dark:text-slate-200
@@ -96,12 +114,30 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors })
               `}
               placeholder="seu_usuario"
               autoComplete="username"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
             />
           </div>
           {errors.username && <p className="mt-1 text-sm text-red-600">{errors.username}</p>}
-          <p className="mt-1 text-xs text-gray-500">
-            Apenas letras, números e underscore
-          </p>
+          {!errors.username && formData.username && (
+            formData.username.length >= 3 && /^[a-zA-Z0-9_]+$/.test(formData.username) ? (
+              <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+                <Check className="h-3 w-3" /> Nome de usuário válido
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-amber-600">
+                {formData.username.length < 3
+                  ? 'Mínimo 3 caracteres'
+                  : 'Apenas letras, números e underscore (_)'}
+              </p>
+            )
+          )}
+          {!formData.username && (
+            <p className="mt-1 text-xs text-gray-500">
+              Apenas letras, números e underscore
+            </p>
+          )}
         </div>
 
         {/* Password */}
@@ -119,6 +155,7 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors })
               type={showPassword ? 'text' : 'password'}
               value={formData.password}
               onChange={onChange}
+              onInput={handleInput}
               className={`
                 w-full pl-10 pr-12 py-2 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent
                 bg-white text-gray-900 dark:bg-slate-900 dark:text-slate-200
@@ -189,6 +226,7 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors })
               type={showConfirmPassword ? 'text' : 'password'}
               value={formData.confirmPassword}
               onChange={onChange}
+              onInput={handleInput}
               className={`
                 w-full pl-10 pr-12 py-2 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent
                 bg-white text-gray-900 dark:bg-slate-900 dark:text-slate-200
@@ -211,6 +249,17 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors })
           </div>
           {errors.confirmPassword && (
             <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+          )}
+          {!errors.confirmPassword && formData.confirmPassword && formData.password && (
+            formData.password === formData.confirmPassword ? (
+              <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+                <Check className="h-3 w-3" /> Senhas conferem
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-amber-600">
+                As senhas não conferem
+              </p>
+            )
           )}
         </div>
       </div>

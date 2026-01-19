@@ -87,7 +87,7 @@ const Register: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 3;
   const stepNames = ['Segurança da Conta', 'Informações Pessoais', 'Perfil Musical'];
-  const BIO_MAX_LENGTH = 240;
+  const BIO_MAX_LENGTH = 340;
 
   // Form state
   const [loading, setLoading] = useState(false);
@@ -208,12 +208,95 @@ const Register: React.FC = () => {
     }
   };
 
+  const normalizeEmail = (value: string) => value.trim();
+  const normalizeUsername = (value: string) => value.trim();
+
+  // Get missing requirements for current step (for user feedback)
+  const getMissingRequirements = (step: number): string[] => {
+    const missing: string[] = [];
+
+    if (step === 1) {
+      const emailTrimmed = normalizeEmail(formData.email);
+      const usernameTrimmed = normalizeUsername(formData.username);
+
+      if (!emailTrimmed) {
+        missing.push('Preencha o email');
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
+        missing.push('Email inválido');
+      }
+
+      if (!usernameTrimmed) {
+        missing.push('Preencha o nome de usuário');
+      } else if (usernameTrimmed.length < 3) {
+        missing.push('Nome de usuário: mínimo 3 caracteres');
+      } else if (!/^[a-zA-Z0-9_]+$/.test(usernameTrimmed)) {
+        missing.push('Nome de usuário: apenas letras, números e _');
+      }
+
+      if (!formData.password) {
+        missing.push('Crie uma senha');
+      } else if (formData.password.length < 6) {
+        missing.push('Senha: mínimo 6 caracteres');
+      }
+
+      if (formData.password && formData.password !== formData.confirmPassword) {
+        missing.push('Confirme sua senha corretamente');
+      }
+    } else if (step === 2) {
+      if (!formData.first_name) {
+        missing.push('Preencha seu nome');
+      }
+
+      if (!formData.city.trim()) {
+        missing.push('Informe sua cidade');
+      }
+    } else if (step === 3) {
+      const bioTrimmed = formData.bio.trim();
+      const extraInstrument = formData.instrumentOther.trim();
+
+      if (!bioTrimmed) {
+        missing.push('Escreva uma mini-bio');
+      } else if (bioTrimmed.length > BIO_MAX_LENGTH) {
+        missing.push(`Bio excede ${BIO_MAX_LENGTH} caracteres`);
+      }
+
+      if (formData.isMultiInstrumentist) {
+        const selectedInstruments = formData.instruments.filter((inst) => inst !== 'other');
+        const includeOther = formData.instruments.includes('other');
+
+        if (selectedInstruments.length === 0 && !includeOther) {
+          missing.push('Selecione pelo menos um instrumento');
+        }
+
+        if (includeOther && !extraInstrument) {
+          missing.push('Informe o instrumento em "Outro"');
+        } else if (includeOther && extraInstrument.length < 3) {
+          missing.push('Instrumento "Outro": mínimo 3 caracteres');
+        }
+      } else {
+        if (!formData.instrument) {
+          missing.push('Selecione um instrumento');
+        } else if (formData.instrument === 'other') {
+          if (!extraInstrument) {
+            missing.push('Informe o instrumento em "Outro"');
+          } else if (extraInstrument.length < 3) {
+            missing.push('Instrumento: mínimo 3 caracteres');
+          }
+        }
+      }
+    }
+
+    return missing;
+  };
+
   // Check if current step is valid (without setting errors)
   const isStepValid = (step: number): boolean => {
     if (step === 1) {
       // Step 1: Account Security
-      if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return false;
-      if (!formData.username || formData.username.length < 3 || !/^[a-zA-Z0-9_]+$/.test(formData.username)) return false;
+      const emailTrimmed = normalizeEmail(formData.email);
+      const usernameTrimmed = normalizeUsername(formData.username);
+      if (!emailTrimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) return false;
+      if (!usernameTrimmed || usernameTrimmed.length < 3 || !/^[a-zA-Z0-9_]+$/.test(usernameTrimmed)) return false;
       if (!formData.password || formData.password.length < 6) return false;
       if (formData.password !== formData.confirmPassword) return false;
       return true;
@@ -263,18 +346,21 @@ const Register: React.FC = () => {
     const newErrors: Record<string, string> = {};
 
     if (step === 1) {
+      const emailTrimmed = normalizeEmail(formData.email);
+      const usernameTrimmed = normalizeUsername(formData.username);
+
       // Step 1: Account Security
-      if (!formData.email) {
+      if (!emailTrimmed) {
         newErrors.email = 'Email é obrigatório';
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
         newErrors.email = 'Email inválido';
       }
 
-      if (!formData.username) {
+      if (!usernameTrimmed) {
         newErrors.username = 'Nome de usuário é obrigatório';
-      } else if (formData.username.length < 3) {
+      } else if (usernameTrimmed.length < 3) {
         newErrors.username = 'Mínimo de 3 caracteres';
-      } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+      } else if (!/^[a-zA-Z0-9_]+$/.test(usernameTrimmed)) {
         newErrors.username = 'Apenas letras, números e underscore';
       }
 
@@ -377,6 +463,11 @@ const Register: React.FC = () => {
       const { confirmPassword, ...restFormData } = formData;
       void confirmPassword;
       const { instrumentOther, instruments, isMultiInstrumentist, ...data } = restFormData;
+      const normalizedData = {
+        ...data,
+        email: normalizeEmail(data.email),
+        username: normalizeUsername(data.username),
+      };
       const customInstrument = instrumentOther.trim();
 
       let allInstruments: string[] = [];
@@ -401,7 +492,7 @@ const Register: React.FC = () => {
       const sanitizedBio = formData.bio.trim().slice(0, BIO_MAX_LENGTH);
 
       const payload = {
-        ...data,
+        ...normalizedData,
         instrument: primaryInstrument,
         instruments: allInstruments,
         bio: sanitizedBio,
@@ -640,6 +731,7 @@ const Register: React.FC = () => {
             onSubmit={handleFinalSubmit}
             isValid={isStepValid(currentStep)}
             isLoading={loading}
+            missingRequirements={getMissingRequirements(currentStep)}
           />
         </div>
 
