@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Star, X, Send } from 'lucide-react';
 import type { Availability, RatingInput } from '../../types';
 import { formatInstrumentLabel } from '../../utils/formatting';
-import SwipeToDismissWrapper from './swipeToDismissWrapper';
+import SwipeToDismissWrapper from './SwipeToDismissWrapper';
 
 interface RatingModalProps {
   isOpen: boolean;

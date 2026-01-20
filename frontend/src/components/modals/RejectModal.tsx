@@ -1,7 +1,7 @@
 // components/modals/RejectModal.tsx
 import React from 'react';
 import { ThumbsDown } from 'lucide-react';
-import SwipeToDismissWrapper from './swipeToDismissWrapper';
+import SwipeToDismissWrapper from './SwipeToDismissWrapper';
 
 interface RejectModalProps {
   isOpen: boolean;
