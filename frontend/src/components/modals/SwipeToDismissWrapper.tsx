@@ -15,10 +15,18 @@ const SwipeToDismissWrapper: React.FC<SwipeToDismissWrapperProps> = ({
   isOpen,
   onClose,
   children,
-  threshold = 100,
+  threshold: propThreshold = 100,
   swipeDirection = 'y',
   disabled = false,
 }) => {
+  const getThreshold = () => {
+    if (typeof window !== 'undefined') {
+      return Math.min(propThreshold, window.innerHeight * 0.15);
+    }
+    return propThreshold;
+  };
+  const threshold = getThreshold();
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && isOpen) {
@@ -38,7 +46,7 @@ const SwipeToDismissWrapper: React.FC<SwipeToDismissWrapperProps> = ({
 
     if (swipeDirection === 'y' || swipeDirection === 'xy') {
       const swipeY = offset.y as number;
-      if (swipeY < -threshold || swipePower > 1) {
+      if (swipeY > threshold || swipePower > 1) {
         onClose();
       }
     }
@@ -53,24 +61,26 @@ const SwipeToDismissWrapper: React.FC<SwipeToDismissWrapperProps> = ({
 
   const getDragConstraints = () => {
     if (swipeDirection === 'y') {
-      return { top: 0, bottom: 200 };
+      return { top: 0, bottom: 50 };
     }
     if (swipeDirection === 'x') {
-      return { left: -200, right: 200 };
+      return { left: -50, right: 50 };
     }
-    return { top: 0, bottom: 200, left: -200, right: 200 };
+    return { top: 0, bottom: 50, left: -50, right: 50 };
   };
 
   return (
     <motion.div
       drag={swipeDirection === 'xy' ? true : swipeDirection}
       dragConstraints={getDragConstraints()}
-      dragElastic={0.2}
+      dragElastic={0.1}
+      dragMomentum={false}
+      dragPropagation={false}
       onDragEnd={handleDragEnd}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: isOpen ? 1 : 0 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
+      initial={{ opacity: 0, y: swipeDirection === 'y' ? 0 : undefined }}
+      animate={{ opacity: isOpen ? 1 : 0, y: isOpen ? 0 : (swipeDirection === 'y' ? 50 : undefined) }}
+      exit={{ opacity: 0, y: swipeDirection === 'y' ? 50 : undefined }}
+      transition={{ duration: 0.25, type: 'spring' }}
       className="relative"
     >
       {children}

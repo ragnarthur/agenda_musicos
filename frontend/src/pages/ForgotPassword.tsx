@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft } from 'lucide-react';
 import { authService } from '../services/api';
 import { getErrorMessage, showToast } from '../utils/toast';
+import { getMobileInputProps } from '../utils/mobileInputs';
 
 const ForgotPassword: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -72,6 +73,7 @@ const ForgotPassword: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  {...getMobileInputProps('email')}
                 />
               </div>
               <button

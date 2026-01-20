@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Star, X, Send } from 'lucide-react';
 import type { Availability, RatingInput } from '../../types';
 import { formatInstrumentLabel } from '../../utils/formatting';
+import SwipeToDismissWrapper from './swipeToDismissWrapper';
 
 interface RatingModalProps {
   isOpen: boolean;
@@ -115,7 +116,8 @@ const RatingModal: React.FC<RatingModalProps> = ({
       aria-modal="true"
       aria-labelledby="rating-modal-title"
     >
-      <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl max-w-lg w-full max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col pb-safe pt-safe">
+      <SwipeToDismissWrapper isOpen={isOpen} onClose={onClose}>
+        <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl max-w-lg w-full max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col pb-safe pt-safe">
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-100">
           <div>
@@ -196,6 +198,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
           </button>
         </div>
       </div>
+      </SwipeToDismissWrapper>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 // components/modals/ConfirmModal.tsx
 import React from 'react';
-import SwipeToDismissWrapper from './SwipeToDismissWrapper';
+import SwipeToDismissWrapper from './swipeToDismissWrapper';
 
 interface ConfirmModalProps {
   isOpen: boolean;

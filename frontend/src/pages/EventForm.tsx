@@ -27,6 +27,7 @@ import { format, parseISO } from 'date-fns';
 import InstrumentIcon from '../components/common/InstrumentIcon';
 import { INSTRUMENT_LABELS as BASE_INSTRUMENT_LABELS } from '../utils/formatting';
 import { sanitizeOptionalText, sanitizeText } from '../utils/sanitize';
+import { getMobileInputProps } from '../utils/mobileInputs';
 
 interface ConflictInfo {
   loading: boolean;
@@ -367,6 +368,7 @@ const EventForm: React.FC = () => {
                   className="input-field pl-10"
                   placeholder="Ex: Show no Bar do João"
                   required
+                  {...getMobileInputProps('username')}
                 />
               </div>
             </div>
@@ -387,6 +389,7 @@ const EventForm: React.FC = () => {
                   className="input-field pl-10"
                   placeholder="Ex: Rua ABC, 123 - Centro"
                   required
+                  {...getMobileInputProps('street-address')}
                 />
               </div>
             </div>
@@ -405,8 +408,8 @@ const EventForm: React.FC = () => {
                   value={formData.venue_contact}
                   onChange={handleChange}
                   className="input-field pl-10"
-                  placeholder="(11) 98888-8888"
-                  maxLength={15}
+                  placeholder="Telefone ou contato do local"
+                  {...getMobileInputProps('tel')}
                 />
               </div>
             </div>
@@ -430,6 +433,7 @@ const EventForm: React.FC = () => {
                     onClick={openDatePicker}
                     className="input-field pl-10"
                     required
+                    {...getMobileInputProps('date')}
                   />
                 </div>
 
