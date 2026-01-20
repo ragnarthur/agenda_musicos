@@ -1,5 +1,7 @@
-export const getMobileInputProps = (type: string) => {
-  const props: Record<string, string | boolean | number> = {
+import type { InputHTMLAttributes } from 'react';
+
+export const getMobileInputProps = (type: string): InputHTMLAttributes<HTMLInputElement> => {
+  const props: Record<string, InputHTMLAttributes<HTMLInputElement>> = {
     email: {
       inputMode: 'email',
       autoComplete: 'email',
@@ -58,10 +60,10 @@ export const getMobileInputProps = (type: string) => {
     },
   };
   
-  return props[type] || {};
+  return props[type] ?? {};
 };
 
-export const getPhoneProps = () => ({
+export const getPhoneProps = (): InputHTMLAttributes<HTMLInputElement> => ({
   inputMode: 'tel',
   autoComplete: 'tel',
   pattern: '[0-9]*',
@@ -69,14 +71,14 @@ export const getPhoneProps = () => ({
   autoCapitalize: 'none',
 });
 
-export const getEmailProps = () => ({
+export const getEmailProps = (): InputHTMLAttributes<HTMLInputElement> => ({
   inputMode: 'email',
   autoComplete: 'email',
   autoCorrect: 'off',
   autoCapitalize: 'none',
 });
 
-export const getPasswordProps = (isNew = true) => ({
+export const getPasswordProps = (isNew = true): InputHTMLAttributes<HTMLInputElement> => ({
   inputMode: 'text',
   autoComplete: isNew ? 'new-password' : 'current-password',
   spellCheck: false,
