@@ -1,5 +1,6 @@
 // components/modals/ConfirmModal.tsx
 import React from 'react';
+import SwipeToDismissWrapper from './SwipeToDismissWrapper';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -41,37 +42,39 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl max-w-md w-full p-5 sm:p-6">
-        <h3
-          id="modal-title"
-          className={`text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2 ${
-            confirmVariant === 'danger' ? 'text-red-600' : 'text-gray-900'
-          }`}
-        >
-          {icon && <span>{icon}</span>}
-          <span>{title}</span>
-        </h3>
-
-        <div className="text-sm sm:text-base text-gray-600 mb-5 sm:mb-6">{message}</div>
-
-        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-3">
-          <button
-            onClick={onClose}
-            disabled={loading}
-            className="w-full sm:w-auto px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
-          >
-            {cancelText}
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={loading}
-            className={`w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-lg disabled:opacity-50 transition-colors flex items-center justify-center gap-2 ${variantClasses[confirmVariant]}`}
+      <SwipeToDismissWrapper isOpen={isOpen} onClose={onClose} disabled={!isOpen}>
+        <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl max-w-md w-full p-5 sm:p-6 pb-safe pt-safe">
+          <h3
+            id="modal-title"
+            className={`text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2 ${
+              confirmVariant === 'danger' ? 'text-red-600' : 'text-gray-900'
+            }`}
           >
             {icon && <span>{icon}</span>}
-            <span>{loading ? 'Processando...' : confirmText}</span>
-          </button>
+            <span>{title}</span>
+          </h3>
+
+          <div className="text-sm sm:text-base text-gray-600 mb-5 sm:mb-6">{message}</div>
+
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-3">
+            <button
+              onClick={onClose}
+              disabled={loading}
+              className="w-full sm:w-auto px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            >
+              {cancelText}
+            </button>
+            <button
+              onClick={onConfirm}
+              disabled={loading}
+              className={`w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-lg disabled:opacity-50 transition-colors flex items-center justify-center gap-2 ${variantClasses[confirmVariant]}`}
+            >
+              {icon && <span>{icon}</span>}
+              <span>{loading ? 'Processando...' : confirmText}</span>
+            </button>
+          </div>
         </div>
-      </div>
+      </SwipeToDismissWrapper>
     </div>
   );
 };

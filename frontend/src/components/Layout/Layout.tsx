@@ -29,7 +29,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     requestAnimationFrame(() => {
       let index = 0;
       // No mobile eu limito o cascade pra manter o efeito sem pesar no scroll.
-      const maxAnimated = isSmallScreen ? 45 : elements.length;
+      const maxAnimated = isSmallScreen ? 15 : elements.length;
       elements.forEach((el) => {
         if (el.closest('[data-cascade-ignore]')) return;
         if (index >= maxAnimated) return;

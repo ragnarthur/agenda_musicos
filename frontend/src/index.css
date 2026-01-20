@@ -378,8 +378,22 @@
   /* Mobile optimization */
   @media (max-width: 768px) {
     .mesh-blob {
-      filter: blur(50px);
-      opacity: 0.7;
+      filter: blur(30px);
+      mix-blend-mode: normal;
+      opacity: 0.5;
+    }
+  }
+
+  @media (max-width: 768px) and (prefers-reduced-motion: no-preference) {
+    /* Disable complex animations on mobile */
+    .dust-chaos,
+    .dust-chaos-secondary {
+      animation: none !important;
+    }
+
+    /* Keep only essential animations */
+    .dust-drift {
+      animation: dust-drift 80s linear infinite;
     }
   }
 
@@ -868,6 +882,23 @@
   .logo-animated::after {
     animation: none !important;
     opacity: 0.6;
+  }
+}
+
+@media (max-width: 768px) {
+  .logo-animated {
+    animation: none !important;
+    background-size: 100% 100%;
+  }
+
+  .logo-animated::after {
+    animation: none !important;
+    opacity: 0.6;
+  }
+
+  .hero-animated::before {
+    animation: none !important;
+    background-position: 50% 50%;
   }
 }
 

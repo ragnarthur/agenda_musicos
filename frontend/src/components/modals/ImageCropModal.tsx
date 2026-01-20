@@ -35,7 +35,6 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   const [baseScale, setBaseScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [pinchDistance, setPinchDistance] = useState<number | null>(null);
   const [isPinching, setIsPinching] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -47,6 +46,14 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     originX: 0,
     originY: 0,
   });
+  const pinchRef = useRef<{
+    distance: number;
+    centerX: number;
+    centerY: number;
+    startZoom: number;
+    startOffsetX: number;
+    startOffsetY: number;
+  } | null>(null);
 
   const aspectRatio = target === 'avatar' ? 1 : 16 / 9;
   const zoomMax = target === 'avatar' ? 3.0 : 2.5;
@@ -81,8 +88,9 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     const updateFrameSize = () => {
       const isMobile = window.innerWidth < 640;
       const maxWidth = Math.min(window.innerWidth * (isMobile ? 0.95 : 0.9), 720);
-      const reservedHeight = isMobile ? 180 : 240;
-      const maxHeight = Math.max(isMobile ? 400 : 300, window.innerHeight - reservedHeight);
+      const reservedHeight = isMobile ? 240 : 240;
+      const minHeight = isMobile ? 260 : 300;
+      const maxHeight = Math.max(minHeight, window.innerHeight - reservedHeight);
       const widthByHeight = maxHeight * aspectRatio;
       const nextWidth = Math.min(maxWidth, widthByHeight);
       const nextHeight = nextWidth / aspectRatio;
@@ -205,19 +213,6 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     event.currentTarget.releasePointerCapture(event.pointerId);
   };
 
-  const handleZoomChange = (value: number) => {
-    const nextZoom = Math.min(Math.max(value, 1), zoomMax);
-    const prevScale = baseScale * zoom;
-    const nextScale = baseScale * nextZoom;
-    const centerX = (-offset.x + cropSize.width / 2) / prevScale;
-    const centerY = (-offset.y + cropSize.height / 2) / prevScale;
-    const nextOffsetX = -(centerX * nextScale - cropSize.width / 2);
-    const nextOffsetY = -(centerY * nextScale - cropSize.height / 2);
-    if (loadError) setLoadError(null);
-    setZoom(nextZoom);
-    setOffset(clampOffset(nextOffsetX, nextOffsetY, nextScale));
-  };
-
   const getTouchDistance = (touches: React.TouchList) => {
     return Math.hypot(
       touches[0].clientX - touches[1].clientX,
@@ -226,28 +221,43 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 2) {
+    if (e.touches.length === 2 && cropRef.current) {
       e.preventDefault();
-      const distance = getTouchDistance(e.touches);
-      setPinchDistance(distance);
+      const centerX = cropSize.width / 2;
+      const centerY = cropSize.height / 2;
+      pinchRef.current = {
+        distance: getTouchDistance(e.touches),
+        centerX,
+        centerY,
+        startZoom: zoom,
+        startOffsetX: offset.x,
+        startOffsetY: offset.y,
+      };
       setIsPinching(true);
       dragRef.current.active = false;
     }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (e.touches.length === 2 && pinchDistance !== null) {
+    if (e.touches.length === 2 && pinchRef.current) {
       e.preventDefault();
       const newDistance = getTouchDistance(e.touches);
-      const scaleFactor = newDistance / pinchDistance;
-      const newZoom = Math.min(Math.max(zoom * scaleFactor, 1), zoomMax);
-      handleZoomChange(newZoom);
-      setPinchDistance(newDistance);
+      const scaleFactor = newDistance / pinchRef.current.distance;
+      const nextZoom = Math.min(Math.max(pinchRef.current.startZoom * scaleFactor, 1), zoomMax);
+      const prevScale = baseScale * pinchRef.current.startZoom;
+      const nextScale = baseScale * nextZoom;
+      const imageX = (pinchRef.current.centerX - pinchRef.current.startOffsetX) / prevScale;
+      const imageY = (pinchRef.current.centerY - pinchRef.current.startOffsetY) / prevScale;
+      const nextOffsetX = pinchRef.current.centerX - imageX * nextScale;
+      const nextOffsetY = pinchRef.current.centerY - imageY * nextScale;
+      if (loadError) setLoadError(null);
+      setZoom(nextZoom);
+      setOffset(clampOffset(nextOffsetX, nextOffsetY, nextScale));
     }
   };
 
   const handleTouchEnd = () => {
-    setPinchDistance(null);
+    pinchRef.current = null;
     setIsPinching(false);
   };
 
@@ -309,13 +319,13 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-black/70 p-3 sm:p-4"
+      className="fixed inset-0 z-[60] flex items-start sm:items-center justify-center overflow-y-auto bg-black/70 p-3 sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="crop-title"
     >
-      <div className="w-full max-w-4xl max-h-[95vh] overflow-y-auto rounded-2xl bg-white p-3 sm:p-6 shadow-2xl dark:bg-gray-900">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-3 sm:mb-4">
+      <div className="w-full max-w-4xl max-h-[95vh] overflow-hidden rounded-2xl bg-white p-3 sm:p-6 pb-safe pt-safe shadow-2xl dark:bg-gray-900">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3 sm:mb-4 shrink-0">
           <div>
             <h2 id="crop-title" className="text-lg font-semibold text-gray-900 dark:text-white">
               Ajustar {target === 'avatar' ? 'avatar' : 'capa'}
@@ -347,25 +357,49 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
           </div>
         </div>
 
-        <div className="flex flex-col items-center gap-2 sm:gap-4">
-          <div
-            ref={cropRef}
-            className="relative w-[min(90vw,720px)] overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 shadow-inner dark:border-gray-700 dark:bg-gray-800 cursor-grab active:cursor-grabbing"
-            style={{
-              aspectRatio: `${aspectRatio}`,
-              width: frameSize.width || undefined,
-              height: frameSize.height || undefined,
-              touchAction: 'none',
-            }}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerCancel={handlePointerUp}
-            onPointerLeave={handlePointerUp}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
+        <div className="flex-1 overflow-y-auto">
+          <div className="flex flex-col items-center gap-2 sm:gap-4 pb-4">
+          <div className="relative">
+            <div
+              className="pointer-events-none absolute right-3 top-3 z-10 rounded-full border border-gray-200/80 bg-white/90 px-2.5 py-1 text-[11px] text-gray-600 shadow-sm backdrop-blur sm:hidden"
+              aria-hidden="true"
+            >
+              <span className="inline-flex items-center gap-1">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-3.5 w-3.5"
+                >
+                  <path d="M8 12l-2-2-2 2" />
+                  <path d="M16 12l2-2 2 2" />
+                  <path d="M9 7l3 3 3-3" />
+                  <path d="M9 17l3-3 3 3" />
+                </svg>
+                Pinch para zoom
+              </span>
+            </div>
+            <div
+              ref={cropRef}
+              className="relative w-[min(90vw,720px)] max-h-[55vh] overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 shadow-inner dark:border-gray-700 dark:bg-gray-800 cursor-grab active:cursor-grabbing"
+              style={{
+                aspectRatio: `${aspectRatio}`,
+                width: frameSize.width || undefined,
+                height: frameSize.height || undefined,
+                touchAction: 'none',
+              }}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
+              onPointerLeave={handlePointerUp}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
             {imageUrl && (
               <img
                 ref={imgRef}
@@ -399,6 +433,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
               }`}
             />
           </div>
+          </div>
 
           {previewUrl && (
             <div className="mt-4 hidden sm:flex flex-col items-center gap-2">
@@ -421,36 +456,21 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
             </div>
           )}
 
-           <div className="flex w-full max-w-xl flex-col gap-2 sm:gap-4">
-             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-               <span className="flex items-center justify-between mb-2">
-                 <span>Zoom</span>
-                 <span className="text-xs text-gray-500 dark:text-gray-400 sm:hidden">
-                   Use dois dedos para zoom
-                 </span>
-               </span>
-               <input
-                 type="range"
-                 min={1}
-                 max={zoomMax}
-                 step={0.01}
-                 value={zoom}
-                 onChange={(event) => handleZoomChange(Number(event.target.value))}
-                 className="mt-1 w-full h-12 sm:h-6 accent-sky-600 touch-manipulation"
-                 style={{ touchAction: 'manipulation' }}
-               />
-             </label>
-             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={handleConfirm}
-                disabled={!imageUrl || !!loadError || !naturalSize.width}
-                className="rounded-lg bg-sky-600 px-5 py-2.5 sm:px-4 sm:py-2 text-base sm:text-sm font-semibold text-white hover:bg-sky-700 active:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60 touch-manipulation"
-              >
-                Salvar e enviar
-              </button>
+            <div className="flex w-full max-w-xl flex-col gap-2 sm:gap-4">
+             <div className="sticky bottom-0 w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur pt-2 pb-[env(safe-area-inset-bottom)]">
+               <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={handleConfirm}
+                  disabled={!imageUrl || !!loadError || !naturalSize.width}
+                  className="rounded-lg bg-sky-600 px-5 py-2.5 sm:px-4 sm:py-2 text-base sm:text-sm font-semibold text-white hover:bg-sky-700 active:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60 touch-manipulation"
+                >
+                  Salvar e enviar
+                </button>
+              </div>
             </div>
-          </div>
+           </div>
+         </div>
         </div>
       </div>
     </div>,

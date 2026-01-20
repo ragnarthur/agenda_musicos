@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { showToast } from '../utils/toast';
 import OwlMascot from '../components/ui/OwlMascot';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
+import { getMobileInputProps } from '../utils/mobileInputs';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -100,6 +101,7 @@ const Login: React.FC = () => {
                 placeholder="Digite seu usuário"
                 required
                 autoFocus
+                {...getMobileInputProps('username')}
               />
             </div>
 
@@ -116,6 +118,7 @@ const Login: React.FC = () => {
                   className="input-field pr-12"
                   placeholder="Digite sua senha"
                   required
+                  {...getMobileInputProps('current-password')}
                 />
                 <button
                   type="button"

@@ -9,6 +9,7 @@ import type { MarketplaceGig, MarketplaceApplication } from '../types';
 import { logError } from '../utils/logger';
 import { sanitizeOptionalText, sanitizeText } from '../utils/sanitize';
 import { getErrorMessage } from '../utils/toast';
+import { getMobileInputProps } from '../utils/mobileInputs';
 
 const statusStyles: Record<string, string> = {
   open: 'bg-emerald-100 text-emerald-800',
@@ -879,7 +880,7 @@ const Marketplace: React.FC = () => {
                     const formatted = formatCurrencyInput(e.target.value);
                     setForm({ ...form, budget: formatted });
                   }}
-                  inputMode="decimal"
+                  {...getMobileInputProps('number')}
                 />
               </div>
               <div>
@@ -903,8 +904,8 @@ const Marketplace: React.FC = () => {
                     const formatted = formatPhone(e.target.value);
                     setForm((prev) => ({ ...prev, contact_phone: formatted }));
                   }}
-                  inputMode="tel"
                   maxLength={15}
+                  {...getMobileInputProps('tel')}
                 />
               </div>
               <div className="sm:col-span-2 flex flex-col sm:flex-row gap-3">

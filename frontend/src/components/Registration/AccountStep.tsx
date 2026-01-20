@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, User, Eye, EyeOff, Lock, Check, X, Loader2, AlertCircle } from 'lucide-react';
 import { registrationService } from '../../services/api';
+import { getMobileInputProps } from '../../utils/mobileInputs';
 
 type EmailStatus = 'idle' | 'checking' | 'available' | 'taken' | 'pending';
 
@@ -53,14 +54,13 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors, o
     const isValidFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
     if (!email || !isValidFormat) {
-      setEmailStatus('idle');
       onEmailValidation?.(isValidFormat, false);
-      return;
+      const idleTimeout = setTimeout(() => setEmailStatus('idle'), 0);
+      return () => clearTimeout(idleTimeout);
     }
 
-    setEmailStatus('checking');
-
     const timeoutId = setTimeout(async () => {
+      setEmailStatus('checking');
       try {
         const response = await registrationService.checkEmail(email);
         if (response.available) {
@@ -74,7 +74,7 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors, o
           onEmailValidation?.(false, true);
         }
       } catch {
-        // On error, don't block the user - backend will validate on submit
+        // On error, don't block user - backend will validate on submit
         setEmailStatus('idle');
         onEmailValidation?.(true, false);
       }
@@ -170,10 +170,7 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors, o
                 ${getEmailInputBorderClass()}
               `}
               placeholder="seu@email.com"
-              autoComplete="email"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
+              {...getMobileInputProps('email')}
             />
           </div>
           {renderEmailFeedback()}
@@ -201,10 +198,7 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors, o
                 ${errors.username ? 'border-red-500' : 'border-gray-300 dark:border-slate-700'}
               `}
               placeholder="seu_usuario"
-              autoComplete="username"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
+              {...getMobileInputProps('username')}
             />
           </div>
           {errors.username && <p className="mt-1 text-sm text-red-600">{errors.username}</p>}
@@ -249,8 +243,8 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors, o
                 bg-white text-gray-900 dark:bg-slate-900 dark:text-slate-200
                 ${errors.password ? 'border-red-500' : 'border-gray-300 dark:border-slate-700'}
               `}
-              placeholder="••••••••"
-              autoComplete="new-password"
+              placeholder="••••••"
+              {...getMobileInputProps('password')}
             />
             <button
               type="button"
@@ -320,8 +314,8 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors, o
                 bg-white text-gray-900 dark:bg-slate-900 dark:text-slate-200
                 ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300 dark:border-slate-700'}
               `}
-              placeholder="••••••••"
-              autoComplete="new-password"
+              placeholder="•••••"
+              {...getMobileInputProps('password')}
             />
             <button
               type="button"

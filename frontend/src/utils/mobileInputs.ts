@@ -1,5 +1,5 @@
 export const getMobileInputProps = (type: string) => {
-  const props: Record<string, any> = {
+  const props: Record<string, string | boolean | number> = {
     email: {
       inputMode: 'email',
       autoComplete: 'email',
