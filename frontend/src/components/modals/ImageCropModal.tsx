@@ -102,35 +102,25 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   }, [aspectRatio, isOpen]);
 
   useEffect(() => {
-    if (!isOpen || !naturalSize.width) return;
+    if (!isOpen || !naturalSize.width || !frameSize.width) return;
 
-    // Obter dimensões atuais do DOM diretamente para evitar race condition
-    const rect = cropRef.current?.getBoundingClientRect();
-    const currentCropWidth = rect?.width || cropSize.width;
-    const currentCropHeight = rect?.height || cropSize.height;
-
-    if (!currentCropWidth) return;
-
+    // Usar frameSize diretamente - é o valor calculado, não depende do DOM
     const nextBaseScale = Math.max(
-      currentCropWidth / naturalSize.width,
-      currentCropHeight / naturalSize.height
+      frameSize.width / naturalSize.width,
+      frameSize.height / naturalSize.height
     );
     const scaledWidth = naturalSize.width * nextBaseScale;
     const scaledHeight = naturalSize.height * nextBaseScale;
 
-    requestAnimationFrame(() => {
-      setBaseScale(nextBaseScale);
-      setZoom(1);
-      setOffset({
-        x: (currentCropWidth - scaledWidth) / 2,
-        y: (currentCropHeight - scaledHeight) / 2,
-      });
-      // Atualizar cropSize se estava desatualizado
-      if (rect && (rect.width !== cropSize.width || rect.height !== cropSize.height)) {
-        setCropSize({ width: rect.width, height: rect.height });
-      }
+    setBaseScale(nextBaseScale);
+    setZoom(1);
+    setOffset({
+      x: (frameSize.width - scaledWidth) / 2,
+      y: (frameSize.height - scaledHeight) / 2,
     });
-  }, [cropSize.height, cropSize.width, isOpen, naturalSize.height, naturalSize.width, target]);
+    // Sincronizar cropSize com frameSize
+    setCropSize({ width: frameSize.width, height: frameSize.height });
+  }, [frameSize.width, frameSize.height, isOpen, naturalSize.height, naturalSize.width, target]);
 
   useEffect(() => {
     if (!isOpen || !imgRef.current || !naturalSize.width || !cropSize.width) return;
