@@ -309,13 +309,13 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4"
+      className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-black/70 p-3 sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="crop-title"
     >
-      <div className="w-full max-w-4xl rounded-2xl bg-white p-4 sm:p-6 shadow-2xl dark:bg-gray-900">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <div className="w-full max-w-4xl max-h-[95vh] overflow-y-auto rounded-2xl bg-white p-3 sm:p-6 shadow-2xl dark:bg-gray-900">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3 sm:mb-4">
           <div>
             <h2 id="crop-title" className="text-lg font-semibold text-gray-900 dark:text-white">
               Ajustar {target === 'avatar' ? 'avatar' : 'capa'}
@@ -347,7 +347,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
           </div>
         </div>
 
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-2 sm:gap-4">
           <div
             ref={cropRef}
             className="relative w-[min(90vw,720px)] overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 shadow-inner dark:border-gray-700 dark:bg-gray-800 cursor-grab active:cursor-grabbing"
@@ -401,7 +401,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
           </div>
 
           {previewUrl && (
-            <div className="mt-4 flex flex-col items-center gap-2">
+            <div className="mt-4 hidden sm:flex flex-col items-center gap-2">
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Preview
               </p>
@@ -421,7 +421,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
             </div>
           )}
 
-           <div className="flex w-full max-w-xl flex-col gap-4">
+           <div className="flex w-full max-w-xl flex-col gap-2 sm:gap-4">
              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                <span className="flex items-center justify-between mb-2">
                  <span>Zoom</span>
@@ -445,7 +445,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                 type="button"
                 onClick={handleConfirm}
                 disabled={!imageUrl || !!loadError || !naturalSize.width}
-                className="rounded-lg bg-sky-600 px-6 py-3 sm:px-4 sm:py-2 text-base sm:text-sm font-semibold text-white hover:bg-sky-700 active:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60 touch-manipulation"
+                className="rounded-lg bg-sky-600 px-5 py-2.5 sm:px-4 sm:py-2 text-base sm:text-sm font-semibold text-white hover:bg-sky-700 active:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60 touch-manipulation"
               >
                 Salvar e enviar
               </button>
