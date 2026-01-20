@@ -13,8 +13,6 @@ from datetime import timedelta
 import requests
 
 from django.conf import settings
-from django.core.mail import send_mail
-from django.template.loader import render_to_string
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
@@ -30,6 +28,11 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from .models import PendingRegistration, Musician, Organization, Membership
 from .throttles import BurstRateThrottle
+from notifications.services.email_service import (
+    send_verification_email,
+    send_welcome_email,
+    send_trial_welcome_email,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -192,74 +195,14 @@ class RegisterView(APIView):
         }, status=status.HTTP_201_CREATED)
 
     def _send_verification_email(self, pending: PendingRegistration):
-        """Envia email de verificação"""
+        """Envia email de verificação usando o EmailService"""
         frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
         verification_url = f"{frontend_url}/verificar-email?token={pending.email_token}"
 
-        subject = 'Confirme seu email - Agenda Músicos'
-        message = f"""
-Olá {pending.first_name}!
-
-Obrigado por se cadastrar na Agenda Músicos.
-
-Para confirmar seu email e continuar o cadastro, clique no link abaixo:
-
-{verification_url}
-
-Este link expira em 48 horas.
-
-Se você não solicitou este cadastro, ignore este email.
-
-Atenciosamente,
-Equipe Agenda Músicos
-        """
-
-        html_message = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <style>
-        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
-        .content {{ background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }}
-        .button {{ display: inline-block; background: #6366f1; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; margin: 20px 0; }}
-        .button:hover {{ background: #4f46e5; }}
-        .footer {{ text-align: center; margin-top: 20px; color: #666; font-size: 12px; }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Agenda Músicos</h1>
-        </div>
-        <div class="content">
-            <h2>Olá {pending.first_name}!</h2>
-            <p>Obrigado por se cadastrar na <strong>Agenda Músicos</strong>.</p>
-            <p>Para confirmar seu email e continuar o cadastro, clique no botão abaixo:</p>
-            <p style="text-align: center;">
-                <a href="{verification_url}" class="button">Confirmar Email</a>
-            </p>
-            <p><small>Ou copie e cole este link no navegador:<br>{verification_url}</small></p>
-            <p><small>Este link expira em 48 horas.</small></p>
-        </div>
-        <div class="footer">
-            <p>Se você não solicitou este cadastro, ignore este email.</p>
-            <p>Equipe Agenda Músicos</p>
-        </div>
-    </div>
-</body>
-</html>
-        """
-
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[pending.email],
-            html_message=html_message,
-            fail_silently=False,
+        send_verification_email(
+            to_email=pending.email,
+            first_name=pending.first_name,
+            verification_url=verification_url,
         )
 
 
@@ -520,37 +463,15 @@ class ProcessPaymentView(APIView):
         return True
 
     def _send_welcome_email(self, pending: PendingRegistration, user):
-        """Envia email de boas-vindas"""
+        """Envia email de boas-vindas usando o EmailService"""
         frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+        login_url = f"{frontend_url}/login"
 
-        subject = 'Bem-vindo à Agenda Músicos!'
-        message = f"""
-Olá {pending.first_name}!
-
-Seu cadastro foi concluído com sucesso!
-
-Agora você pode acessar a plataforma com suas credenciais:
-- Usuário: {user.username}
-- Link: {frontend_url}/login
-
-Na Agenda Músicos você pode:
-- Gerenciar seus shows e eventos
-- Conectar-se com outros músicos
-- Receber convites para tocar
-- E muito mais!
-
-Qualquer dúvida, estamos à disposição.
-
-Bons shows!
-Equipe Agenda Músicos
-        """
-
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            fail_silently=True,
+        send_welcome_email(
+            to_email=user.email,
+            first_name=pending.first_name,
+            username=user.username,
+            login_url=login_url,
         )
 
 
@@ -711,38 +632,16 @@ class StartTrialView(APIView):
         }, status=status.HTTP_201_CREATED)
 
     def _send_trial_welcome_email(self, pending: PendingRegistration, user):
-        """Envia email de boas-vindas para trial"""
+        """Envia email de boas-vindas para trial usando o EmailService"""
         frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+        login_url = f"{frontend_url}/login"
 
-        subject = 'Bem-vindo à Agenda Músicos - Seu teste gratuito começou!'
-        message = f"""
-Olá {pending.first_name}!
-
-Seu período de teste gratuito de 7 dias começou!
-
-Agora você pode acessar a plataforma com suas credenciais:
-- Usuário: {user.username}
-- Link: {frontend_url}/login
-
-Durante o período de teste você tem acesso a todas as funcionalidades:
-- Gerenciar seus shows e eventos
-- Conectar-se com outros músicos
-- Receber convites para tocar
-- Marketplace de vagas
-- E muito mais!
-
-Após 7 dias, você precisará assinar um plano para continuar usando.
-
-Bons shows!
-Equipe Agenda Músicos
-        """
-
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            fail_silently=True,
+        send_trial_welcome_email(
+            to_email=user.email,
+            first_name=pending.first_name,
+            username=user.username,
+            login_url=login_url,
+            trial_days=7,
         )
 
 

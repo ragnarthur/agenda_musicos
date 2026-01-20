@@ -1,0 +1,34 @@
+GigFlow - Sua agenda de shows profissional
+=============================================
+
+RESPOSTA AO CONVITE
+
+Olá, {{ first_name }}!
+
+{{ musician_name }} respondeu ao seu convite:
+
+{% if response == 'accepted' or response == 'confirmado' %}
+╔═══════════════════════════════════════════╗
+║            ✓ CONFIRMADO!                  ║
+║  {{ musician_name }} confirmou presença no evento  ║
+╚═══════════════════════════════════════════╝
+{% elif response == 'declined' or response == 'recusado' %}
+╔═══════════════════════════════════════════╗
+║          ✗ NÃO DISPONÍVEL                 ║
+║  {{ musician_name }} não poderá participar         ║
+╚═══════════════════════════════════════════╝
+{% else %}
+RESPOSTA: {{ response|default:"Pendente" }}
+{% endif %}
+
+DETALHES DO EVENTO:
+{{ event_title }}
+{% for line in event_lines %}{{ line }}
+{% endfor %}
+{% if event_url %}
+Ver evento: {{ event_url }}
+{% endif %}
+
+---------------------------------------------
+Este email foi enviado por GigFlow.
+Preferências de notificação: {{ frontend_url }}/settings/notifications

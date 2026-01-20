@@ -1,0 +1,51 @@
+{% extends 'emails/base.html' %}
+
+{% block title %}{{ title }} - GigFlow{% endblock %}
+
+{% block preview_text %}{{ preview_text|default:title }}{% endblock %}
+
+{% block content %}
+<h2 style="margin: 0 0 16px 0; color: #1f2937; font-size: 22px; font-weight: 600; line-height: 1.3;">
+    {{ title }}
+</h2>
+
+{% if first_name %}
+<p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+    Olá, <strong style="color: #1f2937;">{{ first_name }}</strong>!
+</p>
+{% endif %}
+
+<div style="margin: 0 0 24px 0; color: #4b5563; font-size: 16px; line-height: 1.6; white-space: pre-line;">
+    {{ body }}
+</div>
+
+{% if event_title or event_lines %}
+<!-- Event details box -->
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin: 24px 0;">
+    <tr>
+        <td style="background-color: #f9fafb; border-left: 4px solid #6366f1; border-radius: 0 8px 8px 0; padding: 20px;">
+            {% if event_title %}
+            <p style="margin: 0 0 12px 0; color: #1f2937; font-size: 18px; font-weight: 600;">
+                {{ event_title }}
+            </p>
+            {% endif %}
+            {% if event_lines %}
+            <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                {% for line in event_lines %}
+                <tr>
+                    <td style="padding: 4px 0; color: #4b5563; font-size: 14px; line-height: 1.5;">
+                        {{ line }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% endif %}
+        </td>
+    </tr>
+</table>
+{% endif %}
+
+{% if action_url %}
+{% include 'emails/components/button.html' with url=action_url text=action_text|default:'Ver detalhes' show_fallback_link=False %}
+{% endif %}
+{% endblock %}

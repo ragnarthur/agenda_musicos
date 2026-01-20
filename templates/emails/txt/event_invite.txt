@@ -1,0 +1,24 @@
+GigFlow - Sua agenda de shows profissional
+=============================================
+
+NOVO CONVITE PARA EVENTO
+
+Olá, {{ musician_name }}!
+
+{{ inviter_name }} convidou você para participar de um evento.
+
+DETALHES DO EVENTO:
+{{ event_title }}
+{% for line in event_lines %}{{ line }}
+{% endfor %}
+{% if message %}
+MENSAGEM: {{ message }}
+{% endif %}
+
+Ver detalhes e responder: {{ event_url }}
+
+Responda o convite para que {{ inviter_name }} saiba se pode contar com você!
+
+---------------------------------------------
+Este email foi enviado por GigFlow.
+Preferências de notificação: {{ frontend_url }}/settings/notifications

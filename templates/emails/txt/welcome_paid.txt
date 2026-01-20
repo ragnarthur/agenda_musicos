@@ -1,0 +1,24 @@
+GigFlow - Sua agenda de shows profissional
+=============================================
+
+BEM-VINDO AO GIGFLOW!
+
+Olá, {{ first_name }}!
+
+Parabéns! Sua conta foi ativada com sucesso. Agora você tem acesso completo a todas as funcionalidades do GigFlow para organizar seus shows de forma profissional.
+
+SEUS DADOS DE ACESSO:
+Usuário: {{ username }}
+
+COM O GIGFLOW VOCÊ PODE:
+- Gerenciar shows e eventos - Organize toda sua agenda em um só lugar
+- Convidar músicos - Envie convites e gerencie confirmações facilmente
+- Conectar-se com outros profissionais - Expanda sua rede de contatos
+
+Acesse sua conta: {{ login_url }}
+
+Estamos muito felizes em ter você conosco. Se tiver alguma dúvida, estamos aqui para ajudar!
+
+---------------------------------------------
+Este email foi enviado por GigFlow.
+Acesse: {{ frontend_url }}

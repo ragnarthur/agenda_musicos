@@ -1,0 +1,37 @@
+{% comment %}
+Button CTA component for emails.
+Usage: {% include 'emails/components/button.html' with url=action_url text='Click here' %}
+{% endcomment %}
+
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin: 28px 0;">
+    <tr>
+        <td align="center">
+            <!--[if mso]>
+            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ url }}" style="height:48px;v-text-anchor:middle;width:200px;" arcsize="17%" strokecolor="#6366f1" fillcolor="#6366f1">
+                <w:anchorlock/>
+                <center style="color:#ffffff;font-family:sans-serif;font-size:16px;font-weight:600;">{{ text }}</center>
+            </v:roundrect>
+            <![endif]-->
+            <!--[if !mso]><!-->
+            <a href="{{ url }}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; padding: 14px 32px; border-radius: 8px; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4); transition: all 0.2s ease;">
+                {{ text }}
+            </a>
+            <!--<![endif]-->
+        </td>
+    </tr>
+</table>
+
+{% if show_fallback_link %}
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <td style="text-align: center; padding-top: 8px;">
+            <p style="margin: 0; color: #9ca3af; font-size: 13px; line-height: 1.5;">
+                Se o botão não funcionar, copie e cole este link no navegador:
+            </p>
+            <p style="margin: 8px 0 0 0; word-break: break-all;">
+                <a href="{{ url }}" style="color: #6366f1; font-size: 13px; text-decoration: underline;">{{ url }}</a>
+            </p>
+        </td>
+    </tr>
+</table>
+{% endif %}

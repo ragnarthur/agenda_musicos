@@ -1,0 +1,87 @@
+{% extends 'emails/base.html' %}
+
+{% block title %}Resposta ao convite - GigFlow{% endblock %}
+
+{% block preview_text %}{{ musician_name }} respondeu ao convite para "{{ event_title }}"{% endblock %}
+
+{% block content %}
+<h2 style="margin: 0 0 16px 0; color: #1f2937; font-size: 22px; font-weight: 600; line-height: 1.3;">
+    Resposta ao convite
+</h2>
+
+<p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+    Olá, <strong style="color: #1f2937;">{{ first_name }}</strong>!
+</p>
+
+<p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+    <strong style="color: #1f2937;">{{ musician_name }}</strong> respondeu ao seu convite:
+</p>
+
+<!-- Response status box -->
+{% if response == 'accepted' or response == 'confirmado' %}
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin: 24px 0;">
+    <tr>
+        <td style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px; text-align: center;">
+            <p style="margin: 0 0 4px 0; font-size: 32px;">✅</p>
+            <p style="margin: 0; color: #166534; font-size: 18px; font-weight: 600;">
+                Confirmado!
+            </p>
+            <p style="margin: 8px 0 0 0; color: #15803d; font-size: 14px;">
+                {{ musician_name }} confirmou presença no evento
+            </p>
+        </td>
+    </tr>
+</table>
+{% elif response == 'declined' or response == 'recusado' %}
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin: 24px 0;">
+    <tr>
+        <td style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 20px; text-align: center;">
+            <p style="margin: 0 0 4px 0; font-size: 32px;">❌</p>
+            <p style="margin: 0; color: #991b1b; font-size: 18px; font-weight: 600;">
+                Não disponível
+            </p>
+            <p style="margin: 8px 0 0 0; color: #b91c1c; font-size: 14px;">
+                {{ musician_name }} não poderá participar do evento
+            </p>
+        </td>
+    </tr>
+</table>
+{% else %}
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin: 24px 0;">
+    <tr>
+        <td style="background-color: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; padding: 20px; text-align: center;">
+            <p style="margin: 0 0 4px 0; font-size: 32px;">⏳</p>
+            <p style="margin: 0; color: #92400e; font-size: 18px; font-weight: 600;">
+                {{ response|default:"Pendente" }}
+            </p>
+        </td>
+    </tr>
+</table>
+{% endif %}
+
+<!-- Event details box -->
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin: 24px 0;">
+    <tr>
+        <td style="background-color: #f9fafb; border-left: 4px solid #6366f1; border-radius: 0 8px 8px 0; padding: 20px;">
+            <p style="margin: 0 0 12px 0; color: #1f2937; font-size: 18px; font-weight: 600;">
+                {{ event_title }}
+            </p>
+            {% if event_lines %}
+            <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                {% for line in event_lines %}
+                <tr>
+                    <td style="padding: 4px 0; color: #4b5563; font-size: 14px; line-height: 1.5;">
+                        {{ line }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% endif %}
+        </td>
+    </tr>
+</table>
+
+{% if event_url %}
+{% include 'emails/components/button.html' with url=event_url text='Ver evento' show_fallback_link=False %}
+{% endif %}
+{% endblock %}

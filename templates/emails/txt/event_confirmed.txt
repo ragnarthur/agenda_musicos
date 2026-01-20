@@ -1,0 +1,22 @@
+GigFlow - Sua agenda de shows profissional
+=============================================
+
+EVENTO CONFIRMADO!
+
+Olá, {{ first_name }}!
+
+O evento foi confirmado. Anote na sua agenda!
+
+DETALHES DO EVENTO:
+{{ event_title }}
+{% for line in event_lines %}{{ line }}
+{% endfor %}
+{% if event_url %}
+Ver detalhes: {{ event_url }}
+{% endif %}
+
+Boa apresentação!
+
+---------------------------------------------
+Este email foi enviado por GigFlow.
+Preferências de notificação: {{ frontend_url }}/settings/notifications

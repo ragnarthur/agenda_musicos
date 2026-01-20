@@ -1,0 +1,18 @@
+GigFlow - Sua agenda de shows profissional
+=============================================
+
+CONFIRME SEU EMAIL
+
+Olá, {{ first_name }}!
+
+Obrigado por se cadastrar no GigFlow! Para ativar sua conta e começar a organizar seus shows, acesse o link abaixo:
+
+{{ verification_url }}
+
+IMPORTANTE: Este link expira em 48 horas. Após esse período, você precisará solicitar um novo email de verificação.
+
+Se você não criou uma conta no GigFlow, pode ignorar este email com segurança.
+
+---------------------------------------------
+Este email foi enviado por GigFlow.
+Acesse: {{ frontend_url }}

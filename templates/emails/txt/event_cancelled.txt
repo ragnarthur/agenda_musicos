@@ -1,0 +1,25 @@
+GigFlow - Sua agenda de shows profissional
+=============================================
+
+EVENTO CANCELADO
+
+Olá, {{ first_name }}!
+
+Infelizmente, o evento abaixo foi cancelado:
+
+DETALHES DO EVENTO:
+{{ event_title }} [CANCELADO]
+{% for line in event_lines %}{{ line }}
+{% endfor %}
+{% if cancellation_reason %}
+MOTIVO: {{ cancellation_reason }}
+{% endif %}
+{% if event_url %}
+Ver na agenda: {{ event_url }}
+{% endif %}
+
+Lamentamos o inconveniente. Continue acompanhando sua agenda para novas oportunidades!
+
+---------------------------------------------
+Este email foi enviado por GigFlow.
+Preferências de notificação: {{ frontend_url }}/settings/notifications
