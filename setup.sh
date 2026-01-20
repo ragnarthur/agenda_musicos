@@ -159,9 +159,9 @@ setup_django() {
     cd $PROJECT_DIR
     source .venv/bin/activate
 
-    # Create .env if not exists
-    if [ ! -f ".env" ]; then
-        print_step "Criando arquivo .env..."
+    # Create .env.docker if not exists
+    if [ ! -f ".env.docker" ]; then
+        print_step "Criando arquivo .env.docker..."
 
         # Load DB password from credentials file
         if [ -f "$CREDENTIALS_FILE" ]; then
@@ -171,7 +171,7 @@ setup_django() {
             exit 1
         fi
 
-        cat > .env <<EOF
+        cat > .env.docker <<EOF
 SECRET_KEY=$(python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())")
 DEBUG=False
 ALLOWED_HOSTS=localhost,127.0.0.1,$SERVER_IP
@@ -181,7 +181,7 @@ INTERNAL_PORT=$INTERNAL_PORT
 DATABASE_URL=postgresql://agenda_user:${DB_PASSWORD}@localhost/agenda_musicos
 CORS_ORIGINS=http://$SERVER_IP:$SERVER_PORT
 EOF
-        chmod 600 .env
+        chmod 600 .env.docker
     fi
 
     # Run migrations
@@ -219,12 +219,10 @@ setup_frontend() {
 
     cd $PROJECT_DIR/frontend
 
-    # Create .env if not exists
+    # Frontend env é fornecido via build args no Docker.
+    # Se estiver usando build manual, crie frontend/.env conforme necessário.
     if [ ! -f ".env" ]; then
-        print_step "Criando .env do frontend..."
-        cat > .env <<EOF
-VITE_API_URL=http://$SERVER_IP:$SERVER_PORT/api
-EOF
+        print_warning "frontend/.env não criado (build via Docker usa .env.docker)."
     fi
 
     # Install dependencies and build
@@ -297,7 +295,7 @@ setup_permissions() {
     chmod -R 775 staticfiles/ media/ 2>/dev/null || true
 
     # Proteger arquivos sensíveis
-    chmod 600 .env 2>/dev/null || true
+    chmod 600 .env.docker 2>/dev/null || true
     chmod 600 "$CREDENTIALS_FILE" 2>/dev/null || true
 
     print_step "Permissões configuradas ✓"

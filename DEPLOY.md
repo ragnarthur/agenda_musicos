@@ -85,13 +85,13 @@ GRANT ALL PRIVILEGES ON DATABASE agenda_musicos TO agenda_user;
 ### 4. Configurar Variáveis de Ambiente
 ```bash
 # Copiar arquivo de exemplo
-cp .env.example .env
+cp .env.example .env.docker
 
-# Editar arquivo .env
-nano .env
+# Editar arquivo .env.docker
+nano .env.docker
 ```
 
-**Configuração para produção (.env):**
+**Configuração para produção (.env.docker):**
 ```env
 # Django Settings
 SECRET_KEY=gere-uma-chave-secreta-forte-aqui-use-python-get_random_secret_key
@@ -99,7 +99,7 @@ DEBUG=False
 ALLOWED_HOSTS=seudominio.com,www.seudominio.com,seu-ip-servidor
 
 # Database
-DATABASE_URL=postgresql://agenda_user:senha_segura_aqui@localhost/agenda_musicos
+DATABASE_URL=postgresql://agenda:senha_segura_aqui@db:5432/agenda
 
 # CORS (Frontend URLs)
 CORS_ORIGINS=https://seudominio.com,https://www.seudominio.com
@@ -184,11 +184,11 @@ npm install
 
 ### 2. Configurar Variáveis de Ambiente
 ```bash
-cp .env.example .env
-nano .env
+cp .env.example .env.docker
+nano .env.docker
 ```
 
-**Produção (.env):**
+**Produção (.env.docker):**
 ```env
 VITE_API_URL=https://api.seudominio.com/api
 ```
@@ -386,7 +386,7 @@ https://www.ssllabs.com/ssltest/analyze.html?d=seudominio.com
 - [ ] Banco de dados criado
 - [ ] Migrações executadas
 - [ ] Músicos populados no banco
-- [ ] `.env` configurado corretamente (SECRET_KEY, DEBUG=False)
+- [ ] `.env.docker` configurado corretamente (SECRET_KEY, DEBUG=False)
 - [ ] Arquivos estáticos coletados
 - [ ] Gunicorn rodando via Supervisor
 - [ ] Nginx configurado e rodando
@@ -429,8 +429,8 @@ sudo chown -R www-data:www-data /var/www/agenda-musicos/frontend/dist
 ```
 
 ### CORS Error
-- Verificar `CORS_ORIGINS` no `.env` do backend
-- Verificar `VITE_API_URL` no `.env` do frontend
+- Verificar `CORS_ORIGINS` no `.env.docker` do backend
+- Verificar `VITE_API_URL` no `.env.docker` do frontend
 - Reiniciar backend após mudanças
 
 ### 502 Bad Gateway

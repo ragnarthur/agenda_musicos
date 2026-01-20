@@ -48,7 +48,7 @@
 
 #### 4. **Variáveis de Ambiente** ✅
 - [x] `.env.example` criado
-- [x] `.gitignore` configurado (não commita .env)
+- [x] `.gitignore` configurado (não commita .env.local)
 - [x] Configurações para PostgreSQL documentadas
 
 #### 5. **Testes** ✅
@@ -78,16 +78,16 @@ Siga o guia `DEPLOY.md` para fazer o deploy completo:
 
 ### 2. **Configurações Obrigatórias**
 
-**Backend (.env):**
+**Backend (.env.docker):**
 ```env
 SECRET_KEY=<gerar-chave-forte>
 DEBUG=False
 ALLOWED_HOSTS=seudominio.com,api.seudominio.com
-DATABASE_URL=postgresql://user:pass@localhost/db
+DATABASE_URL=postgresql://user:pass@db:5432/db
 CORS_ORIGINS=https://seudominio.com
 ```
 
-**Frontend (.env):**
+**Frontend (.env.docker):**
 ```env
 VITE_API_URL=https://api.seudominio.com/api
 ```

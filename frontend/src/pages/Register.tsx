@@ -614,7 +614,7 @@ const Register: React.FC = () => {
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4 text-left">
               <p className="text-sm text-gray-800 font-medium">Como receber o código:</p>
               <ul className="list-disc list-inside text-sm text-gray-600 mt-2 space-y-1">
-                <li>O email é enviado por <strong>catsinthegarden01@gmail.com</strong>.</li>
+                <li>O email é enviado por <strong>gigflowagenda@gmail.com</strong>.</li>
                 <li>Procure pelo código/link na caixa de entrada e no spam.</li>
                 <li>Clique no link para confirmar e seguir para o pagamento.</li>
               </ul>

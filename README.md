@@ -220,7 +220,7 @@ sudo systemctl restart nginx
 - Reiniciar: `sudo supervisorctl restart agenda-musicos`
 
 ### CORS Error
-- Verificar `CORS_ORIGINS` em `/var/www/agenda-musicos/.env`
+- Verificar `CORS_ORIGINS` em `/var/www/agenda-musicos/.env.docker`
 - Deve incluir: `http://45.237.131.177:2030`
 - Reiniciar após mudanças
 

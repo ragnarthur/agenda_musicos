@@ -83,11 +83,11 @@ ALLOWED_HOSTS=45.237.131.177
 SERVER_IP=45.237.131.177
 SERVER_PORT=2030
 INTERNAL_PORT=8005
-DATABASE_URL=postgresql://agenda_user:senha@localhost/agenda_musicos
+DATABASE_URL=postgresql://agenda:senha@db:5432/agenda
 CORS_ORIGINS=http://45.237.131.177:2030
 ```
 
-**Localização no servidor:** `/var/www/agenda-musicos/.env`
+**Localização no servidor:** `/var/www/agenda-musicos/.env.docker`
 
 ### 4. `frontend/.env.example`
 Template de variáveis do frontend:
@@ -95,7 +95,7 @@ Template de variáveis do frontend:
 VITE_API_URL=http://45.237.131.177:2030/api
 ```
 
-**Localização no servidor:** `/var/www/agenda-musicos/frontend/.env`
+**Localização no servidor:** `/var/www/agenda-musicos/frontend/.env` (apenas se não usar build via Docker)
 
 ## 🔧 Arquitetura do Servidor
 
@@ -150,7 +150,7 @@ VITE_API_URL=http://45.237.131.177:2030/api
 │   └── dist/                  # Build de produção (servido pelo Nginx)
 ├── staticfiles/               # Arquivos estáticos Django (servido pelo Nginx)
 ├── media/                     # Uploads (servido pelo Nginx)
-├── .env                       # Variáveis de ambiente (não versionado)
+├── .env.docker                # Variáveis de ambiente (servidor)
 ├── nginx.conf                 # ✅ Versionado
 ├── supervisor.conf            # ✅ Versionado
 ├── setup.sh                   # ✅ Versionado

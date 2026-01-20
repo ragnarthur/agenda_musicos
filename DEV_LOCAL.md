@@ -41,10 +41,7 @@ Use o script `dev.sh`:
 ./dev.sh start
 ```
 
-**Ou manualmente**:
-```bash
-DATABASE_URL="postgresql://agenda:agenda@localhost:5433/agenda" DEBUG=True python manage.py runserver
-```
+As variáveis são carregadas do `.env.local` (fallback `.env.docker`).
 
 ### 3. Acessar
 
@@ -187,9 +184,10 @@ Acesso:
 
 ## 📚 Arquivos de Configuração
 
-- `.env.local` - Variáveis de ambiente para desenvolvimento local
+- `.env.docker` - Fonte principal do servidor (produção)
+- `.env.local` - Mesmo formato do `.env.docker`, com valores para dev local
 - `docker-compose.dev.yml` - Configuração Docker para desenvolvimento
-- `dev.sh` - Script auxiliar para comandos comuns
+- `dev.sh` - Script auxiliar (carrega `.env.local`)
 
 ## ✅ Status Atual
 

@@ -19,7 +19,11 @@ from PIL import Image, ImageOps, UnidentifiedImageError, features
 logger = logging.getLogger(__name__)
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
-from .throttles import CreateEventRateThrottle, PreviewConflictsRateThrottle, BurstRateThrottle
+from .throttles import (
+    CreateEventRateThrottle,
+    PreviewConflictsRateThrottle,
+    BurstRateThrottle,
+)
 
 from .models import (
     Musician,
@@ -49,7 +53,11 @@ from .serializers import (
 )
 from .validators import sanitize_string
 from .permissions import IsOwnerOrReadOnly
-from .utils import get_user_organization, split_availability_with_events, award_badges_for_musician
+from .utils import (
+    get_user_organization,
+    split_availability_with_events,
+    award_badges_for_musician,
+)
 
 
 class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
@@ -57,9 +65,10 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
     ViewSet para músicos (apenas leitura).
     Lista todos os músicos ativos da plataforma.
     """
+
     serializer_class = MusicianSerializer
     permission_classes = [IsAuthenticated]
-    
+
     def _scope_queryset(self, queryset):
         if self.request.user.is_staff:
             return queryset
@@ -67,20 +76,20 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
         return queryset
 
     def get_queryset(self):
-        queryset = Musician.objects.filter(is_active=True).select_related('user')
+        queryset = Musician.objects.filter(is_active=True).select_related("user")
         queryset = self._scope_queryset(queryset)
-        search = self.request.query_params.get('search')
+        search = self.request.query_params.get("search")
         if search:
             queryset = queryset.filter(
-                Q(user__first_name__icontains=search) |
-                Q(user__last_name__icontains=search) |
-                Q(user__username__icontains=search) |
-                Q(instagram__icontains=search) |
-                Q(bio__icontains=search)
+                Q(user__first_name__icontains=search)
+                | Q(user__last_name__icontains=search)
+                | Q(user__username__icontains=search)
+                | Q(instagram__icontains=search)
+                | Q(bio__icontains=search)
             )
         return queryset
-    
-    @action(detail=False, methods=['get', 'patch'])
+
+    @action(detail=False, methods=["get", "patch"])
     def me(self, request):
         """
         GET /musicians/me/
@@ -90,26 +99,23 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
             musician = request.user.musician_profile
         except Musician.DoesNotExist:
             return Response(
-                {'detail': 'Usuário não possui perfil de músico.'},
-                status=status.HTTP_404_NOT_FOUND
+                {"detail": "Usuário não possui perfil de músico."},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
-        if request.method.lower() == 'patch':
+        if request.method.lower() == "patch":
             serializer = MusicianUpdateSerializer(
-                musician,
-                data=request.data,
-                partial=True,
-                context={'request': request}
+                musician, data=request.data, partial=True, context={"request": request}
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            output = MusicianSerializer(musician, context={'request': request})
+            output = MusicianSerializer(musician, context={"request": request})
             return Response(output.data)
 
         serializer = self.get_serializer(musician)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=["get"])
     def instruments(self, request):
         """
         GET /musicians/instruments/
@@ -117,56 +123,58 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
         com contagem de músicos por instrumento
         """
         instrument_labels = {
-            'vocal': 'Vocal',
-            'guitar': 'Guitarra',
-            'acoustic_guitar': 'Violão',
-            'bass': 'Baixo',
-            'drums': 'Bateria',
-            'keyboard': 'Teclado',
-            'piano': 'Piano',
-            'synth': 'Sintetizador',
-            'percussion': 'Percussão',
-            'cajon': 'Cajón',
-            'violin': 'Violino',
-            'viola': 'Viola',
-            'cello': 'Violoncelo',
-            'double_bass': 'Contrabaixo acústico',
-            'saxophone': 'Saxofone',
-            'trumpet': 'Trompete',
-            'trombone': 'Trombone',
-            'flute': 'Flauta',
-            'clarinet': 'Clarinete',
-            'harmonica': 'Gaita',
-            'ukulele': 'Ukulele',
-            'banjo': 'Banjo',
-            'mandolin': 'Bandolim',
-            'dj': 'DJ',
-            'producer': 'Produtor(a)',
-            'other': 'Outro',
+            "vocal": "Vocal",
+            "guitar": "Guitarra",
+            "acoustic_guitar": "Violão",
+            "bass": "Baixo",
+            "drums": "Bateria",
+            "keyboard": "Teclado",
+            "piano": "Piano",
+            "synth": "Sintetizador",
+            "percussion": "Percussão",
+            "cajon": "Cajón",
+            "violin": "Violino",
+            "viola": "Viola",
+            "cello": "Violoncelo",
+            "double_bass": "Contrabaixo acústico",
+            "saxophone": "Saxofone",
+            "trumpet": "Trompete",
+            "trombone": "Trombone",
+            "flute": "Flauta",
+            "clarinet": "Clarinete",
+            "harmonica": "Gaita",
+            "ukulele": "Ukulele",
+            "banjo": "Banjo",
+            "mandolin": "Bandolim",
+            "dj": "DJ",
+            "producer": "Produtor(a)",
+            "other": "Outro",
         }
 
         # Busca instrumentos únicos com contagem
         instruments_data = (
             self._scope_queryset(Musician.objects.filter(is_active=True))
             .exclude(instrument__isnull=True)
-            .exclude(instrument='')
-            .values('instrument')
-            .annotate(count=Count('id'))
-            .order_by('instrument')
+            .exclude(instrument="")
+            .values("instrument")
+            .annotate(count=Count("id"))
+            .order_by("instrument")
         )
 
         result = []
         for item in instruments_data:
-            instrument = item['instrument']
-            result.append({
-                'value': instrument,
-                'label': instrument_labels.get(instrument, instrument.capitalize()),
-                'count': item['count']
-            })
+            instrument = item["instrument"]
+            result.append(
+                {
+                    "value": instrument,
+                    "label": instrument_labels.get(instrument, instrument.capitalize()),
+                    "count": item["count"],
+                }
+            )
 
         return Response(result)
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=["get"])
     def with_availability(self, request):
         """
         GET /musicians/with_availability/
@@ -177,9 +185,7 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
 
         # IDs de músicos com disponibilidades públicas futuras
         availability_qs = LeaderAvailability.objects.filter(
-            is_active=True,
-            is_public=True,
-            date__gte=timezone.now().date()
+            is_active=True, is_public=True, date__gte=timezone.now().date()
         )
         if not request.user.is_staff:
             try:
@@ -187,12 +193,12 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
             except Musician.DoesNotExist:
                 return Response([])
 
-        musician_ids = availability_qs.values_list('leader_id', flat=True).distinct()
+        musician_ids = availability_qs.values_list("leader_id", flat=True).distinct()
 
         queryset = self.get_queryset().filter(id__in=musician_ids)
 
         # Filtro por instrumento
-        instrument = request.query_params.get('instrument')
+        instrument = request.query_params.get("instrument")
         if instrument:
             queryset = queryset.filter(instrument=instrument)
 
@@ -209,10 +215,14 @@ class EventViewSet(viewsets.ModelViewSet):
     2. Sistema cria availabilities para todos os músicos convidados
     3. Músicos marcam disponibilidade e confirmam o evento ao aceitar
     """
-    queryset = Event.objects.prefetch_related(
-        'availabilities__musician__user',
-        'logs__performed_by'
-    ).select_related('created_by', 'approved_by').all()
+
+    queryset = (
+        Event.objects.prefetch_related(
+            "availabilities__musician__user", "logs__performed_by"
+        )
+        .select_related("created_by", "approved_by")
+        .all()
+    )
     permission_classes = [IsAuthenticated]
 
     def get_permissions(self):
@@ -221,7 +231,7 @@ class EventViewSet(viewsets.ModelViewSet):
         - update/delete: apenas criador
         - outras: apenas autenticado
         """
-        if self.action in ['update', 'partial_update', 'destroy', 'cancel']:
+        if self.action in ["update", "partial_update", "destroy", "cancel"]:
             return [IsAuthenticated(), IsOwnerOrReadOnly()]
         return [IsAuthenticated()]
 
@@ -232,22 +242,22 @@ class EventViewSet(viewsets.ModelViewSet):
         - preview_conflicts: limite de chamadas de preview
         - approve/reject: limite burst para ações sensíveis
         """
-        if self.action == 'create':
+        if self.action == "create":
             return [CreateEventRateThrottle()]
-        if self.action == 'preview_conflicts':
+        if self.action == "preview_conflicts":
             return [PreviewConflictsRateThrottle()]
-        if self.action in ['approve', 'reject', 'cancel']:
+        if self.action in ["approve", "reject", "cancel"]:
             return [BurstRateThrottle()]
         return super().get_throttles()
 
     def get_serializer_class(self):
         """Escolhe serializer baseado na action"""
-        if self.action == 'list':
+        if self.action == "list":
             return EventListSerializer
-        elif self.action == 'create':
+        elif self.action == "create":
             return EventCreateSerializer
         return EventDetailSerializer
-    
+
     def get_queryset(self):
         """
         Filtra eventos baseado em query params:
@@ -262,11 +272,19 @@ class EventViewSet(viewsets.ModelViewSet):
 
         # Adiciona anotações para contagem de disponibilidades (otimização N+1)
         queryset = queryset.annotate(
-            avail_pending=Count('availabilities', filter=Q(availabilities__response='pending')),
-            avail_available=Count('availabilities', filter=Q(availabilities__response='available')),
-            avail_unavailable=Count('availabilities', filter=Q(availabilities__response='unavailable')),
-            avail_maybe=Count('availabilities', filter=Q(availabilities__response='maybe')),
-            avail_total=Count('availabilities'),
+            avail_pending=Count(
+                "availabilities", filter=Q(availabilities__response="pending")
+            ),
+            avail_available=Count(
+                "availabilities", filter=Q(availabilities__response="available")
+            ),
+            avail_unavailable=Count(
+                "availabilities", filter=Q(availabilities__response="unavailable")
+            ),
+            avail_maybe=Count(
+                "availabilities", filter=Q(availabilities__response="maybe")
+            ),
+            avail_total=Count("availabilities"),
         )
 
         # Exibe eventos onde o usuário participa (criador ou availability)
@@ -274,16 +292,16 @@ class EventViewSet(viewsets.ModelViewSet):
             try:
                 musician = self.request.user.musician_profile
                 queryset = queryset.filter(
-                    models.Q(created_by=self.request.user) |
-                    models.Q(availabilities__musician=musician)
+                    models.Q(created_by=self.request.user)
+                    | models.Q(availabilities__musician=musician)
                 ).distinct()
             except Musician.DoesNotExist:
                 queryset = queryset.filter(created_by=self.request.user)
 
         # Filtro por status
-        status_filter = self.request.query_params.get('status')
+        status_filter = self.request.query_params.get("status")
         if status_filter:
-            statuses = status_filter.split(',')
+            statuses = status_filter.split(",")
             # Valida que status está em choices válidos
             valid_statuses = [choice[0] for choice in Event.STATUS_CHOICES]
             statuses = [s for s in statuses if s in valid_statuses]
@@ -291,42 +309,44 @@ class EventViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(status__in=statuses)
 
         # Minhas propostas
-        if self.request.query_params.get('my_proposals') == 'true':
+        if self.request.query_params.get("my_proposals") == "true":
             queryset = queryset.filter(created_by=self.request.user)
 
         # Pendentes de convite (eventos propostos onde o músico tem availability pendente)
-        if self.request.query_params.get('pending_approval') == 'true':
+        if self.request.query_params.get("pending_approval") == "true":
             try:
                 musician = self.request.user.musician_profile
                 queryset = queryset.filter(
-                    status__in=['proposed', 'confirmed', 'approved'],
+                    status__in=["proposed", "confirmed", "approved"],
                     availabilities__musician=musician,
-                    availabilities__response='pending'
+                    availabilities__response="pending",
                 ).distinct()
             except Musician.DoesNotExist:
                 return Event.objects.none()
 
         # Busca por título ou local
-        search = self.request.query_params.get('search')
+        search = self.request.query_params.get("search")
         if search:
             # Limita tamanho da query para prevenir DoS
             if len(search) > 100:
-                raise ValidationError({'search': 'Busca não pode ter mais de 100 caracteres.'})
+                raise ValidationError(
+                    {"search": "Busca não pode ter mais de 100 caracteres."}
+                )
             queryset = queryset.filter(
                 Q(title__icontains=search) | Q(location__icontains=search)
             )
 
         # Eventos passados
-        if self.request.query_params.get('past') == 'true':
+        if self.request.query_params.get("past") == "true":
             queryset = queryset.filter(event_date__lt=timezone.now().date())
 
         # Eventos futuros (padrão)
-        if self.request.query_params.get('upcoming') == 'true':
+        if self.request.query_params.get("upcoming") == "true":
             queryset = queryset.filter(event_date__gte=timezone.now().date())
 
         return queryset
 
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=["post"])
     def preview_conflicts(self, request):
         """
         POST /events/preview_conflicts/
@@ -335,51 +355,71 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         data = request.data
         try:
-            event_date = date.fromisoformat(data.get('event_date'))
-            start_time_value = time.fromisoformat(data.get('start_time'))
-            end_time_value = time.fromisoformat(data.get('end_time'))
+            event_date = date.fromisoformat(data.get("event_date"))
+            start_time_value = time.fromisoformat(data.get("start_time"))
+            end_time_value = time.fromisoformat(data.get("end_time"))
         except Exception:
-            return Response({'detail': 'Formato inválido de data/horário.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Formato inválido de data/horário."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # Constrói datetime com detecção de cruzar meia-noite
         start_dt = timezone.make_aware(datetime.combine(event_date, start_time_value))
         if end_time_value <= start_time_value:
-            end_dt = timezone.make_aware(datetime.combine(event_date + timedelta(days=1), end_time_value))
+            end_dt = timezone.make_aware(
+                datetime.combine(event_date + timedelta(days=1), end_time_value)
+            )
         else:
             end_dt = timezone.make_aware(datetime.combine(event_date, end_time_value))
 
         buffer = timedelta(minutes=40)
         # Adiciona anotações para otimizar N+1
-        conflicts = Event.objects.filter(
-            status__in=['proposed', 'approved', 'confirmed'],
-            start_datetime__lt=end_dt + buffer,
-            end_datetime__gt=start_dt - buffer
-        ).select_related('created_by', 'approved_by').annotate(
-            avail_pending=Count('availabilities', filter=Q(availabilities__response='pending')),
-            avail_available=Count('availabilities', filter=Q(availabilities__response='available')),
-            avail_unavailable=Count('availabilities', filter=Q(availabilities__response='unavailable')),
-            avail_maybe=Count('availabilities', filter=Q(availabilities__response='maybe')),
-            avail_total=Count('availabilities'),
+        conflicts = (
+            Event.objects.filter(
+                status__in=["proposed", "approved", "confirmed"],
+                start_datetime__lt=end_dt + buffer,
+                end_datetime__gt=start_dt - buffer,
+            )
+            .select_related("created_by", "approved_by")
+            .annotate(
+                avail_pending=Count(
+                    "availabilities", filter=Q(availabilities__response="pending")
+                ),
+                avail_available=Count(
+                    "availabilities", filter=Q(availabilities__response="available")
+                ),
+                avail_unavailable=Count(
+                    "availabilities", filter=Q(availabilities__response="unavailable")
+                ),
+                avail_maybe=Count(
+                    "availabilities", filter=Q(availabilities__response="maybe")
+                ),
+                avail_total=Count("availabilities"),
+            )
         )
 
         if not request.user.is_staff:
             try:
                 musician = request.user.musician_profile
                 conflicts = conflicts.filter(
-                    Q(created_by=request.user) |
-                    Q(availabilities__musician=musician)
+                    Q(created_by=request.user) | Q(availabilities__musician=musician)
                 ).distinct()
             except Musician.DoesNotExist:
                 conflicts = conflicts.filter(created_by=request.user)
 
-        serializer = EventListSerializer(conflicts, many=True, context={'request': request})
-        return Response({
-            'has_conflicts': conflicts.exists(),
-            'count': conflicts.count(),
-            'buffer_minutes': 40,
-            'conflicts': serializer.data
-        })
-    
+        serializer = EventListSerializer(
+            conflicts, many=True, context={"request": request}
+        )
+        return Response(
+            {
+                "has_conflicts": conflicts.exists(),
+                "count": conflicts.count(),
+                "buffer_minutes": 40,
+                "conflicts": serializer.data,
+            }
+        )
+
     def perform_create(self, serializer):
         """
         Cria evento e disponibilidades para músicos convidados.
@@ -391,9 +431,9 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         org = get_user_organization(self.request.user)
 
-        is_solo = serializer.validated_data.get('is_solo', False)
-        invited_musicians_ids = serializer.validated_data.pop('invited_musicians', [])
-        required_instruments = serializer.validated_data.pop('required_instruments', [])
+        is_solo = serializer.validated_data.get("is_solo", False)
+        invited_musicians_ids = serializer.validated_data.pop("invited_musicians", [])
+        required_instruments = serializer.validated_data.pop("required_instruments", [])
 
         if invited_musicians_ids:
             invited_musicians_ids = list(dict.fromkeys(invited_musicians_ids))
@@ -406,18 +446,24 @@ class EventViewSet(viewsets.ModelViewSet):
                 event = serializer.save(
                     created_by=self.request.user,
                     organization=org,
-                    status='confirmed',
+                    status="confirmed",
                     approved_by=self.request.user,
                     approved_at=timezone.now(),
                 )
-                self._log_event(event, 'created', 'Show solo confirmado automaticamente.')
+                self._log_event(
+                    event, "created", "Show solo confirmado automaticamente."
+                )
             else:
                 event = serializer.save(
                     created_by=self.request.user,
                     organization=org,
-                    status='proposed',
+                    status="proposed",
                 )
-                self._log_event(event, 'created', 'Evento criado aguardando confirmação dos músicos convidados.')
+                self._log_event(
+                    event,
+                    "created",
+                    "Evento criado aguardando confirmação dos músicos convidados.",
+                )
 
             if required_instruments:
                 self._save_required_instruments(event, required_instruments)
@@ -436,28 +482,29 @@ class EventViewSet(viewsets.ModelViewSet):
                     musician=creator_musician,
                     event=event,
                     defaults={
-                        'response': 'available',
-                        'notes': 'Evento criado por mim',
-                        'responded_at': now,
-                    }
+                        "response": "available",
+                        "notes": "Evento criado por mim",
+                        "responded_at": now,
+                    },
                 )
 
             # Se não for solo, criar availability para músicos convidados
             if not is_solo and invited_musicians_ids:
                 invited_musicians = Musician.objects.filter(
-                    id__in=invited_musicians_ids,
-                    is_active=True
-                ).exclude(user=self.request.user)  # Exclui o criador (já adicionado acima)
+                    id__in=invited_musicians_ids, is_active=True
+                ).exclude(
+                    user=self.request.user
+                )  # Exclui o criador (já adicionado acima)
 
                 for musician in invited_musicians:
                     Availability.objects.update_or_create(
                         musician=musician,
                         event=event,
                         defaults={
-                            'response': 'pending',
-                            'notes': '',
-                            'responded_at': None,
-                        }
+                            "response": "pending",
+                            "notes": "",
+                            "responded_at": None,
+                        },
                     )
 
             if not is_solo:
@@ -467,9 +514,11 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         Apenas o criador pode deletar o evento de forma definitiva.
         """
-        request_user = getattr(self, 'request', None).user if hasattr(self, 'request') else None
+        request_user = (
+            getattr(self, "request", None).user if hasattr(self, "request") else None
+        )
         if request_user and instance.created_by and instance.created_by != request_user:
-            raise PermissionDenied('Apenas o criador pode deletar este evento.')
+            raise PermissionDenied("Apenas o criador pode deletar este evento.")
 
         super().perform_destroy(instance)
 
@@ -486,15 +535,17 @@ class EventViewSet(viewsets.ModelViewSet):
 
         objs = []
         for item in required_instruments:
-            instrument = (item.get('instrument') or '').strip()
-            quantity = item.get('quantity', 1)
+            instrument = (item.get("instrument") or "").strip()
+            quantity = item.get("quantity", 1)
             if not instrument:
                 continue
-            objs.append(EventInstrument(
-                event=event,
-                instrument=instrument,
-                quantity=quantity,
-            ))
+            objs.append(
+                EventInstrument(
+                    event=event,
+                    instrument=instrument,
+                    quantity=quantity,
+                )
+            )
 
         if objs:
             EventInstrument.objects.bulk_create(objs)
@@ -503,9 +554,11 @@ class EventViewSet(viewsets.ModelViewSet):
         """Cria registro de histórico do evento"""
         EventLog.objects.create(
             event=event,
-            performed_by=getattr(self.request, 'user', None) if hasattr(self, 'request') else None,
+            performed_by=getattr(self.request, "user", None)
+            if hasattr(self, "request")
+            else None,
             action=action,
-            description=description
+            description=description,
         )
 
     def _can_user_rate_event(self, event, user):
@@ -514,22 +567,38 @@ class EventViewSet(viewsets.ModelViewSet):
         Apenas o criador do evento pode avaliar e somente após a data do evento.
         """
         if not event.created_by or event.created_by != user:
-            return False, 'Apenas o criador do evento pode avaliar os músicos.', status.HTTP_403_FORBIDDEN
+            return (
+                False,
+                "Apenas o criador do evento pode avaliar os músicos.",
+                status.HTTP_403_FORBIDDEN,
+            )
 
         event_end = event.end_datetime
         if not event_end and event.event_date and event.end_time:
-            event_end = timezone.make_aware(datetime.combine(event.event_date, event.end_time))
+            event_end = timezone.make_aware(
+                datetime.combine(event.event_date, event.end_time)
+            )
 
         if event_end and event_end >= timezone.now():
-            return False, 'Avaliações são liberadas apenas após o término do evento.', status.HTTP_400_BAD_REQUEST
+            return (
+                False,
+                "Avaliações são liberadas apenas após o término do evento.",
+                status.HTTP_400_BAD_REQUEST,
+            )
 
-        already_rated = MusicianRating.objects.filter(event=event, rated_by=user).exists()
+        already_rated = MusicianRating.objects.filter(
+            event=event, rated_by=user
+        ).exists()
         if already_rated:
-            return False, 'Você já enviou avaliações para este evento.', status.HTTP_400_BAD_REQUEST
+            return (
+                False,
+                "Você já enviou avaliações para este evento.",
+                status.HTTP_400_BAD_REQUEST,
+            )
 
-        return True, '', status.HTTP_200_OK
+        return True, "", status.HTTP_200_OK
 
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
     def approve(self, request, pk=None):
         """
         POST /events/{id}/approve/
@@ -537,46 +606,48 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         event = self.get_object()
 
-        if event.status == 'cancelled':
+        if event.status == "cancelled":
             return Response(
-                {'detail': 'Evento cancelado não pode ser confirmado.'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Evento cancelado não pode ser confirmado."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
             musician = request.user.musician_profile
         except Musician.DoesNotExist:
             return Response(
-                {'detail': 'Usuário não possui perfil de músico.'},
-                status=status.HTTP_403_FORBIDDEN
+                {"detail": "Usuário não possui perfil de músico."},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         # Garante que o músico foi convidado para o evento
         if not event.availabilities.filter(musician=musician).exists():
             return Response(
-                {'detail': 'Apenas músicos convidados podem confirmar este evento.'},
-                status=status.HTTP_403_FORBIDDEN
+                {"detail": "Apenas músicos convidados podem confirmar este evento."},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         availability, created = Availability.objects.update_or_create(
             musician=musician,
             event=event,
             defaults={
-                'response': 'available',
-                'notes': 'Confirmado via convite',
-                'responded_at': timezone.now(),
-            }
+                "response": "available",
+                "notes": "Confirmado via convite",
+                "responded_at": timezone.now(),
+            },
         )
 
-        if created or availability.response == 'available':
+        if created or availability.response == "available":
             approver_name = request.user.get_full_name() or request.user.username
-            self._log_event(event, 'availability', f'Convite confirmado por {approver_name}.')
+            self._log_event(
+                event, "availability", f"Convite confirmado por {approver_name}."
+            )
 
         self._check_and_confirm_event(event, confirmed_by=request.user)
-        serializer = EventDetailSerializer(event, context={'request': request})
+        serializer = EventDetailSerializer(event, context={"request": request})
         return Response(serializer.data)
-    
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
     def reject(self, request, pk=None):
         """
         POST /events/{id}/reject/
@@ -585,49 +656,53 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         event = self.get_object()
 
-        if event.status == 'cancelled':
+        if event.status == "cancelled":
             return Response(
-                {'detail': 'Evento cancelado não pode ser recusado.'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Evento cancelado não pode ser recusado."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
             musician = request.user.musician_profile
         except Musician.DoesNotExist:
             return Response(
-                {'detail': 'Usuário não possui perfil de músico.'},
-                status=status.HTTP_403_FORBIDDEN
+                {"detail": "Usuário não possui perfil de músico."},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         # Garante que o músico foi convidado para o evento
         if not event.availabilities.filter(musician=musician).exists():
             return Response(
-                {'detail': 'Apenas músicos convidados podem recusar este evento.'},
-                status=status.HTTP_403_FORBIDDEN
+                {"detail": "Apenas músicos convidados podem recusar este evento."},
+                status=status.HTTP_403_FORBIDDEN,
             )
-        
+
         # Pega o motivo
-        reason = request.data.get('reason', '')
+        reason = request.data.get("reason", "")
 
         Availability.objects.update_or_create(
             musician=musician,
             event=event,
             defaults={
-                'response': 'unavailable',
-                'notes': reason or 'Convite recusado',
-                'responded_at': timezone.now(),
-            }
+                "response": "unavailable",
+                "notes": reason or "Convite recusado",
+                "responded_at": timezone.now(),
+            },
         )
 
         self._log_event(
             event,
-            'availability',
-            f'Convite recusado por {musician.user.get_full_name() or musician.user.username}. Motivo: {reason or "Não informado."}'
+            "availability",
+            f"Convite recusado por {musician.user.get_full_name() or musician.user.username}. Motivo: {reason or 'Não informado.'}",
         )
-        serializer = EventDetailSerializer(event, context={'request': request})
+        serializer = EventDetailSerializer(event, context={"request": request})
         return Response(serializer.data)
 
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsOwnerOrReadOnly])
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[IsAuthenticated, IsOwnerOrReadOnly],
+    )
     def cancel(self, request, pk=None):
         """
         POST /events/{id}/cancel/
@@ -639,26 +714,26 @@ class EventViewSet(viewsets.ModelViewSet):
         # Apenas o criador pode cancelar
         if event.created_by != request.user:
             return Response(
-                {'detail': 'Apenas o criador pode cancelar este evento.'},
-                status=status.HTTP_403_FORBIDDEN
+                {"detail": "Apenas o criador pode cancelar este evento."},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         # Verifica se o evento pode ser cancelado
-        if event.status == 'cancelled':
+        if event.status == "cancelled":
             return Response(
-                {'detail': 'Evento já está cancelado.'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Evento já está cancelado."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Cancela o evento
-        event.status = 'cancelled'
+        event.status = "cancelled"
         event.save()
-        self._log_event(event, 'cancelled', 'Evento cancelado pelo criador.')
+        self._log_event(event, "cancelled", "Evento cancelado pelo criador.")
 
-        serializer = EventDetailSerializer(event, context={'request': request})
+        serializer = EventDetailSerializer(event, context={"request": request})
         return Response(serializer.data)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=["post"])
     def set_availability(self, request, pk=None):
         """
         POST /events/{id}/set_availability/
@@ -674,62 +749,68 @@ class EventViewSet(viewsets.ModelViewSet):
             musician = request.user.musician_profile
         except Musician.DoesNotExist:
             return Response(
-                {'detail': 'Usuário não possui perfil de músico.'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Usuário não possui perfil de músico."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Apenas músicos convidados podem responder disponibilidade
         if not event.availabilities.filter(musician=musician).exists():
             return Response(
-                {'detail': 'Você não foi convidado para este evento.'},
-                status=status.HTTP_403_FORBIDDEN
+                {"detail": "Você não foi convidado para este evento."},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         # Valida response
-        response_value = request.data.get('response', 'pending')
-        valid_responses = ['pending', 'available', 'unavailable', 'maybe']
+        response_value = request.data.get("response", "pending")
+        valid_responses = ["pending", "available", "unavailable", "maybe"]
 
         if response_value not in valid_responses:
             return Response(
-                {'detail': f'Response inválido. Opções: {", ".join(valid_responses)}'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": f"Response inválido. Opções: {', '.join(valid_responses)}"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Captura estado anterior para log
         previous = Availability.objects.filter(musician=musician, event=event).first()
 
         # Cria ou atualiza a disponibilidade
-        sanitized_notes = sanitize_string(request.data.get('notes', ''), max_length=1000, allow_empty=True)
+        sanitized_notes = sanitize_string(
+            request.data.get("notes", ""), max_length=1000, allow_empty=True
+        )
         availability, created = Availability.objects.update_or_create(
             musician=musician,
             event=event,
             defaults={
-                'response': response_value,
-                'notes': sanitized_notes,
-                'responded_at': timezone.now() if response_value != 'pending' else None,
-            }
+                "response": response_value,
+                "notes": sanitized_notes,
+                "responded_at": timezone.now() if response_value != "pending" else None,
+            },
         )
 
         # Registra log apenas se houve mudança e resposta não é pendente
-        if response_value != 'pending':
+        if response_value != "pending":
             prev_response = previous.response if previous else None
-            prev_notes = previous.notes if previous else ''
+            prev_notes = previous.notes if previous else ""
             response_labels = {
-                'available': 'Disponível',
-                'unavailable': 'Indisponível',
-                'maybe': 'Talvez',
-                'pending': 'Pendente',
+                "available": "Disponível",
+                "unavailable": "Indisponível",
+                "maybe": "Talvez",
+                "pending": "Pendente",
             }
             response_label = response_labels.get(response_value, response_value)
-            if created or prev_response != response_value or prev_notes != (sanitized_notes or ''):
+            if (
+                created
+                or prev_response != response_value
+                or prev_notes != (sanitized_notes or "")
+            ):
                 self._log_event(
                     event,
-                    'availability',
-                    f'{musician.user.get_full_name() or musician.user.username} marcou disponibilidade: {response_label}'
+                    "availability",
+                    f"{musician.user.get_full_name() or musician.user.username} marcou disponibilidade: {response_label}",
                 )
 
         # Verifica se algum convidado aceitou e confirma o evento
-        if response_value == 'available':
+        if response_value == "available":
             self._check_and_confirm_event(event, confirmed_by=request.user)
 
         serializer = AvailabilitySerializer(availability)
@@ -747,9 +828,9 @@ class EventViewSet(viewsets.ModelViewSet):
             locked_event = Event.objects.select_for_update().get(pk=event.pk)
 
             # Verifica se já foi confirmado (por outra requisição concorrente)
-            if locked_event.status == 'confirmed':
+            if locked_event.status == "confirmed":
                 return
-            if locked_event.status in ['cancelled', 'rejected']:
+            if locked_event.status in ["cancelled", "rejected"]:
                 return
 
             all_availabilities = locked_event.availabilities.all()
@@ -762,19 +843,20 @@ class EventViewSet(viewsets.ModelViewSet):
                 )
 
             if invitee_availabilities.exists():
-                has_confirmation = invitee_availabilities.filter(response='available').exists()
+                has_confirmation = invitee_availabilities.filter(
+                    response="available"
+                ).exists()
                 if not has_confirmation:
                     return
             else:
                 # Sem convidados: confirma apenas se o criador está disponível
                 creator_available = all_availabilities.filter(
-                    musician__user=locked_event.created_by,
-                    response='available'
+                    musician__user=locked_event.created_by, response="available"
                 ).exists()
                 if not creator_available:
                     return
 
-            locked_event.status = 'confirmed'
+            locked_event.status = "confirmed"
             if confirmed_by and not locked_event.approved_by:
                 locked_event.approved_by = confirmed_by
                 locked_event.approved_at = timezone.now()
@@ -790,13 +872,13 @@ class EventViewSet(viewsets.ModelViewSet):
                 approver_name = approver.get_full_name() or approver.username
 
             description = (
-                f'Evento confirmado por {approver_name}.'
+                f"Evento confirmado por {approver_name}."
                 if approver_name
-                else 'Evento confirmado.'
+                else "Evento confirmado."
             )
-            self._log_event(locked_event, 'approved', description)
+            self._log_event(locked_event, "approved", description)
 
-    @action(detail=True, methods=['get'])
+    @action(detail=True, methods=["get"])
     def can_rate(self, request, pk=None):
         """
         GET /events/{id}/can_rate/
@@ -805,12 +887,9 @@ class EventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
         can_rate, reason, _ = self._can_user_rate_event(event, request.user)
 
-        return Response({
-            'can_rate': can_rate,
-            'reason': reason
-        })
+        return Response({"can_rate": can_rate, "reason": reason})
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=["post"])
     def submit_ratings(self, request, pk=None):
         """
         POST /events/{id}/submit_ratings/
@@ -821,99 +900,102 @@ class EventViewSet(viewsets.ModelViewSet):
         can_rate, reason, status_code = self._can_user_rate_event(event, request.user)
 
         if not can_rate:
-            return Response(
-                {'detail': reason, 'can_rate': False},
-                status=status_code
-            )
+            return Response({"detail": reason, "can_rate": False}, status=status_code)
 
         serializer = RatingSubmitSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        ratings_data = serializer.validated_data['ratings']
+        ratings_data = serializer.validated_data["ratings"]
 
-        allowed_musician_ids = set(event.availabilities.values_list('musician_id', flat=True))
+        allowed_musician_ids = set(
+            event.availabilities.values_list("musician_id", flat=True)
+        )
         if not allowed_musician_ids:
             return Response(
-                {'detail': 'Evento não possui músicos associados para avaliação.'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Evento não possui músicos associados para avaliação."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         seen_ids = set()
         normalized_ratings = []
 
         for item in ratings_data:
-            musician_id_raw = item.get('musician_id')
-            rating_raw = item.get('rating')
+            musician_id_raw = item.get("musician_id")
+            rating_raw = item.get("rating")
 
             try:
                 musician_id = int(musician_id_raw)
             except (TypeError, ValueError):
                 return Response(
-                    {'detail': f'ID de músico inválido: {musician_id_raw}'},
-                    status=status.HTTP_400_BAD_REQUEST
+                    {"detail": f"ID de músico inválido: {musician_id_raw}"},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
             try:
                 rating_value = int(rating_raw)
             except (TypeError, ValueError):
                 return Response(
-                    {'detail': f'Nota inválida para o músico {musician_id}.'},
-                    status=status.HTTP_400_BAD_REQUEST
+                    {"detail": f"Nota inválida para o músico {musician_id}."},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
             if rating_value < 1 or rating_value > 5:
                 return Response(
-                    {'detail': f'Nota do músico {musician_id} deve estar entre 1 e 5.'},
-                    status=status.HTTP_400_BAD_REQUEST
+                    {"detail": f"Nota do músico {musician_id} deve estar entre 1 e 5."},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
             if musician_id in seen_ids:
                 return Response(
-                    {'detail': 'Não é permitido avaliar o mesmo músico mais de uma vez.'},
-                    status=status.HTTP_400_BAD_REQUEST
+                    {
+                        "detail": "Não é permitido avaliar o mesmo músico mais de uma vez."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
             if musician_id not in allowed_musician_ids:
                 return Response(
-                    {'detail': f'Músico {musician_id} não faz parte do evento.'},
-                    status=status.HTTP_400_BAD_REQUEST
+                    {"detail": f"Músico {musician_id} não faz parte do evento."},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
             seen_ids.add(musician_id)
-            normalized_ratings.append({
-                'musician_id': musician_id,
-                'rating': rating_value,
-                'comment': (item.get('comment') or '').strip() or None,
-            })
+            normalized_ratings.append(
+                {
+                    "musician_id": musician_id,
+                    "rating": rating_value,
+                    "comment": (item.get("comment") or "").strip() or None,
+                }
+            )
 
-        musicians_map = {
-            m.id: m for m in Musician.objects.filter(id__in=seen_ids)
-        }
+        musicians_map = {m.id: m for m in Musician.objects.filter(id__in=seen_ids)}
         missing_musicians = seen_ids - set(musicians_map.keys())
 
         if missing_musicians:
-            missing_list = ', '.join(map(str, sorted(missing_musicians)))
+            missing_list = ", ".join(map(str, sorted(missing_musicians)))
             return Response(
-                {'detail': f'Músicos não encontrados: {missing_list}'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": f"Músicos não encontrados: {missing_list}"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         created_ratings = []
         with transaction.atomic():
             for item in normalized_ratings:
-                musician = musicians_map[item['musician_id']]
+                musician = musicians_map[item["musician_id"]]
                 rating_obj = MusicianRating.objects.create(
                     event=event,
                     musician=musician,
                     rated_by=request.user,
-                    rating=item['rating'],
-                    comment=item['comment']
+                    rating=item["rating"],
+                    comment=item["comment"],
                 )
                 created_ratings.append(rating_obj)
 
-        output_serializer = MusicianRatingSerializer(created_ratings, many=True, context={'request': request})
+        output_serializer = MusicianRatingSerializer(
+            created_ratings, many=True, context={"request": request}
+        )
         return Response(output_serializer.data, status=status.HTTP_201_CREATED)
-    
-    @action(detail=False, methods=['get'])
+
+    @action(detail=False, methods=["get"])
     def my_events(self, request):
         """
         GET /events/my_events/
@@ -921,22 +1003,31 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         try:
             musician = request.user.musician_profile
-            events = Event.objects.filter(
-                availabilities__musician=musician
-            ).distinct()
+            events = Event.objects.filter(availabilities__musician=musician).distinct()
 
             org = get_user_organization(request.user)
             if org:
                 events = events.filter(organization=org)
 
-            events = events.select_related('created_by', 'approved_by').prefetch_related(
-                'availabilities__musician__user'
-            ).annotate(
-                avail_pending=Count('availabilities', filter=Q(availabilities__response='pending')),
-                avail_available=Count('availabilities', filter=Q(availabilities__response='available')),
-                avail_unavailable=Count('availabilities', filter=Q(availabilities__response='unavailable')),
-                avail_maybe=Count('availabilities', filter=Q(availabilities__response='maybe')),
-                avail_total=Count('availabilities'),
+            events = (
+                events.select_related("created_by", "approved_by")
+                .prefetch_related("availabilities__musician__user")
+                .annotate(
+                    avail_pending=Count(
+                        "availabilities", filter=Q(availabilities__response="pending")
+                    ),
+                    avail_available=Count(
+                        "availabilities", filter=Q(availabilities__response="available")
+                    ),
+                    avail_unavailable=Count(
+                        "availabilities",
+                        filter=Q(availabilities__response="unavailable"),
+                    ),
+                    avail_maybe=Count(
+                        "availabilities", filter=Q(availabilities__response="maybe")
+                    ),
+                    avail_total=Count("availabilities"),
+                )
             )
 
             serializer = self.get_serializer(events, many=True)
@@ -944,7 +1035,7 @@ class EventViewSet(viewsets.ModelViewSet):
         except Musician.DoesNotExist:
             return Response([], status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=["get"])
     def pending_my_response(self, request):
         """
         GET /events/pending_my_response/
@@ -953,25 +1044,37 @@ class EventViewSet(viewsets.ModelViewSet):
         try:
             musician = request.user.musician_profile
             events = Event.objects.filter(
-                availabilities__musician=musician,
-                availabilities__response='pending'
+                availabilities__musician=musician, availabilities__response="pending"
             ).distinct()
 
             org = get_user_organization(request.user)
             if org:
                 events = events.filter(organization=org)
 
-            events = events.select_related('created_by', 'approved_by').prefetch_related(
-                'availabilities__musician__user'
-            ).annotate(
-                avail_pending=Count('availabilities', filter=Q(availabilities__response='pending')),
-                avail_available=Count('availabilities', filter=Q(availabilities__response='available')),
-                avail_unavailable=Count('availabilities', filter=Q(availabilities__response='unavailable')),
-                avail_maybe=Count('availabilities', filter=Q(availabilities__response='maybe')),
-                avail_total=Count('availabilities'),
+            events = (
+                events.select_related("created_by", "approved_by")
+                .prefetch_related("availabilities__musician__user")
+                .annotate(
+                    avail_pending=Count(
+                        "availabilities", filter=Q(availabilities__response="pending")
+                    ),
+                    avail_available=Count(
+                        "availabilities", filter=Q(availabilities__response="available")
+                    ),
+                    avail_unavailable=Count(
+                        "availabilities",
+                        filter=Q(availabilities__response="unavailable"),
+                    ),
+                    avail_maybe=Count(
+                        "availabilities", filter=Q(availabilities__response="maybe")
+                    ),
+                    avail_total=Count("availabilities"),
+                )
             )
 
-            serializer = EventListSerializer(events, many=True, context={'request': request})
+            serializer = EventListSerializer(
+                events, many=True, context={"request": request}
+            )
             return Response(serializer.data)
         except Musician.DoesNotExist:
             return Response([], status=status.HTTP_200_OK)
@@ -982,53 +1085,58 @@ class AvailabilityViewSet(viewsets.ModelViewSet):
     ViewSet para disponibilidades.
     Usuários só podem ver/editar suas próprias disponibilidades.
     """
+
     serializer_class = AvailabilitySerializer
     permission_classes = [IsAuthenticated]
-    
+
     def get_queryset(self):
         """Filtra para mostrar apenas disponibilidades do músico logado"""
         try:
             musician = self.request.user.musician_profile
             org = get_user_organization(self.request.user)
-            queryset = Availability.objects.filter(
-                musician=musician
-            ).select_related('musician__user', 'event')
+            queryset = Availability.objects.filter(musician=musician).select_related(
+                "musician__user", "event"
+            )
 
             if org:
                 queryset = queryset.filter(event__organization=org)
-            
+
             # Filtro por status da resposta
-            response_filter = self.request.query_params.get('response')
+            response_filter = self.request.query_params.get("response")
             if response_filter:
                 queryset = queryset.filter(response=response_filter)
-            
+
             # Filtro por status do evento
-            event_status = self.request.query_params.get('event_status')
+            event_status = self.request.query_params.get("event_status")
             if event_status:
                 queryset = queryset.filter(event__status=event_status)
-            
+
             return queryset
         except Musician.DoesNotExist:
             return Availability.objects.none()
-    
+
     def perform_create(self, serializer):
         """Força o musician a ser o usuário logado"""
         try:
             musician = self.request.user.musician_profile
-            event = serializer.validated_data.get('event')
+            event = serializer.validated_data.get("event")
             if not event:
-                raise ValidationError({'event': 'Evento é obrigatório.'})
+                raise ValidationError({"event": "Evento é obrigatório."})
 
-            existing = Availability.objects.filter(musician=musician, event=event).first()
+            existing = Availability.objects.filter(
+                musician=musician, event=event
+            ).first()
             if not existing:
-                raise PermissionDenied('Você não foi convidado para este evento.')
+                raise PermissionDenied("Você não foi convidado para este evento.")
 
-            raise ValidationError({
-                'detail': 'Disponibilidade já existe. Use /events/{id}/set_availability/ ou PUT /availabilities/{id}/.'
-            })
+            raise ValidationError(
+                {
+                    "detail": "Disponibilidade já existe. Use /events/{id}/set_availability/ ou PUT /availabilities/{id}/."
+                }
+            )
         except Musician.DoesNotExist:
-            raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
-    
+            raise ValidationError({"detail": "Usuário não possui perfil de músico."})
+
     def perform_update(self, serializer):
         """Permite apenas atualizar a própria availability"""
         try:
@@ -1036,10 +1144,13 @@ class AvailabilityViewSet(viewsets.ModelViewSet):
             # Verifica se a availability pertence ao músico
             if serializer.instance.musician != musician:
                 from rest_framework.exceptions import PermissionDenied
-                raise PermissionDenied('Você não pode editar disponibilidades de outros músicos.')
+
+                raise PermissionDenied(
+                    "Você não pode editar disponibilidades de outros músicos."
+                )
             serializer.save()
         except Musician.DoesNotExist:
-            raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
+            raise ValidationError({"detail": "Usuário não possui perfil de músico."})
 
     def perform_destroy(self, instance):
         """Permite apenas deletar a própria availability"""
@@ -1048,16 +1159,20 @@ class AvailabilityViewSet(viewsets.ModelViewSet):
             # Verifica se a availability pertence ao músico
             if instance.musician != musician:
                 from rest_framework.exceptions import PermissionDenied
-                raise PermissionDenied('Você não pode deletar disponibilidades de outros músicos.')
+
+                raise PermissionDenied(
+                    "Você não pode deletar disponibilidades de outros músicos."
+                )
             super().perform_destroy(instance)
         except Musician.DoesNotExist:
-            raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
+            raise ValidationError({"detail": "Usuário não possui perfil de músico."})
 
 
 class ConnectionViewSet(viewsets.ModelViewSet):
     """
     Conexões entre músicos (seguir, ligar depois, indicar, já toquei com).
     """
+
     serializer_class = ConnectionSerializer
     permission_classes = [IsAuthenticated]
 
@@ -1067,9 +1182,11 @@ class ConnectionViewSet(viewsets.ModelViewSet):
         except Musician.DoesNotExist:
             return Connection.objects.none()
 
-        qs = Connection.objects.filter(follower=musician).select_related('target__user', 'follower__user')
+        qs = Connection.objects.filter(follower=musician).select_related(
+            "target__user", "follower__user"
+        )
 
-        ctype = self.request.query_params.get('type')
+        ctype = self.request.query_params.get("type")
         if ctype:
             qs = qs.filter(connection_type=ctype)
 
@@ -1079,11 +1196,13 @@ class ConnectionViewSet(viewsets.ModelViewSet):
         try:
             musician = self.request.user.musician_profile
         except Musician.DoesNotExist:
-            raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
+            raise ValidationError({"detail": "Usuário não possui perfil de músico."})
 
-        target = serializer.validated_data.get('target')
+        target = serializer.validated_data.get("target")
         if target == musician:
-            raise ValidationError({'detail': 'Não é possível criar conexão consigo mesmo.'})
+            raise ValidationError(
+                {"detail": "Não é possível criar conexão consigo mesmo."}
+            )
 
         serializer.save(follower=musician)
 
@@ -1092,6 +1211,7 @@ class BadgeViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Lista badges do músico logado com progresso para badges não conquistadas.
     """
+
     serializer_class = MusicianBadgeSerializer
     permission_classes = [IsAuthenticated]
 
@@ -1111,10 +1231,11 @@ class BadgeViewSet(viewsets.ReadOnlyModelViewSet):
         try:
             musician = request.user.musician_profile
         except Musician.DoesNotExist:
-            return Response({'earned': [], 'available': []})
+            return Response({"earned": [], "available": []})
 
         data = get_badge_progress(musician)
         return Response(data)
+
 
 class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
     """
@@ -1124,6 +1245,7 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
     - Outros músicos podem visualizar apenas as públicas
     - Filtragem por data (upcoming, past, specific date)
     """
+
     serializer_class = LeaderAvailabilitySerializer
     permission_classes = [IsAuthenticated]
 
@@ -1140,10 +1262,12 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         - ?mine=true (apenas minhas)
         - ?instrument=<instrument> (filtrar por instrumento do músico)
         """
-        queryset = LeaderAvailability.objects.filter(is_active=True).select_related('leader__user')
+        queryset = LeaderAvailability.objects.filter(is_active=True).select_related(
+            "leader__user"
+        )
 
-        mine_param = self.request.query_params.get('mine') == 'true'
-        public_param = self.request.query_params.get('public') == 'true'
+        mine_param = self.request.query_params.get("mine") == "true"
+        public_param = self.request.query_params.get("public") == "true"
 
         # Default: mostrar apenas minhas agendas se nada for informado
         if not mine_param and not public_param:
@@ -1167,37 +1291,37 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         queryset = queryset.filter(filters)
 
         # Filtro por data futura
-        if self.request.query_params.get('upcoming') == 'true':
+        if self.request.query_params.get("upcoming") == "true":
             queryset = queryset.filter(date__gte=timezone.now().date())
 
         # Filtro por data passada
-        if self.request.query_params.get('past') == 'true':
+        if self.request.query_params.get("past") == "true":
             queryset = queryset.filter(date__lt=timezone.now().date())
 
         # Filtro por data específica
-        specific_date = self.request.query_params.get('date')
+        specific_date = self.request.query_params.get("date")
         if specific_date:
             queryset = queryset.filter(date=specific_date)
 
         # Filtro por músico específico
-        leader_id = self.request.query_params.get('leader')
+        leader_id = self.request.query_params.get("leader")
         if leader_id and public_param:
             queryset = queryset.filter(leader_id=leader_id)
 
         # Filtro por instrumento
-        instrument = self.request.query_params.get('instrument')
+        instrument = self.request.query_params.get("instrument")
         if instrument:
             queryset = queryset.filter(leader__instrument=instrument)
 
         # Busca por nome/username/instagram do músico (funciona em todos os modos)
-        search = self.request.query_params.get('search')
+        search = self.request.query_params.get("search")
         if search:
             queryset = queryset.filter(
-                Q(leader__user__first_name__icontains=search) |
-                Q(leader__user__last_name__icontains=search) |
-                Q(leader__user__username__icontains=search) |
-                Q(leader__instagram__icontains=search) |
-                Q(notes__icontains=search)
+                Q(leader__user__first_name__icontains=search)
+                | Q(leader__user__last_name__icontains=search)
+                | Q(leader__user__username__icontains=search)
+                | Q(leader__instagram__icontains=search)
+                | Q(notes__icontains=search)
             )
 
         return queryset
@@ -1226,9 +1350,9 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
             created = serializer.instance
             buffer = timedelta(minutes=40)
             conflicting_events = Event.objects.filter(
-                status__in=['proposed', 'approved', 'confirmed'],
+                status__in=["proposed", "approved", "confirmed"],
                 start_datetime__lt=created.end_datetime + buffer,
-                end_datetime__gt=created.start_datetime - buffer
+                end_datetime__gt=created.start_datetime - buffer,
             )
             conflicting_events = conflicting_events.filter(
                 Q(created_by=musician.user) | Q(availabilities__musician=musician)
@@ -1237,7 +1361,7 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
                 # Ajusta disponibilidade recém-criada consumindo eventos já existentes
                 self._split_availability_with_events(created, list(conflicting_events))
         except Musician.DoesNotExist:
-            raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
+            raise ValidationError({"detail": "Usuário não possui perfil de músico."})
 
     def create(self, request, *args, **kwargs):
         """
@@ -1251,12 +1375,15 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         except Exception as exc:
             logging.exception("Erro ao criar disponibilidade do músico")
             from rest_framework.exceptions import ValidationError
+
             if isinstance(exc, ValidationError):
                 raise
-            return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
 
     def perform_update(self, serializer):
         """
@@ -1268,14 +1395,17 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
             # Verifica se a disponibilidade pertence ao músico
             if serializer.instance.leader != musician:
                 from rest_framework.exceptions import PermissionDenied
-                raise PermissionDenied('Você não pode editar disponibilidades de outros músicos.')
+
+                raise PermissionDenied(
+                    "Você não pode editar disponibilidades de outros músicos."
+                )
 
             instance = serializer.save()
             buffer = timedelta(minutes=40)
             conflicting_events = Event.objects.filter(
-                status__in=['proposed', 'approved', 'confirmed'],
+                status__in=["proposed", "approved", "confirmed"],
                 start_datetime__lt=instance.end_datetime + buffer,
-                end_datetime__gt=instance.start_datetime - buffer
+                end_datetime__gt=instance.start_datetime - buffer,
             )
             conflicting_events = conflicting_events.filter(
                 Q(created_by=musician.user) | Q(availabilities__musician=musician)
@@ -1283,7 +1413,7 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
             if conflicting_events.exists():
                 self._split_availability_with_events(instance, list(conflicting_events))
         except Musician.DoesNotExist:
-            raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
+            raise ValidationError({"detail": "Usuário não possui perfil de músico."})
 
     def perform_destroy(self, instance):
         """
@@ -1294,13 +1424,16 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
 
             if instance.leader != musician:
                 from rest_framework.exceptions import PermissionDenied
-                raise PermissionDenied('Você não pode excluir disponibilidades de outros músicos.')
+
+                raise PermissionDenied(
+                    "Você não pode excluir disponibilidades de outros músicos."
+                )
 
             super().perform_destroy(instance)
         except Musician.DoesNotExist:
-            raise ValidationError({'detail': 'Usuário não possui perfil de músico.'})
+            raise ValidationError({"detail": "Usuário não possui perfil de músico."})
 
-    @action(detail=True, methods=['get'])
+    @action(detail=True, methods=["get"])
     def conflicting_events(self, request, pk=None):
         """
         GET /leader-availabilities/{id}/conflicting_events/
@@ -1310,10 +1443,13 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         conflicting = availability.get_conflicting_events()
 
         from .serializers import EventListSerializer
-        serializer = EventListSerializer(conflicting, many=True, context={'request': request})
+
+        serializer = EventListSerializer(
+            conflicting, many=True, context={"request": request}
+        )
         return Response(serializer.data)
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=["get"])
     def available_musicians(self, request):
         """
         GET /leader-availabilities/available_musicians/?date=YYYY-MM-DD
@@ -1324,55 +1460,55 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         - instrument: filtra por instrumento
         - only_available: se 'true', retorna apenas músicos com disponibilidade
         """
-        date_param = request.query_params.get('date')
+        date_param = request.query_params.get("date")
         if not date_param:
             return Response(
-                {'detail': 'Parâmetro "date" é obrigatório.'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": 'Parâmetro "date" é obrigatório.'},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
             target_date = date.fromisoformat(date_param)
         except ValueError:
             return Response(
-                {'detail': 'Formato de data inválido. Use YYYY-MM-DD.'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Formato de data inválido. Use YYYY-MM-DD."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         instrument_labels = {
-            'vocal': 'Vocal',
-            'guitar': 'Guitarra',
-            'acoustic_guitar': 'Violão',
-            'bass': 'Baixo',
-            'drums': 'Bateria',
-            'keyboard': 'Teclado',
-            'piano': 'Piano',
-            'synth': 'Sintetizador',
-            'percussion': 'Percussão',
-            'cajon': 'Cajón',
-            'violin': 'Violino',
-            'viola': 'Viola',
-            'cello': 'Violoncelo',
-            'double_bass': 'Contrabaixo acústico',
-            'saxophone': 'Saxofone',
-            'trumpet': 'Trompete',
-            'trombone': 'Trombone',
-            'flute': 'Flauta',
-            'clarinet': 'Clarinete',
-            'harmonica': 'Gaita',
-            'ukulele': 'Ukulele',
-            'banjo': 'Banjo',
-            'mandolin': 'Bandolim',
-            'dj': 'DJ',
-            'producer': 'Produtor(a)',
-            'other': 'Outro',
+            "vocal": "Vocal",
+            "guitar": "Guitarra",
+            "acoustic_guitar": "Violão",
+            "bass": "Baixo",
+            "drums": "Bateria",
+            "keyboard": "Teclado",
+            "piano": "Piano",
+            "synth": "Sintetizador",
+            "percussion": "Percussão",
+            "cajon": "Cajón",
+            "violin": "Violino",
+            "viola": "Viola",
+            "cello": "Violoncelo",
+            "double_bass": "Contrabaixo acústico",
+            "saxophone": "Saxofone",
+            "trumpet": "Trompete",
+            "trombone": "Trombone",
+            "flute": "Flauta",
+            "clarinet": "Clarinete",
+            "harmonica": "Gaita",
+            "ukulele": "Ukulele",
+            "banjo": "Banjo",
+            "mandolin": "Bandolim",
+            "dj": "DJ",
+            "producer": "Produtor(a)",
+            "other": "Outro",
         }
 
         # Busca todos os músicos ativos, exceto o próprio usuário
-        musicians = Musician.objects.filter(
-            is_active=True
-        ).select_related('user').exclude(
-            user=request.user
+        musicians = (
+            Musician.objects.filter(is_active=True)
+            .select_related("user")
+            .exclude(user=request.user)
         )
 
         if not request.user.is_staff:
@@ -1382,26 +1518,28 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
                 return Response([])
 
         # Filtro opcional por instrumento
-        instrument = request.query_params.get('instrument')
+        instrument = request.query_params.get("instrument")
         if instrument:
             musicians = musicians.filter(instrument=instrument)
 
         # Busca disponibilidades públicas na data (para associar aos músicos)
         availabilities_map = {}
         availabilities = LeaderAvailability.objects.filter(
-            is_active=True,
-            is_public=True,
-            date=target_date
-        ).select_related('leader')
+            is_active=True, is_public=True, date=target_date
+        ).select_related("leader")
         for avail in availabilities:
             availabilities_map.setdefault(avail.leader_id, []).append(avail)
 
-        only_available = request.query_params.get('only_available', '').lower() == 'true'
+        only_available = (
+            request.query_params.get("only_available", "").lower() == "true"
+        )
 
         result = []
         for musician in musicians:
             avail_list = availabilities_map.get(musician.id, [])
-            primary_avail = min(avail_list, key=lambda x: x.start_time) if avail_list else None
+            primary_avail = (
+                min(avail_list, key=lambda x: x.start_time) if avail_list else None
+            )
 
             # Se only_available=true, pula músicos sem disponibilidade
             if only_available and not primary_avail:
@@ -1409,31 +1547,38 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
 
             availability_slots = [
                 {
-                    'id': slot.id,
-                    'start_time': slot.start_time.strftime('%H:%M'),
-                    'end_time': slot.end_time.strftime('%H:%M'),
-                    'notes': slot.notes,
+                    "id": slot.id,
+                    "start_time": slot.start_time.strftime("%H:%M"),
+                    "end_time": slot.end_time.strftime("%H:%M"),
+                    "notes": slot.notes,
                 }
                 for slot in sorted(avail_list, key=lambda x: x.start_time)
             ]
 
             musician_data = {
-                'musician_id': musician.id,
-                'musician_name': musician.user.get_full_name() or musician.user.username,
-                'instrument': musician.instrument,
-                'instrument_display': instrument_labels.get(musician.instrument, musician.instrument or ''),
-                'has_availability': primary_avail is not None,
-                'availability_id': primary_avail.id if primary_avail else None,
-                'start_time': primary_avail.start_time.strftime('%H:%M') if primary_avail else None,
-                'end_time': primary_avail.end_time.strftime('%H:%M') if primary_avail else None,
-                'notes': primary_avail.notes if primary_avail else None,
-                'availability_count': len(avail_list),
-                'availability_slots': availability_slots,
+                "musician_id": musician.id,
+                "musician_name": musician.user.get_full_name()
+                or musician.user.username,
+                "instrument": musician.instrument,
+                "instrument_display": instrument_labels.get(
+                    musician.instrument, musician.instrument or ""
+                ),
+                "has_availability": primary_avail is not None,
+                "availability_id": primary_avail.id if primary_avail else None,
+                "start_time": primary_avail.start_time.strftime("%H:%M")
+                if primary_avail
+                else None,
+                "end_time": primary_avail.end_time.strftime("%H:%M")
+                if primary_avail
+                else None,
+                "notes": primary_avail.notes if primary_avail else None,
+                "availability_count": len(avail_list),
+                "availability_slots": availability_slots,
             }
             result.append(musician_data)
 
         # Ordena: músicos com disponibilidade primeiro, depois por nome
-        result.sort(key=lambda x: (not x['has_availability'], x['musician_name']))
+        result.sort(key=lambda x: (not x["has_availability"], x["musician_name"]))
 
         return Response(result)
 
@@ -1446,69 +1591,90 @@ MAX_COVER_SIZE = (1600, 900)
 MAX_IMAGE_PIXELS = 12_000_000
 
 
-def _process_profile_image(uploaded_file, *, max_bytes, max_size, crop_square, quality, prefix):
+def _process_profile_image(
+    uploaded_file, *, max_bytes, max_size, crop_square, quality, prefix
+):
     if uploaded_file.size > max_bytes:
         size_mb = max_bytes // (1024 * 1024)
-        raise ValueError(f'Arquivo muito grande. Tamanho máximo: {size_mb}MB.')
+        raise ValueError(f"Arquivo muito grande. Tamanho máximo: {size_mb}MB.")
 
     try:
         image = Image.open(uploaded_file)
-        image_format = (image.format or '').upper()
+        image_format = (image.format or "").upper()
         image = ImageOps.exif_transpose(image)
     except (UnidentifiedImageError, Image.DecompressionBombError) as exc:
-        raise ValueError('Arquivo inválido. Envie uma imagem JPG, PNG ou WEBP.') from exc
+        raise ValueError(
+            "Arquivo inválido. Envie uma imagem JPG, PNG ou WEBP."
+        ) from exc
 
     if not image_format:
-        content_type = getattr(uploaded_file, 'content_type', '') or ''
-        if content_type.lower() in ('image/jpeg', 'image/jpg'):
-            image_format = 'JPEG'
-        elif content_type.lower() == 'image/png':
-            image_format = 'PNG'
-        elif content_type.lower() == 'image/webp':
-            image_format = 'WEBP'
+        content_type = getattr(uploaded_file, "content_type", "") or ""
+        if content_type.lower() in ("image/jpeg", "image/jpg"):
+            image_format = "JPEG"
+        elif content_type.lower() == "image/png":
+            image_format = "PNG"
+        elif content_type.lower() == "image/webp":
+            image_format = "WEBP"
 
-    if image_format not in {'JPEG', 'PNG', 'WEBP'}:
-        raise ValueError('Formato não suportado. Use JPG, PNG ou WEBP.')
+    if image_format not in {"JPEG", "PNG", "WEBP"}:
+        raise ValueError("Formato não suportado. Use JPG, PNG ou WEBP.")
 
     if image.width * image.height > MAX_IMAGE_PIXELS:
-        raise ValueError('Imagem muito grande. Reduza a resolução.')
+        raise ValueError("Imagem muito grande. Reduza a resolução.")
 
-    has_alpha = image.mode in ('RGBA', 'LA') or (image.mode == 'P' and 'transparency' in image.info)
-    image = image.convert('RGBA' if has_alpha else 'RGB')
+    has_alpha = image.mode in ("RGBA", "LA") or (
+        image.mode == "P" and "transparency" in image.info
+    )
+    image = image.convert("RGBA" if has_alpha else "RGB")
 
     if crop_square:
         image = ImageOps.fit(image, (max_size, max_size), method=Image.LANCZOS)
     else:
-        image.thumbnail(max_size, Image.LANCZOS)
+        if isinstance(max_size, tuple):
+            width, height = max_size
+            aspect = image.width / image.height
+            if aspect > width / height:
+                image = ImageOps.fit(
+                    image, (width, int(width / aspect)), method=Image.LANCZOS
+                )
+            else:
+                image = ImageOps.fit(
+                    image, (int(height * aspect), height), method=Image.LANCZOS
+                )
+        else:
+            image.thumbnail((max_size, max_size), Image.LANCZOS)
 
     buffer = BytesIO()
-    if features.check('webp'):
-        output_format = 'WEBP'
-        output_ext = 'webp'
+    if features.check("webp"):
+        output_format = "WEBP"
+        output_ext = "webp"
     elif has_alpha:
-        output_format = 'PNG'
-        output_ext = 'png'
+        output_format = "PNG"
+        output_ext = "png"
     else:
-        output_format = 'JPEG'
-        output_ext = 'jpg'
+        output_format = "JPEG"
+        output_ext = "jpg"
 
-    if output_format == 'JPEG' and image.mode != 'RGB':
-        image = image.convert('RGB')
+    if output_format == "JPEG" and image.mode != "RGB":
+        image = image.convert("RGB")
 
-    save_kwargs = {'format': output_format}
-    if output_format == 'WEBP':
-        save_kwargs.update({'quality': quality, 'method': 6})
-    elif output_format == 'JPEG':
-        save_kwargs.update({'quality': quality, 'optimize': True})
-    elif output_format == 'PNG':
-        save_kwargs.update({'optimize': True, 'compress_level': 6})
+    save_kwargs = {"format": output_format}
+    if output_format == "WEBP":
+        save_kwargs.update({"quality": quality, "method": 6})
+    elif output_format == "JPEG":
+        save_kwargs.update({"quality": quality, "optimize": True})
+    elif output_format == "PNG":
+        save_kwargs.update({"optimize": True, "compress_level": 6})
 
     image.save(buffer, **save_kwargs)
     buffer.seek(0)
-    return ContentFile(buffer.getvalue(), name=f'{prefix}-{uuid4().hex}.{output_ext}')
+    return ContentFile(buffer.getvalue(), name=f"{prefix}-{uuid4().hex}.{output_ext}")
+
+
 from rest_framework.decorators import api_view, permission_classes
 
-@api_view(['POST'])
+
+@api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def upload_avatar(request):
     """
@@ -1517,24 +1683,23 @@ def upload_avatar(request):
     """
     try:
         musician = request.user.musician_profile
-        if 'avatar' not in request.FILES:
+        if "avatar" not in request.FILES:
             logger.warning(
-                'Upload de avatar sem arquivo | user_id=%s',
-                getattr(request.user, 'id', None),
+                "Upload de avatar sem arquivo | user_id=%s",
+                getattr(request.user, "id", None),
             )
             return Response(
-                {'detail': 'Nenhuma imagem enviada'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Nenhuma imagem enviada"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        avatar_file = request.FILES['avatar']
+        avatar_file = request.FILES["avatar"]
         processed_file = _process_profile_image(
             avatar_file,
             max_bytes=MAX_AVATAR_BYTES,
             max_size=MAX_AVATAR_SIZE,
             crop_square=True,
-            quality=82,
-            prefix='avatar',
+            quality=88,
+            prefix="avatar",
         )
 
         if musician.avatar:
@@ -1543,45 +1708,41 @@ def upload_avatar(request):
         musician.avatar = processed_file
         musician.save()
 
-        return Response({
-            'avatar': request.build_absolute_uri(musician.avatar.url)
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {"avatar": request.build_absolute_uri(musician.avatar.url)},
+            status=status.HTTP_200_OK,
+        )
 
     except Musician.DoesNotExist:
         logger.warning(
-            'Upload de avatar sem perfil de músico | user_id=%s',
-            getattr(request.user, 'id', None),
+            "Upload de avatar sem perfil de músico | user_id=%s",
+            getattr(request.user, "id", None),
         )
         return Response(
-            {'detail': 'Perfil não encontrado'},
-            status=status.HTTP_404_NOT_FOUND
+            {"detail": "Perfil não encontrado"}, status=status.HTTP_404_NOT_FOUND
         )
     except ValueError as e:
         logger.warning(
-            'Upload de avatar inválido | user_id=%s | arquivo=%s | tamanho=%s | content_type=%s | erro=%s',
-            getattr(request.user, 'id', None),
-            getattr(avatar_file, 'name', None),
-            getattr(avatar_file, 'size', None),
-            getattr(avatar_file, 'content_type', None),
+            "Upload de avatar inválido | user_id=%s | arquivo=%s | tamanho=%s | content_type=%s | erro=%s",
+            getattr(request.user, "id", None),
+            getattr(avatar_file, "name", None),
+            getattr(avatar_file, "size", None),
+            getattr(avatar_file, "content_type", None),
             str(e),
         )
-        return Response(
-            {'detail': str(e)},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         logger.exception(
-            'Erro inesperado no upload de avatar | user_id=%s | arquivo=%s',
-            getattr(request.user, 'id', None),
-            getattr(avatar_file, 'name', None),
+            "Erro inesperado no upload de avatar | user_id=%s | arquivo=%s",
+            getattr(request.user, "id", None),
+            getattr(avatar_file, "name", None),
         )
         return Response(
-            {'detail': str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def upload_cover(request):
     """
@@ -1590,24 +1751,23 @@ def upload_cover(request):
     """
     try:
         musician = request.user.musician_profile
-        if 'cover_image' not in request.FILES:
+        if "cover_image" not in request.FILES:
             logger.warning(
-                'Upload de capa sem arquivo | user_id=%s',
-                getattr(request.user, 'id', None),
+                "Upload de capa sem arquivo | user_id=%s",
+                getattr(request.user, "id", None),
             )
             return Response(
-                {'detail': 'Nenhuma imagem enviada'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Nenhuma imagem enviada"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        cover_file = request.FILES['cover_image']
+        cover_file = request.FILES["cover_image"]
         processed_file = _process_profile_image(
             cover_file,
             max_bytes=MAX_COVER_BYTES,
             max_size=MAX_COVER_SIZE,
             crop_square=False,
-            quality=80,
-            prefix='cover',
+            quality=85,
+            prefix="cover",
         )
 
         if musician.cover_image:
@@ -1616,45 +1776,41 @@ def upload_cover(request):
         musician.cover_image = processed_file
         musician.save()
 
-        return Response({
-            'cover_image': request.build_absolute_uri(musician.cover_image.url)
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {"cover_image": request.build_absolute_uri(musician.cover_image.url)},
+            status=status.HTTP_200_OK,
+        )
 
     except Musician.DoesNotExist:
         logger.warning(
-            'Upload de capa sem perfil de músico | user_id=%s',
-            getattr(request.user, 'id', None),
+            "Upload de capa sem perfil de músico | user_id=%s",
+            getattr(request.user, "id", None),
         )
         return Response(
-            {'detail': 'Perfil não encontrado'},
-            status=status.HTTP_404_NOT_FOUND
+            {"detail": "Perfil não encontrado"}, status=status.HTTP_404_NOT_FOUND
         )
     except ValueError as e:
         logger.warning(
-            'Upload de capa inválido | user_id=%s | arquivo=%s | tamanho=%s | content_type=%s | erro=%s',
-            getattr(request.user, 'id', None),
-            getattr(cover_file, 'name', None),
-            getattr(cover_file, 'size', None),
-            getattr(cover_file, 'content_type', None),
+            "Upload de capa inválido | user_id=%s | arquivo=%s | tamanho=%s | content_type=%s | erro=%s",
+            getattr(request.user, "id", None),
+            getattr(cover_file, "name", None),
+            getattr(cover_file, "size", None),
+            getattr(cover_file, "content_type", None),
             str(e),
         )
-        return Response(
-            {'detail': str(e)},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         logger.exception(
-            'Erro inesperado no upload de capa | user_id=%s | arquivo=%s',
-            getattr(request.user, 'id', None),
-            getattr(cover_file, 'name', None),
+            "Erro inesperado no upload de capa | user_id=%s | arquivo=%s",
+            getattr(request.user, "id", None),
+            getattr(cover_file, "name", None),
         )
         return Response(
-            {'detail': str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 def get_musician_connections(request, musician_id):
     """
     GET /api/musicians/<id>/connections/
@@ -1665,40 +1821,44 @@ def get_musician_connections(request, musician_id):
         musician = Musician.objects.get(id=musician_id, is_active=True)
 
         # Busca conexões onde o músico é o follower
-        connections = Connection.objects.filter(
-            follower=musician
-        ).select_related('target__user').order_by('-created_at')[:6]
+        connections = (
+            Connection.objects.filter(follower=musician)
+            .select_related("target__user")
+            .order_by("-created_at")[:6]
+        )
 
         # Serializar os músicos conectados (targets)
         connected_musicians = []
         for conn in connections:
             target = conn.target
-            connected_musicians.append({
-                'id': target.id,
-                'full_name': target.user.get_full_name() or target.user.username,
-                'instrument': target.instrument,
-                'avatar': request.build_absolute_uri(target.avatar.url) if target.avatar else None
-            })
+            connected_musicians.append(
+                {
+                    "id": target.id,
+                    "full_name": target.user.get_full_name() or target.user.username,
+                    "instrument": target.instrument,
+                    "avatar": request.build_absolute_uri(target.avatar.url)
+                    if target.avatar
+                    else None,
+                }
+            )
 
-        return Response({
-            'total': connections.count(),
-            'connections': connected_musicians
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {"total": connections.count(), "connections": connected_musicians},
+            status=status.HTTP_200_OK,
+        )
 
     except Musician.DoesNotExist:
         return Response(
-            {'detail': 'Músico não encontrado'},
-            status=status.HTTP_404_NOT_FOUND
+            {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
         )
     except Exception as e:
         logging.exception("Erro ao buscar conexões")
         return Response(
-            {'detail': str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 def get_musician_reviews(request, musician_id):
     """
     GET /api/musicians/<id>/reviews/
@@ -1709,27 +1869,29 @@ def get_musician_reviews(request, musician_id):
         musician = Musician.objects.get(id=musician_id, is_active=True)
 
         # Busca avaliações do músico (10 mais recentes)
-        reviews = MusicianRating.objects.filter(
-            musician=musician
-        ).select_related('rated_by', 'event').order_by('-created_at')[:10]
+        reviews = (
+            MusicianRating.objects.filter(musician=musician)
+            .select_related("rated_by", "event")
+            .order_by("-created_at")[:10]
+        )
 
-        serializer = MusicianRatingSerializer(reviews, many=True, context={'request': request})
+        serializer = MusicianRatingSerializer(
+            reviews, many=True, context={"request": request}
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     except Musician.DoesNotExist:
         return Response(
-            {'detail': 'Músico não encontrado'},
-            status=status.HTTP_404_NOT_FOUND
+            {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
         )
     except Exception as e:
         logging.exception("Erro ao buscar avaliações")
         return Response(
-            {'detail': str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_musician_badges(request, musician_id):
     """
@@ -1739,37 +1901,37 @@ def get_musician_badges(request, musician_id):
     try:
         musician = Musician.objects.get(id=musician_id, is_active=True)
 
-        badges = MusicianBadge.objects.filter(
-            musician=musician
-        ).order_by('-awarded_at')
+        badges = MusicianBadge.objects.filter(musician=musician).order_by("-awarded_at")
 
         badge_data = []
         for badge in badges:
-            badge_data.append({
-                'id': badge.id,
-                'badge_type': badge.badge_type,
-                'name': badge.get_badge_type_display(),
-                'description': badge.description,
-                'icon': badge.icon,
-                'awarded_at': badge.awarded_at.isoformat() if badge.awarded_at else None,
-            })
+            badge_data.append(
+                {
+                    "id": badge.id,
+                    "badge_type": badge.badge_type,
+                    "name": badge.get_badge_type_display(),
+                    "description": badge.description,
+                    "icon": badge.icon,
+                    "awarded_at": badge.awarded_at.isoformat()
+                    if badge.awarded_at
+                    else None,
+                }
+            )
 
         return Response(badge_data, status=status.HTTP_200_OK)
 
     except Musician.DoesNotExist:
         return Response(
-            {'detail': 'Músico não encontrado'},
-            status=status.HTTP_404_NOT_FOUND
+            {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
         )
     except Exception as e:
         logging.exception("Erro ao buscar badges")
         return Response(
-            {'detail': str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_musician_stats(request, musician_id):
     """
@@ -1780,47 +1942,54 @@ def get_musician_stats(request, musician_id):
         musician = Musician.objects.get(id=musician_id, is_active=True)
 
         # Eventos onde o músico participou (tem availability com response='available')
-        total_events = Event.objects.filter(
-            availabilities__musician=musician,
-            availabilities__response='available',
-            status__in=['confirmed', 'approved']
-        ).distinct().count()
+        total_events = (
+            Event.objects.filter(
+                availabilities__musician=musician,
+                availabilities__response="available",
+                status__in=["confirmed", "approved"],
+            )
+            .distinct()
+            .count()
+        )
 
         # Eventos criados pelo músico (como líder)
         events_as_leader = Event.objects.filter(
-            created_by=musician.user,
-            status__in=['confirmed', 'approved']
+            created_by=musician.user, status__in=["confirmed", "approved"]
         ).count()
 
         # Eventos onde foi convidado (não é o criador)
-        events_as_member = Event.objects.filter(
-            availabilities__musician=musician,
-            availabilities__response='available',
-            status__in=['confirmed', 'approved']
-        ).exclude(
-            created_by=musician.user
-        ).distinct().count()
+        events_as_member = (
+            Event.objects.filter(
+                availabilities__musician=musician,
+                availabilities__response="available",
+                status__in=["confirmed", "approved"],
+            )
+            .exclude(created_by=musician.user)
+            .distinct()
+            .count()
+        )
 
-        return Response({
-            'total_events': total_events,
-            'events_as_leader': events_as_leader,
-            'events_as_member': events_as_member,
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {
+                "total_events": total_events,
+                "events_as_leader": events_as_leader,
+                "events_as_member": events_as_member,
+            },
+            status=status.HTTP_200_OK,
+        )
 
     except Musician.DoesNotExist:
         return Response(
-            {'detail': 'Músico não encontrado'},
-            status=status.HTTP_404_NOT_FOUND
+            {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
         )
     except Exception as e:
         logging.exception("Erro ao buscar estatísticas")
         return Response(
-            {'detail': str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_musician_connection_status(request, musician_id):
     """
@@ -1835,39 +2004,45 @@ def get_musician_connection_status(request, musician_id):
         try:
             current_musician = request.user.musician_profile
         except Musician.DoesNotExist:
-            return Response({
-                'is_connected': False,
-                'connection_id': None,
-                'connection_type': None,
-            }, status=status.HTTP_200_OK)
+            return Response(
+                {
+                    "is_connected": False,
+                    "connection_id": None,
+                    "connection_type": None,
+                },
+                status=status.HTTP_200_OK,
+            )
 
         # Verifica se existe conexão
         connection = Connection.objects.filter(
-            follower=current_musician,
-            target=target_musician
+            follower=current_musician, target=target_musician
         ).first()
 
         if connection:
-            return Response({
-                'is_connected': True,
-                'connection_id': connection.id,
-                'connection_type': connection.connection_type,
-            }, status=status.HTTP_200_OK)
+            return Response(
+                {
+                    "is_connected": True,
+                    "connection_id": connection.id,
+                    "connection_type": connection.connection_type,
+                },
+                status=status.HTTP_200_OK,
+            )
         else:
-            return Response({
-                'is_connected': False,
-                'connection_id': None,
-                'connection_type': None,
-            }, status=status.HTTP_200_OK)
+            return Response(
+                {
+                    "is_connected": False,
+                    "connection_id": None,
+                    "connection_type": None,
+                },
+                status=status.HTTP_200_OK,
+            )
 
     except Musician.DoesNotExist:
         return Response(
-            {'detail': 'Músico não encontrado'},
-            status=status.HTTP_404_NOT_FOUND
+            {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
         )
     except Exception as e:
         logging.exception("Erro ao verificar conexão")
         return Response(
-            {'detail': str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

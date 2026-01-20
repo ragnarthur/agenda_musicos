@@ -36,6 +36,8 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [loadError, setLoadError] = useState<string | null>(null);
   const [pinchDistance, setPinchDistance] = useState<number | null>(null);
+  const [isPinching, setIsPinching] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const cropRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef({
@@ -47,7 +49,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   });
 
   const aspectRatio = target === 'avatar' ? 1 : 16 / 9;
-  const zoomMax = target === 'avatar' ? 2.6 : 2.2;
+  const zoomMax = target === 'avatar' ? 3.0 : 2.5;
   const isAvatar = target === 'avatar';
 
   React.useEffect(() => {
@@ -77,9 +79,10 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
     const updateFrameSize = () => {
-      const maxWidth = Math.min(window.innerWidth * 0.9, 720);
-      const reservedHeight = 240;
-      const maxHeight = Math.max(260, window.innerHeight - reservedHeight);
+      const isMobile = window.innerWidth < 640;
+      const maxWidth = Math.min(window.innerWidth * (isMobile ? 0.95 : 0.9), 720);
+      const reservedHeight = isMobile ? 180 : 240;
+      const maxHeight = Math.max(isMobile ? 400 : 300, window.innerHeight - reservedHeight);
       const widthByHeight = maxHeight * aspectRatio;
       const nextWidth = Math.min(maxWidth, widthByHeight);
       const nextHeight = nextWidth / aspectRatio;
@@ -98,7 +101,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     );
     const scaledWidth = naturalSize.width * nextBaseScale;
     const scaledHeight = naturalSize.height * nextBaseScale;
-    
+
     requestAnimationFrame(() => {
       setBaseScale(nextBaseScale);
       setZoom(1);
@@ -108,6 +111,32 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
       });
     });
   }, [cropSize.height, cropSize.width, isOpen, naturalSize.height, naturalSize.width, target]);
+
+  useEffect(() => {
+    if (!isOpen || !imgRef.current || !naturalSize.width || !cropSize.width) return;
+    const output = OUTPUT_SIZES[target];
+    const scale = baseScale * zoom;
+    const sx = Math.max(0, -offset.x / scale);
+    const sy = Math.max(0, -offset.y / scale);
+    const sw = cropSize.width / scale;
+    const sh = cropSize.height / scale;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = output.width;
+    canvas.height = output.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx || !imgRef.current) return;
+
+    ctx.drawImage(imgRef.current, sx, sy, sw, sh, 0, 0, output.width, output.height);
+
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        setPreviewUrl(url);
+        return () => URL.revokeObjectURL(url);
+      }
+    }, 'image/jpeg', 0.7);
+  }, [zoom, offset, cropSize, naturalSize, baseScale, isOpen, target]);
 
   const canvasToBlob = (canvas: HTMLCanvasElement, type: string, quality: number) =>
     new Promise<Blob>((resolve, reject) => {
@@ -164,7 +193,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   };
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!dragRef.current.active) return;
+    if (!dragRef.current.active || isPinching) return;
     const deltaX = event.clientX - dragRef.current.startX;
     const deltaY = event.clientY - dragRef.current.startY;
     const scale = baseScale * zoom;
@@ -201,6 +230,8 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
       e.preventDefault();
       const distance = getTouchDistance(e.touches);
       setPinchDistance(distance);
+      setIsPinching(true);
+      dragRef.current.active = false;
     }
   };
 
@@ -217,6 +248,25 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
 
   const handleTouchEnd = () => {
     setPinchDistance(null);
+    setIsPinching(false);
+  };
+
+  const handleReset = () => {
+    if (!naturalSize.width || !cropSize.width) return;
+    requestAnimationFrame(() => {
+      setZoom(1);
+      const nextBaseScale = Math.max(
+        cropSize.width / naturalSize.width,
+        cropSize.height / naturalSize.height
+      );
+      const scaledWidth = naturalSize.width * nextBaseScale;
+      const scaledHeight = naturalSize.height * nextBaseScale;
+      setBaseScale(nextBaseScale);
+      setOffset({
+        x: (cropSize.width - scaledWidth) / 2,
+        y: (cropSize.height - scaledHeight) / 2,
+      });
+    });
   };
 
   const handleConfirm = async () => {
@@ -264,7 +314,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
       aria-modal="true"
       aria-labelledby="crop-title"
     >
-      <div className="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+      <div className="w-full max-w-4xl rounded-2xl bg-white p-4 sm:p-6 shadow-2xl dark:bg-gray-900">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <div>
             <h2 id="crop-title" className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -279,13 +329,22 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
               </p>
             )}
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
-            Cancelar
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleReset}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              Resetar
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              Cancelar
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-col items-center gap-4">
@@ -341,26 +400,47 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
             />
           </div>
 
-          <div className="flex w-full max-w-xl flex-col gap-4">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              <span className="flex items-center justify-between mb-2">
-                <span>Zoom</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 sm:hidden">
-                  Use dois dedos para zoom
-                </span>
-              </span>
-              <input
-                type="range"
-                min={1}
-                max={zoomMax}
-                step={0.01}
-                value={zoom}
-                onChange={(event) => handleZoomChange(Number(event.target.value))}
-                className="mt-1 w-full h-10 sm:h-6 accent-sky-600 touch-manipulation"
-                style={{ touchAction: 'manipulation' }}
-              />
-            </label>
-            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          {previewUrl && (
+            <div className="mt-4 flex flex-col items-center gap-2">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Preview
+              </p>
+              <div
+                className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"
+                style={{
+                  width: isAvatar ? 100 : 160,
+                  aspectRatio: `${aspectRatio}`,
+                }}
+              >
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          )}
+
+           <div className="flex w-full max-w-xl flex-col gap-4">
+             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+               <span className="flex items-center justify-between mb-2">
+                 <span>Zoom</span>
+                 <span className="text-xs text-gray-500 dark:text-gray-400 sm:hidden">
+                   Use dois dedos para zoom
+                 </span>
+               </span>
+               <input
+                 type="range"
+                 min={1}
+                 max={zoomMax}
+                 step={0.01}
+                 value={zoom}
+                 onChange={(event) => handleZoomChange(Number(event.target.value))}
+                 className="mt-1 w-full h-12 sm:h-6 accent-sky-600 touch-manipulation"
+                 style={{ touchAction: 'manipulation' }}
+               />
+             </label>
+             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={handleConfirm}

@@ -15,20 +15,23 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Carregar variáveis de ambiente do .env.local
-export DATABASE_URL="postgresql://agenda:agenda@localhost:5433/agenda"
-export DEBUG="True"
-export SECRET_KEY="dev-secret-key"
-export ALLOWED_HOSTS="localhost,127.0.0.1,backend"
-export CORS_ALLOWED_ORIGINS="http://localhost:5173,http://127.0.0.1:5173"
-export FRONTEND_URL="http://localhost:5174"
-export EMAIL_BACKEND="django.core.mail.backends.console.EmailBackend"
-export DEFAULT_FROM_EMAIL="dev@localhost"
-export PAYMENT_SERVICE_URL="http://localhost:3002"
-export PAYMENT_SERVICE_SECRET="dev-payment-secret"
-export USE_STRIPE="False"
-export ALLOW_FAKE_PAYMENT="True"
-export COOKIE_SECURE="False"
+# Carregar variáveis de ambiente do .env.local (fallback: .env.docker)
+load_env_file() {
+  local env_file="$1"
+  if [ ! -f "$env_file" ]; then
+    return 1
+  fi
+  while IFS= read -r line || [ -n "$line" ]; do
+    [[ -z "$line" || "$line" == \#* ]] && continue
+    local key="${line%%=*}"
+    local value="${line#*=}"
+    export "$key=$value"
+  done < "$env_file"
+}
+
+if ! load_env_file ".env.local"; then
+  load_env_file ".env.docker"
+fi
 
 # Comando padrão é start
 COMMAND=${1:-start}
