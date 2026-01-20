@@ -102,10 +102,18 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   }, [aspectRatio, isOpen]);
 
   useEffect(() => {
-    if (!isOpen || !naturalSize.width || !cropSize.width) return;
+    if (!isOpen || !naturalSize.width) return;
+
+    // Obter dimensões atuais do DOM diretamente para evitar race condition
+    const rect = cropRef.current?.getBoundingClientRect();
+    const currentCropWidth = rect?.width || cropSize.width;
+    const currentCropHeight = rect?.height || cropSize.height;
+
+    if (!currentCropWidth) return;
+
     const nextBaseScale = Math.max(
-      cropSize.width / naturalSize.width,
-      cropSize.height / naturalSize.height
+      currentCropWidth / naturalSize.width,
+      currentCropHeight / naturalSize.height
     );
     const scaledWidth = naturalSize.width * nextBaseScale;
     const scaledHeight = naturalSize.height * nextBaseScale;
@@ -114,9 +122,13 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
       setBaseScale(nextBaseScale);
       setZoom(1);
       setOffset({
-        x: (cropSize.width - scaledWidth) / 2,
-        y: (cropSize.height - scaledHeight) / 2,
+        x: (currentCropWidth - scaledWidth) / 2,
+        y: (currentCropHeight - scaledHeight) / 2,
       });
+      // Atualizar cropSize se estava desatualizado
+      if (rect && (rect.width !== cropSize.width || rect.height !== cropSize.height)) {
+        setCropSize({ width: rect.width, height: rect.height });
+      }
     });
   }, [cropSize.height, cropSize.width, isOpen, naturalSize.height, naturalSize.width, target]);
 
