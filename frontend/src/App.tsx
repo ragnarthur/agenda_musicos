@@ -25,22 +25,21 @@ const Register = lazy(() => import('./pages/Register'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
-const Payment = lazy(() => import('./pages/Payment'));
-const Plans = lazy(() => import('./pages/Plans'));
-const PlanSuccess = lazy(() => import('./pages/PlanSuccess'));
-const FinancialSettings = lazy(() => import('./pages/FinancialSettings'));
+  const Payment = lazy(() => import('./pages/Payment'));
+  const Plans = lazy(() => import('./pages/Plans'));
+  const PlanSuccess = lazy(() => import('./pages/PlanSuccess'));
+  const FinancialSettings = lazy(() => import('./pages/FinancialSettings'));
 
-const useStripe = import.meta.env.VITE_USE_STRIPE === 'true';
-const allowFakePayment = import.meta.env.VITE_ALLOW_FAKE_PAYMENT === 'true';
-const PaymentSuccess = lazy(() => import('./pages/PaymentSuccess'));
-const NotificationSettings = lazy(() => import('./pages/NotificationSettings'));
+  const useStripe = import.meta.env.VITE_USE_STRIPE === 'true';
+  const allowFakePayment = import.meta.env.VITE_ALLOW_FAKE_PAYMENT === 'true';
+  const NotificationSettings = lazy(() => import('./pages/NotificationSettings'));
 
-// Componente de loading para Suspense
-const PageLoader: React.FC = () => (
-  <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center">
-    <Loading text="Carregando..." />
-  </div>
-);
+  // Componente de loading para Suspense
+  const PageLoader: React.FC = () => (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center">
+      <Loading text="Carregando..." />
+    </div>
+  );
 
 // Componente para rotas protegidas
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
@@ -128,7 +127,7 @@ function AppRoutes() {
         {(!useStripe || allowFakePayment) && <Route path="/pagamento" element={<Payment />} />}
         <Route path="/planos" element={<Plans />} />
         <Route path="/planos/sucesso" element={<PlanSuccess />} />
-        <Route path="/pagamento/sucesso" element={<PaymentSuccess />} />
+         <Route path="/pagamento/sucesso" element={<Payment />} />
 
         <Route
           path="/eventos/agenda"

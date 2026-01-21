@@ -20,13 +20,175 @@ const MAX_OUTPUT_BYTES = {
   cover: 5 * 1024 * 1024,
 };
 
+const PRESETS = {
+  avatar: [
+    { id: 'center', label: 'Central' },
+    { id: 'portrait', label: 'Retrato' },
+    { id: 'close', label: 'Fechado' },
+  ],
+  cover: [
+    { id: 'center', label: 'Central' },
+    { id: 'top', label: 'Topo' },
+    { id: 'bottom', label: 'Base' },
+    { id: 'left', label: 'Esquerda' },
+    { id: 'right', label: 'Direita' },
+  ],
+} as const;
+
+type CropPreset = typeof PRESETS.avatar[number]['id'] | typeof PRESETS.cover[number]['id'];
+
+const isJpeg = (file: File) => file.type === 'image/jpeg' || file.type === 'image/jpg';
+
+const canvasToBlob = (canvas: HTMLCanvasElement, type: string, quality: number) =>
+  new Promise<Blob>((resolve, reject) => {
+    if (canvas.toBlob) {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error('Falha ao processar imagem.'));
+        }
+      }, type, quality);
+      return;
+    }
+    try {
+      const dataUrl = canvas.toDataURL(type, quality);
+      const [header, data] = dataUrl.split(',');
+      const mimeMatch = /data:(.*?);base64/.exec(header || '');
+      const mime = mimeMatch?.[1] || type;
+      const binary = atob(data);
+      const buffer = new ArrayBuffer(binary.length);
+      const bytes = new Uint8Array(buffer);
+      for (let i = 0; i < binary.length; i += 1) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      resolve(new Blob([buffer], { type: mime }));
+    } catch (err) {
+      reject(err);
+    }
+  });
+
+const readExifOrientation = async (file: File) => {
+  if (!isJpeg(file)) return 1;
+  const buffer = await file.arrayBuffer();
+  const view = new DataView(buffer);
+  if (view.byteLength < 12 || view.getUint16(0, false) !== 0xffd8) return 1;
+  let offset = 2;
+  while (offset + 1 < view.byteLength) {
+    const marker = view.getUint16(offset, false);
+    offset += 2;
+    if (marker === 0xffe1) {
+      void view.getUint16(offset, false);
+      offset += 2;
+      if (view.getUint32(offset, false) !== 0x45786966) return 1;
+      offset += 6;
+      const tiffOffset = offset;
+      const endian = view.getUint16(tiffOffset, false);
+      const littleEndian = endian === 0x4949;
+      if (!littleEndian && endian !== 0x4d4d) return 1;
+      const getUint16 = (valueOffset: number) => view.getUint16(valueOffset, littleEndian);
+      const getUint32 = (valueOffset: number) => view.getUint32(valueOffset, littleEndian);
+      const firstIfdOffset = getUint32(tiffOffset + 4);
+      if (firstIfdOffset < 8) return 1;
+      const ifdOffset = tiffOffset + firstIfdOffset;
+      const entries = getUint16(ifdOffset);
+      for (let i = 0; i < entries; i += 1) {
+        const entryOffset = ifdOffset + 2 + i * 12;
+        const tag = getUint16(entryOffset);
+        if (tag === 0x0112) {
+          const type = getUint16(entryOffset + 2);
+          const count = getUint32(entryOffset + 4);
+          if (type === 3 && count === 1) {
+            return getUint16(entryOffset + 8);
+          }
+          const valueOffset = getUint32(entryOffset + 8);
+          return getUint16(tiffOffset + valueOffset);
+        }
+      }
+      return 1;
+    }
+    const length = view.getUint16(offset, false);
+    if (length < 2) break;
+    offset += length;
+  }
+  return 1;
+};
+
+const loadImageFromBlob = (blob: Blob) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Falha ao abrir imagem.'));
+    };
+    img.src = url;
+  });
+
+const loadDrawable = async (blob: Blob): Promise<HTMLImageElement | ImageBitmap> => {
+  if (typeof createImageBitmap === 'function') {
+    try {
+      return await createImageBitmap(blob, { imageOrientation: 'none' });
+    } catch {
+      // fallback para Image quando o navegador nao suporta as opcoes
+    }
+  }
+  return loadImageFromBlob(blob);
+};
+
+const createOrientedBlob = async (file: File, orientation: number) => {
+  if (orientation === 1) return file;
+  const drawable = await loadDrawable(file);
+  const width = 'naturalWidth' in drawable ? drawable.naturalWidth : drawable.width;
+  const height = 'naturalHeight' in drawable ? drawable.naturalHeight : drawable.height;
+  const swapAxis = [5, 6, 7, 8].includes(orientation);
+  const canvas = document.createElement('canvas');
+  canvas.width = swapAxis ? height : width;
+  canvas.height = swapAxis ? width : height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return file;
+  switch (orientation) {
+    case 2:
+      ctx.setTransform(-1, 0, 0, 1, width, 0);
+      break;
+    case 3:
+      ctx.setTransform(-1, 0, 0, -1, width, height);
+      break;
+    case 4:
+      ctx.setTransform(1, 0, 0, -1, 0, height);
+      break;
+    case 5:
+      ctx.setTransform(0, 1, 1, 0, 0, 0);
+      break;
+    case 6:
+      ctx.setTransform(0, 1, -1, 0, height, 0);
+      break;
+    case 7:
+      ctx.setTransform(0, -1, -1, 0, height, width);
+      break;
+    case 8:
+      ctx.setTransform(0, -1, 1, 0, 0, width);
+      break;
+    default:
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      break;
+  }
+  ctx.drawImage(drawable, 0, 0);
+  if ('close' in drawable) drawable.close();
+  return canvasToBlob(canvas, 'image/jpeg', 0.92);
+};
+
 const ImageCropModal: React.FC<ImageCropModalProps> = ({
   isOpen,
   file,
   target,
   onClose,
   onConfirm,
-}) => {
+  }) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [naturalSize, setNaturalSize] = useState({ width: 0, height: 0 });
   const [cropSize, setCropSize] = useState({ width: 0, height: 0 });
@@ -37,7 +199,11 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isPinching, setIsPinching] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isRotating, setIsRotating] = useState(false);
+  const [isPreparing, setIsPreparing] = useState(false);
   const imgRef = useRef<HTMLImageElement | null>(null);
+  const sourceUrlRef = useRef<string | null>(null);
+  const imageUrlRef = useRef<string | null>(null);
   const cropRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef({
     active: false,
@@ -58,17 +224,71 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   const aspectRatio = target === 'avatar' ? 1 : 16 / 9;
   const zoomMax = target === 'avatar' ? 3.0 : 2.5;
   const isAvatar = target === 'avatar';
+  const presets = isAvatar ? PRESETS.avatar : PRESETS.cover;
+
+  const setSourceUrlSafe = (nextUrl: string | null) => {
+    if (sourceUrlRef.current && sourceUrlRef.current !== nextUrl) {
+      URL.revokeObjectURL(sourceUrlRef.current);
+    }
+    sourceUrlRef.current = nextUrl;
+  };
+
+  const setImageUrlSafe = (nextUrl: string | null) => {
+    if (
+      imageUrlRef.current &&
+      imageUrlRef.current !== nextUrl &&
+      imageUrlRef.current !== sourceUrlRef.current
+    ) {
+      URL.revokeObjectURL(imageUrlRef.current);
+    }
+    imageUrlRef.current = nextUrl;
+    setImageUrl(nextUrl);
+  };
 
   React.useEffect(() => {
     if (!isOpen || !file) {
-      setImageUrl(null);
+      setImageUrlSafe(null);
+      setSourceUrlSafe(null);
       setLoadError(null);
+      setIsPreparing(false);
+      setNaturalSize({ width: 0, height: 0 });
       return;
     }
-    const url = URL.createObjectURL(file);
-    setImageUrl(url);
+
+    let active = true;
+    setIsPreparing(true);
     setLoadError(null);
-    return () => URL.revokeObjectURL(url);
+    setNaturalSize({ width: 0, height: 0 });
+
+    const prepareImage = async () => {
+      try {
+        const orientation = await readExifOrientation(file);
+        if (!active) return;
+        const normalized = orientation > 1 ? await createOrientedBlob(file, orientation) : file;
+        if (!active) return;
+        const url = URL.createObjectURL(normalized);
+        if (!active) {
+          URL.revokeObjectURL(url);
+          return;
+        }
+        setSourceUrlSafe(url);
+        setImageUrlSafe(url);
+      } catch {
+        if (!active) return;
+        const fallbackUrl = URL.createObjectURL(file);
+        setSourceUrlSafe(fallbackUrl);
+        setImageUrlSafe(fallbackUrl);
+      } finally {
+        if (active) setIsPreparing(false);
+      }
+    };
+
+    prepareImage();
+
+    return () => {
+      active = false;
+      setIsPreparing(false);
+    };
   }, [file, isOpen]);
 
   useEffect(() => {
@@ -140,42 +360,20 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     ctx.drawImage(imgRef.current, sx, sy, sw, sh, 0, 0, output.width, output.height);
 
     canvas.toBlob((blob) => {
-      if (blob) {
-        const url = URL.createObjectURL(blob);
-        setPreviewUrl(url);
-        return () => URL.revokeObjectURL(url);
-      }
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      setPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return url;
+      });
     }, 'image/jpeg', 0.7);
+    return () => {
+      setPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
+    };
   }, [zoom, offset, cropSize, naturalSize, baseScale, isOpen, target]);
-
-  const canvasToBlob = (canvas: HTMLCanvasElement, type: string, quality: number) =>
-    new Promise<Blob>((resolve, reject) => {
-      if (canvas.toBlob) {
-        canvas.toBlob((blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error('Falha ao processar imagem.'));
-          }
-        }, type, quality);
-        return;
-      }
-      try {
-        const dataUrl = canvas.toDataURL(type, quality);
-        const [header, data] = dataUrl.split(',');
-        const mimeMatch = /data:(.*?);base64/.exec(header || '');
-        const mime = mimeMatch?.[1] || type;
-        const binary = atob(data);
-        const buffer = new ArrayBuffer(binary.length);
-        const bytes = new Uint8Array(buffer);
-        for (let i = 0; i < binary.length; i += 1) {
-          bytes[i] = binary.charCodeAt(i);
-        }
-        resolve(new Blob([buffer], { type: mime }));
-      } catch (err) {
-        reject(err);
-      }
-    });
 
   const clampOffset = (x: number, y: number, scale: number) => {
     const scaledWidth = naturalSize.width * scale;
@@ -188,8 +386,75 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     };
   };
 
+  const getCenteredOffset = (scale: number) => ({
+    x: (cropSize.width - naturalSize.width * scale) / 2,
+    y: (cropSize.height - naturalSize.height * scale) / 2,
+  });
+
+  const applyPreset = (preset: CropPreset) => {
+    if (!naturalSize.width || !cropSize.width || isPreparing) return;
+    let nextZoom = zoom;
+    if (preset === 'portrait') nextZoom = Math.min(zoomMax, 1.25);
+    if (preset === 'close') nextZoom = Math.min(zoomMax, 1.55);
+    const scale = baseScale * nextZoom;
+    const centered = getCenteredOffset(scale);
+    let nextOffset = { ...centered };
+    if (preset === 'top') {
+      nextOffset = { x: centered.x, y: 0 };
+    }
+    if (preset === 'bottom') {
+      nextOffset = { x: centered.x, y: cropSize.height - naturalSize.height * scale };
+    }
+    if (preset === 'left') {
+      nextOffset = { x: 0, y: centered.y };
+    }
+    if (preset === 'right') {
+      nextOffset = { x: cropSize.width - naturalSize.width * scale, y: centered.y };
+    }
+    if (preset === 'portrait') {
+      nextOffset = { x: centered.x, y: centered.y - cropSize.height * 0.08 };
+    }
+    if (preset === 'close') {
+      nextOffset = { x: centered.x, y: centered.y - cropSize.height * 0.12 };
+    }
+    setZoom(nextZoom);
+    setOffset(clampOffset(nextOffset.x, nextOffset.y, scale));
+  };
+
+  const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    if (!naturalSize.width || isPreparing) return;
+    event.preventDefault();
+    const step = event.deltaY < 0 ? 0.05 : -0.05;
+    updateZoom(zoom + step);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!naturalSize.width || isPreparing) return;
+    const step = event.shiftKey ? 20 : 6;
+    let dx = 0;
+    let dy = 0;
+    if (event.key === 'ArrowLeft') dx = -step;
+    if (event.key === 'ArrowRight') dx = step;
+    if (event.key === 'ArrowUp') dy = -step;
+    if (event.key === 'ArrowDown') dy = step;
+    if (dx || dy) {
+      event.preventDefault();
+      const scale = baseScale * zoom;
+      setOffset((prev) => clampOffset(prev.x + dx, prev.y + dy, scale));
+      return;
+    }
+    if (event.key === '+' || event.key === '=') {
+      event.preventDefault();
+      updateZoom(zoom + 0.1);
+    }
+    if (event.key === '-' || event.key === '_') {
+      event.preventDefault();
+      updateZoom(zoom - 0.1);
+    }
+  };
+
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!naturalSize.width) return;
+    if (!naturalSize.width || isPreparing) return;
     if (loadError) setLoadError(null);
     event.preventDefault();
     dragRef.current = {
@@ -203,7 +468,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   };
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!dragRef.current.active || isPinching) return;
+    if (!dragRef.current.active || isPinching || isPreparing) return;
     const deltaX = event.clientX - dragRef.current.startX;
     const deltaY = event.clientY - dragRef.current.startY;
     const scale = baseScale * zoom;
@@ -223,6 +488,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (isPreparing) return;
     if (e.touches.length === 2 && cropRef.current) {
       e.preventDefault();
       const centerX = cropSize.width / 2;
@@ -241,6 +507,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    if (isPreparing) return;
     if (e.touches.length === 2 && pinchRef.current) {
       e.preventDefault();
       const newDistance = getTouchDistance(e.touches);
@@ -263,8 +530,51 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     setIsPinching(false);
   };
 
+  const clampZoom = (value: number) => Math.min(Math.max(value, 1), zoomMax);
+
+  const updateZoom = (value: number) => {
+    if (isPreparing) return;
+    const nextZoom = clampZoom(value);
+    const scale = baseScale * nextZoom;
+    setZoom(nextZoom);
+    setOffset((prev) => clampOffset(prev.x, prev.y, scale));
+  };
+
+  const resetImage = () => {
+    if (!sourceUrlRef.current) return;
+    setLoadError(null);
+    setImageUrlSafe(sourceUrlRef.current);
+  };
+
+  const rotateImage = async (direction: 'left' | 'right') => {
+    if (!imgRef.current || isRotating || isPreparing) return;
+    setIsRotating(true);
+    setLoadError(null);
+    try {
+      const img = imgRef.current;
+      const width = img.naturalWidth;
+      const height = img.naturalHeight;
+      const canvas = document.createElement('canvas');
+      canvas.width = height;
+      canvas.height = width;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      const angle = direction === 'left' ? -90 : 90;
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((angle * Math.PI) / 180);
+      ctx.drawImage(img, -width / 2, -height / 2);
+      const blob = await canvasToBlob(canvas, 'image/jpeg', 0.92);
+      const url = URL.createObjectURL(blob);
+      setImageUrlSafe(url);
+    } catch {
+      setLoadError('Não foi possível girar esta imagem.');
+    } finally {
+      setIsRotating(false);
+    }
+  };
+
   const handleReset = () => {
-    if (!naturalSize.width || !cropSize.width) return;
+    if (!naturalSize.width || !cropSize.width || isPreparing) return;
     requestAnimationFrame(() => {
       setZoom(1);
       const nextBaseScale = Math.max(
@@ -282,7 +592,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   };
 
   const handleConfirm = async () => {
-    if (!imgRef.current || !file || loadError) return;
+    if (!imgRef.current || !file || loadError || isPreparing) return;
     const output = OUTPUT_SIZES[target];
     const maxBytes = MAX_OUTPUT_BYTES[target];
     const scale = baseScale * zoom;
@@ -335,19 +645,49 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Arraste para posicionar e use o zoom para ajustar.
             </p>
+            {isPreparing && (
+              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                Preparando imagem para edição...
+              </p>
+            )}
             {loadError && (
               <p className="mt-2 text-sm text-red-600">
                 {loadError}
               </p>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={resetImage}
+              disabled={!imageUrl || isRotating || isPreparing}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              Reverter foto
+            </button>
+            <button
+              type="button"
+              onClick={() => rotateImage('left')}
+              disabled={!imageUrl || isRotating || isPreparing}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              Girar -90
+            </button>
+            <button
+              type="button"
+              onClick={() => rotateImage('right')}
+              disabled={!imageUrl || isRotating || isPreparing}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              Girar 90
+            </button>
             <button
               type="button"
               onClick={handleReset}
-              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+              disabled={!naturalSize.width || isPreparing}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
             >
-              Resetar
+              Resetar enquadramento
             </button>
             <button
               type="button"
@@ -393,6 +733,9 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                 height: frameSize.height || undefined,
                 touchAction: 'none',
               }}
+              tabIndex={0}
+              aria-label="Area de recorte"
+              aria-busy={isPreparing}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
@@ -401,6 +744,8 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
+              onWheel={handleWheel}
+              onKeyDown={handleKeyDown}
             >
             {imageUrl && (
               <img
@@ -421,6 +766,17 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                 draggable={false}
               />
             )}
+            <div className="pointer-events-none absolute inset-0 opacity-70">
+              <div className="absolute inset-y-0 left-1/3 w-px bg-white/40" />
+              <div className="absolute inset-y-0 left-2/3 w-px bg-white/40" />
+              <div className="absolute inset-x-0 top-1/3 h-px bg-white/40" />
+              <div className="absolute inset-x-0 top-2/3 h-px bg-white/40" />
+            </div>
+            {!isAvatar && (
+              <div className="pointer-events-none absolute inset-0">
+                <div className="absolute inset-[10%] rounded-xl border border-white/35" />
+              </div>
+            )}
             <div
               className="pointer-events-none absolute inset-0"
               style={{
@@ -438,15 +794,17 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
           </div>
 
           {previewUrl && (
-            <div className="mt-4 hidden sm:flex flex-col items-center gap-2">
+            <div className="mt-4 flex flex-col items-center gap-2">
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Preview
               </p>
               <div
-                className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"
+                className={`overflow-hidden border border-gray-200 dark:border-gray-700 ${
+                  isAvatar ? 'rounded-full' : 'rounded-lg'
+                }`}
                 style={{
-                  width: isAvatar ? 100 : 160,
-                  aspectRatio: `${aspectRatio}`,
+                  width: isAvatar ? 80 : 160,
+                  height: isAvatar ? 80 : 90,
                 }}
               >
                 <img
@@ -459,19 +817,78 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
           )}
 
             <div className="flex w-full max-w-xl flex-col gap-2 sm:gap-4">
-             <div className="sticky bottom-0 w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur pt-2 pb-[env(safe-area-inset-bottom)]">
-               <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <button
-                  type="button"
-                  onClick={handleConfirm}
-                  disabled={!imageUrl || !!loadError || !naturalSize.width}
-                  className="rounded-lg bg-sky-600 px-5 py-2.5 sm:px-4 sm:py-2 text-base sm:text-sm font-semibold text-white hover:bg-sky-700 active:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60 touch-manipulation"
-                >
-                  Salvar e enviar
-                </button>
+              <div className="w-full rounded-xl border border-gray-200 bg-white/90 p-3 text-gray-700 shadow-sm backdrop-blur dark:border-gray-700 dark:bg-gray-900/80 dark:text-gray-200">
+                <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  <span>Zoom</span>
+                  <span>{Math.round(zoom * 100)}%</span>
+                </div>
+                <div className="mt-2 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => updateZoom(zoom - 0.1)}
+                    disabled={!naturalSize.width || zoom <= 1 || isPreparing}
+                    className="rounded-lg border border-gray-200 px-2.5 py-1 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                    aria-label="Diminuir zoom"
+                  >
+                    −
+                  </button>
+                  <input
+                    type="range"
+                    min={1}
+                    max={zoomMax}
+                    step={0.01}
+                    value={zoom}
+                    onChange={(event) => updateZoom(Number(event.target.value))}
+                    disabled={!naturalSize.width || isPreparing}
+                    className="h-2 w-full appearance-none rounded-full bg-gray-200 dark:bg-gray-700"
+                    aria-label="Controle de zoom"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => updateZoom(zoom + 0.1)}
+                    disabled={!naturalSize.width || zoom >= zoomMax || isPreparing}
+                    className="rounded-lg border border-gray-200 px-2.5 py-1 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                    aria-label="Aumentar zoom"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+              <div className="w-full rounded-xl border border-gray-200 bg-white/90 p-3 text-gray-700 shadow-sm backdrop-blur dark:border-gray-700 dark:bg-gray-900/80 dark:text-gray-200">
+                <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  <span>Presets</span>
+                  <span>Guias ativas</span>
+                </div>
+                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {presets.map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => applyPreset(preset.id)}
+                      disabled={!naturalSize.width || isPreparing}
+                      className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  {isAvatar ? 'Grade 3x3 + máscara circular.' : 'Grade 3x3 + área segura da capa.'}
+                </p>
+              </div>
+              <div className="sticky bottom-0 w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur pt-2 pb-[env(safe-area-inset-bottom)]">
+                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                  <button
+                    type="button"
+                    onClick={handleConfirm}
+                    disabled={!imageUrl || !!loadError || !naturalSize.width || isPreparing}
+                    className="rounded-lg bg-sky-600 px-5 py-2.5 sm:px-4 sm:py-2 text-base sm:text-sm font-semibold text-white hover:bg-sky-700 active:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60 touch-manipulation"
+                  >
+                    Salvar e enviar
+                  </button>
+                </div>
               </div>
             </div>
-           </div>
          </div>
         </div>
       </div>

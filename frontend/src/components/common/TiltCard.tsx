@@ -62,4 +62,4 @@ const TiltCard: React.FC<Props> = memo(({ children, className }) => {
 });
 TiltCard.displayName = 'TiltCard';
 
-export default TiltCard;
+export default memo(TiltCard);
