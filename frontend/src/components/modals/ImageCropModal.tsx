@@ -201,6 +201,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isRotating, setIsRotating] = useState(false);
   const [isPreparing, setIsPreparing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const sourceUrlRef = useRef<string | null>(null);
   const imageUrlRef = useRef<string | null>(null);
@@ -416,6 +417,15 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isSaving) onClose();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, isSaving, onClose]);
 
   const clampOffset = (x: number, y: number, scale: number) => {
     const scaledWidth = naturalSize.width * scale;
@@ -634,7 +644,8 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   };
 
   const handleConfirm = async () => {
-    if (!imgRef.current || !file || loadError || isPreparing) return;
+    if (!imgRef.current || !file || loadError || isPreparing || isSaving) return;
+    setIsSaving(true);
     const output = OUTPUT_SIZES[target];
     const maxBytes = MAX_OUTPUT_BYTES[target];
     const scale = baseScale * zoom;
@@ -647,7 +658,10 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     canvas.width = output.width;
     canvas.height = output.height;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+      setIsSaving(false);
+      return;
+    }
 
     ctx.drawImage(imgRef.current, sx, sy, sw, sh, 0, 0, output.width, output.height);
     try {
@@ -659,244 +673,298 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
       }
       if (blob.size > maxBytes) {
         setLoadError('Imagem muito grande. Escolha uma foto menor ou reduza o zoom.');
+        setIsSaving(false);
         return;
       }
       const croppedFile = new File([blob], `${target}-crop.jpg`, { type: 'image/jpeg' });
       onConfirm(croppedFile);
     } catch {
       setLoadError('Não foi possível processar esta imagem. Use JPG, PNG ou WEBP.');
+      setIsSaving(false);
     }
   };
 
   if (!isOpen || !file) return null;
   if (typeof document === 'undefined') return null;
 
+  const zoomPercent = Math.round(zoom * 100);
+
   return createPortal(
     <div
-      className="fixed inset-0 z-[60] flex items-start sm:items-center justify-center overflow-y-auto bg-black/70 p-3 sm:p-4"
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/80 sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="crop-title"
+      onClick={(e) => e.target === e.currentTarget && !isSaving && onClose()}
     >
-      <div className="w-full max-w-4xl max-h-[95vh] overflow-hidden rounded-2xl bg-white p-3 sm:p-6 pb-safe pt-safe shadow-2xl dark:bg-gray-900">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-3 sm:mb-4 shrink-0">
-          <div>
-            <h2 id="crop-title" className="text-lg font-semibold text-gray-900 dark:text-white">
-              Ajustar {target === 'avatar' ? 'avatar' : 'capa'}
+      <div className="flex w-full max-w-5xl flex-col bg-white shadow-2xl dark:bg-gray-900 sm:max-h-[92vh] sm:rounded-2xl sm:overflow-hidden max-h-[100dvh] rounded-t-2xl">
+        {/* Header compacto */}
+        <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-800 shrink-0">
+          <div className="flex items-center gap-3">
+            <h2 id="crop-title" className="text-base font-semibold text-gray-900 dark:text-white">
+              Ajustar {isAvatar ? 'foto de perfil' : 'foto de capa'}
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Arraste para posicionar e use o zoom para ajustar.
-            </p>
             {isPreparing && (
-              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                Preparando imagem para edição...
-              </p>
-            )}
-            {loadError && (
-              <p className="mt-2 text-sm text-red-600">
-                {loadError}
-              </p>
+              <span className="text-xs text-gray-400 animate-pulse">Carregando...</span>
             )}
           </div>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <button
-              type="button"
-              onClick={resetImage}
-              disabled={!imageUrl || isRotating || isPreparing}
-              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-            >
-              Reverter foto
-            </button>
-            <button
-              type="button"
-              onClick={handleReset}
-              disabled={!naturalSize.width || isPreparing}
-              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-            >
-              Resetar enquadramento
-            </button>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isSaving}
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300 disabled:opacity-50"
+            aria-label="Fechar"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {loadError && (
+          <div className="px-4 py-2 bg-red-50 dark:bg-red-900/20 border-b border-red-100 dark:border-red-800">
+            <p className="text-sm text-red-600 dark:text-red-400">{loadError}</p>
+          </div>
+        )}
+
+        {/* Conteúdo principal - horizontal no desktop */}
+        <div className="flex flex-1 flex-col md:flex-row overflow-hidden">
+          {/* Área de crop */}
+          <div className="flex-1 flex items-center justify-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-950 min-h-0">
+            <div className="relative">
+              <div
+                ref={cropRef}
+                className="relative overflow-hidden rounded-xl border-2 border-white/20 bg-gray-900 cursor-grab active:cursor-grabbing shadow-2xl"
+                style={{
+                  aspectRatio: `${aspectRatio}`,
+                  width: frameSize.width || undefined,
+                  height: frameSize.height || undefined,
+                  touchAction: 'none',
+                }}
+                tabIndex={0}
+                aria-label="Área de recorte"
+                aria-busy={isPreparing}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerUp}
+                onPointerLeave={handlePointerUp}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onWheel={handleWheel}
+                onKeyDown={handleKeyDown}
+              >
+                {imageUrl && (
+                  <img
+                    ref={imgRef}
+                    src={imageUrl}
+                    alt="Pré-visualização"
+                    onLoad={(event) => {
+                      const img = event.currentTarget;
+                      setNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
+                    }}
+                    onError={() => setLoadError('Não foi possível abrir esta foto. Use JPG, PNG ou WEBP.')}
+                    className="absolute left-0 top-0 select-none pointer-events-none"
+                    style={{
+                      transform: `translate(${offset.x}px, ${offset.y}px) scale(${baseScale * zoom})`,
+                      transformOrigin: 'top left',
+                      willChange: 'transform',
+                    }}
+                    draggable={false}
+                  />
+                )}
+                {/* Grade 3x3 */}
+                <div className="pointer-events-none absolute inset-0 opacity-60">
+                  <div className="absolute inset-y-0 left-1/3 w-px bg-white/50" />
+                  <div className="absolute inset-y-0 left-2/3 w-px bg-white/50" />
+                  <div className="absolute inset-x-0 top-1/3 h-px bg-white/50" />
+                  <div className="absolute inset-x-0 top-2/3 h-px bg-white/50" />
+                </div>
+                {/* Área segura para capa */}
+                {!isAvatar && (
+                  <div className="pointer-events-none absolute inset-0">
+                    <div className="absolute inset-[10%] rounded-lg border border-dashed border-white/30" />
+                  </div>
+                )}
+                {/* Máscara circular para avatar */}
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  style={{
+                    background: isAvatar
+                      ? 'radial-gradient(circle at center, transparent 0 46%, rgba(0,0,0,0.6) 47%)'
+                      : 'none',
+                  }}
+                />
+                {/* Borda do frame */}
+                <div
+                  className={`pointer-events-none absolute inset-0 ring-2 ring-white/60 ${
+                    isAvatar ? 'rounded-full' : 'rounded-xl'
+                  }`}
+                />
+                {/* Controles de zoom inline */}
+                {naturalSize.width > 0 && (
+                  <div
+                    className="absolute bottom-2.5 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/20 bg-black/60 px-2 py-1 text-xs text-white shadow-lg backdrop-blur-sm"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onPointerUp={(e) => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ touchAction: 'auto' }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => updateZoom(zoom - 0.1)}
+                      disabled={zoom <= 1 || isPreparing}
+                      className="rounded-full w-6 h-6 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
+                      aria-label="Diminuir zoom"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="range"
+                      min={1}
+                      max={zoomMax}
+                      step={0.01}
+                      value={zoom}
+                      onChange={(e) => updateZoom(Number(e.target.value))}
+                      disabled={isPreparing}
+                      className="h-1 w-16 sm:w-20 appearance-none rounded-full bg-white/25 accent-white cursor-pointer"
+                      aria-label="Controle de zoom"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => updateZoom(zoom + 0.1)}
+                      disabled={zoom >= zoomMax || isPreparing}
+                      className="rounded-full w-6 h-6 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
+                      aria-label="Aumentar zoom"
+                    >
+                      +
+                    </button>
+                    <span className="w-10 text-center text-[11px] font-medium tabular-nums">{zoomPercent}%</span>
+                    <span className="h-3 w-px bg-white/25" />
+                    <button
+                      type="button"
+                      onClick={() => rotateImage('left')}
+                      disabled={isRotating || isPreparing}
+                      className="rounded-full w-6 h-6 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
+                      aria-label="Girar para a esquerda"
+                    >
+                      ↺
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => rotateImage('right')}
+                      disabled={isRotating || isPreparing}
+                      className="rounded-full w-6 h-6 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
+                      aria-label="Girar para a direita"
+                    >
+                      ↻
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar direito - preview + ações (desktop) / oculto no mobile */}
+          <div className="hidden md:flex flex-col w-56 border-l border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 gap-4">
+            {/* Preview */}
+            {previewUrl && (
+              <div className="flex flex-col items-center gap-2">
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                  Preview
+                </p>
+                <div
+                  className={`overflow-hidden border-2 border-gray-200 dark:border-gray-700 shadow-md ${
+                    isAvatar ? 'rounded-full' : 'rounded-lg'
+                  }`}
+                  style={{
+                    width: isAvatar ? 120 : 180,
+                    height: isAvatar ? 120 : 101,
+                  }}
+                >
+                  <img
+                    src={previewUrl}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Presets */}
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                Enquadramento
+              </p>
+              <div className="grid grid-cols-1 gap-1.5">
+                {presets.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => applyPreset(preset.id)}
+                    disabled={!naturalSize.width || isPreparing}
+                    className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:border-gray-300 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800 dark:hover:border-gray-600 transition-colors text-left"
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Ações secundárias */}
+            <div className="flex flex-col gap-1.5 mt-auto pt-4 border-t border-gray-100 dark:border-gray-800">
+              <button
+                type="button"
+                onClick={handleReset}
+                disabled={!naturalSize.width || isPreparing}
+                className="rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors text-left"
+              >
+                Resetar posição
+              </button>
+              <button
+                type="button"
+                onClick={resetImage}
+                disabled={!imageUrl || isRotating || isPreparing}
+                className="rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors text-left"
+              >
+                Desfazer rotação
+              </button>
+            </div>
+
+            {/* Botão salvar desktop */}
             <button
               type="button"
               onClick={handleConfirm}
-              disabled={!imageUrl || !!loadError || !naturalSize.width || isPreparing}
-              className="rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-sky-700 active:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={!imageUrl || !!loadError || !naturalSize.width || isPreparing || isSaving}
+              className="rounded-xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-700 active:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
             >
-              Salvar e enviar
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-            >
-              Cancelar
+              {isSaving ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Salvando...
+                </>
+              ) : (
+                'Salvar foto'
+              )}
             </button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="flex flex-col items-center gap-2 sm:gap-4 pb-4">
-          <div className="relative">
-            <div
-              className="pointer-events-none absolute right-3 top-3 z-10 rounded-full border border-gray-200/80 bg-white/90 px-2.5 py-1 text-[11px] text-gray-600 shadow-sm backdrop-blur sm:hidden"
-              aria-hidden="true"
-            >
-              <span className="inline-flex items-center gap-1">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-3.5 w-3.5"
-                >
-                  <path d="M8 12l-2-2-2 2" />
-                  <path d="M16 12l2-2 2 2" />
-                  <path d="M9 7l3 3 3-3" />
-                  <path d="M9 17l3-3 3 3" />
-                </svg>
-                Pinch para zoom
-              </span>
-            </div>
-            <div
-              ref={cropRef}
-              className="relative w-[min(90vw,720px)] max-h-[55vh] overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 shadow-inner dark:border-gray-700 dark:bg-gray-800 cursor-grab active:cursor-grabbing"
-              style={{
-                aspectRatio: `${aspectRatio}`,
-                width: frameSize.width || undefined,
-                height: frameSize.height || undefined,
-                touchAction: 'none',
-              }}
-              tabIndex={0}
-              aria-label="Area de recorte"
-              aria-busy={isPreparing}
-              onPointerDown={handlePointerDown}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              onPointerCancel={handlePointerUp}
-              onPointerLeave={handlePointerUp}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              onWheel={handleWheel}
-              onKeyDown={handleKeyDown}
-            >
-            {imageUrl && (
-              <img
-                ref={imgRef}
-                src={imageUrl}
-                alt="Pré-visualização"
-                onLoad={(event) => {
-                  const img = event.currentTarget;
-                  setNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
-                }}
-                onError={() => setLoadError('Não foi possível abrir esta foto. Use JPG, PNG ou WEBP.')}
-                className="absolute left-0 top-0 select-none pointer-events-none"
-                style={{
-                  transform: `translate(${offset.x}px, ${offset.y}px) scale(${baseScale * zoom})`,
-                  transformOrigin: 'top left',
-                  willChange: 'transform',
-                }}
-                draggable={false}
-              />
-            )}
-            <div className="pointer-events-none absolute inset-0 opacity-70">
-              <div className="absolute inset-y-0 left-1/3 w-px bg-white/40" />
-              <div className="absolute inset-y-0 left-2/3 w-px bg-white/40" />
-              <div className="absolute inset-x-0 top-1/3 h-px bg-white/40" />
-              <div className="absolute inset-x-0 top-2/3 h-px bg-white/40" />
-            </div>
-            {!isAvatar && (
-              <div className="pointer-events-none absolute inset-0">
-                <div className="absolute inset-[10%] rounded-xl border border-white/35" />
-              </div>
-            )}
-            <div
-              className="pointer-events-none absolute inset-0"
-              style={{
-                background: isAvatar
-                  ? 'radial-gradient(circle at center, transparent 0 46%, rgba(0,0,0,0.55) 47%)'
-                  : 'linear-gradient(0deg, rgba(0,0,0,0.18), rgba(0,0,0,0.18))',
-              }}
-            />
-            <div
-              className={`pointer-events-none absolute inset-0 ring-2 ring-white/80 dark:ring-white/20 ${
-                isAvatar ? 'rounded-full' : 'rounded-2xl'
-              }`}
-            />
-            {naturalSize.width > 0 && (
-              <div
-                className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-black/45 px-3 py-1 text-xs text-white shadow-sm backdrop-blur"
-                onPointerDown={(event) => event.stopPropagation()}
-                onPointerUp={(event) => event.stopPropagation()}
-                onClick={(event) => event.stopPropagation()}
-                style={{ touchAction: 'auto' }}
-              >
-                <button
-                  type="button"
-                  onClick={() => updateZoom(zoom - 0.1)}
-                  disabled={zoom <= 1 || isPreparing}
-                  className="rounded-full px-2 py-0.5 hover:bg-white/10 disabled:opacity-50"
-                  aria-label="Diminuir zoom"
-                >
-                  −
-                </button>
-                <input
-                  type="range"
-                  min={1}
-                  max={zoomMax}
-                  step={0.01}
-                  value={zoom}
-                  onChange={(event) => updateZoom(Number(event.target.value))}
-                  disabled={isPreparing}
-                  className="h-1.5 w-24 appearance-none rounded-full bg-white/30"
-                  aria-label="Controle de zoom"
-                />
-                <button
-                  type="button"
-                  onClick={() => updateZoom(zoom + 0.1)}
-                  disabled={zoom >= zoomMax || isPreparing}
-                  className="rounded-full px-2 py-0.5 hover:bg-white/10 disabled:opacity-50"
-                  aria-label="Aumentar zoom"
-                >
-                  +
-                </button>
-                <span className="h-3 w-px bg-white/30" />
-                <button
-                  type="button"
-                  onClick={() => rotateImage('left')}
-                  disabled={isRotating || isPreparing}
-                  className="rounded-full px-2 py-0.5 hover:bg-white/10 disabled:opacity-50"
-                  aria-label="Girar para a esquerda"
-                >
-                  ↺
-                </button>
-                <button
-                  type="button"
-                  onClick={() => rotateImage('right')}
-                  disabled={isRotating || isPreparing}
-                  className="rounded-full px-2 py-0.5 hover:bg-white/10 disabled:opacity-50"
-                  aria-label="Girar para a direita"
-                >
-                  ↻
-                </button>
-              </div>
-            )}
-          </div>
-          </div>
-
+        {/* Preview mobile (inline) */}
+        <div className="md:hidden flex items-center justify-center gap-4 px-4 py-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
           {previewUrl && (
-            <div className="mt-4 flex flex-col items-center gap-2">
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Preview
-              </p>
+            <div className="flex items-center gap-3">
               <div
-                className={`overflow-hidden border border-gray-200 dark:border-gray-700 ${
+                className={`overflow-hidden border-2 border-gray-200 dark:border-gray-700 shadow-sm shrink-0 ${
                   isAvatar ? 'rounded-full' : 'rounded-lg'
                 }`}
                 style={{
-                  width: isAvatar ? 80 : 160,
-                  height: isAvatar ? 80 : 90,
+                  width: isAvatar ? 56 : 96,
+                  height: isAvatar ? 56 : 54,
                 }}
               >
                 <img
@@ -905,34 +973,46 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                   className="w-full h-full object-cover"
                 />
               </div>
-            </div>
-          )}
-
-            <div className="flex w-full max-w-xl flex-col gap-2 sm:gap-4">
-              <div className="w-full rounded-xl border border-gray-200 bg-white/90 p-3 text-gray-700 shadow-sm backdrop-blur dark:border-gray-700 dark:bg-gray-900/80 dark:text-gray-200">
-                <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  <span>Presets</span>
-                  <span>Guias ativas</span>
-                </div>
-                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {presets.map((preset) => (
+              <div className="flex flex-col gap-1">
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Preview</p>
+                <div className="flex gap-2">
+                  {presets.slice(0, 3).map((preset) => (
                     <button
                       key={preset.id}
                       type="button"
                       onClick={() => applyPreset(preset.id)}
                       disabled={!naturalSize.width || isPreparing}
-                      className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                      className="rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300"
                     >
                       {preset.label}
                     </button>
                   ))}
                 </div>
-                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  {isAvatar ? 'Grade 3x3 + máscara circular.' : 'Grade 3x3 + área segura da capa.'}
-                </p>
               </div>
             </div>
-         </div>
+          )}
+        </div>
+
+        {/* Footer fixo mobile */}
+        <div className="md:hidden shrink-0 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-3 pb-safe">
+          <button
+            type="button"
+            onClick={handleConfirm}
+            disabled={!imageUrl || !!loadError || !naturalSize.width || isPreparing || isSaving}
+            className="w-full rounded-xl bg-sky-600 px-4 py-3.5 text-base font-semibold text-white hover:bg-sky-700 active:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+          >
+            {isSaving ? (
+              <>
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Salvando...
+              </>
+            ) : (
+              'Salvar foto'
+            )}
+          </button>
         </div>
       </div>
     </div>,
