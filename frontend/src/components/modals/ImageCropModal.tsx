@@ -309,10 +309,10 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
     const updateFrameSize = () => {
-      const isMobile = window.innerWidth < 640;
-      const maxWidth = Math.min(window.innerWidth * (isMobile ? 0.95 : 0.9), 720);
-      const reservedHeight = isMobile ? 240 : 240;
-      const minHeight = isMobile ? 260 : 300;
+      // Configurações unificadas desktop/mobile (otimizado para mobile)
+      const maxWidth = Math.min(window.innerWidth * 0.95, 720);
+      const reservedHeight = 240;
+      const minHeight = 260;
       const maxHeight = Math.max(minHeight, window.innerHeight - reservedHeight);
       const widthByHeight = maxHeight * aspectRatio;
       const nextWidth = Math.min(maxWidth, widthByHeight);
@@ -430,12 +430,31 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   const clampOffset = (x: number, y: number, scale: number) => {
     const scaledWidth = naturalSize.width * scale;
     const scaledHeight = naturalSize.height * scale;
-    const minX = cropSize.width - scaledWidth;
-    const minY = cropSize.height - scaledHeight;
-    return {
-      x: Math.min(0, Math.max(minX, x)),
-      y: Math.min(0, Math.max(minY, y)),
-    };
+
+    // Se a imagem é menor que o frame, centralizar nessa dimensão
+    // Se é maior, limitar para não mostrar espaço vazio
+    let clampedX: number;
+    let clampedY: number;
+
+    if (scaledWidth <= cropSize.width) {
+      // Imagem menor ou igual ao frame na horizontal: centralizar
+      clampedX = (cropSize.width - scaledWidth) / 2;
+    } else {
+      // Imagem maior que o frame: permitir arrastar
+      const minX = cropSize.width - scaledWidth;
+      clampedX = Math.min(0, Math.max(minX, x));
+    }
+
+    if (scaledHeight <= cropSize.height) {
+      // Imagem menor ou igual ao frame na vertical: centralizar
+      clampedY = (cropSize.height - scaledHeight) / 2;
+    } else {
+      // Imagem maior que o frame: permitir arrastar
+      const minY = cropSize.height - scaledHeight;
+      clampedY = Math.min(0, Math.max(minY, y));
+    }
+
+    return { x: clampedX, y: clampedY };
   };
 
   const getCenteredOffset = (scale: number) => ({
