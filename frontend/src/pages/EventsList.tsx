@@ -14,7 +14,7 @@ import {
 import Layout from '../components/Layout/Layout';
 import { useEvents } from '../hooks/useEvents';
 import type { Availability, Event } from '../types';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { getEventComputedStatus } from '../utils/events';
 import { formatInstrumentLabel, getMusicianDisplayName } from '../utils/formatting';

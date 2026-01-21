@@ -1,5 +1,6 @@
 // services/api.ts
 import axios, { AxiosError } from 'axios';
+import toast from 'react-hot-toast';
 import type {
   LoginCredentials,
   Musician,

@@ -17,7 +17,7 @@ import { eventService, musicianService } from '../services/api';
 import { getErrorMessage, showToast } from '../utils/toast';
 import { logError } from '../utils/logger';
 import type { Event, EventCreate, AvailableMusician, Musician } from '../types';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isBefore } from 'date-fns';
 import InstrumentIcon from '../components/common/InstrumentIcon';
 import { INSTRUMENT_LABELS as BASE_INSTRUMENT_LABELS } from '../utils/formatting';
 import { sanitizeOptionalText, sanitizeText } from '../utils/sanitize';
