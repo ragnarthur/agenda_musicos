@@ -204,6 +204,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   const imgRef = useRef<HTMLImageElement | null>(null);
   const sourceUrlRef = useRef<string | null>(null);
   const imageUrlRef = useRef<string | null>(null);
+  const previewUrlRef = useRef<string | null>(null);
   const cropRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef({
     active: false,
@@ -225,6 +226,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   const zoomMax = target === 'avatar' ? 3.0 : 2.5;
   const isAvatar = target === 'avatar';
   const presets = isAvatar ? PRESETS.avatar : PRESETS.cover;
+  const initialFocusKeyRef = useRef<string | null>(null);
 
   const setSourceUrlSafe = (nextUrl: string | null) => {
     if (sourceUrlRef.current && sourceUrlRef.current !== nextUrl) {
@@ -321,26 +323,62 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     return () => window.removeEventListener('resize', updateFrameSize);
   }, [aspectRatio, isOpen]);
 
+  const getDefaultFocus = () => {
+    const aspect = naturalSize.height / naturalSize.width;
+    if (isAvatar) {
+      if (aspect >= 1.3) return { x: 0.5, y: 0.35 };
+      if (aspect <= 0.85) return { x: 0.5, y: 0.5 };
+      return { x: 0.5, y: 0.42 };
+    }
+    if (aspect >= 1.2) return { x: 0.5, y: 0.3 };
+    if (aspect <= 0.6) return { x: 0.5, y: 0.45 };
+    return { x: 0.5, y: 0.4 };
+  };
+
   useEffect(() => {
     if (!isOpen || !naturalSize.width || !frameSize.width) return;
 
-    // Usar frameSize diretamente - é o valor calculado, não depende do DOM
     const nextBaseScale = Math.max(
       frameSize.width / naturalSize.width,
       frameSize.height / naturalSize.height
     );
-    const scaledWidth = naturalSize.width * nextBaseScale;
-    const scaledHeight = naturalSize.height * nextBaseScale;
-
     setBaseScale(nextBaseScale);
-    setZoom(1);
-    setOffset({
-      x: (frameSize.width - scaledWidth) / 2,
-      y: (frameSize.height - scaledHeight) / 2,
-    });
-    // Sincronizar cropSize com frameSize
     setCropSize({ width: frameSize.width, height: frameSize.height });
-  }, [frameSize.width, frameSize.height, isOpen, naturalSize.height, naturalSize.width, target]);
+
+    const key = sourceUrl ? `${sourceUrl}-${target}` : null;
+    if (!key) {
+      const centered = {
+        x: (frameSize.width - naturalSize.width * scale) / 2,
+        y: (frameSize.height - naturalSize.height * scale) / 2,
+      };
+      setZoom(1);
+      setOffset(centered);
+      return;
+    }
+
+    if (initialFocusKeyRef.current !== key) {
+      const scale = nextBaseScale;
+      const focus = getDefaultFocus();
+      const nextOffset = clampOffset(
+        frameSize.width / 2 - naturalSize.width * focus.x * scale,
+        frameSize.height / 2 - naturalSize.height * focus.y * scale,
+        scale
+      );
+      setZoom(1);
+      setOffset(nextOffset);
+      initialFocusKeyRef.current = key;
+      return;
+    }
+    setOffset((prev) => clampOffset(prev.x, prev.y, nextBaseScale * zoom));
+  }, [
+    frameSize.width,
+    frameSize.height,
+    isOpen,
+    naturalSize.height,
+    naturalSize.width,
+    target,
+    sourceUrl,
+  ]);
 
   useEffect(() => {
     if (!isOpen || !imgRef.current || !naturalSize.width || !cropSize.width) return;
@@ -364,16 +402,20 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
       const url = URL.createObjectURL(blob);
       setPreviewUrl((prev) => {
         if (prev) URL.revokeObjectURL(prev);
+        previewUrlRef.current = url;
         return url;
       });
     }, 'image/jpeg', 0.7);
-    return () => {
-      setPreviewUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return null;
-      });
-    };
   }, [zoom, offset, cropSize, naturalSize, baseScale, isOpen, target]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
+      }
+    };
+  }, []);
 
   const clampOffset = (x: number, y: number, scale: number) => {
     const scaledWidth = naturalSize.width * scale;
