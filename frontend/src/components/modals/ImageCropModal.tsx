@@ -421,6 +421,12 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     setOffset(clampOffset(nextOffset.x, nextOffset.y, scale));
   };
 
+  const nudgeOffset = (dx: number, dy: number) => {
+    if (!naturalSize.width || isPreparing) return;
+    const scale = baseScale * zoom;
+    setOffset((prev) => clampOffset(prev.x + dx, prev.y + dy, scale));
+  };
+
   const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
     if (!naturalSize.width || isPreparing) return;
     event.preventDefault();
@@ -700,6 +706,101 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
         </div>
 
         <div className="flex-1 overflow-y-auto">
+          <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 mb-4">
+            <div className="rounded-xl border border-gray-200 bg-white/90 p-3 text-gray-700 shadow-sm backdrop-blur dark:border-gray-700 dark:bg-gray-900/80 dark:text-gray-200">
+              <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                <span>Zoom</span>
+                <span>{Math.round(zoom * 100)}%</span>
+              </div>
+              <div className="mt-2 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => updateZoom(zoom - 0.1)}
+                  disabled={!naturalSize.width || zoom <= 1 || isPreparing}
+                  className="rounded-lg border border-gray-200 px-2.5 py-1 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                  aria-label="Diminuir zoom"
+                >
+                  −
+                </button>
+                <input
+                  type="range"
+                  min={1}
+                  max={zoomMax}
+                  step={0.01}
+                  value={zoom}
+                  onChange={(event) => updateZoom(Number(event.target.value))}
+                  disabled={!naturalSize.width || isPreparing}
+                  className="h-2 w-full appearance-none rounded-full bg-gray-200 dark:bg-gray-700"
+                  aria-label="Controle de zoom"
+                />
+                <button
+                  type="button"
+                  onClick={() => updateZoom(zoom + 0.1)}
+                  disabled={!naturalSize.width || zoom >= zoomMax || isPreparing}
+                  className="rounded-lg border border-gray-200 px-2.5 py-1 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                  aria-label="Aumentar zoom"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white/90 p-3 text-gray-700 shadow-sm backdrop-blur dark:border-gray-700 dark:bg-gray-900/80 dark:text-gray-200">
+              <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                <span>Movimento</span>
+                <span>Arraste ou use setas</span>
+              </div>
+              <div className="mt-2 grid grid-cols-3 gap-2 place-items-center">
+                <div />
+                <button
+                  type="button"
+                  onClick={() => nudgeOffset(0, -18)}
+                  disabled={!naturalSize.width || isPreparing}
+                  className="rounded-lg border border-gray-200 px-2.5 py-1 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                  aria-label="Mover para cima"
+                >
+                  ↑
+                </button>
+                <div />
+                <button
+                  type="button"
+                  onClick={() => nudgeOffset(-18, 0)}
+                  disabled={!naturalSize.width || isPreparing}
+                  className="rounded-lg border border-gray-200 px-2.5 py-1 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                  aria-label="Mover para esquerda"
+                >
+                  ←
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPreset('center')}
+                  disabled={!naturalSize.width || isPreparing}
+                  className="rounded-lg border border-gray-200 px-2.5 py-1 text-xs text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                >
+                  Centro
+                </button>
+                <button
+                  type="button"
+                  onClick={() => nudgeOffset(18, 0)}
+                  disabled={!naturalSize.width || isPreparing}
+                  className="rounded-lg border border-gray-200 px-2.5 py-1 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                  aria-label="Mover para direita"
+                >
+                  →
+                </button>
+                <div />
+                <button
+                  type="button"
+                  onClick={() => nudgeOffset(0, 18)}
+                  disabled={!naturalSize.width || isPreparing}
+                  className="rounded-lg border border-gray-200 px-2.5 py-1 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                  aria-label="Mover para baixo"
+                >
+                  ↓
+                </button>
+                <div />
+              </div>
+            </div>
+          </div>
           <div className="flex flex-col items-center gap-2 sm:gap-4 pb-4">
           <div className="relative">
             <div
@@ -817,43 +918,6 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
           )}
 
             <div className="flex w-full max-w-xl flex-col gap-2 sm:gap-4">
-              <div className="w-full rounded-xl border border-gray-200 bg-white/90 p-3 text-gray-700 shadow-sm backdrop-blur dark:border-gray-700 dark:bg-gray-900/80 dark:text-gray-200">
-                <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  <span>Zoom</span>
-                  <span>{Math.round(zoom * 100)}%</span>
-                </div>
-                <div className="mt-2 flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => updateZoom(zoom - 0.1)}
-                    disabled={!naturalSize.width || zoom <= 1 || isPreparing}
-                    className="rounded-lg border border-gray-200 px-2.5 py-1 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                    aria-label="Diminuir zoom"
-                  >
-                    −
-                  </button>
-                  <input
-                    type="range"
-                    min={1}
-                    max={zoomMax}
-                    step={0.01}
-                    value={zoom}
-                    onChange={(event) => updateZoom(Number(event.target.value))}
-                    disabled={!naturalSize.width || isPreparing}
-                    className="h-2 w-full appearance-none rounded-full bg-gray-200 dark:bg-gray-700"
-                    aria-label="Controle de zoom"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => updateZoom(zoom + 0.1)}
-                    disabled={!naturalSize.width || zoom >= zoomMax || isPreparing}
-                    className="rounded-lg border border-gray-200 px-2.5 py-1 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                    aria-label="Aumentar zoom"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
               <div className="w-full rounded-xl border border-gray-200 bg-white/90 p-3 text-gray-700 shadow-sm backdrop-blur dark:border-gray-700 dark:bg-gray-900/80 dark:text-gray-200">
                 <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
                   <span>Presets</span>
