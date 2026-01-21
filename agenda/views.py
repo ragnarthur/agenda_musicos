@@ -4,7 +4,7 @@ from io import BytesIO
 from uuid import uuid4
 from datetime import timedelta, datetime, time, date
 
-from django.db import models, transaction
+from django.db import models, transaction, connection
 from django.db.models import Q, Count
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -91,7 +91,15 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
             )
         instrument = self.request.query_params.get("instrument")
         if instrument and instrument != "all":
-            queryset = queryset.filter(instrument=instrument)
+            if connection.vendor == "sqlite":
+                queryset = queryset.filter(
+                    Q(instrument=instrument)
+                    | Q(instruments__icontains=f'"{instrument}"')
+                )
+            else:
+                queryset = queryset.filter(
+                    Q(instrument=instrument) | Q(instruments__contains=[instrument])
+                )
         return queryset
 
     @action(detail=False, methods=["get", "patch"])

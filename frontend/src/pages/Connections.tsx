@@ -440,8 +440,8 @@ const Connections: React.FC = () => {
                                 <p className="font-semibold text-gray-900 truncate">{m.full_name}</p>
                                 <p className="text-sm text-gray-500 dark:text-slate-400">@{m.user.username}</p>
                                 {instruments.length > 0 && (
-                                  <div className="flex flex-wrap gap-1.5 mt-2">
-                                    {instruments.map((inst) => (
+                                   <div className="flex flex-wrap gap-1.5 mt-2">
+                                    {(instruments || []).map((inst) => (
                                       <span
                                         key={inst}
                                         className="inline-flex items-center gap-1 rounded-full border border-primary-100 bg-primary-50/80 px-2 py-0.5 text-xs font-medium text-primary-700 dark:border-primary-800/50 dark:bg-primary-900/30 dark:text-primary-300"

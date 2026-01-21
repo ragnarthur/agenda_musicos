@@ -61,7 +61,7 @@ const AvailabilityList: React.FC<AvailabilityListProps> = memo(({ availabilities
       </div>
 
       <div className="space-y-3">
-        {availabilities.map((availability) => (
+        {(availabilities || []).map((availability) => (
           <div
             key={availability.id}
             className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"

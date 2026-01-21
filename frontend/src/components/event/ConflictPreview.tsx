@@ -55,8 +55,8 @@ const ConflictPreview: React.FC<ConflictPreviewProps> = ({ conflictInfo }) => {
       <div className="flex-1 space-y-2">
         <p className="font-semibold">{getStatusMessage()}</p>
         {!conflictInfo.loading && conflictInfo.hasConflicts && (
-          <div className="space-y-1 text-sm">
-            {conflictInfo.conflicts.slice(0, 3).map((conflict) => (
+            <div className="space-y-1 text-sm">
+              {(conflictInfo?.conflicts || []).slice(0, 3).map((conflict) => (
               <div key={conflict.id} className="flex items-center justify-between">
                 <span className="font-medium">{conflict.title}</span>
                 <span className="text-xs text-gray-600">

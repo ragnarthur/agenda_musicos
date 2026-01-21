@@ -692,9 +692,17 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     try {
       let quality = 0.92;
       let blob = await canvasToBlob(canvas, 'image/jpeg', quality);
-      while (blob.size > maxBytes && quality > 0.7) {
+      let iterations = 0;
+      const maxIterations = 10;
+      while (blob.size > maxBytes && quality > 0.7 && iterations < maxIterations) {
         quality -= 0.08;
         blob = await canvasToBlob(canvas, 'image/jpeg', quality);
+        iterations++;
+      }
+      if (iterations >= maxIterations) {
+        setLoadError('Não foi possível reduzir a imagem para o tamanho desejado.');
+        setIsSaving(false);
+        return;
       }
       if (blob.size > maxBytes) {
         setLoadError('Imagem muito grande. Escolha uma foto menor ou reduza o zoom.');

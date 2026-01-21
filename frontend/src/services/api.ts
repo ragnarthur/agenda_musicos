@@ -110,7 +110,10 @@ api.interceptors.response.use(
 
         // Em rotas públicas, não redirecionamos para login (ex: verificação de email)
         if (!isPublicAuthPath && !isOnPublicRoute && !isUserProfileCall && window.location.pathname !== '/login') {
-          window.location.href = '/login';
+          toast.error('Sessão expirada. Faça login novamente.');
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 1500);
         }
         return Promise.reject(refreshError);
       }

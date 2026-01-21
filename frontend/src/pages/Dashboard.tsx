@@ -25,25 +25,25 @@ const getStartDateTime = (event: Event): number => {
   return 0;
 };
 
-const isEventToday = (event: Event): boolean => {
-  if (event.event_date) {
-    try {
-      return isToday(parseISO(event.event_date));
-    } catch {
-      // ignore parse errors
+  const isEventToday = (event: Event): boolean => {
+    if (event.event_date) {
+      try {
+        return isToday(parseISO(event.event_date));
+      } catch {
+        return false;
+      }
     }
-  }
 
-  if (event.start_datetime) {
-    try {
-      return isToday(parseISO(event.start_datetime));
-    } catch {
-      return false;
+    if (event.start_datetime) {
+      try {
+        return isToday(parseISO(event.start_datetime));
+      } catch {
+        return false;
+      }
     }
-  }
 
-  return false;
-};
+    return false;
+  };
 
 const Dashboard: React.FC = memo(() => {
   const { user } = useAuth();
@@ -317,8 +317,8 @@ const Dashboard: React.FC = memo(() => {
                 </Link>
               </div>
             </div>
-            <div className="pb-4 overflow-y-auto max-h-[50vh]">
-              {events.slice(5).map((event) => (
+              <div className="pb-4 overflow-y-auto max-h-[50vh]">
+                {(events || []).slice(5).map((event) => (
                 <Link
                   key={event.id}
                   to={`/eventos/${event.id}`}

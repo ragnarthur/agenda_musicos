@@ -53,7 +53,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = useCallback(async (credentials: LoginCredentials) => {
     try {
       await authService.login(credentials);
-      // Marca sessão ativa no sessionStorage
       sessionStorage.setItem(SESSION_KEY, 'true');
       const musician = await musicianService.getMe();
       setUser(musician);
@@ -61,7 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logError('Erro no login:', error);
       throw error;
     }
-  }, []);
+  }, [logError]);
 
   const refreshUser = useCallback(async () => {
     try {
@@ -72,11 +71,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (status !== 401) {
         logError('Erro ao atualizar sessão do usuário:', error);
       }
-      if (status === 401) {
-        setUser(null);
-      }
+      setUser(null);
+      sessionStorage.removeItem(SESSION_KEY);
     }
-  }, []);
+  }, [logError]);
 
   const logout = useCallback(async () => {
     try {

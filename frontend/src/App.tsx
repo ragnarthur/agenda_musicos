@@ -43,13 +43,17 @@ const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 
 // Componente para rotas protegidas
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) {
     return <PageLoader />;
   }
 
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
 };
 
 // Componente para redirecionar usuários autenticados da página de login

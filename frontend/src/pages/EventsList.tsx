@@ -90,20 +90,24 @@ const EventsList: React.FC = () => {
 
   const { events, count, isLoading, isLoadingMore, hasMore, loadMore } = useEvents(params);
 
-  const groups = useMemo(() => {
-    const byDate = new Map<string, Event[]>();
-    events.forEach((event) => {
-      const key = format(parseISO(event.event_date), 'yyyy-MM-dd');
-      if (!byDate.has(key)) byDate.set(key, []);
-      byDate.get(key)!.push(event);
-    });
+    const groups = useMemo(() => {
+      const byDate = new Map<string, Event[]>();
+      events.forEach((event) => {
+        try {
+          const key = format(parseISO(event.event_date), 'yyyy-MM-dd');
+          if (!byDate.has(key)) byDate.set(key, []);
+          byDate.get(key)!.push(event);
+        } catch {
+          // Skip events with invalid dates
+        }
+      });
 
     return Array.from(byDate.entries())
       .sort(([a], [b]) => (a < b ? -1 : 1))
       .map(([dateKey, list]) => {
         const dateObj = parseISO(dateKey);
-        const today = new Date();
-        const diffDays = Math.floor((dateObj.getTime() - today.setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24));
+        const today = startOfDay(new Date());
+        const diffDays = Math.floor((dateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
         const tone =
           diffDays < 0

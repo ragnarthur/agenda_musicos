@@ -1,5 +1,5 @@
 // components/modals/RatingModal.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Star, X, Send } from 'lucide-react';
 import type { Availability, RatingInput } from '../../types';
 import { formatInstrumentLabel } from '../../utils/formatting';
@@ -31,23 +31,46 @@ const RatingModal: React.FC<RatingModalProps> = ({
   loading = false,
 }) => {
   // Inicializa ratings para cada músico (apenas os que aceitaram)
-  const initialRatings: MusicianRatingState[] = availabilities
-    .filter((a) => a.response === 'available')
-    .map((a) => ({
-      musician_id: a.musician.id,
-      musician_name:
-        a.musician.full_name ||
-        a.musician.user?.full_name ||
-        `${a.musician.user?.first_name || ''} ${a.musician.user?.last_name || ''}`.trim() ||
-        a.musician.user?.username ||
-        'Músico',
-      instrument: formatInstrumentLabel(a.musician.instrument),
-      rating: 0,
-      comment: '',
-    }));
-
-  const [ratings, setRatings] = useState<MusicianRatingState[]>(initialRatings);
+  const [ratings, setRatings] = useState<MusicianRatingState[]>([]);
   const [error, setError] = useState<string>('');
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const initialRatings: MusicianRatingState[] = availabilities
+      .filter((a) => a.response === 'available')
+      .map((a) => ({
+        musician_id: a.musician.id,
+        musician_name:
+          a.musician.full_name ||
+          a.musician.user?.full_name ||
+          `${a.musician.user?.first_name || ''} ${a.musician.user?.last_name || ''}`.trim() ||
+          a.musician.user?.username ||
+          'Músico',
+        instrument: formatInstrumentLabel(a.musician.instrument),
+        rating: 0,
+        comment: '',
+      }));
+    setRatings(initialRatings);
+  }, [availabilities]);
+
+  useEffect(() => {
+    const initialRatings: MusicianRatingState[] = availabilities
+      .filter((a) => a.response === 'available')
+      .map((a) => ({
+        musician_id: a.musician.id,
+        musician_name:
+          a.musician.full_name ||
+          a.musician.user?.full_name ||
+          `${a.musician.user?.first_name || ''} ${a.musician.user?.last_name || ''}`.trim() ||
+          a.musician.user?.username ||
+          'Músico',
+        instrument: formatInstrumentLabel(a.musician.instrument),
+        rating: 0,
+        comment: '',
+      }));
+    setRatings(initialRatings);
+  }, [availabilities]);
 
   if (!isOpen) return null;
 

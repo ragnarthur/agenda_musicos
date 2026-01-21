@@ -2,11 +2,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Calendar,
-  MapPin,
-  Clock,
-  Phone,
-  FileText,
   Save,
   X,
   CheckCircle,
@@ -14,7 +9,6 @@ import {
   Sparkles,
   Users,
   UserPlus,
-  Search,
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import ConflictPreview from '../components/event/ConflictPreview';
@@ -90,9 +84,17 @@ const EventForm: React.FC = () => {
 
   const durationPreview = useMemo(() => {
     if (!formData.start_time || !formData.end_time) return null;
-    const [startH, startM] = formData.start_time.split(':').map(Number);
-    const [endH, endM] = formData.end_time.split(':').map(Number);
-    let minutes = (endH * 60 + endM) - (startH * 60 + startM);
+    const parseTime = (time: string) => {
+      const parts = time.split(':');
+      if (parts.length !== 2) return null;
+      const [h, m] = parts.map(Number);
+      if (isNaN(h) || isNaN(m)) return null;
+      return h * 60 + m;
+    };
+    const startMinutes = parseTime(formData.start_time);
+    const endMinutes = parseTime(formData.end_time);
+    if (startMinutes === null || endMinutes === null) return null;
+    let minutes = endMinutes - startMinutes;
     if (minutes <= 0) minutes += 24 * 60;
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
@@ -117,7 +119,7 @@ const EventForm: React.FC = () => {
           while (hasNext && !cancelled) {
             const pageData = await musicianService.getAllPaginated({ page, page_size: 50 });
             aggregated.push(...pageData.results);
-            hasNext = Boolean(pageData.next);
+            hasNext = Boolean(pageData?.next);
             page += 1;
           }
           const musicians = aggregated;
@@ -220,12 +222,12 @@ const EventForm: React.FC = () => {
       try {
         const result = await eventService.previewConflicts({ event_date, start_time, end_time });
         if (!cancelled) {
-          setConflictInfo({
+          setConflictInfo(prev => ({
             loading: false,
             hasConflicts: result.has_conflicts,
             conflicts: result.conflicts || [],
-            bufferMinutes: result.buffer_minutes,
-          });
+            bufferMinutes: result.buffer_minutes ?? prev.bufferMinutes,
+          }));
         }
       } catch (err) {
         if (!cancelled) {
@@ -281,8 +283,11 @@ const EventForm: React.FC = () => {
         return;
       }
 
-      const todayStr = format(new Date(), 'yyyy-MM-dd');
-      if (formData.event_date && formData.event_date < todayStr) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const eventDate = parseISO(formData.event_date || '');
+
+      if (formData.event_date && eventDate && isBefore(eventDate, today)) {
         setError('A data do evento não pode ser no passado');
         setLoading(false);
         return;
@@ -367,14 +372,13 @@ const EventForm: React.FC = () => {
                 Título do Evento *
               </label>
               <div className="relative">
-                <FileText className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none" />
                 <input
                   id="title"
                   name="title"
                   type="text"
                   value={formData.title}
                   onChange={handleChange}
-                  className="input-field pl-12"
+                  className="input-field"
                   placeholder="Ex: Show no Bar do João"
                   required
                   {...getMobileInputProps('username')}
@@ -388,14 +392,13 @@ const EventForm: React.FC = () => {
                 Local *
               </label>
               <div className="relative">
-                <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none" />
                 <input
                   id="location"
                   name="location"
                   type="text"
                   value={formData.location}
                   onChange={handleChange}
-                  className="input-field pl-12"
+                  className="input-field"
                   placeholder="Ex: Rua ABC, 123 - Centro"
                   required
                   {...getMobileInputProps('street-address')}
@@ -409,14 +412,13 @@ const EventForm: React.FC = () => {
                 Contato do Local
               </label>
               <div className="relative">
-                <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none" />
                 <input
                   id="venue_contact"
                   name="venue_contact"
                   type="text"
                   value={formData.venue_contact}
                   onChange={handleChange}
-                  className="input-field pl-12"
+                  className="input-field"
                   placeholder="Telefone ou contato do local"
                   {...getMobileInputProps('tel')}
                 />
@@ -430,7 +432,6 @@ const EventForm: React.FC = () => {
                   Data *
                 </label>
                 <div className="relative">
-                  <Calendar className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none" />
                   <input
                     id="event_date"
                     name="event_date"
@@ -440,7 +441,7 @@ const EventForm: React.FC = () => {
                     ref={dateInputRef}
                     onFocus={openDatePicker}
                     onClick={openDatePicker}
-                    className="input-field pl-12"
+                    className="input-field"
                     required
                     {...getMobileInputProps('date')}
                   />
@@ -453,14 +454,13 @@ const EventForm: React.FC = () => {
                   Início *
                 </label>
                 <div className="relative">
-                  <Clock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none" />
                   <input
                     id="start_time"
                     name="start_time"
                     type="time"
                     value={formData.start_time}
                     onChange={handleChange}
-                    className="input-field pl-12"
+                    className="input-field"
                     required
                   />
                 </div>
@@ -471,14 +471,13 @@ const EventForm: React.FC = () => {
                   Término *
                 </label>
                 <div className="relative">
-                  <Clock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none" />
                   <input
                     id="end_time"
                     name="end_time"
                     type="time"
                     value={formData.end_time}
                     onChange={handleChange}
-                    className="input-field pl-12"
+                    className="input-field"
                     required
                   />
                 </div>
@@ -553,13 +552,12 @@ const EventForm: React.FC = () => {
                       Buscar instrumento
                     </label>
                     <div className="relative">
-                      <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
                       <input
                         type="text"
                         value={instrumentQuery}
                         onChange={(e) => setInstrumentQuery(e.target.value)}
                         placeholder="Digite violão, teclado, bateria..."
-                        className="input-field pl-11"
+                        className="input-field"
                       />
                     </div>
                   </div>

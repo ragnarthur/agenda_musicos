@@ -71,7 +71,7 @@ const getStartTimestamp = (event: Event): number => {
     const fallback = safeParse(`${event.event_date}T${event.start_time}`);
     if (fallback) return fallback.getTime();
   }
-  return 0;
+  return Infinity;
 };
 
 const EventBoard: React.FC = () => {

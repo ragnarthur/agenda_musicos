@@ -332,11 +332,13 @@ const Register: React.FC = () => {
 
         if (includeOther) {
           if (!extraInstrument || extraInstrument.length < 3) return false;
-          selectedInstruments.push(extraInstrument);
+          const finalInstruments = [...selectedInstruments, extraInstrument];
+          if (!finalInstruments.length) return false;
+          if (finalInstruments.some((inst) => inst.length > 50)) return false;
+        } else {
+          if (!selectedInstruments.length) return false;
+          if (selectedInstruments.some((inst) => inst.length > 50)) return false;
         }
-
-        if (!selectedInstruments.length) return false;
-        if (selectedInstruments.some((inst) => inst.length > 50)) return false;
       } else {
         const primary =
           formData.instrument === 'other' ? extraInstrument : (formData.instrument || '').trim();
@@ -422,7 +424,12 @@ const Register: React.FC = () => {
           } else if (extraInstrument.length < 3) {
             newErrors.instrument = 'Use pelo menos 3 caracteres para o instrumento adicional';
           } else {
-            selectedInstruments.push(extraInstrument);
+            const finalInstruments = [...selectedInstruments, extraInstrument];
+            if (!finalInstruments.length && !newErrors.instrument) {
+              newErrors.instrument = 'Selecione ou informe pelo menos um instrumento';
+            } else if (finalInstruments.some((inst) => inst.length > 50) && !newErrors.instrument) {
+              newErrors.instrument = 'Instrumento deve ter no máximo 50 caracteres';
+            }
           }
         }
 

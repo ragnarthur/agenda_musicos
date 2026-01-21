@@ -165,8 +165,8 @@ const Musicians: React.FC = () => {
           >
             {musicians.map((musician: Musician) => {
               const emoji = getInstrumentEmoji(musician.instrument, musician.bio);
-              const username = musician.instagram || musician.user.username;
-              const contactEmail = musician.public_email || musician.user.email;
+              const username = musician.instagram || musician.user?.username || '';
+              const contactEmail = musician.public_email || musician.user?.email || '';
               const instrumentLabel = getInstrumentLabel(musician.instrument);
               const avatarUrl = musician.avatar_url;
               return (
