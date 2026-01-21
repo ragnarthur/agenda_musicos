@@ -421,12 +421,6 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     setOffset(clampOffset(nextOffset.x, nextOffset.y, scale));
   };
 
-  const nudgeOffset = (dx: number, dy: number) => {
-    if (!naturalSize.width || isPreparing) return;
-    const scale = baseScale * zoom;
-    setOffset((prev) => clampOffset(prev.x + dx, prev.y + dy, scale));
-  };
-
   const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
     if (!naturalSize.width || isPreparing) return;
     event.preventDefault();
@@ -673,22 +667,6 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => rotateImage('left')}
-              disabled={!imageUrl || isRotating || isPreparing}
-              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-            >
-              Girar -90
-            </button>
-            <button
-              type="button"
-              onClick={() => rotateImage('right')}
-              disabled={!imageUrl || isRotating || isPreparing}
-              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-            >
-              Girar 90
-            </button>
-            <button
-              type="button"
               onClick={handleReset}
               disabled={!naturalSize.width || isPreparing}
               className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
@@ -706,101 +684,6 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 mb-4">
-            <div className="rounded-xl border border-gray-200 bg-white/90 p-3 text-gray-700 shadow-sm backdrop-blur dark:border-gray-700 dark:bg-gray-900/80 dark:text-gray-200">
-              <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                <span>Zoom</span>
-                <span>{Math.round(zoom * 100)}%</span>
-              </div>
-              <div className="mt-2 flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => updateZoom(zoom - 0.1)}
-                  disabled={!naturalSize.width || zoom <= 1 || isPreparing}
-                  className="rounded-lg border border-gray-200 px-2.5 py-1 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                  aria-label="Diminuir zoom"
-                >
-                  −
-                </button>
-                <input
-                  type="range"
-                  min={1}
-                  max={zoomMax}
-                  step={0.01}
-                  value={zoom}
-                  onChange={(event) => updateZoom(Number(event.target.value))}
-                  disabled={!naturalSize.width || isPreparing}
-                  className="h-2 w-full appearance-none rounded-full bg-gray-200 dark:bg-gray-700"
-                  aria-label="Controle de zoom"
-                />
-                <button
-                  type="button"
-                  onClick={() => updateZoom(zoom + 0.1)}
-                  disabled={!naturalSize.width || zoom >= zoomMax || isPreparing}
-                  className="rounded-lg border border-gray-200 px-2.5 py-1 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                  aria-label="Aumentar zoom"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-white/90 p-3 text-gray-700 shadow-sm backdrop-blur dark:border-gray-700 dark:bg-gray-900/80 dark:text-gray-200">
-              <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                <span>Movimento</span>
-                <span>Arraste ou use setas</span>
-              </div>
-              <div className="mt-2 grid grid-cols-3 gap-2 place-items-center">
-                <div />
-                <button
-                  type="button"
-                  onClick={() => nudgeOffset(0, -18)}
-                  disabled={!naturalSize.width || isPreparing}
-                  className="rounded-lg border border-gray-200 px-2.5 py-1 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                  aria-label="Mover para cima"
-                >
-                  ↑
-                </button>
-                <div />
-                <button
-                  type="button"
-                  onClick={() => nudgeOffset(-18, 0)}
-                  disabled={!naturalSize.width || isPreparing}
-                  className="rounded-lg border border-gray-200 px-2.5 py-1 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                  aria-label="Mover para esquerda"
-                >
-                  ←
-                </button>
-                <button
-                  type="button"
-                  onClick={() => applyPreset('center')}
-                  disabled={!naturalSize.width || isPreparing}
-                  className="rounded-lg border border-gray-200 px-2.5 py-1 text-xs text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                >
-                  Centro
-                </button>
-                <button
-                  type="button"
-                  onClick={() => nudgeOffset(18, 0)}
-                  disabled={!naturalSize.width || isPreparing}
-                  className="rounded-lg border border-gray-200 px-2.5 py-1 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                  aria-label="Mover para direita"
-                >
-                  →
-                </button>
-                <div />
-                <button
-                  type="button"
-                  onClick={() => nudgeOffset(0, 18)}
-                  disabled={!naturalSize.width || isPreparing}
-                  className="rounded-lg border border-gray-200 px-2.5 py-1 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                  aria-label="Mover para baixo"
-                >
-                  ↓
-                </button>
-                <div />
-              </div>
-            </div>
-          </div>
           <div className="flex flex-col items-center gap-2 sm:gap-4 pb-4">
           <div className="relative">
             <div
@@ -891,6 +774,64 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                 isAvatar ? 'rounded-full' : 'rounded-2xl'
               }`}
             />
+            {naturalSize.width > 0 && (
+              <div
+                className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-black/45 px-3 py-1 text-xs text-white shadow-sm backdrop-blur"
+                onPointerDown={(event) => event.stopPropagation()}
+                onPointerUp={(event) => event.stopPropagation()}
+                onClick={(event) => event.stopPropagation()}
+                style={{ touchAction: 'auto' }}
+              >
+                <button
+                  type="button"
+                  onClick={() => updateZoom(zoom - 0.1)}
+                  disabled={zoom <= 1 || isPreparing}
+                  className="rounded-full px-2 py-0.5 hover:bg-white/10 disabled:opacity-50"
+                  aria-label="Diminuir zoom"
+                >
+                  −
+                </button>
+                <input
+                  type="range"
+                  min={1}
+                  max={zoomMax}
+                  step={0.01}
+                  value={zoom}
+                  onChange={(event) => updateZoom(Number(event.target.value))}
+                  disabled={isPreparing}
+                  className="h-1.5 w-24 appearance-none rounded-full bg-white/30"
+                  aria-label="Controle de zoom"
+                />
+                <button
+                  type="button"
+                  onClick={() => updateZoom(zoom + 0.1)}
+                  disabled={zoom >= zoomMax || isPreparing}
+                  className="rounded-full px-2 py-0.5 hover:bg-white/10 disabled:opacity-50"
+                  aria-label="Aumentar zoom"
+                >
+                  +
+                </button>
+                <span className="h-3 w-px bg-white/30" />
+                <button
+                  type="button"
+                  onClick={() => rotateImage('left')}
+                  disabled={isRotating || isPreparing}
+                  className="rounded-full px-2 py-0.5 hover:bg-white/10 disabled:opacity-50"
+                  aria-label="Girar para a esquerda"
+                >
+                  ↺
+                </button>
+                <button
+                  type="button"
+                  onClick={() => rotateImage('right')}
+                  disabled={isRotating || isPreparing}
+                  className="rounded-full px-2 py-0.5 hover:bg-white/10 disabled:opacity-50"
+                  aria-label="Girar para a direita"
+                >
+                  ↻
+                </button>
+              </div>
+            )}
           </div>
           </div>
 
