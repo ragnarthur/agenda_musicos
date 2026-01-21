@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 type CropTarget = 'avatar' | 'cover';
@@ -194,7 +194,13 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   const [cropSize, setCropSize] = useState({ width: 0, height: 0 });
   const [frameSize, setFrameSize] = useState({ width: 0, height: 0 });
   const [zoom, setZoom] = useState(1);
-  const [baseScale, setBaseScale] = useState(1);
+  const baseScale = useMemo(() => {
+    if (!naturalSize.width || !frameSize.width) return 1;
+    return Math.max(
+      frameSize.width / naturalSize.width,
+      frameSize.height / naturalSize.height
+    );
+  }, [frameSize.height, frameSize.width, naturalSize.height, naturalSize.width]);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isPinching, setIsPinching] = useState(false);
@@ -372,19 +378,13 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   useEffect(() => {
     if (!isOpen || !naturalSize.width || !frameSize.width) return;
 
-    const nextBaseScale = Math.max(
-      frameSize.width / naturalSize.width,
-      frameSize.height / naturalSize.height
-    );
-    setBaseScale(nextBaseScale);
     setCropSize({ width: frameSize.width, height: frameSize.height });
 
     const key = sourceUrlRef.current ? `${sourceUrlRef.current}-${target}` : null;
     if (!key) {
-      const scale = nextBaseScale;
       const centered = {
-        x: (frameSize.width - naturalSize.width * scale) / 2,
-        y: (frameSize.height - naturalSize.height * scale) / 2,
+        x: (frameSize.width - naturalSize.width * baseScale) / 2,
+        y: (frameSize.height - naturalSize.height * baseScale) / 2,
       };
       setZoom(1);
       setOffset(centered);
@@ -392,20 +392,20 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     }
 
     if (initialFocusKeyRef.current !== key) {
-      const scale = nextBaseScale;
       const focus = getDefaultFocus();
       const nextOffset = clampOffset(
-        frameSize.width / 2 - naturalSize.width * focus.x * scale,
-        frameSize.height / 2 - naturalSize.height * focus.y * scale,
-        scale
+        frameSize.width / 2 - naturalSize.width * focus.x * baseScale,
+        frameSize.height / 2 - naturalSize.height * focus.y * baseScale,
+        baseScale
       );
       setZoom(1);
       setOffset(nextOffset);
       initialFocusKeyRef.current = key;
       return;
     }
-    setOffset((prev) => clampOffset(prev.x, prev.y, nextBaseScale * zoom));
+    setOffset((prev) => clampOffset(prev.x, prev.y, baseScale * zoom));
   }, [
+    baseScale,
     frameSize.width,
     frameSize.height,
     isOpen,
@@ -654,13 +654,8 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     if (!naturalSize.width || !cropSize.width || isPreparing) return;
     requestAnimationFrame(() => {
       setZoom(1);
-      const nextBaseScale = Math.max(
-        cropSize.width / naturalSize.width,
-        cropSize.height / naturalSize.height
-      );
-      const scaledWidth = naturalSize.width * nextBaseScale;
-      const scaledHeight = naturalSize.height * nextBaseScale;
-      setBaseScale(nextBaseScale);
+      const scaledWidth = naturalSize.width * baseScale;
+      const scaledHeight = naturalSize.height * baseScale;
       setOffset({
         x: (cropSize.width - scaledWidth) / 2,
         y: (cropSize.height - scaledHeight) / 2,
