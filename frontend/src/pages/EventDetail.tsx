@@ -79,10 +79,6 @@ const EventDetail: React.FC = () => {
     navigate(`/eventos/${event.id}/editar`);
   }, [event, navigate]);
 
-  const handleRate = useCallback(() => {
-    setShowRatingModal(true);
-  }, []);
-
   const handleSetAvailability = useCallback(async () => {
     if (!id) return;
     
@@ -195,7 +191,7 @@ const EventDetail: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={handleCancel}
+                    onClick={() => setShowCancelModal(true)}
                     className="p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
                     title="Cancelar evento"
                     aria-label="Cancelar evento"
@@ -204,7 +200,7 @@ const EventDetail: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={handleRate}
+                    onClick={() => setShowDeleteModal(true)}
                     className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
                   >
                     <Trash2 className="h-5 w-5" />

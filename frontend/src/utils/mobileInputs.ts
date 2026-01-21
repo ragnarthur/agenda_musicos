@@ -25,7 +25,6 @@ export const getMobileInputProps = (type: string): InputHTMLAttributes<HTMLInput
     tel: {
       inputMode: 'tel',
       autoComplete: 'tel',
-      pattern: '[0-9]*',
     },
     url: {
       inputMode: 'url',
@@ -66,7 +65,6 @@ export const getMobileInputProps = (type: string): InputHTMLAttributes<HTMLInput
 export const getPhoneProps = (): InputHTMLAttributes<HTMLInputElement> => ({
   inputMode: 'tel',
   autoComplete: 'tel',
-  pattern: '[0-9]*',
   autoCorrect: 'off',
   autoCapitalize: 'none',
 });

@@ -1,6 +1,7 @@
 // pages/EventEditForm.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useSWRConfig } from 'swr';
 import { Calendar, MapPin, Clock, Phone, FileText, Save, X } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
@@ -13,6 +14,7 @@ import { getErrorMessage } from '../utils/toast';
 const EventEditForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { mutate } = useSWRConfig();
   const [loading, setLoading] = useState(false);
   const [loadingEvent, setLoadingEvent] = useState(true);
   const [error, setError] = useState('');
@@ -135,6 +137,8 @@ const EventEditForm: React.FC = () => {
         venue_contact: sanitizeOptionalText(formData.venue_contact, 200),
       };
       await eventService.update(parseInt(id), sanitizedPayload);
+      // Invalidar cache de eventos para que a listagem recarregue
+      mutate((key) => typeof key === 'string' && key.startsWith('/events'), undefined, { revalidate: true });
       navigate(`/eventos/${id}`);
     } catch (err: unknown) {
       logError('Erro ao atualizar evento:', err);

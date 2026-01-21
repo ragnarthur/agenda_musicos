@@ -107,15 +107,24 @@ const EventForm: React.FC = () => {
       return;
     }
 
-    let cancelled = false;
-    const loadMusicians = async () => {
-      setLoadingMusicians(true);
-      try {
-        const musicians: Musician[] = await musicianService.getAll();
-        const mapped = musicians.map((musician) => {
-          const instruments = (musician.instruments && musician.instruments.length > 0)
-            ? musician.instruments
-            : musician.instrument
+      let cancelled = false;
+      const loadMusicians = async () => {
+        setLoadingMusicians(true);
+        try {
+          const aggregated: Musician[] = [];
+          let page = 1;
+          let hasNext = true;
+          while (hasNext && !cancelled) {
+            const pageData = await musicianService.getAllPaginated({ page, page_size: 50 });
+            aggregated.push(...pageData.results);
+            hasNext = Boolean(pageData.next);
+            page += 1;
+          }
+          const musicians = aggregated;
+          const mapped = musicians.map((musician) => {
+            const instruments = (musician.instruments && musician.instruments.length > 0)
+              ? musician.instruments
+              : musician.instrument
               ? [musician.instrument]
               : [];
           const primary = instruments[0] || musician.instrument;
@@ -494,14 +503,29 @@ const EventForm: React.FC = () => {
 
             {/* Show Solo */}
             <div className="flex items-start space-x-3 rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 via-white to-indigo-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 p-4">
-              <input
-                type="checkbox"
-                id="is_solo"
-                name="is_solo"
-                checked={formData.is_solo}
-                onChange={(e) => setFormData(prev => ({ ...prev, is_solo: e.target.checked }))}
-                className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-              />
+              <div className="relative flex items-start">
+                <input type="checkbox" id="is_solo" name="is_solo" checked={formData.is_solo} onChange={(e) => setFormData(prev => ({ ...prev, is_solo: e.target.checked }))} className="sr-only" />
+                <div
+                  role="checkbox"
+                  tabIndex={0}
+                  aria-checked={formData.is_solo}
+                  onClick={() => setFormData(prev => ({ ...prev, is_solo: !prev.is_solo }))}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setFormData(prev => ({ ...prev, is_solo: !prev.is_solo }));
+                    }
+                  }}
+                  className="mt-1 h-11 w-11 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all touch-manipulation bg-primary-600 border-primary-600 text-white"
+                  style={{ touchAction: 'manipulation' }}
+                >
+                  {formData.is_solo && (
+                    <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </div>
+              </div>
               <div className="flex-1">
                 <label htmlFor="is_solo" className="block text-sm font-medium text-gray-900 cursor-pointer">
                   Show Solo

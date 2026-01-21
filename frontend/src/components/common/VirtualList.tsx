@@ -3,6 +3,8 @@ import React, { useState, useRef, useMemo } from 'react';
 interface VirtualListProps<T> {
   items: T[];
   itemHeight: number;
+  itemGap?: number;
+  containerHeight?: number;
   overscan?: number;
   renderItem: (item: T, index: number, style: React.CSSProperties) => React.ReactNode;
   className?: string;
@@ -11,6 +13,8 @@ interface VirtualListProps<T> {
 const VirtualList = <T,>({
   items,
   itemHeight,
+  itemGap = 0,
+  containerHeight = 600,
   overscan = 5,
   renderItem,
   className = '',
@@ -19,20 +23,21 @@ const VirtualList = <T,>({
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef<number | null>(null);
 
-  const containerHeight = 600;
+  const fullItemHeight = itemHeight + itemGap;
 
   const { visibleRange, totalHeight } = useMemo(() => {
-    const startIndex = Math.floor(scrollTop / itemHeight);
+    const startIndex = Math.floor(scrollTop / fullItemHeight);
     const endIndex = Math.min(
-      Math.ceil((scrollTop + containerHeight) / itemHeight) + overscan,
+      Math.ceil((scrollTop + containerHeight) / fullItemHeight) + overscan,
       items.length - 1
     );
 
+    const total = items.length ? items.length * fullItemHeight - itemGap : 0;
     return {
       visibleRange: { start: startIndex, end: endIndex },
-      totalHeight: items.length * itemHeight,
+      totalHeight: total,
     };
-  }, [scrollTop, items.length, itemHeight, overscan]);
+  }, [scrollTop, items.length, fullItemHeight, overscan, itemGap, containerHeight]);
 
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     setScrollTop(event.currentTarget.scrollTop);
@@ -58,7 +63,7 @@ const VirtualList = <T,>({
     <div
       className={`overflow-y-auto ${isScrolling ? 'scroll-smooth' : ''} ${className}`}
       onScroll={handleScroll}
-      style={{ height: '100%' }}
+      style={{ height: containerHeight }}
     >
       <div
         style={{
@@ -66,19 +71,24 @@ const VirtualList = <T,>({
           position: 'relative',
         }}
       >
-        {visibleItems.map((item, index) => (
-          <div
-            key={((item as Record<string, unknown>).id as string | number) || index}
-            style={{
-              position: 'absolute',
-              top: `${(visibleRange.start + index) * itemHeight}px`,
-              left: 0,
-              width: '100%',
-            }}
-          >
-            {renderItem(item, index, { position: 'absolute', top: `${(visibleRange.start + index) * itemHeight}px`, left: 0, width: '100%' })}
-          </div>
-        ))}
+        {visibleItems.map((item, index) => {
+          const itemIndex = visibleRange.start + index;
+          const top = itemIndex * fullItemHeight;
+          return (
+            <div
+              key={((item as Record<string, unknown>).id as string | number) || itemIndex}
+              style={{
+                position: 'absolute',
+                top: `${top}px`,
+                left: 0,
+                width: '100%',
+                height: `${itemHeight}px`,
+              }}
+            >
+              {renderItem(item, itemIndex, { width: '100%', height: '100%' })}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

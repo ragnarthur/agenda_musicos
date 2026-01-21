@@ -29,7 +29,9 @@ const DustParticles3D: React.FC = memo(() => {
     let height = 0;
     let dpr = window.devicePixelRatio || 1;
     let isSmallScreen = window.matchMedia('(max-width: 768px)').matches;
+    let isVisible = !document.hidden;
     const particles: Particle[] = [];
+    const MAX_DPR = 1.5;
 
     const resetArea = () => {
       width = window.innerWidth;
@@ -37,7 +39,7 @@ const DustParticles3D: React.FC = memo(() => {
       const rawDpr = window.devicePixelRatio || 1;
       isSmallScreen = window.matchMedia('(max-width: 768px)').matches;
       // Mobile: mantém performance
-      dpr = isSmallScreen ? 1 : rawDpr;
+      dpr = isSmallScreen ? 1 : Math.min(rawDpr, MAX_DPR);
       canvas.width = Math.floor(width * dpr);
       canvas.height = Math.floor(height * dpr);
       canvas.style.width = `${width}px`;
@@ -93,7 +95,32 @@ const DustParticles3D: React.FC = memo(() => {
     init();
 
     let lastTime = performance.now();
+    const stopAnimation = () => {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = 0;
+      }
+    };
+    const startAnimation = () => {
+      if (rafId === 0) {
+        lastTime = performance.now();
+        rafId = requestAnimationFrame(render);
+      }
+    };
+    const handleVisibilityChange = () => {
+      isVisible = !document.hidden;
+      if (isVisible) {
+        startAnimation();
+      } else {
+        stopAnimation();
+      }
+    };
+
     const render = (time: number) => {
+      if (!isVisible) {
+        rafId = 0;
+        return;
+      }
       // Frame throttling: renderizar a cada 2 frames para melhor performance
       frameCount += 1;
       if (frameCount % 2 !== 0) {
@@ -171,14 +198,16 @@ const DustParticles3D: React.FC = memo(() => {
       rafId = requestAnimationFrame(render);
     };
 
-    rafId = requestAnimationFrame(render);
+    startAnimation();
 
     const handleResize = () => init();
     window.addEventListener('resize', handleResize);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      cancelAnimationFrame(rafId);
+      stopAnimation();
       window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [isLowPower]);
 

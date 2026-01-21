@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 type CropTarget = 'avatar' | 'cover';
@@ -324,7 +324,40 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     return () => window.removeEventListener('resize', updateFrameSize);
   }, [aspectRatio, isOpen]);
 
-  const getDefaultFocus = () => {
+  const clampOffset = useCallback(
+    (x: number, y: number, scale: number) => {
+      const scaledWidth = naturalSize.width * scale;
+      const scaledHeight = naturalSize.height * scale;
+
+      // Se a imagem é menor que o frame, centralizar nessa dimensão
+      // Se é maior, limitar para não mostrar espaço vazio
+      let clampedX: number;
+      let clampedY: number;
+
+      if (scaledWidth <= cropSize.width) {
+        // Imagem menor ou igual ao frame na horizontal: centralizar
+        clampedX = (cropSize.width - scaledWidth) / 2;
+      } else {
+        // Imagem maior que o frame: permitir arrastar
+        const minX = cropSize.width - scaledWidth;
+        clampedX = Math.min(0, Math.max(minX, x));
+      }
+
+      if (scaledHeight <= cropSize.height) {
+        // Imagem menor ou igual ao frame na vertical: centralizar
+        clampedY = (cropSize.height - scaledHeight) / 2;
+      } else {
+        // Imagem maior que o frame: permitir arrastar
+        const minY = cropSize.height - scaledHeight;
+        clampedY = Math.min(0, Math.max(minY, y));
+      }
+
+      return { x: clampedX, y: clampedY };
+    },
+    [cropSize.height, cropSize.width, naturalSize.height, naturalSize.width]
+  );
+
+  const getDefaultFocus = useCallback(() => {
     const aspect = naturalSize.height / naturalSize.width;
     if (isAvatar) {
       if (aspect >= 1.3) return { x: 0.5, y: 0.35 };
@@ -334,7 +367,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     if (aspect >= 1.2) return { x: 0.5, y: 0.3 };
     if (aspect <= 0.6) return { x: 0.5, y: 0.45 };
     return { x: 0.5, y: 0.4 };
-  };
+  }, [isAvatar, naturalSize.height, naturalSize.width]);
 
   useEffect(() => {
     if (!isOpen || !naturalSize.width || !frameSize.width) return;
@@ -379,6 +412,9 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     naturalSize.height,
     naturalSize.width,
     target,
+    zoom,
+    clampOffset,
+    getDefaultFocus,
   ]);
 
   useEffect(() => {
@@ -426,36 +462,6 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, isSaving, onClose]);
-
-  const clampOffset = (x: number, y: number, scale: number) => {
-    const scaledWidth = naturalSize.width * scale;
-    const scaledHeight = naturalSize.height * scale;
-
-    // Se a imagem é menor que o frame, centralizar nessa dimensão
-    // Se é maior, limitar para não mostrar espaço vazio
-    let clampedX: number;
-    let clampedY: number;
-
-    if (scaledWidth <= cropSize.width) {
-      // Imagem menor ou igual ao frame na horizontal: centralizar
-      clampedX = (cropSize.width - scaledWidth) / 2;
-    } else {
-      // Imagem maior que o frame: permitir arrastar
-      const minX = cropSize.width - scaledWidth;
-      clampedX = Math.min(0, Math.max(minX, x));
-    }
-
-    if (scaledHeight <= cropSize.height) {
-      // Imagem menor ou igual ao frame na vertical: centralizar
-      clampedY = (cropSize.height - scaledHeight) / 2;
-    } else {
-      // Imagem maior que o frame: permitir arrastar
-      const minY = cropSize.height - scaledHeight;
-      clampedY = Math.min(0, Math.max(minY, y));
-    }
-
-    return { x: clampedX, y: clampedY };
-  };
 
   const getCenteredOffset = (scale: number) => ({
     x: (cropSize.width - naturalSize.width * scale) / 2,
@@ -834,7 +840,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                       type="button"
                       onClick={() => updateZoom(zoom - 0.1)}
                       disabled={zoom <= 1 || isPreparing}
-                      className="rounded-full w-6 h-6 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
+                      className="rounded-full h-11 w-11 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
                       aria-label="Diminuir zoom"
                     >
                       −
@@ -854,7 +860,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                       type="button"
                       onClick={() => updateZoom(zoom + 0.1)}
                       disabled={zoom >= zoomMax || isPreparing}
-                      className="rounded-full w-6 h-6 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
+                      className="rounded-full h-11 w-11 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
                       aria-label="Aumentar zoom"
                     >
                       +
@@ -865,7 +871,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                       type="button"
                       onClick={() => rotateImage('left')}
                       disabled={isRotating || isPreparing}
-                      className="rounded-full w-6 h-6 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
+                      className="rounded-full h-11 w-11 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
                       aria-label="Girar para a esquerda"
                     >
                       ↺
@@ -874,7 +880,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                       type="button"
                       onClick={() => rotateImage('right')}
                       disabled={isRotating || isPreparing}
-                      className="rounded-full w-6 h-6 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
+                      className="rounded-full h-11 w-11 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
                       aria-label="Girar para a direita"
                     >
                       ↻

@@ -88,7 +88,7 @@ const EventsList: React.FC = () => {
     return p;
   }, [filter, debouncedSearch, timeFilter]);
 
-  const { events, isLoading } = useEvents(params);
+  const { events, count, isLoading, isLoadingMore, hasMore, loadMore } = useEvents(params);
 
   const groups = useMemo(() => {
     const byDate = new Map<string, Event[]>();
@@ -127,11 +127,11 @@ const EventsList: React.FC = () => {
     const confirmed = events.filter((ev) => ev.status === 'confirmed' || ev.status === 'approved');
     const solos = events.filter((ev) => ev.is_solo);
     return {
-      total: events.length,
+      total: count || events.length,
       confirmed: confirmed.length,
       solos: solos.length,
     };
-  }, [events]);
+  }, [events, count]);
 
   const clearSearch = useCallback(() => {
     setSearchTerm('');
@@ -341,6 +341,18 @@ const EventsList: React.FC = () => {
                 </div>
               );
             })}
+            {hasMore && (
+              <div className="flex justify-center pt-2">
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={loadMore}
+                  disabled={isLoadingMore}
+                >
+                  {isLoadingMore ? 'Carregando...' : 'Carregar mais eventos'}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

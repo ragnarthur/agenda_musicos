@@ -1,5 +1,5 @@
 // pages/Connections.tsx
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Users, Star, Heart, ThumbsUp, Music, Trophy, Search, X, Filter, Trash2, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
@@ -7,12 +7,13 @@ import Loading from '../components/common/Loading';
 import { StatCard } from '../components/ui/StatCard';
 import TiltCard from '../components/common/TiltCard';
 import { connectionService } from '../services/api';
-import { useConnectionsPage } from '../hooks/useConnections';
+import { useConnectionsPage, useConnectionsPaginated } from '../hooks/useConnections';
 import type { Connection, ConnectionType, Musician } from '../types';
 import { INSTRUMENT_LABELS } from '../utils/formatting';
 import InstrumentIcon from '../components/common/InstrumentIcon';
 import { showToast } from '../utils/toast';
 import { logError } from '../utils/logger';
+import VirtualList from '../components/common/VirtualList';
 
 const connectionLabels: Record<string, string> = {
   follow: 'Seguir',
@@ -92,6 +93,7 @@ const ProgressRing: React.FC<{ percentage: number; size?: number; strokeWidth?: 
 const Connections: React.FC = () => {
   const [loadingAction, setLoadingAction] = useState(false);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [instrumentFilter, setInstrumentFilter] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<string>('follow');
 
@@ -100,28 +102,42 @@ const Connections: React.FC = () => {
     connections,
     badgeData,
     musicians,
+    musiciansCount,
+    hasMoreMusicians,
+    loadMoreMusicians,
+    resetMusicians,
+    validatingMusicians,
     isLoading,
     mutateConnections,
-  } = useConnectionsPage();
+  } = useConnectionsPage({
+    musicianSearch: debouncedSearch || undefined,
+    musicianInstrument: instrumentFilter !== 'all' ? instrumentFilter : undefined,
+  });
 
-  const filteredMusicians = useMemo(() => {
-    return musicians
-      .filter((m) => {
-        const instruments = getMusicianInstruments(m);
-        if (instrumentFilter === 'all') return true;
-        return instruments.includes(instrumentFilter);
-      })
-      .filter((m) => {
-        const term = search.toLowerCase();
-        if (!term) return true;
-        const instruments = getMusicianInstruments(m);
-        return (
-          m.full_name.toLowerCase().includes(term) ||
-          m.user.username.toLowerCase().includes(term) ||
-          instruments.some((inst) => getInstrumentLabel(inst).toLowerCase().includes(term))
-        );
-      });
-  }, [musicians, search, instrumentFilter]);
+  const {
+    connections: connectionsPage,
+    hasMore: hasMoreConnections,
+    loadMore: loadMoreConnections,
+    reset: resetConnectionsPage,
+    isLoading: loadingConnectionsPage,
+    isLoadingMore: loadingConnectionsMore,
+    mutate: mutateConnectionsPage,
+  } = useConnectionsPaginated({ type: activeTab });
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    resetMusicians();
+  }, [debouncedSearch, instrumentFilter, resetMusicians]);
+
+  useEffect(() => {
+    resetConnectionsPage();
+  }, [activeTab, resetConnectionsPage]);
 
   const stats = useMemo(() => {
     const totals: Record<string, number> = { follow: 0, recommend: 0, played_with: 0 };
@@ -152,6 +168,8 @@ const Connections: React.FC = () => {
     return groups;
   }, [connections]);
 
+  const activeTabCount = grouped[activeTab]?.length ?? 0;
+
   const handleToggle = async (targetId: number, type: ConnectionType) => {
     const existing = connectionMap[targetId]?.[type];
     setLoadingAction(true);
@@ -163,6 +181,7 @@ const Connections: React.FC = () => {
       }
       // Revalidate connections cache
       mutateConnections();
+      mutateConnectionsPage();
     } catch (error) {
       logError('Erro ao alternar conexão:', error);
       showToast.apiError(error);
@@ -176,6 +195,7 @@ const Connections: React.FC = () => {
       await connectionService.delete(id);
       // Revalidate connections cache
       mutateConnections();
+      mutateConnectionsPage();
     } catch (error) {
       logError('Erro ao remover conexão:', error);
       showToast.apiError(error);
@@ -356,107 +376,125 @@ const Connections: React.FC = () => {
               </div>
 
               {/* Contador de resultados */}
-              <div className="mt-3 flex items-center justify-between">
-                <p className="text-sm text-gray-500 dark:text-slate-400">
-                  Mostrando <span className="font-semibold text-gray-700 dark:text-slate-200">{filteredMusicians.length}</span> de <span className="font-semibold text-gray-700 dark:text-slate-200">{musicians.length}</span> músicos
-                </p>
-              </div>
+                  <div className="mt-3 flex items-center justify-between">
+                    <p className="text-sm text-gray-500 dark:text-slate-400">
+                      Mostrando <span className="font-semibold text-gray-700 dark:text-slate-200">{musicians.length}</span> de <span className="font-semibold text-gray-700 dark:text-slate-200">{musiciansCount || musicians.length}</span> músicos
+                    </p>
+                  </div>
 
-              {/* Lista de Músicos */}
-              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1 sm:pr-2 mt-4">
-                {filteredMusicians.map((m, index) => {
-                  const instruments = getMusicianInstruments(m);
-                  const primaryInstrument = instruments[0] || m.instrument;
-                  const active = connectionMap[m.id] || {};
-                  const profilePhoto = m.avatar_url;
-
-                  return (
+                  {/* Lista de Músicos */}
+                  {musicians.length === 0 ? (
                     <motion.div
-                      key={m.id}
-                      className="musician-card-enhanced overflow-hidden"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.03 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-center py-8"
                     >
-                      {/* Shine effect element */}
-                      <div className="shine-effect" />
-
-                      <div className="flex items-center gap-4 mb-4">
-                        {/* Avatar com foto ou ícone */}
-                        <motion.div
-                          className="relative h-14 w-14 rounded-full flex-shrink-0 overflow-hidden"
-                          whileHover={{ scale: 1.08 }}
-                          transition={{ type: 'spring', stiffness: 300 }}
-                        >
-                          {profilePhoto ? (
-                            <img
-                              src={profilePhoto}
-                              alt={m.full_name}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div className="h-full w-full bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-900/40 dark:to-primary-800/30 flex items-center justify-center">
-                              <InstrumentIcon instrument={primaryInstrument} size={28} />
-                            </div>
-                          )}
-                        </motion.div>
-
-                        <div className="min-w-0 flex-1">
-                          <p className="font-semibold text-gray-900 truncate">{m.full_name}</p>
-                          <p className="text-sm text-gray-500 dark:text-slate-400">@{m.user.username}</p>
-                          {instruments.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 mt-2">
-                              {instruments.map((inst) => (
-                                <span
-                                  key={inst}
-                                  className="inline-flex items-center gap-1 rounded-full border border-primary-100 bg-primary-50/80 px-2 py-0.5 text-xs font-medium text-primary-700 dark:border-primary-800/50 dark:bg-primary-900/30 dark:text-primary-300"
-                                >
-                                  <InstrumentIcon instrument={inst} size={12} />
-                                  <span>{getInstrumentLabel(inst)}</span>
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Botões de Conexão Modernos */}
-                      <div className="grid grid-cols-3 gap-2">
-                        {activeConnectionTypes.map((type) => {
-                          const isOn = Boolean(active[type]);
-                          const Icon = connectionIcons[type];
-                          return (
-                            <motion.button
-                              key={type}
-                              onClick={() => handleToggle(m.id, type as ConnectionType)}
-                              className={`connection-pill-modern ${isOn ? `active ${type}` : ''}`}
-                              disabled={loadingAction}
-                              whileTap={{ scale: 0.95 }}
-                              whileHover={{ scale: 1.02 }}
-                            >
-                              <Icon className="h-4 w-4" />
-                              <span className="hidden sm:inline">
-                                {isOn ? connectionLabelsActive[type] : connectionLabels[type]}
-                              </span>
-                            </motion.button>
-                          );
-                        })}
-                      </div>
+                      <p className="text-4xl mb-2">🔍</p>
+                      <p className="text-sm text-gray-500 dark:text-slate-400">Nenhum músico encontrado.</p>
                     </motion.div>
-                  );
-                })}
-                {filteredMusicians.length === 0 && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-center py-8"
-                  >
-                    <p className="text-4xl mb-2">🔍</p>
-                    <p className="text-sm text-gray-500 dark:text-slate-400">Nenhum músico encontrado.</p>
-                  </motion.div>
-                )}
-              </div>
-            </div>
+                  ) : (
+                    <VirtualList
+                      items={musicians}
+                      itemHeight={220}
+                      itemGap={12}
+                      containerHeight={500}
+                      className="pr-1 sm:pr-2 mt-4"
+                      renderItem={(m, index) => {
+                        const instruments = getMusicianInstruments(m);
+                        const primaryInstrument = instruments[0] || m.instrument;
+                        const active = connectionMap[m.id] || {};
+                        const profilePhoto = m.avatar_url;
+
+                        return (
+                          <motion.div
+                            key={m.id}
+                            className="musician-card-enhanced overflow-hidden h-full"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: index * 0.03 }}
+                          >
+                            {/* Shine effect element */}
+                            <div className="shine-effect" />
+
+                            <div className="flex items-center gap-4 mb-4">
+                              {/* Avatar com foto ou ícone */}
+                              <motion.div
+                                className="relative h-14 w-14 rounded-full flex-shrink-0 overflow-hidden"
+                                whileHover={{ scale: 1.08 }}
+                                transition={{ type: 'spring', stiffness: 300 }}
+                              >
+                                {profilePhoto ? (
+                                  <img
+                                    src={profilePhoto}
+                                    alt={m.full_name}
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="h-full w-full bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-900/40 dark:to-primary-800/30 flex items-center justify-center">
+                                    <InstrumentIcon instrument={primaryInstrument} size={28} />
+                                  </div>
+                                )}
+                              </motion.div>
+
+                              <div className="min-w-0 flex-1">
+                                <p className="font-semibold text-gray-900 truncate">{m.full_name}</p>
+                                <p className="text-sm text-gray-500 dark:text-slate-400">@{m.user.username}</p>
+                                {instruments.length > 0 && (
+                                  <div className="flex flex-wrap gap-1.5 mt-2">
+                                    {instruments.map((inst) => (
+                                      <span
+                                        key={inst}
+                                        className="inline-flex items-center gap-1 rounded-full border border-primary-100 bg-primary-50/80 px-2 py-0.5 text-xs font-medium text-primary-700 dark:border-primary-800/50 dark:bg-primary-900/30 dark:text-primary-300"
+                                      >
+                                        <InstrumentIcon instrument={inst} size={12} />
+                                        <span>{getInstrumentLabel(inst)}</span>
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Botões de Conexão Modernos */}
+                            <div className="grid grid-cols-3 gap-2">
+                              {activeConnectionTypes.map((type) => {
+                                const isOn = Boolean(active[type]);
+                                const Icon = connectionIcons[type];
+                                return (
+                                  <motion.button
+                                    key={type}
+                                    onClick={() => handleToggle(m.id, type as ConnectionType)}
+                                    className={`connection-pill-modern ${isOn ? `active ${type}` : ''}`}
+                                    disabled={loadingAction}
+                                    whileTap={{ scale: 0.95 }}
+                                    whileHover={{ scale: 1.02 }}
+                                  >
+                                    <Icon className="h-4 w-4" />
+                                    <span className="hidden sm:inline">
+                                      {isOn ? connectionLabelsActive[type] : connectionLabels[type]}
+                                    </span>
+                                  </motion.button>
+                                );
+                              })}
+                            </div>
+                          </motion.div>
+                        );
+                      }}
+                    />
+                  )}
+                  {hasMoreMusicians && (
+                    <div className="mt-3 flex justify-center">
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={loadMoreMusicians}
+                        disabled={validatingMusicians}
+                      >
+                        {validatingMusicians ? 'Carregando...' : 'Carregar mais musicos'}
+                      </button>
+                    </div>
+                  )}
+                </div>
 
             {/* Tabs de Conexões Agrupadas */}
             <div className="mt-6">
@@ -492,7 +530,11 @@ const Connections: React.FC = () => {
                   transition={{ duration: 0.2 }}
                   className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/80 p-4 min-h-[180px]"
                 >
-                  {grouped[activeTab].length === 0 ? (
+                  {loadingConnectionsPage ? (
+                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                      <p className="text-sm text-gray-500 dark:text-slate-400">Carregando conexoes...</p>
+                    </div>
+                  ) : activeTabCount === 0 ? (
                     <div className="flex flex-col items-center justify-center py-8 text-center">
                       <p className="text-3xl mb-2">
                         {activeTab === 'follow' ? '💝' : activeTab === 'recommend' ? '👍' : '🎸'}
@@ -502,50 +544,68 @@ const Connections: React.FC = () => {
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-2">
-                      {grouped[activeTab].map((c, index) => {
-                        const targetPhoto = c.target.avatar_url;
-                        return (
-                          <motion.div
-                            key={c.id}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.03 }}
-                            className="flex items-center justify-between rounded-xl border border-gray-100 dark:border-slate-700 bg-gray-50/80 dark:bg-slate-800/50 px-4 py-3 hover:bg-gray-100/80 dark:hover:bg-slate-800/80 transition-colors"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="mini-avatar">
-                                {targetPhoto ? (
-                                  <img src={targetPhoto} alt={c.target.full_name} />
-                                ) : (
-                                  <InstrumentIcon instrument={c.target.instrument} size={16} />
-                                )}
-                              </div>
-                              <div>
-                                <p className="font-semibold text-gray-900 text-sm">{c.target.full_name}</p>
-                                <p className="text-xs text-gray-500 dark:text-slate-400">
-                                  {INSTRUMENT_LABELS[c.target.instrument] || c.target.instrument}
-                                  {c.verified && c.connection_type === 'played_with' && (
-                                    <span className="ml-2 inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                                      <CheckCircle className="h-3 w-3" />
-                                      Verificado
-                                    </span>
-                                  )}
-                                </p>
-                              </div>
-                            </div>
-                            <motion.button
-                              onClick={() => handleDelete(c.id)}
-                              className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                              disabled={loadingAction}
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
+                    <div>
+                      <VirtualList
+                        items={connectionsPage}
+                        itemHeight={80}
+                        itemGap={8}
+                        containerHeight={320}
+                        renderItem={(c, index) => {
+                          const targetPhoto = c.target.avatar_url;
+                          return (
+                            <motion.div
+                              key={c.id}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.03 }}
+                              className="flex h-full items-center justify-between rounded-xl border border-gray-100 dark:border-slate-700 bg-gray-50/80 dark:bg-slate-800/50 px-4 py-3 hover:bg-gray-100/80 dark:hover:bg-slate-800/80 transition-colors"
                             >
-                              <Trash2 className="h-4 w-4" />
-                            </motion.button>
-                          </motion.div>
-                        );
-                      })}
+                              <div className="flex items-center gap-3">
+                                <div className="mini-avatar">
+                                  {targetPhoto ? (
+                                    <img src={targetPhoto} alt={c.target.full_name} />
+                                  ) : (
+                                    <InstrumentIcon instrument={c.target.instrument} size={16} />
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-gray-900 text-sm">{c.target.full_name}</p>
+                                  <p className="text-xs text-gray-500 dark:text-slate-400">
+                                    {INSTRUMENT_LABELS[c.target.instrument] || c.target.instrument}
+                                    {c.verified && c.connection_type === 'played_with' && (
+                                      <span className="ml-2 inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                                        <CheckCircle className="h-3 w-3" />
+                                        Verificado
+                                      </span>
+                                    )}
+                                  </p>
+                                </div>
+                              </div>
+                              <motion.button
+                                onClick={() => handleDelete(c.id)}
+                                className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                disabled={loadingAction}
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </motion.button>
+                            </motion.div>
+                          );
+                        }}
+                      />
+                      {hasMoreConnections && (
+                        <div className="mt-3 flex justify-center">
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={loadMoreConnections}
+                            disabled={loadingConnectionsMore}
+                          >
+                            {loadingConnectionsMore ? 'Carregando...' : 'Carregar mais conexoes'}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </motion.div>

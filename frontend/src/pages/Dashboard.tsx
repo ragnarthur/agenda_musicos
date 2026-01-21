@@ -50,7 +50,7 @@ const Dashboard: React.FC = memo(() => {
   const prefersReducedMotion = useReducedMotion();
 
   const { events: upcomingEvents, isLoading: loadingEvents } = useUpcomingEvents();
-  const { pendingApprovals, pendingResponses, isLoading: loadingNotifications } = useDashboardNotifications();
+  const { pendingApprovalsCount, pendingResponsesCount, isLoading: loadingNotifications } = useDashboardNotifications();
 
   const loading = loadingEvents || loadingNotifications;
 
@@ -160,7 +160,7 @@ const Dashboard: React.FC = memo(() => {
               >
                 <ListChecks className="h-8 w-8 text-green-600 dark:text-green-400" />
                 <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                  {pendingApprovals.length}
+                  {pendingApprovalsCount}
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Solicitações Pendentes</p>
               </Link>
@@ -177,7 +177,7 @@ const Dashboard: React.FC = memo(() => {
               >
                 <Zap className="h-8 w-8 text-amber-600 dark:text-amber-400" />
                 <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                  {pendingResponses.length}
+                  {pendingResponsesCount}
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Respostas Pendentes</p>
               </Link>
@@ -368,7 +368,7 @@ const Dashboard: React.FC = memo(() => {
               to={`/eventos/${event.id}`}
               className="flex items-start gap-4 p-3 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex-1"
             >
-              <div className="flex-1 min-w-[140px]">
+              <div className="flex-1 min-w-0">
                 <div className="w-full text-xs text-gray-500 dark:text-gray-400 mb-1">
                   {format(parseISO(event.event_date), "dd 'de' MMM", { locale: ptBR })}
                 </div>
@@ -379,7 +379,7 @@ const Dashboard: React.FC = memo(() => {
                   {event.location || 'Local não definido'}
                 </p>
               </div>
-              <div className="flex items-center gap-2 shrink-0 min-w-[100px]">
+              <div className="flex items-center gap-2 shrink-0 min-w-[90px] sm:min-w-[100px]">
                 <p className="text-xs font-semibold text-gray-900 dark:text-white mb-1">
                   {formatTime(event.start_time)}
                 </p>
@@ -400,7 +400,7 @@ const Dashboard: React.FC = memo(() => {
                 to={`/eventos/${event.id}`}
                 className="flex items-start gap-4 p-3 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex-1"
               >
-                <div className="flex-1 min-w-[140px]">
+                <div className="flex-1 min-w-0">
                   <div className="w-full text-xs text-gray-500 dark:text-gray-400 mb-1">
                     {format(parseISO(event.event_date), "dd 'de' MMM", { locale: ptBR })}
                   </div>
@@ -411,7 +411,7 @@ const Dashboard: React.FC = memo(() => {
                     {event.location || 'Local não definido'}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 shrink-0 min-w-[100px]">
+                <div className="flex items-center gap-2 shrink-0 min-w-[90px] sm:min-w-[100px]">
                   <p className="text-xs font-semibold text-gray-900 dark:text-white mb-1">
                     {formatTime(event.start_time)}
                   </p>

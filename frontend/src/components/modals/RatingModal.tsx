@@ -89,7 +89,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
             key={star}
             type="button"
             onClick={() => handleRatingChange(musicianId, star)}
-            className={`p-0.5 sm:p-1 transition-all hover:scale-110 ${
+            className={`p-2 sm:p-3 transition-all hover:scale-110 active:scale-95 touch-manipulation ${
               star <= currentRating
                 ? 'text-yellow-400'
                 : 'text-gray-300 hover:text-yellow-200'

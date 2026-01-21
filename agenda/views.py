@@ -58,6 +58,7 @@ from .utils import (
     split_availability_with_events,
     award_badges_for_musician,
 )
+from .pagination import StandardResultsSetPagination
 
 
 class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
@@ -68,6 +69,7 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
 
     serializer_class = MusicianSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
 
     def _scope_queryset(self, queryset):
         if self.request.user.is_staff:
@@ -87,6 +89,9 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
                 | Q(instagram__icontains=search)
                 | Q(bio__icontains=search)
             )
+        instrument = self.request.query_params.get("instrument")
+        if instrument and instrument != "all":
+            queryset = queryset.filter(instrument=instrument)
         return queryset
 
     @action(detail=False, methods=["get", "patch"])
@@ -224,6 +229,7 @@ class EventViewSet(viewsets.ModelViewSet):
         .all()
     )
     permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
 
     def get_permissions(self):
         """
@@ -1175,6 +1181,7 @@ class ConnectionViewSet(viewsets.ModelViewSet):
 
     serializer_class = ConnectionSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
         try:
@@ -1191,6 +1198,13 @@ class ConnectionViewSet(viewsets.ModelViewSet):
             qs = qs.filter(connection_type=ctype)
 
         return qs
+
+    def list(self, request, *args, **kwargs):
+        if request.query_params.get("all") == "true":
+            queryset = self.filter_queryset(self.get_queryset())
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+        return super().list(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         try:

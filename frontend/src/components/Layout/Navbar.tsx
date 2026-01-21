@@ -195,8 +195,8 @@ const Navbar: React.FC = memo(() => {
 
           {/* Usuário e Logout */}
           <div className="flex items-center space-x-3 min-w-fit md:min-w-0 flex-shrink-0">
-            <div className="hidden md:block text-right">
-              <p className="text-sm font-medium text-slate-100 leading-snug max-w-[240px] truncate whitespace-nowrap">
+            <div className="hidden md:block text-right min-w-0 flex-1">
+              <p className="text-sm font-medium text-slate-100 leading-snug truncate" title={user?.full_name}>
                 {user?.full_name}
               </p>
             </div>
@@ -231,7 +231,7 @@ const Navbar: React.FC = memo(() => {
           <div className="flex flex-wrap items-center gap-1.5 -ml-1">
             <Link
               to="/eventos"
-              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-2 text-[11px] font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 whitespace-nowrap sm:gap-2 sm:px-3 sm:text-xs"
+              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-2.5 text-[11px] font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 whitespace-nowrap sm:gap-2 sm:px-4 sm:py-3 sm:text-xs"
             >
               <Calendar className="h-4 w-4" />
               Eventos
@@ -243,21 +243,21 @@ const Navbar: React.FC = memo(() => {
             </Link>
             <Link
               to="/disponibilidades"
-              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-2 text-[11px] font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 whitespace-nowrap sm:gap-2 sm:px-3 sm:text-xs"
+              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-2.5 text-[11px] font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 whitespace-nowrap sm:gap-2 sm:px-4 sm:py-3 sm:text-xs"
             >
               <Clock className="h-4 w-4" />
               Datas
             </Link>
             <Link
               to="/configuracoes/notificacoes"
-              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-2 text-[11px] font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 whitespace-nowrap sm:gap-2 sm:px-3 sm:text-xs"
+              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-2.5 text-[11px] font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 whitespace-nowrap sm:gap-2 sm:px-4 sm:py-3 sm:text-xs"
             >
               <Bell className="h-4 w-4" />
               Notificações
             </Link>
             <button
               onClick={() => setOpenMore((prev) => !prev)}
-              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-2 text-[11px] font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 whitespace-nowrap sm:gap-2 sm:px-3 sm:text-xs"
+              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-2.5 text-[11px] font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 whitespace-nowrap sm:gap-2 sm:px-4 sm:py-3 sm:text-xs"
               aria-expanded={openMore}
               aria-controls="mobile-more-menu"
             >

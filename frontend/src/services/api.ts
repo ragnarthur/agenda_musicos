@@ -20,6 +20,13 @@ import type {
   MusicianUpdatePayload,
 } from '../types';
 
+export type PaginatedResponse<T> = {
+  results: T[];
+  count: number;
+  next: string | null;
+  previous: string | null;
+};
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 // Instância global com cookies seguros
@@ -153,7 +160,7 @@ export const musicianService = {
     return response.data.results || response.data;
   },
 
-  getAllPaginated: async (params?: { search?: string; page?: number }): Promise<{ results: Musician[]; count: number; next: string | null; previous: string | null }> => {
+  getAllPaginated: async (params?: { search?: string; instrument?: string; page?: number; page_size?: number }): Promise<PaginatedResponse<Musician>> => {
     const response = await api.get('/musicians/', { params });
     const data = response.data;
     if (Array.isArray(data)) {
@@ -250,6 +257,34 @@ export const eventService = {
     const response = await api.get('/events/', { params });
     // Backend retorna objeto paginado: { count, next, previous, results }
     return response.data.results || response.data;
+  },
+
+  getAllPaginated: async (params?: {
+    status?: string;
+    my_proposals?: boolean;
+    pending_approval?: boolean;
+    search?: string;
+    past?: boolean;
+    upcoming?: boolean;
+    page?: number;
+    page_size?: number;
+  }): Promise<PaginatedResponse<Event>> => {
+    const response = await api.get('/events/', { params });
+    const data = response.data;
+    if (Array.isArray(data)) {
+      return {
+        results: data,
+        count: data.length,
+        next: null,
+        previous: null,
+      };
+    }
+    return {
+      results: data.results || [],
+      count: data.count ?? (data.results ? data.results.length : 0),
+      next: data.next ?? null,
+      previous: data.previous ?? null,
+    };
   },
 
   getById: async (id: number): Promise<Event> => {
@@ -403,9 +438,28 @@ export const leaderAvailabilityService = {
 
 // Connections Service
 export const connectionService = {
-  getAll: async (params?: { type?: string }): Promise<Connection[]> => {
+  getAll: async (params?: { type?: string; all?: boolean; page?: number; page_size?: number }): Promise<Connection[]> => {
     const response = await api.get('/connections/', { params });
     return response.data.results || response.data;
+  },
+
+  getAllPaginated: async (params?: { type?: string; page?: number; page_size?: number }): Promise<PaginatedResponse<Connection>> => {
+    const response = await api.get('/connections/', { params });
+    const data = response.data;
+    if (Array.isArray(data)) {
+      return {
+        results: data,
+        count: data.length,
+        next: null,
+        previous: null,
+      };
+    }
+    return {
+      results: data.results || [],
+      count: data.count ?? (data.results ? data.results.length : 0),
+      next: data.next ?? null,
+      previous: data.previous ?? null,
+    };
   },
 
   create: async (payload: { target_id: number; connection_type: string; notes?: string }): Promise<Connection> => {

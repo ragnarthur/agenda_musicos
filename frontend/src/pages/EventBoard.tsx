@@ -88,8 +88,16 @@ const EventBoard: React.FC = () => {
       };
       if (timeFilter === 'upcoming') params.upcoming = true;
       if (timeFilter === 'past') params.past = true;
-      const data = await eventService.getAll(params);
-      setEvents(data);
+      const aggregated: Event[] = [];
+      let page = 1;
+      let hasNext = true;
+      while (hasNext) {
+        const pageData = await eventService.getAllPaginated({ ...params, page, page_size: 50 });
+        aggregated.push(...pageData.results);
+        hasNext = Boolean(pageData.next);
+        page += 1;
+      }
+      setEvents(aggregated);
     } catch (error) {
       logError('Erro ao carregar grade de eventos:', error);
       showToast.apiError(error);
