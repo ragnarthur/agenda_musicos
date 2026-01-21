@@ -367,14 +367,14 @@ const EventForm: React.FC = () => {
                 Título do Evento *
               </label>
               <div className="relative">
-                <FileText className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <FileText className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none" />
                 <input
                   id="title"
                   name="title"
                   type="text"
                   value={formData.title}
                   onChange={handleChange}
-                  className="input-field pl-10"
+                  className="input-field pl-12"
                   placeholder="Ex: Show no Bar do João"
                   required
                   {...getMobileInputProps('username')}
@@ -388,14 +388,14 @@ const EventForm: React.FC = () => {
                 Local *
               </label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none" />
                 <input
                   id="location"
                   name="location"
                   type="text"
                   value={formData.location}
                   onChange={handleChange}
-                  className="input-field pl-10"
+                  className="input-field pl-12"
                   placeholder="Ex: Rua ABC, 123 - Centro"
                   required
                   {...getMobileInputProps('street-address')}
@@ -409,14 +409,14 @@ const EventForm: React.FC = () => {
                 Contato do Local
               </label>
               <div className="relative">
-                <Phone className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none" />
                 <input
                   id="venue_contact"
                   name="venue_contact"
                   type="text"
                   value={formData.venue_contact}
                   onChange={handleChange}
-                  className="input-field pl-10"
+                  className="input-field pl-12"
                   placeholder="Telefone ou contato do local"
                   {...getMobileInputProps('tel')}
                 />
@@ -430,7 +430,7 @@ const EventForm: React.FC = () => {
                   Data *
                 </label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <Calendar className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none" />
                   <input
                     id="event_date"
                     name="event_date"
@@ -440,7 +440,7 @@ const EventForm: React.FC = () => {
                     ref={dateInputRef}
                     onFocus={openDatePicker}
                     onClick={openDatePicker}
-                    className="input-field pl-10"
+                    className="input-field pl-12"
                     required
                     {...getMobileInputProps('date')}
                   />
@@ -453,14 +453,14 @@ const EventForm: React.FC = () => {
                   Início *
                 </label>
                 <div className="relative">
-                  <Clock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <Clock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none" />
                   <input
                     id="start_time"
                     name="start_time"
                     type="time"
                     value={formData.start_time}
                     onChange={handleChange}
-                    className="input-field pl-10"
+                    className="input-field pl-12"
                     required
                   />
                 </div>
@@ -471,14 +471,14 @@ const EventForm: React.FC = () => {
                   Término *
                 </label>
                 <div className="relative">
-                  <Clock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <Clock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none" />
                   <input
                     id="end_time"
                     name="end_time"
                     type="time"
                     value={formData.end_time}
                     onChange={handleChange}
-                    className="input-field pl-10"
+                    className="input-field pl-12"
                     required
                   />
                 </div>
@@ -553,13 +553,13 @@ const EventForm: React.FC = () => {
                       Buscar instrumento
                     </label>
                     <div className="relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
                       <input
                         type="text"
                         value={instrumentQuery}
                         onChange={(e) => setInstrumentQuery(e.target.value)}
                         placeholder="Digite violão, teclado, bateria..."
-                        className="input-field pl-9"
+                        className="input-field pl-11"
                       />
                     </div>
                   </div>
