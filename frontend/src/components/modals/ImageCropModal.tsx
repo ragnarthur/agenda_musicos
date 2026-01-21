@@ -204,12 +204,14 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isPinching, setIsPinching] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isRotating, setIsRotating] = useState(false);
   const [isPreparing, setIsPreparing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const sourceUrlRef = useRef<string | null>(null);
   const imageUrlRef = useRef<string | null>(null);
+  const previewUrlRef = useRef<string | null>(null);
   const cropRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef({
     active: false,
@@ -259,6 +261,11 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
       setLoadError(null);
       setIsPreparing(false);
       setNaturalSize({ width: 0, height: 0 });
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
+      }
+      setPreviewUrl(null);
       return;
     }
 
@@ -414,6 +421,43 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     clampOffset,
     getDefaultFocus,
   ]);
+
+  useEffect(() => {
+    if (!isOpen || !imgRef.current || !naturalSize.width || !cropSize.width) return;
+    const output = OUTPUT_SIZES[target];
+    const scale = baseScale * zoom;
+    const sx = Math.max(0, -offset.x / scale);
+    const sy = Math.max(0, -offset.y / scale);
+    const sw = cropSize.width / scale;
+    const sh = cropSize.height / scale;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = output.width;
+    canvas.height = output.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx || !imgRef.current) return;
+
+    ctx.drawImage(imgRef.current, sx, sy, sw, sh, 0, 0, output.width, output.height);
+
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      setPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        previewUrlRef.current = url;
+        return url;
+      });
+    }, 'image/jpeg', 0.7);
+  }, [zoom, offset, cropSize, naturalSize, baseScale, isOpen, target]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -677,6 +721,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   if (typeof document === 'undefined') return null;
 
   const zoomPercent = Math.round(zoom * 100);
+  const outputSize = OUTPUT_SIZES[target];
 
   return createPortal(
     <div
@@ -720,117 +765,151 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
         <div className="flex flex-1 flex-col md:flex-row overflow-hidden">
           {/* Preview */}
           <div className="flex-1 flex items-center justify-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-950 min-h-0">
-            <div className="relative">
+            <div className="flex flex-col items-center gap-3">
               <div
-                ref={cropRef}
-                className={`relative overflow-hidden bg-gray-900 cursor-grab active:cursor-grabbing shadow-2xl ${
-                  isAvatar ? 'rounded-full' : 'rounded-2xl'
-                }`}
-                style={{
-                  aspectRatio: `${aspectRatio}`,
-                  width: frameSize.width || undefined,
-                  height: frameSize.height || undefined,
-                  touchAction: 'none',
-                }}
-                tabIndex={0}
-                aria-label="Pré-visualização"
-                aria-busy={isPreparing}
-                onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                onPointerCancel={handlePointerUp}
-                onPointerLeave={handlePointerUp}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-                onWheel={handleWheel}
-                onKeyDown={handleKeyDown}
+                className="flex w-full items-center justify-between text-xs font-medium text-gray-500 dark:text-gray-400"
+                style={{ width: frameSize.width || undefined }}
               >
-                {imageUrl && (
-                  <img
-                    ref={imgRef}
-                    src={imageUrl}
-                    alt="Pré-visualização"
-                    onLoad={(event) => {
-                      const img = event.currentTarget;
-                      setNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
-                    }}
-                    onError={() => setLoadError('Não foi possível abrir esta foto. Use JPG, PNG ou WEBP.')}
-                    className="absolute left-0 top-0 select-none pointer-events-none"
-                    style={{
-                      transform: `translate(${offset.x}px, ${offset.y}px) scale(${baseScale * zoom})`,
-                      transformOrigin: 'top left',
-                      willChange: 'transform',
-                    }}
-                    draggable={false}
-                  />
-                )}
-                {/* Controles de zoom inline */}
-                {naturalSize.width > 0 && (
-                  <div
-                    className="absolute bottom-2.5 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/20 bg-black/60 px-2 py-1 text-xs text-white shadow-lg backdrop-blur-sm"
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onPointerUp={(e) => e.stopPropagation()}
-                    onClick={(e) => e.stopPropagation()}
-                    style={{ touchAction: 'auto' }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => updateZoom(zoom - 0.1)}
-                      disabled={zoom <= 1 || isPreparing}
-                      className="rounded-full h-11 w-11 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
-                      aria-label="Diminuir zoom"
-                    >
-                      −
-                    </button>
-                    <input
-                      type="range"
-                      min={1}
-                      max={zoomMax}
-                      step={0.01}
-                      value={zoom}
-                      onChange={(e) => updateZoom(Number(e.target.value))}
-                      disabled={isPreparing}
-                      className="h-1 w-16 sm:w-20 appearance-none rounded-full bg-white/25 accent-white cursor-pointer"
-                      aria-label="Controle de zoom"
+                <span>Ajuste</span>
+                <span className="text-[11px] font-normal text-gray-400">Arraste para mover e use o zoom</span>
+              </div>
+              <div className="relative">
+                <div
+                  ref={cropRef}
+                  className={`relative overflow-hidden border border-white/15 bg-gray-900 cursor-grab active:cursor-grabbing shadow-2xl ${
+                    isAvatar ? 'rounded-full' : 'rounded-2xl'
+                  }`}
+                  style={{
+                    aspectRatio: `${aspectRatio}`,
+                    width: frameSize.width || undefined,
+                    height: frameSize.height || undefined,
+                    touchAction: 'none',
+                  }}
+                  tabIndex={0}
+                  aria-label="Pré-visualização"
+                  aria-busy={isPreparing}
+                  onPointerDown={handlePointerDown}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                  onPointerCancel={handlePointerUp}
+                  onPointerLeave={handlePointerUp}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  onWheel={handleWheel}
+                  onKeyDown={handleKeyDown}
+                >
+                  {imageUrl && (
+                    <img
+                      ref={imgRef}
+                      src={imageUrl}
+                      alt="Pré-visualização"
+                      onLoad={(event) => {
+                        const img = event.currentTarget;
+                        setNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
+                      }}
+                      onError={() => setLoadError('Não foi possível abrir esta foto. Use JPG, PNG ou WEBP.')}
+                      className="absolute left-0 top-0 select-none pointer-events-none"
+                      style={{
+                        transform: `translate(${offset.x}px, ${offset.y}px) scale(${baseScale * zoom})`,
+                        transformOrigin: 'top left',
+                        willChange: 'transform',
+                      }}
+                      draggable={false}
                     />
-                    <button
-                      type="button"
-                      onClick={() => updateZoom(zoom + 0.1)}
-                      disabled={zoom >= zoomMax || isPreparing}
-                      className="rounded-full h-11 w-11 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
-                      aria-label="Aumentar zoom"
+                  )}
+                  {/* Controles de zoom inline */}
+                  {naturalSize.width > 0 && (
+                    <div
+                      className="absolute bottom-2.5 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/20 bg-black/60 px-2 py-1 text-xs text-white shadow-lg backdrop-blur-sm"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onPointerUp={(e) => e.stopPropagation()}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ touchAction: 'auto' }}
                     >
-                      +
-                    </button>
-                    <span className="w-10 text-center text-[11px] font-medium tabular-nums">{zoomPercent}%</span>
-                    <span className="h-3 w-px bg-white/25" />
-                    <button
-                      type="button"
-                      onClick={() => rotateImage('left')}
-                      disabled={isRotating || isPreparing}
-                      className="rounded-full h-11 w-11 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
-                      aria-label="Girar para a esquerda"
-                    >
-                      ↺
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => rotateImage('right')}
-                      disabled={isRotating || isPreparing}
-                      className="rounded-full h-11 w-11 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
-                      aria-label="Girar para a direita"
-                    >
-                      ↻
-                    </button>
-                  </div>
-                )}
+                      <button
+                        type="button"
+                        onClick={() => updateZoom(zoom - 0.1)}
+                        disabled={zoom <= 1 || isPreparing}
+                        className="rounded-full h-11 w-11 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
+                        aria-label="Diminuir zoom"
+                      >
+                        −
+                      </button>
+                      <input
+                        type="range"
+                        min={1}
+                        max={zoomMax}
+                        step={0.01}
+                        value={zoom}
+                        onChange={(e) => updateZoom(Number(e.target.value))}
+                        disabled={isPreparing}
+                        className="h-1 w-16 sm:w-20 appearance-none rounded-full bg-white/25 accent-white cursor-pointer"
+                        aria-label="Controle de zoom"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => updateZoom(zoom + 0.1)}
+                        disabled={zoom >= zoomMax || isPreparing}
+                        className="rounded-full h-11 w-11 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
+                        aria-label="Aumentar zoom"
+                      >
+                        +
+                      </button>
+                      <span className="w-10 text-center text-[11px] font-medium tabular-nums">{zoomPercent}%</span>
+                      <span className="h-3 w-px bg-white/25" />
+                      <button
+                        type="button"
+                        onClick={() => rotateImage('left')}
+                        disabled={isRotating || isPreparing}
+                        className="rounded-full h-11 w-11 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
+                        aria-label="Girar para a esquerda"
+                      >
+                        ↺
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => rotateImage('right')}
+                        disabled={isRotating || isPreparing}
+                        className="rounded-full h-11 w-11 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
+                        aria-label="Girar para a direita"
+                      >
+                        ↻
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
           {/* Sidebar direito - ajustes (desktop) / oculto no mobile */}
           <div className="hidden md:flex flex-col w-56 border-l border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 gap-4">
+            {previewUrl && (
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 shadow-sm dark:border-gray-800 dark:bg-gray-950">
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                  Preview final
+                </p>
+                <div
+                  className={`mt-2 overflow-hidden border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 ${
+                    isAvatar ? 'rounded-full' : 'rounded-lg'
+                  }`}
+                  style={{
+                    width: isAvatar ? 120 : 180,
+                    height: isAvatar ? 120 : 101,
+                  }}
+                >
+                  <img
+                    src={previewUrl}
+                    alt="Preview final"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <p className="mt-2 text-[11px] text-gray-400">
+                  Saida {outputSize.width} x {outputSize.height}
+                </p>
+              </div>
+            )}
             {/* Presets */}
             <div className="flex flex-col gap-2">
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
@@ -895,6 +974,33 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
 
         {/* Ajustes mobile */}
         <div className="md:hidden flex flex-col gap-3 px-4 py-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
+          {previewUrl && (
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 shadow-sm dark:border-gray-800 dark:bg-gray-950">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                Preview final
+              </p>
+              <div className="mt-2 flex items-center gap-3">
+                <div
+                  className={`overflow-hidden border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 ${
+                    isAvatar ? 'rounded-full' : 'rounded-lg'
+                  }`}
+                  style={{
+                    width: isAvatar ? 64 : 104,
+                    height: isAvatar ? 64 : 58,
+                  }}
+                >
+                  <img
+                    src={previewUrl}
+                    alt="Preview final"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <p className="text-[11px] text-gray-400">
+                  Saida {outputSize.width} x {outputSize.height}
+                </p>
+              </div>
+            </div>
+          )}
           <div className="flex flex-col gap-2">
             <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Enquadramento
