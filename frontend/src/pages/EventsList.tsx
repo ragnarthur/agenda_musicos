@@ -182,7 +182,7 @@ const EventsList: React.FC = () => {
         </div>
       </Link>
     );
-  }, [extractLineup, getEventComputedStatus]);
+  }, []);
 
   return (
     <Layout>

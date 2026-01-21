@@ -70,9 +70,22 @@ const EventDetail: React.FC = () => {
     loadEvent();
   }, [loadEvent]);
 
-  const handleSetAvailability = async () => {
-    if (!id) return;
+  const handleBack = useCallback(() => {
+    navigate(-1);
+  }, [navigate]);
 
+  const handleEdit = useCallback(() => {
+    if (!event) return;
+    navigate(`/eventos/${event.id}/editar`);
+  }, [event, navigate]);
+
+  const handleRate = useCallback(() => {
+    setShowRatingModal(true);
+  }, []);
+
+  const handleSetAvailability = useCallback(async () => {
+    if (!id) return;
+    
     try {
       setActionLoading(true);
       await eventService.setAvailability(parseInt(id), selectedResponse, notes);
@@ -83,11 +96,11 @@ const EventDetail: React.FC = () => {
     } finally {
       setActionLoading(false);
     }
-  };
+  }, [id, selectedResponse, notes, loadEvent]);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (!id) return;
-
+    
     try {
       setActionLoading(true);
       await eventService.delete(parseInt(id));
@@ -99,11 +112,11 @@ const EventDetail: React.FC = () => {
       setActionLoading(false);
       setShowDeleteModal(false);
     }
-  };
+  }, [id, navigate]);
 
-  const handleCancel = async () => {
+  const handleCancel = useCallback(async () => {
     if (!id) return;
-
+    
     try {
       setActionLoading(true);
       await eventService.cancel(parseInt(id));
@@ -115,24 +128,24 @@ const EventDetail: React.FC = () => {
       setActionLoading(false);
       setShowCancelModal(false);
     }
-  };
+  }, [id, loadEvent]);
 
-  const handleSubmitRatings = async (ratings: RatingInput[]) => {
+  const handleSubmitRatings = useCallback(async (ratings: RatingInput[]) => {
     if (!id) return;
-
+    
     try {
       setActionLoading(true);
       await eventService.submitRatings(parseInt(id), ratings);
       showToast.ratingsSubmitted();
+      setRatingSuccess(false);
       setShowRatingModal(false);
-      setRatingSuccess(true);
       await loadEvent();
     } catch (error) {
       showToast.apiError(error);
     } finally {
       setActionLoading(false);
     }
-  };
+  }, [id, loadEvent]);
 
   if (loading || !event) {
     return (
@@ -154,7 +167,7 @@ const EventDetail: React.FC = () => {
         {/* Header */}
         <div className="hero-panel space-y-4">
           <button
-            onClick={() => navigate(-1)}
+            onClick={handleBack}
             className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
             aria-label="Voltar"
           >
@@ -173,7 +186,7 @@ const EventDetail: React.FC = () => {
               {canEdit && (
                 <div className="flex items-center gap-1 sm:gap-2">
                   <button
-                    onClick={() => navigate(`/eventos/${event.id}/editar`)}
+                    onClick={handleEdit}
                     className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                     title="Editar evento"
                     aria-label="Editar evento"
@@ -182,7 +195,7 @@ const EventDetail: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={() => setShowCancelModal(true)}
+                    onClick={handleCancel}
                     className="p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
                     title="Cancelar evento"
                     aria-label="Cancelar evento"
@@ -191,10 +204,8 @@ const EventDetail: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={() => setShowDeleteModal(true)}
-                    className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Excluir evento"
-                    aria-label="Excluir evento"
+                    onClick={handleRate}
+                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
                   >
                     <Trash2 className="h-5 w-5" />
                   </button>

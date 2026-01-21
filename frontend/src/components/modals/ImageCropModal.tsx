@@ -717,6 +717,14 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
             </button>
             <button
               type="button"
+              onClick={handleConfirm}
+              disabled={!imageUrl || !!loadError || !naturalSize.width || isPreparing}
+              className="rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-sky-700 active:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Salvar e enviar
+            </button>
+            <button
+              type="button"
               onClick={onClose}
               className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
             >
@@ -922,18 +930,6 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                 <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                   {isAvatar ? 'Grade 3x3 + máscara circular.' : 'Grade 3x3 + área segura da capa.'}
                 </p>
-              </div>
-              <div className="sticky bottom-0 w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur pt-2 pb-[env(safe-area-inset-bottom)]">
-                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                  <button
-                    type="button"
-                    onClick={handleConfirm}
-                    disabled={!imageUrl || !!loadError || !naturalSize.width || isPreparing}
-                    className="rounded-lg bg-sky-600 px-5 py-2.5 sm:px-4 sm:py-2 text-base sm:text-sm font-semibold text-white hover:bg-sky-700 active:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60 touch-manipulation"
-                  >
-                    Salvar e enviar
-                  </button>
-                </div>
               </div>
             </div>
          </div>
