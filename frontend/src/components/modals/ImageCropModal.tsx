@@ -204,14 +204,12 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isPinching, setIsPinching] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isRotating, setIsRotating] = useState(false);
   const [isPreparing, setIsPreparing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const sourceUrlRef = useRef<string | null>(null);
   const imageUrlRef = useRef<string | null>(null);
-  const previewUrlRef = useRef<string | null>(null);
   const cropRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef({
     active: false,
@@ -416,43 +414,6 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     clampOffset,
     getDefaultFocus,
   ]);
-
-  useEffect(() => {
-    if (!isOpen || !imgRef.current || !naturalSize.width || !cropSize.width) return;
-    const output = OUTPUT_SIZES[target];
-    const scale = baseScale * zoom;
-    const sx = Math.max(0, -offset.x / scale);
-    const sy = Math.max(0, -offset.y / scale);
-    const sw = cropSize.width / scale;
-    const sh = cropSize.height / scale;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = output.width;
-    canvas.height = output.height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx || !imgRef.current) return;
-
-    ctx.drawImage(imgRef.current, sx, sy, sw, sh, 0, 0, output.width, output.height);
-
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      setPreviewUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        previewUrlRef.current = url;
-        return url;
-      });
-    }, 'image/jpeg', 0.7);
-  }, [zoom, offset, cropSize, naturalSize, baseScale, isOpen, target]);
-
-  useEffect(() => {
-    return () => {
-      if (previewUrlRef.current) {
-        URL.revokeObjectURL(previewUrlRef.current);
-        previewUrlRef.current = null;
-      }
-    };
-  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -757,12 +718,14 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
 
         {/* Conteúdo principal - horizontal no desktop */}
         <div className="flex flex-1 flex-col md:flex-row overflow-hidden">
-          {/* Área de crop */}
+          {/* Preview */}
           <div className="flex-1 flex items-center justify-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-950 min-h-0">
             <div className="relative">
               <div
                 ref={cropRef}
-                className="relative overflow-hidden rounded-xl border-2 border-white/20 bg-gray-900 cursor-grab active:cursor-grabbing shadow-2xl"
+                className={`relative overflow-hidden bg-gray-900 cursor-grab active:cursor-grabbing shadow-2xl ${
+                  isAvatar ? 'rounded-full' : 'rounded-2xl'
+                }`}
                 style={{
                   aspectRatio: `${aspectRatio}`,
                   width: frameSize.width || undefined,
@@ -770,7 +733,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                   touchAction: 'none',
                 }}
                 tabIndex={0}
-                aria-label="Área de recorte"
+                aria-label="Pré-visualização"
                 aria-busy={isPreparing}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
@@ -802,34 +765,6 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                     draggable={false}
                   />
                 )}
-                {/* Grade 3x3 */}
-                <div className="pointer-events-none absolute inset-0 opacity-60">
-                  <div className="absolute inset-y-0 left-1/3 w-px bg-white/50" />
-                  <div className="absolute inset-y-0 left-2/3 w-px bg-white/50" />
-                  <div className="absolute inset-x-0 top-1/3 h-px bg-white/50" />
-                  <div className="absolute inset-x-0 top-2/3 h-px bg-white/50" />
-                </div>
-                {/* Área segura para capa */}
-                {!isAvatar && (
-                  <div className="pointer-events-none absolute inset-0">
-                    <div className="absolute inset-[10%] rounded-lg border border-dashed border-white/30" />
-                  </div>
-                )}
-                {/* Máscara circular para avatar */}
-                <div
-                  className="pointer-events-none absolute inset-0"
-                  style={{
-                    background: isAvatar
-                      ? 'radial-gradient(circle at center, transparent 0 46%, rgba(0,0,0,0.6) 47%)'
-                      : 'none',
-                  }}
-                />
-                {/* Borda do frame */}
-                <div
-                  className={`pointer-events-none absolute inset-0 ring-2 ring-white/60 ${
-                    isAvatar ? 'rounded-full' : 'rounded-xl'
-                  }`}
-                />
                 {/* Controles de zoom inline */}
                 {naturalSize.width > 0 && (
                   <div
@@ -894,32 +829,8 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
             </div>
           </div>
 
-          {/* Sidebar direito - preview + ações (desktop) / oculto no mobile */}
+          {/* Sidebar direito - ajustes (desktop) / oculto no mobile */}
           <div className="hidden md:flex flex-col w-56 border-l border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 gap-4">
-            {/* Preview */}
-            {previewUrl && (
-              <div className="flex flex-col items-center gap-2">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                  Preview
-                </p>
-                <div
-                  className={`overflow-hidden border-2 border-gray-200 dark:border-gray-700 shadow-md ${
-                    isAvatar ? 'rounded-full' : 'rounded-lg'
-                  }`}
-                  style={{
-                    width: isAvatar ? 120 : 180,
-                    height: isAvatar ? 120 : 101,
-                  }}
-                >
-                  <img
-                    src={previewUrl}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-            )}
-
             {/* Presets */}
             <div className="flex flex-col gap-2">
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
@@ -982,43 +893,44 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
           </div>
         </div>
 
-        {/* Preview mobile (inline) */}
-        <div className="md:hidden flex items-center justify-center gap-4 px-4 py-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
-          {previewUrl && (
-            <div className="flex items-center gap-3">
-              <div
-                className={`overflow-hidden border-2 border-gray-200 dark:border-gray-700 shadow-sm shrink-0 ${
-                  isAvatar ? 'rounded-full' : 'rounded-lg'
-                }`}
-                style={{
-                  width: isAvatar ? 56 : 96,
-                  height: isAvatar ? 56 : 54,
-                }}
-              >
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Preview</p>
-                <div className="flex gap-2">
-                  {presets.slice(0, 3).map((preset) => (
-                    <button
-                      key={preset.id}
-                      type="button"
-                      onClick={() => applyPreset(preset.id)}
-                      disabled={!naturalSize.width || isPreparing}
-                      className="rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300"
-                    >
-                      {preset.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+        {/* Ajustes mobile */}
+        <div className="md:hidden flex flex-col gap-3 px-4 py-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
+          <div className="flex flex-col gap-2">
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+              Enquadramento
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {presets.map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => applyPreset(preset.id)}
+                  disabled={!naturalSize.width || isPreparing}
+                  className="rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300"
+                >
+                  {preset.label}
+                </button>
+              ))}
             </div>
-          )}
+          </div>
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={handleReset}
+              disabled={!naturalSize.width || isPreparing}
+              className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300"
+            >
+              Resetar posição
+            </button>
+            <button
+              type="button"
+              onClick={resetImage}
+              disabled={!imageUrl || isRotating || isPreparing}
+              className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300"
+            >
+              Desfazer rotação
+            </button>
+          </div>
         </div>
 
         {/* Footer fixo mobile */}
