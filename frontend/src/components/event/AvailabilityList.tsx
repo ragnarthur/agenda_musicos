@@ -1,5 +1,5 @@
 // components/event/AvailabilityList.tsx
-import React from 'react';
+import React, { memo } from 'react';
 import type { Availability } from '../../types';
 import { INSTRUMENT_LABELS, AVAILABILITY_LABELS } from '../../utils/formatting';
 
@@ -45,7 +45,7 @@ function formatInstrument(instrument: string | undefined): string {
   return INSTRUMENT_LABELS[instrument] || `${instrument.charAt(0).toUpperCase()}${instrument.slice(1)}`;
 }
 
-const AvailabilityList: React.FC<AvailabilityListProps> = ({ availabilities }) => {
+const AvailabilityList: React.FC<AvailabilityListProps> = memo(({ availabilities }) => {
   const counts = getAvailabilityCounts(availabilities);
 
   return (
@@ -93,6 +93,8 @@ const AvailabilityList: React.FC<AvailabilityListProps> = ({ availabilities }) =
       </div>
     </div>
   );
-};
+});
+
+AvailabilityList.displayName = 'AvailabilityList';
 
 export default AvailabilityList;

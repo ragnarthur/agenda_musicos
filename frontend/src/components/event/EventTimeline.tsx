@@ -1,5 +1,5 @@
 // components/event/EventTimeline.tsx
-import React from 'react';
+import React, { memo } from 'react';
 import { History, Activity } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import type { EventLog } from '../../types';
@@ -9,7 +9,7 @@ interface EventTimelineProps {
   maxItems?: number;
 }
 
-const EventTimeline: React.FC<EventTimelineProps> = ({ logs, maxItems = 20 }) => {
+const EventTimeline: React.FC<EventTimelineProps> = memo(({ logs, maxItems = 20 }) => {
   if (!logs || logs.length === 0) {
     return null;
   }
@@ -49,6 +49,8 @@ const EventTimeline: React.FC<EventTimelineProps> = ({ logs, maxItems = 20 }) =>
       </div>
     </div>
   );
-};
+});
+
+EventTimeline.displayName = 'EventTimeline';
 
 export default EventTimeline;

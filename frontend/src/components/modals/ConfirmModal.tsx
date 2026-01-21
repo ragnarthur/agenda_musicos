@@ -1,5 +1,5 @@
 // components/modals/ConfirmModal.tsx
-import React from 'react';
+import React, { memo } from 'react';
 import SwipeToDismissWrapper from './SwipeToDismissWrapper';
 
 interface ConfirmModalProps {
@@ -15,7 +15,7 @@ interface ConfirmModalProps {
   icon?: React.ReactNode;
 }
 
-const ConfirmModal: React.FC<ConfirmModalProps> = ({
+const ConfirmModal: React.FC<ConfirmModalProps> = memo(({
   isOpen,
   onClose,
   onConfirm,
@@ -77,6 +77,8 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
       </SwipeToDismissWrapper>
     </div>
   );
-};
+});
+
+ConfirmModal.displayName = 'ConfirmModal';
 
 export default ConfirmModal;

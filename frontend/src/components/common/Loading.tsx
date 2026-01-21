@@ -1,5 +1,5 @@
 // components/common/Loading.tsx
-import React from 'react';
+import React, { memo } from 'react';
 import { Loader2 } from 'lucide-react';
 
 interface LoadingProps {
@@ -7,7 +7,7 @@ interface LoadingProps {
   text?: string;
 }
 
-const Loading: React.FC<LoadingProps> = ({ size = 'md', text }) => {
+const Loading: React.FC<LoadingProps> = memo(({ size = 'md', text }) => {
   const sizeClasses = {
     sm: 'h-4 w-4',
     md: 'h-8 w-8',
@@ -20,6 +20,8 @@ const Loading: React.FC<LoadingProps> = ({ size = 'md', text }) => {
       {text && <p className="mt-2 text-sm text-slate-200">{text}</p>}
     </div>
   );
-};
+});
+
+Loading.displayName = 'Loading';
 
 export default Loading;

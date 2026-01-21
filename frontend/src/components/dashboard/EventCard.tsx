@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarClock } from 'lucide-react';
 import { type Event } from '../../types';
@@ -7,7 +7,7 @@ interface EventCardProps {
   event: Event;
 }
 
-const EventCard: React.FC<EventCardProps> = ({ event }) => {
+const EventCard: React.FC<EventCardProps> = memo(({ event }) => {
   const startTime = event.start_datetime || (event.event_date && event.start_time 
     ? `${event.event_date}T${event.start_time}`
     : '');
@@ -47,6 +47,8 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
       </p>
     </Link>
   );
-};
+});
+
+EventCard.displayName = 'EventCard';
 
 export default EventCard;

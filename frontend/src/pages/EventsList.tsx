@@ -1,5 +1,5 @@
 // pages/EventsList.tsx
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Plus,
@@ -133,7 +133,11 @@ const EventsList: React.FC = () => {
     };
   }, [events]);
 
-  const renderEventCard = (event: Event) => {
+  const clearSearch = useCallback(() => {
+    setSearchTerm('');
+  }, []);
+
+  const renderEventCard = useCallback((event: Event) => {
     const lineup = event.availabilities ? extractLineup(event) : [event.created_by_name];
     const startLabel = event.start_time ? event.start_time.slice(0, 5) : '--:--';
     const endLabel = event.end_time ? event.end_time.slice(0, 5) : '--:--';
@@ -178,7 +182,7 @@ const EventsList: React.FC = () => {
         </div>
       </Link>
     );
-  };
+  }, [extractLineup, getEventComputedStatus]);
 
   return (
     <Layout>
@@ -229,7 +233,7 @@ const EventsList: React.FC = () => {
               />
               {searchTerm && (
                 <button
-                  onClick={() => setSearchTerm('')}
+                  onClick={clearSearch}
                   className="absolute right-3.5 top-3 text-gray-400 hover:text-gray-600"
                 >
                   <X className="h-5 w-5" />

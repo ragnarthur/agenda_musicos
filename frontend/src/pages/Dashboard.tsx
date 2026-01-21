@@ -1,5 +1,5 @@
 // pages/Dashboard.tsx
-import React, { useMemo, memo } from 'react';
+import React, { useMemo, memo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarClock, Clock, Plus, Users, ListChecks, Zap, Briefcase } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -68,7 +68,10 @@ const Dashboard: React.FC = memo(() => {
   }, [upcomingEvents]);
 
   const agendaCount = events.length;
-  const formatTime = (time?: string) => (time ? time.slice(0, 5) : '--:--');
+  const formatTime = useCallback((time?: string) => (time ? time.slice(0, 5) : '--:--'), []);
+  const handleScrollToEvents = useCallback(() => {
+    document.getElementById('events-section')?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
 
   if (loading) {
     return (
@@ -347,9 +350,7 @@ const Dashboard: React.FC = memo(() => {
         <div className="mt-8 flex items-center gap-2">
           <button
             type="button"
-            onClick={() => {
-              document.getElementById('events-section')?.scrollIntoView({ behavior: 'smooth' });
-            }}
+            onClick={handleScrollToEvents}
             className="inline-flex items-center gap-2 rounded-full border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
             <span className="text-base">↓</span>

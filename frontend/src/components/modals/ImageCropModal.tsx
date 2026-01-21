@@ -228,7 +228,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   const presets = isAvatar ? PRESETS.avatar : PRESETS.cover;
   const initialFocusKeyRef = useRef<string | null>(null);
 
-  const setSourceUrlSafe = (nextUrl: string | null) => {
+  const setSourceUrlRef = (nextUrl: string | null) => {
     if (sourceUrlRef.current && sourceUrlRef.current !== nextUrl) {
       URL.revokeObjectURL(sourceUrlRef.current);
     }
@@ -250,7 +250,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   React.useEffect(() => {
     if (!isOpen || !file) {
       setImageUrlSafe(null);
-      setSourceUrlSafe(null);
+      setSourceUrlRef(null);
       setLoadError(null);
       setIsPreparing(false);
       setNaturalSize({ width: 0, height: 0 });
@@ -273,12 +273,12 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
           URL.revokeObjectURL(url);
           return;
         }
-        setSourceUrlSafe(url);
+        setSourceUrlRef(url);
         setImageUrlSafe(url);
       } catch {
         if (!active) return;
         const fallbackUrl = URL.createObjectURL(file);
-        setSourceUrlSafe(fallbackUrl);
+        setSourceUrlRef(fallbackUrl);
         setImageUrlSafe(fallbackUrl);
       } finally {
         if (active) setIsPreparing(false);
@@ -345,8 +345,9 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     setBaseScale(nextBaseScale);
     setCropSize({ width: frameSize.width, height: frameSize.height });
 
-    const key = sourceUrl ? `${sourceUrl}-${target}` : null;
+    const key = sourceUrlRef.current ? `${sourceUrlRef.current}-${target}` : null;
     if (!key) {
+      const scale = nextBaseScale;
       const centered = {
         x: (frameSize.width - naturalSize.width * scale) / 2,
         y: (frameSize.height - naturalSize.height * scale) / 2,
@@ -377,7 +378,6 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     naturalSize.height,
     naturalSize.width,
     target,
-    sourceUrl,
   ]);
 
   useEffect(() => {
