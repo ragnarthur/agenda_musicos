@@ -26,8 +26,8 @@ export function useNotifications() {
     fetchNotificationCounts,
     {
       revalidateOnFocus: false,
-      refreshInterval: 30000, // Poll every 30 seconds
-      dedupingInterval: 10000,
+      refreshInterval: 60000, // Poll every 60 seconds on desktop
+      dedupingInterval: 30000,
     }
   );
 
