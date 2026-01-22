@@ -220,6 +220,9 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   const [isPreparing, setIsPreparing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Mobile UX: painel de ajustes recolhível (mais sutil)
+  const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
+
   const imgRef = useRef<HTMLImageElement | null>(null);
 
   const sourceUrlRef = useRef<string | null>(null);
@@ -393,6 +396,11 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     return () => window.removeEventListener('resize', update);
   }, [isOpen, target]);
 
+  // Reset do painel mobile ao abrir/fechar
+  useEffect(() => {
+    if (!isOpen) setMobileSettingsOpen(false);
+  }, [isOpen]);
+
   // Prepara imagem (EXIF etc)
   useEffect(() => {
     if (!isOpen || !file) {
@@ -407,6 +415,8 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
         previewUrlRef.current = null;
       }
       setPreviewUrl(null);
+
+      setMobileSettingsOpen(false);
       return;
     }
 
@@ -491,7 +501,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     zoom,
   ]);
 
-  // Gera preview final (lado direito)
+  // Gera preview final (lado direito / overlay no mobile)
   useEffect(() => {
     if (!isOpen || !imgRef.current || !naturalSize.width || !cropSize.width) return;
 
@@ -866,8 +876,9 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
           {/* Preview */}
           <div className="flex-1 flex items-center justify-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-950 min-h-0">
             <div className="flex flex-col items-center gap-3">
+              {/* Desktop-only helper line (no mobile pra não poluir) */}
               <div
-                className="flex w-full items-center justify-between text-xs font-medium text-gray-500 dark:text-gray-400"
+                className="hidden sm:flex w-full items-center justify-between text-xs font-medium text-gray-500 dark:text-gray-400"
                 style={{ width: frameSize.width || undefined }}
               >
                 <span>Ajuste</span>
@@ -921,10 +932,27 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                     />
                   )}
 
+                  {/* Mobile: preview final como badge overlay (sutil, não vira card gigante) */}
+                  {previewUrl && (
+                    <div className="md:hidden absolute left-3 top-3 z-20 flex items-center gap-2 rounded-full border border-white/15 bg-black/55 px-2 py-1 backdrop-blur-sm shadow-lg">
+                      <div
+                        className={`overflow-hidden border border-white/20 bg-black/30 ${
+                          isAvatar ? 'rounded-full' : 'rounded-md'
+                        }`}
+                        style={{ width: 34, height: 34 }}
+                      >
+                        <img src={previewUrl} alt="Preview final" className="h-full w-full object-cover" />
+                      </div>
+                      <span className="hidden sm:inline text-[11px] text-white/80">
+                        {outputSize.width}×{outputSize.height}
+                      </span>
+                    </div>
+                  )}
+
                   {/* Inline controls */}
                   {naturalSize.width > 0 && (
                     <div
-                      className="absolute bottom-2.5 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/20 bg-black/60 px-2 py-1 text-xs text-white shadow-lg backdrop-blur-sm"
+                      className="absolute bottom-2.5 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/15 bg-black/55 px-2 py-1 text-xs text-white shadow-lg backdrop-blur-sm"
                       onPointerDown={(e) => e.stopPropagation()}
                       onPointerUp={(e) => e.stopPropagation()}
                       onClick={(e) => e.stopPropagation()}
@@ -934,7 +962,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                         type="button"
                         onClick={() => updateZoom(zoom - 0.1)}
                         disabled={zoom <= 1 || isPreparing}
-                        className="rounded-full h-11 w-11 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
+                        className="rounded-full h-10 w-10 sm:h-11 sm:w-11 flex items-center justify-center hover:bg-white/12 disabled:opacity-40 transition-colors"
                         aria-label="Diminuir zoom"
                       >
                         −
@@ -948,7 +976,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                         value={zoom}
                         onChange={(e) => updateZoom(Number(e.target.value))}
                         disabled={isPreparing}
-                        className="h-1 w-16 sm:w-20 appearance-none rounded-full bg-white/25 accent-white cursor-pointer"
+                        className="h-1 w-14 sm:w-20 appearance-none rounded-full bg-white/25 accent-white cursor-pointer"
                         aria-label="Controle de zoom"
                       />
 
@@ -956,20 +984,20 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                         type="button"
                         onClick={() => updateZoom(zoom + 0.1)}
                         disabled={zoom >= zoomMax || isPreparing}
-                        className="rounded-full h-11 w-11 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
+                        className="rounded-full h-10 w-10 sm:h-11 sm:w-11 flex items-center justify-center hover:bg-white/12 disabled:opacity-40 transition-colors"
                         aria-label="Aumentar zoom"
                       >
                         +
                       </button>
 
                       <span className="w-10 text-center text-[11px] font-medium tabular-nums">{zoomPercent}%</span>
-                      <span className="h-3 w-px bg-white/25" />
+                      <span className="h-3 w-px bg-white/20" />
 
                       <button
                         type="button"
                         onClick={() => rotateImage('left')}
                         disabled={isRotating || isPreparing}
-                        className="rounded-full h-11 w-11 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
+                        className="rounded-full h-10 w-10 sm:h-11 sm:w-11 flex items-center justify-center hover:bg-white/12 disabled:opacity-40 transition-colors"
                         aria-label="Girar para a esquerda"
                       >
                         ↺
@@ -979,7 +1007,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                         type="button"
                         onClick={() => rotateImage('right')}
                         disabled={isRotating || isPreparing}
-                        className="rounded-full h-11 w-11 flex items-center justify-center hover:bg-white/15 disabled:opacity-40 transition-colors"
+                        className="rounded-full h-10 w-10 sm:h-11 sm:w-11 flex items-center justify-center hover:bg-white/12 disabled:opacity-40 transition-colors"
                         aria-label="Girar para a direita"
                       >
                         ↻
@@ -1079,96 +1107,117 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
           </div>
         </div>
 
-        {/* Mobile settings */}
-        <div className="md:hidden flex flex-col gap-3 px-4 py-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
-          {previewUrl && (
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 shadow-sm dark:border-gray-800 dark:bg-gray-950">
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                Preview final
+        {/* MOBILE: bottom sheet sutil (configs ficam escondidas por padrão) */}
+        <div className="md:hidden shrink-0 border-t border-gray-100 dark:border-gray-800 bg-white/90 dark:bg-gray-900/90 backdrop-blur supports-[backdrop-filter]:backdrop-blur-xl">
+          {/* Bar principal (sempre visível) */}
+          <div className="flex items-center justify-between px-4 pt-3 pb-2">
+            <button
+              type="button"
+              onClick={() => setMobileSettingsOpen((v) => !v)}
+              disabled={!naturalSize.width || isPreparing}
+              className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white/70 px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-white disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900/60 dark:text-gray-200"
+              aria-expanded={mobileSettingsOpen}
+              aria-controls="mobile-crop-settings"
+            >
+              <span>Ajustes</span>
+              <span className="text-[11px] text-gray-400 dark:text-gray-400 tabular-nums">{zoomPercent}%</span>
+              <svg
+                className={`h-4 w-4 transition-transform ${mobileSettingsOpen ? 'rotate-180' : ''}`}
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+
+            {/* Ações rápidas (bem discretas) */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleReset}
+                disabled={!naturalSize.width || isPreparing}
+                className="h-10 w-10 rounded-full border border-gray-200 bg-white/70 text-gray-700 hover:bg-white disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900/60 dark:text-gray-200"
+                aria-label="Resetar posição"
+                title="Resetar posição"
+              >
+                ⟲
+              </button>
+
+              <button
+                type="button"
+                onClick={resetImage}
+                disabled={!imageUrl || isRotating || isPreparing}
+                className="h-10 w-10 rounded-full border border-gray-200 bg-white/70 text-gray-700 hover:bg-white disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900/60 dark:text-gray-200"
+                aria-label="Desfazer rotação"
+                title="Desfazer rotação"
+              >
+                ↩
+              </button>
+            </div>
+          </div>
+
+          {/* Painel recolhível */}
+          <div
+            id="mobile-crop-settings"
+            className={`overflow-hidden transition-[max-height,opacity] duration-300 ${
+              mobileSettingsOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
+            }`}
+          >
+            <div className="px-4 pb-3">
+              <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                Enquadramento
               </p>
 
-              <div className="mt-2 flex items-center gap-3">
-                <div
-                  className={`overflow-hidden border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 ${
-                    isAvatar ? 'rounded-full' : 'rounded-lg'
-                  }`}
-                  style={{ width: isAvatar ? 64 : 104, height: isAvatar ? 64 : 58 }}
-                >
-                  <img src={previewUrl} alt="Preview final" className="h-full w-full object-cover" />
-                </div>
-
-                <p className="text-[11px] text-gray-400">
-                  Saida {outputSize.width} x {outputSize.height}
-                </p>
+              <div className="mt-2 -mx-1 px-1 flex gap-2 overflow-x-auto no-scrollbar">
+                {presets.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => applyPreset(preset.id)}
+                    disabled={!naturalSize.width || isPreparing}
+                    className="shrink-0 rounded-full border border-gray-200 bg-gray-50/70 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-white disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900/60 dark:text-gray-200"
+                  >
+                    {preset.label}
+                  </button>
+                ))}
               </div>
-            </div>
-          )}
 
-          <div className="flex flex-col gap-2">
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Enquadramento
-            </p>
-
-            <div className="flex flex-wrap gap-2">
-              {presets.map((preset) => (
-                <button
-                  key={preset.id}
-                  type="button"
-                  onClick={() => applyPreset(preset.id)}
-                  disabled={!naturalSize.width || isPreparing}
-                  className="rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300"
-                >
-                  {preset.label}
-                </button>
-              ))}
+              <p className="mt-3 text-[11px] text-gray-400 dark:text-gray-400">
+                Dica: pinça para zoom, arraste para mover.
+              </p>
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
+          {/* Botão salvar fixo */}
+          <div className="px-4 pb-safe pb-3">
             <button
               type="button"
-              onClick={handleReset}
-              disabled={!naturalSize.width || isPreparing}
-              className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300"
+              onClick={handleConfirm}
+              disabled={!imageUrl || !!loadError || !naturalSize.width || isPreparing || isSaving}
+              className="w-full rounded-xl bg-sky-600 px-4 py-3 text-base font-semibold text-white hover:bg-sky-700 active:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
             >
-              Resetar posição
-            </button>
-
-            <button
-              type="button"
-              onClick={resetImage}
-              disabled={!imageUrl || isRotating || isPreparing}
-              className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300"
-            >
-              Desfazer rotação
+              {isSaving ? (
+                <>
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Salvando...
+                </>
+              ) : (
+                'Salvar foto'
+              )}
             </button>
           </div>
-        </div>
-
-        {/* Mobile footer */}
-        <div className="md:hidden shrink-0 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-3 pb-safe">
-          <button
-            type="button"
-            onClick={handleConfirm}
-            disabled={!imageUrl || !!loadError || !naturalSize.width || isPreparing || isSaving}
-            className="w-full rounded-xl bg-sky-600 px-4 py-3.5 text-base font-semibold text-white hover:bg-sky-700 active:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
-          >
-            {isSaving ? (
-              <>
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                Salvando...
-              </>
-            ) : (
-              'Salvar foto'
-            )}
-          </button>
         </div>
       </div>
     </div>,
