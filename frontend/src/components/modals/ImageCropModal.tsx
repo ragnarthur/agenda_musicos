@@ -15,6 +15,7 @@ const OUTPUT_SIZES = {
   avatar: { width: 512, height: 512 },
   cover: { width: 1600, height: 900 },
 };
+
 const MAX_OUTPUT_BYTES = {
   avatar: 2 * 1024 * 1024,
   cover: 5 * 1024 * 1024,
@@ -43,14 +44,12 @@ const canvasToBlob = (canvas: HTMLCanvasElement, type: string, quality: number) 
   new Promise<Blob>((resolve, reject) => {
     if (canvas.toBlob) {
       canvas.toBlob((blob) => {
-        if (blob) {
-          resolve(blob);
-        } else {
-          reject(new Error('Falha ao processar imagem.'));
-        }
+        if (blob) resolve(blob);
+        else reject(new Error('Falha ao processar imagem.'));
       }, type, quality);
       return;
     }
+
     try {
       const dataUrl = canvas.toDataURL(type, quality);
       const [header, data] = dataUrl.split(',');
@@ -59,9 +58,7 @@ const canvasToBlob = (canvas: HTMLCanvasElement, type: string, quality: number) 
       const binary = atob(data);
       const buffer = new ArrayBuffer(binary.length);
       const bytes = new Uint8Array(buffer);
-      for (let i = 0; i < binary.length; i += 1) {
-        bytes[i] = binary.charCodeAt(i);
-      }
+      for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
       resolve(new Blob([buffer], { type: mime }));
     } catch (err) {
       reject(err);
@@ -70,43 +67,52 @@ const canvasToBlob = (canvas: HTMLCanvasElement, type: string, quality: number) 
 
 const readExifOrientation = async (file: File) => {
   if (!isJpeg(file)) return 1;
+
   const buffer = await file.arrayBuffer();
   const view = new DataView(buffer);
   if (view.byteLength < 12 || view.getUint16(0, false) !== 0xffd8) return 1;
+
   let offset = 2;
   while (offset + 1 < view.byteLength) {
     const marker = view.getUint16(offset, false);
     offset += 2;
+
     if (marker === 0xffe1) {
       void view.getUint16(offset, false);
       offset += 2;
-      if (view.getUint32(offset, false) !== 0x45786966) return 1;
+
+      if (view.getUint32(offset, false) !== 0x45786966) return 1; // 'Exif'
       offset += 6;
+
       const tiffOffset = offset;
       const endian = view.getUint16(tiffOffset, false);
-      const littleEndian = endian === 0x4949;
-      if (!littleEndian && endian !== 0x4d4d) return 1;
+      const littleEndian = endian === 0x4949; // 'II'
+      if (!littleEndian && endian !== 0x4d4d) return 1; // 'MM'
+
       const getUint16 = (valueOffset: number) => view.getUint16(valueOffset, littleEndian);
       const getUint32 = (valueOffset: number) => view.getUint32(valueOffset, littleEndian);
+
       const firstIfdOffset = getUint32(tiffOffset + 4);
       if (firstIfdOffset < 8) return 1;
+
       const ifdOffset = tiffOffset + firstIfdOffset;
       const entries = getUint16(ifdOffset);
+
       for (let i = 0; i < entries; i += 1) {
         const entryOffset = ifdOffset + 2 + i * 12;
         const tag = getUint16(entryOffset);
         if (tag === 0x0112) {
           const type = getUint16(entryOffset + 2);
           const count = getUint32(entryOffset + 4);
-          if (type === 3 && count === 1) {
-            return getUint16(entryOffset + 8);
-          }
+          if (type === 3 && count === 1) return getUint16(entryOffset + 8);
+
           const valueOffset = getUint32(entryOffset + 8);
           return getUint16(tiffOffset + valueOffset);
         }
       }
       return 1;
     }
+
     const length = view.getUint16(offset, false);
     if (length < 2) break;
     offset += length;
@@ -134,7 +140,7 @@ const loadDrawable = async (blob: Blob): Promise<HTMLImageElement | ImageBitmap>
     try {
       return await createImageBitmap(blob, { imageOrientation: 'none' });
     } catch {
-      // fallback para Image quando o navegador nao suporta as opcoes
+      // fallback
     }
   }
   return loadImageFromBlob(blob);
@@ -142,15 +148,19 @@ const loadDrawable = async (blob: Blob): Promise<HTMLImageElement | ImageBitmap>
 
 const createOrientedBlob = async (file: File, orientation: number) => {
   if (orientation === 1) return file;
+
   const drawable = await loadDrawable(file);
   const width = 'naturalWidth' in drawable ? drawable.naturalWidth : drawable.width;
   const height = 'naturalHeight' in drawable ? drawable.naturalHeight : drawable.height;
+
   const swapAxis = [5, 6, 7, 8].includes(orientation);
   const canvas = document.createElement('canvas');
   canvas.width = swapAxis ? height : width;
   canvas.height = swapAxis ? width : height;
+
   const ctx = canvas.getContext('2d');
   if (!ctx) return file;
+
   switch (orientation) {
     case 2:
       ctx.setTransform(-1, 0, 0, 1, width, 0);
@@ -177,8 +187,10 @@ const createOrientedBlob = async (file: File, orientation: number) => {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       break;
   }
+
   ctx.drawImage(drawable, 0, 0);
   if ('close' in drawable) drawable.close();
+
   return canvasToBlob(canvas, 'image/jpeg', 0.92);
 };
 
@@ -188,31 +200,34 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   target,
   onClose,
   onConfirm,
-  }) => {
+}) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [naturalSize, setNaturalSize] = useState({ width: 0, height: 0 });
+
+  // cropSize é a verdade: é o tamanho real do elemento que faz o recorte
   const [cropSize, setCropSize] = useState({ width: 0, height: 0 });
+
+  // frameSize é só layout (width/height que você dá pro crop)
   const [frameSize, setFrameSize] = useState({ width: 0, height: 0 });
+
   const [zoom, setZoom] = useState(1);
-  const baseScale = useMemo(() => {
-    if (!naturalSize.width || !frameSize.width) return 1;
-    return Math.max(
-      frameSize.width / naturalSize.width,
-      frameSize.height / naturalSize.height
-    );
-  }, [frameSize.height, frameSize.width, naturalSize.height, naturalSize.width]);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isPinching, setIsPinching] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isRotating, setIsRotating] = useState(false);
   const [isPreparing, setIsPreparing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
   const imgRef = useRef<HTMLImageElement | null>(null);
+
   const sourceUrlRef = useRef<string | null>(null);
   const imageUrlRef = useRef<string | null>(null);
   const previewUrlRef = useRef<string | null>(null);
+
   const cropRef = useRef<HTMLDivElement | null>(null);
+
   const dragRef = useRef({
     active: false,
     startX: 0,
@@ -220,19 +235,19 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     originX: 0,
     originY: 0,
   });
+
   const pinchRef = useRef<{
-    distance: number;
-    centerX: number;
-    centerY: number;
+    startDistance: number;
     startZoom: number;
-    startOffsetX: number;
-    startOffsetY: number;
+    imageX: number;
+    imageY: number;
   } | null>(null);
 
-  const aspectRatio = target === 'avatar' ? 1 : 16 / 9;
-  const zoomMax = target === 'avatar' ? 3.0 : 2.5;
   const isAvatar = target === 'avatar';
+  const aspectRatio = isAvatar ? 1 : 16 / 9;
+  const zoomMax = isAvatar ? 3.0 : 2.5;
   const presets = isAvatar ? PRESETS.avatar : PRESETS.cover;
+
   const initialFocusKeyRef = useRef<string | null>(null);
 
   const setSourceUrlRef = (nextUrl: string | null) => {
@@ -254,13 +269,139 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     setImageUrl(nextUrl);
   };
 
-  React.useEffect(() => {
+  // IMPORTANTÃO: baseScale calculado com cropSize (tamanho real do recorte)
+  const baseScale = useMemo(() => {
+    if (!naturalSize.width || !cropSize.width) return 1;
+    return Math.max(cropSize.width / naturalSize.width, cropSize.height / naturalSize.height);
+  }, [cropSize.height, cropSize.width, naturalSize.height, naturalSize.width]);
+
+  const clampOffset = useCallback(
+    (x: number, y: number, scale: number) => {
+      const scaledWidth = naturalSize.width * scale;
+      const scaledHeight = naturalSize.height * scale;
+
+      let clampedX: number;
+      let clampedY: number;
+
+      if (scaledWidth <= cropSize.width) clampedX = (cropSize.width - scaledWidth) / 2;
+      else {
+        const minX = cropSize.width - scaledWidth;
+        clampedX = Math.min(0, Math.max(minX, x));
+      }
+
+      if (scaledHeight <= cropSize.height) clampedY = (cropSize.height - scaledHeight) / 2;
+      else {
+        const minY = cropSize.height - scaledHeight;
+        clampedY = Math.min(0, Math.max(minY, y));
+      }
+
+      return { x: clampedX, y: clampedY };
+    },
+    [cropSize.height, cropSize.width, naturalSize.height, naturalSize.width]
+  );
+
+  const clampZoom = (value: number) => Math.min(Math.max(value, 1), zoomMax);
+
+  const getLocalPoint = (clientX: number, clientY: number) => {
+    const rect = cropRef.current?.getBoundingClientRect();
+    if (!rect) return { x: cropSize.width / 2, y: cropSize.height / 2 };
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  };
+
+  const updateZoom = (value: number, anchor?: { x: number; y: number }) => {
+    if (isPreparing || !naturalSize.width || !cropSize.width) return;
+
+    const nextZoom = clampZoom(value);
+    const prevScale = baseScale * zoom;
+    const nextScale = baseScale * nextZoom;
+
+    const a = anchor ?? { x: cropSize.width / 2, y: cropSize.height / 2 };
+
+    // mantém o ponto ancorado (mais natural)
+    const imageX = (a.x - offset.x) / prevScale;
+    const imageY = (a.y - offset.y) / prevScale;
+
+    const nextOffsetX = a.x - imageX * nextScale;
+    const nextOffsetY = a.y - imageY * nextScale;
+
+    setZoom(nextZoom);
+    setOffset(clampOffset(nextOffsetX, nextOffsetY, nextScale));
+  };
+
+  const getCenteredOffset = (scale: number) => ({
+    x: (cropSize.width - naturalSize.width * scale) / 2,
+    y: (cropSize.height - naturalSize.height * scale) / 2,
+  });
+
+  const getDefaultFocus = useCallback(() => {
+    const aspect = naturalSize.height / naturalSize.width;
+
+    if (isAvatar) {
+      if (aspect >= 1.3) return { x: 0.5, y: 0.35 };
+      if (aspect <= 0.85) return { x: 0.5, y: 0.5 };
+      return { x: 0.5, y: 0.42 };
+    }
+
+    if (aspect >= 1.2) return { x: 0.5, y: 0.3 };
+    if (aspect <= 0.6) return { x: 0.5, y: 0.45 };
+    return { x: 0.5, y: 0.4 };
+  }, [isAvatar, naturalSize.height, naturalSize.width]);
+
+  // Monta o frameSize pro layout (crop vai ter esse tamanho)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const updateFrameSize = () => {
+      const maxWidth = Math.min(window.innerWidth * 0.95, 720);
+      const reservedHeight = 240;
+      const minHeight = 260;
+      const maxHeight = Math.max(minHeight, window.innerHeight - reservedHeight);
+
+      const widthByHeight = maxHeight * aspectRatio;
+      const nextWidth = Math.min(maxWidth, widthByHeight);
+      const nextHeight = nextWidth / aspectRatio;
+
+      setFrameSize({ width: nextWidth, height: nextHeight });
+    };
+
+    updateFrameSize();
+    window.addEventListener('resize', updateFrameSize);
+    return () => window.removeEventListener('resize', updateFrameSize);
+  }, [aspectRatio, isOpen]);
+
+  // Mantém cropSize sempre correto usando ResizeObserver (melhor que window.resize)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const el = cropRef.current;
+    if (!el) return;
+
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      setCropSize({ width: rect.width, height: rect.height });
+    };
+
+    update();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(() => update());
+      ro.observe(el);
+      return () => ro.disconnect();
+    }
+
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [isOpen, target]);
+
+  // Prepara imagem (EXIF etc)
+  useEffect(() => {
     if (!isOpen || !file) {
       setImageUrlSafe(null);
       setSourceUrlRef(null);
       setLoadError(null);
       setIsPreparing(false);
       setNaturalSize({ width: 0, height: 0 });
+
       if (previewUrlRef.current) {
         URL.revokeObjectURL(previewUrlRef.current);
         previewUrlRef.current = null;
@@ -278,13 +419,16 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
       try {
         const orientation = await readExifOrientation(file);
         if (!active) return;
+
         const normalized = orientation > 1 ? await createOrientedBlob(file, orientation) : file;
         if (!active) return;
+
         const url = URL.createObjectURL(normalized);
         if (!active) {
           URL.revokeObjectURL(url);
           return;
         }
+
         setSourceUrlRef(url);
         setImageUrlSafe(url);
       } catch {
@@ -305,92 +449,15 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     };
   }, [file, isOpen]);
 
+  // Define offset inicial (com foco “inteligente”) quando já temos naturalSize e cropSize
   useEffect(() => {
-    if (!isOpen) return undefined;
-    const updateCropSize = () => {
-      const rect = cropRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      setCropSize({ width: rect.width, height: rect.height });
-    };
-    updateCropSize();
-    window.addEventListener('resize', updateCropSize);
-    return () => window.removeEventListener('resize', updateCropSize);
-  }, [isOpen, target]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const updateFrameSize = () => {
-      // Configurações unificadas desktop/mobile (otimizado para mobile)
-      const maxWidth = Math.min(window.innerWidth * 0.95, 720);
-      const reservedHeight = 240;
-      const minHeight = 260;
-      const maxHeight = Math.max(minHeight, window.innerHeight - reservedHeight);
-      const widthByHeight = maxHeight * aspectRatio;
-      const nextWidth = Math.min(maxWidth, widthByHeight);
-      const nextHeight = nextWidth / aspectRatio;
-      setFrameSize({ width: nextWidth, height: nextHeight });
-    };
-    updateFrameSize();
-    window.addEventListener('resize', updateFrameSize);
-    return () => window.removeEventListener('resize', updateFrameSize);
-  }, [aspectRatio, isOpen]);
-
-  const clampOffset = useCallback(
-    (x: number, y: number, scale: number) => {
-      const scaledWidth = naturalSize.width * scale;
-      const scaledHeight = naturalSize.height * scale;
-
-      // Se a imagem é menor que o frame, centralizar nessa dimensão
-      // Se é maior, limitar para não mostrar espaço vazio
-      let clampedX: number;
-      let clampedY: number;
-
-      if (scaledWidth <= cropSize.width) {
-        // Imagem menor ou igual ao frame na horizontal: centralizar
-        clampedX = (cropSize.width - scaledWidth) / 2;
-      } else {
-        // Imagem maior que o frame: permitir arrastar
-        const minX = cropSize.width - scaledWidth;
-        clampedX = Math.min(0, Math.max(minX, x));
-      }
-
-      if (scaledHeight <= cropSize.height) {
-        // Imagem menor ou igual ao frame na vertical: centralizar
-        clampedY = (cropSize.height - scaledHeight) / 2;
-      } else {
-        // Imagem maior que o frame: permitir arrastar
-        const minY = cropSize.height - scaledHeight;
-        clampedY = Math.min(0, Math.max(minY, y));
-      }
-
-      return { x: clampedX, y: clampedY };
-    },
-    [cropSize.height, cropSize.width, naturalSize.height, naturalSize.width]
-  );
-
-  const getDefaultFocus = useCallback(() => {
-    const aspect = naturalSize.height / naturalSize.width;
-    if (isAvatar) {
-      if (aspect >= 1.3) return { x: 0.5, y: 0.35 };
-      if (aspect <= 0.85) return { x: 0.5, y: 0.5 };
-      return { x: 0.5, y: 0.42 };
-    }
-    if (aspect >= 1.2) return { x: 0.5, y: 0.3 };
-    if (aspect <= 0.6) return { x: 0.5, y: 0.45 };
-    return { x: 0.5, y: 0.4 };
-  }, [isAvatar, naturalSize.height, naturalSize.width]);
-
-  useEffect(() => {
-    if (!isOpen || !naturalSize.width || !frameSize.width) return;
-
-    setCropSize({ width: frameSize.width, height: frameSize.height });
+    if (!isOpen || !naturalSize.width || !cropSize.width) return;
 
     const key = sourceUrlRef.current ? `${sourceUrlRef.current}-${target}` : null;
+    const scale = baseScale * zoom;
+
     if (!key) {
-      const centered = {
-        x: (frameSize.width - naturalSize.width * baseScale) / 2,
-        y: (frameSize.height - naturalSize.height * baseScale) / 2,
-      };
+      const centered = getCenteredOffset(scale);
       setZoom(1);
       setOffset(centered);
       return;
@@ -399,33 +466,38 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     if (initialFocusKeyRef.current !== key) {
       const focus = getDefaultFocus();
       const nextOffset = clampOffset(
-        frameSize.width / 2 - naturalSize.width * focus.x * baseScale,
-        frameSize.height / 2 - naturalSize.height * focus.y * baseScale,
+        cropSize.width / 2 - naturalSize.width * focus.x * baseScale,
+        cropSize.height / 2 - naturalSize.height * focus.y * baseScale,
         baseScale
       );
+
       setZoom(1);
       setOffset(nextOffset);
       initialFocusKeyRef.current = key;
       return;
     }
-    setOffset((prev) => clampOffset(prev.x, prev.y, baseScale * zoom));
+
+    setOffset((prev) => clampOffset(prev.x, prev.y, scale));
   }, [
     baseScale,
-    frameSize.width,
-    frameSize.height,
+    clampOffset,
+    cropSize.height,
+    cropSize.width,
+    getDefaultFocus,
     isOpen,
     naturalSize.height,
     naturalSize.width,
     target,
     zoom,
-    clampOffset,
-    getDefaultFocus,
   ]);
 
+  // Gera preview final (lado direito)
   useEffect(() => {
     if (!isOpen || !imgRef.current || !naturalSize.width || !cropSize.width) return;
+
     const output = OUTPUT_SIZES[target];
     const scale = baseScale * zoom;
+
     const sx = Math.max(0, -offset.x / scale);
     const sy = Math.max(0, -offset.y / scale);
     const sw = cropSize.width / scale;
@@ -434,6 +506,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     const canvas = document.createElement('canvas');
     canvas.width = output.width;
     canvas.height = output.height;
+
     const ctx = canvas.getContext('2d');
     if (!ctx || !imgRef.current) return;
 
@@ -442,6 +515,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     canvas.toBlob((blob) => {
       if (!blob) return;
       const url = URL.createObjectURL(blob);
+
       setPreviewUrl((prev) => {
         if (prev) URL.revokeObjectURL(prev);
         previewUrlRef.current = url;
@@ -450,6 +524,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     }, 'image/jpeg', 0.7);
   }, [zoom, offset, cropSize, naturalSize, baseScale, isOpen, target]);
 
+  // Cleanup preview url
   useEffect(() => {
     return () => {
       if (previewUrlRef.current) {
@@ -459,46 +534,38 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     };
   }, []);
 
+  // ESC para fechar
   useEffect(() => {
     if (!isOpen) return;
+
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !isSaving) onClose();
     };
+
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, isSaving, onClose]);
 
-  const getCenteredOffset = (scale: number) => ({
-    x: (cropSize.width - naturalSize.width * scale) / 2,
-    y: (cropSize.height - naturalSize.height * scale) / 2,
-  });
-
   const applyPreset = (preset: CropPreset) => {
     if (!naturalSize.width || !cropSize.width || isPreparing) return;
+
     let nextZoom = zoom;
     if (preset === 'portrait') nextZoom = Math.min(zoomMax, 1.25);
     if (preset === 'close') nextZoom = Math.min(zoomMax, 1.55);
+
     const scale = baseScale * nextZoom;
     const centered = getCenteredOffset(scale);
+
     let nextOffset = { ...centered };
-    if (preset === 'top') {
-      nextOffset = { x: centered.x, y: 0 };
-    }
-    if (preset === 'bottom') {
-      nextOffset = { x: centered.x, y: cropSize.height - naturalSize.height * scale };
-    }
-    if (preset === 'left') {
-      nextOffset = { x: 0, y: centered.y };
-    }
-    if (preset === 'right') {
-      nextOffset = { x: cropSize.width - naturalSize.width * scale, y: centered.y };
-    }
-    if (preset === 'portrait') {
-      nextOffset = { x: centered.x, y: centered.y - cropSize.height * 0.08 };
-    }
-    if (preset === 'close') {
-      nextOffset = { x: centered.x, y: centered.y - cropSize.height * 0.12 };
-    }
+
+    if (preset === 'top') nextOffset = { x: centered.x, y: 0 };
+    if (preset === 'bottom') nextOffset = { x: centered.x, y: cropSize.height - naturalSize.height * scale };
+    if (preset === 'left') nextOffset = { x: 0, y: centered.y };
+    if (preset === 'right') nextOffset = { x: cropSize.width - naturalSize.width * scale, y: centered.y };
+
+    if (preset === 'portrait') nextOffset = { x: centered.x, y: centered.y - cropSize.height * 0.08 };
+    if (preset === 'close') nextOffset = { x: centered.x, y: centered.y - cropSize.height * 0.12 };
+
     setZoom(nextZoom);
     setOffset(clampOffset(nextOffset.x, nextOffset.y, scale));
   };
@@ -506,29 +573,36 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
     if (!naturalSize.width || isPreparing) return;
     event.preventDefault();
-    const step = event.deltaY < 0 ? 0.05 : -0.05;
-    updateZoom(zoom + step);
+
+    const step = event.deltaY < 0 ? 0.08 : -0.08;
+    const anchor = getLocalPoint(event.clientX, event.clientY);
+    updateZoom(zoom + step, anchor);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (!naturalSize.width || isPreparing) return;
+
     const step = event.shiftKey ? 20 : 6;
     let dx = 0;
     let dy = 0;
+
     if (event.key === 'ArrowLeft') dx = -step;
     if (event.key === 'ArrowRight') dx = step;
     if (event.key === 'ArrowUp') dy = -step;
     if (event.key === 'ArrowDown') dy = step;
+
     if (dx || dy) {
       event.preventDefault();
       const scale = baseScale * zoom;
       setOffset((prev) => clampOffset(prev.x + dx, prev.y + dy, scale));
       return;
     }
+
     if (event.key === '+' || event.key === '=') {
       event.preventDefault();
       updateZoom(zoom + 0.1);
     }
+
     if (event.key === '-' || event.key === '_') {
       event.preventDefault();
       updateZoom(zoom - 0.1);
@@ -538,7 +612,9 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!naturalSize.width || isPreparing) return;
     if (loadError) setLoadError(null);
+
     event.preventDefault();
+
     dragRef.current = {
       active: true,
       startX: event.clientX,
@@ -546,80 +622,91 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
       originX: offset.x,
       originY: offset.y,
     };
+
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!dragRef.current.active || isPinching || isPreparing) return;
+
     const deltaX = event.clientX - dragRef.current.startX;
     const deltaY = event.clientY - dragRef.current.startY;
     const scale = baseScale * zoom;
+
     setOffset(clampOffset(dragRef.current.originX + deltaX, dragRef.current.originY + deltaY, scale));
   };
 
   const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
     dragRef.current.active = false;
-    event.currentTarget.releasePointerCapture(event.pointerId);
+    try {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    } catch {
+      // ignore
+    }
   };
 
-  const getTouchDistance = (touches: React.TouchList) => {
-    return Math.hypot(
-      touches[0].clientX - touches[1].clientX,
-      touches[0].clientY - touches[1].clientY
-    );
+  const getTouchDistance = (touches: React.TouchList) =>
+    Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY);
+
+  const getTouchCenterLocal = (touches: React.TouchList) => {
+    const rect = cropRef.current?.getBoundingClientRect();
+    if (!rect) return { x: cropSize.width / 2, y: cropSize.height / 2 };
+
+    const cx = (touches[0].clientX + touches[1].clientX) / 2 - rect.left;
+    const cy = (touches[0].clientY + touches[1].clientY) / 2 - rect.top;
+    return { x: cx, y: cy };
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (isPreparing) return;
-    if (e.touches.length === 2 && cropRef.current) {
+    if (isPreparing || !naturalSize.width || !cropSize.width) return;
+
+    if (e.touches.length === 2) {
       e.preventDefault();
-      const centerX = cropSize.width / 2;
-      const centerY = cropSize.height / 2;
+
+      const center = getTouchCenterLocal(e.touches);
+      const startDistance = getTouchDistance(e.touches);
+
+      const startScale = baseScale * zoom;
+      const imageX = (center.x - offset.x) / startScale;
+      const imageY = (center.y - offset.y) / startScale;
+
       pinchRef.current = {
-        distance: getTouchDistance(e.touches),
-        centerX,
-        centerY,
+        startDistance,
         startZoom: zoom,
-        startOffsetX: offset.x,
-        startOffsetY: offset.y,
+        imageX,
+        imageY,
       };
+
       setIsPinching(true);
       dragRef.current.active = false;
     }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (isPreparing) return;
-    if (e.touches.length === 2 && pinchRef.current) {
-      e.preventDefault();
-      const newDistance = getTouchDistance(e.touches);
-      const scaleFactor = newDistance / pinchRef.current.distance;
-      const nextZoom = Math.min(Math.max(pinchRef.current.startZoom * scaleFactor, 1), zoomMax);
-      const prevScale = baseScale * pinchRef.current.startZoom;
-      const nextScale = baseScale * nextZoom;
-      const imageX = (pinchRef.current.centerX - pinchRef.current.startOffsetX) / prevScale;
-      const imageY = (pinchRef.current.centerY - pinchRef.current.startOffsetY) / prevScale;
-      const nextOffsetX = pinchRef.current.centerX - imageX * nextScale;
-      const nextOffsetY = pinchRef.current.centerY - imageY * nextScale;
-      if (loadError) setLoadError(null);
-      setZoom(nextZoom);
-      setOffset(clampOffset(nextOffsetX, nextOffsetY, nextScale));
-    }
+    if (isPreparing || !naturalSize.width || !cropSize.width) return;
+    if (e.touches.length !== 2 || !pinchRef.current) return;
+
+    e.preventDefault();
+
+    const center = getTouchCenterLocal(e.touches);
+    const newDistance = getTouchDistance(e.touches);
+
+    const scaleFactor = newDistance / pinchRef.current.startDistance;
+    const nextZoom = clampZoom(pinchRef.current.startZoom * scaleFactor);
+    const nextScale = baseScale * nextZoom;
+
+    const nextOffsetX = center.x - pinchRef.current.imageX * nextScale;
+    const nextOffsetY = center.y - pinchRef.current.imageY * nextScale;
+
+    if (loadError) setLoadError(null);
+
+    setZoom(nextZoom);
+    setOffset(clampOffset(nextOffsetX, nextOffsetY, nextScale));
   };
 
   const handleTouchEnd = () => {
     pinchRef.current = null;
     setIsPinching(false);
-  };
-
-  const clampZoom = (value: number) => Math.min(Math.max(value, 1), zoomMax);
-
-  const updateZoom = (value: number) => {
-    if (isPreparing) return;
-    const nextZoom = clampZoom(value);
-    const scale = baseScale * nextZoom;
-    setZoom(nextZoom);
-    setOffset((prev) => clampOffset(prev.x, prev.y, scale));
   };
 
   const resetImage = () => {
@@ -630,21 +717,27 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
 
   const rotateImage = async (direction: 'left' | 'right') => {
     if (!imgRef.current || isRotating || isPreparing) return;
+
     setIsRotating(true);
     setLoadError(null);
+
     try {
       const img = imgRef.current;
       const width = img.naturalWidth;
       const height = img.naturalHeight;
+
       const canvas = document.createElement('canvas');
       canvas.width = height;
       canvas.height = width;
+
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
+
       const angle = direction === 'left' ? -90 : 90;
       ctx.translate(canvas.width / 2, canvas.height / 2);
       ctx.rotate((angle * Math.PI) / 180);
       ctx.drawImage(img, -width / 2, -height / 2);
+
       const blob = await canvasToBlob(canvas, 'image/jpeg', 0.92);
       const url = URL.createObjectURL(blob);
       setImageUrlSafe(url);
@@ -657,23 +750,24 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
 
   const handleReset = () => {
     if (!naturalSize.width || !cropSize.width || isPreparing) return;
+
     requestAnimationFrame(() => {
       setZoom(1);
-      const scaledWidth = naturalSize.width * baseScale;
-      const scaledHeight = naturalSize.height * baseScale;
-      setOffset({
-        x: (cropSize.width - scaledWidth) / 2,
-        y: (cropSize.height - scaledHeight) / 2,
-      });
+      const scale = baseScale * 1;
+      const centered = getCenteredOffset(scale);
+      setOffset(clampOffset(centered.x, centered.y, scale));
     });
   };
 
   const handleConfirm = async () => {
     if (!imgRef.current || !file || loadError || isPreparing || isSaving) return;
+
     setIsSaving(true);
+
     const output = OUTPUT_SIZES[target];
     const maxBytes = MAX_OUTPUT_BYTES[target];
     const scale = baseScale * zoom;
+
     const sx = Math.max(0, -offset.x / scale);
     const sy = Math.max(0, -offset.y / scale);
     const sw = cropSize.width / scale;
@@ -682,6 +776,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     const canvas = document.createElement('canvas');
     canvas.width = output.width;
     canvas.height = output.height;
+
     const ctx = canvas.getContext('2d');
     if (!ctx) {
       setIsSaving(false);
@@ -689,26 +784,32 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     }
 
     ctx.drawImage(imgRef.current, sx, sy, sw, sh, 0, 0, output.width, output.height);
+
     try {
       let quality = 0.92;
       let blob = await canvasToBlob(canvas, 'image/jpeg', quality);
+
       let iterations = 0;
       const maxIterations = 10;
+
       while (blob.size > maxBytes && quality > 0.7 && iterations < maxIterations) {
         quality -= 0.08;
         blob = await canvasToBlob(canvas, 'image/jpeg', quality);
-        iterations++;
+        iterations += 1;
       }
+
       if (iterations >= maxIterations) {
         setLoadError('Não foi possível reduzir a imagem para o tamanho desejado.');
         setIsSaving(false);
         return;
       }
+
       if (blob.size > maxBytes) {
         setLoadError('Imagem muito grande. Escolha uma foto menor ou reduza o zoom.');
         setIsSaving(false);
         return;
       }
+
       const croppedFile = new File([blob], `${target}-crop.jpg`, { type: 'image/jpeg' });
       onConfirm(croppedFile);
     } catch {
@@ -732,16 +833,15 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
       onClick={(e) => e.target === e.currentTarget && !isSaving && onClose()}
     >
       <div className="flex w-full max-w-5xl flex-col bg-white shadow-2xl dark:bg-gray-900 sm:max-h-[92vh] sm:rounded-2xl sm:overflow-hidden max-h-[100dvh] rounded-t-2xl">
-        {/* Header compacto */}
+        {/* Header */}
         <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-800 shrink-0">
           <div className="flex items-center gap-3">
             <h2 id="crop-title" className="text-base font-semibold text-gray-900 dark:text-white">
               Ajustar {isAvatar ? 'foto de perfil' : 'foto de capa'}
             </h2>
-            {isPreparing && (
-              <span className="text-xs text-gray-400 animate-pulse">Carregando...</span>
-            )}
+            {isPreparing && <span className="text-xs text-gray-400 animate-pulse">Carregando...</span>}
           </div>
+
           <button
             type="button"
             onClick={onClose}
@@ -761,7 +861,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
           </div>
         )}
 
-        {/* Conteúdo principal - horizontal no desktop */}
+        {/* Content */}
         <div className="flex flex-1 flex-col md:flex-row overflow-hidden">
           {/* Preview */}
           <div className="flex-1 flex items-center justify-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-950 min-h-0">
@@ -773,6 +873,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                 <span>Ajuste</span>
                 <span className="text-[11px] font-normal text-gray-400">Arraste para mover e use o zoom</span>
               </div>
+
               <div className="relative">
                 <div
                   ref={cropRef}
@@ -809,16 +910,18 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                         setNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
                       }}
                       onError={() => setLoadError('Não foi possível abrir esta foto. Use JPG, PNG ou WEBP.')}
-                      className="absolute left-0 top-0 select-none pointer-events-none"
+                      // FIX CRÍTICO: Tailwind preflight limita img com max-width:100% — isso quebra o crop.
+                      className="absolute left-0 top-0 select-none pointer-events-none max-w-none max-h-none"
                       style={{
-                        transform: `translate(${offset.x}px, ${offset.y}px) scale(${baseScale * zoom})`,
+                        transform: `translate3d(${offset.x}px, ${offset.y}px, 0) scale(${baseScale * zoom})`,
                         transformOrigin: 'top left',
                         willChange: 'transform',
                       }}
                       draggable={false}
                     />
                   )}
-                  {/* Controles de zoom inline */}
+
+                  {/* Inline controls */}
                   {naturalSize.width > 0 && (
                     <div
                       className="absolute bottom-2.5 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/20 bg-black/60 px-2 py-1 text-xs text-white shadow-lg backdrop-blur-sm"
@@ -836,6 +939,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                       >
                         −
                       </button>
+
                       <input
                         type="range"
                         min={1}
@@ -847,6 +951,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                         className="h-1 w-16 sm:w-20 appearance-none rounded-full bg-white/25 accent-white cursor-pointer"
                         aria-label="Controle de zoom"
                       />
+
                       <button
                         type="button"
                         onClick={() => updateZoom(zoom + 0.1)}
@@ -856,8 +961,10 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                       >
                         +
                       </button>
+
                       <span className="w-10 text-center text-[11px] font-medium tabular-nums">{zoomPercent}%</span>
                       <span className="h-3 w-px bg-white/25" />
+
                       <button
                         type="button"
                         onClick={() => rotateImage('left')}
@@ -867,6 +974,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                       >
                         ↺
                       </button>
+
                       <button
                         type="button"
                         onClick={() => rotateImage('right')}
@@ -883,38 +991,34 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
             </div>
           </div>
 
-          {/* Sidebar direito - ajustes (desktop) / oculto no mobile */}
+          {/* Sidebar desktop */}
           <div className="hidden md:flex flex-col w-56 border-l border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 gap-4">
             {previewUrl && (
               <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 shadow-sm dark:border-gray-800 dark:bg-gray-950">
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                   Preview final
                 </p>
+
                 <div
                   className={`mt-2 overflow-hidden border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 ${
                     isAvatar ? 'rounded-full' : 'rounded-lg'
                   }`}
-                  style={{
-                    width: isAvatar ? 120 : 180,
-                    height: isAvatar ? 120 : 101,
-                  }}
+                  style={{ width: isAvatar ? 120 : 180, height: isAvatar ? 120 : 101 }}
                 >
-                  <img
-                    src={previewUrl}
-                    alt="Preview final"
-                    className="h-full w-full object-cover"
-                  />
+                  <img src={previewUrl} alt="Preview final" className="h-full w-full object-cover" />
                 </div>
+
                 <p className="mt-2 text-[11px] text-gray-400">
                   Saida {outputSize.width} x {outputSize.height}
                 </p>
               </div>
             )}
-            {/* Presets */}
+
             <div className="flex flex-col gap-2">
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                 Enquadramento
               </p>
+
               <div className="grid grid-cols-1 gap-1.5">
                 {presets.map((preset) => (
                   <button
@@ -930,7 +1034,6 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
               </div>
             </div>
 
-            {/* Ações secundárias */}
             <div className="flex flex-col gap-1.5 mt-auto pt-4 border-t border-gray-100 dark:border-gray-800">
               <button
                 type="button"
@@ -940,6 +1043,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
               >
                 Resetar posição
               </button>
+
               <button
                 type="button"
                 onClick={resetImage}
@@ -950,7 +1054,6 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
               </button>
             </div>
 
-            {/* Botão salvar desktop */}
             <button
               type="button"
               onClick={handleConfirm}
@@ -961,7 +1064,11 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                 <>
                   <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
                   </svg>
                   Salvando...
                 </>
@@ -972,39 +1079,36 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
           </div>
         </div>
 
-        {/* Ajustes mobile */}
+        {/* Mobile settings */}
         <div className="md:hidden flex flex-col gap-3 px-4 py-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
           {previewUrl && (
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 shadow-sm dark:border-gray-800 dark:bg-gray-950">
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                 Preview final
               </p>
+
               <div className="mt-2 flex items-center gap-3">
                 <div
                   className={`overflow-hidden border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 ${
                     isAvatar ? 'rounded-full' : 'rounded-lg'
                   }`}
-                  style={{
-                    width: isAvatar ? 64 : 104,
-                    height: isAvatar ? 64 : 58,
-                  }}
+                  style={{ width: isAvatar ? 64 : 104, height: isAvatar ? 64 : 58 }}
                 >
-                  <img
-                    src={previewUrl}
-                    alt="Preview final"
-                    className="h-full w-full object-cover"
-                  />
+                  <img src={previewUrl} alt="Preview final" className="h-full w-full object-cover" />
                 </div>
+
                 <p className="text-[11px] text-gray-400">
                   Saida {outputSize.width} x {outputSize.height}
                 </p>
               </div>
             </div>
           )}
+
           <div className="flex flex-col gap-2">
             <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Enquadramento
             </p>
+
             <div className="flex flex-wrap gap-2">
               {presets.map((preset) => (
                 <button
@@ -1019,6 +1123,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
               ))}
             </div>
           </div>
+
           <div className="flex flex-col gap-2">
             <button
               type="button"
@@ -1028,6 +1133,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
             >
               Resetar posição
             </button>
+
             <button
               type="button"
               onClick={resetImage}
@@ -1039,7 +1145,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
           </div>
         </div>
 
-        {/* Footer fixo mobile */}
+        {/* Mobile footer */}
         <div className="md:hidden shrink-0 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-3 pb-safe">
           <button
             type="button"
@@ -1051,7 +1157,11 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
               <>
                 <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
                 </svg>
                 Salvando...
               </>
