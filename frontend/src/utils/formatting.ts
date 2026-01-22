@@ -54,6 +54,8 @@ export function minutesToTimeString(totalMinutes: number): string {
  */
 export function formatDate(dateString: string | Date): string {
   const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+  if (Number.isNaN(date.getTime())) return '-';
+
   return date.toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: '2-digit',
@@ -66,6 +68,8 @@ export function formatDate(dateString: string | Date): string {
  */
 export function formatDateFull(dateString: string | Date): string {
   const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+  if (Number.isNaN(date.getTime())) return '-';
+
   return date.toLocaleDateString('pt-BR', {
     weekday: 'long',
     day: '2-digit',
@@ -75,17 +79,61 @@ export function formatDateFull(dateString: string | Date): string {
 }
 
 /**
+ * Formatter cacheado para evitar recriar Intl.NumberFormat toda hora.
+ */
+const BRL_FORMATTER = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+/**
+ * Parse seguro para valores monetários vindos como number/string.
+ * Aceita:
+ * - "6000000.00"
+ * - "6.000.000,00"
+ * - "R$ 6.000.000,00"
+ * - 6000000
+ */
+function parseCurrencyToNumber(value: number | string): number {
+  if (typeof value === 'number') return value;
+
+  const raw = value.trim();
+  if (!raw) return NaN;
+
+  // remove tudo que não for dígito, vírgula, ponto, sinal
+  const cleaned = raw.replace(/[^\d,.-]/g, '');
+
+  const hasComma = cleaned.includes(',');
+  const hasDot = cleaned.includes('.');
+
+  // Se tem vírgula e ponto, assume pt-BR (ponto milhar, vírgula decimal)
+  if (hasComma && hasDot) {
+    const normalized = cleaned.replace(/\./g, '').replace(',', '.');
+    return Number.parseFloat(normalized);
+  }
+
+  // Se só tem vírgula, assume vírgula decimal
+  if (hasComma && !hasDot) {
+    const normalized = cleaned.replace(',', '.');
+    return Number.parseFloat(normalized);
+  }
+
+  // Caso padrão: "6000000.00" (decimal com ponto) ou inteiro
+  return Number.parseFloat(cleaned);
+}
+
+/**
  * Formata um valor monetário para Real brasileiro.
  */
 export function formatCurrency(value: number | string | null | undefined): string {
   if (value === null || value === undefined) return '-';
-  const numValue = typeof value === 'string' ? parseFloat(value) : value;
-  if (isNaN(numValue)) return '-';
 
-  return numValue.toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  });
+  const numValue = parseCurrencyToNumber(value);
+  if (!Number.isFinite(numValue)) return '-';
+
+  return BRL_FORMATTER.format(numValue);
 }
 
 /**

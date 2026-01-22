@@ -27,7 +27,7 @@ import { musicianService, connectionService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { getErrorMessage, showToast } from '../utils/toast';
 import { logError } from '../utils/logger';
-import { formatInstrumentLabel } from '../utils/formatting';
+import { formatInstrumentLabel, formatCurrency } from '../utils/formatting';
 import type { Musician, MusicianBadge } from '../types';
 
 interface Connection {
@@ -309,6 +309,7 @@ const MusicianProfile: React.FC = () => {
               uploadingCover={uploadingCover}
             />
           </div>
+
           {isOwnProfile && (
             <ImageCropModal
               isOpen={isCropOpen}
@@ -341,7 +342,7 @@ const MusicianProfile: React.FC = () => {
             />
             <StatCard
               icon={<DollarSign className="h-6 w-6 text-white" />}
-              value={musician.base_fee ? `R$ ${musician.base_fee}` : '-'}
+              value={formatCurrency(musician.base_fee)}
               label="Cachê Base"
               color="purple"
             />
@@ -361,7 +362,9 @@ const MusicianProfile: React.FC = () => {
                   <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{musician.bio}</p>
                 ) : (
                   <p className="text-gray-400 dark:text-gray-500 italic">
-                    {isOwnProfile ? 'Adicione uma bio para que outros músicos conheçam você melhor.' : 'Este músico ainda não adicionou uma bio.'}
+                    {isOwnProfile
+                      ? 'Adicione uma bio para que outros músicos conheçam você melhor.'
+                      : 'Este músico ainda não adicionou uma bio.'}
                   </p>
                 )}
               </div>
@@ -417,17 +420,22 @@ const MusicianProfile: React.FC = () => {
                 {musician.equipment_items && musician.equipment_items.length > 0 ? (
                   <ul className="space-y-3">
                     {musician.equipment_items.map((item, idx) => (
-                      <li key={idx} className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                      <li
+                        key={idx}
+                        className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700 last:border-0"
+                      >
                         <span className="text-gray-700 dark:text-gray-300">{item.name}</span>
                         <span className="font-semibold text-gray-900 dark:text-white">
-                          {item.price ? `R$ ${item.price}` : '-'}
+                          {formatCurrency(item.price)}
                         </span>
                       </li>
                     ))}
                   </ul>
                 ) : (
                   <p className="text-gray-400 dark:text-gray-500 italic">
-                    {isOwnProfile ? 'Adicione equipamentos e serviços extras que você oferece.' : 'Nenhum equipamento ou serviço adicional.'}
+                    {isOwnProfile
+                      ? 'Adicione equipamentos e serviços extras que você oferece.'
+                      : 'Nenhum equipamento ou serviço adicional.'}
                   </p>
                 )}
                 {isOwnProfile && (
@@ -456,7 +464,9 @@ const MusicianProfile: React.FC = () => {
                   </div>
                 ) : (
                   <p className="text-gray-400 dark:text-gray-500 italic">
-                    {isOwnProfile ? 'Suas avaliações aparecerão aqui após participar de eventos.' : 'Este músico ainda não recebeu avaliações.'}
+                    {isOwnProfile
+                      ? 'Suas avaliações aparecerão aqui após participar de eventos.'
+                      : 'Este músico ainda não recebeu avaliações.'}
                   </p>
                 )}
               </div>
@@ -499,6 +509,7 @@ const MusicianProfile: React.FC = () => {
                       <span>{musician.phone}</span>
                     </a>
                   ) : null}
+
                   {musician.whatsapp ? (
                     <a
                       href={`https://wa.me/55${musician.whatsapp.replace(/\D/g, '')}`}
@@ -512,6 +523,7 @@ const MusicianProfile: React.FC = () => {
                       <span>WhatsApp</span>
                     </a>
                   ) : null}
+
                   {musician.instagram ? (
                     <a
                       href={`https://instagram.com/${musician.instagram.replace('@', '')}`}
@@ -525,6 +537,7 @@ const MusicianProfile: React.FC = () => {
                       <span>@{musician.instagram.replace('@', '')}</span>
                     </a>
                   ) : null}
+
                   {!musician.phone && !musician.whatsapp && !musician.instagram && (
                     <p className="text-gray-400 dark:text-gray-500 italic text-sm">
                       {isOwnProfile ? 'Adicione informações de contato no seu perfil.' : 'Informações de contato não disponíveis.'}
@@ -543,10 +556,15 @@ const MusicianProfile: React.FC = () => {
                     </Link>
                   )}
                 </div>
+
                 {connections.length > 0 ? (
                   <div className="grid grid-cols-3 gap-3">
                     {connections.slice(0, 6).map((conn) => (
-                      <Link key={conn.id} to={`/musicos/${conn.id}`} className="text-center hover:scale-105 transition-transform">
+                      <Link
+                        key={conn.id}
+                        to={`/musicos/${conn.id}`}
+                        className="text-center hover:scale-105 transition-transform"
+                      >
                         <div className="w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-2 overflow-hidden ring-2 ring-blue-500/10 dark:ring-blue-400/10">
                           {conn.avatar ? (
                             <img src={conn.avatar} alt={conn.full_name} className="w-full h-full object-cover" />
@@ -565,6 +583,7 @@ const MusicianProfile: React.FC = () => {
                     {isOwnProfile ? 'Conecte-se com outros músicos da plataforma!' : 'Nenhuma conexão ainda.'}
                   </p>
                 )}
+
                 {isOwnProfile && (
                   <Link
                     to="/musicos"
