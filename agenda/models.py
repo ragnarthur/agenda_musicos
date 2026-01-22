@@ -772,6 +772,11 @@ class MusicianRating(models.Model):
 class Connection(models.Model):
     """
     Relações entre músicos: seguir, salvar para ligar depois, indicar e "já toquei com".
+
+    Solução FINAL (nível banco):
+      - UniqueConstraint garante que não existe duplicata do mesmo:
+        (follower, target, connection_type)
+      - Índices melhoram listagens (dashboard/perfil)
     """
     CONNECTION_TYPES = [
         ('follow', 'Seguir favorito'),
@@ -784,24 +789,41 @@ class Connection(models.Model):
         Musician,
         on_delete=models.CASCADE,
         related_name='connections_from',
-        help_text='Músico que iniciou a conexão'
+        help_text='Músico que iniciou a conexão',
+        db_index=True,
     )
     target = models.ForeignKey(
         Musician,
         on_delete=models.CASCADE,
         related_name='connections_to',
-        help_text='Músico alvo da conexão'
+        help_text='Músico alvo da conexão',
+        db_index=True,
     )
-    connection_type = models.CharField(max_length=20, choices=CONNECTION_TYPES, default='follow')
+    connection_type = models.CharField(
+        max_length=20,
+        choices=CONNECTION_TYPES,
+        default='follow',
+        db_index=True,
+    )
     verified = models.BooleanField(default=False, help_text='Marcação de "já toquei com" confirmada')
     notes = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = [('follower', 'target', 'connection_type')]
         ordering = ['-created_at']
         verbose_name = 'Conexão de Músico'
         verbose_name_plural = 'Conexões de Músico'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['follower', 'target', 'connection_type'],
+                name='uniq_connection_follower_target_type',
+            )
+        ]
+        indexes = [
+            models.Index(fields=['follower', 'created_at']),
+            models.Index(fields=['target', 'created_at']),
+            models.Index(fields=['follower', 'target']),
+        ]
 
     def __str__(self):
         return f"{self.follower} -> {self.target} ({self.connection_type})"
