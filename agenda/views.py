@@ -1835,23 +1835,53 @@ def upload_cover(request):
 @api_view(["GET"])
 def get_musician_connections(request, musician_id):
     """
-    GET /api/musicians/<id>/connections/
-    Retorna conexões do músico (usuários que ele segue)
+    GET /api/musicians/<id>/connections/?type=follow&limit=6
+
+    Retorna conexões do músico (targets), garantindo:
+    - sem duplicados por target (mesmo que existam múltiplos connection_type)
+    - suporte a filtro por type (opcional)
+    - suporte a limit (opcional, default=6, max=24)
     """
     try:
-        # Verifica se o músico existe
         musician = Musician.objects.get(id=musician_id, is_active=True)
 
-        # Busca conexões onde o músico é o follower
-        connections = (
+        ctype = (request.query_params.get("type") or "").strip()
+        limit_raw = request.query_params.get("limit") or "6"
+
+        try:
+            limit = int(limit_raw)
+        except ValueError:
+            return Response(
+                {"detail": 'Parâmetro "limit" inválido.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        limit = max(1, min(limit, 24))
+
+        qs = (
             Connection.objects.filter(follower=musician)
             .select_related("target__user")
-            .order_by("-created_at")[:6]
+            .order_by("-created_at")
         )
 
-        # Serializar os músicos conectados (targets)
+        if ctype:
+            qs = qs.filter(connection_type=ctype)
+
+        total_unique = qs.values("target_id").distinct().count()
+
+        seen_target_ids = set()
+        unique_targets = []
+
+        for conn in qs:
+            if conn.target_id in seen_target_ids:
+                continue
+            seen_target_ids.add(conn.target_id)
+            unique_targets.append(conn)
+            if len(unique_targets) >= limit:
+                break
+
         connected_musicians = []
-        for conn in connections:
+        for conn in unique_targets:
             target = conn.target
             connected_musicians.append(
                 {
@@ -1865,7 +1895,12 @@ def get_musician_connections(request, musician_id):
             )
 
         return Response(
-            {"total": connections.count(), "connections": connected_musicians},
+            {
+                "total": total_unique,
+                "connections": connected_musicians,
+                "limit": limit,
+                "type": ctype or None,
+            },
             status=status.HTTP_200_OK,
         )
 
@@ -1874,9 +1909,10 @@ def get_musician_connections(request, musician_id):
             {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
         )
     except Exception as e:
-        logging.exception("Erro ao buscar conexões")
+        logger.exception("Erro ao buscar conexões")
         return Response(
-            {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            {"detail": "Erro interno ao buscar conexões."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
 

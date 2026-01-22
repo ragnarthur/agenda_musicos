@@ -33,8 +33,8 @@ import type { Musician, MusicianBadge } from '../types';
 interface Connection {
   id: number;
   full_name: string;
-  instrument: string;
-  avatar: string | null;
+  instrument?: string | null;
+  avatar?: string | null;
 }
 
 interface Review {
@@ -62,6 +62,7 @@ const MusicianProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [musician, setMusician] = useState<Musician | null>(null);
   const [connections, setConnections] = useState<Connection[]>([]);
+  const [connectionsTotal, setConnectionsTotal] = useState(0);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [badges, setBadges] = useState<MusicianBadge[]>([]);
   const [stats, setStats] = useState<MusicianStats | null>(null);
@@ -91,7 +92,7 @@ const MusicianProfile: React.FC = () => {
 
       // Fetch dados secundários em paralelo (com fallbacks)
       const [connectionsRes, reviewsRes, badgesRes, statsRes] = await Promise.allSettled([
-        musicianService.getConnections(Number(id)),
+        musicianService.getConnections(Number(id), { type: 'follow', limit: 6 }),
         musicianService.getReviews(Number(id)),
         musicianService.getBadges(Number(id)),
         musicianService.getStats(Number(id)),
@@ -99,6 +100,7 @@ const MusicianProfile: React.FC = () => {
 
       if (connectionsRes.status === 'fulfilled') {
         setConnections(connectionsRes.value.connections || []);
+        setConnectionsTotal(connectionsRes.value.total ?? connectionsRes.value.connections?.length ?? 0);
       }
       if (reviewsRes.status === 'fulfilled') {
         setReviews(reviewsRes.value || []);
@@ -550,7 +552,7 @@ const MusicianProfile: React.FC = () => {
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white">Conexões</h2>
-                  {connections.length > 6 && (
+                  {connectionsTotal > 6 && (
                     <Link to="/conexoes" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
                       Ver todas
                     </Link>

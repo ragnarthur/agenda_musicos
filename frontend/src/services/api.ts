@@ -28,6 +28,31 @@ export type PaginatedResponse<T> = {
   previous: string | null;
 };
 
+export type ProfileConnection = {
+  id: number;
+  full_name: string;
+  instrument?: string | null;
+  avatar?: string | null;
+};
+
+export type ConnectionsResponse = {
+  total: number;
+  connections: ProfileConnection[];
+  limit?: number;
+  type?: string | null;
+};
+
+const dedupeById = <T extends { id: number }>(items: T[]): T[] => {
+  const seen = new Set<number>();
+  const out: T[] = [];
+  for (const item of items) {
+    if (seen.has(item.id)) continue;
+    seen.add(item.id);
+    out.push(item);
+  }
+  return out;
+};
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 // Instância global com cookies seguros
@@ -222,9 +247,22 @@ export const musicianService = {
     return response.data;
   },
 
-  getConnections: async (musicianId: number): Promise<{ connections: Array<{ id: number; full_name: string; instrument: string; avatar: string | null }> }> => {
-    const response = await api.get(`/musicians/${musicianId}/connections/`);
-    return response.data;
+  getConnections: async (
+    musicianId: number,
+    opts?: { type?: string; limit?: number }
+  ): Promise<ConnectionsResponse> => {
+    const type = opts?.type ?? 'follow';
+    const limit = opts?.limit ?? 6;
+    const response = await api.get<ConnectionsResponse>(`/musicians/${musicianId}/connections/`, {
+      params: { type, limit },
+    });
+    const unique = dedupeById(response.data.connections || []);
+    return {
+      ...response.data,
+      connections: unique,
+      limit: response.data.limit ?? limit,
+      type: response.data.type ?? type,
+    };
   },
 
   getReviews: async (musicianId: number): Promise<Array<{ id: number; rated_by_name: string; rated_by_avatar: string | null; rating: number; comment: string; time_ago: string }>> => {
