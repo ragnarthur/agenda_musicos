@@ -16,7 +16,7 @@ import Loading from '../components/common/Loading';
 import { publicMusicianService, type MusicianPublic, type Organization } from '../services/publicApi';
 import { useCompanyAuth } from '../contexts/CompanyAuthContext';
 import { formatInstrumentLabel } from '../utils/formatting';
-import { getCityBySlug, getCityDisplayName, getActiveCities, type City } from '../config/cities';
+import { getCityDisplayName, getActiveCities, type City } from '../config/cities';
 
 const MusicianPublicProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
