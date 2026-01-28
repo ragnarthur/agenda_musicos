@@ -415,6 +415,11 @@ export const eventService = {
     const response = await api.post(`/events/${id}/submit_ratings/`, { ratings });
     return response.data;
   },
+
+  updateAvatar: async (avatarUrl: string): Promise<{ avatar_url: string }> => {
+    const response = await api.patch('/musicians/avatar/', { avatar_url: avatarUrl });
+    return response.data;
+  },
 };
 
 // Availability Service

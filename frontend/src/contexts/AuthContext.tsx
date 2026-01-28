@@ -70,9 +70,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Atualizar avatar do Google se existir no sessionStorage
       const googleAvatar = sessionStorage.getItem('_googleAvatarUrl');
-      if (googleAvatar && musician?.user?.id) {
+      if (googleAvatar) {
         try {
-          await api.patch('/musicians/avatar/', { avatar_url: googleAvatar });
+          await musicianService.updateAvatar(googleAvatar);
           sessionStorage.removeItem('_googleAvatarUrl');
           console.log('Avatar do Google atualizado com sucesso');
         } catch (avatarError) {

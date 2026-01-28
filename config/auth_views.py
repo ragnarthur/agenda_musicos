@@ -342,6 +342,7 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
             email = idinfo.get("email", "").lower()
             given_name = idinfo.get("given_name", "")
             family_name = idinfo.get("family_name", "")
+            picture = idinfo.get("picture", "")  # Avatar do Google
 
             if email != musician_request.email:
                 return Response(
@@ -386,6 +387,7 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
                     first_name=given_name or musician_request.full_name.split()[0],
                     last_name=family_name
                     or " ".join(musician_request.full_name.split()[1:]),
+                    avatar_url=picture,  # Avatar do Google
                 )
                 user.set_unusable_password()  # Login apenas via Google
                 user.save()
@@ -511,6 +513,7 @@ class GoogleRegisterCompanyView(CookieTokenMixin, APIView):
             email_verified = idinfo.get("email_verified", False)
             given_name = idinfo.get("given_name", "")
             family_name = idinfo.get("family_name", "")
+            picture = idinfo.get("picture", "")  # Avatar do Google
 
             if not email or not email_verified:
                 return Response(
@@ -559,6 +562,7 @@ class GoogleRegisterCompanyView(CookieTokenMixin, APIView):
                     email=email,
                     first_name=given_name,
                     last_name=family_name,
+                    avatar_url=picture,  # Avatar do Google
                 )
                 user.set_unusable_password()
                 user.save()

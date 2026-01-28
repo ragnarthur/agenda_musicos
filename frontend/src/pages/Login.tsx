@@ -9,6 +9,7 @@ import OwlMascot from '../components/ui/OwlMascot';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import { getMobileInputProps } from '../utils/mobileInputs';
 import { googleAuthService } from '../services/publicApi';
+import GoogleIcon from '../components/icons/GoogleIcon';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -17,6 +18,7 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [googleReady, setGoogleReady] = useState(false);
 
   const { login, setSession } = useAuth();
   const navigate = useNavigate();
@@ -90,6 +92,7 @@ const Login: React.FC = () => {
 
     if (!clientId) {
       console.warn('VITE_GOOGLE_CLIENT_ID não configurado. Login com Google desabilitado.');
+      setGoogleReady(false);
       return;
     }
 
@@ -111,6 +114,7 @@ const Login: React.FC = () => {
             width: '100%',
           });
         }
+        setGoogleReady(true);
       }
     };
     script.onerror = () => {
@@ -168,6 +172,21 @@ const Login: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Entrar</h2>
 
           {/* Google Sign In */}
+          <button
+            type="button"
+            onClick={() => {
+              if (!googleReady || !window.google) {
+                showToast.error('Google não configurado para este ambiente.');
+                return;
+              }
+              window.google.accounts.id.prompt();
+            }}
+            className="w-full mb-4 inline-flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-60"
+            disabled={!googleReady}
+          >
+            <GoogleIcon className="h-5 w-5" />
+            Entrar com Google
+          </button>
           <div className="relative mb-6">
             <div
               id="google-signin-button"
