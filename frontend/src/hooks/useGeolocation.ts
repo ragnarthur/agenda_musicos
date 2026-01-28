@@ -1,0 +1,261 @@
+import { useState, useEffect, useCallback } from 'react';
+import { geocodingService } from '../services/geocoding';
+
+interface Coordinates {
+  latitude: number | null;
+  longitude: number | null;
+}
+
+interface GeolocationData {
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  coordinates: Coordinates;
+  isLoading: boolean;
+  error: string | null;
+  hasPermission: boolean;
+  isMonteCarmelo: boolean;
+}
+
+const CACHE_KEY = 'geolocation_data';
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hora em milissegundos
+
+export const useGeolocation = () => {
+  const [data, setData] = useState<GeolocationData>({
+    city: null,
+    state: null,
+    country: null,
+    coordinates: { latitude: null, longitude: null },
+    isLoading: true,
+    error: null,
+    hasPermission: false,
+    isMonteCarmelo: false,
+  });
+
+  const checkCache = useCallback(() => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        const now = Date.now();
+
+        if (now - parsed.timestamp < CACHE_DURATION) {
+          const isMonteCarmelo = parsed.data.city?.toLowerCase().includes('monte carmelo') || false;
+          setData({
+            city: parsed.data.city,
+            state: parsed.data.state,
+            country: parsed.data.country,
+            coordinates: parsed.coordinates,
+            isLoading: false,
+            error: null,
+            hasPermission: true,
+            isMonteCarmelo,
+          });
+          return true;
+        } else {
+          localStorage.removeItem(CACHE_KEY);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao ler cache:', error);
+    }
+    return false;
+  }, []);
+
+  const saveCache = useCallback((geoData: GeolocationData) => {
+    try {
+      const cacheData = {
+        timestamp: Date.now(),
+        data: {
+          city: geoData.city,
+          state: geoData.state,
+          country: geoData.country,
+        },
+        coordinates: geoData.coordinates,
+      };
+      localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+    } catch (error) {
+      console.error('Erro ao salvar cache:', error);
+    }
+  }, []);
+
+  const requestPermission = useCallback(async () => {
+    if (!navigator.geolocation) {
+      setData((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: 'Geolocalização não é suportada neste navegador',
+      }));
+      return false;
+    }
+
+    try {
+      const permission = await navigator.permissions.query({
+        name: 'geolocation'
+      } as PermissionDescriptor);
+
+      if (permission.state === 'granted') {
+        setData((prev) => ({ ...prev, hasPermission: true }));
+        return true;
+      } else if (permission.state === 'denied') {
+        setData((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: 'Permissão de localização negada',
+          hasPermission: false,
+        }));
+        return false;
+      } else if (permission.state === 'prompt') {
+        setData((prev) => ({ ...prev, hasPermission: true }));
+        return true;
+      }
+    } catch (error) {
+      console.log('API de permissões não disponível, tentando geolocalização direta');
+      setData((prev) => ({ ...prev, hasPermission: true }));
+      return true;
+    }
+
+    return false;
+  }, []);
+
+  const getLocation = useCallback(async () => {
+    if (!navigator.geolocation) {
+      setData((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: 'Geolocalização não é suportada neste navegador',
+      }));
+      return;
+    }
+
+    try {
+      await requestPermission();
+
+      setData((prev) => ({ ...prev, isLoading: true, error: null }));
+
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+          reject(new Error('Timeout ao obter localização'));
+        }, 10000); // 10 segundos timeout
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            clearTimeout(timeoutId);
+            resolve(position);
+          },
+          (error) => {
+            clearTimeout(timeoutId);
+            reject(error);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 8000,
+            maximumAge: 0,
+          }
+        );
+      });
+
+      // Extrair coordenadas
+      const { latitude, longitude } = position.coords;
+      const coords = { latitude, longitude };
+
+      console.log('Coordenadas obtidas:', coords);
+
+      // Fazer reverse geocoding para obter cidade/estado/país
+      const locationInfo = await geocodingService.reverseGeocode(latitude, longitude);
+
+      if (locationInfo) {
+        // Verificar se é Monte Carmelo
+        const isMonteCarmelo = locationInfo.city?.toLowerCase().includes('monte carmelo') || false;
+
+        // Atualizar estado com todos os dados
+        const newData: GeolocationData = {
+          city: locationInfo.city,
+          state: locationInfo.state,
+          country: locationInfo.country,
+          coordinates: coords,
+          isLoading: false,
+          error: null,
+          hasPermission: true,
+          isMonteCarmelo,
+        };
+
+        setData(newData);
+        saveCache(newData); // Salvar no cache para evitar novas requisições
+
+        console.log('Localização completa obtida:', newData);
+      } else {
+        // Geocoding falhou, mas temos coordenadas
+        console.warn('Geocoding retornou nulo, salvando apenas coordenadas');
+        setData((prev) => ({
+          ...prev,
+          coordinates: coords,
+          isLoading: false,
+          error: 'Não foi possível identificar sua cidade',
+          hasPermission: true,
+        }));
+      }
+    } catch (error: any) {
+      console.error('Erro ao obter localização:', error);
+
+      let errorMessage = 'Erro ao obter localização';
+
+      // Traduzir códigos de erro da Geolocation API
+      if (error.code === 1) {
+        errorMessage = 'Permissão de localização negada';
+      } else if (error.code === 2) {
+        errorMessage = 'Localização indisponível';
+      } else if (error.code === 3) {
+        errorMessage = 'Timeout ao obter localização';
+      }
+
+      setData((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: errorMessage,
+        hasPermission: error.code !== 1, // Se negado, não tem permissão
+      }));
+    }
+  }, [requestPermission, saveCache]);
+
+  useEffect(() => {
+    const initGeolocation = async () => {
+      // Primeiro verifica se tem dados em cache
+      const hasCachedData = checkCache();
+
+      if (hasCachedData) {
+        console.log('Usando dados de geolocalização do cache');
+        return;
+      }
+
+      // Se não tem cache, busca nova localização
+      await getLocation();
+    };
+
+    initGeolocation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Roda apenas uma vez no mount para evitar loop infinito
+
+  const reset = useCallback(() => {
+    localStorage.removeItem(CACHE_KEY);
+    setData({
+      city: null,
+      state: null,
+      country: null,
+      coordinates: { latitude: null, longitude: null },
+      isLoading: true,
+      error: null,
+      hasPermission: false,
+      isMonteCarmelo: false,
+    });
+    // Após resetar, buscar nova localização
+    getLocation();
+  }, [getLocation]);
+
+  return {
+    ...data,
+    getLocation,
+    reset,
+    requestPermission,
+  };
+};
