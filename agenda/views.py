@@ -2136,28 +2136,9 @@ def create_musician_request(request):
     serializer.is_valid(raise_exception=True)
     musician_request = serializer.save()
 
-    # NOVO: Notificar administradores automaticamente
-    try:
-        from agenda.services.email_service import EmailService
-
-        success = EmailService.notify_admins_new_request(musician_request)
-        if not success:
-            # Log do erro, mas não falhar a requisição
-            import logging
-
-            logger = logging.getLogger(__name__)
-            logger.error(
-                f"Falha ao notificar admins sobre solicitação #{musician_request.id}"
-            )
-    except Exception as e:
-        import logging
-
-        logger = logging.getLogger(__name__)
-        logger.error(f"Erro ao processar notificação: {e}")
-
     return Response(
         {
-            "message": "Solicitação enviada com sucesso! Nossa equipe analisará e entrará em contato em até 48h.",
+            "message": "Solicitação enviada com sucesso! Você receberá um email quando sua solicitação for analisada.",
             "id": musician_request.id,
         },
         status=status.HTTP_201_CREATED,
@@ -2172,7 +2153,9 @@ def list_musician_requests(request):
     Lista solicitações de músicos (admin only)
     """
     if not request.user.is_staff:
-        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
+        )
 
     status_filter = request.query_params.get("status", "pending")
     queryset = MusicianRequest.objects.all().order_by("-created_at")
@@ -2200,7 +2183,9 @@ def get_musician_request(request, request_id):
     Detalhe de uma solicitação (admin only)
     """
     if not request.user.is_staff:
-        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
+        )
 
     musician_request = get_object_or_404(MusicianRequest, id=request_id)
     serializer = MusicianRequestAdminSerializer(musician_request)
@@ -2209,10 +2194,10 @@ def get_musician_request(request, request_id):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def reject_musician_request(request, request_id):
+def approve_musician_request(request, request_id):
     """
-    POST /api/admin/musician-requests/<id>/reject/
-    Rejeita solicitação e envia email (admin only)
+    POST /api/admin/musician-requests/<id>/approve/
+    Aprova solicitação e envia email com link de convite (admin only)
     """
     if not request.user.is_staff:
         return Response(
@@ -2223,129 +2208,8 @@ def reject_musician_request(request, request_id):
 
     if musician_request.status != "pending":
         return Response(
-            {
-                "detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"},
-                status=status.HTTP_400_BAD_REQUEST,
-            }
-        )
-
-    notes = request.data.get("admin_notes", "")
-    
-    # Rejeitar solicitação
-    musician_request.reject(request.user, notes)
-    
-    # NOVO: Enviar email de notificação
-    try:
-        from agenda.services.email_service import EmailService
-        rejection_reason = notes if notes else "Não atendemos nossos critérios no momento."
-        
-        EmailService.send_rejection_notification(musician_request, rejection_reason)
-        logger.info(f"Email de rejeição enviado para {musician_request.email}")
-        
-    except Exception as e:
-        logger.error(f"Erro ao enviar email de rejeição: {e}")
-        # Continuar mesmo sem falhar o processo
-
-    return Response(
-        {
-            "message": "Solicitação rejeitada com sucesso.",
-            "rejection_reason": notes if notes else None,
-        },
-        status=status.HTTP_200_OK,
-    )
-
-    musician_request = get_object_or_404(MusicianRequest, id=request_id)
-
-    if musician_request.status != "pending":
-        return Response(
-            {
-                "detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"},
-                status=status.HTTP_400_BAD_REQUEST,
-            }
-        )
-
-    notes = request.data.get("admin_notes", "")
-    
-    # Gerar username único
-    base_name = musician_request.full_name.lower().replace(' ', '').replace('-', '').replace('_', '')
-    username = f"{base_name}{musician_request.id}"
-    
-    # Gerar senha aleatória
-    import secrets
-    password = secrets.token_urlsafe(12)
-    
-    # Criar usuário Django
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
-    
-    user = User.objects.create_user(
-        username=unique_id,
-        email=musician_request.email,
-        password=password,
-        first_name=musician_request.full_name.split(' ')[0] if ' ' in musician_request.full_name else musician_request.full_name,
-        last_name=' '.join(musician_request.full_name.split(' '[1:]) if ' ' in musician_request.full_name else '',
-        is_active=True
-    )
-    
-    # Criar perfil de músico
-    musician = Musician.objects.create(
-        user=user,
-        phone=musician_request.phone,
-        instrument=musician_request.instrument,
-        instruments=musician_request.instruments,
-        bio=musician_request.bio,
-        city=musician_request.city,
-        state=musicar_request.state,
-        instagram=musician_request.instagram,
-        is_verified=True,  # Pré-verificado pelo admin
-        created_from_request=musician_request
-    )
-    
-    # Aprovar solicitação
-    invite_token = musician_request.approve(request.user, notes)
-    
-    # Marcar solicitação como usada para criar o usuário
-    musician_request.mark_invite_used()
-        
-        # NOVO: Enviar email com credenciais
-        try:
-            from agenda.services.email_service import EmailService
-            
-            credentials = {
-                'username': username,
-                'password': password,
-                'full_name': musician_request.full_name,
-                'login_url': f"{getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')}/login"
-            }
-            
-            EmailService.send_approval_notification(musician_request, credentials)
-            
-            logger.info(f"Email de aprovação enviado para {musician_request.email}")
-            
-        except Exception as e:
-            logger.error(f"Erro ao enviar email de aprovação: {e}")
-            # Continuar mesmo sem falhar o processo
-        
-        return Response(
-            {
-                "message": "Solicitação aprovada com sucesso! Usuário criado e notificado.",
-                "user_id": user.id,
-                "musician_id": musician.id,
-                "username": username,
-                "invite_token": invite_token,
-                "invite_expires_at": musician_request.invite_expires_at.isoformat(),
-            },
-            status=status.HTTP_200_OK,
-        )
-        
-    except Exception as e:
-        logger.error(f"Erro ao aprovar solicitação #{request_id}: {e}")
-        return Response(
-            {
-                "detail": f"Erro ao processar aprovação: {str(e)}",
-                "error": str(e)
-            },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            {"detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"},
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
     notes = request.data.get("admin_notes", "")
@@ -2372,15 +2236,15 @@ def reject_musician_request(request, request_id):
     Rejeita solicitação (admin only)
     """
     if not request.user.is_staff:
-        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
+        )
 
     musician_request = get_object_or_404(MusicianRequest, id=request_id)
 
     if musician_request.status != "pending":
         return Response(
-            {
-                "detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"
-            },
+            {"detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -2409,7 +2273,9 @@ def validate_invite_token(request):
     try:
         musician_request = MusicianRequest.objects.get(invite_token=token)
     except MusicianRequest.DoesNotExist:
-        return Response({"detail": "Token inválido"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"detail": "Token inválido"}, status=status.HTTP_404_NOT_FOUND
+        )
 
     if not musician_request.is_invite_valid():
         if musician_request.invite_used:
@@ -2500,16 +2366,12 @@ def list_received_contact_requests(request):
         )
 
     status_filter = request.query_params.get("status")
-    queryset = ContactRequest.objects.filter(to_musician=musician).order_by(
-        "-created_at"
-    )
+    queryset = ContactRequest.objects.filter(to_musician=musician).order_by("-created_at")
 
     if status_filter:
         queryset = queryset.filter(status=status_filter)
 
-    serializer = ContactRequestSerializer(
-        queryset, many=True, context={"request": request}
-    )
+    serializer = ContactRequestSerializer(queryset, many=True, context={"request": request})
     return Response(serializer.data)
 
 
@@ -2536,9 +2398,7 @@ def list_sent_contact_requests(request):
         from_organization=membership.organization
     ).order_by("-created_at")
 
-    serializer = ContactRequestSerializer(
-        queryset, many=True, context={"request": request}
-    )
+    serializer = ContactRequestSerializer(queryset, many=True, context={"request": request})
     return Response(serializer.data)
 
 
@@ -2559,7 +2419,9 @@ def get_contact_request(request, contact_id):
     is_sender = contact_request.from_user == request.user
 
     if not is_musician and not is_sender:
-        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
+        )
 
     # Marca como lido se for o músico acessando
     if is_musician and contact_request.status == "pending":
@@ -2617,7 +2479,9 @@ def archive_contact_request(request, contact_id):
     )
 
     if not is_musician:
-        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
+        )
 
     contact_request.archive()
     return Response({"message": "Mensagem arquivada"})
@@ -2660,9 +2524,7 @@ def list_musicians_by_city(request):
             Q(instrument__iexact=instrument) | Q(instruments__icontains=instrument)
         )
 
-    serializer = MusicianPublicSerializer(
-        queryset, many=True, context={"request": request}
-    )
+    serializer = MusicianPublicSerializer(queryset, many=True, context={"request": request})
     return Response(serializer.data)
 
 
@@ -2691,14 +2553,12 @@ def list_sponsors(request):
 
     # REGRA: Rodízio determinístico por dia
     # Ordenar por tier, depois aplicar offset baseado no dia
-    sponsors = list(queryset.order_by("sponsor_tier", "id"))
+    sponsors = list(queryset.order_by('sponsor_tier', 'id'))
     if sponsors:
         day_offset = date.today().toordinal() % len(sponsors)
         sponsors = sponsors[day_offset:] + sponsors[:day_offset]
 
-    serializer = OrganizationPublicSerializer(
-        sponsors, many=True, context={"request": request}
-    )
+    serializer = OrganizationPublicSerializer(sponsors, many=True, context={"request": request})
     return Response(serializer.data)
 
 
@@ -2721,15 +2581,11 @@ def get_company_dashboard(request):
     GET /api/company/dashboard/
     Dashboard da empresa
     """
-    membership = (
-        Membership.objects.filter(
-            user=request.user,
-            status="active",
-            organization__org_type__in=["company", "venue"],
-        )
-        .select_related("organization")
-        .first()
-    )
+    membership = Membership.objects.filter(
+        user=request.user,
+        status="active",
+        organization__org_type__in=["company", "venue"],
+    ).select_related("organization").first()
 
     if not membership:
         return Response(
@@ -2747,9 +2603,7 @@ def get_company_dashboard(request):
 
     return Response(
         {
-            "organization": OrganizationSerializer(
-                organization, context={"request": request}
-            ).data,
+            "organization": OrganizationSerializer(organization, context={"request": request}).data,
             "stats": {
                 "total_sent": total_sent,
                 "pending_replies": pending_replies,
@@ -2766,19 +2620,17 @@ def update_company_profile(request):
     PATCH /api/company/profile/
     Atualiza perfil da empresa
     """
-    membership = (
-        Membership.objects.filter(
-            user=request.user,
-            status="active",
-            organization__org_type__in=["company", "venue"],
-            role__in=["owner", "admin"],
-        )
-        .select_related("organization")
-        .first()
-    )
+    membership = Membership.objects.filter(
+        user=request.user,
+        status="active",
+        organization__org_type__in=["company", "venue"],
+        role__in=["owner", "admin"],
+    ).select_related("organization").first()
 
     if not membership:
-        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
+        )
 
     organization = membership.organization
     serializer = OrganizationSerializer(

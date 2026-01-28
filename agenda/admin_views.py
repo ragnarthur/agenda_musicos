@@ -6,8 +6,8 @@ from django.db.models import Count, Sum, Q
 from django.utils import timezone
 from datetime import datetime, timedelta
 from calendar import month_name
-from ..models import MusicianRequest, Event
-from ..serializers import MusicianRequestSerializer, EventSerializer
+from .models import MusicianRequest, Event
+from .serializers import MusicianRequestSerializer, EventListSerializer
 
 
 @api_view(["GET"])
@@ -130,7 +130,7 @@ def admin_events_list(request):
     """Get all events for admin management"""
     try:
         events = Event.objects.all().order_by("-date")
-        serializer = EventSerializer(events, many=True)
+        serializer = EventListSerializer(events, many=True)
         return Response(serializer.data)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -152,9 +152,9 @@ def public_request_status(request):
 
         if email:
             # Search by email, return the most recent request
-            requests = MusicianRequest.objects.filter(
-                email__iexact=email
-            ).order_by("-created_at")
+            requests = MusicianRequest.objects.filter(email__iexact=email).order_by(
+                "-created_at"
+            )
             if not requests.exists():
                 return Response([], status=status.HTTP_200_OK)
 
