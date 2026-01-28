@@ -15,6 +15,29 @@ from .views import (
     get_musician_badges,
     get_musician_stats,
     get_musician_connection_status,
+    # Musician Request views
+    create_musician_request,
+    list_musician_requests,
+    get_musician_request,
+    approve_musician_request,
+    reject_musician_request,
+    validate_invite_token,
+    # Contact Request views
+    create_contact_request,
+    list_received_contact_requests,
+    list_sent_contact_requests,
+    get_contact_request,
+    reply_contact_request,
+    archive_contact_request,
+    # Public views
+    list_musicians_by_city,
+    list_sponsors,
+    get_musician_public_profile,
+    # Company views
+    get_company_dashboard,
+    update_company_profile,
+    get_musician_for_company,
+    get_unread_messages_count,
 )
 from .registration_views import (
     RegisterView,
@@ -29,6 +52,8 @@ from .registration_views import (
     SubscriptionActivateFakeView,
     PaymentCallbackView,
     SubscriptionStatusUpdateView,
+    RegisterWithInviteView,
+    RegisterCompanyView,
 )
 from .password_views import (
     PasswordResetRequestView,
@@ -48,6 +73,8 @@ router.register('badges', BadgeViewSet, basename='badge')
 urlpatterns = [
     # Registro de novos usuários (público)
     path('register/', RegisterView.as_view(), name='register'),
+    path('register-with-invite/', RegisterWithInviteView.as_view(), name='register-with-invite'),
+    path('register-company/', RegisterCompanyView.as_view(), name='register-company'),
     path('check-email/', CheckEmailView.as_view(), name='check-email'),
     path('verify-email/', VerifyEmailView.as_view(), name='verify-email'),
     path('registration-status/', RegistrationStatusView.as_view(), name='registration-status'),
@@ -72,6 +99,48 @@ urlpatterns = [
     path('musicians/<int:musician_id>/badges/', get_musician_badges, name='musician-badges'),
     path('musicians/<int:musician_id>/stats/', get_musician_stats, name='musician-stats'),
     path('musicians/<int:musician_id>/connection-status/', get_musician_connection_status, name='musician-connection-status'),
+
+    # =========================================================================
+    # Musician Request (Solicitação de Acesso)
+    # =========================================================================
+    path('musician-request/', create_musician_request, name='musician-request-create'),
+    path('validate-invite/', validate_invite_token, name='validate-invite'),
+
+    # Admin - Gerenciar solicitações
+    path('admin/musician-requests/', list_musician_requests, name='admin-musician-requests'),
+    path('admin/musician-requests/<int:request_id>/', get_musician_request, name='admin-musician-request-detail'),
+    path('admin/musician-requests/<int:request_id>/approve/', approve_musician_request, name='admin-musician-request-approve'),
+    path('admin/musician-requests/<int:request_id>/reject/', reject_musician_request, name='admin-musician-request-reject'),
+
+    # =========================================================================
+    # Contact Requests (Mensagens de Empresas para Músicos)
+    # =========================================================================
+    path('contact-requests/', create_contact_request, name='contact-request-create'),
+    path('contact-requests/received/', list_received_contact_requests, name='contact-requests-received'),
+    path('contact-requests/sent/', list_sent_contact_requests, name='contact-requests-sent'),
+    path('contact-requests/<int:contact_id>/', get_contact_request, name='contact-request-detail'),
+    path('contact-requests/<int:contact_id>/reply/', reply_contact_request, name='contact-request-reply'),
+    path('contact-requests/<int:contact_id>/archive/', archive_contact_request, name='contact-request-archive'),
+
+    # =========================================================================
+    # Public (Músicos por cidade, Patrocinadores, Perfil público)
+    # =========================================================================
+    path('musicians/public-by-city/', list_musicians_by_city, name='musicians-by-city'),
+    path('musicians/public/<int:musician_id>/', get_musician_public_profile, name='musician-public-profile'),
+    path('organizations/sponsors/', list_sponsors, name='sponsors'),
+
+    # =========================================================================
+    # Company (Dashboard, Perfil, Músicos)
+    # =========================================================================
+    path('company/dashboard/', get_company_dashboard, name='company-dashboard'),
+    path('company/profile/', update_company_profile, name='company-profile'),
+    path('company/musicians/<int:musician_id>/', get_musician_for_company, name='company-musician-detail'),
+
+    # =========================================================================
+    # Messages
+    # =========================================================================
+    path('messages/unread-count/', get_unread_messages_count, name='messages-unread-count'),
+
     path('', include(router.urls)),
 ]
 

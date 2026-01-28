@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { CompanyAuthProvider, useCompanyAuth } from './contexts/CompanyAuthContext';
 import Loading from './components/common/Loading';
 
 // Lazy load de páginas para otimizar o bundle inicial
@@ -34,6 +35,14 @@ const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
   const allowFakePayment = import.meta.env.VITE_ALLOW_FAKE_PAYMENT === 'true';
   const NotificationSettings = lazy(() => import('./pages/NotificationSettings'));
 
+  // Company pages lazy loading
+  const CompanyDashboard = lazy(() => import('./pages/company/CompanyDashboard'));
+  const CompanyLayout = lazy(() => import('./pages/company/CompanyLayout'));
+
+  // Public pages (city landing and public profiles)
+  const CityLanding = lazy(() => import('./pages/CityLanding'));
+  const MusicianPublicProfile = lazy(() => import('./pages/MusicianPublicProfile'));
+
   // Componente de loading para Suspense
   const PageLoader: React.FC = () => (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center">
@@ -41,16 +50,66 @@ const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
     </div>
   );
 
-// Componente para rotas protegidas
+  // Enhanced Auth Hook for routing
+  const useSmartAuth = () => {
+    const { isAuthenticated: musicianAuth, user: musicianUser, loading: musicianLoading } = useAuth();
+    const { isAuthenticated: companyAuth, organization, loading: companyLoading } = useCompanyAuth();
+    
+    const getAuthState = () => {
+      const loading = musicianLoading || companyLoading;
+      
+      if (loading) return { loading, isAuthenticated: false, userType: null };
+      
+      if (musicianAuth) {
+        return { 
+          loading: false, 
+          isAuthenticated: true, 
+          userType: 'musician' as const,
+          user: musicianUser 
+        };
+      }
+      
+      if (companyAuth) {
+        return { 
+          loading: false, 
+          isAuthenticated: true, 
+          userType: 'company' as const,
+          user: organization 
+        };
+      }
+      
+      return { loading: false, isAuthenticated: false, userType: null };
+    };
+    
+    const authState = getAuthState();
+    return authState;
+  };
+
+// Componente para rotas protegidas (músicos)
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
-  const { isAuthenticated, loading, user } = useAuth();
+  const { isAuthenticated, loading, userType } = useSmartAuth();
 
   if (loading) {
     return <PageLoader />;
   }
 
-  if (!isAuthenticated || !user) {
+  if (!isAuthenticated || userType !== 'musician') {
     return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
+
+// Componente para rotas protegidas de empresas
+const CompanyProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
+  const { isAuthenticated, loading, userType } = useSmartAuth();
+
+  if (loading) {
+    return <PageLoader />;
+  }
+
+  if (!isAuthenticated || userType !== 'company') {
+    return <Navigate to="/login-empresa" replace />;
   }
 
   return children;
@@ -69,14 +128,21 @@ const PublicRoute: React.FC<{ children: React.ReactElement }> = ({ children }) =
 
 // Componente para Landing (redireciona se autenticado)
 const LandingRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, userType } = useSmartAuth();
 
   if (loading) {
     return <PageLoader />;
   }
 
-  // Se autenticado, redireciona para dashboard
-  return !isAuthenticated ? children : <Navigate to="/dashboard" replace />;
+  // Se autenticado, redireciona para dashboard correto
+  if (isAuthenticated) {
+    if (userType === 'company') {
+      return <Navigate to="/empresa/dashboard" replace />;
+    }
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
 };
 
 function AppRoutes() {
@@ -132,6 +198,10 @@ function AppRoutes() {
         <Route path="/planos" element={<Plans />} />
         <Route path="/planos/sucesso" element={<PlanSuccess />} />
          <Route path="/pagamento/sucesso" element={<Payment />} />
+
+        {/* Public City Landing and Musician Profile */}
+        <Route path="/cidades/:slug" element={<CityLanding />} />
+        <Route path="/musico/:id" element={<MusicianPublicProfile />} />
 
         <Route
           path="/eventos/agenda"
@@ -259,6 +329,80 @@ function AppRoutes() {
           }
         />
 
+        {/* Company Routes */}
+        <Route
+          path="/empresa/dashboard"
+          element={
+            <CompanyProtectedRoute>
+              <CompanyDashboard />
+            </CompanyProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/empresa/musicians"
+          element={
+            <CompanyProtectedRoute>
+              <CompanyLayout>
+                <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                  <div className="text-center">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Busca de Músicos</h2>
+                    <p className="text-gray-600">Em breve...</p>
+                  </div>
+                </div>
+              </CompanyLayout>
+            </CompanyProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/empresa/contatos"
+          element={
+            <CompanyProtectedRoute>
+              <CompanyLayout>
+                <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                  <div className="text-center">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Conversas</h2>
+                    <p className="text-gray-600">Em breve...</p>
+                  </div>
+                </div>
+              </CompanyLayout>
+            </CompanyProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/empresa/vagas"
+          element={
+            <CompanyProtectedRoute>
+              <CompanyLayout>
+                <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                  <div className="text-center">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Minhas Vagas</h2>
+                    <p className="text-gray-600">Em breve...</p>
+                  </div>
+                </div>
+              </CompanyLayout>
+            </CompanyProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/empresa/configuracoes"
+          element={
+            <CompanyProtectedRoute>
+              <CompanyLayout>
+                <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                  <div className="text-center">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Configurações</h2>
+                    <p className="text-gray-600">Em breve...</p>
+                  </div>
+                </div>
+              </CompanyLayout>
+            </CompanyProtectedRoute>
+          }
+        />
+
         {/* Rota padrão - redireciona para home */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -271,32 +415,34 @@ function App() {
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <AppRoutes />
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#1f2937',
-                color: '#f9fafb',
-                borderRadius: '0.75rem',
-                padding: '12px 16px',
-              },
-              success: {
-                iconTheme: {
-                  primary: '#10b981',
-                  secondary: '#f9fafb',
+          <CompanyAuthProvider>
+            <AppRoutes />
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#1f2937',
+                  color: '#f9fafb',
+                  borderRadius: '0.75rem',
+                  padding: '12px 16px',
                 },
-              },
-              error: {
-                iconTheme: {
-                  primary: '#ef4444',
-                  secondary: '#f9fafb',
+                success: {
+                  iconTheme: {
+                    primary: '#10b981',
+                    secondary: '#f9fafb',
+                  },
                 },
-                duration: 5000,
-              },
-            }}
-          />
+                error: {
+                  iconTheme: {
+                    primary: '#ef4444',
+                    secondary: '#f9fafb',
+                  },
+                  duration: 5000,
+                },
+              }}
+            />
+          </CompanyAuthProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

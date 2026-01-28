@@ -11,12 +11,56 @@ class Organization(models.Model):
     """
     Organização/grupo que utiliza o sistema.
     Controla escopo de dados e assinatura.
+    Suporta bandas, empresas contratantes e casas de shows.
     """
+    ORG_TYPE_CHOICES = [
+        ('band', 'Banda/Grupo'),
+        ('company', 'Empresa'),
+        ('venue', 'Casa de Shows'),
+    ]
+
+    SPONSOR_TIER_CHOICES = [
+        ('bronze', 'Bronze'),
+        ('silver', 'Prata'),
+        ('gold', 'Ouro'),
+    ]
+
     name = models.CharField(max_length=150, unique=True)
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='owned_organizations')
     subscription_status = models.CharField(max_length=30, default='active')  # active, trialing, past_due, cancelled
     plan_id = models.CharField(max_length=50, blank=True, null=True)
     current_period_end = models.DateTimeField(blank=True, null=True)
+
+    # Tipo de organização
+    org_type = models.CharField(
+        max_length=20,
+        choices=ORG_TYPE_CHOICES,
+        default='band',
+        help_text='Tipo de organização'
+    )
+
+    # Dados da empresa
+    description = models.TextField(blank=True, null=True, help_text='Descrição da empresa/organização')
+    logo = models.ImageField(upload_to='org_logos/', blank=True, null=True, help_text='Logo da organização')
+    website = models.URLField(blank=True, null=True, help_text='Site da empresa')
+    phone = models.CharField(max_length=20, blank=True, null=True, help_text='Telefone de contato')
+    contact_email = models.EmailField(blank=True, null=True, help_text='Email de contato')
+    contact_name = models.CharField(max_length=150, blank=True, null=True, help_text='Nome do responsável')
+
+    # Localização
+    city = models.CharField(max_length=100, blank=True, null=True, help_text='Cidade')
+    state = models.CharField(max_length=2, blank=True, null=True, help_text='UF')
+
+    # Patrocínio
+    is_sponsor = models.BooleanField(default=False, help_text='É patrocinador da plataforma')
+    sponsor_tier = models.CharField(
+        max_length=20,
+        choices=SPONSOR_TIER_CHOICES,
+        blank=True,
+        null=True,
+        help_text='Nível de patrocínio'
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -27,6 +71,14 @@ class Organization(models.Model):
 
     def __str__(self):
         return self.name
+
+    def is_company(self):
+        """Verifica se é uma empresa contratante"""
+        return self.org_type == 'company'
+
+    def is_venue(self):
+        """Verifica se é uma casa de shows"""
+        return self.org_type == 'venue'
 
 
 class Membership(models.Model):
@@ -853,6 +905,187 @@ class MusicianBadge(models.Model):
 
     def __str__(self):
         return f"{self.musician} - {self.name}"
+
+
+class MusicianRequest(models.Model):
+    """
+    Solicitação de acesso de músico.
+    Músicos solicitam acesso e admin aprova manualmente.
+    Quando aprovado, um convite com token é enviado por email.
+    """
+    STATUS_CHOICES = [
+        ('pending', 'Pendente'),
+        ('approved', 'Aprovado'),
+        ('rejected', 'Rejeitado'),
+    ]
+
+    # Dados básicos
+    email = models.EmailField(unique=True)
+    full_name = models.CharField(max_length=150)
+    phone = models.CharField(max_length=20)
+
+    # Dados musicais
+    instrument = models.CharField(max_length=100, help_text='Instrumento principal')
+    instruments = models.JSONField(default=list, blank=True, help_text='Lista de instrumentos')
+    bio = models.TextField(blank=True, null=True)
+
+    # Localização
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=2)
+
+    # Redes sociais (para validação)
+    instagram = models.CharField(max_length=100, blank=True, null=True)
+
+    # Status e controle
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    admin_notes = models.TextField(blank=True, null=True, help_text='Notas do admin sobre a solicitação')
+    reviewed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reviewed_musician_requests'
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    # Token de convite (gerado quando aprovado)
+    invite_token = models.CharField(max_length=64, unique=True, null=True, blank=True)
+    invite_expires_at = models.DateTimeField(null=True, blank=True)
+    invite_used = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Solicitação de Músico'
+        verbose_name_plural = 'Solicitações de Músicos'
+        indexes = [
+            models.Index(fields=['status', 'created_at']),
+            models.Index(fields=['invite_token']),
+            models.Index(fields=['email']),
+        ]
+
+    def __str__(self):
+        return f"{self.full_name} ({self.email}) - {self.get_status_display()}"
+
+    def approve(self, admin_user, notes=None):
+        """Aprova a solicitação e gera token de convite"""
+        import secrets
+        from datetime import timedelta
+
+        self.status = 'approved'
+        self.reviewed_by = admin_user
+        self.reviewed_at = timezone.now()
+        self.invite_token = secrets.token_urlsafe(32)
+        self.invite_expires_at = timezone.now() + timedelta(days=7)
+        if notes:
+            self.admin_notes = notes
+        self.save()
+        return self.invite_token
+
+    def reject(self, admin_user, notes=None):
+        """Rejeita a solicitação"""
+        self.status = 'rejected'
+        self.reviewed_by = admin_user
+        self.reviewed_at = timezone.now()
+        if notes:
+            self.admin_notes = notes
+        self.save()
+
+    def is_invite_valid(self):
+        """Verifica se o convite ainda é válido"""
+        if not self.invite_token:
+            return False
+        if self.invite_used:
+            return False
+        if self.invite_expires_at and timezone.now() > self.invite_expires_at:
+            return False
+        return self.status == 'approved'
+
+    def mark_invite_used(self):
+        """Marca o convite como usado"""
+        self.invite_used = True
+        self.save(update_fields=['invite_used'])
+
+
+class ContactRequest(models.Model):
+    """
+    Solicitação de contato/orçamento de empresa para músico.
+    Empresas podem enviar mensagens para músicos.
+    """
+    STATUS_CHOICES = [
+        ('pending', 'Pendente'),
+        ('read', 'Lido'),
+        ('replied', 'Respondido'),
+        ('archived', 'Arquivado'),
+    ]
+
+    # Quem enviou
+    from_organization = models.ForeignKey(
+        'Organization',
+        on_delete=models.CASCADE,
+        related_name='sent_contact_requests'
+    )
+    from_user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='sent_contact_requests'
+    )
+
+    # Para quem
+    to_musician = models.ForeignKey(
+        'Musician',
+        on_delete=models.CASCADE,
+        related_name='received_contact_requests'
+    )
+
+    # Conteúdo
+    subject = models.CharField(max_length=200, help_text='Assunto da mensagem')
+    message = models.TextField(help_text='Mensagem/descrição do evento')
+    event_date = models.DateField(null=True, blank=True, help_text='Data do evento (opcional)')
+    event_location = models.CharField(max_length=200, blank=True, null=True, help_text='Local do evento')
+    budget_range = models.CharField(max_length=100, blank=True, null=True, help_text='Faixa de orçamento')
+
+    # Status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+
+    # Resposta do músico
+    reply_message = models.TextField(blank=True, null=True)
+    replied_at = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Solicitação de Contato'
+        verbose_name_plural = 'Solicitações de Contato'
+        indexes = [
+            models.Index(fields=['to_musician', 'status']),
+            models.Index(fields=['from_organization', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.from_organization.name} -> {self.to_musician}: {self.subject}"
+
+    def mark_as_read(self):
+        """Marca como lido"""
+        if self.status == 'pending':
+            self.status = 'read'
+            self.save(update_fields=['status', 'updated_at'])
+
+    def reply(self, message):
+        """Músico responde à solicitação"""
+        self.reply_message = message
+        self.replied_at = timezone.now()
+        self.status = 'replied'
+        self.save()
+
+    def archive(self):
+        """Arquiva a solicitação"""
+        self.status = 'archived'
+        self.save(update_fields=['status', 'updated_at'])
 
 
 class PendingRegistration(models.Model):

@@ -26,7 +26,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from .models import PendingRegistration, Musician, Organization, Membership
+from .models import PendingRegistration, Musician, Organization, Membership, MusicianRequest
 from .throttles import BurstRateThrottle
 from notifications.services.email_service import (
     send_verification_email,
@@ -1041,3 +1041,274 @@ class SubscriptionStatusUpdateView(APIView):
         logger.info(f'Subscription status updated for musician {musician.id}: {new_status}')
 
         return Response({'success': True})
+
+
+class RegisterWithInviteView(APIView):
+    """
+    POST /api/register-with-invite/
+    Registro de músico usando token de convite (após aprovação do admin).
+    """
+    permission_classes = [AllowAny]
+    throttle_classes = [BurstRateThrottle]
+
+    def post(self, request):
+        data = request.data
+        errors = {}
+
+        # Validar token de convite
+        invite_token = data.get('invite_token')
+        if not invite_token:
+            return Response(
+                {'error': 'Token de convite não fornecido.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            musician_request = MusicianRequest.objects.get(invite_token=invite_token)
+        except MusicianRequest.DoesNotExist:
+            return Response(
+                {'error': 'Token de convite inválido.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not musician_request.is_invite_valid():
+            if musician_request.invite_used:
+                return Response(
+                    {'error': 'Este convite já foi utilizado.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            return Response(
+                {'error': 'Convite expirado.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validações de campos
+        required_fields = ['password']
+        for field in required_fields:
+            if not data.get(field):
+                errors[field] = 'Este campo é obrigatório.'
+
+        if errors:
+            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
+        password = data['password']
+
+        # Validação de força de senha
+        try:
+            validate_password(password)
+        except DjangoValidationError as e:
+            return Response(
+                {'password': list(e.messages)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Usa dados do MusicianRequest ou permite override
+        email = musician_request.email
+        first_name = data.get('first_name') or musician_request.full_name.split()[0]
+        last_name = data.get('last_name') or ' '.join(musician_request.full_name.split()[1:])
+        username = data.get('username') or email.split('@')[0]
+
+        # Validação de username único
+        if User.objects.filter(username=username).exists():
+            # Gera username único
+            base_username = username
+            counter = 1
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}{counter}"
+                counter += 1
+
+        # Validação de email (já deveria estar ok pelo MusicianRequest)
+        if User.objects.filter(email=email).exists():
+            return Response(
+                {'email': 'Este email já está cadastrado.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            with transaction.atomic():
+                # Cria usuário
+                user = User.objects.create(
+                    username=username,
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name,
+                )
+                user.set_password(password)
+                user.save()
+
+                # Cria músico
+                instruments = musician_request.instruments or []
+                if musician_request.instrument and musician_request.instrument not in instruments:
+                    instruments.insert(0, musician_request.instrument)
+
+                musician = Musician.objects.create(
+                    user=user,
+                    phone=musician_request.phone,
+                    instagram=musician_request.instagram or '',
+                    instrument=musician_request.instrument,
+                    instruments=instruments,
+                    bio=musician_request.bio or '',
+                    city=musician_request.city,
+                    state=musician_request.state,
+                    role='member',
+                    is_active=True,
+                    subscription_status='active',  # Músicos aprovados têm acesso ativo
+                )
+
+                # Cria organização pessoal
+                org, created = Organization.objects.get_or_create(
+                    owner=user,
+                    defaults={
+                        'name': f"Org de {username}",
+                        'subscription_status': 'active',
+                    }
+                )
+                if not created:
+                    org.subscription_status = 'active'
+                    org.save()
+
+                # Adiciona como membro owner
+                Membership.objects.get_or_create(
+                    user=user,
+                    organization=org,
+                    defaults={
+                        'role': 'owner',
+                        'status': 'active',
+                    }
+                )
+
+                # Marca convite como usado
+                musician_request.mark_invite_used()
+
+                logger.info(f'Musician registered via invite: {user.username}')
+
+        except Exception as e:
+            logger.error(f'Error registering musician with invite: {e}')
+            return Response(
+                {'error': 'Erro ao criar conta. Tente novamente.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        # Envia email de boas-vindas
+        try:
+            frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+            login_url = f"{frontend_url}/login"
+            send_welcome_email(
+                to_email=user.email,
+                first_name=first_name,
+                username=username,
+                login_url=login_url,
+            )
+        except Exception as e:
+            logger.error(f'Error sending welcome email: {e}')
+
+        return Response({
+            'message': 'Conta criada com sucesso!',
+            'username': username,
+            'email': email,
+        }, status=status.HTTP_201_CREATED)
+
+
+class RegisterCompanyView(APIView):
+    """
+    POST /api/register-company/
+    Registro de empresa (gratuito, sem aprovação).
+    """
+    permission_classes = [AllowAny]
+    throttle_classes = [BurstRateThrottle]
+
+    def post(self, request):
+        from .serializers import CompanyRegisterSerializer
+
+        serializer = CompanyRegisterSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        data = serializer.validated_data
+        email = data['email']
+        password = data['password']
+        company_name = data['company_name']
+        contact_name = data['contact_name']
+        phone = data.get('phone', '')
+        city = data['city']
+        state = data['state']
+        org_type = data.get('org_type', 'company')
+
+        # Validação de força de senha
+        try:
+            validate_password(password)
+        except DjangoValidationError as e:
+            return Response(
+                {'password': list(e.messages)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validação de username único
+        username = email.split('@')[0]
+        if User.objects.filter(username=username).exists():
+            base_username = username
+            counter = 1
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}{counter}"
+                counter += 1
+
+        # Validação de nome de empresa único
+        if Organization.objects.filter(name=company_name).exists():
+            return Response(
+                {'company_name': 'Uma empresa com este nome já está cadastrada.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            with transaction.atomic():
+                # Extrai primeiro e último nome
+                name_parts = contact_name.split()
+                first_name = name_parts[0] if name_parts else contact_name
+                last_name = ' '.join(name_parts[1:]) if len(name_parts) > 1 else ''
+
+                # Cria usuário
+                user = User.objects.create(
+                    username=username,
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name,
+                )
+                user.set_password(password)
+                user.save()
+
+                # Cria organização (empresa)
+                organization = Organization.objects.create(
+                    name=company_name,
+                    owner=user,
+                    org_type=org_type,
+                    contact_name=contact_name,
+                    contact_email=email,
+                    phone=phone,
+                    city=city,
+                    state=state,
+                    subscription_status='active',
+                )
+
+                # Cria membership
+                Membership.objects.create(
+                    user=user,
+                    organization=organization,
+                    role='owner',
+                    status='active',
+                )
+
+                logger.info(f'Company registered: {company_name} by {user.username}')
+
+        except Exception as e:
+            logger.error(f'Error registering company: {e}')
+            return Response(
+                {'error': 'Erro ao criar conta. Tente novamente.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        return Response({
+            'message': 'Empresa cadastrada com sucesso!',
+            'username': username,
+            'email': email,
+            'company_name': company_name,
+        }, status=status.HTTP_201_CREATED)

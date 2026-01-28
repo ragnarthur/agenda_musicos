@@ -37,6 +37,8 @@ from .models import (
     MusicianRating,
     Connection,
     MusicianBadge,
+    MusicianRequest,
+    ContactRequest,
 )
 from .serializers import (
     MusicianSerializer,
@@ -50,6 +52,15 @@ from .serializers import (
     RatingSubmitSerializer,
     ConnectionSerializer,
     MusicianBadgeSerializer,
+    MusicianRequestSerializer,
+    MusicianRequestCreateSerializer,
+    MusicianRequestAdminSerializer,
+    ContactRequestSerializer,
+    ContactRequestCreateSerializer,
+    ContactRequestReplySerializer,
+    MusicianPublicSerializer,
+    OrganizationSerializer,
+    OrganizationPublicSerializer,
 )
 from .validators import sanitize_string
 from .permissions import IsOwnerOrReadOnly
@@ -2104,3 +2115,576 @@ def get_musician_connection_status(request, musician_id):
         return Response(
             {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+# =============================================================================
+# MUSICIAN REQUEST VIEWS (Solicitação de Acesso)
+# =============================================================================
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAdminUser
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def create_musician_request(request):
+    """
+    POST /api/musician-request/
+    Músico solicita acesso à plataforma (público)
+    """
+    serializer = MusicianRequestCreateSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    musician_request = serializer.save()
+
+    return Response(
+        {
+            "message": "Solicitação enviada com sucesso! Você receberá um email quando sua solicitação for analisada.",
+            "id": musician_request.id,
+        },
+        status=status.HTTP_201_CREATED,
+    )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def list_musician_requests(request):
+    """
+    GET /api/admin/musician-requests/
+    Lista solicitações de músicos (admin only)
+    """
+    if not request.user.is_staff:
+        return Response(
+            {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
+        )
+
+    status_filter = request.query_params.get("status", "pending")
+    queryset = MusicianRequest.objects.all().order_by("-created_at")
+
+    if status_filter and status_filter != "all":
+        queryset = queryset.filter(status=status_filter)
+
+    city = request.query_params.get("city")
+    if city:
+        queryset = queryset.filter(city__icontains=city)
+
+    state = request.query_params.get("state")
+    if state:
+        queryset = queryset.filter(state__iexact=state)
+
+    serializer = MusicianRequestAdminSerializer(queryset, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_musician_request(request, request_id):
+    """
+    GET /api/admin/musician-requests/<id>/
+    Detalhe de uma solicitação (admin only)
+    """
+    if not request.user.is_staff:
+        return Response(
+            {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
+        )
+
+    musician_request = get_object_or_404(MusicianRequest, id=request_id)
+    serializer = MusicianRequestAdminSerializer(musician_request)
+    return Response(serializer.data)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def approve_musician_request(request, request_id):
+    """
+    POST /api/admin/musician-requests/<id>/approve/
+    Aprova solicitação e envia email com link de convite (admin only)
+    """
+    if not request.user.is_staff:
+        return Response(
+            {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
+        )
+
+    musician_request = get_object_or_404(MusicianRequest, id=request_id)
+
+    if musician_request.status != "pending":
+        return Response(
+            {"detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    notes = request.data.get("admin_notes", "")
+    invite_token = musician_request.approve(request.user, notes)
+
+    # TODO: Enviar email com link de convite
+    # O link será: /cadastro?token={invite_token}
+
+    return Response(
+        {
+            "message": "Solicitação aprovada com sucesso!",
+            "invite_token": invite_token,
+            "invite_expires_at": musician_request.invite_expires_at.isoformat(),
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def reject_musician_request(request, request_id):
+    """
+    POST /api/admin/musician-requests/<id>/reject/
+    Rejeita solicitação (admin only)
+    """
+    if not request.user.is_staff:
+        return Response(
+            {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
+        )
+
+    musician_request = get_object_or_404(MusicianRequest, id=request_id)
+
+    if musician_request.status != "pending":
+        return Response(
+            {"detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    notes = request.data.get("admin_notes", "")
+    musician_request.reject(request.user, notes)
+
+    return Response(
+        {"message": "Solicitação rejeitada"},
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def validate_invite_token(request):
+    """
+    GET /api/validate-invite/?token=xxx
+    Valida token de convite e retorna dados da solicitação
+    """
+    token = request.query_params.get("token")
+    if not token:
+        return Response(
+            {"detail": "Token não fornecido"}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        musician_request = MusicianRequest.objects.get(invite_token=token)
+    except MusicianRequest.DoesNotExist:
+        return Response(
+            {"detail": "Token inválido"}, status=status.HTTP_404_NOT_FOUND
+        )
+
+    if not musician_request.is_invite_valid():
+        if musician_request.invite_used:
+            return Response(
+                {"detail": "Este convite já foi utilizado"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(
+            {"detail": "Convite expirado"}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    return Response(
+        {
+            "valid": True,
+            "email": musician_request.email,
+            "full_name": musician_request.full_name,
+            "phone": musician_request.phone,
+            "instrument": musician_request.instrument,
+            "instruments": musician_request.instruments,
+            "bio": musician_request.bio,
+            "city": musician_request.city,
+            "state": musician_request.state,
+            "instagram": musician_request.instagram,
+        }
+    )
+
+
+# =============================================================================
+# CONTACT REQUEST VIEWS (Mensagens de Empresas para Músicos)
+# =============================================================================
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def create_contact_request(request):
+    """
+    POST /api/contact-requests/
+    Empresa envia mensagem para músico
+    """
+    # Verifica se usuário pertence a uma empresa
+    try:
+        membership = Membership.objects.filter(
+            user=request.user,
+            status="active",
+            organization__org_type__in=["company", "venue"],
+        ).first()
+
+        if not membership:
+            return Response(
+                {"detail": "Apenas empresas podem enviar mensagens para músicos"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        organization = membership.organization
+    except Exception:
+        return Response(
+            {"detail": "Erro ao verificar organização"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    serializer = ContactRequestCreateSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+
+    contact_request = serializer.save(
+        from_organization=organization,
+        from_user=request.user,
+    )
+
+    return Response(
+        ContactRequestSerializer(contact_request, context={"request": request}).data,
+        status=status.HTTP_201_CREATED,
+    )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def list_received_contact_requests(request):
+    """
+    GET /api/contact-requests/received/
+    Músico vê mensagens recebidas
+    """
+    try:
+        musician = request.user.musician_profile
+    except Musician.DoesNotExist:
+        return Response(
+            {"detail": "Perfil de músico não encontrado"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    status_filter = request.query_params.get("status")
+    queryset = ContactRequest.objects.filter(to_musician=musician).order_by("-created_at")
+
+    if status_filter:
+        queryset = queryset.filter(status=status_filter)
+
+    serializer = ContactRequestSerializer(queryset, many=True, context={"request": request})
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def list_sent_contact_requests(request):
+    """
+    GET /api/contact-requests/sent/
+    Empresa vê mensagens enviadas
+    """
+    membership = Membership.objects.filter(
+        user=request.user,
+        status="active",
+        organization__org_type__in=["company", "venue"],
+    ).first()
+
+    if not membership:
+        return Response(
+            {"detail": "Apenas empresas podem ver mensagens enviadas"},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    queryset = ContactRequest.objects.filter(
+        from_organization=membership.organization
+    ).order_by("-created_at")
+
+    serializer = ContactRequestSerializer(queryset, many=True, context={"request": request})
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_contact_request(request, contact_id):
+    """
+    GET /api/contact-requests/<id>/
+    Detalhe de uma mensagem
+    """
+    contact_request = get_object_or_404(ContactRequest, id=contact_id)
+
+    # Verifica permissão: músico destinatário ou empresa remetente
+    is_musician = (
+        hasattr(request.user, "musician_profile")
+        and contact_request.to_musician == request.user.musician_profile
+    )
+    is_sender = contact_request.from_user == request.user
+
+    if not is_musician and not is_sender:
+        return Response(
+            {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Marca como lido se for o músico acessando
+    if is_musician and contact_request.status == "pending":
+        contact_request.mark_as_read()
+
+    serializer = ContactRequestSerializer(contact_request, context={"request": request})
+    return Response(serializer.data)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def reply_contact_request(request, contact_id):
+    """
+    POST /api/contact-requests/<id>/reply/
+    Músico responde à mensagem
+    """
+    contact_request = get_object_or_404(ContactRequest, id=contact_id)
+
+    # Verifica se é o músico destinatário
+    try:
+        musician = request.user.musician_profile
+        if contact_request.to_musician != musician:
+            return Response(
+                {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
+            )
+    except Musician.DoesNotExist:
+        return Response(
+            {"detail": "Perfil de músico não encontrado"},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    serializer = ContactRequestReplySerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+
+    contact_request.reply(serializer.validated_data["reply_message"])
+
+    return Response(
+        ContactRequestSerializer(contact_request, context={"request": request}).data
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def archive_contact_request(request, contact_id):
+    """
+    POST /api/contact-requests/<id>/archive/
+    Arquiva mensagem
+    """
+    contact_request = get_object_or_404(ContactRequest, id=contact_id)
+
+    # Verifica permissão
+    is_musician = (
+        hasattr(request.user, "musician_profile")
+        and contact_request.to_musician == request.user.musician_profile
+    )
+
+    if not is_musician:
+        return Response(
+            {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
+        )
+
+    contact_request.archive()
+    return Response({"message": "Mensagem arquivada"})
+
+
+# =============================================================================
+# PUBLIC VIEWS (Músicos por cidade, patrocinadores)
+# =============================================================================
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def list_musicians_by_city(request):
+    """
+    GET /api/musicians/public-by-city/?city=Monte+Carmelo&state=MG
+    Retorna músicos públicos de uma cidade (sem autenticação)
+    """
+    city = request.query_params.get("city")
+    state = request.query_params.get("state")
+
+    if not city or not state:
+        return Response(
+            {"detail": "Parâmetros city e state são obrigatórios"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    queryset = Musician.objects.filter(
+        is_active=True,
+        city__iexact=city,
+        state__iexact=state,
+    ).select_related("user")
+
+    # Ordenar por rating e depois por nome
+    queryset = queryset.order_by("-average_rating", "user__first_name")
+
+    # Filtro por instrumento
+    instrument = request.query_params.get("instrument")
+    if instrument:
+        queryset = queryset.filter(
+            Q(instrument__iexact=instrument) | Q(instruments__icontains=instrument)
+        )
+
+    serializer = MusicianPublicSerializer(queryset, many=True, context={"request": request})
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def list_sponsors(request):
+    """
+    GET /api/organizations/sponsors/?city=Monte+Carmelo&state=MG
+    Retorna patrocinadores de uma cidade com rodízio diário
+    """
+    city = request.query_params.get("city")
+    state = request.query_params.get("state")
+
+    # REGRA: city/state obrigatórios - retornar 400
+    if not city or not state:
+        return Response(
+            {"detail": "Parâmetros city e state são obrigatórios"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    queryset = Organization.objects.filter(
+        is_sponsor=True,
+        city__iexact=city,
+        state__iexact=state,
+    )
+
+    # REGRA: Rodízio determinístico por dia
+    # Ordenar por tier, depois aplicar offset baseado no dia
+    sponsors = list(queryset.order_by('sponsor_tier', 'id'))
+    if sponsors:
+        day_offset = date.today().toordinal() % len(sponsors)
+        sponsors = sponsors[day_offset:] + sponsors[:day_offset]
+
+    serializer = OrganizationPublicSerializer(sponsors, many=True, context={"request": request})
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def get_musician_public_profile(request, musician_id):
+    """
+    GET /api/musicians/public/<id>/
+    Perfil público do músico (sem autenticação)
+    """
+    musician = get_object_or_404(Musician, id=musician_id, is_active=True)
+    serializer = MusicianPublicSerializer(musician, context={"request": request})
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_company_dashboard(request):
+    """
+    GET /api/company/dashboard/
+    Dashboard da empresa
+    """
+    membership = Membership.objects.filter(
+        user=request.user,
+        status="active",
+        organization__org_type__in=["company", "venue"],
+    ).select_related("organization").first()
+
+    if not membership:
+        return Response(
+            {"detail": "Usuário não pertence a uma empresa"},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    organization = membership.organization
+
+    # Estatísticas
+    sent_requests = ContactRequest.objects.filter(from_organization=organization)
+    pending_replies = sent_requests.filter(status__in=["pending", "read"]).count()
+    total_sent = sent_requests.count()
+    replied = sent_requests.filter(status="replied").count()
+
+    return Response(
+        {
+            "organization": OrganizationSerializer(organization, context={"request": request}).data,
+            "stats": {
+                "total_sent": total_sent,
+                "pending_replies": pending_replies,
+                "replied": replied,
+            },
+        }
+    )
+
+
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated])
+def update_company_profile(request):
+    """
+    PATCH /api/company/profile/
+    Atualiza perfil da empresa
+    """
+    membership = Membership.objects.filter(
+        user=request.user,
+        status="active",
+        organization__org_type__in=["company", "venue"],
+        role__in=["owner", "admin"],
+    ).select_related("organization").first()
+
+    if not membership:
+        return Response(
+            {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
+        )
+
+    organization = membership.organization
+    serializer = OrganizationSerializer(
+        organization,
+        data=request.data,
+        partial=True,
+        context={"request": request},
+    )
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_musician_for_company(request, musician_id):
+    """
+    GET /api/company/musicians/<id>/
+    Empresa vê perfil completo do músico
+    """
+    # Verifica se é empresa
+    membership = Membership.objects.filter(
+        user=request.user,
+        status="active",
+        organization__org_type__in=["company", "venue"],
+    ).first()
+
+    if not membership:
+        return Response(
+            {"detail": "Apenas empresas podem acessar esta rota"},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    musician = get_object_or_404(Musician, id=musician_id, is_active=True)
+    serializer = MusicianPublicSerializer(musician, context={"request": request})
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_unread_messages_count(request):
+    """
+    GET /api/messages/unread-count/
+    Conta mensagens não lidas do músico
+    """
+    try:
+        musician = request.user.musician_profile
+    except Musician.DoesNotExist:
+        return Response({"count": 0})
+
+    count = ContactRequest.objects.filter(
+        to_musician=musician,
+        status="pending",
+    ).count()
+
+    return Response({"count": count})
