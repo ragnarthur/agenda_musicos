@@ -9,6 +9,7 @@ interface CompanyAuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  setSession: (payload: { organization: Organization; access?: string; refresh?: string }) => void;
   logout: () => void;
   refreshToken: () => Promise<void>;
   updateOrganization: (data: Partial<Organization>) => Promise<void>;
@@ -81,6 +82,18 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
     }
   };
 
+  const setSession = (payload: { organization: Organization; access?: string; refresh?: string }) => {
+    if (payload.access) {
+      localStorage.setItem('companyToken', payload.access);
+    }
+    if (payload.refresh) {
+      localStorage.setItem('companyRefresh', payload.refresh);
+    }
+    localStorage.setItem('userType', 'company');
+    setOrganization(payload.organization);
+    localStorage.setItem('companyOrganization', JSON.stringify(payload.organization));
+  };
+
   const logout = (): void => {
     // Limpar storage
     localStorage.removeItem('companyToken');
@@ -102,9 +115,16 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
         throw new Error('Refresh token não encontrado');
       }
 
-      // Aqui você faria a chamada para renovar o token
-      // Por enquanto, vamos apenas manter o token existente
-      console.log('Token refresh não implementado ainda');
+      // Chamar endpoint de refresh do backend
+      const response = await companyService.refreshToken(refreshToken);
+
+      // Atualizar access token
+      localStorage.setItem('companyToken', response.access);
+
+      // Se o backend retornar um novo refresh token, atualizar também
+      if (response.refresh) {
+        localStorage.setItem('companyRefresh', response.refresh);
+      }
     } catch (error) {
       console.error('Erro ao renovar token:', error);
       logout();
@@ -130,6 +150,7 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
     loading,
     isAuthenticated: !!organization,
     login,
+    setSession,
     logout,
     refreshToken,
     updateOrganization,

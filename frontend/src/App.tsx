@@ -9,6 +9,8 @@ import Loading from './components/common/Loading';
 
 // Lazy load de páginas para otimizar o bundle inicial
 const Landing = lazy(() => import('./pages/Landing'));
+const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+const StatusPage = lazy(() => import('./components/StatusPage'));
 const Login = lazy(() => import('./pages/Login'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const EventsList = lazy(() => import('./pages/EventsList'));
@@ -26,6 +28,7 @@ const Register = lazy(() => import('./pages/Register'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
+const MusicianRequest = lazy(() => import('./pages/MusicianRequest'));
   const Payment = lazy(() => import('./pages/Payment'));
   const Plans = lazy(() => import('./pages/Plans'));
   const PlanSuccess = lazy(() => import('./pages/PlanSuccess'));
@@ -39,7 +42,10 @@ const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
   const LoginCompany = lazy(() => import('./pages/LoginCompany'));
   const RegisterCompany = lazy(() => import('./pages/RegisterCompany'));
   const CompanyDashboard = lazy(() => import('./pages/company/CompanyDashboard'));
-  const CompanyLayout = lazy(() => import('./pages/company/CompanyLayout'));
+  const MusicianSearch = lazy(() => import('./pages/company/MusicianSearch'));
+  const Contacts = lazy(() => import('./pages/company/Contacts'));
+  const CompanySettings = lazy(() => import('./pages/company/CompanySettings'));
+  const JobPostings = lazy(() => import('./pages/company/JobPostings'));
 
   // Public pages (city landing and public profiles)
   const CityLanding = lazy(() => import('./pages/CityLanding'));
@@ -199,6 +205,15 @@ function AppRoutes() {
           element={
             <PublicRoute>
               <ResetPassword />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path="/solicitar-acesso"
+          element={
+            <PublicRoute>
+              <MusicianRequest />
             </PublicRoute>
           }
         />
@@ -371,14 +386,7 @@ function AppRoutes() {
           path="/empresa/musicians"
           element={
             <CompanyProtectedRoute>
-              <CompanyLayout>
-                <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                  <div className="text-center">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Busca de Músicos</h2>
-                    <p className="text-gray-600">Em breve...</p>
-                  </div>
-                </div>
-              </CompanyLayout>
+              <MusicianSearch />
             </CompanyProtectedRoute>
           }
         />
@@ -387,14 +395,7 @@ function AppRoutes() {
           path="/empresa/contatos"
           element={
             <CompanyProtectedRoute>
-              <CompanyLayout>
-                <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                  <div className="text-center">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Conversas</h2>
-                    <p className="text-gray-600">Em breve...</p>
-                  </div>
-                </div>
-              </CompanyLayout>
+              <Contacts />
             </CompanyProtectedRoute>
           }
         />
@@ -403,14 +404,7 @@ function AppRoutes() {
           path="/empresa/vagas"
           element={
             <CompanyProtectedRoute>
-              <CompanyLayout>
-                <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                  <div className="text-center">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Minhas Vagas</h2>
-                    <p className="text-gray-600">Em breve...</p>
-                  </div>
-                </div>
-              </CompanyLayout>
+              <JobPostings />
             </CompanyProtectedRoute>
           }
         />
@@ -419,15 +413,28 @@ function AppRoutes() {
           path="/empresa/configuracoes"
           element={
             <CompanyProtectedRoute>
-              <CompanyLayout>
-                <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                  <div className="text-center">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Configurações</h2>
-                    <p className="text-gray-600">Em breve...</p>
-                  </div>
-                </div>
-              </CompanyLayout>
+              <CompanySettings />
             </CompanyProtectedRoute>
+          }
+        />
+
+        {/* Admin Routes */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <Suspense fallback={<Loading />}>
+              <AdminDashboard />
+            </Suspense>
+          }
+        />
+
+        {/* Public Status Page */}
+        <Route
+          path="/status"
+          element={
+            <Suspense fallback={<Loading />}>
+              <StatusPage />
+            </Suspense>
           }
         />
 

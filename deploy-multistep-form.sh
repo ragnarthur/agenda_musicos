@@ -1,13 +1,34 @@
 #!/bin/bash
 
 # Script de Deploy - Formulário Multi-Step
-# Executar no servidor: ssh arthur@srv1252721
-# cd /opt/agenda-musicos/agenda_musicos && bash deploy-multistep-form.sh
+# Executar no servidor com: bash deploy-multistep-form.sh
+# Certifique-se de estar no diretório do projeto
 
 set -e  # Para em caso de erro
 
 echo "🚀 Iniciando deploy do formulário multi-step..."
 echo ""
+
+# Função de health check
+wait_for_service() {
+    local url=$1
+    local max_attempts=$2
+    local service_name=$3
+    local attempt=0
+
+    echo "⏳ Aguardando $service_name ficar pronto..."
+    while [ $attempt -lt $max_attempts ]; do
+        if curl -sf "$url" > /dev/null 2>&1; then
+            echo "✅ $service_name está pronto!"
+            return 0
+        fi
+        attempt=$((attempt + 1))
+        echo "   Tentativa $attempt/$max_attempts..."
+        sleep 2
+    done
+    echo "❌ $service_name não iniciou após $((max_attempts * 2)) segundos"
+    return 1
+}
 
 # 1. Pull do código
 echo "📥 1. Fazendo git pull..."
@@ -27,9 +48,11 @@ docker compose -f docker-compose.prod.yml up -d frontend
 echo "✅ Frontend reiniciado"
 echo ""
 
-# 4. Aguardar frontend ficar pronto
-echo "⏳ 4. Aguardando frontend iniciar..."
-sleep 5
+# 4. Aguardar frontend ficar pronto (com health check)
+if ! wait_for_service "http://localhost" 15 "Frontend"; then
+    echo "⚠️  Warning: Frontend pode não estar totalmente pronto"
+    docker compose -f docker-compose.prod.yml logs --tail=20 frontend
+fi
 echo ""
 
 # 5. Verificar status dos containers

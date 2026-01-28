@@ -35,7 +35,16 @@ db.sqlite3-journal
 /staticfiles
 .env
 .env.local
+.env.docker
+.env.prod
+.env.test
+*.key
+*.pem
 cookies*.txt
+
+# Credentials
+.credentials
+secrets.txt
 
 # IDE
 .vscode/
@@ -54,10 +63,11 @@ AGENTS.md
 *claude*.md
 .claude
 
-# Markdown docs (ignore all)
+# Markdown docs (ignore all except README)
 *.md
 *.MD
 !README.md
+!frontend/README.md
 
 # Test coverage
 htmlcov/
@@ -70,7 +80,22 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
-.env.docker
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Payment service env files
 payment-service/.env.docker
 payment-service/.env.prod
 payment-service/.env.prod.example.bak
+
+# Certificates (additional protection)
+*.crt
+*.csr
+*.cer

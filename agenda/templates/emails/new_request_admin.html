@@ -1,0 +1,191 @@
+<!-- templates/emails/new_request_admin.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova Solicitação de Acesso - GigFlow</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 30px;
+        }
+        .request-details {
+            background-color: #f8f9fa;
+            border-left: 4px solid #6366f1;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        .detail-item {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: flex-start;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #6366f1;
+            min-width: 120px;
+            margin-right: 10px;
+        }
+        .cta-section {
+            text-align: center;
+            padding: 30px;
+            background-color: #f8f9fa;
+        }
+        .btn-primary {
+            display: inline-block;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            display: inline-block;
+            background: #ffffff;
+            color: #6366f1;
+            text-decoration: none;
+            padding: 12px 30px;
+            border: 2px solid #6366f1;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 10px;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 14px;
+            border-top: 1px solid #eee;
+        }
+        .instrument-tag {
+            display: inline-block;
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>⭐ Nova Solicitação de Acesso</h1>
+            <p>Um novo músico solicitou acesso ao GigFlow</p>
+        </div>
+        
+        <div class="content">
+            <h2>📋 Detalhes da Solicitação</h2>
+            
+            <div class="request-details">
+                <div class="detail-item">
+                    <span class="detail-label">Nome:</span>
+                    <span>{{ musician_request.full_name }}</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Email:</span>
+                    <span>{{ musician_request.email }}</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Telefone:</span>
+                    <span>{{ musician_request.phone }}</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Instrumento:</span>
+                    <span>{{ musician_request.instrument }}</span>
+                </div>
+                
+                {% if musician_request.instruments %}
+                <div class="detail-item">
+                    <span class="detail-label">Outros:</span>
+                    <span>
+                        {% for instrument in musician_request.instruments %}
+                        <span class="instrument-tag">{{ instrument }}</span>
+                        {% endfor %}
+                    </span>
+                </div>
+                {% endif %}
+                
+                <div class="detail-item">
+                    <span class="detail-label">Cidade:</span>
+                    <span>{{ musician_request.city }} - {{ musician_request.state }}</span>
+                </div>
+                
+                {% if musician_request.instagram %}
+                <div class="detail-item">
+                    <span class="detail-label">Instagram:</span>
+                    <span>@{{ musician_request.instagram }}</span>
+                </div>
+                {% endif %}
+                
+                {% if musician_request.bio %}
+                <div class="detail-item">
+                    <span class="detail-label">Bio:</span>
+                    <span>{{ musician_request.bio|truncatewords:20 }}</span>
+                </div>
+                {% endif %}
+                
+                <div class="detail-item">
+                    <span class="detail-label">Data:</span>
+                    <span>{{ musician_request.created_at|date:"d/m/Y H:i" }}</span>
+                </div>
+            </div>
+            
+            <div class="cta-section">
+                <h3>🚀 Próximos Passos</h3>
+                <p>Acesse o painel administrativo para analisar esta solicitação:</p>
+                
+                <a href="{{ admin_panel_url }}" class="btn-primary">
+                    Analisar Solicitação
+                </a>
+                
+                <p style="margin-top: 20px; color: #666;">
+                    <small>ID da solicitação: #{{ musician_request.id }}</small>
+                </p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Este é um email automático do GigFlow</p>
+            <p>Se você não é um administrador, por favor ignore esta mensagem.</p>
+        </div>
+    </div>
+</body>
+</html>

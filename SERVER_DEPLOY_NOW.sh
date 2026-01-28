@@ -8,8 +8,13 @@ set -e  # Para em caso de erro
 echo "🚀 Iniciando deploy da atualização do autocomplete de cidades..."
 echo ""
 
-# Diretório do projeto
-cd /opt/agenda-musicos/agenda_musicos
+# Diretório do projeto (configure se necessário)
+PROJECT_DIR="${PROJECT_DIR:-/opt/agenda-musicos/agenda_musicos}"
+cd "$PROJECT_DIR" 2>/dev/null || {
+    echo "❌ Diretório do projeto não encontrado: $PROJECT_DIR"
+    echo "   Configure PROJECT_DIR ou execute no diretório correto"
+    exit 1
+}
 
 echo "📥 1. Fazendo git pull..."
 git pull origin main

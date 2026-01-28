@@ -1,6 +1,6 @@
 // pages/RegisterCompany.tsx
 // Cadastro de empresa (gratuito, sem aprovação)
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
@@ -8,6 +8,7 @@ import { Building2, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import { companyService, googleAuthService, type CompanyRegisterData } from '../services/publicApi';
 import { BRAZILIAN_STATES } from '../config/cities';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
+import { useCompanyAuth } from '../contexts/CompanyAuthContext';
 
 declare global {
   interface Window {
@@ -24,6 +25,7 @@ declare global {
 
 export default function RegisterCompany() {
   const navigate = useNavigate();
+  const { setSession } = useCompanyAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -72,7 +74,7 @@ export default function RegisterCompany() {
     }
   };
 
-  const handleGoogleCallback = async (response: { credential: string }) => {
+  const handleGoogleCallback = useCallback(async (response: { credential: string }) => {
     try {
       const result = await googleAuthService.authenticate(response.credential, 'company');
       if (result.new_user) {
@@ -86,16 +88,21 @@ export default function RegisterCompany() {
         toast.success('Complete o cadastro da empresa');
       } else {
         // Usuário já existe
+        setSession({
+          organization: result.organization as any,
+          access: result.access,
+          refresh: result.refresh,
+        });
         toast.success('Login realizado!');
         navigate('/empresa/dashboard');
       }
     } catch {
       toast.error('Erro ao autenticar com Google');
     }
-  };
+  }, [navigate, setSession]);
 
   // Renderiza botão do Google
-  useState(() => {
+  useEffect(() => {
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
@@ -121,7 +128,7 @@ export default function RegisterCompany() {
     return () => {
       document.body.removeChild(script);
     };
-  });
+  }, [handleGoogleCallback]);
 
   if (success) {
     return (

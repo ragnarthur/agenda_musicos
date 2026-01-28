@@ -1,11 +1,27 @@
   #!/bin/bash
-  cd /var/www/agenda-musicos
 
-  echo "🔄 Atualizando código..."
-  sudo git pull origin main
+# Verificar se está no diretório correto
+if [ ! -f "manage.py" ]; then
+    echo "❌ Erro: Este script deve ser executado no diretório raiz do projeto"
+    echo "   (deve conter o arquivo manage.py)"
+    exit 1
+fi
 
-  echo "🐍 Atualizando backend..."
-  source .venv/bin/activate
+cd /var/www/agenda-musicos
+
+echo "🔄 Atualizando código..."
+sudo git pull origin main
+
+echo "🐍 Atualizando backend..."
+
+# Verificar se virtual environment existe
+if [ ! -d ".venv" ]; then
+    echo "❌ Erro: Virtual environment (.venv) não encontrado"
+    echo "   Execute: python3 -m venv .venv && source .venv/bin/activate"
+    exit 1
+fi
+
+source .venv/bin/activate
   pip install -r requirements.txt
   python manage.py migrate
   python manage.py collectstatic --noinput

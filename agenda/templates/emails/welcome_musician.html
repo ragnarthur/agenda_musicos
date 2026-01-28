@@ -1,0 +1,214 @@
+<!-- templates/emails/welcome_musician.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bem-vindo ao GigFlow!</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f9ff;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .welcome-badge {
+            background: #3b82f6;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .feature-box {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 2px solid #60a5fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .feature-box h3 {
+            margin: 0 0 15px 0;
+            color: #1e40af;
+            font-size: 18px;
+        }
+        .feature-item {
+            background: white;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .feature-item h4 {
+            margin: 0 0 8px 0;
+            color: #1e3a8a;
+            font-size: 16px;
+        }
+        .feature-item p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .cta-section {
+            text-align: center;
+            padding: 30px;
+            background: #f8fafc;
+        }
+        .btn-primary {
+            display: inline-block;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            text-decoration: none;
+            padding: 16px 40px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+        .tips-section {
+            background: #fef3c7;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .tips-section h3 {
+            color: #92400e;
+            margin: 0 0 15px 0;
+        }
+        .tips-section ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .tips-section li {
+            color: #78350f;
+            margin-bottom: 8px;
+        }
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            font-size: 14px;
+            border-top: 1px solid #e5e7eb;
+            background: #f9fafb;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>🎉 Bem-vindo ao GigFlow!</h1>
+            <p>Olá, {{ user.first_name }}!</p>
+        </div>
+
+        <div class="content">
+            <div class="welcome-badge">
+                🎵 Conta Ativada
+            </div>
+
+            <h2>🚀 Sua Jornada Musical Começa Aqui!</h2>
+            <p>Parabéns por completar seu cadastro no GigFlow! Agora você faz parte de uma comunidade de músicos profissionais e tem acesso a oportunidades exclusivas.</p>
+
+            <div class="feature-box">
+                <h3>🎯 O que você pode fazer na plataforma:</h3>
+
+                <div class="feature-item">
+                    <h4>📅 Gerenciar Agenda</h4>
+                    <p>Organize suas apresentações e disponibilidades em um só lugar.</p>
+                </div>
+
+                <div class="feature-item">
+                    <h4>💬 Receber Propostas</h4>
+                    <p>Empresas e casas de shows podem te encontrar e enviar convites.</p>
+                </div>
+
+                <div class="feature-item">
+                    <h4>🎤 Mostrar seu Talento</h4>
+                    <p>Complete seu perfil com fotos, vídeos e informações sobre seu trabalho.</p>
+                </div>
+
+                <div class="feature-item">
+                    <h4>⭐ Construir Reputação</h4>
+                    <p>Receba avaliações de clientes e fortaleça sua carreira.</p>
+                </div>
+            </div>
+
+            <div class="cta-section">
+                <h3>🎸 Acesse sua Conta</h3>
+                <p>Clique no botão abaixo para começar:</p>
+
+                <a href="{{ frontend_url }}/musicos/dashboard" class="btn-primary">
+                    Ir para Dashboard
+                </a>
+            </div>
+
+            <div class="tips-section">
+                <h3>💡 Dicas para Aproveitar ao Máximo</h3>
+                <ul>
+                    <li><strong>Complete seu perfil:</strong> Adicione foto, bio e todos os seus instrumentos</li>
+                    <li><strong>Adicione seus trabalhos:</strong> Fotos e vídeos de apresentações anteriores</li>
+                    <li><strong>Mantenha agenda atualizada:</strong> Informe suas disponibilidades</li>
+                    <li><strong>Seja profissional:</strong> Responda mensagens rapidamente</li>
+                    <li><strong>Peça avaliações:</strong> Solicite feedback dos clientes após shows</li>
+                    <li><strong>Conecte redes sociais:</strong> Instagram e YouTube ajudam a mostrar seu trabalho</li>
+                </ul>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px; padding: 20px; background: #eff6ff; border-radius: 8px;">
+                <h3 style="color: #1e40af; margin-bottom: 15px;">📱 Próximos Passos</h3>
+                <ol style="text-align: left; max-width: 400px; margin: 0 auto; color: #374151;">
+                    <li style="margin-bottom: 10px;"><strong>1.</strong> Complete todas as seções do seu perfil</li>
+                    <li style="margin-bottom: 10px;"><strong>2.</strong> Adicione fotos e vídeos profissionais</li>
+                    <li style="margin-bottom: 10px;"><strong>3.</strong> Configure suas disponibilidades</li>
+                    <li style="margin-bottom: 10px;"><strong>4.</strong> Conecte suas redes sociais</li>
+                    <li><strong>5.</strong> Comece a receber propostas!</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Este é um email automático do GigFlow</p>
+            <p>Precisa de ajuda? Entre em contato: gigflowagenda@gmail.com</p>
+            <p style="margin-top: 15px;">
+                <strong>GigFlow</strong><br>
+                Sua carreira musical organizada
+            </p>
+        </div>
+    </div>
+</body>
+</html>

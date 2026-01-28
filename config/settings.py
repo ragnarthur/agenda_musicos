@@ -80,13 +80,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     # Third party
     "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
-
     # Local
     "agenda",
     "marketplace",
@@ -99,17 +97,13 @@ INSTALLED_APPS = [
 # =========================================================
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-
     # CORS precisa ficar o mais alto possível, antes do CommonMiddleware
     "corsheaders.middleware.CorsMiddleware",
-
     # CSP header para proteção contra XSS
     "config.middleware.CSPMiddleware",
-
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
-
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -155,14 +149,21 @@ if DATABASE_URL:
         parsed_port = None
 
     query = parse_qs(parsed.query)
-    sslmode = query.get("sslmode", [None])[0] or ("require" if DB_SSL_REQUIRE else "disable")
+    sslmode = query.get("sslmode", [None])[0] or (
+        "require" if DB_SSL_REQUIRE else "disable"
+    )
 
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": (parsed.path or "").lstrip("/") or config("POSTGRES_DB", default="postgres"),
-            "USER": unquote(parsed.username or config("POSTGRES_USER", default="postgres")),
-            "PASSWORD": unquote(parsed.password or config("POSTGRES_PASSWORD", default="")),
+            "NAME": (parsed.path or "").lstrip("/")
+            or config("POSTGRES_DB", default="postgres"),
+            "USER": unquote(
+                parsed.username or config("POSTGRES_USER", default="postgres")
+            ),
+            "PASSWORD": unquote(
+                parsed.password or config("POSTGRES_PASSWORD", default="")
+            ),
             "HOST": parsed.hostname or "db",
             "PORT": parsed_port or 5432,
             "CONN_MAX_AGE": 60,
@@ -182,7 +183,9 @@ else:
 # Password validation
 # =========================================================
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
@@ -219,7 +222,7 @@ CSRF_COOKIE_SECURE = COOKIE_SECURE
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
 
-CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_HTTPONLY = True
 
 
 # =========================================================
@@ -236,33 +239,37 @@ if DEBUG:
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": tuple(DEFAULT_AUTH_CLASSES),
-    "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.IsAuthenticated",
-    ),
-    "DEFAULT_THROTTLE_CLASSES": (
-        "rest_framework.throttling.ScopedRateThrottle",
-    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_THROTTLE_CLASSES": ("rest_framework.throttling.ScopedRateThrottle",),
     "DEFAULT_THROTTLE_RATES": {
         # Auth
         "login": config("THROTTLE_LOGIN", default="30/min"),
         "token_obtain_pair": config("THROTTLE_LOGIN", default="30/min"),
         "token_refresh": config("THROTTLE_TOKEN_REFRESH", default="60/min"),
         "refresh": config("THROTTLE_TOKEN_REFRESH", default="60/min"),
-
         # ✅ FIX DO BUG:
         # Algumas views (ex.: password-reset) usam throttle_scope = "burst".
         # Se não existir rate aqui, o DRF levanta ImproperlyConfigured e devolve 500.
         "burst": config("THROTTLE_BURST", default="10/min"),
-
         # Eventos
         "create_event": config("THROTTLE_CREATE_EVENT", default="30/min"),
         "preview_conflicts": config("THROTTLE_PREVIEW_CONFLICTS", default="60/min"),
+        # Outros endpoints sensíveis
+        "register": config("THROTTLE_REGISTER", default="5/min"),
+        "password_reset": config("THROTTLE_PASSWORD_RESET", default="5/min"),
+        "contact_request": config("THROTTLE_CONTACT_REQUEST", default="20/min"),
+        "musician_request": config("THROTTLE_MUSICIAN_REQUEST", default="3/min"),
+        "profile_update": config("THROTTLE_PROFILE_UPDATE", default="30/min"),
     },
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(config("JWT_ACCESS_MINUTES", default=60))),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=int(config("JWT_REFRESH_DAYS", default=7))),
+    "ACCESS_TOKEN_LIFETIME": timedelta(
+        minutes=max(int(config("JWT_ACCESS_MINUTES", default=60)), 15)
+    ),
+    "REFRESH_TOKEN_LIFETIME": timedelta(
+        days=max(int(config("JWT_REFRESH_DAYS", default=7)), 1)
+    ),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
@@ -282,6 +289,12 @@ CORS_ALLOWED_ORIGINS = env_csv("CORS_ALLOWED_ORIGINS", default="")
 # Se quiser “modo debug” via env:
 # CORS_ALLOW_ALL_ORIGINS=True (NÃO use em produção real)
 CORS_ALLOW_ALL_ORIGINS = config("CORS_ALLOW_ALL_ORIGINS", default=False, cast=bool)
+
+# Prevenir CORS permissivo em produção
+if not DEBUG and CORS_ALLOW_ALL_ORIGINS:
+    raise RuntimeError(
+        "CORS_ALLOW_ALL_ORIGINS não deve ser True em produção. Configure CORS_ALLOWED_ORIGINS."
+    )
 
 # ✅ Se você for usar cookies cross-origin (ex: api. subdomain separado),
 # precisa True + frontend fetch com credentials: "include".

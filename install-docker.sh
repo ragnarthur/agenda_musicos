@@ -40,7 +40,22 @@ sudo apt-get install -y \
 
 echo -e "${BLUE}🔑 Adicionando chave GPG do Docker...${NC}"
 sudo mkdir -p /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+GPG_KEY_PATH="/etc/apt/keyrings/docker.gpg"
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o "$GPG_KEY_PATH"
+
+# Verificar se o arquivo foi criado e tem conteúdo válido
+if [ ! -s "$GPG_KEY_PATH" ]; then
+    echo -e "${RED}❌ Erro: Falha ao baixar chave GPG${NC}"
+    echo -e "${YELLOW}   Verifique sua conexão com a internet${NC}"
+    exit 1
+fi
+
+# Verificar formato do arquivo GPG
+if ! file "$GPG_KEY_PATH" | grep -q "GPG key"; then
+    echo -e "${RED}❌ Erro: Chave GPG corrompida ou inválida${NC}"
+    exit 1
+fi
 
 echo -e "${BLUE}📝 Configurando repositório...${NC}"
 echo \

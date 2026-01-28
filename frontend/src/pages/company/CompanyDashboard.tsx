@@ -69,7 +69,7 @@ const CompanyDashboard: React.FC = () => {
   const loadTopMusicians = async () => {
     try {
       // Buscar músicos da cidade da empresa (se disponível)
-      const city = organization?.city || 'monte-carmelo';
+      const city = organization?.city || 'Monte Carmelo';
       const state = organization?.state || 'MG';
       const musicians = await publicMusicianService.listByCity(city, state);
       setTopMusicians(musicians.slice(0, 6)); // Top 6 músicos

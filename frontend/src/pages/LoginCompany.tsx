@@ -1,12 +1,13 @@
 // pages/LoginCompany.tsx
 // Login específico para empresas
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { Building2, Eye, EyeOff, LogIn } from 'lucide-react';
-import { companyService, googleAuthService } from '../services/publicApi';
+import { googleAuthService } from '../services/publicApi';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
+import { useCompanyAuth } from '../contexts/CompanyAuthContext';
 
 declare global {
   interface Window {
@@ -28,6 +29,7 @@ interface LoginForm {
 
 export default function LoginCompany() {
   const navigate = useNavigate();
+  const { login, setSession } = useCompanyAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -40,10 +42,7 @@ export default function LoginCompany() {
   const onSubmit = async (data: LoginForm) => {
     setIsSubmitting(true);
     try {
-      const response = await companyService.login(data.email, data.password);
-      // Salva informações da empresa no localStorage
-      localStorage.setItem('userType', 'company');
-      localStorage.setItem('organization', JSON.stringify(response.organization));
+      await login(data.email, data.password);
       toast.success('Login realizado com sucesso!');
       navigate('/empresa/dashboard');
     } catch (error: unknown) {
@@ -54,7 +53,7 @@ export default function LoginCompany() {
     }
   };
 
-  const handleGoogleCallback = async (response: { credential: string }) => {
+  const handleGoogleCallback = useCallback(async (response: { credential: string }) => {
     try {
       const result = await googleAuthService.authenticate(response.credential, 'company');
       if (result.new_user) {
@@ -62,8 +61,11 @@ export default function LoginCompany() {
         toast.error('Conta não encontrada. Faça o cadastro primeiro.');
         navigate('/cadastro-empresa');
       } else if (result.user_type === 'company' && result.organization) {
-        localStorage.setItem('userType', 'company');
-        localStorage.setItem('organization', JSON.stringify(result.organization));
+        setSession({
+          organization: result.organization as any,
+          access: result.access,
+          refresh: result.refresh,
+        });
         toast.success('Login realizado!');
         navigate('/empresa/dashboard');
       } else {
@@ -72,10 +74,10 @@ export default function LoginCompany() {
     } catch {
       toast.error('Erro ao autenticar com Google');
     }
-  };
+  }, [navigate, setSession]);
 
   // Renderiza botão do Google
-  useState(() => {
+  useEffect(() => {
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
@@ -101,7 +103,7 @@ export default function LoginCompany() {
     return () => {
       document.body.removeChild(script);
     };
-  });
+  }, [handleGoogleCallback]);
 
   return (
     <FullscreenBackground>

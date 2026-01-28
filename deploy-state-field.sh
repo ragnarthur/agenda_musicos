@@ -1,13 +1,34 @@
 #!/bin/bash
 
 # Script de Deploy - Campo State (UF)
-# Executar no servidor: ssh arthur@srv1252721
-# cd /opt/agenda-musicos/agenda_musicos && bash deploy-state-field.sh
+# Executar no servidor com: bash deploy-state-field.sh
+# Certifique-se de estar no diretório do projeto
 
 set -e  # Para em caso de erro
 
 echo "🚀 Iniciando deploy do campo State (UF)..."
 echo ""
+
+# Função de health check
+wait_for_service() {
+    local url=$1
+    local max_attempts=$2
+    local service_name=$3
+    local attempt=0
+
+    echo "⏳ Aguardando $service_name ficar pronto..."
+    while [ $attempt -lt $max_attempts ]; do
+        if curl -sf "$url" > /dev/null 2>&1; then
+            echo "✅ $service_name está pronto!"
+            return 0
+        fi
+        attempt=$((attempt + 1))
+        echo "   Tentativa $attempt/$max_attempts..."
+        sleep 2
+    done
+    echo "❌ $service_name não iniciou após $((max_attempts * 2)) segundos"
+    return 1
+}
 
 # 1. Pull do código
 echo "📥 1. Fazendo git pull..."
@@ -33,18 +54,27 @@ docker compose -f docker-compose.prod.yml up -d backend frontend
 echo "✅ Serviços reiniciados"
 echo ""
 
-# 5. Aguardar backend ficar pronto
-echo "⏳ 5. Aguardando backend iniciar..."
-sleep 10
+# 5. Aguardar backend ficar pronto (com health check)
+if ! wait_for_service "http://localhost:8000/healthz/" 15 "Backend"; then
+    echo "⚠️  Warning: Backend pode não estar totalmente pronto"
+    docker compose -f docker-compose.prod.yml logs --tail=20 backend
+fi
 echo ""
 
-# 6. Verificar migrations
-echo "🔍 6. Verificando migrations aplicadas..."
-docker compose -f docker-compose.prod.yml logs backend | grep "0024_add_state_to_musician"
+# 6. Aguardar frontend ficar pronto (com health check)
+if ! wait_for_service "http://localhost" 10 "Frontend"; then
+    echo "⚠️  Warning: Frontend pode não estar totalmente pronto"
+    docker compose -f docker-compose.prod.yml logs --tail=20 frontend
+fi
 echo ""
 
-# 7. Verificar status dos containers
-echo "📊 7. Status dos containers:"
+# 7. Verificar migrations
+echo "🔍 7. Verificando migrations aplicadas..."
+docker compose -f docker-compose.prod.yml logs backend | grep "0024_add_state_to_musician" || echo "ℹ️  Migration não encontrada nos logs recentes"
+echo ""
+
+# 8. Verificar status dos containers
+echo "📊 8. Status dos containers:"
 docker compose -f docker-compose.prod.yml ps
 echo ""
 

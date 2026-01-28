@@ -3,8 +3,7 @@
 # =============================================================================
 # Deploy Script - Agenda de Musicos (Docker)
 # =============================================================================
-# Servidor: Hostinger VPS
-# IP: 181.215.134.53
+# Servidor: Configure DOMAIN e SERVER_IP via variáveis de ambiente
 # Dominio: gigflowagenda.com.br
 # =============================================================================
 
@@ -17,7 +16,8 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 PROJECT_DIR="/var/www/agenda-musicos"
-DOMAIN="gigflowagenda.com.br"
+DOMAIN="${DOMAIN:-gigflowagenda.com.br}"
+SERVER_IP="${SERVER_IP:-127.0.0.1}"
 
 print_step() {
     echo -e "${GREEN}==>${NC} $1"
@@ -100,10 +100,10 @@ generate_ssl() {
 
     # Verificar se DNS esta propagado
     RESOLVED_IP=$(dig +short $DOMAIN)
-    SERVER_IP="181.215.134.53"
 
-    if [ "$RESOLVED_IP" != "$SERVER_IP" ]; then
-        print_warning "DNS ainda nao propagado. $DOMAIN aponta para: $RESOLVED_IP (esperado: $SERVER_IP)"
+    if [ -z "$SERVER_IP" ] || [ "$RESOLVED_IP" != "$SERVER_IP" ]; then
+        print_warning "DNS ainda nao propagado. $DOMAIN aponta para: $RESOLVED_IP"
+        print_warning "Configure SERVER_IP=$RESOLVED_IP se este for o IP correto."
         print_warning "Aguarde a propagacao do DNS antes de gerar o certificado SSL."
         return 1
     fi
@@ -209,5 +209,18 @@ main() {
     echo -e "${GREEN}Concluido!${NC}"
 }
 
-cd $PROJECT_DIR 2>/dev/null || cd "$(dirname "$0")"
+# Verificar e mudar para diretório do projeto
+if [ -d "$PROJECT_DIR" ]; then
+    cd "$PROJECT_DIR"
+else
+    PROJECT_DIR_FALLBACK="$(dirname "$0")"
+    if [ -d "$PROJECT_DIR_FALLBACK" ]; then
+        cd "$PROJECT_DIR_FALLBACK"
+    else
+        print_error "Diretório do projeto não encontrado: $PROJECT_DIR"
+        print_error "Certifique-se de estar no diretório correto ou configure PROJECT_DIR"
+        exit 1
+    fi
+fi
+
 main "$@"

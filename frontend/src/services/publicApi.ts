@@ -300,6 +300,12 @@ export const companyService = {
     const response = await api.get(`/company/musicians/${id}/`);
     return response.data;
   },
+
+  // Refresh token
+  refreshToken: async (refreshToken: string): Promise<{ access: string; refresh?: string }> => {
+    const response = await api.post('/token/refresh/', { refresh: refreshToken });
+    return response.data;
+  },
 };
 
 // =============================================================================

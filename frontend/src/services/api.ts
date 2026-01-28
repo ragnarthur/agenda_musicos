@@ -113,6 +113,11 @@ api.interceptors.response.use(
     const publicRoutes = [
       '/login',
       '/cadastro',
+      '/login-empresa',
+      '/cadastro-empresa',
+      '/solicitar-acesso',
+      '/cidades',
+      '/musico',
       '/verificar-email',
       '/esqueci-senha',
       '/redefinir-senha',
@@ -138,7 +143,11 @@ api.interceptors.response.use(
         if (!isPublicAuthPath && !isOnPublicRoute && !isUserProfileCall && window.location.pathname !== '/login') {
           toast.error('Sessão expirada. Faça login novamente.');
           setTimeout(() => {
-            window.location.href = '/login';
+            if (window.location.pathname.startsWith('/empresa')) {
+              window.location.href = '/login-empresa';
+            } else {
+              window.location.href = '/login';
+            }
           }, 1500);
         }
         return Promise.reject(refreshError);

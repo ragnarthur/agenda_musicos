@@ -4,9 +4,7 @@
 # Setup Script - Agenda de Músicos
 # =============================================================================
 # Configuração automática do servidor
-# IP: 45.237.131.177
-# Porta Externa: 2029
-# Porta Interna: 8005
+# Configure variáveis de ambiente: PROJECT_DIR, SERVER_IP, SERVER_PORT, INTERNAL_PORT
 # =============================================================================
 
 set -e  # Exit on error
@@ -18,10 +16,10 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Configuration
-PROJECT_DIR="/var/www/agenda-musicos"
-SERVER_IP="45.237.131.177"
-SERVER_PORT="2030"
-INTERNAL_PORT="8005"
+PROJECT_DIR="${PROJECT_DIR:-/var/www/agenda-musicos}"
+SERVER_IP="${SERVER_IP:-127.0.0.1}"
+SERVER_PORT="${SERVER_PORT:-2030}"
+INTERNAL_PORT="${INTERNAL_PORT:-8005}"
 CREDENTIALS_FILE="$PROJECT_DIR/.credentials"
 
 # Generate secure random password
@@ -121,6 +119,14 @@ setup_python_env() {
 setup_database() {
     print_step "Configurando banco de dados PostgreSQL..."
 
+    # Adicionar lock file para prevenir race conditions
+    DB_LOCK="/tmp/pgsql_setup.lock"
+    exec 200>"$DB_LOCK"
+    flock -n 200 || {
+        print_error "Outra instância já está executando setup do banco"
+        exit 1
+    }
+
     # Check if database already exists
     if sudo -u postgres psql -lqt | cut -d \| -f 1 | grep -qw agenda_musicos; then
         print_warning "Banco de dados 'agenda_musicos' já existe. Pulando criação."
@@ -134,9 +140,12 @@ setup_database() {
         # Generate secure random password
         DB_PASSWORD=$(generate_password)
 
+        # Escape password for SQL injection protection
+        DB_PASSWORD_ESCAPED=$(printf '%s' "$DB_PASSWORD" | sed "s/'/''/g")
+
         sudo -u postgres psql <<EOF
 CREATE DATABASE agenda_musicos;
-CREATE USER agenda_user WITH PASSWORD '$DB_PASSWORD';
+CREATE USER agenda_user WITH PASSWORD '$DB_PASSWORD_ESCAPED';
 ALTER ROLE agenda_user SET client_encoding TO 'utf8';
 ALTER ROLE agenda_user SET default_transaction_isolation TO 'read committed';
 ALTER ROLE agenda_user SET timezone TO 'America/Sao_Paulo';
