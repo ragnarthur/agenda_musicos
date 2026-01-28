@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import OwlMascot from '../components/ui/OwlMascot';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import UserTypeToggle from '../components/navigation/UserTypeToggle';
+import CityDisplay from '../components/CityDisplay';
+import CityBadge from '../components/CityBadge';
 
 type TypewriterPhase = 'typing' | 'pausing' | 'deleting' | 'waiting';
 type UserType = 'musician' | 'company';
@@ -244,6 +246,10 @@ const Landing: React.FC = () => {
               <OwlMascot className="h-48 w-48 sm:h-56 sm:w-56" />
             </div>
           </motion.div>
+          <CityDisplay />
+          <div className="flex justify-center mb-6">
+            <CityBadge />
+          </div>
 
           {/* Título */}
           <motion.div

@@ -20,7 +20,12 @@ interface GeolocationData {
 const CACHE_KEY = 'geolocation_data';
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hora em milissegundos
 
-export const useGeolocation = () => {
+interface GeolocationOptions {
+  autoStart?: boolean;
+}
+
+export const useGeolocation = (options: GeolocationOptions = {}) => {
+  const { autoStart = true } = options;
   const [data, setData] = useState<GeolocationData>({
     city: null,
     state: null,
@@ -74,6 +79,7 @@ export const useGeolocation = () => {
         coordinates: geoData.coordinates,
       };
       localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+      window.dispatchEvent(new CustomEvent('geolocation:updated', { detail: cacheData }));
     } catch (error) {
       console.error('Erro ao salvar cache:', error);
     }
@@ -228,13 +234,45 @@ export const useGeolocation = () => {
         return;
       }
 
+      if (!autoStart) {
+        setData((prev) => ({ ...prev, isLoading: false }));
+        return;
+      }
+
       // Se não tem cache, busca nova localização
       await getLocation();
     };
 
     initGeolocation();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Roda apenas uma vez no mount para evitar loop infinito
+  }, [autoStart, checkCache, getLocation]);
+
+  useEffect(() => {
+    const onGeoUpdated = (event: Event) => {
+      const detail = (event as CustomEvent).detail as {
+        data?: { city?: string | null; state?: string | null; country?: string | null };
+        coordinates?: Coordinates;
+      };
+
+      if (!detail?.data) return;
+
+      const isMonteCarmelo = detail.data.city?.toLowerCase().includes('monte carmelo') || false;
+
+      setData((prev) => ({
+        ...prev,
+        city: detail.data.city ?? prev.city,
+        state: detail.data.state ?? prev.state,
+        country: detail.data.country ?? prev.country,
+        coordinates: detail.coordinates ?? prev.coordinates,
+        isLoading: false,
+        error: null,
+        hasPermission: true,
+        isMonteCarmelo,
+      }));
+    };
+
+    window.addEventListener('geolocation:updated', onGeoUpdated);
+    return () => window.removeEventListener('geolocation:updated', onGeoUpdated);
+  }, []);
 
   const reset = useCallback(() => {
     localStorage.removeItem(CACHE_KEY);

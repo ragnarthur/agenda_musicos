@@ -9,11 +9,11 @@ import CompanyNavbar from '../../components/navigation/CompanyNavbar';
 import { publicMusicianService, type MusicianPublic } from '../../services/publicApi';
 import Loading from '../../components/common/Loading';
 import toast from 'react-hot-toast';
-
-const BRAZILIAN_STATES = [
-  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG',
-  'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
-];
+import { BRAZILIAN_STATES } from '../../config/locations';
+import {
+  clearLocationPreference,
+  getLocationPreference,
+} from '../../utils/locationPreference';
 
 const COMMON_INSTRUMENTS = [
   'Violão', 'Guitarra', 'Baixo', 'Bateria', 'Teclado', 'Piano',
@@ -36,12 +36,46 @@ const MusicianSearch: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Inicializar com cidade da empresa
+  // Inicializar com cidade preferida (manual) ou cidade da empresa
   useEffect(() => {
+    const preference = getLocationPreference();
+    if (preference?.city && preference?.state) {
+      setSelectedCity(preference.city);
+      setSelectedState(preference.state);
+      return;
+    }
+
     if (organization?.city && organization?.state) {
       setSelectedCity(organization.city);
       setSelectedState(organization.state);
     }
+  }, [organization]);
+
+  useEffect(() => {
+    const onPreferenceUpdated = (event: Event) => {
+      const detail = (event as CustomEvent).detail as { city?: string; state?: string };
+      if (detail?.city && detail?.state) {
+        setSelectedCity(detail.city);
+        setSelectedState(detail.state);
+      }
+    };
+
+    const onPreferenceCleared = () => {
+      if (organization?.city && organization?.state) {
+        setSelectedCity(organization.city);
+        setSelectedState(organization.state);
+      } else {
+        setSelectedCity('');
+        setSelectedState('');
+      }
+    };
+
+    window.addEventListener('location:preference-updated', onPreferenceUpdated);
+    window.addEventListener('location:preference-cleared', onPreferenceCleared);
+    return () => {
+      window.removeEventListener('location:preference-updated', onPreferenceUpdated);
+      window.removeEventListener('location:preference-cleared', onPreferenceCleared);
+    };
   }, [organization]);
 
   // Carregar músicos quando cidade/estado mudar
@@ -224,6 +258,22 @@ const MusicianSearch: React.FC = () => {
                 >
                   <X className="h-4 w-4" />
                   Limpar filtros
+                </button>
+              </div>
+            )}
+
+            {(selectedCity || selectedState) && (
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                <MapPin className="h-4 w-4 text-indigo-500" />
+                <span>
+                  Buscando em {selectedCity || 'cidade'}{selectedState ? `, ${selectedState}` : ''}
+                </span>
+                <button
+                  type="button"
+                  onClick={clearLocationPreference}
+                  className="text-indigo-600 hover:text-indigo-700 underline underline-offset-2"
+                >
+                  Usar cidade da empresa
                 </button>
               </div>
             )}

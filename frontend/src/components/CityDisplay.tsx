@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MapPin, X, Mail, Check, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGeolocation } from '../hooks/useGeolocation';
 
 const CITIES_IN_SOON = [
   { value: 'sao_paulo_sp', label: 'São Paulo, SP' },
+  { value: 'rio_de_janeiro_rj', label: 'Rio de Janeiro, RJ' },
   { value: 'belo_horizonte_mg', label: 'Belo Horizonte, MG' },
   { value: 'brasilia_df', label: 'Brasília, DF' },
 ];
@@ -13,11 +14,26 @@ interface CityDisplayProps {
   onDismiss?: () => void;
 }
 
+const AUTO_DISMISS_MS = 12000;
+
 const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
   const { city, state, isMonteCarmelo, isLoading, error, reset } = useGeolocation();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({ email: '', city: '' });
   const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    if (!isVisible) return;
+    if (isLoading || error || showForm || formStatus !== 'idle') return;
+
+    const timer = setTimeout(() => {
+      setIsVisible(false);
+      onDismiss?.();
+    }, AUTO_DISMISS_MS);
+
+    return () => clearTimeout(timer);
+  }, [isVisible, isLoading, error, showForm, formStatus, onDismiss]);
 
   const handleCitySelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setFormData((prev) => ({ ...prev, city: e.target.value }));
@@ -40,8 +56,18 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
   const handleDismiss = () => {
     setShowForm(false);
     setFormStatus('idle');
+    setIsVisible(false);
     onDismiss?.();
   };
+
+  const handleQuickCity = (value: string) => {
+    setFormData((prev) => ({ ...prev, city: value }));
+    setShowForm(true);
+  };
+
+  if (!isVisible) {
+    return null;
+  }
 
   if (isLoading) {
     return (
@@ -50,7 +76,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.4 }}
-        className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50"
+        className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-2rem)] sm:w-auto"
       >
         <div className="bg-amber-500/10 backdrop-blur-md rounded-2xl border border-amber-500/30 px-6 py-4 shadow-2xl max-w-2xl">
           <div className="flex items-center gap-3">
@@ -75,7 +101,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.4 }}
-        className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50"
+        className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-2rem)] sm:w-auto"
       >
         <div className="bg-red-500/10 backdrop-blur-md rounded-2xl border border-red-500/30 px-6 py-4 shadow-2xl max-w-2xl">
           <div className="flex items-start gap-3">
@@ -113,7 +139,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.4 }}
-        className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50"
+        className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-2rem)] sm:w-auto"
       >
         <div className="bg-green-500/10 backdrop-blur-md rounded-2xl border border-green-500/30 px-8 py-6 shadow-2xl max-w-md">
           <div className="flex flex-col items-center gap-3">
@@ -148,7 +174,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.4 }}
-          className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50"
+          className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-2rem)] sm:w-auto"
         >
           <div className={`${
             isMonteCarmelo 
@@ -169,41 +195,73 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
                     🎉 Monte Carmelo é parceiro do GigFlow!
                   </p>
                   <p className="text-amber-200/80 text-sm">
-                    Bem-vindo à plataforma que está transformando o mercado musical de Monte Carmelo e região.
+                    Que bom ver você por aqui. A plataforma já está ativa na sua região.
                   </p>
-                  <div className="flex gap-2 mt-3">
+                  <div className="flex flex-wrap gap-2 mt-3">
                     <button
                       onClick={() => setShowForm(true)}
-                      className="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-all text-sm shadow-lg hover:shadow-xl"
+                      className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-all text-sm shadow-lg hover:shadow-xl"
                     >
                       Solicitar Acesso
                     </button>
+                    <button
+                      onClick={handleDismiss}
+                      className="px-4 py-2 bg-white/10 hover:bg-white/20 text-amber-200 hover:text-amber-100 font-medium rounded-lg transition-all text-sm border border-amber-500/20"
+                    >
+                      Ver depois
+                    </button>
+                  </div>
+                  <p className="text-amber-200/70 text-xs mt-3">
+                    Também estamos chegando em:
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {CITIES_IN_SOON.map((cityOption) => (
+                      <button
+                        key={cityOption.value}
+                        onClick={() => handleQuickCity(cityOption.value)}
+                        className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-amber-100 text-xs rounded-full border border-amber-500/20 transition-all"
+                      >
+                        {cityOption.label}
+                      </button>
+                    ))}
                   </div>
                 </>
               ) : (
                 <>
                   <p className="text-amber-100 font-semibold text-base mb-1">
-                    Você está em {city}, {state}
+                    Olá! Detectamos você em {city}, {state}.
                   </p>
                   <p className="text-amber-200/70 text-sm mb-3">
-                    Estamos chegando em mais cidades em breve! 🚀
-                    <br />
-                    Seja o primeiro a saber quando o GigFlow chegar em sua região.
+                    Estamos abrindo novas cidades agora — quer ser avisado quando chegar na sua região?
                   </p>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {CITIES_IN_SOON.map((cityOption) => (
+                      <button
+                        key={cityOption.value}
+                        onClick={() => handleQuickCity(cityOption.value)}
+                        className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-amber-100 text-xs rounded-full border border-amber-500/20 transition-all"
+                      >
+                        {cityOption.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() => setShowForm(true)}
-                      className="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-all text-sm shadow-lg hover:shadow-xl"
+                      className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-all text-sm shadow-lg hover:shadow-xl"
                     >
-                      Quero ser Avisado
+                      Quero ser avisado
                     </button>
                     <button
                       onClick={handleDismiss}
-                      className="px-3 py-2 bg-white/10 hover:bg-white/20 text-amber-200 hover:text-amber-100 font-medium rounded-lg transition-all text-sm border border-amber-500/20"
+                      className="px-4 py-2 bg-white/10 hover:bg-white/20 text-amber-200 hover:text-amber-100 font-medium rounded-lg transition-all text-sm border border-amber-500/20"
                     >
-                      Ignorar
+                      Fechar
                     </button>
                   </div>
+                  <p className="text-amber-200/50 text-xs mt-2">
+                    Esta mensagem fecha automaticamente em alguns segundos.
+                  </p>
                 </>
               )}
             </div>
@@ -225,7 +283,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.3 }}
-          className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50"
+          className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-2rem)] sm:w-auto"
         >
           <div className="bg-amber-500/10 backdrop-blur-md rounded-2xl border border-amber-500/30 px-6 py-5 shadow-2xl max-w-md w-full">
             <div className="flex items-start gap-3">

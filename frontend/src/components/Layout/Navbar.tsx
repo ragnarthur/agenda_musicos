@@ -19,6 +19,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../hooks/useNotifications';
 import OwlMascot from '../ui/OwlMascot';
 import ThemeToggle from './ThemeToggle';
+import CityBadge from '../CityBadge';
 
 const Navbar: React.FC = memo(() => {
   const { user, logout } = useAuth();
@@ -202,6 +203,7 @@ const Navbar: React.FC = memo(() => {
             </div>
 
             <div className="flex items-center gap-2">
+              <CityBadge className="hidden md:inline-flex" />
               <ThemeToggle />
               {showPlanShortcut && (
                 <Link
@@ -228,6 +230,9 @@ const Navbar: React.FC = memo(() => {
 
         {/* Navbar Mobile */}
         <div className="md:hidden relative pb-3">
+          <div className="mb-2">
+            <CityBadge />
+          </div>
           <div className="flex flex-wrap items-center gap-1.5 -ml-1">
             <Link
               to="/eventos"

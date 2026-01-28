@@ -16,6 +16,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompanyAuth } from '../../contexts/CompanyAuthContext';
 import OwlMascot from '../ui/OwlMascot';
+import CityBadge from '../CityBadge';
 
 const CompanyNavbar: React.FC = () => {
   const { organization, logout } = useCompanyAuth();
@@ -115,6 +116,7 @@ const CompanyNavbar: React.FC = () => {
 
             {/* User Actions */}
             <div className="flex items-center gap-4">
+              <CityBadge variant="light" className="hidden lg:inline-flex" />
               {/* Notifications */}
               <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
                 <Bell className="w-5 h-5" />
