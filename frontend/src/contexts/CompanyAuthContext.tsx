@@ -77,15 +77,13 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
     try {
       setLoading(true);
       const response = await companyService.login(email.toLowerCase().trim(), password);
-      
-      // Armazenar tokens
-      localStorage.setItem('companyToken', response.access);
-      localStorage.setItem('companyRefresh', response.refresh);
-      localStorage.setItem('userType', 'company');
-      
-      // Armazenar dados da organização
+
+      // Marcar sessão como ativa
+      sessionStorage.setItem(SESSION_KEY, 'true');
+
+      // Armazenar dados da organização (tokens ficam em cookies httpOnly)
       setOrganization(response.organization as Organization);
-      localStorage.setItem('companyOrganization', JSON.stringify(response.organization));
+      sessionStorage.setItem('companyOrganization', JSON.stringify(response.organization));
 
       toast.success(`Bem-vindo(a) à ${response.organization.name}!`);
     } catch (error: any) {
@@ -98,24 +96,31 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
   };
 
   const setSession = (payload: { organization: Organization; access?: string; refresh?: string }) => {
-    if (payload.access) {
-      localStorage.setItem('companyToken', payload.access);
-    }
-    if (payload.refresh) {
-      localStorage.setItem('companyRefresh', payload.refresh);
-    }
-    localStorage.setItem('userType', 'company');
+    // Marcar sessão como ativa
+    sessionStorage.setItem(SESSION_KEY, 'true');
+
+    // Armazenar dados da organização
     setOrganization(payload.organization);
-    localStorage.setItem('companyOrganization', JSON.stringify(payload.organization));
+    sessionStorage.setItem('companyOrganization', JSON.stringify(payload.organization));
   };
 
   const logout = (): void => {
-    // Limpar storage
-    localStorage.removeItem('companyToken');
-    localStorage.removeItem('companyRefresh');
-    localStorage.removeItem('userType');
-    localStorage.removeItem('companyOrganization');
-    
+    // Revogar token do Google se existir
+    const organizationEmail = organization?.contact_email;
+    if (organizationEmail && window.google?.accounts?.id) {
+      window.google.accounts.id.revoke(organizationEmail, (done) => {
+        if (done.error) {
+          console.warn('Erro ao revogar Google token:', done.error);
+        } else {
+          console.log('Google session revoked');
+        }
+      });
+    }
+
+    // Limpar sessionStorage
+    sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem('companyOrganization');
+
     // Limpar estado
     setOrganization(null);
     setLoading(false);
@@ -125,23 +130,13 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
 
   const refreshToken = async (): Promise<void> => {
     try {
-      const refreshToken = localStorage.getItem('companyRefresh');
-      if (!refreshToken) {
-        throw new Error('Refresh token não encontrado');
-      }
-
-      // Chamar endpoint de refresh do backend
-      const response = await companyService.refreshToken(refreshToken);
-
-      // Atualizar access token
-      localStorage.setItem('companyToken', response.access);
-
-      // Se o backend retornar um novo refresh token, atualizar também
-      if (response.refresh) {
-        localStorage.setItem('companyRefresh', response.refresh);
-      }
+      // Tokens agora são gerenciados por cookies httpOnly no backend
+      // Este método pode ser usado para validar a sessão se necessário
+      const dashboard = await companyService.getDashboard();
+      setOrganization(dashboard.organization);
+      sessionStorage.setItem('companyOrganization', JSON.stringify(dashboard.organization));
     } catch (error) {
-      console.error('Erro ao renovar token:', error);
+      console.error('Erro ao renovar sessão:', error);
       logout();
       throw error;
     }
@@ -151,7 +146,7 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
     try {
       const updatedOrg = await companyService.updateProfile(data);
       setOrganization(updatedOrg);
-      localStorage.setItem('companyOrganization', JSON.stringify(updatedOrg));
+      sessionStorage.setItem('companyOrganization', JSON.stringify(updatedOrg));
       toast.success('Perfil atualizado com sucesso!');
     } catch (error: any) {
       const message = error?.response?.data?.detail || 'Erro ao atualizar perfil.';

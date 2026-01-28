@@ -255,14 +255,14 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
 
       if (!detail?.data) return;
 
-      const isMonteCarmelo = detail.data.city?.toLowerCase().includes('monte carmelo') || false;
+      const isMonteCarmelo = detail.data?.city?.toLowerCase().includes('monte carmelo') || false;
 
       setData((prev) => ({
         ...prev,
-        city: detail.data.city ?? prev.city,
-        state: detail.data.state ?? prev.state,
-        country: detail.data.country ?? prev.country,
-        coordinates: detail.coordinates ?? prev.coordinates,
+        city: detail.data?.city ?? prev.city,
+        state: detail.data?.state ?? prev.state,
+        country: detail.data?.country ?? prev.country,
+        coordinates: detail?.coordinates ?? prev.coordinates,
         isLoading: false,
         error: null,
         hasPermission: true,

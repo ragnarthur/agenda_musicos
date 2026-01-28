@@ -8,6 +8,7 @@ from .views import (
     LeaderAvailabilityViewSet,
     ConnectionViewSet,
     BadgeViewSet,
+    InstrumentViewSet,
     upload_avatar,
     upload_cover,
     get_musician_connections,
@@ -64,6 +65,7 @@ from .registration_views import (
     SubscriptionStatusUpdateView,
     RegisterWithInviteView,
     RegisterCompanyView,
+    update_avatar,
 )
 from .password_views import (
     PasswordResetRequestView,
@@ -81,6 +83,7 @@ router.register(
 )
 router.register("connections", ConnectionViewSet, basename="connection")
 router.register("badges", BadgeViewSet, basename="badge")
+router.register("instruments", InstrumentViewSet, basename="instrument")
 
 urlpatterns = [
     # Registro de novos usuários (público)
@@ -91,6 +94,7 @@ urlpatterns = [
         name="register-with-invite",
     ),
     path("register-company/", RegisterCompanyView.as_view(), name="register-company"),
+    path("musicians/avatar/", update_avatar, name="update-avatar"),
     path("check-email/", CheckEmailView.as_view(), name="check-email"),
     path("verify-email/", VerifyEmailView.as_view(), name="verify-email"),
     path(

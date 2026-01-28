@@ -9,19 +9,6 @@ import { googleAuthService } from '../services/publicApi';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import { useCompanyAuth } from '../contexts/CompanyAuthContext';
 
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: unknown) => void;
-          renderButton: (element: HTMLElement, config: unknown) => void;
-        };
-      };
-    };
-  }
-}
-
 interface LoginForm {
   email: string;
   password: string;
@@ -32,6 +19,7 @@ export default function LoginCompany() {
   const { login, setSession } = useCompanyAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const {
     register,
@@ -54,6 +42,9 @@ export default function LoginCompany() {
   };
 
   const handleGoogleCallback = useCallback(async (response: { credential: string }) => {
+    if (isGoogleLoading) return; // Prevenir múltiplas chamadas
+
+    setIsGoogleLoading(true);
     try {
       const result = await googleAuthService.authenticate(response.credential, 'company');
       if (result.new_user) {
@@ -71,19 +62,36 @@ export default function LoginCompany() {
       } else {
         toast.error('Esta conta não é de uma empresa');
       }
-    } catch {
-      toast.error('Erro ao autenticar com Google');
+    } catch (error: any) {
+      console.error('Google OAuth error:', error);
+      const message = error?.response?.data?.detail;
+
+      if (error?.response?.status === 401) {
+        toast.error(message || 'Token do Google inválido ou expirado');
+      } else if (error?.response?.status === 400) {
+        toast.error(message || 'Dados inválidos do Google');
+      } else {
+        toast.error(message || 'Erro ao autenticar com Google');
+      }
+    } finally {
+      setIsGoogleLoading(false);
     }
-  }, [navigate, setSession]);
+  }, [navigate, setSession, isGoogleLoading]);
 
   // Renderiza botão do Google
   useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+    if (!clientId) {
+      console.warn('VITE_GOOGLE_CLIENT_ID não configurado. Login com Google desabilitado.');
+      return;
+    }
+
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
     script.onload = () => {
-      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-      if (clientId && window.google) {
+      if (window.google) {
         window.google.accounts.id.initialize({
           client_id: clientId,
           callback: handleGoogleCallback,
@@ -99,9 +107,16 @@ export default function LoginCompany() {
         }
       }
     };
+    script.onerror = () => {
+      console.error('Erro ao carregar Google Sign-In');
+    };
     document.body.appendChild(script);
     return () => {
-      document.body.removeChild(script);
+      try {
+        document.body.removeChild(script);
+      } catch (e) {
+        // Script já removido
+      }
     };
   }, [handleGoogleCallback]);
 
@@ -122,7 +137,17 @@ export default function LoginCompany() {
           </div>
 
           {/* Google Sign In */}
-          <div id="google-signin-button" className="mb-6 flex justify-center" />
+          <div className="relative mb-6">
+            <div
+              id="google-signin-button"
+              className={`flex justify-center transition-opacity ${isGoogleLoading ? 'opacity-50 pointer-events-none' : ''}`}
+            />
+            {isGoogleLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600" />
+              </div>
+            )}
+          </div>
 
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">

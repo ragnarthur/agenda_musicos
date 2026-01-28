@@ -1,6 +1,6 @@
 # agenda/admin.py
 from django.contrib import admin
-from .models import Musician, Event, Availability, LeaderAvailability
+from .models import Musician, Event, Availability, LeaderAvailability, Instrument
 
 
 @admin.register(Musician)
@@ -122,3 +122,39 @@ class LeaderAvailabilityAdmin(admin.ModelAdmin):
                 # Usuário não possui perfil de músico - deixa leader como None
                 pass
         super().save_model(request, obj, form, change)
+
+
+@admin.register(Instrument)
+class InstrumentAdmin(admin.ModelAdmin):
+    list_display = ['display_name', 'name', 'type', 'usage_count', 'is_approved', 'created_at']
+    list_filter = ['type', 'is_approved']
+    search_fields = ['name', 'display_name']
+    readonly_fields = ['name', 'created_at', 'created_by']
+    ordering = ['-usage_count', 'display_name']
+
+    actions = ['approve_instruments', 'reject_instruments']
+
+    fieldsets = (
+        ('Informações do Instrumento', {
+            'fields': ('display_name', 'name', 'type', 'is_approved')
+        }),
+        ('Estatísticas', {
+            'fields': ('usage_count',)
+        }),
+        ('Auditoria', {
+            'fields': ('created_by', 'created_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def approve_instruments(self, request, queryset):
+        """Aprova instrumentos selecionados"""
+        count = queryset.update(is_approved=True)
+        self.message_user(request, f'{count} instrumento(s) aprovado(s).')
+    approve_instruments.short_description = "Aprovar instrumentos selecionados"
+
+    def reject_instruments(self, request, queryset):
+        """Rejeita instrumentos selecionados"""
+        count = queryset.update(is_approved=False)
+        self.message_user(request, f'{count} instrumento(s) rejeitado(s).')
+    reject_instruments.short_description = "Rejeitar instrumentos selecionados"

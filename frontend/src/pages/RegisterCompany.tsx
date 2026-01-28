@@ -10,19 +10,6 @@ import { BRAZILIAN_STATES } from '../config/cities';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import { useCompanyAuth } from '../contexts/CompanyAuthContext';
 
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: unknown) => void;
-          renderButton: (element: HTMLElement, config: unknown) => void;
-        };
-      };
-    };
-  }
-}
-
 export default function RegisterCompany() {
   const navigate = useNavigate();
   const { setSession } = useCompanyAuth();

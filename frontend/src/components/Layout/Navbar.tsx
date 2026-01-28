@@ -14,6 +14,7 @@ import {
   UserCheck,
   Settings,
   Wallet,
+  Shield,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../hooks/useNotifications';
@@ -54,6 +55,7 @@ const Navbar: React.FC = memo(() => {
 
   const displayName =
     user?.full_name || user?.user?.first_name || user?.user?.username || 'Conta';
+  const isStaff = Boolean(user?.user?.is_staff);
 
   const handleLogout = useCallback(async () => {
     await logout();
@@ -175,6 +177,20 @@ const Navbar: React.FC = memo(() => {
                     <Wallet className="h-4 w-4" />
                     Valores e equipamentos
                   </RouterNavLink>
+                  {isStaff && (
+                    <RouterNavLink
+                      to="/admin/dashboard"
+                      onClick={() => setOpenDesktopMore(false)}
+                      className={({ isActive }) =>
+                        `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                          isActive ? 'bg-blue-500/10 text-blue-100' : 'text-slate-200 hover:bg-white/5'
+                        }`
+                      }
+                    >
+                      <Shield className="h-4 w-4" />
+                      Administração
+                    </RouterNavLink>
+                  )}
                   {showPlanShortcut && (
                     <RouterNavLink
                       to="/planos"
@@ -370,6 +386,16 @@ const Navbar: React.FC = memo(() => {
                   </span>
                 )}
               </Link>
+              {isStaff && (
+                <Link
+                  to="/admin/dashboard"
+                  onClick={() => setOpenMore(false)}
+                  className="flex items-center gap-3 px-3 py-2 text-blue-200 hover:bg-blue-500/10 rounded-lg transition-colors"
+                >
+                  <Shield className="h-5 w-5" />
+                  <span className="text-sm font-medium">Administração</span>
+                </Link>
+              )}
               {showPlanShortcut && (
                 <Link
                   to="/planos"

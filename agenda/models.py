@@ -4,7 +4,90 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.utils import timezone
+from django.conf import settings
 from datetime import datetime
+import re
+import unicodedata
+
+
+class Instrument(models.Model):
+    """Instrumento musical disponível no sistema."""
+
+    # Nome normalizado (lowercase, sem acentos) - chave única
+    name = models.CharField(
+        max_length=50,
+        unique=True,
+        db_index=True,
+        help_text="Nome normalizado do instrumento (ex: 'violao')"
+    )
+
+    # Nome de exibição (com formatação original)
+    display_name = models.CharField(
+        max_length=50,
+        help_text="Nome formatado para exibição (ex: 'Violão')"
+    )
+
+    # Tipo do instrumento
+    INSTRUMENT_TYPE_CHOICES = [
+        ('predefined', 'Pré-definido'),  # Instrumentos oficiais do sistema
+        ('community', 'Comunidade'),     # Criados por usuários
+    ]
+    type = models.CharField(
+        max_length=20,
+        choices=INSTRUMENT_TYPE_CHOICES,
+        default='community'
+    )
+
+    # Estatísticas de uso
+    usage_count = models.PositiveIntegerField(
+        default=0,
+        help_text="Quantos músicos usam este instrumento"
+    )
+
+    # Auditoria
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='instruments_created',
+        help_text="Usuário que adicionou este instrumento (se community)"
+    )
+
+    # Moderação
+    is_approved = models.BooleanField(
+        default=True,
+        help_text="Se False, precisa aprovação de admin"
+    )
+
+    class Meta:
+        ordering = ['-usage_count', 'display_name']
+        verbose_name = 'Instrumento'
+        verbose_name_plural = 'Instrumentos'
+
+    def __str__(self):
+        return self.display_name
+
+    @staticmethod
+    def normalize_name(name: str) -> str:
+        """Normaliza nome do instrumento (lowercase, sem acentos)."""
+        name = name.strip().lower()
+        # Remove acentos
+        name = unicodedata.normalize('NFKD', name)
+        name = ''.join([c for c in name if not unicodedata.combining(c)])
+        # Remove caracteres especiais (mantém apenas letras, números, espaços, hífens)
+        name = re.sub(r'[^a-z0-9\s\-]', '', name)
+        # Substitui múltiplos espaços por um único
+        name = re.sub(r'\s+', ' ', name)
+        return name
+
+    def increment_usage(self):
+        """Incrementa contador de uso."""
+        self.usage_count = models.F('usage_count') + 1
+        self.save(update_fields=['usage_count'])
+        # Refresh para ter o valor atualizado
+        self.refresh_from_db()
 
 
 class Organization(models.Model):
@@ -1262,6 +1345,27 @@ class PendingRegistration(models.Model):
             role="member",
             is_active=True,
         )
+
+        # Incrementa contadores de uso dos instrumentos
+        for instrument_name in instruments:
+            try:
+                instrument = Instrument.objects.get(
+                    name=Instrument.normalize_name(instrument_name)
+                )
+                instrument.increment_usage()
+            except Instrument.DoesNotExist:
+                # Instrumento não existe na tabela global
+                # (caso de instrumentos legados salvos antes da migração)
+                # Criar automaticamente:
+                Instrument.objects.get_or_create(
+                    name=Instrument.normalize_name(instrument_name),
+                    defaults={
+                        'display_name': instrument_name.capitalize(),
+                        'type': 'community',
+                        'is_approved': True,
+                        'usage_count': 1
+                    }
+                )
 
         # Atualiza status
         self.status = "completed"

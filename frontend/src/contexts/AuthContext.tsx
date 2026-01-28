@@ -67,6 +67,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       sessionStorage.setItem(SESSION_KEY, 'true');
       const musician = await musicianService.getMe();
       setUser(musician);
+      
+      // Atualizar avatar do Google se existir no sessionStorage
+      const googleAvatar = sessionStorage.getItem('_googleAvatarUrl');
+      if (googleAvatar && musician?.user?.id) {
+        try {
+          await api.patch('/musicians/avatar/', { avatar_url: googleAvatar });
+          sessionStorage.removeItem('_googleAvatarUrl');
+          console.log('Avatar do Google atualizado com sucesso');
+        } catch (avatarError) {
+          console.warn('Erro ao atualizar avatar do Google:', avatarError);
+        }
+      }
     } catch (error) {
       logError('Erro ao iniciar sessão:', error);
       throw error;
@@ -89,6 +101,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = useCallback(async () => {
     try {
+      // Revogar token do Google se existir
+      const userEmail = user?.user?.email;
+      if (userEmail && window.google?.accounts?.id) {
+        window.google.accounts.id.revoke(userEmail, (done) => {
+          if (done.error) {
+            console.warn('Erro ao revogar Google token:', done.error);
+          } else {
+            console.log('Google session revoked');
+          }
+        });
+      }
+
       await authService.logout();
     } catch (error) {
       logError('Erro ao finalizar sessão:', error);
@@ -97,7 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       sessionStorage.removeItem(SESSION_KEY);
       setUser(null);
     }
-  }, []);
+  }, [user]);
 
   const value = useMemo<AuthContextType>(() => ({
     user,

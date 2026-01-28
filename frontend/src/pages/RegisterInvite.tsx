@@ -11,19 +11,6 @@ import { musicianRequestService, googleAuthService, inviteRegisterService } from
 import { authService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: unknown) => void;
-          renderButton: (element: HTMLElement, config: unknown) => void;
-        };
-      };
-    };
-  }
-}
-
 const RegisterInvite: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -49,6 +36,7 @@ const RegisterInvite: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   useEffect(() => {
     if (!inviteToken) {
@@ -75,6 +63,9 @@ const RegisterInvite: React.FC = () => {
   }, [inviteToken]);
 
   const handleGoogleCallback = useCallback(async (response: { credential: string }) => {
+    if (isGoogleLoading) return; // Prevenir múltiplas chamadas
+
+    setIsGoogleLoading(true);
     try {
       const result = await googleAuthService.registerMusician(response.credential, inviteToken);
       if (result.user_type === 'musician') {
@@ -84,18 +75,35 @@ const RegisterInvite: React.FC = () => {
       } else {
         showToast.error('Cadastro inválido para músico.');
       }
-    } catch {
-      showToast.error('Erro ao concluir cadastro com Google.');
+    } catch (error: any) {
+      console.error('Google OAuth error:', error);
+      const message = error?.response?.data?.detail;
+
+      if (error?.response?.status === 401) {
+        showToast.error(message || 'Token do Google inválido ou expirado');
+      } else if (error?.response?.status === 400) {
+        showToast.error(message || 'Dados inválidos do Google');
+      } else {
+        showToast.error(message || 'Erro ao concluir cadastro com Google');
+      }
+    } finally {
+      setIsGoogleLoading(false);
     }
-  }, [inviteToken, navigate, setSession]);
+  }, [inviteToken, navigate, setSession, isGoogleLoading]);
 
   useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+    if (!clientId) {
+      console.warn('VITE_GOOGLE_CLIENT_ID não configurado. Login com Google desabilitado.');
+      return;
+    }
+
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
     script.onload = () => {
-      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-      if (clientId && window.google) {
+      if (window.google) {
         window.google.accounts.id.initialize({
           client_id: clientId,
           callback: handleGoogleCallback,
@@ -111,9 +119,16 @@ const RegisterInvite: React.FC = () => {
         }
       }
     };
+    script.onerror = () => {
+      console.error('Erro ao carregar Google Sign-In');
+    };
     document.body.appendChild(script);
     return () => {
-      document.body.removeChild(script);
+      try {
+        document.body.removeChild(script);
+      } catch (e) {
+        // Script já removido
+      }
     };
   }, [handleGoogleCallback]);
 
@@ -206,7 +221,17 @@ const RegisterInvite: React.FC = () => {
           </div>
 
           <div className="mt-6">
-            <div id="google-signin-invite" className="mb-4 flex justify-center" />
+            <div className="relative mb-4">
+              <div
+                id="google-signin-invite"
+                className={`flex justify-center transition-opacity ${isGoogleLoading ? 'opacity-50 pointer-events-none' : ''}`}
+              />
+              {isGoogleLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600" />
+                </div>
+              )}
+            </div>
             <div className="relative mb-4">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-200" />

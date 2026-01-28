@@ -17,6 +17,7 @@ from .models import (
     MusicianRequest,
     ContactRequest,
     Organization,
+    Instrument,
 )
 from .validators import validate_not_empty_string, sanitize_string
 
@@ -28,7 +29,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'full_name']
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'full_name', 'is_staff']
         read_only_fields = ['id']
 
     def get_full_name(self, obj):
@@ -219,6 +220,54 @@ class MusicianUpdateSerializer(serializers.ModelSerializer):
             attrs['state'] = sanitize_string(attrs.get('state'), max_length=2, allow_empty=True, to_upper=True)
 
         return attrs
+
+    def update(self, instance, validated_data):
+        """Atualiza perfil do músico e gerencia contadores de uso de instrumentos."""
+
+        # Guarda instrumentos antigos antes de atualizar
+        old_instruments = set(instance.instruments) if instance.instruments else set()
+
+        # Atualiza o músico com os novos dados
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Atualiza contadores de uso de instrumentos
+        new_instruments = set(instance.instruments) if instance.instruments else set()
+
+        # Instrumentos removidos: decrementar
+        removed = old_instruments - new_instruments
+        for inst_name in removed:
+            try:
+                instrument = Instrument.objects.get(
+                    name=Instrument.normalize_name(inst_name)
+                )
+                instrument.usage_count = max(0, instrument.usage_count - 1)
+                instrument.save(update_fields=['usage_count'])
+            except Instrument.DoesNotExist:
+                pass
+
+        # Instrumentos adicionados: incrementar
+        added = new_instruments - old_instruments
+        for inst_name in added:
+            try:
+                instrument = Instrument.objects.get(
+                    name=Instrument.normalize_name(inst_name)
+                )
+                instrument.increment_usage()
+            except Instrument.DoesNotExist:
+                # Criar se não existir
+                Instrument.objects.get_or_create(
+                    name=Instrument.normalize_name(inst_name),
+                    defaults={
+                        'display_name': inst_name.capitalize(),
+                        'type': 'community',
+                        'is_approved': True,
+                        'usage_count': 1
+                    }
+                )
+
+        return instance
 
 
 class AvailabilitySerializer(serializers.ModelSerializer):
@@ -1181,3 +1230,58 @@ class CompanyRegisterSerializer(serializers.Serializer):
         attrs['city'] = sanitize_string(attrs['city'], max_length=100, allow_empty=False)
         attrs['state'] = sanitize_string(attrs['state'], max_length=2, allow_empty=False, to_upper=True)
         return attrs
+
+
+class InstrumentSerializer(serializers.ModelSerializer):
+    """Serializer para listar instrumentos."""
+
+    class Meta:
+        model = Instrument
+        fields = ['id', 'name', 'display_name', 'type', 'usage_count']
+        read_only_fields = ['id', 'usage_count']
+
+
+class InstrumentCreateSerializer(serializers.Serializer):
+    """Serializer para criar novo instrumento customizado."""
+
+    display_name = serializers.CharField(
+        max_length=50,
+        min_length=3,
+        help_text="Nome do instrumento (ex: 'Cavaquinho')"
+    )
+
+    def validate_display_name(self, value):
+        """Valida e normaliza nome do instrumento."""
+        value = value.strip()
+
+        if len(value) < 3:
+            raise serializers.ValidationError("Nome muito curto (mínimo 3 caracteres)")
+
+        if len(value) > 50:
+            raise serializers.ValidationError("Nome muito longo (máximo 50 caracteres)")
+
+        # Normaliza para verificar duplicata
+        normalized = Instrument.normalize_name(value)
+
+        # Verifica se já existe (case-insensitive)
+        if Instrument.objects.filter(name=normalized).exists():
+            existing = Instrument.objects.get(name=normalized)
+            raise serializers.ValidationError(
+                f"Instrumento já existe: '{existing.display_name}'"
+            )
+
+        return value
+
+    def create(self, validated_data):
+        display_name = validated_data['display_name']
+        normalized = Instrument.normalize_name(display_name)
+
+        instrument = Instrument.objects.create(
+            name=normalized,
+            display_name=display_name,
+            type='community',
+            created_by=self.context['request'].user,
+            is_approved=True  # Auto-aprovar por enquanto
+        )
+
+        return instrument

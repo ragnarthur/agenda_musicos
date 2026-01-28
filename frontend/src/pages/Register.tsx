@@ -15,19 +15,6 @@ import MusicProfileStep from '../components/Registration/MusicProfileStep';
 import { googleAuthService } from '../services/publicApi';
 import { useAuth } from '../contexts/AuthContext';
 
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: unknown) => void;
-          renderButton: (element: HTMLElement, config: unknown) => void;
-        };
-      };
-    };
-  }
-}
-
 const BRAZILIAN_CITIES = [
   { city: 'São Paulo', state: 'SP' },
   { city: 'Rio de Janeiro', state: 'RJ' },
@@ -155,12 +142,46 @@ const Register: React.FC = () => {
     }
   }, [inviteToken, navigate]);
 
+  // Carregar dados do Google do sessionStorage (ao invés de query params)
   useEffect(() => {
+    const googleData = sessionStorage.getItem('_googleRegisterData');
+    if (googleData) {
+      try {
+        const data = JSON.parse(googleData);
+        setFormData((prev) => ({
+          ...prev,
+          email: data.email || prev.email,
+          first_name: data.firstName || prev.first_name,
+          last_name: data.lastName || prev.last_name,
+        }));
+
+        setGoogleUserInfo({
+          email: data.email,
+          first_name: data.firstName,
+          last_name: data.lastName,
+        });
+
+        // Salvar picture para usar como avatar inicial (opcional)
+        if (data.picture) {
+          sessionStorage.setItem('_googlePicture', data.picture);
+          sessionStorage.setItem('_googleAvatarUrl', data.picture);
+        }
+
+        // Limpar dados após uso
+        sessionStorage.removeItem('_googleRegisterData');
+
+        showToast.success('Dados do Google carregados! Complete seu cadastro.');
+      } catch (e) {
+        console.error('Erro ao processar dados do Google:', e);
+      }
+    }
+
+    // Fallback: manter suporte a query params por compatibilidade (mas não recomendado)
     const email = queryParams.get('email') || '';
     const firstName = queryParams.get('first_name') || '';
     const lastName = queryParams.get('last_name') || '';
 
-    if (email || firstName || lastName) {
+    if (!googleData && (email || firstName || lastName)) {
       setFormData((prev) => ({
         ...prev,
         email: email || prev.email,
