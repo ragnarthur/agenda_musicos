@@ -20,6 +20,7 @@ export default function MusicianRequest() {
     register,
     handleSubmit,
     formState: { errors },
+    setValue,
   } = useForm<MusicianRequestCreate>();
 
   // Carregar Google Sign-In
@@ -64,6 +65,29 @@ export default function MusicianRequest() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    const googleData = sessionStorage.getItem('_googleRegisterData');
+    if (!googleData) return;
+
+    try {
+      const data = JSON.parse(googleData);
+      const fullName = [data.firstName, data.lastName].filter(Boolean).join(' ').trim();
+
+      if (fullName) {
+        setValue('full_name', fullName, { shouldDirty: true });
+      }
+      if (data.email) {
+        setValue('email', data.email, { shouldDirty: true });
+      }
+
+      showToast.success('Dados do Google carregados. Complete o formulário.');
+    } catch (error) {
+      console.error('Erro ao processar dados do Google:', error);
+    } finally {
+      sessionStorage.removeItem('_googleRegisterData');
+    }
+  }, [setValue]);
 
   // Handler para Google Auth
   const handleGoogleCallback = async (response: { credential: string }) => {

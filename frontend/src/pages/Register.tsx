@@ -14,7 +14,6 @@ import PersonalInfoStep from '../components/Registration/PersonalInfoStep';
 import MusicProfileStep from '../components/Registration/MusicProfileStep';
 import { googleAuthService } from '../services/publicApi';
 import { useAuth } from '../contexts/AuthContext';
-import GoogleIcon from '../components/icons/GoogleIcon';
 
 const BRAZILIAN_CITIES = [
   { city: 'São Paulo', state: 'SP' },
@@ -101,7 +100,6 @@ const Register: React.FC = () => {
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const [filteredCities, setFilteredCities] = useState<Array<{ city: string; state: string }>>([]);
   const [isEmailDuplicate, setIsEmailDuplicate] = useState(false);
-  const [googleReady, setGoogleReady] = useState(false);
 
   // Callback for email validation from AccountStep
   const handleEmailValidation = useCallback((_isValid: boolean, isDuplicate: boolean) => {
@@ -232,7 +230,6 @@ const Register: React.FC = () => {
     script.onload = () => {
       const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
       if (!clientId) {
-        setGoogleReady(false);
         return;
       }
       if (window.google) {
@@ -249,7 +246,6 @@ const Register: React.FC = () => {
             width: '100%',
           });
         }
-        setGoogleReady(true);
       }
     };
     document.body.appendChild(script);
@@ -863,25 +859,6 @@ const Register: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8">
           {currentStep === 1 && (
             <div className="mb-6">
-              <button
-                type="button"
-                onClick={() => {
-                  if (!googleReady || !window.google) {
-                    showToast.error('Google não configurado para este ambiente.');
-                    return;
-                  }
-                  window.google.accounts.id.prompt((notification) => {
-                    if (notification?.isNotDisplayed?.() || notification?.isSkippedMoment?.()) {
-                      showToast.info('Clique no botão do Google abaixo para continuar.');
-                    }
-                  });
-                }}
-                aria-disabled={!googleReady}
-                className={`w-full mb-4 inline-flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors ${!googleReady ? 'opacity-60 cursor-not-allowed' : ''}`}
-              >
-                <GoogleIcon className="h-5 w-5" />
-                Continuar com Google
-              </button>
               <div id="google-signin-button" className="mb-4 flex justify-center" />
               {googleUserInfo && (
                 <div className="mb-4 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">

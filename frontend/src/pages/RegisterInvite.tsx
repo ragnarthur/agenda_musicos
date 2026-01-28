@@ -10,7 +10,6 @@ import { showToast } from '../utils/toast';
 import { musicianRequestService, googleAuthService, inviteRegisterService } from '../services/publicApi';
 import { authService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import GoogleIcon from '../components/icons/GoogleIcon';
 
 const RegisterInvite: React.FC = () => {
   const location = useLocation();
@@ -38,7 +37,6 @@ const RegisterInvite: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [googleReady, setGoogleReady] = useState(false);
 
   useEffect(() => {
     if (!inviteToken) {
@@ -98,7 +96,6 @@ const RegisterInvite: React.FC = () => {
 
     if (!clientId) {
       console.warn('VITE_GOOGLE_CLIENT_ID não configurado. Login com Google desabilitado.');
-      setGoogleReady(false);
       return;
     }
 
@@ -120,7 +117,6 @@ const RegisterInvite: React.FC = () => {
             width: '100%',
           });
         }
-        setGoogleReady(true);
       }
     };
     script.onerror = () => {
@@ -225,25 +221,6 @@ const RegisterInvite: React.FC = () => {
           </div>
 
           <div className="mt-6">
-              <button
-                type="button"
-                onClick={() => {
-                  if (!googleReady || !window.google) {
-                    showToast.error('Google não configurado para este ambiente.');
-                    return;
-                  }
-                  window.google.accounts.id.prompt((notification) => {
-                    if (notification?.isNotDisplayed?.() || notification?.isSkippedMoment?.()) {
-                      showToast.info('Clique no botão do Google abaixo para continuar.');
-                    }
-                  });
-                }}
-                aria-disabled={!googleReady}
-                className={`w-full mb-4 inline-flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors ${!googleReady ? 'opacity-60 cursor-not-allowed' : ''}`}
-              >
-              <GoogleIcon className="h-5 w-5" />
-              Concluir com Google
-            </button>
             <div className="relative mb-4">
               <div
                 id="google-signin-invite"
