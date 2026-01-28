@@ -99,10 +99,10 @@ const CityLanding: React.FC = () => {
               <span className="text-lg font-medium">{getCityDisplayName(city)}</span>
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
-              Musicos em {city.name}
+              Músicos em {city.name}
             </h1>
             <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              {city.description || `Encontre os melhores musicos de ${city.name} para seu evento.`}
+              {city.description || `Encontre os melhores músicos de ${city.name} para seu evento.`}
             </p>
           </motion.div>
         </section>
@@ -205,7 +205,7 @@ const CityLanding: React.FC = () => {
         <section className="container mx-auto px-4 py-8">
           {loading ? (
             <div className="flex justify-center items-center py-20">
-              <Loading text="Carregando musicos..." />
+              <Loading text="Carregando músicos..." />
             </div>
           ) : filteredMusicians.length === 0 ? (
             <motion.div
@@ -216,8 +216,8 @@ const CityLanding: React.FC = () => {
               <Music className="h-16 w-16 text-gray-500 mx-auto mb-4" />
               <p className="text-xl text-gray-400">
                 {selectedInstrument === 'all'
-                  ? `Nenhum musico encontrado em ${city.name}.`
-                  : `Nenhum musico de ${formatInstrumentLabel(selectedInstrument)} encontrado em ${city.name}.`}
+                  ? `Nenhum músico encontrado em ${city.name}.`
+                  : `Nenhum músico de ${formatInstrumentLabel(selectedInstrument)} encontrado em ${city.name}.`}
               </p>
             </motion.div>
           ) : (
@@ -251,14 +251,14 @@ const CityLanding: React.FC = () => {
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-lg"
               >
                 <Building2 className="h-5 w-5" />
-                E empresa? Cadastre-se
+                É empresa? Cadastre-se
               </Link>
               <Link
                 to="/solicitar-acesso"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border-2 border-white/30 hover:border-white/50 transition-all text-lg"
               >
                 <UserPlus className="h-5 w-5" />
-                E musico? Solicite acesso
+                É músico? Solicite acesso
               </Link>
             </div>
           </motion.div>
@@ -336,7 +336,7 @@ const MusicianCard: React.FC<MusicianCardProps> = ({ musician, delay, city }) =>
                 {Number(musician.average_rating).toFixed(1)}
               </span>
               <span className="text-gray-400 text-sm">
-                ({musician.total_ratings} {musician.total_ratings === 1 ? 'avaliacao' : 'avaliacoes'})
+                ({musician.total_ratings} {musician.total_ratings === 1 ? 'avaliação' : 'avaliações'})
               </span>
             </div>
           )}

@@ -77,11 +77,11 @@ const Landing: React.FC = () => {
       }
     ],
     primaryCTA: {
-      text: "Começar como Músico",
-      to: "/cadastro"
+      text: "Solicitar Acesso",
+      to: "/solicitar-acesso"
     },
     secondaryCTA: {
-      text: "Já sou músico",
+      text: "Entrar",
       to: "/login"
     }
   };
@@ -130,11 +130,11 @@ const Landing: React.FC = () => {
       }
     ],
     primaryCTA: {
-      text: "Contratar Músicos",
+      text: "Cadastrar Empresa",
       to: "/cadastro-empresa"
     },
     secondaryCTA: {
-      text: "Já sou empresa",
+      text: "Entrar",
       to: "/login-empresa"
     }
   };

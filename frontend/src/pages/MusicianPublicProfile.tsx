@@ -76,7 +76,7 @@ const MusicianPublicProfile: React.FC = () => {
         }
       } catch (err) {
         console.error('Error fetching musician:', err);
-        setError('Musico nao encontrado');
+        setError('Músico não encontrado');
       } finally {
         setLoading(false);
       }
@@ -112,7 +112,7 @@ const MusicianPublicProfile: React.FC = () => {
       <FullscreenBackground enableBlueWaves>
         <div className="container mx-auto px-4 py-20 text-center">
           <Music className="h-16 w-16 text-gray-500 mx-auto mb-4" />
-          <p className="text-xl text-gray-400 mb-6">{error || 'Musico nao encontrado'}</p>
+          <p className="text-xl text-gray-400 mb-6">{error || 'Músico não encontrado'}</p>
           <Link
             to={backLink}
             className="inline-flex items-center gap-2 text-primary-400 hover:text-primary-300"
@@ -135,7 +135,7 @@ const MusicianPublicProfile: React.FC = () => {
             className="inline-flex items-center gap-2 text-primary-400 hover:text-primary-300 transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
-            {city ? `Voltar para musicos de ${city.name}` : 'Voltar'}
+            {city ? `Voltar para músicos de ${city.name}` : 'Voltar'}
           </Link>
         </div>
 
@@ -191,7 +191,7 @@ const MusicianPublicProfile: React.FC = () => {
                       {Number(musician.average_rating).toFixed(1)}
                     </span>
                     <span className="text-gray-400">
-                      ({musician.total_ratings} {musician.total_ratings === 1 ? 'avaliacao' : 'avaliacoes'})
+                      ({musician.total_ratings} {musician.total_ratings === 1 ? 'avaliação' : 'avaliações'})
                     </span>
                   </div>
                 )}
@@ -262,7 +262,7 @@ const MusicianPublicProfile: React.FC = () => {
                 </button>
                 {!isCompanyAuth && (
                   <p className="text-gray-400 text-sm mt-2 text-center md:text-left">
-                    Voce precisa ter uma conta de empresa para entrar em contato.
+                    Você precisa ter uma conta de empresa para entrar em contato.
                   </p>
                 )}
               </div>
@@ -347,14 +347,14 @@ const MusicianPublicProfile: React.FC = () => {
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-lg"
               >
                 <Building2 className="h-5 w-5" />
-                E empresa? Cadastre-se
+                É empresa? Cadastre-se
               </Link>
               <Link
                 to="/solicitar-acesso"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border-2 border-white/30 hover:border-white/50 transition-all text-lg"
               >
                 <UserPlus className="h-5 w-5" />
-                E musico? Solicite acesso
+                É músico? Solicite acesso
               </Link>
             </div>
           </motion.div>
