@@ -9,14 +9,12 @@ import { musicianRequestService, googleAuthService, type MusicianRequestCreate }
 import { BRAZILIAN_STATES } from '../config/cities';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import { showToast } from '../utils/toast';
-import GoogleIcon from '../components/icons/GoogleIcon';
 
 export default function MusicianRequest() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [googleReady, setGoogleReady] = useState(false);
 
   const {
     register,
@@ -42,7 +40,16 @@ export default function MusicianRequest() {
           client_id: clientId,
           callback: handleGoogleCallback,
         });
-        setGoogleReady(true);
+
+        // Renderizar botão oficial do Google
+        const buttonDiv = document.getElementById('google-signin-request');
+        if (buttonDiv) {
+          window.google.accounts.id.renderButton(buttonDiv, {
+            theme: 'outline',
+            size: 'large',
+            width: '100%',
+          });
+        }
       }
     };
     script.onerror = () => {
@@ -160,26 +167,10 @@ export default function MusicianRequest() {
             <p className="text-gray-600 dark:text-gray-300">
               Preencha o formulário para solicitar seu acesso como músico
             </p>
-          </div> 
-
-          {/* Google Sign-In */}
-          <div className="relative mb-6">
-            <button
-              type="button"
-              onClick={() => {
-                if (!googleReady || !window.google) {
-                  showToast.error('Google não configurado para este ambiente.');
-                  return;
-                }
-                window.google.accounts.id.prompt();
-              }}
-              className="w-full inline-flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-60"
-              disabled={!googleReady}
-            >
-              <GoogleIcon className="h-5 w-5" />
-              Solicitar Acesso com Google
-            </button>
           </div>
+
+          {/* Google Sign-In - Botão oficial */}
+          <div id="google-signin-request" className="mb-6 flex justify-center" />
 
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
@@ -189,7 +180,7 @@ export default function MusicianRequest() {
               <span className="px-2 bg-white text-gray-500">ou preencha o formulário</span>
             </div>
           </div>
- 
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Nome Completo */}
             <div>

@@ -18,7 +18,7 @@ interface GoogleAccountsId {
     email: string,
     callback: (done: { successful: boolean; error?: string }) => void
   ) => void;
-  prompt: () => void;
+  prompt: (listener?: (notification: unknown) => void) => void;
 }
 
 declare global {

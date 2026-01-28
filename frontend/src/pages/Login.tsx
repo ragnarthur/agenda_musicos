@@ -179,10 +179,14 @@ const Login: React.FC = () => {
                 showToast.error('Google não configurado para este ambiente.');
                 return;
               }
-              window.google.accounts.id.prompt();
+              window.google.accounts.id.prompt((notification) => {
+                if (notification?.isNotDisplayed?.() || notification?.isSkippedMoment?.()) {
+                  showToast.info('Clique no botão do Google abaixo para continuar.');
+                }
+              });
             }}
-            className="w-full mb-4 inline-flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-60"
-            disabled={!googleReady}
+            aria-disabled={!googleReady}
+            className={`w-full mb-4 inline-flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors ${!googleReady ? 'opacity-60 cursor-not-allowed' : ''}`}
           >
             <GoogleIcon className="h-5 w-5" />
             Entrar com Google
