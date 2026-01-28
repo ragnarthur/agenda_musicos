@@ -36,6 +36,8 @@ const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
   const NotificationSettings = lazy(() => import('./pages/NotificationSettings'));
 
   // Company pages lazy loading
+  const LoginCompany = lazy(() => import('./pages/LoginCompany'));
+  const RegisterCompany = lazy(() => import('./pages/RegisterCompany'));
   const CompanyDashboard = lazy(() => import('./pages/company/CompanyDashboard'));
   const CompanyLayout = lazy(() => import('./pages/company/CompanyLayout'));
 
@@ -117,13 +119,21 @@ const CompanyProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ chi
 
 // Componente para redirecionar usuários autenticados da página de login
 const PublicRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, userType } = useSmartAuth();
 
   if (loading) {
     return <PageLoader />;
   }
 
-  return !isAuthenticated ? children : <Navigate to="/dashboard" replace />;
+  // Se já estiver autenticado, redireciona para o dashboard correto
+  if (isAuthenticated) {
+    if (userType === 'company') {
+      return <Navigate to="/empresa/dashboard" replace />;
+    }
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
 };
 
 // Componente para Landing (redireciona se autenticado)
@@ -189,6 +199,24 @@ function AppRoutes() {
           element={
             <PublicRoute>
               <ResetPassword />
+            </PublicRoute>
+          }
+        />
+        
+        {/* Rotas Públicas de Empresa */}
+        <Route
+          path="/login-empresa"
+          element={
+            <PublicRoute>
+              <LoginCompany />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/cadastro-empresa"
+          element={
+            <PublicRoute>
+              <RegisterCompany />
             </PublicRoute>
           }
         />
