@@ -1306,9 +1306,18 @@ class RegisterCompanyView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+        # Retornar formato padronizado
         return Response({
-            'message': 'Empresa cadastrada com sucesso!',
+            'detail': 'Empresa cadastrada com sucesso!',
+            'user_type': 'company',
+            'organization': {
+                'id': organization.id,
+                'name': organization.name,
+                'org_type': organization.org_type,
+            },
             'username': username,
             'email': email,
-            'company_name': company_name,
+            # Nota: access/refresh tokens não são gerados aqui (usuário precisa fazer login)
+            'access': None,
+            'refresh': None,
         }, status=status.HTTP_201_CREATED)

@@ -1,5 +1,5 @@
 // pages/Login.tsx
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -8,6 +8,20 @@ import { showToast } from '../utils/toast';
 import OwlMascot from '../components/ui/OwlMascot';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import { getMobileInputProps } from '../utils/mobileInputs';
+import { googleAuthService } from '../services/publicApi';
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: unknown) => void;
+          renderButton: (element: HTMLElement, config: unknown) => void;
+        };
+      };
+    };
+  }
+}
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -16,7 +30,7 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { login, setSession } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,6 +53,59 @@ const Login: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const handleGoogleCallback = useCallback(async (response: { credential: string }) => {
+    try {
+      const result = await googleAuthService.authenticate(response.credential, 'musician');
+      if (result.new_user) {
+        showToast.error('Conta não encontrada. Faça o cadastro primeiro.');
+        const params = new URLSearchParams();
+        if (result.email) params.set('email', result.email);
+        if (result.first_name) params.set('first_name', result.first_name);
+        if (result.last_name) params.set('last_name', result.last_name);
+        navigate(`/cadastro?${params.toString()}`);
+        return;
+      }
+
+      if (result.user_type === 'musician') {
+        await setSession();
+        showToast.success('Login realizado com sucesso!');
+        navigate('/dashboard');
+      } else {
+        showToast.error('Esta conta não é de músico');
+      }
+    } catch {
+      showToast.error('Erro ao autenticar com Google');
+    }
+  }, [navigate, setSession]);
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.onload = () => {
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      if (clientId && window.google) {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleGoogleCallback,
+        });
+        const buttonDiv = document.getElementById('google-signin-button');
+        if (buttonDiv) {
+          window.google.accounts.id.renderButton(buttonDiv, {
+            theme: 'outline',
+            size: 'large',
+            text: 'signin_with',
+            width: '100%',
+          });
+        }
+      }
+    };
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, [handleGoogleCallback]);
 
   return (
     <FullscreenBackground
@@ -80,6 +147,18 @@ const Login: React.FC = () => {
         {/* Card de Login */}
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Entrar</h2>
+
+          {/* Google Sign In */}
+          <div id="google-signin-button" className="mb-6 flex justify-center" />
+
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">ou entre com usuário</span>
+            </div>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (

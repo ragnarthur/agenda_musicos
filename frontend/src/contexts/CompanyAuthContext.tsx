@@ -17,6 +17,10 @@ interface CompanyAuthContextType {
 
 const CompanyAuthContext = createContext<CompanyAuthContextType | null>(null);
 
+// Chave para marcar sessão ativa no sessionStorage
+// sessionStorage é limpo ao fechar o navegador, garantindo novo login
+const SESSION_KEY = 'gigflow_company_session';
+
 interface CompanyAuthProviderProps {
   children: ReactNode;
 }
@@ -25,15 +29,23 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Verificar se já existe um token no localStorage
+  // Verificar se já existe uma sessão ativa
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const token = localStorage.getItem('companyToken');
-        const organizationData = localStorage.getItem('companyOrganization');
+        // Verifica se há uma sessão ativa nesta janela do navegador
+        const hasActiveSession = sessionStorage.getItem(SESSION_KEY);
+        const organizationData = sessionStorage.getItem('companyOrganization');
 
-        if (token && organizationData) {
-          // Usar dados cached do localStorage primeiro
+        if (!hasActiveSession) {
+          // Navegador foi fechado e reaberto - força novo login
+          setOrganization(null);
+          setLoading(false);
+          return;
+        }
+
+        if (organizationData) {
+          // Usar dados cached do sessionStorage primeiro
           const org = JSON.parse(organizationData);
           setOrganization(org);
 
@@ -41,9 +53,12 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
           try {
             const dashboard = await companyService.getDashboard();
             setOrganization(dashboard.organization);
-            localStorage.setItem('companyOrganization', JSON.stringify(dashboard.organization));
+            sessionStorage.setItem('companyOrganization', JSON.stringify(dashboard.organization));
           } catch (error) {
-            console.error('Token inválido:', error);
+            const status = (error as { response?: { status?: number } })?.response?.status;
+            if (status !== 401) {
+              console.error('Erro ao validar sessão:', error);
+            }
             logout();
           }
         }

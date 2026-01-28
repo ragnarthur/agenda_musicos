@@ -62,6 +62,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [logError]);
 
+  const setSession = useCallback(async () => {
+    try {
+      sessionStorage.setItem(SESSION_KEY, 'true');
+      const musician = await musicianService.getMe();
+      setUser(musician);
+    } catch (error) {
+      logError('Erro ao iniciar sessão:', error);
+      throw error;
+    }
+  }, [logError]);
+
   const refreshUser = useCallback(async () => {
     try {
       const currentUser = await musicianService.getMe();
@@ -91,11 +102,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value = useMemo<AuthContextType>(() => ({
     user,
     login,
+    setSession,
     logout,
     refreshUser,
     isAuthenticated: !!user,
     loading,
-  }), [user, login, logout, refreshUser, loading]);
+  }), [user, login, setSession, logout, refreshUser, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

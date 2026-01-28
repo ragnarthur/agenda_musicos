@@ -25,6 +25,7 @@ const LeaderAvailability = lazy(() => import('./pages/LeaderAvailability'));
 const Marketplace = lazy(() => import('./pages/Marketplace'));
 const Connections = lazy(() => import('./pages/Connections'));
 const Register = lazy(() => import('./pages/Register'));
+const RegisterInvite = lazy(() => import('./pages/RegisterInvite'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
@@ -189,6 +190,14 @@ function AppRoutes() {
           element={
             <PublicRoute>
               <Register />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/cadastro/invite"
+          element={
+            <PublicRoute>
+              <RegisterInvite />
             </PublicRoute>
           }
         />

@@ -1,6 +1,6 @@
 // pages/Register.tsx
-import React, { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { registrationService, type RegisterData } from '../services/api';
@@ -12,6 +12,21 @@ import StepNavigation from '../components/Registration/StepNavigation';
 import AccountStep from '../components/Registration/AccountStep';
 import PersonalInfoStep from '../components/Registration/PersonalInfoStep';
 import MusicProfileStep from '../components/Registration/MusicProfileStep';
+import { googleAuthService } from '../services/publicApi';
+import { useAuth } from '../contexts/AuthContext';
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: unknown) => void;
+          renderButton: (element: HTMLElement, config: unknown) => void;
+        };
+      };
+    };
+  }
+}
 
 const BRAZILIAN_CITIES = [
   { city: 'São Paulo', state: 'SP' },
@@ -121,10 +136,99 @@ const Register: React.FC = () => {
     city: '',
     state: '',
   });
+  const [googleUserInfo, setGoogleUserInfo] = useState<{ email: string; first_name: string; last_name: string } | null>(null);
+
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { setSession } = useAuth();
+
+  const queryParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const inviteToken = queryParams.get('token');
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
   }, []);
+
+  useEffect(() => {
+    if (inviteToken) {
+      navigate(`/cadastro/invite?token=${inviteToken}`);
+    }
+  }, [inviteToken, navigate]);
+
+  useEffect(() => {
+    const email = queryParams.get('email') || '';
+    const firstName = queryParams.get('first_name') || '';
+    const lastName = queryParams.get('last_name') || '';
+
+    if (email || firstName || lastName) {
+      setFormData((prev) => ({
+        ...prev,
+        email: email || prev.email,
+        first_name: firstName || prev.first_name,
+        last_name: lastName || prev.last_name,
+      }));
+    }
+  }, [queryParams]);
+
+  const handleGoogleCallback = useCallback(async (response: { credential: string }) => {
+    try {
+      const result = await googleAuthService.authenticate(response.credential, 'musician');
+      if (result.new_user) {
+        const nextUser = {
+          email: result.email || '',
+          first_name: result.first_name || '',
+          last_name: result.last_name || '',
+        };
+        setGoogleUserInfo(nextUser);
+        setFormData((prev) => ({
+          ...prev,
+          email: nextUser.email || prev.email,
+          first_name: nextUser.first_name || prev.first_name,
+          last_name: nextUser.last_name || prev.last_name,
+        }));
+        showToast.success('Conta Google conectada. Complete seu cadastro.');
+        return;
+      }
+
+      if (result.user_type === 'musician') {
+        await setSession();
+        showToast.success('Login realizado com sucesso!');
+        navigate('/dashboard');
+      } else {
+        showToast.error('Esta conta não é de músico');
+      }
+    } catch {
+      showToast.error('Erro ao autenticar com Google');
+    }
+  }, [navigate, setSession]);
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.onload = () => {
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      if (clientId && window.google) {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleGoogleCallback,
+        });
+        const buttonDiv = document.getElementById('google-signin-button');
+        if (buttonDiv) {
+          window.google.accounts.id.renderButton(buttonDiv, {
+            theme: 'outline',
+            size: 'large',
+            text: 'signup_with',
+            width: '100%',
+          });
+        }
+      }
+    };
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, [handleGoogleCallback]);
 
   // City autocomplete logic
   const handleCityChange = (value: string) => {
@@ -729,6 +833,24 @@ const Register: React.FC = () => {
 
         {/* Form Card */}
         <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8">
+          {currentStep === 1 && (
+            <div className="mb-6">
+              <div id="google-signin-button" className="mb-4 flex justify-center" />
+              {googleUserInfo && (
+                <div className="mb-4 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
+                  Autenticado com Google: <strong>{googleUserInfo.email}</strong>
+                </div>
+              )}
+              <div className="relative mb-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">ou preencha seus dados</span>
+                </div>
+              </div>
+            </div>
+          )}
           {/* Step Title */}
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
             {stepNames[currentStep - 1]}

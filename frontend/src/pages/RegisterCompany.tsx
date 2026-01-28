@@ -29,8 +29,8 @@ export default function RegisterCompany() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [googleCredential, setGoogleCredential] = useState<string | null>(null);
-  const [googleUserInfo, setGoogleUserInfo] = useState<{ email: string; first_name: string; last_name: string } | null>(null);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [googleUserInfo, setGoogleUserInfo] = useState<{ email: string; first_name: string; last_name: string; picture?: string } | null>(null);
 
   const {
     register,
@@ -46,14 +46,11 @@ export default function RegisterCompany() {
 
     setIsSubmitting(true);
     try {
-      if (googleCredential) {
-        // Registro via Google
-        await googleAuthService.registerCompany(googleCredential, {
-          company_name: data.company_name,
-          phone: data.phone,
-          city: data.city,
-          state: data.state,
-          org_type: data.org_type,
+      if (googleUserInfo) {
+        // Registro via Google - usa email validado do Google
+        await companyService.register({
+          ...data,
+          email: googleUserInfo.email, // Email já validado pelo Google
         });
       } else {
         // Registro normal
@@ -75,19 +72,28 @@ export default function RegisterCompany() {
   };
 
   const handleGoogleCallback = useCallback(async (response: { credential: string }) => {
+    if (isGoogleLoading) return; // Prevenir múltiplas chamadas
+
+    setIsGoogleLoading(true);
     try {
       const result = await googleAuthService.authenticate(response.credential, 'company');
       if (result.new_user) {
-        // Novo usuário - preencher dados
-        setGoogleCredential(response.credential);
+        // Novo usuário - salvar apenas os DADOS (não o credential que expira)
         setGoogleUserInfo({
           email: result.email || '',
           first_name: result.first_name || '',
           last_name: result.last_name || '',
+          picture: result.picture,
         });
-        toast.success('Complete o cadastro da empresa');
-      } else {
-        // Usuário já existe
+
+        // Salvar picture para usar como avatar inicial (opcional)
+        if (result.picture) {
+          sessionStorage.setItem('_googlePicture', result.picture);
+        }
+
+        toast.success('Conta Google conectada! Complete os dados da empresa.');
+      } else if (result.user_type === 'company' && result.organization) {
+        // Usuário já existe - fazer login
         setSession({
           organization: result.organization as any,
           access: result.access,
@@ -95,20 +101,39 @@ export default function RegisterCompany() {
         });
         toast.success('Login realizado!');
         navigate('/empresa/dashboard');
+      } else {
+        toast.error('Esta conta Google não é de empresa');
       }
-    } catch {
-      toast.error('Erro ao autenticar com Google');
+    } catch (error: any) {
+      console.error('Google OAuth error:', error);
+      const message = error?.response?.data?.detail;
+
+      if (error?.response?.status === 401) {
+        toast.error(message || 'Token do Google inválido ou expirado');
+      } else if (error?.response?.status === 400) {
+        toast.error(message || 'Dados inválidos do Google');
+      } else {
+        toast.error(message || 'Erro ao conectar com Google. Tente novamente.');
+      }
+    } finally {
+      setIsGoogleLoading(false);
     }
-  }, [navigate, setSession]);
+  }, [navigate, setSession, isGoogleLoading]);
 
   // Renderiza botão do Google
   useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+    if (!clientId) {
+      console.warn('VITE_GOOGLE_CLIENT_ID não configurado. Login com Google desabilitado.');
+      return;
+    }
+
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
     script.onload = () => {
-      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-      if (clientId && window.google) {
+      if (window.google) {
         window.google.accounts.id.initialize({
           client_id: clientId,
           callback: handleGoogleCallback,
@@ -124,9 +149,16 @@ export default function RegisterCompany() {
         }
       }
     };
+    script.onerror = () => {
+      console.error('Erro ao carregar Google Sign-In');
+    };
     document.body.appendChild(script);
     return () => {
-      document.body.removeChild(script);
+      try {
+        document.body.removeChild(script);
+      } catch (e) {
+        // Script já removido
+      }
     };
   }, [handleGoogleCallback]);
 
@@ -173,7 +205,17 @@ export default function RegisterCompany() {
           </div>
 
           {/* Google Sign In */}
-          <div id="google-signin-button" className="mb-6 flex justify-center" />
+          <div className="relative mb-6">
+            <div
+              id="google-signin-button"
+              className={`flex justify-center transition-opacity ${isGoogleLoading ? 'opacity-50 pointer-events-none' : ''}`}
+            />
+            {isGoogleLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600" />
+              </div>
+            )}
+          </div>
 
           {googleUserInfo && (
             <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
@@ -241,7 +283,7 @@ export default function RegisterCompany() {
             </div>
 
             {/* Email */}
-            {!googleCredential && (
+            {!googleUserInfo && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Email *
@@ -262,7 +304,7 @@ export default function RegisterCompany() {
             )}
 
             {/* Senha */}
-            {!googleCredential && (
+            {!googleUserInfo && (
               <>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

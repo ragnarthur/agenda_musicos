@@ -141,6 +141,7 @@ class GoogleAuthView(CookieTokenMixin, APIView):
 
     authentication_classes = []
     permission_classes = []
+    throttle_scope = "google_auth"
 
     def post(self, request, *args, **kwargs):
         from google.oauth2 import id_token
@@ -286,6 +287,7 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
 
     authentication_classes = []
     permission_classes = []
+    throttle_scope = "google_register"
 
     def post(self, request, *args, **kwargs):
         from google.oauth2 import id_token
@@ -464,6 +466,7 @@ class GoogleRegisterCompanyView(CookieTokenMixin, APIView):
 
     authentication_classes = []
     permission_classes = []
+    throttle_scope = "google_register"
 
     def post(self, request, *args, **kwargs):
         from google.oauth2 import id_token
