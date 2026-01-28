@@ -155,8 +155,8 @@ const PlanSelection: React.FC = () => {
             </div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro</h2>
             <p className="text-gray-600 mb-6">{error}</p>
-            <Link to="/cadastro" className="block w-full btn-primary text-center">
-              Fazer novo cadastro
+            <Link to="/solicitar-acesso" className="block w-full btn-primary text-center">
+              Solicitar Acesso
             </Link>
           </div>
         </div>
@@ -195,10 +195,10 @@ const PlanSelection: React.FC = () => {
           </div>
           <div className="flex items-center gap-3">
             <Link
-              to="/cadastro"
+              to="/solicitar-acesso"
               className="hidden sm:inline-block text-white/80 hover:text-white text-sm underline-offset-4 hover:underline"
             >
-              Voltar ao cadastro
+              Voltar à solicitação de acesso
             </Link>
             <Link
               to="/login"

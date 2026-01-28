@@ -349,8 +349,8 @@ const Plans: React.FC = () => {
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro</h2>
           <p className="text-gray-600 mb-6">{error}</p>
-          <Link to="/cadastro" className="btn-primary w-full block text-center">
-            Fazer novo cadastro
+          <Link to="/solicitar-acesso" className="btn-primary w-full block text-center">
+            Solicitar Acesso
           </Link>
         </div>
       </FullscreenBackground>

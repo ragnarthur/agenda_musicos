@@ -1,5 +1,4 @@
-// types/google.d.ts
-// Declarações TypeScript para Google Sign-In API
+export {};
 
 interface GoogleAccountsId {
   initialize: (config: {
@@ -19,6 +18,7 @@ interface GoogleAccountsId {
     email: string,
     callback: (done: { successful: boolean; error?: string }) => void
   ) => void;
+  prompt: () => void;
 }
 
 declare global {
@@ -30,5 +30,3 @@ declare global {
     };
   }
 }
-
-export {};

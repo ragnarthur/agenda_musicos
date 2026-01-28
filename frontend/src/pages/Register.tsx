@@ -231,7 +231,11 @@ const Register: React.FC = () => {
     script.async = true;
     script.onload = () => {
       const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-      if (clientId && window.google) {
+      if (!clientId) {
+        setGoogleReady(false);
+        return;
+      }
+      if (window.google) {
         window.google.accounts.id.initialize({
           client_id: clientId,
           callback: handleGoogleCallback,
@@ -246,8 +250,6 @@ const Register: React.FC = () => {
           });
         }
         setGoogleReady(true);
-      } else {
-        setGoogleReady(false);
       }
     };
     document.body.appendChild(script);

@@ -238,8 +238,8 @@ const Payment: React.FC = () => {
             </div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro</h2>
             <p className="text-gray-600 mb-6">{error}</p>
-            <Link to="/cadastro" className="block w-full btn-primary text-center">
-              Fazer novo cadastro
+            <Link to="/solicitar-acesso" className="block w-full btn-primary text-center">
+              Solicitar Acesso
             </Link>
           </div>
         </div>

@@ -1,24 +1,104 @@
 // pages/MusicianRequest.tsx
 // Formulário público para músicos solicitarem acesso à plataforma
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { Music, Send, CheckCircle } from 'lucide-react';
-import { musicianRequestService, type MusicianRequestCreate } from '../services/publicApi';
+import { musicianRequestService, googleAuthService, type MusicianRequestCreate } from '../services/publicApi';
 import { BRAZILIAN_STATES } from '../config/cities';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
+import { showToast } from '../utils/toast';
+import GoogleIcon from '../components/icons/GoogleIcon';
 
 export default function MusicianRequest() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [googleReady, setGoogleReady] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<MusicianRequestCreate>();
+
+  // Carregar Google Sign-In
+  useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+    if (!clientId) {
+      console.warn('VITE_GOOGLE_CLIENT_ID não configurado. Login com Google desabilitado.');
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.onload = () => {
+      if (window.google) {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleGoogleCallback,
+        });
+        setGoogleReady(true);
+      }
+    };
+    script.onerror = () => {
+      console.error('Erro ao carregar Google Sign-In');
+    };
+    document.body.appendChild(script);
+    return () => {
+      try {
+        document.body.removeChild(script);
+      } catch (e) {
+        // Script já removido
+      }
+    };
+  }, []);
+
+  // Handler para Google Auth
+  const handleGoogleCallback = async (response: { credential: string }) => {
+    if (isGoogleLoading) return;
+
+    setIsGoogleLoading(true);
+    try {
+      const result = await googleAuthService.authenticate(response.credential, 'musician');
+      if (result.new_user) {
+        // Salvar dados do Google em sessionStorage
+        sessionStorage.setItem('_googleRegisterData', JSON.stringify({
+          email: result.email,
+          firstName: result.first_name,
+          lastName: result.last_name,
+          picture: result.picture,
+        }));
+        if (result.picture) {
+          sessionStorage.setItem('_googleAvatarUrl', result.picture);
+        }
+
+        showToast.error('Conta não encontrada. Você deve primeiro solicitar acesso.');
+        navigate('/solicitar-acesso');
+        return;
+      }
+
+      showToast.error('Usuário já cadastrado. Faça login.');
+      navigate('/login');
+    } catch (error: any) {
+      console.error('Google OAuth error:', error);
+      const message = error?.response?.data?.detail;
+
+      if (error?.response?.status === 401) {
+        showToast.error(message || 'Token do Google inválido ou expirado');
+      } else if (error?.response?.status === 400) {
+        showToast.error(message || 'Dados inválidos do Google');
+      } else {
+        showToast.error(message || 'Erro ao autenticar com Google');
+      }
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
 
   const onSubmit = async (data: MusicianRequestCreate) => {
     setIsSubmitting(true);
@@ -80,8 +160,36 @@ export default function MusicianRequest() {
             <p className="text-gray-600 dark:text-gray-300">
               Preencha o formulário para solicitar seu acesso como músico
             </p>
+          </div> 
+
+          {/* Google Sign-In */}
+          <div className="relative mb-6">
+            <button
+              type="button"
+              onClick={() => {
+                if (!googleReady || !window.google) {
+                  showToast.error('Google não configurado para este ambiente.');
+                  return;
+                }
+                window.google.accounts.id.prompt();
+              }}
+              className="w-full inline-flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-60"
+              disabled={!googleReady}
+            >
+              <GoogleIcon className="h-5 w-5" />
+              Solicitar Acesso com Google
+            </button>
           </div>
 
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">ou preencha o formulário</span>
+            </div>
+          </div>
+ 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Nome Completo */}
             <div>
@@ -241,9 +349,9 @@ export default function MusicianRequest() {
 
           <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
             Já tem uma conta?{' '}
-            <a href="/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
+            <Link to="/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
               Faça login
-            </a>
+            </Link>
           </p>
         </div>
       </div>
