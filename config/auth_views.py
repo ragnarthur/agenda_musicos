@@ -9,6 +9,13 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+try:
+    from google.oauth2 import id_token
+    from google.auth.transport import requests as google_requests
+except Exception:  # pragma: no cover - fallback when deps are missing
+    id_token = None
+    google_requests = None
+
 from agenda.throttles import LoginRateThrottle
 from agenda.models import Membership
 
@@ -179,8 +186,6 @@ class GoogleAuthView(CookieTokenMixin, APIView):
     throttle_scope = "google_auth"
 
     def post(self, request, *args, **kwargs):
-        from google.oauth2 import id_token
-        from google.auth.transport import requests as google_requests
         import os
 
         credential = request.data.get("credential")
@@ -190,6 +195,12 @@ class GoogleAuthView(CookieTokenMixin, APIView):
             return Response(
                 {"detail": "Credencial do Google não fornecida."},
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not id_token or not google_requests:
+            return Response(
+                {"detail": "Autenticação com Google não configurada."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
         # Verifica o token do Google
@@ -325,8 +336,6 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
     throttle_scope = "google_register"
 
     def post(self, request, *args, **kwargs):
-        from google.oauth2 import id_token
-        from google.auth.transport import requests as google_requests
         from django.db import transaction
         from agenda.models import Musician, Organization, Membership, MusicianRequest
         import os
@@ -338,6 +347,12 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
             return Response(
                 {"detail": "Credencial do Google não fornecida."},
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not id_token or not google_requests:
+            return Response(
+                {"detail": "Autenticação com Google não configurada."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
         if not invite_token:
@@ -504,8 +519,6 @@ class GoogleRegisterCompanyView(CookieTokenMixin, APIView):
     throttle_scope = "google_register"
 
     def post(self, request, *args, **kwargs):
-        from google.oauth2 import id_token
-        from google.auth.transport import requests as google_requests
         from django.db import transaction
         from agenda.models import Organization, Membership
         import os
@@ -521,6 +534,12 @@ class GoogleRegisterCompanyView(CookieTokenMixin, APIView):
             return Response(
                 {"detail": "Credencial do Google não fornecida."},
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not id_token or not google_requests:
+            return Response(
+                {"detail": "Autenticação com Google não configurada."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
         if not company_name or not city or not state:
