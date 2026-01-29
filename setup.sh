@@ -217,8 +217,12 @@ else:
     print('Superuser already exists')
 EOF
 
-    # Populate database with musicians
-    python manage.py populate_db || true
+    # Populate database with demo data only when explicitly allowed
+    if [ "${ALLOW_DEMO_DATA:-}" = "true" ]; then
+        python manage.py populate_db || true
+    else
+        print_warning "Dados de demonstração não serão criados (set ALLOW_DEMO_DATA=true para permitir)."
+    fi
 
     print_step "Django configurado ✓"
 }
@@ -349,9 +353,11 @@ print_summary() {
     echo "    - URL: http://$SERVER_IP:$SERVER_PORT/admin/"
     echo "    - User: admin"
     echo ""
-    echo -e "${RED}ATENÇÃO:${NC} Altere as senhas dos músicos de demonstração!"
-    echo "  Use: python manage.py changepassword <username>"
-    echo ""
+    if [ "${ALLOW_DEMO_DATA:-}" = "true" ]; then
+        echo -e "${RED}ATENÇÃO:${NC} Altere as senhas dos músicos de demonstração!"
+        echo "  Use: python manage.py changepassword <username>"
+        echo ""
+    fi
     echo "Comandos úteis:"
     echo "  - Ver logs: sudo supervisorctl tail -f agenda-musicos"
     echo "  - Reiniciar: sudo supervisorctl restart agenda-musicos"

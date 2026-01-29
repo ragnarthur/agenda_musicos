@@ -1,10 +1,10 @@
 // pages/MusicianRequest.tsx
 // Formulário público para músicos solicitarem acesso à plataforma
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
-import { Music, Send, CheckCircle } from 'lucide-react';
+import { Music, Send, CheckCircle, Search, Check } from 'lucide-react';
 import { musicianRequestService, googleAuthService, type MusicianRequestCreate } from '../services/publicApi';
 import { BRAZILIAN_STATES } from '../config/cities';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
@@ -73,7 +73,11 @@ export default function MusicianRequest() {
   const [submitted, setSubmitted] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isMultiInstrumentalist, setIsMultiInstrumentalist] = useState(false);
-  const { instruments, loading: loadingInstruments } = useInstruments();
+  const [selectedInstruments, setSelectedInstruments] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [customInstrumentName, setCustomInstrumentName] = useState('');
+  const { instruments, loading: loadingInstruments, createCustomInstrument } = useInstruments();
 
   const {
     register,
@@ -83,7 +87,60 @@ export default function MusicianRequest() {
     watch,
   } = useForm<MusicianRequestCreate>();
 
-  const watchedInstruments = watch('instruments') || [];
+  // Filtrar instrumentos com base na busca
+  const filteredInstruments = useMemo(() => {
+    if (!searchQuery.trim()) return instruments;
+    const query = searchQuery.toLowerCase();
+    return instruments.filter(inst =>
+      inst.display_name.toLowerCase().includes(query) ||
+      inst.name.toLowerCase().includes(query)
+    );
+  }, [instruments, searchQuery]);
+
+  // Toggle de seleção
+  const toggleInstrument = (name: string) => {
+    setSelectedInstruments((prev) => {
+      if (!prev.includes(name) && prev.length >= 10) {
+        toast.error('Máximo de 10 instrumentos permitidos');
+        return prev;
+      }
+      return prev.includes(name)
+        ? prev.filter((i) => i !== name)
+        : [...prev, name];
+    });
+  };
+
+  // Adicionar instrumento customizado
+  const handleAddCustomInstrument = async () => {
+    const trimmed = customInstrumentName.trim();
+    if (!trimmed) return;
+
+    if (trimmed.length < 3) {
+      toast.error('Nome do instrumento deve ter ao menos 3 caracteres');
+      return;
+    }
+
+    if (instruments.some(i => i.name.toLowerCase() === trimmed.toLowerCase())) {
+      toast.error('Este instrumento já existe na lista');
+      return;
+    }
+
+    const newInstrument = await createCustomInstrument(trimmed);
+    if (newInstrument) {
+      toggleInstrument(newInstrument.name);
+      setCustomInstrumentName('');
+      setShowCustomInput(false);
+      setSearchQuery('');
+      toast.success(`Instrumento "${newInstrument.display_name}" adicionado!`);
+    } else {
+      toast.error('Erro ao adicionar instrumento. Tente novamente.');
+    }
+  };
+
+  // Sync com react-hook-form
+  useEffect(() => {
+    setValue('instruments', selectedInstruments, { shouldValidate: true });
+  }, [selectedInstruments, setValue]);
 
   // Carregar Google Sign-In
   useEffect(() => {
@@ -194,9 +251,23 @@ export default function MusicianRequest() {
   };
 
   const onSubmit = async (data: MusicianRequestCreate) => {
+    // Validação adicional de instrumentos
+    if (isMultiInstrumentalist && selectedInstruments.length === 0) {
+      toast.error('Selecione pelo menos um instrumento');
+      return;
+    }
+
+    if (selectedInstruments.length > 10) {
+      toast.error('Máximo de 10 instrumentos permitidos');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      await musicianRequestService.create(data);
+      await musicianRequestService.create({
+        ...data,
+        instruments: selectedInstruments,
+      });
       setSubmitted(true);
       toast.success('Solicitação enviada com sucesso!');
     } catch (error: unknown) {
@@ -345,102 +416,113 @@ export default function MusicianRequest() {
             </div>
 
             {/* Multi-instrumentista */}
-            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800 animate-fade-in">
-              <div className="flex items-center space-x-4">
-                <div className={`toggle-switch relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 ${isMultiInstrumentalist ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'}`}>
-                  <input
-                    type="checkbox"
-                    id="multi-instrumentalist"
-                    checked={isMultiInstrumentalist}
-                    onChange={(e) => setIsMultiInstrumentalist(e.target.checked)}
-                    className="peer sr-only"
-                  />
-                  <div className={`toggle-knob inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${isMultiInstrumentalist ? 'translate-x-6' : 'translate-x-0'}`} />
-                </div>
-                <label htmlFor="multi-instrumentalist" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
-                  Sou multi-instrumentista
-                </label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Music className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {watchedInstruments.length} instrumento(s)
-                </span>
-              </div>
+            <div className="flex items-start sm:items-center space-x-2 sm:space-x-3 py-2">
+              <input
+                type="checkbox"
+                id="multi-instrumentalist"
+                checked={isMultiInstrumentalist}
+                onChange={(e) => setIsMultiInstrumentalist(e.target.checked)}
+                className="w-6 h-6 sm:w-5 sm:h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 touch-manipulation mt-0.5 sm:mt-0 flex-shrink-0"
+              />
+              <label htmlFor="multi-instrumentalist" className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                Sou multi-instrumentista (toco mais de um instrumento)
+              </label>
             </div>
 
-            {/* Lista de instrumentos adicionais com animação */}
-            <div 
-              className={`overflow-hidden transition-all duration-300 ease-in-out ${isMultiInstrumentalist ? 'max-h-96 opacity-100 animate-slide-down' : 'max-h-0 opacity-0'}`}
-            >
-              <div className="mt-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                  Outros Instrumentos que você toca
+            {/* Seleção de instrumentos com Pills */}
+            {isMultiInstrumentalist && (
+              <div className="space-y-3">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Selecione seus instrumentos <span className="text-red-500">*</span>
                 </label>
+
+                {/* Campo de busca */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Buscar instrumento..."
+                    className="w-full pl-9 pr-4 py-2 min-h-[44px] border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
+                  />
+                </div>
+
                 {loadingInstruments ? (
-                  <div className="flex items-center justify-center p-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 dark:border-indigo-400" />
-                    <span className="ml-3 text-sm text-gray-500 dark:text-gray-400">Carregando instrumentos...</span>
+                  <div className="text-center py-4">
+                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600" />
+                    <p className="mt-2 text-xs text-gray-500">Carregando...</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-72 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-xl p-4 bg-gray-50 dark:bg-gray-900/50">
-                    {instruments.map((inst) => (
-                      <label 
-                        key={inst.id} 
-                        className={`
-                          instrument-card flex items-center space-x-2 cursor-pointer p-3 rounded-lg border-2 transition-all duration-200
-                          ${watchedInstruments.includes(inst.name) 
-                            ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 dark:border-indigo-400 selected' 
-                            : 'border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-gray-100 dark:hover:bg-gray-800'
-                          }
-                        `}
+                  <>
+                    {/* Pills de instrumentos */}
+                    <div className="flex flex-wrap gap-2">
+                      {filteredInstruments.map((inst) => {
+                        const isSelected = selectedInstruments.includes(inst.name);
+                        return (
+                          <button
+                            key={inst.id}
+                            type="button"
+                            onClick={() => toggleInstrument(inst.name)}
+                            className={`
+                              px-4 py-2.5 min-h-[44px] rounded-full text-sm font-medium
+                              border-2 transition-all duration-200 touch-manipulation
+                              ${isSelected
+                                ? 'bg-indigo-600 border-indigo-600 text-white shadow-md'
+                                : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-indigo-300'
+                              }
+                            `}
+                          >
+                            {inst.display_name}
+                            {inst.type === 'community' && ' ✨'}
+                          </button>
+                        );
+                      })}
+
+                      {/* Pill "Outro" */}
+                      <button
+                        type="button"
+                        onClick={() => setShowCustomInput(!showCustomInput)}
+                        className="px-4 py-2.5 min-h-[44px] rounded-full border-2 border-dashed border-gray-400 dark:border-gray-500 text-gray-600 dark:text-gray-400 hover:border-indigo-400 hover:text-indigo-600 transition-all text-sm font-medium touch-manipulation"
                       >
-                        <input
-                          type="checkbox"
-                          value={inst.name}
-                          {...register('instruments')}
-                          className="sr-only"
-                        />
-                        <div className={`
-                          checkbox-check w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200
-                          ${watchedInstruments.includes(inst.name)
-                            ? 'bg-indigo-600 border-indigo-600'
-                            : 'border-gray-300 dark:border-gray-600'
-                          }
-                        `}>
-                          {watchedInstruments.includes(inst.name) && (
-                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
-                        </div>
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          {inst.display_name}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-                {watchedInstruments.length > 0 && (
-                  <div className="mt-4 flex items-center justify-between p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg border border-indigo-200 dark:border-indigo-800 animate-fade-in">
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                      <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        {watchedInstruments.length} instrumento(s) selecionado(s)
-                      </span>
+                        + Outro
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setValue('instruments', [])}
-                      className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium"
-                    >
-                      Limpar seleção
-                    </button>
-                  </div>
+
+                    {/* Input customizado */}
+                    {showCustomInput && (
+                      <div className="flex gap-2 animate-fadeIn">
+                        <input
+                          type="text"
+                          value={customInstrumentName}
+                          onChange={(e) => setCustomInstrumentName(e.target.value)}
+                          placeholder="Nome do instrumento"
+                          className="flex-1 px-3 sm:px-4 py-3 min-h-[44px] border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
+                          onKeyPress={(e) => e.key === 'Enter' && handleAddCustomInstrument()}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddCustomInstrument}
+                          disabled={!customInstrumentName.trim()}
+                          className="px-4 py-3 min-h-[44px] bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-all text-sm font-medium touch-manipulation"
+                        >
+                          Adicionar
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Contador de selecionados */}
+                    {selectedInstruments.length > 0 && (
+                      <p className="text-xs sm:text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
+                        <Check className="h-3 w-3 sm:h-4 sm:w-4" />
+                        {selectedInstruments.length} instrumento(s) selecionado(s)
+                        {selectedInstruments.length >= 10 && ' (máximo atingido)'}
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
-            </div>
-          </>
+            )}
 
             {/* Cidade e Estado */}
             <div className="grid grid-cols-2 gap-4">
