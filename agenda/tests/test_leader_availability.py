@@ -25,7 +25,6 @@ class LeaderAvailabilityModelTest(TestCase):
         self.org = Organization.objects.create(
             name='Test Org',
             owner=self.user,
-            subscription_status='active'
         )
         Membership.objects.create(
             user=self.user,
@@ -82,7 +81,6 @@ class LeaderAvailabilityAPITest(APITestCase):
         self.org = Organization.objects.create(
             name='Banda Test',
             owner=self.user,
-            subscription_status='active'
         )
         Membership.objects.create(
             user=self.user,
@@ -392,7 +390,6 @@ class LeaderAvailabilityInstrumentsTest(APITestCase):
         self.org = Organization.objects.create(
             name='Test Org',
             owner=self.user,
-            subscription_status='active'
         )
 
         # Criar músicos com diferentes instrumentos
@@ -449,7 +446,6 @@ class AvailableMusiciansEndpointTest(APITestCase):
         self.org = Organization.objects.create(
             name='Banda Test',
             owner=self.user,
-            subscription_status='active'
         )
         Membership.objects.create(
             user=self.user,

@@ -27,7 +27,6 @@ class EventInviteFlowTest(APITestCase):
         self.org = Organization.objects.create(
             name='Banda Test',
             owner=self.creator,
-            subscription_status='active'
         )
         Membership.objects.create(
             user=self.creator,
