@@ -1,5 +1,5 @@
 # config/middleware.py
-from decouple import config
+from django.conf import settings
 
 
 class CSPMiddleware:
@@ -18,7 +18,7 @@ class CSPMiddleware:
             "style-src 'self' 'unsafe-inline'; "
             "connect-src 'self'"
         )
-        self.csp_header = config("CSP_HEADER", default=default_csp)
+        self.csp_header = getattr(settings, "CSP_HEADER", "") or default_csp
 
     def __call__(self, request):
         response = self.get_response(request)

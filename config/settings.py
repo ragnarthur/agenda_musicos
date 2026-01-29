@@ -13,10 +13,20 @@ from decouple import config as decouple_config, Config, RepositoryEnv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 ENV_PROFILE = os.getenv("DJANGO_ENV") or os.getenv("ENV") or "production"
+ENV_FILE = os.getenv("ENV_FILE")
+ENV_DOCKER = BASE_DIR / ".env.docker"
 ENV_LOCAL = BASE_DIR / ".env.local"
+ENV_DEFAULT = BASE_DIR / ".env"
 
-if ENV_PROFILE.lower() != "production" and ENV_LOCAL.exists():
+if ENV_FILE:
+    config = Config(RepositoryEnv(ENV_FILE))
+elif ENV_DOCKER.exists():
+    # Prefer .env.docker when available (local dev uses Postgres via Docker)
+    config = Config(RepositoryEnv(str(ENV_DOCKER)))
+elif ENV_PROFILE.lower() != "production" and ENV_LOCAL.exists():
     config = Config(RepositoryEnv(str(ENV_LOCAL)))
+elif ENV_DEFAULT.exists():
+    config = Config(RepositoryEnv(str(ENV_DEFAULT)))
 else:
     config = decouple_config
 
@@ -36,6 +46,7 @@ def env_csv(name: str, default: str = "") -> list[str]:
 # =========================================================
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=False, cast=bool)
+CSP_HEADER = config("CSP_HEADER", default="").strip()
 
 # Admin URL protegida
 import secrets
