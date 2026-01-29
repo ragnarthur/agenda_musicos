@@ -84,7 +84,6 @@ export default function MusicianRequest() {
     handleSubmit,
     formState: { errors },
     setValue,
-    watch,
   } = useForm<MusicianRequestCreate>();
 
   // Filtrar instrumentos com base na busca
@@ -623,5 +622,6 @@ export default function MusicianRequest() {
         </div>
       </div>
     </FullscreenBackground>
+    </>
   );
 }
