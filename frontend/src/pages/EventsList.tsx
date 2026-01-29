@@ -10,6 +10,7 @@ import {
   Clock,
   Sparkles,
   Filter,
+  Coins,
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import { useEvents } from '../hooks/useEvents';
@@ -17,7 +18,7 @@ import type { Availability, Event } from '../types';
 import { format, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { getEventComputedStatus } from '../utils/events';
-import { formatInstrumentLabel, getMusicianDisplayName } from '../utils/formatting';
+import { formatCurrency, formatInstrumentLabel, getMusicianDisplayName } from '../utils/formatting';
 
 type TimeFilter = 'upcoming' | 'past' | 'all';
 
@@ -169,8 +170,13 @@ const EventsList: React.FC = () => {
               <span>
                 {startLabel} - {endLabel}
               </span>
-              {event.payment_amount && <span>R$ {event.payment_amount}</span>}
             </div>
+            {event.payment_amount !== null && event.payment_amount !== undefined && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-gray-700">
+                <Coins className="h-4 w-4 text-emerald-500" />
+                <span>Cachê: {formatCurrency(event.payment_amount)}</span>
+              </div>
+            )}
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-700">
               <Users className="h-4 w-4 text-gray-500" />
               {lineup.map((name) => (

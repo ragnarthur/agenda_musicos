@@ -89,7 +89,6 @@ export interface Organization {
   sponsor_tier: 'bronze' | 'silver' | 'gold' | null;
   owner: number | null;
   owner_name: string | null;
-  subscription_status: string;
   created_at: string;
   updated_at: string;
 }

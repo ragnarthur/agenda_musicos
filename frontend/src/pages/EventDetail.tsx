@@ -5,12 +5,12 @@ import {
   Calendar,
   Clock,
   MapPin,
-  DollarSign,
   User,
   ArrowLeft,
   Edit,
   Trash2,
   Ban,
+  Coins,
   Star,
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
@@ -27,6 +27,7 @@ import type { Event, AvailabilityResponse, RatingInput } from '../types';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { getEventComputedStatus } from '../utils/events';
+import { formatCurrency } from '../utils/formatting';
 
 const EventDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -250,12 +251,12 @@ const EventDetail: React.FC = () => {
                 </div>
               </div>
 
-              {event.payment_amount && (
+              {event.payment_amount !== null && event.payment_amount !== undefined && (
                 <div className="flex items-start space-x-3">
-                  <DollarSign className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <Coins className="h-5 w-5 text-emerald-500 mt-0.5" />
                   <div>
                     <p className="text-sm text-gray-500">Cachê</p>
-                    <p className="font-medium">R$ {event.payment_amount}</p>
+                    <p className="font-medium">{formatCurrency(event.payment_amount)}</p>
                   </div>
                 </div>
               )}

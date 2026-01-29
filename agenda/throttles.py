@@ -133,6 +133,18 @@ class ProfileUpdateRateThrottle(SimpleRateThrottle):
         return self.get_ident(request)
 
 
+class PublicRateThrottle(SimpleRateThrottle):
+    """
+    Rate limiting para endpoints públicos.
+    Previne abuso de APIs públicas.
+    """
+
+    scope = "public"
+
+    def get_cache_key(self, request, view):
+        return self.get_ident(request)
+
+
 class PreviewConflictsRateThrottle(SimpleRateThrottle):
     """
     Rate limiting para preview de conflitos.
