@@ -9,19 +9,25 @@ import { musicianRequestService, googleAuthService, type MusicianRequestCreate }
 import { BRAZILIAN_STATES } from '../config/cities';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import { showToast } from '../utils/toast';
+import { useInstruments } from '../hooks/useInstruments';
 
 export default function MusicianRequest() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isMultiInstrumentalist, setIsMultiInstrumentalist] = useState(false);
+  const { instruments, loading: loadingInstruments } = useInstruments();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     setValue,
+    watch,
   } = useForm<MusicianRequestCreate>();
+
+  const watchedInstruments = watch('instruments') || [];
 
   // Carregar Google Sign-In
   useEffect(() => {
@@ -260,7 +266,7 @@ export default function MusicianRequest() {
               )}
             </div>
 
-            {/* Instrumento */}
+            {/* Instrumento Principal */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Instrumento Principal *
@@ -275,6 +281,53 @@ export default function MusicianRequest() {
                 <p className="mt-1 text-sm text-red-600">{errors.instrument.message}</p>
               )}
             </div>
+
+            {/* Multi-instrumentista */}
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="multi-instrumentalist"
+                checked={isMultiInstrumentalist}
+                onChange={(e) => setIsMultiInstrumentalist(e.target.checked)}
+                className="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+              />
+              <label htmlFor="multi-instrumentalist" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Sou multi-instrumentista (toco mais de um instrumento)
+              </label>
+            </div>
+
+            {/* Lista de instrumentos adicionais */}
+            {isMultiInstrumentalist && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Outros Instrumentos (adicione os instrumentos que você toca)
+                </label>
+                {loadingInstruments ? (
+                  <p className="text-sm text-gray-500">Carregando instrumentos...</p>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3">
+                    {instruments.map((inst) => (
+                      <label key={inst.id} className="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+                        <input
+                          type="checkbox"
+                          value={inst.name}
+                          {...register('instruments')}
+                          className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                        />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                          {inst.display_name}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+                {watchedInstruments.length > 0 && (
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    {watchedInstruments.length} instrumento(s) selecionado(s)
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Cidade e Estado */}
             <div className="grid grid-cols-2 gap-4">
