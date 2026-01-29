@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Clock, CheckCircle, XCircle, AlertCircle, TrendingUp, Search, Copy, Mail, MapPin, Phone, Music2 } from 'lucide-react';
 import { api, musicianService } from '../services/api';
