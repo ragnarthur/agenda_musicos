@@ -73,8 +73,74 @@ trap cleanup INT TERM EXIT
 
 require_cmd docker
 require_cmd npm
-require_file "$ROOT_DIR/.env.local"
-require_file "$ROOT_DIR/frontend/.env.local"
+
+# =============================================================================
+# Carregar variáveis de ambiente do .env.docker
+# =============================================================================
+
+# Tentar carregar .env.docker se existir
+if [ -f "$ROOT_DIR/.env.docker" ]; then
+  echo "📦 Carregando variáveis de $ROOT_DIR/.env.docker..."
+
+  # Carregar todas as variáveis do .env.docker
+  while IFS= read -r line || [ -n "$line" ]; do
+    # Ignorar linhas vazias e comentários
+    [[ -z "$line" || "$line" =~ ^#.* ]] && continue
+
+    # Extrair key e value
+    local key="${line%%=*}"
+    local value="${line#*=}"
+
+    # Remover aspas se existirem
+    value="${value%\"}"
+    value="${value#\"}"
+
+    # Exportar variável como está (com prefixo)
+    export "$key=$value"
+  done < "$ROOT_DIR/.env.docker"
+
+  echo "✅ Variáveis carregadas de .env.docker"
+
+  # Converter variáveis DB_* para variáveis Django (sem prefixo)
+  export SECRET_KEY="${DB_SECRET_KEY}"
+  export DEBUG="${DB_DEBUG}"
+  export ALLOWED_HOSTS="${DB_ALLOW_HOSTS}"
+  export ADMIN_URL="${DB_ADMIN_URL}"
+  export DATABASE_URL="${DB_DATABASE_URL}"
+  export CORS_ALLOWED_ORIGINS="${DB_CORS_ORIGINS}"
+  export CORS_ALLOW_CREDENTIALS="${DB_CORS_CREDENTIALS}"
+  export CSRF_TRUSTED_ORIGINS="${DB_CSRF_ORIGINS}"
+  export CSP_HEADER="${DB_CSP_HEADER}"
+  export GOOGLE_CLIENT_ID="${DB_GOOGLE_CLIENT_ID}"
+  export FRONTEND_URL="${DB_FRONTEND_URL}"
+  export EMAIL_HOST="${DB_EMAIL_HOST}"
+  export EMAIL_PORT="${DB_EMAIL_PORT}"
+  export EMAIL_USE_TLS="${DB_EMAIL_USE_TLS}"
+  export EMAIL_HOST_USER="${DB_EMAIL_HOST_USER}"
+  export EMAIL_HOST_PASSWORD="${DB_EMAIL_HOST_PASSWORD}"
+  export DEFAULT_FROM_EMAIL="${DB_DEFAULT_FROM_EMAIL}"
+
+  # Gerar automaticamente o frontend/.env.local (apenas variáveis VITE_*)
+  echo "📝 Gerando $ROOT_DIR/frontend/.env.local..."
+  cat > "$ROOT_DIR/frontend/.env.local" << EOF
+VITE_API_URL=${VITE_API_URL}
+VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
+EOF
+  echo "✅ Arquivo frontend/.env.local gerado"
+
+else
+  echo "⚠️  Arquivo .env.docker não encontrado."
+  echo "   Criando a partir do .env.example..."
+  cp "$ROOT_DIR/.env.example" "$ROOT_DIR/.env.docker" 2>/dev/null || true
+  if [ -f "$ROOT_DIR/.env.docker" ]; then
+    echo "   Edite $ROOT_DIR/.env.docker e preencha os valores necessários."
+    echo "   Execute novamente ./local-up.sh"
+    exit 1
+  else
+    echo "❌ Não foi possível criar .env.docker"
+    exit 1
+  fi
+fi
 
 FRONTEND_PORT=5173
 
