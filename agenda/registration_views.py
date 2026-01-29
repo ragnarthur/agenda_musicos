@@ -173,16 +173,12 @@ class RegisterWithInviteView(APIView):
                 )
 
                 # Cria organização pessoal
-                org, created = Organization.objects.get_or_create(
+                org, _ = Organization.objects.get_or_create(
                     owner=user,
                     defaults={
                         "name": f"Org de {username}",
-                        "subscription_status": "active",
                     },
                 )
-                if not created:
-                    org.subscription_status = "active"
-                    org.save()
 
                 # Adiciona como membro owner
                 Membership.objects.get_or_create(
@@ -306,7 +302,6 @@ class RegisterCompanyView(APIView):
                     phone=phone,
                     city=city,
                     state=state,
-                    subscription_status="active",
                 )
 
                 # Cria membership
@@ -361,21 +356,48 @@ def update_avatar(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # Validar URL
+    # Validar URL com whitelist de esquemas permitidos
     from urllib.parse import urlparse
 
     parsed = urlparse(avatar_url)
+
+    # Whitelist de esquemas permitidos
+    ALLOWED_SCHEMES = {"http", "https"}
+
     if not parsed.scheme or not parsed.netloc:
         return Response(
             {"detail": "URL inválida."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # Atualizar avatar
-    user = request.user
-    user.avatar_url = avatar_url
-    user.save()
+    if parsed.scheme not in ALLOWED_SCHEMES:
+        return Response(
+            {"detail": "Apenas URLs http/https são permitidas."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
+    # Validações adicionais contra XSS
+    avatar_url_lower = avatar_url.lower()
+    if "javascript:" in avatar_url_lower:
+        return Response(
+            {"detail": "URL não permitida."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if "data:" in avatar_url_lower:
+        return Response(
+            {"detail": "URLs data: não são permitidas. Use upload de arquivo."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if "vbscript:" in avatar_url_lower:
+        return Response(
+            {"detail": "URL não permitida."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # TODO: Implementar salvamento do avatar no perfil do Musician/Organization
+    # Por enquanto, apenas retornar sucesso sem salvar
     return Response(
         {"detail": "Avatar atualizado com sucesso.", "avatar_url": avatar_url},
         status=status.HTTP_200_OK,

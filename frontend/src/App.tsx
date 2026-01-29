@@ -10,6 +10,7 @@ import Loading from './components/common/Loading';
 // Lazy load de páginas para otimizar o bundle inicial
 const Landing = lazy(() => import('./pages/Landing'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const StatusPage = lazy(() => import('./components/StatusPage'));
 const Login = lazy(() => import('./pages/Login'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -250,12 +251,6 @@ function AppRoutes() {
           }
         />
 
-        {/* Legacy payment routes - redirect to /solicitar-acesso */}
-        <Route path="/pagamento" element={<Navigate to="/solicitar-acesso" replace />} />
-        <Route path="/pagamento/sucesso" element={<Navigate to="/solicitar-acesso" replace />} />
-        <Route path="/planos" element={<Navigate to="/solicitar-acesso" replace />} />
-        <Route path="/planos/sucesso" element={<Navigate to="/solicitar-acesso" replace />} />
-
         {/* Public City Landing and Musician Profile */}
         <Route path="/cidades/:slug" element={<CityLanding />} />
         <Route path="/musico/:id" element={<MusicianPublicProfile />} />
@@ -433,6 +428,14 @@ function AppRoutes() {
         />
 
         {/* Admin Routes */}
+        <Route
+          path="/admin/login"
+          element={
+            <PublicRoute>
+              <AdminLogin />
+            </PublicRoute>
+          }
+        />
         <Route
           path="/admin/dashboard"
           element={

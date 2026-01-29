@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Calendar, Users, Award, Megaphone, Search, MessageSquare, Shield, Briefcase } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import OwlMascot from '../components/ui/OwlMascot';
@@ -33,8 +33,9 @@ interface UserContent {
 }
 
 const Landing: React.FC = () => {
+  const navigate = useNavigate();
   const [userType, setUserType] = useState<UserType>('musician');
-  
+
   const musicianContent: UserContent = {
     hero: "Sua Carreira Musical Organizada",
     subtitle: "Agenda inteligente para shows, networking e oportunidades profissionais",
@@ -128,7 +129,7 @@ const Landing: React.FC = () => {
       {
         icon: <Briefcase className="h-12 w-12" />,
         title: "Gestão Profissional de Eventos",
-        description: "Organize todas as suas contratações em um só lugar. Histórico, pagamentos, feedbacks e muito mais."
+        description: "Organize todas as suas contratações em um só lugar. Histórico, feedbacks e muito mais."
       }
     ],
     primaryCTA: {
@@ -223,6 +224,21 @@ const Landing: React.FC = () => {
       }
     };
   }, [displayText, phase, currentPhraseIndex, heroPhrases, getTypingDelay, getDeletingDelay]);
+
+  // Admin keyboard shortcut: Ctrl+Shift+A or Cmd+Shift+A
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Ctrl+Shift+A (Windows/Linux) or Cmd+Shift+A (Mac)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'A') {
+        e.preventDefault();
+        navigate('/admin/login');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [navigate]);
+
   return (
     <FullscreenBackground
       enableBlueWaves
@@ -407,7 +423,7 @@ const Landing: React.FC = () => {
         </section>
 
         {/* Footer CTA */}
-        <section className="container mx-auto px-4 py-16 text-center border-t border-white/10">
+        <section className="relative container mx-auto px-4 py-16 text-center border-t border-white/10">
           <AnimatePresence mode="wait">
             <motion.h3
               key={userType}
@@ -417,7 +433,7 @@ const Landing: React.FC = () => {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
             >
-              {userType === 'musician' 
+              {userType === 'musician'
                 ? 'Pronto para organizar sua carreira?'
                 : 'Pronto para encontrar os melhores músicos?'
               }
@@ -444,8 +460,17 @@ const Landing: React.FC = () => {
           </AnimatePresence>
 
           <p className="text-gray-400 text-sm mt-8">
-            © 2026 DXM Tech. Todos os direitos reservados.
+            © 2026 GigFlow. Todos os direitos reservados.
           </p>
+
+          {/* Admin access link - subtle */}
+          <Link
+            to="/admin/login"
+            className="absolute bottom-4 right-4 opacity-30 hover:opacity-100 transition-all duration-300 hover:scale-110 group"
+            title="Acesso Administrativo"
+          >
+            <Shield className="h-5 w-5 text-gray-400 group-hover:text-amber-400 transition-colors" />
+          </Link>
         </section>
       </div>
     </FullscreenBackground>

@@ -20,7 +20,7 @@ REFRESH_COOKIE = "refresh_token"
 
 def log_error_and_return_response(logger, message, status_code, include_details=False):
     """
-    Função segura de logging de erros que não expõe informações sensíveis.
+    Função segura de logging de erros.
 
     Args:
         logger: Logger instance
@@ -28,11 +28,20 @@ def log_error_and_return_response(logger, message, status_code, include_details=
         status_code: Código de status HTTP
         include_details: Se True, inclui detalhes (apenas para debug)
     """
+    # Em produção, nunca incluir detalhes no log
+    if not settings.DEBUG:
+        logger.error(f"{message} (sem detalhes por segurança)", exc_info=False)
+        return Response(
+            {"detail": "Erro ao processar solicitação."},
+            status=status_code,
+        )
+
+    # Em DEBUG, pode incluir mais contexto
     if settings.DEBUG and include_details:
         logger.error(message, exc_info=True)
         return Response({"detail": message}, status=status_code)
     else:
-        logger.error(f"{message} (ver logs para detalhes)", exc_info=True)
+        logger.error(f"{message} (ver logs para detalhes)", exc_info=False)
         return Response(
             {"detail": "Erro ao processar solicitação."},
             status=status_code,
@@ -98,6 +107,13 @@ class CookieTokenRefreshView(CookieTokenMixin, TokenRefreshView):
     def post(self, request, *args, **kwargs):
         data = request.data.copy()
 
+        # Validar que não tem cookie se token foi enviado no body
+        if "refresh" in data and request.COOKIES.get(REFRESH_COOKIE):
+            return Response(
+                {"detail": "Use apenas um método: body ou cookie, não ambos."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         if "refresh" not in data:
             refresh_cookie = request.COOKIES.get(REFRESH_COOKIE)
             if not refresh_cookie:
@@ -105,6 +121,25 @@ class CookieTokenRefreshView(CookieTokenMixin, TokenRefreshView):
                     {"detail": "Refresh token ausente."},
                     status=status.HTTP_401_UNAUTHORIZED,
                 )
+
+            # Validar formato do token antes de usar
+            try:
+                # Verificar se é um JWT válido
+                from jwt import decode as jwt_decode
+                from rest_framework_simplejwt.settings import api_settings
+
+                # Decodificar sem verificar assinatura para validar formato
+                jwt_decode(
+                    refresh_cookie,
+                    options={"verify_signature": False},
+                    algorithms=[api_settings.ALGORITHM],
+                )
+            except Exception:
+                return Response(
+                    {"detail": "Token inválido."},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+
             data["refresh"] = refresh_cookie
 
         serializer = self.get_serializer(data=data)
@@ -387,10 +422,10 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
                     first_name=given_name or musician_request.full_name.split()[0],
                     last_name=family_name
                     or " ".join(musician_request.full_name.split()[1:]),
-                    avatar_url=picture,  # Avatar do Google
                 )
                 user.set_unusable_password()  # Login apenas via Google
                 user.save()
+                # TODO: Salvar picture no perfil do Musician se necessário
 
                 # Cria músico
                 instruments = musician_request.instruments or []
@@ -411,7 +446,6 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
                     state=musician_request.state,
                     role="member",
                     is_active=True,
-                    subscription_status="active",
                 )
 
                 # Cria organização pessoal
@@ -419,7 +453,6 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
                     owner=user,
                     defaults={
                         "name": f"Org de {username}",
-                        "subscription_status": "active",
                     },
                 )
 
@@ -562,10 +595,10 @@ class GoogleRegisterCompanyView(CookieTokenMixin, APIView):
                     email=email,
                     first_name=given_name,
                     last_name=family_name,
-                    avatar_url=picture,  # Avatar do Google
                 )
                 user.set_unusable_password()
                 user.save()
+                # TODO: Salvar picture no perfil da Organization se necessário
 
                 # Cria organização
                 organization = Organization.objects.create(
@@ -577,7 +610,6 @@ class GoogleRegisterCompanyView(CookieTokenMixin, APIView):
                     phone=phone,
                     city=city,
                     state=state,
-                    subscription_status="active",
                 )
 
                 # Cria membership
