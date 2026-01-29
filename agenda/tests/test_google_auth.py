@@ -2,7 +2,7 @@
 Testes para autenticação Google
 """
 
-from django.test import TestCase, Client
+from django.test import TestCase, Client, override_settings
 from django.contrib.auth.models import User
 from unittest.mock import patch
 
@@ -14,6 +14,7 @@ from config.auth_views import (
 )
 
 
+@override_settings(GOOGLE_CLIENT_ID="test-client-id")
 class GoogleAuthTests(TestCase):
     """Testes para autenticação Google"""
 

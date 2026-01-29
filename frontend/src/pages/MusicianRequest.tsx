@@ -11,6 +11,62 @@ import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import { showToast } from '../utils/toast';
 import { useInstruments } from '../hooks/useInstruments';
 
+// Animações CSS
+const styles = `
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes slideDown {
+    from { opacity: 0; max-height: 0; }
+    to { opacity: 1; max-height: 400px; }
+  }
+  
+  @keyframes scaleIn {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  .animate-slide-down {
+    animation: slideDown 0.3s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+  
+  .instrument-card {
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .instrument-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .instrument-card.selected {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+  }
+  
+  .toggle-switch {
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .toggle-knob {
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .checkbox-check {
+    transition: all 0.15s ease-in-out;
+  }
+`;
+
 export default function MusicianRequest() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -184,7 +240,9 @@ export default function MusicianRequest() {
   }
 
   return (
-    <FullscreenBackground>
+    <>
+      <style>{styles}</style>
+      <FullscreenBackground>
       <div className="min-h-screen flex items-center justify-center p-4 py-12">
         <div className="max-w-lg w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
@@ -267,14 +325,14 @@ export default function MusicianRequest() {
             </div>
 
             {/* Instrumento Principal */}
-            <div>
+            <div className="animate-fade-in">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Instrumento Principal *
               </label>
               <input
                 type="text"
                 {...register('instrument', { required: 'Instrumento é obrigatório' })}
-                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white transition-all duration-200 focus:shadow-lg"
                 placeholder="Ex: Guitarra, Vocal, Bateria..."
               />
               {errors.instrument && (
@@ -283,38 +341,76 @@ export default function MusicianRequest() {
             </div>
 
             {/* Multi-instrumentista */}
-            <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                id="multi-instrumentalist"
-                checked={isMultiInstrumentalist}
-                onChange={(e) => setIsMultiInstrumentalist(e.target.checked)}
-                className="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-              />
-              <label htmlFor="multi-instrumentalist" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Sou multi-instrumentista (toco mais de um instrumento)
-              </label>
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800 animate-fade-in">
+              <div className="flex items-center space-x-4">
+                <div className={`toggle-switch relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 ${isMultiInstrumentalist ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                  <input
+                    type="checkbox"
+                    id="multi-instrumentalist"
+                    checked={isMultiInstrumentalist}
+                    onChange={(e) => setIsMultiInstrumentalist(e.target.checked)}
+                    className="peer sr-only"
+                  />
+                  <div className={`toggle-knob inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${isMultiInstrumentalist ? 'translate-x-6' : 'translate-x-0'}`} />
+                </div>
+                <label htmlFor="multi-instrumentalist" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                  Sou multi-instrumentista
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Music className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {watchedInstruments.length} instrumento(s)
+                </span>
+              </div>
             </div>
 
-            {/* Lista de instrumentos adicionais */}
-            {isMultiInstrumentalist && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Outros Instrumentos (adicione os instrumentos que você toca)
+            {/* Lista de instrumentos adicionais com animação */}
+            <div 
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${isMultiInstrumentalist ? 'max-h-96 opacity-100 animate-slide-down' : 'max-h-0 opacity-0'}`}
+            >
+              <div className="mt-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                  Outros Instrumentos que você toca
                 </label>
                 {loadingInstruments ? (
-                  <p className="text-sm text-gray-500">Carregando instrumentos...</p>
+                  <div className="flex items-center justify-center p-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 dark:border-indigo-400" />
+                    <span className="ml-3 text-sm text-gray-500 dark:text-gray-400">Carregando instrumentos...</span>
+                  </div>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-72 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-xl p-4 bg-gray-50 dark:bg-gray-900/50">
                     {instruments.map((inst) => (
-                      <label key={inst.id} className="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+                      <label 
+                        key={inst.id} 
+                        className={`
+                          instrument-card flex items-center space-x-2 cursor-pointer p-3 rounded-lg border-2 transition-all duration-200
+                          ${watchedInstruments.includes(inst.name) 
+                            ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 dark:border-indigo-400 selected' 
+                            : 'border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-gray-100 dark:hover:bg-gray-800'
+                          }
+                        `}
+                      >
                         <input
                           type="checkbox"
                           value={inst.name}
                           {...register('instruments')}
-                          className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                          className="sr-only"
                         />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                        <div className={`
+                          checkbox-check w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200
+                          ${watchedInstruments.includes(inst.name)
+                            ? 'bg-indigo-600 border-indigo-600'
+                            : 'border-gray-300 dark:border-gray-600'
+                          }
+                        `}>
+                          {watchedInstruments.includes(inst.name) && (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           {inst.display_name}
                         </span>
                       </label>
@@ -322,12 +418,25 @@ export default function MusicianRequest() {
                   </div>
                 )}
                 {watchedInstruments.length > 0 && (
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                    {watchedInstruments.length} instrumento(s) selecionado(s)
-                  </p>
+                  <div className="mt-4 flex items-center justify-between p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg border border-indigo-200 dark:border-indigo-800 animate-fade-in">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                      <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        {watchedInstruments.length} instrumento(s) selecionado(s)
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setValue('instruments', [])}
+                      className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium"
+                    >
+                      Limpar seleção
+                    </button>
+                  </div>
                 )}
               </div>
-            )}
+            </div>
+          </>
 
             {/* Cidade e Estado */}
             <div className="grid grid-cols-2 gap-4">
