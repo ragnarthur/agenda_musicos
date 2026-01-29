@@ -289,3 +289,38 @@ export function countAvailabilities(availabilities: Availability[] | undefined):
     { available: 0, unavailable: 0, maybe: 0, pending: 0, total: 0 }
   );
 }
+
+/**
+ * Formata número de telefone brasileiro.
+ * Aceita entrada com ou sem máscara e aplica formatação: (XX) XXXXX-XXXX
+ * @param value - Valor a ser formatado (pode ter dígitos ou já estar formatado)
+ * @returns Telefone formatado no padrão brasileiro
+ * @example
+ * formatPhone('11999999999') // '(11) 99999-9999'
+ * formatPhone('(11) 99999-9999') // '(11) 99999-9999'
+ * formatPhone('11') // '11'
+ */
+export function formatPhone(value: string): string {
+  if (!value) return '';
+  
+  const numbers = value.replace(/\D/g, '');
+  const limited = numbers.slice(0, 11);
+  
+  if (limited.length <= 2) return limited;
+  if (limited.length <= 6) return `(${limited.slice(0, 2)}) ${limited.slice(2)}`;
+  if (limited.length <= 10) return `(${limited.slice(0, 2)}) ${limited.slice(2, 6)}-${limited.slice(6)}`;
+  return `(${limited.slice(0, 2)}) ${limited.slice(2, 7)}-${limited.slice(7)}`;
+}
+
+/**
+ * Remove a máscara de telefone, retornando apenas os dígitos.
+ * Útil para enviar ao backend ou armazenar em formato limpo.
+ * @param value - Telefone com ou sem máscara
+ * @returns Apenas os dígitos do telefone
+ * @example
+ * unmaskPhone('(11) 99999-9999') // '11999999999'
+ * unmaskPhone('11999999999') // '11999999999'
+ */
+export function unmaskPhone(value: string): string {
+  return value.replace(/\D/g, '');
+}

@@ -10,6 +10,8 @@ import { BRAZILIAN_STATES } from '../config/cities';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import { showToast } from '../utils/toast';
 import { useInstruments } from '../hooks/useInstruments';
+import { formatPhone } from '../utils/formatting';
+import { getMobileInputProps } from '../utils/mobileInputs';
 
 // Animações CSS
 const styles = `
@@ -84,7 +86,15 @@ export default function MusicianRequest() {
     handleSubmit,
     formState: { errors },
     setValue,
+    watch,
   } = useForm<MusicianRequestCreate>();
+
+  const watchedPhone = watch('phone');
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhone(e.target.value);
+    setValue('phone', formatted);
+  };
 
   // Filtrar instrumentos com base na busca
   const filteredInstruments = useMemo(() => {
@@ -388,7 +398,10 @@ export default function MusicianRequest() {
               <input
                 type="tel"
                 inputMode="tel"
-                {...register('phone', { required: 'Telefone é obrigatório' })}
+                value={watchedPhone || ''}
+                onChange={handlePhoneChange}
+                maxLength={15}
+                {...getMobileInputProps('tel')}
                 className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white transition-all duration-200 focus:shadow-lg"
                 placeholder="(00) 00000-0000"
               />

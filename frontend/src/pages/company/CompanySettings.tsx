@@ -16,6 +16,7 @@ import { useCompanyAuth } from '../../contexts/CompanyAuthContext';
 import CompanyNavbar from '../../components/navigation/CompanyNavbar';
 import type { Organization } from '../../services/publicApi';
 import Loading from '../../components/common/Loading';
+import { formatPhone } from '../../utils/formatting';
 
 const BRAZILIAN_STATES = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG',
@@ -58,7 +59,12 @@ const CompanySettings: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    if (name === 'phone') {
+      setFormData(prev => ({ ...prev, [name]: formatPhone(value) }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
     setHasChanges(true);
   };
 
@@ -290,8 +296,10 @@ const CompanySettings: React.FC = () => {
                   type="tel"
                   id="phone"
                   name="phone"
+                  inputMode="tel"
                   value={formData.phone}
                   onChange={handleChange}
+                  maxLength={15}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   placeholder="(34) 99999-9999"
                 />

@@ -9,6 +9,8 @@ import { companyService, googleAuthService, type CompanyRegisterData } from '../
 import { BRAZILIAN_STATES } from '../config/cities';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import { useCompanyAuth } from '../contexts/CompanyAuthContext';
+import { formatPhone } from '../utils/formatting';
+import { getMobileInputProps } from '../utils/mobileInputs';
 
 export default function RegisterCompany() {
   const navigate = useNavigate();
@@ -23,7 +25,16 @@ export default function RegisterCompany() {
     register,
     handleSubmit,
     formState: { errors },
+    setValue,
+    watch,
   } = useForm<CompanyRegisterData & { confirm_password: string }>();
+
+  const watchedPhone = watch('phone');
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhone(e.target.value);
+    setValue('phone', formatted);
+  };
 
   const onSubmit = async (data: CompanyRegisterData & { confirm_password: string }) => {
     if (data.password !== data.confirm_password) {
@@ -341,7 +352,11 @@ export default function RegisterCompany() {
               </label>
               <input
                 type="tel"
-                {...register('phone')}
+                inputMode="tel"
+                value={watchedPhone || ''}
+                onChange={handlePhoneChange}
+                maxLength={15}
+                {...getMobileInputProps('tel')}
                 className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
                 placeholder="(00) 00000-0000"
               />
