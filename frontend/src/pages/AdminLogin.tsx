@@ -15,11 +15,11 @@ const AdminLogin: React.FC = () => {
     setLoading(true);
 
     try {
-      await authService.login({ email, password });
+      await authService.login({ username: email, password });
 
       // Verificar se o usuário é admin
-      const user = await musicianService.getMe();
-      if (!user.is_staff && !user.is_superuser) {
+      const musician = await musicianService.getMe();
+      if (!musician.user?.is_staff && !musician.user?.is_superuser) {
         showToast.error('Acesso negado. Esta área é restrita a administradores.');
         await authService.logout();
         return;

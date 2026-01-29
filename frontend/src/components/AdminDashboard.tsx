@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Clock, CheckCircle, XCircle, AlertCircle, TrendingUp, Search, Copy, Mail, MapPin, Phone, Music2 } from 'lucide-react';
-import { api, authService } from '../services/api';
+import { api, musicianService } from '../services/api';
 import { musicianRequestService, type MusicianRequest } from '../services/publicApi';
 import { showToast } from '../utils/toast';
 import { format, parseISO } from 'date-fns';
@@ -48,8 +48,8 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const checkAdminAccess = async () => {
       try {
-        const user = await musicianService.getMe();
-        if (!user.is_staff && !user.is_superuser) {
+        const musician = await musicianService.getMe();
+        if (!musician.user?.is_staff && !musician.user?.is_superuser) {
           showToast.error('Acesso negado. Esta área é restrita a administradores.');
           navigate('/admin/login');
         }
