@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, throttle_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.files.base import ContentFile
@@ -23,6 +23,7 @@ from .throttles import (
     CreateEventRateThrottle,
     PreviewConflictsRateThrottle,
     BurstRateThrottle,
+    PublicRateThrottle,
 )
 
 from .models import (
@@ -72,6 +73,7 @@ from .utils import (
     split_availability_with_events,
     award_badges_for_musician,
 )
+from .instrument_utils import INSTRUMENT_LABELS, get_instrument_label
 from .pagination import StandardResultsSetPagination
 
 
@@ -105,15 +107,30 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
             )
         instrument = self.request.query_params.get("instrument")
         if instrument and instrument != "all":
-            if connection.vendor == "sqlite":
-                queryset = queryset.filter(
-                    Q(instrument=instrument)
-                    | Q(instruments__icontains=f'"{instrument}"')
-                )
+            # Validar instrument antes de usar
+            from .models import Instrument
+
+            # Normalizar e validar que o instrumento existe
+            instrument_normalized = Instrument.normalize_name(instrument)
+            valid_instruments = Instrument.objects.filter(
+                name=instrument_normalized, is_approved=True
+            ).values_list("name", flat=True)
+
+            if not valid_instruments:
+                # Se não for um instrumento aprovado, não filtra
+                pass
             else:
-                queryset = queryset.filter(
-                    Q(instrument=instrument) | Q(instruments__contains=[instrument])
-                )
+                # Usar valor validado
+                if connection.vendor == "sqlite":
+                    queryset = queryset.filter(
+                        Q(instrument=instrument_normalized)
+                        | Q(instruments__icontains=f'"{instrument_normalized}"')
+                    )
+                else:
+                    queryset = queryset.filter(
+                        Q(instrument=instrument_normalized)
+                        | Q(instruments__contains=[instrument_normalized])
+                    )
         return queryset
 
     @action(detail=False, methods=["get", "patch"])
@@ -149,34 +166,7 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
         Retorna lista de instrumentos únicos dos músicos cadastrados
         com contagem de músicos por instrumento
         """
-        instrument_labels = {
-            "vocal": "Vocal",
-            "guitar": "Guitarra",
-            "acoustic_guitar": "Violão",
-            "bass": "Baixo",
-            "drums": "Bateria",
-            "keyboard": "Teclado",
-            "piano": "Piano",
-            "synth": "Sintetizador",
-            "percussion": "Percussão",
-            "cajon": "Cajón",
-            "violin": "Violino",
-            "viola": "Viola",
-            "cello": "Violoncelo",
-            "double_bass": "Contrabaixo acústico",
-            "saxophone": "Saxofone",
-            "trumpet": "Trompete",
-            "trombone": "Trombone",
-            "flute": "Flauta",
-            "clarinet": "Clarinete",
-            "harmonica": "Gaita",
-            "ukulele": "Ukulele",
-            "banjo": "Banjo",
-            "mandolin": "Bandolim",
-            "dj": "DJ",
-            "producer": "Produtor(a)",
-            "other": "Outro",
-        }
+        instrument_labels = INSTRUMENT_LABELS
 
         # Busca instrumentos únicos com contagem
         instruments_data = (
@@ -548,6 +538,23 @@ class EventViewSet(viewsets.ModelViewSet):
         if request_user and instance.created_by and instance.created_by != request_user:
             raise PermissionDenied("Apenas o criador pode deletar este evento.")
 
+        # ✅ Log de auditoria
+        from .audit import AuditLog
+
+        x_forwarded_for = self.request.META.get("HTTP_X_FORWARDED_FOR", "")
+        ip_address = (
+            x_forwarded_for.split(",")[0].strip() if x_forwarded_for else None
+        ) or self.request.META.get("REMOTE_ADDR")
+
+        AuditLog.objects.create(
+            user=request_user,
+            action="event_delete",
+            resource_type="event",
+            resource_id=instance.id,
+            ip_address=ip_address,
+            user_agent=self.request.META.get("HTTP_USER_AGENT", "")[:500],
+        )
+
         super().perform_destroy(instance)
 
     def _split_availability_with_events(self, availability, events):
@@ -852,16 +859,30 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         # Usa transação com lock para evitar race condition
         with transaction.atomic():
-            # Re-busca o evento com lock exclusivo
-            locked_event = Event.objects.select_for_update().get(pk=event.pk)
+            # Re-busca o evento com lock exclusivo e tratamento de erro
+            try:
+                locked_event = Event.objects.select_for_update(nowait=False).get(
+                    pk=event.pk
+                )
+            except Exception as e:
+                logger.error(f"Erro ao obter lock do evento {event.pk}: {e}")
+                from rest_framework.exceptions import ValidationError
+
+                raise ValidationError(
+                    {"detail": "Conflito ao confirmar evento. Tente novamente."}
+                )
 
             # Verifica se já foi confirmado (por outra requisição concorrente)
             if locked_event.status == "confirmed":
+                logger.info(f"Evento {event.pk} já estava confirmado")
                 return
             if locked_event.status in ["cancelled", "rejected"]:
+                logger.warning(
+                    f"Tentativa de confirmar evento {event.pk} com status {locked_event.status}"
+                )
                 return
 
-            all_availabilities = locked_event.availabilities.all()
+            all_availabilities = locked_event.availabilities.select_for_update().all()
 
             # Convidados = todos exceto o criador
             invitee_availabilities = all_availabilities
@@ -1596,9 +1617,7 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
                 "musician_name": musician.user.get_full_name()
                 or musician.user.username,
                 "instrument": musician.instrument,
-                "instrument_display": instrument_labels.get(
-                    musician.instrument, musician.instrument or ""
-                ),
+                "instrument_display": get_instrument_label(musician.instrument),
                 "has_availability": primary_avail is not None,
                 "availability_id": primary_avail.id if primary_avail else None,
                 "start_time": primary_avail.start_time.strftime("%H:%M")
@@ -1759,19 +1778,14 @@ def upload_avatar(request):
         )
     except ValueError as e:
         logger.warning(
-            "Upload de avatar inválido | user_id=%s | arquivo=%s | tamanho=%s | content_type=%s | erro=%s",
+            "Upload de avatar inválido | user_id=%s",
             getattr(request.user, "id", None),
-            getattr(avatar_file, "name", None),
-            getattr(avatar_file, "size", None),
-            getattr(avatar_file, "content_type", None),
-            str(e),
         )
         return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         logger.exception(
-            "Erro inesperado no upload de avatar | user_id=%s | arquivo=%s",
+            "Erro inesperado no upload de avatar | user_id=%s",
             getattr(request.user, "id", None),
-            getattr(avatar_file, "name", None),
         )
         return Response(
             {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -1827,19 +1841,14 @@ def upload_cover(request):
         )
     except ValueError as e:
         logger.warning(
-            "Upload de capa inválido | user_id=%s | arquivo=%s | tamanho=%s | content_type=%s | erro=%s",
+            "Upload de capa inválido | user_id=%s",
             getattr(request.user, "id", None),
-            getattr(cover_file, "name", None),
-            getattr(cover_file, "size", None),
-            getattr(cover_file, "content_type", None),
-            str(e),
         )
         return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         logger.exception(
-            "Erro inesperado no upload de capa | user_id=%s | arquivo=%s",
+            "Erro inesperado no upload de capa | user_id=%s",
             getattr(request.user, "id", None),
-            getattr(cover_file, "name", None),
         )
         return Response(
             {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -2156,9 +2165,7 @@ def list_musician_requests(request):
     Lista solicitações de músicos (admin only)
     """
     if not request.user.is_staff:
-        return Response(
-            {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
-        )
+        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
 
     status_filter = request.query_params.get("status", "pending")
     queryset = MusicianRequest.objects.all().order_by("-created_at")
@@ -2186,9 +2193,7 @@ def get_musician_request(request, request_id):
     Detalhe de uma solicitação (admin only)
     """
     if not request.user.is_staff:
-        return Response(
-            {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
-        )
+        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
 
     musician_request = get_object_or_404(MusicianRequest, id=request_id)
     serializer = MusicianRequestAdminSerializer(musician_request)
@@ -2203,15 +2208,15 @@ def approve_musician_request(request, request_id):
     Aprova solicitação e envia email com link de convite (admin only)
     """
     if not request.user.is_staff:
-        return Response(
-            {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
-        )
+        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
 
     musician_request = get_object_or_404(MusicianRequest, id=request_id)
 
     if musician_request.status != "pending":
         return Response(
-            {"detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"},
+            {
+                "detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"
+            },
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -2295,15 +2300,15 @@ def reject_musician_request(request, request_id):
     Rejeita solicitação (admin only)
     """
     if not request.user.is_staff:
-        return Response(
-            {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
-        )
+        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
 
     musician_request = get_object_or_404(MusicianRequest, id=request_id)
 
     if musician_request.status != "pending":
         return Response(
-            {"detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"},
+            {
+                "detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"
+            },
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -2332,9 +2337,7 @@ def validate_invite_token(request):
     try:
         musician_request = MusicianRequest.objects.get(invite_token=token)
     except MusicianRequest.DoesNotExist:
-        return Response(
-            {"detail": "Token inválido"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"detail": "Token inválido"}, status=status.HTTP_404_NOT_FOUND)
 
     if not musician_request.is_invite_valid():
         if musician_request.invite_used:
@@ -2425,12 +2428,16 @@ def list_received_contact_requests(request):
         )
 
     status_filter = request.query_params.get("status")
-    queryset = ContactRequest.objects.filter(to_musician=musician).order_by("-created_at")
+    queryset = ContactRequest.objects.filter(to_musician=musician).order_by(
+        "-created_at"
+    )
 
     if status_filter:
         queryset = queryset.filter(status=status_filter)
 
-    serializer = ContactRequestSerializer(queryset, many=True, context={"request": request})
+    serializer = ContactRequestSerializer(
+        queryset, many=True, context={"request": request}
+    )
     return Response(serializer.data)
 
 
@@ -2457,7 +2464,9 @@ def list_sent_contact_requests(request):
         from_organization=membership.organization
     ).order_by("-created_at")
 
-    serializer = ContactRequestSerializer(queryset, many=True, context={"request": request})
+    serializer = ContactRequestSerializer(
+        queryset, many=True, context={"request": request}
+    )
     return Response(serializer.data)
 
 
@@ -2478,9 +2487,7 @@ def get_contact_request(request, contact_id):
     is_sender = contact_request.from_user == request.user
 
     if not is_musician and not is_sender:
-        return Response(
-            {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
-        )
+        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
 
     # Marca como lido se for o músico acessando
     if is_musician and contact_request.status == "pending":
@@ -2538,9 +2545,7 @@ def archive_contact_request(request, contact_id):
     )
 
     if not is_musician:
-        return Response(
-            {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
-        )
+        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
 
     contact_request.archive()
     return Response({"message": "Mensagem arquivada"})
@@ -2553,6 +2558,7 @@ def archive_contact_request(request, contact_id):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@throttle_classes([PublicRateThrottle])
 def list_musicians_by_city(request):
     """
     GET /api/musicians/public-by-city/?city=Monte+Carmelo&state=MG
@@ -2583,12 +2589,15 @@ def list_musicians_by_city(request):
             Q(instrument__iexact=instrument) | Q(instruments__icontains=instrument)
         )
 
-    serializer = MusicianPublicSerializer(queryset, many=True, context={"request": request})
+    serializer = MusicianPublicSerializer(
+        queryset, many=True, context={"request": request}
+    )
     return Response(serializer.data)
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@throttle_classes([PublicRateThrottle])
 def list_sponsors(request):
     """
     GET /api/organizations/sponsors/?city=Monte+Carmelo&state=MG
@@ -2612,17 +2621,20 @@ def list_sponsors(request):
 
     # REGRA: Rodízio determinístico por dia
     # Ordenar por tier, depois aplicar offset baseado no dia
-    sponsors = list(queryset.order_by('sponsor_tier', 'id'))
+    sponsors = list(queryset.order_by("sponsor_tier", "id"))
     if sponsors:
         day_offset = date.today().toordinal() % len(sponsors)
         sponsors = sponsors[day_offset:] + sponsors[:day_offset]
 
-    serializer = OrganizationPublicSerializer(sponsors, many=True, context={"request": request})
+    serializer = OrganizationPublicSerializer(
+        sponsors, many=True, context={"request": request}
+    )
     return Response(serializer.data)
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@throttle_classes([PublicRateThrottle])
 def get_musician_public_profile(request, musician_id):
     """
     GET /api/musicians/public/<id>/
@@ -2640,11 +2652,15 @@ def get_company_dashboard(request):
     GET /api/company/dashboard/
     Dashboard da empresa
     """
-    membership = Membership.objects.filter(
-        user=request.user,
-        status="active",
-        organization__org_type__in=["company", "venue"],
-    ).select_related("organization").first()
+    membership = (
+        Membership.objects.filter(
+            user=request.user,
+            status="active",
+            organization__org_type__in=["company", "venue"],
+        )
+        .select_related("organization")
+        .first()
+    )
 
     if not membership:
         return Response(
@@ -2662,7 +2678,9 @@ def get_company_dashboard(request):
 
     return Response(
         {
-            "organization": OrganizationSerializer(organization, context={"request": request}).data,
+            "organization": OrganizationSerializer(
+                organization, context={"request": request}
+            ).data,
             "stats": {
                 "total_sent": total_sent,
                 "pending_replies": pending_replies,
@@ -2679,17 +2697,19 @@ def update_company_profile(request):
     PATCH /api/company/profile/
     Atualiza perfil da empresa
     """
-    membership = Membership.objects.filter(
-        user=request.user,
-        status="active",
-        organization__org_type__in=["company", "venue"],
-        role__in=["owner", "admin"],
-    ).select_related("organization").first()
+    membership = (
+        Membership.objects.filter(
+            user=request.user,
+            status="active",
+            organization__org_type__in=["company", "venue"],
+            role__in=["owner", "admin"],
+        )
+        .select_related("organization")
+        .first()
+    )
 
     if not membership:
-        return Response(
-            {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
-        )
+        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
 
     organization = membership.organization
     serializer = OrganizationSerializer(
@@ -2768,26 +2788,25 @@ class InstrumentViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = super().get_queryset()
 
         # Busca por query
-        search = self.request.query_params.get('q', None)
+        search = self.request.query_params.get("q", None)
         if search:
             search_normalized = Instrument.normalize_name(search)
             queryset = queryset.filter(
-                Q(name__icontains=search_normalized) |
-                Q(display_name__icontains=search)
+                Q(name__icontains=search_normalized) | Q(display_name__icontains=search)
             )
 
         # Ordena: pré-definidos primeiro, depois por uso
         queryset = queryset.annotate(
             type_order=models.Case(
-                models.When(type='predefined', then=0),
+                models.When(type="predefined", then=0),
                 default=1,
-                output_field=models.IntegerField()
+                output_field=models.IntegerField(),
             )
-        ).order_by('type_order', '-usage_count', 'display_name')
+        ).order_by("type_order", "-usage_count", "display_name")
 
         return queryset
 
-    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
     def create_custom(self, request):
         """
         Cria novo instrumento customizado.
@@ -2796,20 +2815,18 @@ class InstrumentViewSet(viewsets.ReadOnlyModelViewSet):
         Body: { "display_name": "Cavaquinho" }
         """
         serializer = InstrumentCreateSerializer(
-            data=request.data,
-            context={'request': request}
+            data=request.data, context={"request": request}
         )
 
         if serializer.is_valid():
             instrument = serializer.save()
             return Response(
-                InstrumentSerializer(instrument).data,
-                status=status.HTTP_201_CREATED
+                InstrumentSerializer(instrument).data, status=status.HTTP_201_CREATED
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=["get"])
     def popular(self, request):
         """
         Retorna instrumentos mais populares.
