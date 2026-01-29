@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { geocodingService } from '../services/geocoding';
+import { isIOSSafari, getGeolocationTimeout, getPositionTimeout } from '../utils/browserDetection';
 
 interface Coordinates {
   latitude: number | null;
@@ -22,6 +23,13 @@ const CACHE_DURATION = 60 * 60 * 1000; // 1 hora em milissegundos
 
 interface GeolocationOptions {
   autoStart?: boolean;
+}
+
+interface GeolocationError extends Error {
+  code: number;
+  PERMISSION_DENIED: number;
+  POSITION_UNAVAILABLE: number;
+  TIMEOUT: number;
 }
 
 export const useGeolocation = (options: GeolocationOptions = {}) => {
@@ -115,7 +123,7 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
         setData((prev) => ({ ...prev, hasPermission: true }));
         return true;
       }
-    } catch (error) {
+    } catch {
       console.log('API de permissões não disponível, tentando geolocalização direta');
       setData((prev) => ({ ...prev, hasPermission: true }));
       return true;
@@ -124,7 +132,7 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
     return false;
   }, []);
 
-  const getLocation = useCallback(async () => {
+  const getLocation = useCallback(async (retryWithLowAccuracy = false) => {
     if (!navigator.geolocation) {
       setData((prev) => ({
         ...prev,
@@ -136,13 +144,20 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
 
     try {
       await requestPermission();
-
       setData((prev) => ({ ...prev, isLoading: true, error: null }));
+
+      const timeoutDuration = getGeolocationTimeout();
+      const positionTimeout = getPositionTimeout();
 
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         const timeoutId = setTimeout(() => {
-          reject(new Error('Timeout ao obter localização'));
-        }, 10000); // 10 segundos timeout
+          const error = new Error('Timeout ao obter localização') as GeolocationError;
+          error.code = 3;
+          error.PERMISSION_DENIED = 1;
+          error.POSITION_UNAVAILABLE = 2;
+          error.TIMEOUT = 3;
+          reject(error);
+        }, timeoutDuration);
 
         navigator.geolocation.getCurrentPosition(
           (position) => {
@@ -154,9 +169,9 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
             reject(error);
           },
           {
-            enableHighAccuracy: true,
-            timeout: 8000,
-            maximumAge: 0,
+            enableHighAccuracy: !retryWithLowAccuracy,
+            timeout: positionTimeout,
+            maximumAge: retryWithLowAccuracy ? 300000 : 0, // 5 min cache on retry
           }
         );
       });
@@ -201,25 +216,44 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
           hasPermission: true,
         }));
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao obter localização:', error);
+
+      // Verifica se o erro tem propriedade code (erro da Geolocation API)
+      const hasErrorCode = error !== null && typeof error === 'object' && 'code' in error && typeof error.code === 'number';
+
+      // Se falhou com alta precisão e não tentamos ainda, tentar com baixa precisão
+      if (!retryWithLowAccuracy && hasErrorCode && error.code === 3) { // Timeout
+        console.log('Tentando novamente com precisão reduzida...');
+        return getLocation(true);
+      }
 
       let errorMessage = 'Erro ao obter localização';
 
-      // Traduzir códigos de erro da Geolocation API
-      if (error.code === 1) {
-        errorMessage = 'Permissão de localização negada';
-      } else if (error.code === 2) {
-        errorMessage = 'Localização indisponível';
-      } else if (error.code === 3) {
-        errorMessage = 'Timeout ao obter localização';
+      const isIOSDevice = isIOSSafari();
+
+      // Mensagens específicas para iOS/Safari
+      if (hasErrorCode && error.code === 1) {
+        if (isIOSDevice) {
+          errorMessage = 'Permissão de localização negada. Vá em Ajustes > Safari > Localização e permita o acesso.';
+        } else {
+          errorMessage = 'Permissão de localização negada';
+        }
+      } else if (hasErrorCode && error.code === 2) {
+        errorMessage = 'Localização indisponível. Verifique se o GPS está ativado.';
+      } else if (hasErrorCode && error.code === 3) {
+        if (isIOSDevice) {
+          errorMessage = 'Timeout ao obter localização. O GPS pode estar desativado ou o sinal está fraco.';
+        } else {
+          errorMessage = 'Timeout ao obter localização';
+        }
       }
 
       setData((prev) => ({
         ...prev,
         isLoading: false,
         error: errorMessage,
-        hasPermission: error.code !== 1, // Se negado, não tem permissão
+        hasPermission: !hasErrorCode || error.code !== 1, // Se negado, não tem permissão
       }));
     }
   }, [requestPermission, saveCache]);

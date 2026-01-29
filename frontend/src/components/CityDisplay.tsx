@@ -76,9 +76,9 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.4 }}
-        className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-2rem)] sm:w-auto"
+        className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] md:w-auto"
       >
-        <div className="bg-amber-500/10 backdrop-blur-md rounded-2xl border border-amber-500/30 px-6 py-4 shadow-2xl max-w-2xl">
+        <div className="bg-amber-500/10 backdrop-blur-md rounded-2xl border border-amber-500/30 px-3 py-3 sm:px-6 sm:py-4 shadow-2xl max-w-2xl">
           <div className="flex items-center gap-3">
             <div className="animate-spin">
               <MapPin className="h-6 w-6 text-amber-400" />
@@ -101,17 +101,17 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.4 }}
-        className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-2rem)] sm:w-auto"
+        className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] md:w-auto"
       >
-        <div className="bg-red-500/10 backdrop-blur-md rounded-2xl border border-red-500/30 px-6 py-4 shadow-2xl max-w-2xl">
+        <div className="bg-red-500/10 backdrop-blur-md rounded-2xl border border-red-500/30 px-3 py-3 sm:px-6 sm:py-4 shadow-2xl max-w-2xl">
           <div className="flex items-start gap-3">
             <AlertCircle className="h-6 w-6 text-red-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-red-100 font-medium text-sm mb-2">
                 Não foi possível detectar sua localização
               </p>
-              <p className="text-red-200/70 text-xs">
-                Verifique as permissões do navegador ou tente novamente.
+              <p className="text-red-200/70 text-xs leading-relaxed">
+                {error}
               </p>
               <button
                 onClick={reset}
@@ -139,9 +139,9 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.4 }}
-        className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-2rem)] sm:w-auto"
+        className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] md:w-auto"
       >
-        <div className="bg-green-500/10 backdrop-blur-md rounded-2xl border border-green-500/30 px-8 py-6 shadow-2xl max-w-md">
+        <div className="bg-green-500/10 backdrop-blur-md rounded-2xl border border-green-500/30 px-4 py-4 sm:px-8 sm:py-6 shadow-2xl max-w-md">
           <div className="flex flex-col items-center gap-3">
             <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center">
               <Check className="h-8 w-8 text-green-400" />
@@ -174,13 +174,13 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.4 }}
-          className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-2rem)] sm:w-auto"
+          className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] md:w-auto"
         >
           <div className={`${
-            isMonteCarmelo 
-              ? 'bg-gradient-to-r from-amber-500/10 via-amber-400/12 to-amber-500/10' 
+            isMonteCarmelo
+              ? 'bg-gradient-to-r from-amber-500/10 via-amber-400/12 to-amber-500/10'
               : 'bg-amber-500/10'
-          } backdrop-blur-md rounded-2xl border border-amber-500/30 px-6 py-4 shadow-2xl max-w-2xl`}>
+          } backdrop-blur-md rounded-2xl border border-amber-500/30 px-3 py-3 sm:px-6 sm:py-4 shadow-2xl max-w-2xl`}>
           <div className="flex items-start gap-3">
             <div className={`${
               isMonteCarmelo ? 'bg-amber-500/20' : 'bg-amber-500/10'
@@ -197,7 +197,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
                   <p className="text-amber-200/80 text-sm">
                     Que bom ver você por aqui. A plataforma já está ativa na sua região.
                   </p>
-                  <div className="flex flex-wrap gap-2 mt-3">
+                  <div className="flex flex-col xs:flex-row flex-wrap gap-2 mt-3">
                     <button
                       onClick={() => setShowForm(true)}
                       className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-all text-sm shadow-lg hover:shadow-xl"
@@ -245,7 +245,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
                       </button>
                     ))}
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-col xs:flex-row flex-wrap gap-2">
                     <button
                       onClick={() => setShowForm(true)}
                       className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-all text-sm shadow-lg hover:shadow-xl"
@@ -283,9 +283,9 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.3 }}
-          className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-2rem)] sm:w-auto"
+          className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] md:w-auto"
         >
-          <div className="bg-amber-500/10 backdrop-blur-md rounded-2xl border border-amber-500/30 px-6 py-5 shadow-2xl max-w-md w-full">
+          <div className="bg-amber-500/10 backdrop-blur-md rounded-2xl border border-amber-500/30 px-4 py-4 sm:px-6 sm:py-5 shadow-2xl max-w-md w-full">
             <div className="flex items-start gap-3">
               <div className="bg-amber-500/10 p-2.5 rounded-full">
                 <Mail className="h-6 w-6 text-amber-400" />

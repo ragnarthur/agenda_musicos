@@ -7,6 +7,9 @@ export default {
   ],
   theme: {
     extend: {
+      screens: {
+        'xs': '375px', // iPhone SE and small mobile devices
+      },
       colors: {
         primary: {
           50: '#f0f9ff',

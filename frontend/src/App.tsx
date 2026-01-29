@@ -470,7 +470,12 @@ function App() {
           <CompanyAuthProvider>
             <AppRoutes />
             <Toaster
-              position="top-right"
+              position="top-center"
+              containerStyle={{
+                marginTop: 'env(safe-area-inset-top)',
+                maxWidth: 'calc(100vw - 32px)',
+                padding: '0 16px',
+              }}
               toastOptions={{
                 duration: 4000,
                 style: {
@@ -478,6 +483,10 @@ function App() {
                   color: '#f9fafb',
                   borderRadius: '0.75rem',
                   padding: '12px 16px',
+                  maxWidth: 'calc(100vw - 32px)',
+                  width: 'auto',
+                  wordBreak: 'break-word',
+                  overflowWrap: 'break-word',
                 },
                 success: {
                   iconTheme: {
