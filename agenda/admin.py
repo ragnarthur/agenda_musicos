@@ -33,17 +33,13 @@ class EventAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Informações do Evento', {
-            'fields': ('title', 'description', 'location', 'venue_contact', 'is_solo')
+            'fields': ('title', 'description', 'location', 'venue_contact', 'payment_amount', 'is_solo')
         }),
         ('Data e Hora', {
             'fields': (
                 'event_date', 'start_time', 'end_time',
                 'start_datetime', 'end_datetime'
             )
-        }),
-        ('Financeiro', {
-            'fields': ('payment_amount',),
-            'classes': ('collapse',)
         }),
         ('Status', {
             'fields': (

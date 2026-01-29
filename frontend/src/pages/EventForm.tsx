@@ -67,6 +67,7 @@ const EventForm: React.FC = () => {
     description: '',
     location: '',
     venue_contact: '',
+    payment_amount: '',
     event_date: prefilledData?.date || '',
     start_time: prefilledData?.start_time || '',
     end_time: prefilledData?.end_time || '',
@@ -263,6 +264,15 @@ const EventForm: React.FC = () => {
     }
   };
 
+  const parsePaymentAmount = (value: string | number | null | undefined): number | null => {
+    if (value === null || value === undefined) return null;
+    const raw = String(value).trim();
+    if (!raw) return null;
+    const normalized = raw.includes(',') ? raw.replace(/\./g, '').replace(',', '.') : raw;
+    const num = Number(normalized);
+    return Number.isFinite(num) ? Number(num.toFixed(2)) : null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -300,6 +310,7 @@ const EventForm: React.FC = () => {
         location: sanitizeText(formData.location, 300),
         description: sanitizeOptionalText(formData.description, 5000),
         venue_contact: sanitizeOptionalText(formData.venue_contact, 200),
+        payment_amount: parsePaymentAmount(formData.payment_amount),
         invited_musicians: formData.is_solo ? [] : selectedMusicians,
       };
 
@@ -423,6 +434,28 @@ const EventForm: React.FC = () => {
                   {...getMobileInputProps('tel')}
                 />
               </div>
+            </div>
+
+            {/* Cachê */}
+            <div>
+              <label htmlFor="payment_amount" className="block text-sm font-medium text-gray-700 mb-2">
+                Cachê (opcional)
+              </label>
+              <div className="relative">
+                <input
+                  id="payment_amount"
+                  name="payment_amount"
+                  type="text"
+                  inputMode="decimal"
+                  value={formData.payment_amount ?? ''}
+                  onChange={handleChange}
+                  className="input-field"
+                  placeholder="Ex: 500,00"
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Informe o valor do cachê se já estiver definido.
+              </p>
             </div>
 
             {/* Data e Horários */}

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSWRConfig } from 'swr';
-import { Calendar, MapPin, Clock, Phone, FileText, Save, X } from 'lucide-react';
+import { Calendar, MapPin, Clock, Phone, FileText, Save, X, Coins } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { eventService } from '../services/api';
@@ -24,6 +24,7 @@ const EventEditForm: React.FC = () => {
     description: '',
     location: '',
     venue_contact: '',
+    payment_amount: '',
     event_date: '',
     start_time: '',
     end_time: '',
@@ -43,10 +44,10 @@ const EventEditForm: React.FC = () => {
         description: event.description || '',
         location: event.location,
         venue_contact: event.venue_contact || '',
+        payment_amount: event.payment_amount ?? '',
         event_date: event.event_date,
         start_time: event.start_time,
         end_time: event.end_time,
-        payment_amount: event.payment_amount,
         is_solo: event.is_solo ?? false,
       });
     } catch (err) {
@@ -93,6 +94,15 @@ const EventEditForm: React.FC = () => {
     }
   };
 
+  const parsePaymentAmount = (value: string | number | null | undefined): number | null => {
+    if (value === null || value === undefined) return null;
+    const raw = String(value).trim();
+    if (!raw) return null;
+    const normalized = raw.includes(',') ? raw.replace(/\./g, '').replace(',', '.') : raw;
+    const num = Number(normalized);
+    return Number.isFinite(num) ? Number(num.toFixed(2)) : null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id) return;
@@ -135,6 +145,7 @@ const EventEditForm: React.FC = () => {
         location: sanitizeText(formData.location, 300),
         description: sanitizeOptionalText(formData.description, 5000),
         venue_contact: sanitizeOptionalText(formData.venue_contact, 200),
+        payment_amount: parsePaymentAmount(formData.payment_amount),
       };
       await eventService.update(parseInt(id), sanitizedPayload);
       // Invalidar cache de eventos para que a listagem recarregue
@@ -227,6 +238,26 @@ const EventEditForm: React.FC = () => {
                 className="input-field pl-10"
                 placeholder="(11) 98888-8888"
                 maxLength={15}
+              />
+            </div>
+          </div>
+
+          {/* Cachê */}
+          <div>
+            <label htmlFor="payment_amount" className="block text-sm font-medium text-gray-700 mb-2">
+              Cachê (opcional)
+            </label>
+            <div className="relative">
+              <Coins className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+              <input
+                id="payment_amount"
+                name="payment_amount"
+                type="text"
+                inputMode="decimal"
+                value={formData.payment_amount ?? ''}
+                onChange={handleChange}
+                className="input-field pl-10"
+                placeholder="Ex: 500,00"
               />
             </div>
           </div>
