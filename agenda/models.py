@@ -117,12 +117,6 @@ class Organization(models.Model):
         blank=True,
         related_name="owned_organizations",
     )
-    subscription_status = models.CharField(
-        max_length=30, default="active"
-    )  # active, trialing, past_due, cancelled
-    plan_id = models.CharField(max_length=50, blank=True, null=True)
-    current_period_end = models.DateTimeField(blank=True, null=True)
-
     # Tipo de organização
     org_type = models.CharField(
         max_length=20,
@@ -364,6 +358,14 @@ class Event(models.Model):
     venue_contact = models.CharField(
         max_length=200, blank=True, null=True, help_text="Contato do local"
     )
+    payment_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        help_text="Valor do cachê",
+        validators=[MinValueValidator(0, message="Valor do cachê não pode ser negativo.")],
+    )
 
     # Datas
     event_date = models.DateField(help_text="Data do evento")
@@ -373,18 +375,6 @@ class Event(models.Model):
     # Para facilitar queries (combinação de date + time)
     start_datetime = models.DateTimeField(help_text="Data/hora início completa")
     end_datetime = models.DateTimeField(help_text="Data/hora fim completa")
-
-    # Informações financeiras (opcional)
-    payment_amount = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        blank=True,
-        null=True,
-        validators=[
-            MinValueValidator(0, message="Valor do cachê não pode ser negativo.")
-        ],
-        help_text="Valor do cachê",
-    )
 
     # Show solo (confirmação automática)
     is_solo = models.BooleanField(

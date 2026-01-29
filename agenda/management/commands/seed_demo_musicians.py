@@ -61,10 +61,7 @@ class Command(BaseCommand):
     ]
 
     def handle(self, *args, **options):
-        org, _ = Organization.objects.get_or_create(
-            name='Banda Principal',
-            defaults={'subscription_status': 'active'}
-        )
+        org, _ = Organization.objects.get_or_create(name='Banda Principal')
 
         created_users = 0
         created_musicians = 0

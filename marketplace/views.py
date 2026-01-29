@@ -2,7 +2,7 @@ from django.db import transaction
 from django.db.models import Count
 from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from decimal import Decimal, InvalidOperation
@@ -46,20 +46,6 @@ class GigViewSet(viewsets.ModelViewSet):
                 musician = user.musician_profile
             except Musician.DoesNotExist:
                 raise PermissionDenied('Apenas músicos podem publicar vagas.')
-
-            if musician.is_on_trial():
-                limit = 1
-            elif musician.has_active_subscription():
-                limit = 10
-            else:
-                raise PermissionDenied('É necessário ter uma assinatura ativa para publicar vagas.')
-
-            active_statuses = ['open', 'in_review']
-            active_count = Gig.objects.filter(created_by=user, status__in=active_statuses).count()
-            if active_count >= limit:
-                raise ValidationError(
-                    {'detail': f'Limite de vagas atingido ({limit}). Finalize vagas existentes para publicar novas.'}
-                )
 
         contact_name = validated.get('contact_name') or user.get_full_name() or user.username
         contact_email = validated.get('contact_email') or user.email

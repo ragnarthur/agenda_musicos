@@ -2,7 +2,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
-import TrialBanner from '../TrialBanner';
 import AnimatedBackground from './AnimatedBackground';
 
 interface LayoutProps {
@@ -43,9 +42,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
       {/* Aqui eu deixo o fundo estático pra economizar GPU no mobile, mas sem perder identidade */}
-      {/* As partículas ficam só nas telas-chave (login/landing/planos/cadastro). */}
+      {/* As partículas ficam só nas telas-chave (login/landing/cadastro). */}
       <AnimatedBackground enableBlueWaves enableParticles={false} />
-      <TrialBanner />
       <Navbar />
 
       <div className="relative z-10 flex min-h-screen flex-col pt-6 sm:pt-8">

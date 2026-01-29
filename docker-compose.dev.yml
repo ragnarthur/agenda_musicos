@@ -32,8 +32,6 @@ services:
       DATABASE_URL: "postgresql://agenda:agenda@db:5432/agenda"
       CSP_HEADER: "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'"
       DEFAULT_FROM_EMAIL: "Agenda Musicos <noreply@localhost>"
-      USE_STRIPE: "False"
-      ALLOW_FAKE_PAYMENT: "True"
     volumes:
       - ./:/app
     ports:
@@ -52,8 +50,6 @@ services:
       dockerfile: Dockerfile.dev
     environment:
       VITE_API_URL: "http://localhost:8001/api"
-      VITE_USE_STRIPE: "false"
-      VITE_ALLOW_FAKE_PAYMENT: "true"
       VITE_GOOGLE_CLIENT_ID: "${VITE_GOOGLE_CLIENT_ID}"
     volumes:
       - ./frontend:/app

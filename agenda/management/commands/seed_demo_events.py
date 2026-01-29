@@ -91,10 +91,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('Use os eventos passados (status confirmed) para testar ratings.'))
 
     def _get_or_create_organization(self) -> Organization:
-        org, _ = Organization.objects.get_or_create(
-            name='Banda Principal',
-            defaults={'subscription_status': 'active'},
-        )
+        org, _ = Organization.objects.get_or_create(name='Banda Principal')
         return org
 
     def _get_creator_user(self, org: Organization) -> User:

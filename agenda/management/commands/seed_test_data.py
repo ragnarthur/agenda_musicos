@@ -240,10 +240,7 @@ class Command(BaseCommand):
 
     def _get_or_create_organization(self):
         """Obtém ou cria organização de teste"""
-        org, created = Organization.objects.get_or_create(
-            name='Banda Principal',
-            defaults={'subscription_status': 'active'}
-        )
+        org, created = Organization.objects.get_or_create(name='Banda Principal')
         if created:
             self.stdout.write(f'Organização criada: {org.name}')
         return org

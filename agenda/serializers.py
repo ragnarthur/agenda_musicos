@@ -305,9 +305,9 @@ class EventListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = [
-            'id', 'title', 'location', 'event_date', 'start_time', 'end_time',
+            'id', 'title', 'location', 'payment_amount', 'event_date', 'start_time', 'end_time',
             'status', 'status_display', 'created_by_name', 'approved_by_name',
-            'approval_label', 'availability_summary', 'payment_amount', 'is_solo', 'created_at', 'created_by'
+            'approval_label', 'availability_summary', 'is_solo', 'created_at', 'created_by'
         ]
     
     def get_created_by_name(self, obj):
@@ -397,9 +397,9 @@ class EventDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = [
-            'id', 'title', 'description', 'location', 'venue_contact',
+            'id', 'title', 'description', 'location', 'venue_contact', 'payment_amount',
             'event_date', 'start_time', 'end_time', 'start_datetime', 'end_datetime',
-            'payment_amount', 'is_solo', 'status', 'status_display', 'can_approve',
+            'is_solo', 'status', 'status_display', 'can_approve',
             'can_rate', 'created_by', 'created_by_name', 'approved_by', 'approved_by_name',
             'approved_at', 'rejection_reason', 'approval_label', 'availabilities',
             'required_instruments', 'logs', 'created_at', 'updated_at'
@@ -595,8 +595,8 @@ class EventCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = [
-            'id', 'title', 'description', 'location', 'venue_contact',
-            'event_date', 'start_time', 'end_time', 'payment_amount', 'is_solo',
+            'id', 'title', 'description', 'location', 'venue_contact', 'payment_amount',
+            'event_date', 'start_time', 'end_time', 'is_solo',
             'status', 'status_display', 'invited_musicians', 'required_instruments'
         ]
         read_only_fields = ['id', 'status', 'status_display']
@@ -931,7 +931,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
             'id', 'name', 'org_type', 'description', 'logo', 'logo_url',
             'website', 'phone', 'contact_email', 'contact_name',
             'city', 'state', 'is_sponsor', 'sponsor_tier',
-            'owner', 'owner_name', 'subscription_status',
+            'owner', 'owner_name',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'owner', 'created_at', 'updated_at']

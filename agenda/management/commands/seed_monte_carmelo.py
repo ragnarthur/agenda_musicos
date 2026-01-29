@@ -121,7 +121,6 @@ class Command(BaseCommand):
                     'state': data['state'],
                     'description': data['description'],
                     'website': data.get('website'),
-                    'subscription_status': 'active',
                 },
             )
             if created:
@@ -135,7 +134,6 @@ class Command(BaseCommand):
                 'org_type': 'band',
                 'city': 'Monte Carmelo',
                 'state': 'MG',
-                'subscription_status': 'active',
             }
         )
 

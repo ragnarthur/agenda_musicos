@@ -115,10 +115,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('Reset concluído.'))
 
     def _get_org(self):
-        org, _ = Organization.objects.get_or_create(
-            name='Banda Principal',
-            defaults={'subscription_status': 'active'},
-        )
+        org, _ = Organization.objects.get_or_create(name='Banda Principal')
         return org
 
     def _clear_events(self):

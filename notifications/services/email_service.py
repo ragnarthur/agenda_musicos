@@ -203,33 +203,15 @@ def send_password_reset_email(to_email: str, first_name: str, reset_url: str) ->
 def send_welcome_email(
     to_email: str, first_name: str, username: str, login_url: str
 ) -> bool:
-    """Send welcome email after payment."""
+    """Send welcome email after registration."""
     return EmailService.send(
-        template_name="welcome_paid",
+        template_name="welcome",
         to_email=to_email,
         subject="Bem-vindo ao GigFlow!",
         context={
             "first_name": first_name,
             "username": username,
             "login_url": login_url,
-        },
-        fail_silently=True,
-    )
-
-
-def send_trial_welcome_email(
-    to_email: str, first_name: str, username: str, login_url: str, trial_days: int = 7
-) -> bool:
-    """Send welcome email for trial users."""
-    return EmailService.send(
-        template_name="welcome_trial",
-        to_email=to_email,
-        subject="Seu teste gratuito começou - GigFlow",
-        context={
-            "first_name": first_name,
-            "username": username,
-            "login_url": login_url,
-            "trial_days": trial_days,
         },
         fail_silently=True,
     )

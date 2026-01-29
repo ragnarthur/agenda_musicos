@@ -10,16 +10,6 @@ export interface User {
   is_staff?: boolean;
 }
 
-export interface SubscriptionInfo {
-  status: 'trial' | 'active' | 'canceled' | 'past_due' | 'expired';
-  is_trial: boolean;
-  trial_days_remaining: number;
-  trial_ends_at: string | null;
-  plan: 'monthly' | 'annual' | null;
-  has_active_subscription: boolean;
-  subscription_ends_at: string | null;
-}
-
 export interface EquipmentItem {
   name: string;
   price: number | string | null;
@@ -48,7 +38,6 @@ export interface Musician {
   average_rating?: number;
   total_ratings?: number;
   created_at: string;
-  subscription_info?: SubscriptionInfo;
 }
 
 export interface MusicianUpdatePayload {
@@ -83,12 +72,12 @@ export interface Event {
   description?: string;
   location: string;
   venue_contact?: string;
+  payment_amount?: number | string | null;
   event_date: string;
   start_time: string;
   end_time: string;
   start_datetime: string;
   end_datetime: string;
-  payment_amount?: string;
   is_solo: boolean;
   status: 'proposed' | 'approved' | 'rejected' | 'confirmed' | 'cancelled';
   status_display: string;
@@ -119,10 +108,10 @@ export interface EventCreate {
   description?: string;
   location: string;
   venue_contact?: string;
+  payment_amount?: number | string | null;
   event_date: string;
   start_time: string;
   end_time: string;
-  payment_amount?: string;
   is_solo?: boolean;
   invited_musicians?: number[];
 }

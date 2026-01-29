@@ -37,6 +37,23 @@ def env_csv(name: str, default: str = "") -> list[str]:
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=False, cast=bool)
 
+# Admin URL protegida
+import secrets
+import sys
+
+IS_TESTING = any(
+    arg == "test" or arg == "pytest" or arg.endswith("pytest") for arg in sys.argv
+)
+
+if DEBUG or IS_TESTING:
+    ADMIN_URL = config(
+        "ADMIN_URL", default="admin-secret-" + secrets.token_urlsafe(16)
+    )
+else:
+    ADMIN_URL = config("ADMIN_URL", default="").strip()
+    if not ADMIN_URL:
+        raise RuntimeError("ADMIN_URL está vazio. Configure a env ADMIN_URL.")
+
 ALLOWED_HOSTS = env_csv("ALLOWED_HOSTS", default="")
 
 if not ALLOWED_HOSTS:
@@ -105,6 +122,10 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     # CSP header para proteção contra XSS
     "config.middleware.CSPMiddleware",
+    # Headers de segurança HTTP adicionais
+    "config.middleware.SecurityHeadersMiddleware",
+    # Limitação de tamanho de requisição
+    "config.middleware.MaxRequestSizeMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -223,8 +244,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SESSION_COOKIE_SECURE = COOKIE_SECURE
 CSRF_COOKIE_SECURE = COOKIE_SECURE
 
-SESSION_COOKIE_SAMESITE = "Lax"
-CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SAMESITE = "Strict" if not DEBUG else "Lax"
+CSRF_COOKIE_SAMESITE = "Strict" if not DEBUG else "Lax"
 
 CSRF_COOKIE_HTTPONLY = True
 
@@ -267,6 +288,7 @@ REST_FRAMEWORK = {
         "contact_request": config("THROTTLE_CONTACT_REQUEST", default="20/min"),
         "musician_request": config("THROTTLE_MUSICIAN_REQUEST", default="3/min"),
         "profile_update": config("THROTTLE_PROFILE_UPDATE", default="30/min"),
+        "public": config("THROTTLE_PUBLIC", default="100/min"),
     },
 }
 
@@ -336,8 +358,6 @@ DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="webmaster@localhost")
 # =========================================================
 FRONTEND_URL = config("FRONTEND_URL", default="")
 
-PAYMENT_SERVICE_URL = config("PAYMENT_SERVICE_URL", default="")
-PAYMENT_SERVICE_SECRET = config("PAYMENT_SERVICE_SECRET", default="")
 
 TELEGRAM_BOT_TOKEN = config("TELEGRAM_BOT_TOKEN", default="")
 TELEGRAM_BOT_USERNAME = config("TELEGRAM_BOT_USERNAME", default="")

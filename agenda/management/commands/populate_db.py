@@ -54,7 +54,7 @@ class Command(BaseCommand):
 
         created_count = 0
         updated_count = 0
-        org, _ = Organization.objects.get_or_create(name='Banda Principal', defaults={'subscription_status': 'active'})
+        org, _ = Organization.objects.get_or_create(name='Banda Principal')
 
         for data in musicians_data:
             # Extrair dados do usuário e do músico

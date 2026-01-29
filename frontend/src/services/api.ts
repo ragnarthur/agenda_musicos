@@ -99,9 +99,7 @@ api.interceptors.response.use(
       '/check-email/',
       '/verify-email/',
       '/registration-status/',
-      '/process-payment/',
       '/resend-verification/',
-      '/start-trial/',
       '/password-reset/',
       '/password-reset-confirm/',
     ];
@@ -121,9 +119,6 @@ api.interceptors.response.use(
       '/verificar-email',
       '/esqueci-senha',
       '/redefinir-senha',
-      '/pagamento',
-      '/planos',
-      '/planos/sucesso',
     ];
     const isOnPublicRoute = publicRoutes.some((route) => window.location.pathname.startsWith(route));
 
