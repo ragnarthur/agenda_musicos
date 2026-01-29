@@ -2218,12 +2218,68 @@ def approve_musician_request(request, request_id):
     notes = request.data.get("admin_notes", "")
     invite_token = musician_request.approve(request.user, notes)
 
-    # TODO: Enviar email com link de convite
-    # O link será: /cadastro?token={invite_token}
+    # Enviar email com link de convite
+    try:
+        from django.core.mail import send_mail
+        from django.template.loader import render_to_string
+        from django.conf import settings
+        import logging
+
+        logger = logging.getLogger(__name__)
+
+        # Construir URL do convite
+        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
+        invite_url = f"{frontend_url}/cadastro/invite?token={invite_token}"
+
+        # Formatar data de expiração
+        expires_at = musician_request.invite_expires_at.strftime("%d/%m/%Y às %H:%M")
+
+        # Renderizar template HTML
+        context = {
+            "full_name": musician_request.full_name,
+            "email": musician_request.email,
+            "invite_url": invite_url,
+            "expires_at": expires_at,
+        }
+        html_message = render_to_string("emails/invite_approved.html", context)
+
+        # Versão texto simples (fallback)
+        text_message = f"""
+Olá {musician_request.full_name}!
+
+Sua solicitação de acesso ao GigFlow foi aprovada! 🎉
+
+Para completar seu cadastro, clique no link abaixo:
+{invite_url}
+
+Importante: Este convite expira em 7 dias ({expires_at}).
+
+Bem-vindo ao GigFlow!
+
+---
+Este é um email automático. Por favor, não responda.
+        """.strip()
+
+        # Enviar email
+        send_mail(
+            subject="🎉 Sua solicitação foi aprovada - GigFlow",
+            message=text_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[musician_request.email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+
+        logger.info(f"Email de aprovação enviado para {musician_request.email}")
+
+    except Exception as e:
+        logger.error(f"Erro ao enviar email de aprovação: {e}")
+        # Não falha a aprovação se o email falhar
+        pass
 
     return Response(
         {
-            "message": "Solicitação aprovada com sucesso!",
+            "message": "Solicitação aprovada com sucesso! Email enviado.",
             "invite_token": invite_token,
             "invite_expires_at": musician_request.invite_expires_at.isoformat(),
         },

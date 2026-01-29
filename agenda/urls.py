@@ -52,17 +52,6 @@ from .admin_views import (
 )
 from .registration_views import (
     RegisterView,
-    CheckEmailView,
-    VerifyEmailView,
-    RegistrationStatusView,
-    ProcessPaymentView,
-    ResendVerificationView,
-    StartTrialView,
-    SubscriptionCheckoutView,
-    SubscriptionActivateView,
-    SubscriptionActivateFakeView,
-    PaymentCallbackView,
-    SubscriptionStatusUpdateView,
     RegisterWithInviteView,
     RegisterCompanyView,
     update_avatar,
@@ -95,48 +84,11 @@ urlpatterns = [
     ),
     path("register-company/", RegisterCompanyView.as_view(), name="register-company"),
     path("musicians/avatar/", update_avatar, name="update-avatar"),
-    path("check-email/", CheckEmailView.as_view(), name="check-email"),
-    path("verify-email/", VerifyEmailView.as_view(), name="verify-email"),
-    path(
-        "registration-status/",
-        RegistrationStatusView.as_view(),
-        name="registration-status",
-    ),
-    # Pagamento fictício só disponível quando Stripe está desativado
-    path("process-payment/", ProcessPaymentView.as_view(), name="process-payment"),
-    path(
-        "resend-verification/",
-        ResendVerificationView.as_view(),
-        name="resend-verification",
-    ),
-    path("start-trial/", StartTrialView.as_view(), name="start-trial"),
-    path(
-        "subscription-checkout/",
-        SubscriptionCheckoutView.as_view(),
-        name="subscription-checkout",
-    ),
     path("password-reset/", PasswordResetRequestView.as_view(), name="password-reset"),
     path(
         "password-reset-confirm/",
         PasswordResetConfirmView.as_view(),
         name="password-reset-confirm",
-    ),
-    # Callbacks do Payment Service (chamados pelo microserviço)
-    path(
-        "subscription-activate/",
-        SubscriptionActivateView.as_view(),
-        name="subscription-activate",
-    ),
-    path(
-        "subscription-activate-fake/",
-        SubscriptionActivateFakeView.as_view(),
-        name="subscription-activate-fake",
-    ),
-    path("payment-callback/", PaymentCallbackView.as_view(), name="payment-callback"),
-    path(
-        "subscription-status-update/",
-        SubscriptionStatusUpdateView.as_view(),
-        name="subscription-status-update",
     ),
     # Image uploads
     path("musicians/upload-avatar/", upload_avatar, name="upload-avatar"),

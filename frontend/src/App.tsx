@@ -24,20 +24,12 @@ const MusicianProfile = lazy(() => import('./pages/MusicianProfile'));
 const LeaderAvailability = lazy(() => import('./pages/LeaderAvailability'));
 const Marketplace = lazy(() => import('./pages/Marketplace'));
 const Connections = lazy(() => import('./pages/Connections'));
-const Register = lazy(() => import('./pages/Register'));
 const RegisterInvite = lazy(() => import('./pages/RegisterInvite'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
-const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const MusicianRequest = lazy(() => import('./pages/MusicianRequest'));
-  const Payment = lazy(() => import('./pages/Payment'));
-  const Plans = lazy(() => import('./pages/Plans'));
-  const PlanSuccess = lazy(() => import('./pages/PlanSuccess'));
-  const FinancialSettings = lazy(() => import('./pages/FinancialSettings'));
-
-  const useStripe = import.meta.env.VITE_USE_STRIPE === 'true';
-  const allowFakePayment = import.meta.env.VITE_ALLOW_FAKE_PAYMENT === 'true';
-  const NotificationSettings = lazy(() => import('./pages/NotificationSettings'));
+const FinancialSettings = lazy(() => import('./pages/FinancialSettings'));
+const NotificationSettings = lazy(() => import('./pages/NotificationSettings'));
 
   // Company pages lazy loading
   const LoginCompany = lazy(() => import('./pages/LoginCompany'));
@@ -143,6 +135,22 @@ const PublicRoute: React.FC<{ children: React.ReactElement }> = ({ children }) =
   return children;
 };
 
+// Componente para rotas administrativas (requer is_staff)
+const AdminProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+  const { user } = useAuth();
+
+  if (loading) {
+    return <PageLoader />;
+  }
+
+  if (!isAuthenticated || !user?.user?.is_staff) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+};
+
 // Componente para Landing (redireciona se autenticado)
 const LandingRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { isAuthenticated, loading, userType } = useSmartAuth();
@@ -188,11 +196,7 @@ function AppRoutes() {
         {/* Legacy route - redirects to /solicitar-acesso */}
         <Route
           path="/cadastro"
-          element={
-            <PublicRoute>
-              <Register />
-            </PublicRoute>
-          }
+          element={<Navigate to="/solicitar-acesso" replace />}
         />
         <Route
           path="/cadastro/invite"
@@ -227,7 +231,7 @@ function AppRoutes() {
             </PublicRoute>
           }
         />
-        
+
         {/* Rotas Públicas de Empresa */}
         <Route
           path="/login-empresa"
@@ -246,11 +250,11 @@ function AppRoutes() {
           }
         />
 
-        <Route path="/verificar-email" element={<VerifyEmail />} />
-        {(!useStripe || allowFakePayment) && <Route path="/pagamento" element={<Payment />} />}
-        <Route path="/planos" element={<Plans />} />
-        <Route path="/planos/sucesso" element={<PlanSuccess />} />
-         <Route path="/pagamento/sucesso" element={<Payment />} />
+        {/* Legacy payment routes - redirect to /solicitar-acesso */}
+        <Route path="/pagamento" element={<Navigate to="/solicitar-acesso" replace />} />
+        <Route path="/pagamento/sucesso" element={<Navigate to="/solicitar-acesso" replace />} />
+        <Route path="/planos" element={<Navigate to="/solicitar-acesso" replace />} />
+        <Route path="/planos/sucesso" element={<Navigate to="/solicitar-acesso" replace />} />
 
         {/* Public City Landing and Musician Profile */}
         <Route path="/cidades/:slug" element={<CityLanding />} />
@@ -432,9 +436,9 @@ function AppRoutes() {
         <Route
           path="/admin/dashboard"
           element={
-            <Suspense fallback={<Loading />}>
+            <AdminProtectedRoute>
               <AdminDashboard />
-            </Suspense>
+            </AdminProtectedRoute>
           }
         />
 

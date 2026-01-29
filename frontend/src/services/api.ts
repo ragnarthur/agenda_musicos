@@ -635,165 +635,19 @@ export interface RegisterData {
   state?: string;
 }
 
-export interface RegistrationStatus {
-  status: string;
-  status_display: string;
-  email: string;
-  first_name: string;
-  email_verified: boolean;
-  payment_completed: boolean;
-  is_expired: boolean;
-  payment_token?: string;
-}
-
 export interface CheckEmailResponse {
   available: boolean;
   reason?: 'already_registered' | 'pending_verification';
 }
 
-export interface PaymentData {
-  payment_token: string;
-  card_number: string;
-  card_holder: string;
-  card_expiry: string;
-  card_cvv: string;
-}
-
 // Registration Service (público - não requer autenticação)
 export const registrationService = {
-  register: async (data: RegisterData): Promise<{ message: string; email: string }> => {
-    const response = await api.post('/register/', data);
-    return response.data;
-  },
-
   checkEmail: async (email: string): Promise<CheckEmailResponse> => {
     const response = await api.get('/check-email/', { params: { email } });
     return response.data;
   },
-
-  verifyEmail: async (token: string): Promise<{
-    message: string;
-    status: string;
-    payment_token?: string;
-    email?: string;
-    first_name?: string;
-  }> => {
-    const response = await api.post('/verify-email/', { token });
-    return response.data;
-  },
-
-  getStatus: async (token: string): Promise<RegistrationStatus> => {
-    const response = await api.get('/registration-status/', { params: { token } });
-    return response.data;
-  },
-
-  processPayment: async (data: PaymentData): Promise<{
-    message: string;
-    username: string;
-    email: string;
-  }> => {
-    const response = await api.post('/process-payment/', data);
-    return response.data;
-  },
-
-  resendVerification: async (email: string): Promise<{ message: string }> => {
-    const response = await api.post('/resend-verification/', { email });
-    return response.data;
-  },
-
-  startTrial: async (paymentToken: string): Promise<{
-    message: string;
-    username: string;
-    email: string;
-    trial_days: number;
-  }> => {
-    const response = await api.post('/start-trial/', { payment_token: paymentToken });
-    return response.data;
-  },
 };
 
-// Payment Service Types (microserviço de pagamento)
-const PAYMENT_SERVICE_URL = import.meta.env.VITE_PAYMENT_SERVICE_URL || 'http://localhost:3001/api';
-
-export interface CheckoutSessionRequest {
-  payment_token: string;
-  plan: 'monthly' | 'annual';
-  success_url: string;
-  cancel_url: string;
-  payment_method?: 'card' | 'pix';
-}
-
-export interface CheckoutSessionResponse {
-  session_id: string;
-  checkout_url: string;
-}
-
-export interface SessionStatusResponse {
-  status: string;
-  payment_status: string;
-  customer_email: string;
-  subscription_id: string | null;
-}
-
-export interface UpgradeCheckoutRequest {
-  plan: 'monthly' | 'annual';
-  success_url: string;
-  cancel_url: string;
-  payment_method?: 'card' | 'pix';
-}
-
-export interface UpgradeCheckoutResponse {
-  session_id: string;
-  checkout_url: string;
-}
-
-// Payment Service (comunicação com microserviço Node.js)
-export const paymentService = {
-  createCheckoutSession: async (data: CheckoutSessionRequest): Promise<CheckoutSessionResponse> => {
-    const response = await fetch(`${PAYMENT_SERVICE_URL}/checkout/create-session`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw { response: { data: error } };
-    }
-
-    return response.json();
-  },
-
-  getSessionStatus: async (sessionId: string): Promise<SessionStatusResponse> => {
-    const response = await fetch(`${PAYMENT_SERVICE_URL}/checkout/session/${sessionId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw { response: { data: error } };
-    }
-
-    return response.json();
-  },
-};
-
-// Billing (backend autenticado)
-export const billingService = {
-  createUpgradeSession: async (data: UpgradeCheckoutRequest): Promise<UpgradeCheckoutResponse> => {
-    const response = await api.post('/subscription-checkout/', data);
-    return response.data;
-  },
-  activateFakeSubscription: async (data: { plan: 'monthly' | 'annual' }): Promise<{ success: boolean }> => {
-    const response = await api.post('/subscription-activate-fake/', data);
-    return response.data;
-  },
-};
 
 // Notification Types
 export interface NotificationChannel {

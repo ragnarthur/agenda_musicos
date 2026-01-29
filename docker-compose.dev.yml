@@ -24,18 +24,16 @@ services:
       DEBUG: "True"
       SECRET_KEY: "dev-secret-key"
       ALLOWED_HOSTS: "localhost,127.0.0.1,backend"
-      CORS_ALLOWED_ORIGINS: "http://localhost:5174"
+      CORS_ALLOWED_ORIGINS: "http://localhost:5173"
       CORS_ALLOW_CREDENTIALS: "True"
-      CSRF_TRUSTED_ORIGINS: "http://localhost:5174"
-      FRONTEND_URL: "http://localhost:5174"
+      CSRF_TRUSTED_ORIGINS: "http://localhost:5173"
+      FRONTEND_URL: "http://localhost:5173"
       GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
       DATABASE_URL: "postgresql://agenda:agenda@db:5432/agenda"
       CSP_HEADER: "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'"
       DEFAULT_FROM_EMAIL: "Agenda Musicos <noreply@localhost>"
       USE_STRIPE: "False"
       ALLOW_FAKE_PAYMENT: "True"
-      PAYMENT_SERVICE_URL: "http://payment-service:3001"
-      PAYMENT_SERVICE_SECRET: "dev-payment-secret"
     volumes:
       - ./:/app
     ports:
@@ -54,7 +52,6 @@ services:
       dockerfile: Dockerfile.dev
     environment:
       VITE_API_URL: "http://localhost:8001/api"
-      VITE_PAYMENT_SERVICE_URL: "http://localhost:3002/api"
       VITE_USE_STRIPE: "false"
       VITE_ALLOW_FAKE_PAYMENT: "true"
       VITE_GOOGLE_CLIENT_ID: "${VITE_GOOGLE_CLIENT_ID}"
@@ -62,30 +59,7 @@ services:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules
     ports:
-      - "5174:5173"
-    depends_on:
-      - backend
-    restart: unless-stopped
-
-  payment-service:
-    build:
-      context: ./payment-service
-      dockerfile: Dockerfile.dev
-    environment:
-      NODE_ENV: development
-      PORT: "3001"
-      STRIPE_SECRET_KEY: "sk_test_placeholder"
-      STRIPE_WEBHOOK_SECRET: "whsec_placeholder"
-      STRIPE_MONTHLY_PRICE_ID: "price_monthly_placeholder"
-      STRIPE_ANNUAL_PRICE_ID: "price_annual_placeholder"
-      DJANGO_API_URL: "http://backend:8000/api"
-      PAYMENT_SERVICE_SECRET: "dev-payment-secret"
-      ALLOWED_ORIGINS: "http://localhost:5174"
-    volumes:
-      - ./payment-service:/app
-      - payment_node_modules:/app/node_modules
-    ports:
-      - "3002:3001"
+      - "5173:5173"
     depends_on:
       - backend
     restart: unless-stopped
@@ -93,4 +67,3 @@ services:
 volumes:
   postgres_data:
   frontend_node_modules:
-  payment_node_modules:

@@ -50,7 +50,6 @@ class MusicianSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     full_name = serializers.SerializerMethodField()
     public_email = serializers.SerializerMethodField()
-    subscription_info = serializers.SerializerMethodField()
     avatar_url = serializers.SerializerMethodField()
     cover_image_url = serializers.SerializerMethodField()
 
@@ -61,9 +60,9 @@ class MusicianSerializer(serializers.ModelSerializer):
             'bio', 'phone', 'instagram', 'whatsapp', 'city', 'state',
             'avatar_url', 'cover_image_url',
             'base_fee', 'travel_fee_per_km', 'equipment_items', 'public_email', 'is_active',
-            'average_rating', 'total_ratings', 'created_at', 'subscription_info'
+            'average_rating', 'total_ratings', 'created_at'
         ]
-        read_only_fields = ['id', 'average_rating', 'total_ratings', 'created_at', 'subscription_info']
+        read_only_fields = ['id', 'average_rating', 'total_ratings', 'created_at']
 
     def get_full_name(self, obj):
         return obj.user.get_full_name() or obj.user.username
@@ -92,13 +91,6 @@ class MusicianSerializer(serializers.ModelSerializer):
             if request:
                 return request.build_absolute_uri(obj.cover_image.url)
             return obj.cover_image.url
-        return None
-
-    def get_subscription_info(self, obj):
-        # Só retorna info de assinatura para o próprio usuário
-        request = self.context.get('request')
-        if request and request.user == obj.user:
-            return obj.get_subscription_info()
         return None
 
 

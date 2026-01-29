@@ -32,26 +32,6 @@ const Navbar: React.FC = memo(() => {
   // Use SWR hook for notifications - shared across Navbar and Dashboard
   const { pendingMyResponse, pendingApproval } = useNotifications();
 
-  const subscriptionInfo = user?.subscription_info;
-  const showPlanShortcut = Boolean(
-    subscriptionInfo &&
-    (subscriptionInfo.is_trial || subscriptionInfo.status === 'expired')
-  );
-  const planStatusLabel = subscriptionInfo?.is_trial
-    ? 'Gratuito'
-    : subscriptionInfo?.status === 'active'
-      ? 'Premium'
-      : 'Expirado';
-  const planStatusDetail = subscriptionInfo?.is_trial
-    ? `Acesso gratuito · ${subscriptionInfo.trial_days_remaining} dias restantes`
-    : subscriptionInfo?.status === 'active'
-      ? 'Plano ativo'
-      : 'Plano expirado';
-  const planHighlightClass = subscriptionInfo?.is_trial
-    ? 'bg-amber-500/15 border-amber-400/30 text-amber-100'
-    : subscriptionInfo?.status === 'active'
-      ? 'bg-emerald-500/15 border-emerald-400/30 text-emerald-100'
-      : 'bg-slate-800/70 border-white/10 text-slate-200';
 
   const displayName =
     user?.full_name || user?.user?.first_name || user?.user?.username || 'Conta';
@@ -120,20 +100,6 @@ const Navbar: React.FC = memo(() => {
                   ref={desktopMoreRef}
                   className="absolute right-0 mt-2 w-60 rounded-xl bg-slate-950/95 border border-white/10 shadow-2xl shadow-black/40 p-2 z-50"
                 >
-                  <div className={`px-3 py-2 rounded-lg mb-2 border ${planHighlightClass}`}>
-                    <p className="text-[11px] uppercase tracking-wide opacity-80">Plano</p>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold">{planStatusLabel}</p>
-                      {subscriptionInfo?.is_trial && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 border border-white/20">
-                          {subscriptionInfo.trial_days_remaining}d
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[11px] opacity-80">
-                      {planStatusDetail}
-                    </p>
-                  </div>
                   <RouterNavLink
                     to="/configuracoes/notificacoes"
                     onClick={() => setOpenDesktopMore(false)}
@@ -191,20 +157,6 @@ const Navbar: React.FC = memo(() => {
                       Administração
                     </RouterNavLink>
                   )}
-                  {showPlanShortcut && (
-                    <RouterNavLink
-                      to="/planos"
-                      onClick={() => setOpenDesktopMore(false)}
-                      className={({ isActive }) =>
-                        `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                          isActive ? 'bg-amber-500/10 text-amber-100' : 'text-slate-100 hover:bg-white/10'
-                        }`
-                      }
-                    >
-                      <Settings className="h-4 w-4" />
-                      Escolher plano
-                    </RouterNavLink>
-                  )}
                 </div>
               )}
             </div>
@@ -221,18 +173,6 @@ const Navbar: React.FC = memo(() => {
             <div className="flex items-center gap-2">
               <CityBadge className="hidden md:inline-flex" />
               <ThemeToggle />
-              {showPlanShortcut && (
-                <Link
-                  to="/planos"
-                  className="hidden md:flex items-center gap-1 text-slate-100 hover:text-white transition-colors"
-                  title={`Assinar plano (${planStatusDetail})`}
-                >
-                  <Settings className="h-5 w-5" />
-                  <span className="text-[10px] font-bold uppercase tracking-wide bg-amber-500/20 text-amber-200 px-1.5 py-0.5 rounded-full border border-amber-300/40">
-                    {planStatusLabel}
-                  </span>
-                </Link>
-              )}
               <button
                 onClick={handleLogout}
                 className="hidden md:flex items-center space-x-1 text-slate-100 hover:text-red-400 transition-colors"
@@ -301,18 +241,6 @@ const Navbar: React.FC = memo(() => {
               <div className="rounded-xl border border-white/10 bg-slate-900/70 px-3 py-2">
                 <p className="text-sm font-semibold text-slate-100 truncate">{displayName}</p>
               </div>
-              <div className={`rounded-xl px-3 py-2 border ${planHighlightClass}`}>
-                <p className="text-xs uppercase tracking-wide mb-1 opacity-80">Plano</p>
-                <p className="text-sm font-semibold flex items-center gap-2">
-                  {planStatusLabel}
-                  {subscriptionInfo?.is_trial && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 border border-white/20">
-                      {subscriptionInfo.trial_days_remaining}d
-                    </span>
-                  )}
-                </p>
-                <p className="text-[11px] opacity-80">{planStatusDetail}</p>
-              </div>
               <Link
                 to="/musicos"
                 onClick={() => setOpenMore(false)}
@@ -361,16 +289,6 @@ const Navbar: React.FC = memo(() => {
                 <Wallet className="h-5 w-5" />
                 <span className="text-sm">Valores e equipamentos</span>
               </Link>
-              {showPlanShortcut && (
-                <Link
-                  to="/planos"
-                  onClick={() => setOpenMore(false)}
-                  className="flex items-center gap-3 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
-                >
-                  <Settings className="h-5 w-5" />
-                  <span className="text-sm">Planos</span>
-                </Link>
-              )}
               <Link
                 to="/aprovacoes"
                 onClick={() => setOpenMore(false)}
@@ -394,21 +312,6 @@ const Navbar: React.FC = memo(() => {
                 >
                   <Shield className="h-5 w-5" />
                   <span className="text-sm font-medium">Administração</span>
-                </Link>
-              )}
-              {showPlanShortcut && (
-                <Link
-                  to="/planos"
-                  onClick={() => setOpenMore(false)}
-                  className="flex items-center justify-between gap-3 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
-                >
-                  <span className="flex items-center gap-3">
-                    <Settings className="h-5 w-5" />
-                    <span className="text-sm">Assinar plano</span>
-                  </span>
-                  <span className="text-[10px] font-bold uppercase tracking-wide bg-amber-500/20 text-amber-200 px-2 py-0.5 rounded-full border border-amber-300/40">
-                    {planStatusLabel}
-                  </span>
                 </Link>
               )}
               <div className="border-t border-white/10 pt-2 mt-2">
