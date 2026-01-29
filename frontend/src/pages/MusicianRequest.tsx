@@ -277,8 +277,9 @@ export default function MusicianRequest() {
               </label>
               <input
                 type="text"
+                inputMode="text"
                 {...register('full_name', { required: 'Nome é obrigatório' })}
-                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white transition-all duration-200 focus:shadow-lg"
                 placeholder="Seu nome completo"
               />
               {errors.full_name && (
@@ -293,6 +294,7 @@ export default function MusicianRequest() {
               </label>
               <input
                 type="email"
+                inputMode="email"
                 {...register('email', {
                   required: 'Email é obrigatório',
                   pattern: {
@@ -300,7 +302,7 @@ export default function MusicianRequest() {
                     message: 'Email inválido',
                   },
                 })}
-                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white transition-all duration-200 focus:shadow-lg"
                 placeholder="seu@email.com"
               />
               {errors.email && (
@@ -315,8 +317,9 @@ export default function MusicianRequest() {
               </label>
               <input
                 type="tel"
+                inputMode="tel"
                 {...register('phone', { required: 'Telefone é obrigatório' })}
-                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white transition-all duration-200 focus:shadow-lg"
                 placeholder="(00) 00000-0000"
               />
               {errors.phone && (
@@ -331,6 +334,7 @@ export default function MusicianRequest() {
               </label>
               <input
                 type="text"
+                inputMode="text"
                 {...register('instrument', { required: 'Instrumento é obrigatório' })}
                 className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white transition-all duration-200 focus:shadow-lg"
                 placeholder="Ex: Guitarra, Vocal, Bateria..."
@@ -446,6 +450,7 @@ export default function MusicianRequest() {
                 </label>
                 <input
                   type="text"
+                  inputMode="text"
                   {...register('city', { required: 'Cidade é obrigatória' })}
                   className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
                   placeholder="Sua cidade"
@@ -461,6 +466,7 @@ export default function MusicianRequest() {
                 <select
                   {...register('state', { required: 'Estado é obrigatório' })}
                   className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+                  inputMode="text"
                 >
                   <option value="">Selecione</option>
                   {BRAZILIAN_STATES.map((s) => (
@@ -482,6 +488,7 @@ export default function MusicianRequest() {
               </label>
               <input
                 type="text"
+                inputMode="text"
                 {...register('instagram')}
                 className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
                 placeholder="@seu.usuario"
@@ -498,8 +505,9 @@ export default function MusicianRequest() {
               </label>
               <textarea
                 {...register('bio')}
+                inputMode="text"
                 rows={3}
-                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white resize-none"
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white resize-none transition-all duration-200 focus:shadow-lg"
                 placeholder="Conte um pouco sobre você e sua experiência musical..."
               />
             </div>
