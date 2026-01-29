@@ -263,9 +263,3 @@ export interface MusicianRating {
   comment?: string;
   created_at: string;
 }
-
-export interface RatingInput {
-  musician_id: number;
-  rating: number;
-  comment?: string;
-}

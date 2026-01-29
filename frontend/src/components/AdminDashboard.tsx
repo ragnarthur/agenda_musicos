@@ -45,32 +45,24 @@ const AdminDashboard: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
   // Check admin access
-  useEffect(() => {
-    const checkAdminAccess = async () => {
-      try {
-        const musician = await musicianService.getMe();
-        if (!musician.user?.is_staff && !musician.user?.is_superuser) {
-          showToast.error('Acesso negado. Esta área é restrita a administradores.');
-          navigate('/admin/login');
-        }
-      } catch (error) {
+  const checkAdminAccess = useCallback(async () => {
+    try {
+      const musician = await musicianService.getMe();
+      if (!musician.user?.is_staff && !musician.user?.is_superuser) {
+        showToast.error('Acesso negado. Esta área é restrita a administradores.');
         navigate('/admin/login');
       }
-    };
-
-    checkAdminAccess();
+    } catch (error) {
+      navigate('/admin/login');
+    }
   }, [navigate]);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, [filter]);
+    checkAdminAccess();
+  }, [checkAdminAccess]);
 
-  // Reset page when filters or search term change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filter, searchTerm]);
-
-  const fetchDashboardData = async () => {
+  // Fetch dashboard data
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       setIsForbidden(false);
@@ -90,14 +82,23 @@ const AdminDashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  // Reset page when filters or search term change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, searchTerm]);
 
   const handleApprove = async (requestId: number) => {
     setActionLoading(requestId);
     try {
       const response = await musicianRequestService.approve(requestId, adminNotes || undefined);
       const origin = window.location.origin;
-      setInviteLink(`${origin}/cadastro?token=${response.invite_token}`);
+      setInviteLink(`${origin}/cadastro/invite?token=${response.invite_token}`);
       setInviteExpiresAt(response.invite_expires_at);
       showToast.success('Solicitação aprovada!');
       await fetchDashboardData();

@@ -54,23 +54,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
     setRatings(initialRatings);
   }, [availabilities]);
 
-  useEffect(() => {
-    const initialRatings: MusicianRatingState[] = availabilities
-      .filter((a) => a.response === 'available')
-      .map((a) => ({
-        musician_id: a.musician.id,
-        musician_name:
-          a.musician.full_name ||
-          a.musician.user?.full_name ||
-          `${a.musician.user?.first_name || ''} ${a.musician.user?.last_name || ''}`.trim() ||
-          a.musician.user?.username ||
-          'Músico',
-        instrument: formatInstrumentLabel(a.musician.instrument),
-        rating: 0,
-        comment: '',
-      }));
-    setRatings(initialRatings);
-  }, [availabilities]);
+
 
   if (!isOpen) return null;
 
