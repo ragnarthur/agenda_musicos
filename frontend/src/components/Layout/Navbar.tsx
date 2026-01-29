@@ -12,7 +12,6 @@ import {
   X,
   Bell,
   UserCheck,
-  Settings,
   Wallet,
   Shield,
 } from 'lucide-react';

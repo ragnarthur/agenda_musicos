@@ -48,7 +48,7 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const checkAdminAccess = async () => {
       try {
-        const user = await authService.getCurrentUser();
+        const user = await musicianService.getMe();
         if (!user.is_staff && !user.is_superuser) {
           showToast.error('Acesso negado. Esta área é restrita a administradores.');
           navigate('/admin/login');

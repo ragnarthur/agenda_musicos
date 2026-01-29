@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Mail, Lock, LogIn } from 'lucide-react';
-import { authService } from '../services/api';
+import { authService, musicianService } from '../services/api';
 import { showToast } from '../utils/toast';
 
 const AdminLogin: React.FC = () => {
@@ -15,10 +15,11 @@ const AdminLogin: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await authService.login(email, password);
+      await authService.login({ email, password });
 
       // Verificar se o usuário é admin
-      if (!response.user?.is_staff && !response.user?.is_superuser) {
+      const user = await musicianService.getMe();
+      if (!user.is_staff && !user.is_superuser) {
         showToast.error('Acesso negado. Esta área é restrita a administradores.');
         await authService.logout();
         return;
