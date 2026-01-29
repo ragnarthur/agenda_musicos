@@ -99,3 +99,18 @@ payment-service/.env.prod.example.bak
 *.crt
 *.csr
 *.cer
+
+# =========================================================
+# CRITICAL: Certbot Certificates and Keys
+# =========================================================
+# Ignore entire certbot configuration folder
+# Includes: private keys, certificates, account keys, renewal configs
+deploy/certbot/conf/
+
+# =========================================================
+# Database Backups
+# =========================================================
+# Ignore all SQLite database backups
+*.sqlite3.bak
+*.sqlite3-*
+db.sqlite3.*
