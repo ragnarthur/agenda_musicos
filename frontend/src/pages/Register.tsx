@@ -1,7 +1,7 @@
 // pages/Register.tsx
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Music } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { registrationService, type RegisterData } from '../services/api';
 import { showToast } from '../utils/toast';
@@ -85,6 +85,48 @@ const BRAZILIAN_CITIES = [
 ].sort((a, b) => a.city.localeCompare(b.city));
 
 const Register: React.FC = () => {
+  const navigate = useNavigate();
+  const [redirecting, setRedirecting] = useState(true);
+
+  // Redirecionar automaticamente para /solicitar-acesso
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      navigate('/solicitar-acesso', { replace: true });
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [navigate]);
+
+  // Mostrar mensagem de redirecionamento
+  if (redirecting) {
+    return (
+      <FullscreenBackground>
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
+            <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Music className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Redirecionando...
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              O cadastro direto foi desativado. Você será redirecionado para a página de solicitação de acesso.
+            </p>
+            <div className="flex justify-center mb-4">
+              <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+            </div>
+            <button
+              onClick={() => navigate('/solicitar-acesso')}
+              className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
+            >
+              Ir Agora
+            </button>
+          </div>
+        </div>
+      </FullscreenBackground>
+    );
+  }
+
   // Multi-step state
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 3;

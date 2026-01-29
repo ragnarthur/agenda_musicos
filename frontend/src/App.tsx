@@ -185,6 +185,7 @@ function AppRoutes() {
             </PublicRoute>
           }
         />
+        {/* Legacy route - redirects to /solicitar-acesso */}
         <Route
           path="/cadastro"
           element={

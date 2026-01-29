@@ -49,6 +49,10 @@ if DEBUG and "testserver" not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append("testserver")
 
 CSRF_TRUSTED_ORIGINS = env_csv("CSRF_TRUSTED_ORIGINS", default="")
+if DEBUG:
+    for origin in ("http://localhost:5173", "http://127.0.0.1:5173"):
+        if origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(origin)
 
 # Atrás de proxy (Nginx/Cloudflare): Django entende HTTPS via header
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
@@ -288,6 +292,10 @@ if not DEBUG:
 # CORS (seu front chama /api no mesmo domínio, então é tranquilo)
 # =========================================================
 CORS_ALLOWED_ORIGINS = env_csv("CORS_ALLOWED_ORIGINS", default="")
+if DEBUG:
+    for origin in ("http://localhost:5173", "http://127.0.0.1:5173"):
+        if origin not in CORS_ALLOWED_ORIGINS:
+            CORS_ALLOWED_ORIGINS.append(origin)
 
 # Se quiser “modo debug” via env:
 # CORS_ALLOW_ALL_ORIGINS=True (NÃO use em produção real)
@@ -302,6 +310,8 @@ if not DEBUG and CORS_ALLOW_ALL_ORIGINS:
 # ✅ Se você for usar cookies cross-origin (ex: api. subdomain separado),
 # precisa True + frontend fetch com credentials: "include".
 CORS_ALLOW_CREDENTIALS = config("CORS_ALLOW_CREDENTIALS", default=False, cast=bool)
+if DEBUG:
+    CORS_ALLOW_CREDENTIALS = True
 
 CORS_URLS_REGEX = r"^/api/.*$"
 

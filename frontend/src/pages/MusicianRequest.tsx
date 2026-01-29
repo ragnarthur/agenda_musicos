@@ -108,8 +108,8 @@ export default function MusicianRequest() {
           sessionStorage.setItem('_googleAvatarUrl', result.picture);
         }
 
-        showToast.error('Conta não encontrada. Você deve primeiro solicitar acesso.');
-        navigate('/solicitar-acesso');
+        showToast.success('Dados do Google carregados. Complete o formulário.');
+        window.location.reload();
         return;
       }
 

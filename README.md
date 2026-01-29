@@ -90,6 +90,22 @@ npm run dev
 
 Frontend: http://localhost:5173
 
+### OAuth Google (dev e docker)
+Dependências já estão em `requirements.txt` e são instaladas no build do Docker.
+
+Variáveis necessárias:
+- `GOOGLE_CLIENT_ID` (backend)
+- `VITE_GOOGLE_CLIENT_ID` (frontend)
+- `CORS_ALLOW_CREDENTIALS=True`
+- `CSRF_TRUSTED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173`
+
+Se estiver usando Docker (compose dev):
+```bash
+export GOOGLE_CLIENT_ID=seu-client-id
+export VITE_GOOGLE_CLIENT_ID=seu-client-id
+docker compose -f docker-compose.dev.yml up --build
+```
+
 ## 📊 Funcionalidades
 
 ### Para Todos os Músicos

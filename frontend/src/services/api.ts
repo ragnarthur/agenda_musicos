@@ -227,6 +227,11 @@ export const musicianService = {
     return response.data;
   },
 
+  updateAvatar: async (avatarUrl: string): Promise<{ avatar_url: string }> => {
+    const response = await api.patch('/musicians/avatar/', { avatar_url: avatarUrl });
+    return response.data;
+  },
+
   uploadAvatar: async (file: File): Promise<{ avatar: string }> => {
     const formData = new FormData();
     formData.append('avatar', file);
@@ -416,10 +421,6 @@ export const eventService = {
     return response.data;
   },
 
-  updateAvatar: async (avatarUrl: string): Promise<{ avatar_url: string }> => {
-    const response = await api.patch('/musicians/avatar/', { avatar_url: avatarUrl });
-    return response.data;
-  },
 };
 
 // Availability Service

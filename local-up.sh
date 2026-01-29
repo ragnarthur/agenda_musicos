@@ -17,6 +17,43 @@ require_file() {
   fi
 }
 
+# =============================================================================
+# Funções de Carregamento de Ambiente
+# =============================================================================
+
+load_env_vars() {
+  local env_file="$1"
+  if [ ! -f "$env_file" ]; then
+    echo "⚠️  Arquivo não encontrado: $env_file"
+    return 1
+  fi
+  
+  echo "📦 Carregando variáveis de $env_file..."
+  
+  # Exportar variáveis do arquivo
+  while IFS= read -r line || [ -n "$line" ]; do
+    # Ignorar linhas vazias e comentários
+    [[ -z "$line" || "$line" =~ ^#.* ]] && continue
+    
+    # Extrair key e value
+    local key="${line%%=*}"
+    local value="${line#*=}"
+    
+    # Remover aspas se existirem
+    value="${value%\"}"
+    value="${value#\"}"
+    
+    export "$key=$value"
+  done < "$env_file"
+  
+  echo "✅ Variáveis carregadas de $env_file"
+  return 0
+}
+
+# =============================================================================
+# Funções Auxiliares
+# =============================================================================
+
 cleanup() {
   echo ""
   echo "🛑 Encerrando serviços locais..."
@@ -37,7 +74,7 @@ if ! docker info >/dev/null 2>&1; then
 fi
 
 echo "🐘 Subindo Postgres (Docker)..."
-docker compose --env-file "$ROOT_DIR/.env.local" -f "$ROOT_DIR/docker-compose.dev.yml" up -d db
+docker compose -f "$ROOT_DIR/docker-compose.dev.yml" up -d db
 
 if [ ! -f "$ROOT_DIR/.venv/bin/activate" ]; then
   echo "❌ Ambiente virtual não encontrado em $ROOT_DIR/.venv"
