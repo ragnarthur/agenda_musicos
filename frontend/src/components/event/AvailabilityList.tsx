@@ -42,7 +42,9 @@ function getAvailabilityCounts(availabilities: Availability[]): AvailabilityCoun
 
 function formatInstrument(instrument: string | undefined): string {
   if (!instrument) return '';
-  return INSTRUMENT_LABELS[instrument] || `${instrument.charAt(0).toUpperCase()}${instrument.slice(1)}`;
+  return (
+    INSTRUMENT_LABELS[instrument] || `${instrument.charAt(0).toUpperCase()}${instrument.slice(1)}`
+  );
 }
 
 const AvailabilityList: React.FC<AvailabilityListProps> = memo(({ availabilities }) => {
@@ -53,15 +55,23 @@ const AvailabilityList: React.FC<AvailabilityListProps> = memo(({ availabilities
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-gray-900">Disponibilidade dos Músicos</h2>
         <div className="flex items-center space-x-4 text-sm">
-          <span className="text-green-600 font-medium">{RESPONSE_ICONS.available} {counts.available}</span>
-          <span className="text-red-600 font-medium">{RESPONSE_ICONS.unavailable} {counts.unavailable}</span>
-          <span className="text-blue-600 font-medium">{RESPONSE_ICONS.maybe} {counts.maybe}</span>
-          <span className="text-yellow-600 font-medium">{RESPONSE_ICONS.pending} {counts.pending}</span>
+          <span className="text-green-600 font-medium">
+            {RESPONSE_ICONS.available} {counts.available}
+          </span>
+          <span className="text-red-600 font-medium">
+            {RESPONSE_ICONS.unavailable} {counts.unavailable}
+          </span>
+          <span className="text-blue-600 font-medium">
+            {RESPONSE_ICONS.maybe} {counts.maybe}
+          </span>
+          <span className="text-yellow-600 font-medium">
+            {RESPONSE_ICONS.pending} {counts.pending}
+          </span>
         </div>
       </div>
 
       <div className="space-y-3">
-        {(availabilities || []).map((availability) => (
+        {(availabilities || []).map(availability => (
           <div
             key={availability.id}
             className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
@@ -69,9 +79,7 @@ const AvailabilityList: React.FC<AvailabilityListProps> = memo(({ availabilities
             <div className="flex items-center space-x-3">
               <div className="flex-shrink-0" />
               <div>
-                <p className="font-medium text-gray-900">
-                  {availability.musician.full_name}
-                </p>
+                <p className="font-medium text-gray-900">{availability.musician.full_name}</p>
                 <p className="text-sm text-gray-500">
                   {formatInstrument(availability.musician.instrument)}
                 </p>
@@ -82,7 +90,8 @@ const AvailabilityList: React.FC<AvailabilityListProps> = memo(({ availabilities
             </div>
 
             <span className={`badge badge-${availability.response}`}>
-              {RESPONSE_BADGE_PREFIX[availability.response]}{AVAILABILITY_LABELS[availability.response] || availability.response}
+              {RESPONSE_BADGE_PREFIX[availability.response]}
+              {AVAILABILITY_LABELS[availability.response] || availability.response}
             </span>
           </div>
         ))}

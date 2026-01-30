@@ -74,14 +74,12 @@ const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
             Você está disponível?
           </label>
           <div className="grid grid-cols-2 gap-3">
-            {RESPONSE_OPTIONS.map((option) => (
+            {RESPONSE_OPTIONS.map(option => (
               <button
                 key={option.value}
                 onClick={() => onResponseChange(option.value)}
                 className={`p-3 rounded-lg border-2 transition-all ${
-                  selectedResponse === option.value
-                    ? option.colors.selected
-                    : option.colors.default
+                  selectedResponse === option.value ? option.colors.selected : option.colors.default
                 }`}
                 aria-pressed={selectedResponse === option.value}
               >
@@ -93,13 +91,16 @@ const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
         </div>
 
         <div>
-          <label htmlFor="availability-notes" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="availability-notes"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Observações
           </label>
           <textarea
             id="availability-notes"
             value={notes}
-            onChange={(e) => onNotesChange(e.target.value)}
+            onChange={e => onNotesChange(e.target.value)}
             rows={3}
             className="input-field"
             placeholder="Adicione alguma observação..."

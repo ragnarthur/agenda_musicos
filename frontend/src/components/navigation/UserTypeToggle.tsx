@@ -15,25 +15,25 @@ interface UserTypeToggleProps {
 const UserTypeToggle: React.FC<UserTypeToggleProps> = ({
   selected,
   onChange,
-  disabled = false
+  disabled = false,
 }) => {
   const toggleOptions = [
-    { 
-      type: 'musician' as UserType, 
-      label: 'Para Músicos', 
+    {
+      type: 'musician' as UserType,
+      label: 'Para Músicos',
       icon: <Music className="w-4 h-4" />,
-      description: 'Organize sua carreira musical'
+      description: 'Organize sua carreira musical',
     },
-    { 
-      type: 'company' as UserType, 
-      label: 'Para Empresas', 
+    {
+      type: 'company' as UserType,
+      label: 'Para Empresas',
       icon: <Building className="w-4 h-4" />,
-      description: 'Encontre e contrate músicos'
-    }
+      description: 'Encontre e contrate músicos',
+    },
   ];
 
   return (
-    <motion.div 
+    <motion.div
       className="flex justify-center mb-8"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -57,10 +57,8 @@ const UserTypeToggle: React.FC<UserTypeToggleProps> = ({
             >
               {icon}
               <span className="font-medium">{label}</span>
-              <span className="text-xs opacity-80 hidden sm:block">
-                {description}
-              </span>
-              
+              <span className="text-xs opacity-80 hidden sm:block">{description}</span>
+
               {/* Indicador ativo */}
               {selected === type && (
                 <motion.div

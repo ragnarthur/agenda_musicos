@@ -41,42 +41,45 @@ export default function LoginCompany() {
     }
   };
 
-  const handleGoogleCallback = useCallback(async (response: { credential: string }) => {
-    if (isGoogleLoading) return; // Prevenir múltiplas chamadas
+  const handleGoogleCallback = useCallback(
+    async (response: { credential: string }) => {
+      if (isGoogleLoading) return; // Prevenir múltiplas chamadas
 
-    setIsGoogleLoading(true);
-    try {
-      const result = await googleAuthService.authenticate(response.credential, 'company');
-      if (result.new_user) {
-        // Novo usuário - redirecionar para cadastro
-        toast.error('Conta não encontrada. Faça o cadastro primeiro.');
-        navigate('/cadastro-empresa');
-      } else if (result.user_type === 'company' && result.organization) {
-        setSession({
-          organization: result.organization as any,
-          access: result.access,
-          refresh: result.refresh,
-        });
-        toast.success('Login realizado!');
-        navigate('/empresa/dashboard');
-      } else {
-        toast.error('Esta conta não é de uma empresa');
-      }
-    } catch (error: any) {
-      console.error('Google OAuth error:', error);
-      const message = error?.response?.data?.detail;
+      setIsGoogleLoading(true);
+      try {
+        const result = await googleAuthService.authenticate(response.credential, 'company');
+        if (result.new_user) {
+          // Novo usuário - redirecionar para cadastro
+          toast.error('Conta não encontrada. Faça o cadastro primeiro.');
+          navigate('/cadastro-empresa');
+        } else if (result.user_type === 'company' && result.organization) {
+          setSession({
+            organization: result.organization as any,
+            access: result.access,
+            refresh: result.refresh,
+          });
+          toast.success('Login realizado!');
+          navigate('/empresa/dashboard');
+        } else {
+          toast.error('Esta conta não é de uma empresa');
+        }
+      } catch (error: any) {
+        console.error('Google OAuth error:', error);
+        const message = error?.response?.data?.detail;
 
-      if (error?.response?.status === 401) {
-        toast.error(message || 'Token do Google inválido ou expirado');
-      } else if (error?.response?.status === 400) {
-        toast.error(message || 'Dados inválidos do Google');
-      } else {
-        toast.error(message || 'Erro ao autenticar com Google');
+        if (error?.response?.status === 401) {
+          toast.error(message || 'Token do Google inválido ou expirado');
+        } else if (error?.response?.status === 400) {
+          toast.error(message || 'Dados inválidos do Google');
+        } else {
+          toast.error(message || 'Erro ao autenticar com Google');
+        }
+      } finally {
+        setIsGoogleLoading(false);
       }
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  }, [navigate, setSession, isGoogleLoading]);
+    },
+    [navigate, setSession, isGoogleLoading]
+  );
 
   // Renderiza botão do Google
   useEffect(() => {
@@ -128,12 +131,8 @@ export default function LoginCompany() {
             <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center mx-auto mb-4">
               <Building2 className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Login Empresa
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300">
-              Acesse sua conta de empresa
-            </p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Login Empresa</h1>
+            <p className="text-gray-600 dark:text-gray-300">Acesse sua conta de empresa</p>
           </div>
 
           {/* Google Sign In */}
@@ -154,7 +153,9 @@ export default function LoginCompany() {
               <div className="w-full border-t border-gray-300 dark:border-gray-600" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">ou entre com email</span>
+              <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">
+                ou entre com email
+              </span>
             </div>
           </div>
 
@@ -173,9 +174,7 @@ export default function LoginCompany() {
                 className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
                 placeholder="empresa@email.com"
               />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-              )}
+              {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
             </div>
 
             {/* Senha */}
@@ -225,7 +224,10 @@ export default function LoginCompany() {
 
           <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
             Não tem uma conta?{' '}
-            <Link to="/cadastro-empresa" className="text-indigo-600 hover:text-indigo-700 font-medium">
+            <Link
+              to="/cadastro-empresa"
+              className="text-indigo-600 hover:text-indigo-700 font-medium"
+            >
               Cadastre sua empresa
             </Link>
           </p>

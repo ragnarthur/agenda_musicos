@@ -32,60 +32,60 @@ const MusicianRequest = lazy(() => import('./pages/MusicianRequest'));
 const FinancialSettings = lazy(() => import('./pages/FinancialSettings'));
 const NotificationSettings = lazy(() => import('./pages/NotificationSettings'));
 
-  // Company pages lazy loading
-  const LoginCompany = lazy(() => import('./pages/LoginCompany'));
-  const RegisterCompany = lazy(() => import('./pages/RegisterCompany'));
-  const CompanyDashboard = lazy(() => import('./pages/company/CompanyDashboard'));
-  const MusicianSearch = lazy(() => import('./pages/company/MusicianSearch'));
-  const Contacts = lazy(() => import('./pages/company/Contacts'));
-  const CompanySettings = lazy(() => import('./pages/company/CompanySettings'));
-  const JobPostings = lazy(() => import('./pages/company/JobPostings'));
+// Company pages lazy loading
+const LoginCompany = lazy(() => import('./pages/LoginCompany'));
+const RegisterCompany = lazy(() => import('./pages/RegisterCompany'));
+const CompanyDashboard = lazy(() => import('./pages/company/CompanyDashboard'));
+const MusicianSearch = lazy(() => import('./pages/company/MusicianSearch'));
+const Contacts = lazy(() => import('./pages/company/Contacts'));
+const CompanySettings = lazy(() => import('./pages/company/CompanySettings'));
+const JobPostings = lazy(() => import('./pages/company/JobPostings'));
 
-  // Public pages (city landing and public profiles)
-  const CityLanding = lazy(() => import('./pages/CityLanding'));
-  const MusicianPublicProfile = lazy(() => import('./pages/MusicianPublicProfile'));
+// Public pages (city landing and public profiles)
+const CityLanding = lazy(() => import('./pages/CityLanding'));
+const MusicianPublicProfile = lazy(() => import('./pages/MusicianPublicProfile'));
 
-  // Componente de loading para Suspense
-  const PageLoader: React.FC = () => (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center">
-      <Loading text="Carregando..." />
-    </div>
-  );
+// Componente de loading para Suspense
+const PageLoader: React.FC = () => (
+  <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center">
+    <Loading text="Carregando..." />
+  </div>
+);
 
-  // Enhanced Auth Hook for routing
-  const useSmartAuth = () => {
-    const { isAuthenticated: musicianAuth, user: musicianUser, loading: musicianLoading } = useAuth();
-    const { isAuthenticated: companyAuth, organization, loading: companyLoading } = useCompanyAuth();
-    
-    const getAuthState = () => {
-      const loading = musicianLoading || companyLoading;
-      
-      if (loading) return { loading, isAuthenticated: false, userType: null };
-      
-      if (musicianAuth) {
-        return { 
-          loading: false, 
-          isAuthenticated: true, 
-          userType: 'musician' as const,
-          user: musicianUser 
-        };
-      }
-      
-      if (companyAuth) {
-        return { 
-          loading: false, 
-          isAuthenticated: true, 
-          userType: 'company' as const,
-          user: organization 
-        };
-      }
-      
-      return { loading: false, isAuthenticated: false, userType: null };
-    };
-    
-    const authState = getAuthState();
-    return authState;
+// Enhanced Auth Hook for routing
+const useSmartAuth = () => {
+  const { isAuthenticated: musicianAuth, user: musicianUser, loading: musicianLoading } = useAuth();
+  const { isAuthenticated: companyAuth, organization, loading: companyLoading } = useCompanyAuth();
+
+  const getAuthState = () => {
+    const loading = musicianLoading || companyLoading;
+
+    if (loading) return { loading, isAuthenticated: false, userType: null };
+
+    if (musicianAuth) {
+      return {
+        loading: false,
+        isAuthenticated: true,
+        userType: 'musician' as const,
+        user: musicianUser,
+      };
+    }
+
+    if (companyAuth) {
+      return {
+        loading: false,
+        isAuthenticated: true,
+        userType: 'company' as const,
+        user: organization,
+      };
+    }
+
+    return { loading: false, isAuthenticated: false, userType: null };
   };
+
+  const authState = getAuthState();
+  return authState;
+};
 
 // Componente para rotas protegidas (músicos)
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
@@ -195,10 +195,7 @@ function AppRoutes() {
           }
         />
         {/* Legacy route - redirects to /solicitar-acesso */}
-        <Route
-          path="/cadastro"
-          element={<Navigate to="/solicitar-acesso" replace />}
-        />
+        <Route path="/cadastro" element={<Navigate to="/solicitar-acesso" replace />} />
         <Route
           path="/cadastro/invite"
           element={

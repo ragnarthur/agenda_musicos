@@ -50,24 +50,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     bootstrap();
   }, []);
 
-  const login = useCallback(async (credentials: LoginCredentials) => {
-    try {
-      await authService.login(credentials);
-      sessionStorage.setItem(SESSION_KEY, 'true');
-      const musician = await musicianService.getMe();
-      setUser(musician);
-    } catch (error) {
-      logError('Erro no login:', error);
-      throw error;
-    }
-  }, [logError]);
+  const login = useCallback(
+    async (credentials: LoginCredentials) => {
+      try {
+        await authService.login(credentials);
+        sessionStorage.setItem(SESSION_KEY, 'true');
+        const musician = await musicianService.getMe();
+        setUser(musician);
+      } catch (error) {
+        logError('Erro no login:', error);
+        throw error;
+      }
+    },
+    [logError]
+  );
 
   const setSession = useCallback(async () => {
     try {
       sessionStorage.setItem(SESSION_KEY, 'true');
       const musician = await musicianService.getMe();
       setUser(musician);
-      
+
       // Atualizar avatar do Google se existir no sessionStorage
       const googleAvatar = sessionStorage.getItem('_googleAvatarUrl');
       if (googleAvatar) {
@@ -104,7 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Revogar token do Google se existir
       const userEmail = user?.user?.email;
       if (userEmail && window.google?.accounts?.id) {
-        window.google.accounts.id.revoke(userEmail, (done) => {
+        window.google.accounts.id.revoke(userEmail, done => {
           if (done.error) {
             console.warn('Erro ao revogar Google token:', done.error);
           } else {
@@ -123,15 +126,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
 
-  const value = useMemo<AuthContextType>(() => ({
-    user,
-    login,
-    setSession,
-    logout,
-    refreshUser,
-    isAuthenticated: !!user,
-    loading,
-  }), [user, login, setSession, logout, refreshUser, loading]);
+  const value = useMemo<AuthContextType>(
+    () => ({
+      user,
+      login,
+      setSession,
+      logout,
+      refreshUser,
+      isAuthenticated: !!user,
+      loading,
+    }),
+    [user, login, setSession, logout, refreshUser, loading]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

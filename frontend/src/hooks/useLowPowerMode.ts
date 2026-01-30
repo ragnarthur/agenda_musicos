@@ -22,17 +22,14 @@ const useLowPowerMode = () => {
       const deviceMemory = navigatorWithConnection.deviceMemory;
       const hardwareConcurrency = navigator.hardwareConcurrency;
       const lowMemory = typeof deviceMemory === 'number' && deviceMemory <= 2;
-      const lowCores = typeof hardwareConcurrency === 'number' && hardwareConcurrency > 0 && hardwareConcurrency <= 2;
+      const lowCores =
+        typeof hardwareConcurrency === 'number' &&
+        hardwareConcurrency > 0 &&
+        hardwareConcurrency <= 2;
 
       // Eu tirei o tamanho da tela desse cálculo pra não matar efeitos no mobile.
       // A performance do mobile agora é ajustada onde o efeito acontece.
-      setLowPower(
-        motionQuery.matches ||
-          dataQuery.matches ||
-          saveData ||
-          lowMemory ||
-          lowCores
-      );
+      setLowPower(motionQuery.matches || dataQuery.matches || saveData || lowMemory || lowCores);
     };
 
     const onChange = () => evaluate();

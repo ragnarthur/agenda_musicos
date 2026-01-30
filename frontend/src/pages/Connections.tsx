@@ -1,6 +1,18 @@
 // pages/Connections.tsx
 import React, { useEffect, useMemo, useState } from 'react';
-import { Users, Star, Heart, ThumbsUp, Music, Trophy, Search, X, Filter, Trash2, CheckCircle } from 'lucide-react';
+import {
+  Users,
+  Star,
+  Heart,
+  ThumbsUp,
+  Music,
+  Trophy,
+  Search,
+  X,
+  Filter,
+  Trash2,
+  CheckCircle,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
@@ -47,7 +59,7 @@ const getInstrumentLabel = (instrument: string): string => {
   if (INSTRUMENT_LABELS[instrument]) return INSTRUMENT_LABELS[instrument];
   return instrument
     .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
 };
 
@@ -55,7 +67,7 @@ const getInstrumentLabel = (instrument: string): string => {
 const ProgressRing: React.FC<{ percentage: number; size?: number; strokeWidth?: number }> = ({
   percentage,
   size = 48,
-  strokeWidth = 4
+  strokeWidth = 4,
 }) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
@@ -141,7 +153,7 @@ const Connections: React.FC = () => {
 
   const stats = useMemo(() => {
     const totals: Record<string, number> = { follow: 0, recommend: 0, played_with: 0 };
-    (connections || []).forEach((c) => {
+    (connections || []).forEach(c => {
       if (c.connection_type in totals) {
         totals[c.connection_type] = (totals[c.connection_type] || 0) + 1;
       }
@@ -151,7 +163,7 @@ const Connections: React.FC = () => {
 
   const connectionMap = useMemo(() => {
     const map: Record<number, Partial<Record<ConnectionType, Connection>>> = {};
-    (connections || []).forEach((c) => {
+    (connections || []).forEach(c => {
       if (!map[c.target.id]) map[c.target.id] = {};
       map[c.target.id][c.connection_type] = c;
     });
@@ -160,7 +172,7 @@ const Connections: React.FC = () => {
 
   const grouped = useMemo(() => {
     const groups: Record<string, Connection[]> = { follow: [], recommend: [], played_with: [] };
-    (connections || []).forEach((c) => {
+    (connections || []).forEach(c => {
       if (c.connection_type in groups) {
         groups[c.connection_type].push(c);
       }
@@ -228,7 +240,10 @@ const Connections: React.FC = () => {
                 <div className="h-5 w-36 rounded-full bg-gray-200 animate-pulse" />
                 <div className="mt-4 grid grid-cols-2 gap-3">
                   {Array.from({ length: 4 }).map((_, idx) => (
-                    <div key={`badge-skeleton-${idx}`} className="h-20 rounded-xl bg-gray-200 animate-pulse" />
+                    <div
+                      key={`badge-skeleton-${idx}`}
+                      className="h-20 rounded-xl bg-gray-200 animate-pulse"
+                    />
                   ))}
                 </div>
               </div>
@@ -319,9 +334,7 @@ const Connections: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">Gerenciar conexões</h2>
-                <p className="text-sm text-gray-600">
-                  Acompanhe favoritos e registre colaborações
-                </p>
+                <p className="text-sm text-gray-600">Acompanhe favoritos e registre colaborações</p>
               </div>
             </div>
 
@@ -335,7 +348,7 @@ const Connections: React.FC = () => {
                   <div className="relative">
                     <input
                       value={search}
-                      onChange={(e) => setSearch(e.target.value)}
+                      onChange={e => setSearch(e.target.value)}
                       className="input-field h-12 pl-11 pr-10"
                       placeholder="Nome ou @username"
                     />
@@ -362,12 +375,14 @@ const Connections: React.FC = () => {
                   <div className="relative">
                     <select
                       value={instrumentFilter}
-                      onChange={(e) => setInstrumentFilter(e.target.value)}
+                      onChange={e => setInstrumentFilter(e.target.value)}
                       className="input-field h-12 pl-11 appearance-none cursor-pointer"
                     >
                       <option value="all">Todos instrumentos</option>
                       {Object.entries(INSTRUMENT_LABELS).map(([key, label]) => (
-                        <option key={key} value={key}>{label}</option>
+                        <option key={key} value={key}>
+                          {label}
+                        </option>
                       ))}
                     </select>
                     <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
@@ -376,125 +391,137 @@ const Connections: React.FC = () => {
               </div>
 
               {/* Contador de resultados */}
-                  <div className="mt-3 flex items-center justify-between">
-                    <p className="text-sm text-gray-500 dark:text-slate-400">
-                      Mostrando <span className="font-semibold text-gray-700 dark:text-slate-200">{musicians.length}</span> de <span className="font-semibold text-gray-700 dark:text-slate-200">{musiciansCount || musicians.length}</span> músicos
-                    </p>
-                  </div>
+              <div className="mt-3 flex items-center justify-between">
+                <p className="text-sm text-gray-500 dark:text-slate-400">
+                  Mostrando{' '}
+                  <span className="font-semibold text-gray-700 dark:text-slate-200">
+                    {musicians.length}
+                  </span>{' '}
+                  de{' '}
+                  <span className="font-semibold text-gray-700 dark:text-slate-200">
+                    {musiciansCount || musicians.length}
+                  </span>{' '}
+                  músicos
+                </p>
+              </div>
 
-                  {/* Lista de Músicos */}
-                  {musicians.length === 0 ? (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="text-center py-8"
-                    >
-                      <p className="text-4xl mb-2">🔍</p>
-                      <p className="text-sm text-gray-500 dark:text-slate-400">Nenhum músico encontrado.</p>
-                    </motion.div>
-                  ) : (
-                    <VirtualList
-                      items={musicians}
-                      itemHeight={220}
-                      itemGap={12}
-                      containerHeight={500}
-                      className="pr-1 sm:pr-2 mt-4"
-                      renderItem={(m, index) => {
-                        const instruments = getMusicianInstruments(m);
-                        const primaryInstrument = instruments[0] || m.instrument;
-                        const active = connectionMap[m.id] || {};
-                        const profilePhoto = m.avatar_url;
+              {/* Lista de Músicos */}
+              {musicians.length === 0 ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-8"
+                >
+                  <p className="text-4xl mb-2">🔍</p>
+                  <p className="text-sm text-gray-500 dark:text-slate-400">
+                    Nenhum músico encontrado.
+                  </p>
+                </motion.div>
+              ) : (
+                <VirtualList
+                  items={musicians}
+                  itemHeight={220}
+                  itemGap={12}
+                  containerHeight={500}
+                  className="pr-1 sm:pr-2 mt-4"
+                  renderItem={(m, index) => {
+                    const instruments = getMusicianInstruments(m);
+                    const primaryInstrument = instruments[0] || m.instrument;
+                    const active = connectionMap[m.id] || {};
+                    const profilePhoto = m.avatar_url;
 
-                        return (
-                          <motion.div
-                            key={m.id}
-                            className="musician-card-enhanced overflow-hidden h-full"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: index * 0.03 }}
-                          >
-                            {/* Shine effect element */}
-                            <div className="shine-effect" />
-
-                            <div className="flex items-center gap-4 mb-4">
-                              {/* Avatar com foto ou ícone */}
-                              <motion.div
-                                className="relative h-14 w-14 rounded-full flex-shrink-0 overflow-hidden"
-                                whileHover={{ scale: 1.08 }}
-                                transition={{ type: 'spring', stiffness: 300 }}
-                              >
-                                {profilePhoto ? (
-                                  <img
-                                    src={profilePhoto}
-                                    alt={m.full_name}
-                                    className="h-full w-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="h-full w-full bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-900/40 dark:to-primary-800/30 flex items-center justify-center">
-                                    <InstrumentIcon instrument={primaryInstrument} size={28} />
-                                  </div>
-                                )}
-                              </motion.div>
-
-                              <div className="min-w-0 flex-1">
-                                <p className="font-semibold text-gray-900 truncate">{m.full_name}</p>
-                                <p className="text-sm text-gray-500 dark:text-slate-400">@{m.user.username}</p>
-                                {instruments.length > 0 && (
-                                   <div className="flex flex-wrap gap-1.5 mt-2">
-                                    {(instruments || []).map((inst) => (
-                                      <span
-                                        key={inst}
-                                        className="inline-flex items-center gap-1 rounded-full border border-primary-100 bg-primary-50/80 px-2 py-0.5 text-xs font-medium text-primary-700 dark:border-primary-800/50 dark:bg-primary-900/30 dark:text-primary-300"
-                                      >
-                                        <InstrumentIcon instrument={inst} size={12} />
-                                        <span>{getInstrumentLabel(inst)}</span>
-                                      </span>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Botões de Conexão Modernos */}
-                            <div className="grid grid-cols-3 gap-2">
-                              {activeConnectionTypes.map((type) => {
-                                const isOn = Boolean(active[type]);
-                                const Icon = connectionIcons[type];
-                                return (
-                                  <motion.button
-                                    key={type}
-                                    onClick={() => handleToggle(m.id, type as ConnectionType)}
-                                    className={`connection-pill-modern ${isOn ? `active ${type}` : ''}`}
-                                    disabled={loadingAction}
-                                    whileTap={{ scale: 0.95 }}
-                                    whileHover={{ scale: 1.02 }}
-                                  >
-                                    <Icon className="h-4 w-4" />
-                                    <span className="hidden sm:inline">
-                                      {isOn ? connectionLabelsActive[type] : connectionLabels[type]}
-                                    </span>
-                                  </motion.button>
-                                );
-                              })}
-                            </div>
-                          </motion.div>
-                        );
-                      }}
-                    />
-                  )}
-                  {hasMoreMusicians && (
-                    <div className="mt-3 flex justify-center">
-                      <button
-                        type="button"
-                        className="btn-primary"
-                        onClick={loadMoreMusicians}
-                        disabled={validatingMusicians}
+                    return (
+                      <motion.div
+                        key={m.id}
+                        className="musician-card-enhanced overflow-hidden h-full"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.03 }}
                       >
-                        {validatingMusicians ? 'Carregando...' : 'Carregar mais musicos'}
-                      </button>
-                    </div>
-                  )}
+                        {/* Shine effect element */}
+                        <div className="shine-effect" />
+
+                        <div className="flex items-center gap-4 mb-4">
+                          {/* Avatar com foto ou ícone */}
+                          <motion.div
+                            className="relative h-14 w-14 rounded-full flex-shrink-0 overflow-hidden"
+                            whileHover={{ scale: 1.08 }}
+                            transition={{ type: 'spring', stiffness: 300 }}
+                          >
+                            {profilePhoto ? (
+                              <img
+                                src={profilePhoto}
+                                alt={m.full_name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="h-full w-full bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-900/40 dark:to-primary-800/30 flex items-center justify-center">
+                                <InstrumentIcon instrument={primaryInstrument} size={28} />
+                              </div>
+                            )}
+                          </motion.div>
+
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-gray-900 truncate">{m.full_name}</p>
+                            <p className="text-sm text-gray-500 dark:text-slate-400">
+                              @{m.user.username}
+                            </p>
+                            {instruments.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 mt-2">
+                                {(instruments || []).map(inst => (
+                                  <span
+                                    key={inst}
+                                    className="inline-flex items-center gap-1 rounded-full border border-primary-100 bg-primary-50/80 px-2 py-0.5 text-xs font-medium text-primary-700 dark:border-primary-800/50 dark:bg-primary-900/30 dark:text-primary-300"
+                                  >
+                                    <InstrumentIcon instrument={inst} size={12} />
+                                    <span>{getInstrumentLabel(inst)}</span>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Botões de Conexão Modernos */}
+                        <div className="grid grid-cols-3 gap-2">
+                          {activeConnectionTypes.map(type => {
+                            const isOn = Boolean(active[type]);
+                            const Icon = connectionIcons[type];
+                            return (
+                              <motion.button
+                                key={type}
+                                onClick={() => handleToggle(m.id, type as ConnectionType)}
+                                className={`connection-pill-modern ${isOn ? `active ${type}` : ''}`}
+                                disabled={loadingAction}
+                                whileTap={{ scale: 0.95 }}
+                                whileHover={{ scale: 1.02 }}
+                              >
+                                <Icon className="h-4 w-4" />
+                                <span className="hidden sm:inline">
+                                  {isOn ? connectionLabelsActive[type] : connectionLabels[type]}
+                                </span>
+                              </motion.button>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    );
+                  }}
+                />
+              )}
+              {hasMoreMusicians && (
+                <div className="mt-3 flex justify-center">
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={loadMoreMusicians}
+                    disabled={validatingMusicians}
+                  >
+                    {validatingMusicians ? 'Carregando...' : 'Carregar mais musicos'}
+                  </button>
                 </div>
+              )}
+            </div>
 
             {/* Tabs de Conexões Agrupadas */}
             <div className="mt-6">
@@ -502,7 +529,7 @@ const Connections: React.FC = () => {
 
               {/* Tab Navigation */}
               <div className="tab-navigation mb-4">
-                {activeConnectionTypes.map((type) => {
+                {activeConnectionTypes.map(type => {
                   const Icon = connectionIcons[type];
                   return (
                     <button
@@ -532,7 +559,9 @@ const Connections: React.FC = () => {
                 >
                   {loadingConnectionsPage ? (
                     <div className="flex flex-col items-center justify-center py-8 text-center">
-                      <p className="text-sm text-gray-500 dark:text-slate-400">Carregando conexoes...</p>
+                      <p className="text-sm text-gray-500 dark:text-slate-400">
+                        Carregando conexoes...
+                      </p>
                     </div>
                   ) : activeTabCount === 0 ? (
                     <div className="flex flex-col items-center justify-center py-8 text-center">
@@ -569,7 +598,9 @@ const Connections: React.FC = () => {
                                   )}
                                 </div>
                                 <div>
-                                  <p className="font-semibold text-gray-900 text-sm">{c.target.full_name}</p>
+                                  <p className="font-semibold text-gray-900 text-sm">
+                                    {c.target.full_name}
+                                  </p>
                                   <p className="text-xs text-gray-500 dark:text-slate-400">
                                     {INSTRUMENT_LABELS[c.target.instrument] || c.target.instrument}
                                     {c.verified && c.connection_type === 'played_with' && (
@@ -626,9 +657,7 @@ const Connections: React.FC = () => {
                     <Star className="h-5 w-5 text-white" />
                   </motion.div>
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      Badges conquistadas
-                    </h2>
+                    <h2 className="text-lg font-semibold text-gray-900">Badges conquistadas</h2>
                     <p className="text-sm text-gray-600">{badgeData.earned.length} conquistas</p>
                   </div>
                 </div>
@@ -641,7 +670,9 @@ const Connections: React.FC = () => {
                   >
                     <p className="text-4xl mb-2">🎯</p>
                     <p className="text-sm text-gray-500 dark:text-slate-400">Nenhuma badge ainda</p>
-                    <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Continue progredindo para conquistar!</p>
+                    <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
+                      Continue progredindo para conquistar!
+                    </p>
                   </motion.div>
                 ) : (
                   <div className="grid grid-cols-2 gap-3">
@@ -716,12 +747,16 @@ const Connections: React.FC = () => {
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <p className="font-semibold text-gray-700 dark:text-slate-200">{badge.name}</p>
+                          <p className="font-semibold text-gray-700 dark:text-slate-200">
+                            {badge.name}
+                          </p>
                           <span className="text-sm font-bold text-primary-600 dark:text-primary-400">
                             {badge.percentage}%
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500 dark:text-slate-400 mb-3">{badge.description}</p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400 mb-3">
+                          {badge.description}
+                        </p>
 
                         {/* Barra de progresso com gradiente */}
                         <div className="relative h-2 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -738,7 +773,7 @@ const Connections: React.FC = () => {
                             }}
                             transition={{
                               width: { duration: 0.8, delay: index * 0.1 },
-                              backgroundPosition: { duration: 3, repeat: Infinity, ease: 'linear' }
+                              backgroundPosition: { duration: 3, repeat: Infinity, ease: 'linear' },
                             }}
                           />
                         </div>
@@ -765,8 +800,12 @@ const Connections: React.FC = () => {
                     className="text-center py-8"
                   >
                     <p className="text-4xl mb-2">🏆</p>
-                    <p className="text-sm text-gray-500 dark:text-slate-400">Todas as badges conquistadas!</p>
-                    <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Parabéns, você é incrível!</p>
+                    <p className="text-sm text-gray-500 dark:text-slate-400">
+                      Todas as badges conquistadas!
+                    </p>
+                    <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
+                      Parabéns, você é incrível!
+                    </p>
                   </motion.div>
                 )}
               </div>

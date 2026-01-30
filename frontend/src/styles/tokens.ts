@@ -26,19 +26,19 @@ export const tokens = {
       primary: '#111827',
       secondary: '#6b7280',
       tertiary: '#9ca3af',
-    }
+    },
   },
   spacing: {
-    section: '2rem',    // 32px
-    card: '1.5rem',     // 24px
-    element: '1rem',    // 16px
-    tight: '0.5rem',    // 8px
+    section: '2rem', // 32px
+    card: '1.5rem', // 24px
+    element: '1rem', // 16px
+    tight: '0.5rem', // 8px
   },
   radius: {
-    sm: '0.5rem',      // 8px
-    md: '0.75rem',     // 12px
-    lg: '1rem',        // 16px
-    xl: '1.5rem',      // 24px
+    sm: '0.5rem', // 8px
+    md: '0.75rem', // 12px
+    lg: '1rem', // 16px
+    xl: '1.5rem', // 24px
     full: '9999px',
   },
   shadow: {
@@ -51,5 +51,5 @@ export const tokens = {
     fast: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
     base: '200ms cubic-bezier(0.4, 0, 0.2, 1)',
     slow: '300ms cubic-bezier(0.4, 0, 0.2, 1)',
-  }
-}
+  },
+};

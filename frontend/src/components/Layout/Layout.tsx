@@ -20,7 +20,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     const elements = Array.from(root.querySelectorAll<HTMLElement>(selector));
     const isSmallScreen = window.matchMedia('(max-width: 768px)').matches;
 
-    elements.forEach((el) => {
+    elements.forEach(el => {
       el.classList.remove('cascade-reveal');
       el.style.removeProperty('--cascade-index');
     });
@@ -29,7 +29,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       let index = 0;
       // No mobile eu limito o cascade pra manter o efeito sem pesar no scroll.
       const maxAnimated = isSmallScreen ? 15 : elements.length;
-      elements.forEach((el) => {
+      elements.forEach(el => {
         if (el.closest('[data-cascade-ignore]')) return;
         if (index >= maxAnimated) return;
         el.style.setProperty('--cascade-index', String(index));
@@ -47,7 +47,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <Navbar />
 
       <div className="relative z-10 flex min-h-screen flex-col pt-6 sm:pt-8">
-        <main ref={mainRef} className="container mx-auto flex-1 max-w-6xl px-3 sm:px-4 pb-16 lg:px-8">
+        <main
+          ref={mainRef}
+          className="container mx-auto flex-1 max-w-6xl px-3 sm:px-4 pb-16 lg:px-8"
+        >
           {children}
         </main>
 

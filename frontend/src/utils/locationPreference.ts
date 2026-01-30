@@ -31,9 +31,7 @@ export const setLocationPreference = (city: string, state: string): LocationPref
     updatedAt: Date.now(),
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(preference));
-  window.dispatchEvent(
-    new CustomEvent('location:preference-updated', { detail: preference })
-  );
+  window.dispatchEvent(new CustomEvent('location:preference-updated', { detail: preference }));
   return preference;
 };
 

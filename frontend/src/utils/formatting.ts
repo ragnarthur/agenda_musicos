@@ -218,7 +218,7 @@ export const formatInstrumentLabel = (instrument?: string): string => {
 
   const pretty = key.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
   if (!pretty) return instrument;
-  return pretty.replace(/\b\w/g, (char) => char.toUpperCase());
+  return pretty.replace(/\b\w/g, char => char.toUpperCase());
 };
 
 /**
@@ -259,8 +259,8 @@ export function extractLineup(availabilities: Availability[] | undefined): strin
   if (!availabilities) return [];
 
   return availabilities
-    .filter((a) => a.response === 'available')
-    .map((a) => getMusicianDisplayName(a.musician));
+    .filter(a => a.response === 'available')
+    .map(a => getMusicianDisplayName(a.musician));
 }
 
 /**
@@ -302,13 +302,14 @@ export function countAvailabilities(availabilities: Availability[] | undefined):
  */
 export function formatPhone(value: string): string {
   if (!value) return '';
-  
+
   const numbers = value.replace(/\D/g, '');
   const limited = numbers.slice(0, 11);
-  
+
   if (limited.length <= 2) return limited;
   if (limited.length <= 6) return `(${limited.slice(0, 2)}) ${limited.slice(2)}`;
-  if (limited.length <= 10) return `(${limited.slice(0, 2)}) ${limited.slice(2, 6)}-${limited.slice(6)}`;
+  if (limited.length <= 10)
+    return `(${limited.slice(0, 2)}) ${limited.slice(2, 6)}-${limited.slice(6)}`;
   return `(${limited.slice(0, 2)}) ${limited.slice(2, 7)}-${limited.slice(7)}`;
 }
 

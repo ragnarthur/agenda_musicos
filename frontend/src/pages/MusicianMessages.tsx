@@ -1,7 +1,18 @@
 // pages/MusicianMessages.tsx
 // Página de mensagens recebidas de empresas
 import { useState, useEffect } from 'react';
-import { Mail, MailOpen, MessageSquare, Archive, Send, Building2, Calendar, MapPin, DollarSign, Clock } from 'lucide-react';
+import {
+  Mail,
+  MailOpen,
+  MessageSquare,
+  Archive,
+  Send,
+  Building2,
+  Calendar,
+  MapPin,
+  DollarSign,
+  Clock,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import { contactRequestService, type ContactRequest } from '../services/publicApi';
 import Navbar from '../components/Layout/Navbar';
@@ -39,9 +50,7 @@ export default function MusicianMessages() {
     if (message.status === 'pending') {
       try {
         const updated = await contactRequestService.get(message.id);
-        setMessages((prev) =>
-          prev.map((m) => (m.id === updated.id ? updated : m))
-        );
+        setMessages(prev => prev.map(m => (m.id === updated.id ? updated : m)));
         setSelectedMessage(updated);
       } catch {
         // Ignora erro silenciosamente
@@ -55,9 +64,7 @@ export default function MusicianMessages() {
     setSending(true);
     try {
       const updated = await contactRequestService.reply(selectedMessage.id, replyText);
-      setMessages((prev) =>
-        prev.map((m) => (m.id === updated.id ? updated : m))
-      );
+      setMessages(prev => prev.map(m => (m.id === updated.id ? updated : m)));
       setSelectedMessage(updated);
       setReplyText('');
       toast.success('Resposta enviada!');
@@ -71,7 +78,7 @@ export default function MusicianMessages() {
   const handleArchive = async (message: ContactRequest) => {
     try {
       await contactRequestService.archive(message.id);
-      setMessages((prev) => prev.filter((m) => m.id !== message.id));
+      setMessages(prev => prev.filter(m => m.id !== message.id));
       if (selectedMessage?.id === message.id) {
         setSelectedMessage(null);
       }
@@ -81,7 +88,7 @@ export default function MusicianMessages() {
     }
   };
 
-  const unreadCount = messages.filter((m) => m.status === 'pending').length;
+  const unreadCount = messages.filter(m => m.status === 'pending').length;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -128,7 +135,7 @@ export default function MusicianMessages() {
           </div>
 
           <div className="flex gap-2">
-            {['all', 'pending', 'read', 'replied'].map((f) => (
+            {['all', 'pending', 'read', 'replied'].map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
@@ -138,7 +145,13 @@ export default function MusicianMessages() {
                     : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
               >
-                {f === 'all' ? 'Todas' : f === 'pending' ? 'Pendentes' : f === 'read' ? 'Lidas' : 'Respondidas'}
+                {f === 'all'
+                  ? 'Todas'
+                  : f === 'pending'
+                    ? 'Pendentes'
+                    : f === 'read'
+                      ? 'Lidas'
+                      : 'Respondidas'}
               </button>
             ))}
           </div>
@@ -158,7 +171,7 @@ export default function MusicianMessages() {
               </div>
             ) : (
               <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-[600px] overflow-y-auto">
-                {messages.map((message) => (
+                {messages.map(message => (
                   <button
                     key={message.id}
                     onClick={() => handleSelectMessage(message)}
@@ -167,7 +180,9 @@ export default function MusicianMessages() {
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`p-2 rounded-lg ${message.status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-900' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                      <div
+                        className={`p-2 rounded-lg ${message.status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-900' : 'bg-gray-100 dark:bg-gray-700'}`}
+                      >
                         {message.status === 'pending' ? (
                           <Mail className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
                         ) : (
@@ -179,7 +194,9 @@ export default function MusicianMessages() {
                           <span className="font-medium text-gray-900 dark:text-white truncate">
                             {message.from_organization_name}
                           </span>
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(message.status)}`}>
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(message.status)}`}
+                          >
                             {message.status_display}
                           </span>
                         </div>
@@ -284,7 +301,7 @@ export default function MusicianMessages() {
                   <div className="p-6 border-t border-gray-200 dark:border-gray-700">
                     <textarea
                       value={replyText}
-                      onChange={(e) => setReplyText(e.target.value)}
+                      onChange={e => setReplyText(e.target.value)}
                       placeholder="Escreva sua resposta..."
                       rows={3}
                       className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white resize-none"

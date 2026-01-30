@@ -59,7 +59,10 @@ const ResetPassword: React.FC = () => {
       <div className="w-full max-w-lg">
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="mb-6">
-            <Link to="/login" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800">
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+            >
               <ArrowLeft className="h-4 w-4" />
               Voltar ao login
             </Link>
@@ -71,7 +74,9 @@ const ResetPassword: React.FC = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Definir nova senha</h1>
-              <p className="text-sm text-gray-600">Escolha uma senha segura para acessar sua conta.</p>
+              <p className="text-sm text-gray-600">
+                Escolha uma senha segura para acessar sua conta.
+              </p>
             </div>
           </div>
 
@@ -98,12 +103,12 @@ const ResetPassword: React.FC = () => {
                     className="input-field pr-12"
                     placeholder="Digite sua nova senha"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={e => setPassword(e.target.value)}
                     required
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
+                    onClick={() => setShowPassword(prev => !prev)}
                     className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
                     aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                   >
@@ -113,7 +118,10 @@ const ResetPassword: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Confirmar senha
                 </label>
                 <div className="relative">
@@ -123,12 +131,12 @@ const ResetPassword: React.FC = () => {
                     className="input-field pr-12"
                     placeholder="Repita a nova senha"
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={e => setConfirmPassword(e.target.value)}
                     required
                   />
                   <button
                     type="button"
-                    onClick={() => setShowConfirm((prev) => !prev)}
+                    onClick={() => setShowConfirm(prev => !prev)}
                     className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
                     aria-label={showConfirm ? 'Ocultar senha' : 'Mostrar senha'}
                   >

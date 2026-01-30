@@ -2,16 +2,16 @@
 // Barra de navegação específica para empresas
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Users, 
-  MessageSquare, 
-  Briefcase, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Users,
+  MessageSquare,
+  Briefcase,
+  Settings,
   LogOut,
   Menu,
   X,
-  Bell
+  Bell,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompanyAuth } from '../../contexts/CompanyAuthContext';
@@ -25,36 +25,36 @@ const CompanyNavbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { 
-      path: '/empresa/dashboard', 
-      label: 'Dashboard', 
+    {
+      path: '/empresa/dashboard',
+      label: 'Dashboard',
       icon: <LayoutDashboard className="w-4 h-4" />,
-      description: 'Visão geral'
+      description: 'Visão geral',
     },
-    { 
-      path: '/empresa/musicians', 
-      label: 'Encontrar Músicos', 
+    {
+      path: '/empresa/musicians',
+      label: 'Encontrar Músicos',
       icon: <Users className="w-4 h-4" />,
-      description: 'Buscar talentos'
+      description: 'Buscar talentos',
     },
-    { 
-      path: '/empresa/contatos', 
-      label: 'Conversas', 
+    {
+      path: '/empresa/contatos',
+      label: 'Conversas',
       icon: <MessageSquare className="w-4 h-4" />,
-      description: 'Mensagens e contatos'
+      description: 'Mensagens e contatos',
     },
-    { 
-      path: '/empresa/vagas', 
-      label: 'Minhas Vagas', 
+    {
+      path: '/empresa/vagas',
+      label: 'Minhas Vagas',
       icon: <Briefcase className="w-4 h-4" />,
-      description: 'Gerenciar vagas'
+      description: 'Gerenciar vagas',
     },
-    { 
-      path: '/empresa/configuracoes', 
-      label: 'Configurações', 
+    {
+      path: '/empresa/configuracoes',
+      label: 'Configurações',
       icon: <Settings className="w-4 h-4" />,
-      description: 'Perfil e configurações'
-    }
+      description: 'Perfil e configurações',
+    },
   ];
 
   const isActivePath = (path: string) => {
@@ -77,7 +77,7 @@ const CompanyNavbar: React.FC = () => {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <Link 
+            <Link
               to="/empresa/dashboard"
               className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
@@ -85,14 +85,12 @@ const CompanyNavbar: React.FC = () => {
               <span className="font-bold text-xl hidden sm:block">
                 GigFlow <span className="text-indigo-600">Empresas</span>
               </span>
-              <span className="font-bold text-xl sm:hidden">
-                GigFlow
-              </span>
+              <span className="font-bold text-xl sm:hidden">GigFlow</span>
             </Link>
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-1">
-              {navItems.map((item) => (
+              {navItems.map(item => (
                 <Link
                   key={item.path}
                   to={item.path}
@@ -102,9 +100,11 @@ const CompanyNavbar: React.FC = () => {
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
-                  <div className={`transition-transform group-hover:scale-110 ${
-                    isActivePath(item.path) ? 'text-indigo-600' : ''
-                  }`}>
+                  <div
+                    className={`transition-transform group-hover:scale-110 ${
+                      isActivePath(item.path) ? 'text-indigo-600' : ''
+                    }`}
+                  >
                     {item.icon}
                   </div>
                   <div className="text-left">
@@ -126,16 +126,14 @@ const CompanyNavbar: React.FC = () => {
               {/* User Menu */}
               <div className="hidden sm:flex items-center gap-3">
                 <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">
-                    {organization?.name}
-                  </p>
+                  <p className="text-sm font-medium text-gray-900">{organization?.name}</p>
                   <p className="text-xs text-gray-500">
                     {organization?.city && `${organization.city} - ${organization?.state}`}
                   </p>
                 </div>
-                
+
                 <div className="h-8 w-px bg-gray-300"></div>
-                
+
                 <button
                   onClick={handleLogout}
                   className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
@@ -168,7 +166,7 @@ const CompanyNavbar: React.FC = () => {
               <div className="container mx-auto px-4 py-4">
                 {/* Mobile Navigation */}
                 <div className="space-y-2 mb-6">
-                  {navItems.map((item) => (
+                  {navItems.map(item => (
                     <Link
                       key={item.path}
                       to={item.path}
@@ -194,9 +192,7 @@ const CompanyNavbar: React.FC = () => {
                 <div className="border-t border-gray-200 pt-4">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <p className="font-medium text-gray-900">
-                        {organization?.name}
-                      </p>
+                      <p className="font-medium text-gray-900">{organization?.name}</p>
                       {organization?.city && (
                         <p className="text-sm text-gray-500">
                           {organization.city} - {organization.state}
@@ -204,7 +200,7 @@ const CompanyNavbar: React.FC = () => {
                       )}
                     </div>
                   </div>
-                  
+
                   <button
                     onClick={handleLogout}
                     className="w-full flex items-center justify-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
@@ -222,7 +218,7 @@ const CompanyNavbar: React.FC = () => {
       {/* Mobile Navigation Bottom Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
         <div className="grid grid-cols-5 gap-1">
-          {navItems.slice(0, 5).map((item) => (
+          {navItems.slice(0, 5).map(item => (
             <Link
               key={item.path}
               to={item.path}
@@ -232,9 +228,11 @@ const CompanyNavbar: React.FC = () => {
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              <div className={`transition-transform hover:scale-110 ${
-                isActivePath(item.path) ? 'text-indigo-600' : ''
-              }`}>
+              <div
+                className={`transition-transform hover:scale-110 ${
+                  isActivePath(item.path) ? 'text-indigo-600' : ''
+                }`}
+              >
                 {item.icon}
               </div>
               <span className="text-xs font-medium">{item.label.split(' ')[0]}</span>

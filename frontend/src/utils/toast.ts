@@ -85,11 +85,12 @@ export const showToast = {
       success: string;
       error?: string | ((error: unknown) => string);
     }
-  ) => toast.promise(promise, {
-    loading: messages.loading,
-    success: messages.success,
-    error: messages.error || 'Ocorreu um erro.',
-  }),
+  ) =>
+    toast.promise(promise, {
+      loading: messages.loading,
+      success: messages.success,
+      error: messages.error || 'Ocorreu um erro.',
+    }),
 };
 
 export default toast;

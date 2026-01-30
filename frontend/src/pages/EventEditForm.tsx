@@ -149,7 +149,9 @@ const EventEditForm: React.FC = () => {
       };
       await eventService.update(parseInt(id), sanitizedPayload);
       // Invalidar cache de eventos para que a listagem recarregue
-      mutate((key) => typeof key === 'string' && key.startsWith('/events'), undefined, { revalidate: true });
+      mutate(key => typeof key === 'string' && key.startsWith('/events'), undefined, {
+        revalidate: true,
+      });
       navigate(`/eventos/${id}`);
     } catch (err: unknown) {
       logError('Erro ao atualizar evento:', err);
@@ -244,7 +246,10 @@ const EventEditForm: React.FC = () => {
 
           {/* Cachê */}
           <div>
-            <label htmlFor="payment_amount" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="payment_amount"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Cachê (opcional)
             </label>
             <div className="relative">
@@ -342,11 +347,14 @@ const EventEditForm: React.FC = () => {
               id="is_solo"
               name="is_solo"
               checked={formData.is_solo}
-              onChange={(e) => setFormData(prev => ({ ...prev, is_solo: e.target.checked }))}
+              onChange={e => setFormData(prev => ({ ...prev, is_solo: e.target.checked }))}
               className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
             />
             <div className="flex-1">
-              <label htmlFor="is_solo" className="block text-sm font-medium text-gray-900 cursor-pointer">
+              <label
+                htmlFor="is_solo"
+                className="block text-sm font-medium text-gray-900 cursor-pointer"
+              >
                 Show Solo
               </label>
               <p className="text-sm text-gray-600 mt-1">
@@ -385,9 +393,7 @@ const EventEditForm: React.FC = () => {
             </button>
           </div>
 
-          <p className="text-sm text-gray-500 text-center">
-            * Campos obrigatórios
-          </p>
+          <p className="text-sm text-gray-500 text-center">* Campos obrigatórios</p>
         </form>
       </div>
     </Layout>

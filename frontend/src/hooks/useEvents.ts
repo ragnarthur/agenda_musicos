@@ -36,7 +36,7 @@ export function useEvents(params?: EventsParams) {
 
   const { data, error, isLoading, isValidating, mutate, size, setSize } = useSWRInfinite(
     getKey,
-    (key) => {
+    key => {
       const query = key.split('?')[1] || '';
       const searchParams = new URLSearchParams(query);
       const page = Number(searchParams.get('page') || 1);
@@ -51,12 +51,12 @@ export function useEvents(params?: EventsParams) {
   );
 
   const pages = data ?? [];
-  const events = pages.flatMap((page) => page.results);
+  const events = pages.flatMap(page => page.results);
   const count = pages[0]?.count ?? 0;
   const hasMore = pages.length > 0 ? Boolean(pages[pages.length - 1]?.next) : false;
   const isLoadingMore = isValidating && size > 0;
 
-  const loadMore = () => setSize((current) => current + 1);
+  const loadMore = () => setSize(current => current + 1);
 
   return {
     events,
@@ -118,7 +118,11 @@ export function useUpcomingEvents() {
   const { data, error, isLoading, isValidating, mutate } = useSWR<Event[]>(
     '/events?upcoming=true&status=proposed,confirmed,approved',
     async () => {
-      const page = await eventService.getAllPaginated({ status: 'proposed,confirmed,approved', upcoming: true, page_size: 50 });
+      const page = await eventService.getAllPaginated({
+        status: 'proposed,confirmed,approved',
+        upcoming: true,
+        page_size: 50,
+      });
       return page.results;
     },
     {

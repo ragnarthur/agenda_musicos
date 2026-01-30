@@ -13,7 +13,9 @@ interface MusicProfileStepProps {
     instrumentOther: string;
     bio: string;
   };
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+  onChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => void;
   errors: Record<string, string>;
   toggleMultiInstrumentist: (value: boolean) => void;
   toggleInstrument: (value: string) => void;
@@ -38,9 +40,9 @@ const MusicProfileStep: React.FC<MusicProfileStepProps> = ({
       return instruments;
     }
     const query = searchQuery.toLowerCase();
-    return instruments.filter(inst =>
-      inst.display_name.toLowerCase().includes(query) ||
-      inst.name.toLowerCase().includes(query)
+    return instruments.filter(
+      inst =>
+        inst.display_name.toLowerCase().includes(query) || inst.name.toLowerCase().includes(query)
     );
   }, [instruments, searchQuery]);
 
@@ -60,7 +62,7 @@ const MusicProfileStep: React.FC<MusicProfileStepProps> = ({
       } else {
         // For single instrument, update via onChange simulation
         const event = {
-          target: { name: 'instrument', value: newInstrument.name }
+          target: { name: 'instrument', value: newInstrument.name },
         } as React.ChangeEvent<HTMLSelectElement>;
         onChange(event);
       }
@@ -112,7 +114,10 @@ const MusicProfileStep: React.FC<MusicProfileStepProps> = ({
 
         {/* Search Field */}
         <div>
-          <label htmlFor="instrument-search" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="instrument-search"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Buscar Instrumento
           </label>
           <div className="relative">
@@ -123,7 +128,7 @@ const MusicProfileStep: React.FC<MusicProfileStepProps> = ({
               id="instrument-search"
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               placeholder="Digite para buscar..."
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent bg-white text-gray-900"
             />
@@ -158,7 +163,7 @@ const MusicProfileStep: React.FC<MusicProfileStepProps> = ({
                 `}
               >
                 <option value="">Selecione um instrumento</option>
-                {filteredInstruments.map((inst) => (
+                {filteredInstruments.map(inst => (
                   <option key={inst.id} value={inst.name}>
                     {inst.display_name}
                     {inst.type === 'community' ? ' ✨' : ''}
@@ -185,7 +190,7 @@ const MusicProfileStep: React.FC<MusicProfileStepProps> = ({
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-              {filteredInstruments.map((inst) => {
+              {filteredInstruments.map(inst => {
                 const checked = formData.instruments.includes(inst.name);
                 return (
                   <label
@@ -219,9 +224,7 @@ const MusicProfileStep: React.FC<MusicProfileStepProps> = ({
                     </span>
                     <span className="text-sm font-medium flex items-center gap-1">
                       {inst.display_name}
-                      {inst.type === 'community' && (
-                        <Sparkles className="h-3 w-3 text-blue-500" />
-                      )}
+                      {inst.type === 'community' && <Sparkles className="h-3 w-3 text-blue-500" />}
                     </span>
                   </label>
                 );
@@ -229,17 +232,19 @@ const MusicProfileStep: React.FC<MusicProfileStepProps> = ({
             </div>
 
             {errors.instrument && <p className="mt-1 text-sm text-red-600">{errors.instrument}</p>}
-            {!errors.instrument && (() => {
-              const selectedCount = formData.instruments.length;
-              if (selectedCount > 0) {
-                return (
-                  <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
-                    <Check className="h-3 w-3" /> {selectedCount} instrumento{selectedCount > 1 ? 's' : ''} selecionado{selectedCount > 1 ? 's' : ''}
-                  </p>
-                );
-              }
-              return null;
-            })()}
+            {!errors.instrument &&
+              (() => {
+                const selectedCount = formData.instruments.length;
+                if (selectedCount > 0) {
+                  return (
+                    <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+                      <Check className="h-3 w-3" /> {selectedCount} instrumento
+                      {selectedCount > 1 ? 's' : ''} selecionado{selectedCount > 1 ? 's' : ''}
+                    </p>
+                  );
+                }
+                return null;
+              })()}
           </div>
         )}
 
@@ -266,27 +271,32 @@ const MusicProfileStep: React.FC<MusicProfileStepProps> = ({
             ) : (
               <div className="space-y-3">
                 <div>
-                  <label htmlFor="custom-instrument-name" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="custom-instrument-name"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Nome do instrumento
                   </label>
                   <input
                     id="custom-instrument-name"
                     type="text"
                     value={customInstrumentName}
-                    onChange={(e) => setCustomInstrumentName(e.target.value)}
+                    onChange={e => setCustomInstrumentName(e.target.value)}
                     placeholder="Ex: Cavaquinho, Alaúde, Theremin..."
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                   />
-                  <p className="mt-1 text-xs text-gray-500">
-                    Mínimo 3 caracteres, máximo 50
-                  </p>
+                  <p className="mt-1 text-xs text-gray-500">Mínimo 3 caracteres, máximo 50</p>
                 </div>
 
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={handleCreateCustomInstrument}
-                    disabled={isCreatingCustom || !customInstrumentName.trim() || customInstrumentName.trim().length < 3}
+                    disabled={
+                      isCreatingCustom ||
+                      !customInstrumentName.trim() ||
+                      customInstrumentName.trim().length < 3
+                    }
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isCreatingCustom ? (
@@ -343,7 +353,15 @@ const MusicProfileStep: React.FC<MusicProfileStepProps> = ({
           {errors.bio && <p className="mt-1 text-sm text-red-600">{errors.bio}</p>}
           <p className="mt-1 text-xs text-gray-500 flex justify-between">
             <span>Mini-bio obrigatória</span>
-            <span className={formData.bio.length > BIO_MAX_LENGTH ? 'text-red-500 font-medium' : formData.bio.trim() ? 'text-green-600' : ''}>
+            <span
+              className={
+                formData.bio.length > BIO_MAX_LENGTH
+                  ? 'text-red-500 font-medium'
+                  : formData.bio.trim()
+                    ? 'text-green-600'
+                    : ''
+              }
+            >
               {formData.bio.length}/{BIO_MAX_LENGTH}
             </span>
           </p>

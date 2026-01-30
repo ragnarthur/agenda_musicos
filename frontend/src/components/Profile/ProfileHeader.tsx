@@ -1,6 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { MapPin, Star, Camera, Loader2, Info, UserPlus, UserCheck, MessageCircle, Briefcase, X } from 'lucide-react';
+import {
+  MapPin,
+  Star,
+  Camera,
+  Loader2,
+  Info,
+  UserPlus,
+  UserCheck,
+  MessageCircle,
+  Briefcase,
+  X,
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Musician } from '../../types';
 import { formatInstrumentLabel } from '../../utils/formatting';
@@ -43,7 +54,10 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const handleWhatsAppClick = () => {
     if (musician.whatsapp) {
       const phone = musician.whatsapp.replace(/\D/g, '');
-      window.open(`https://wa.me/55${phone}?text=Olá ${musician.full_name}, vi seu perfil na Rede Musical!`, '_blank');
+      window.open(
+        `https://wa.me/55${phone}?text=Olá ${musician.full_name}, vi seu perfil na Rede Musical!`,
+        '_blank'
+      );
     }
   };
 
@@ -110,7 +124,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             />
             <button
               type="button"
-              onClick={() => setShowCoverHint((prev) => !prev)}
+              onClick={() => setShowCoverHint(prev => !prev)}
               className="sm:hidden rounded-full border border-white/10 bg-gray-900/70 p-1.5 text-white shadow-lg"
               aria-label="Informacoes sobre o upload da capa"
             >
@@ -127,79 +141,81 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         )}
       </div>
 
-       {/* Avatar + Info */}
-       <div className="relative px-4 sm:px-8 pb-6">
-         <motion.div
-           initial={{ opacity: 0, y: 20 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ duration: 0.5 }}
-           className="flex flex-col md:flex-row items-start md:items-end gap-4 sm:gap-6 -mt-12 sm:-mt-16 md:-mt-20"
-         >
-           {/* Avatar */}
-           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-             <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full border-4 border-white dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl overflow-hidden ring-4 ring-blue-500/20 dark:ring-blue-400/20 hover:ring-blue-500/40 dark:hover:ring-blue-400/40 transition-all">
-               {musician.avatar_url ? (
-                 <div className="w-full h-full flex items-center justify-center">
-                   <img
-                     src={musician.avatar_url}
-                     alt={musician.full_name}
-                     className="w-full h-full object-cover cursor-zoom-in"
-                     onClick={() => setExpandedImage({ src: musician.avatar_url!, alt: musician.full_name })}
-                   />
-                 </div>
-               ) : (
-                 <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
-                   <span className="text-4xl sm:text-5xl font-bold text-gray-500 dark:text-gray-300">
-                     {musician.full_name[0]}
-                   </span>
-                 </div>
-               )}
-             </div>
+      {/* Avatar + Info */}
+      <div className="relative px-4 sm:px-8 pb-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col md:flex-row items-start md:items-end gap-4 sm:gap-6 -mt-12 sm:-mt-16 md:-mt-20"
+        >
+          {/* Avatar */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full border-4 border-white dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl overflow-hidden ring-4 ring-blue-500/20 dark:ring-blue-400/20 hover:ring-blue-500/40 dark:hover:ring-blue-400/40 transition-all">
+              {musician.avatar_url ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <img
+                    src={musician.avatar_url}
+                    alt={musician.full_name}
+                    className="w-full h-full object-cover cursor-zoom-in"
+                    onClick={() =>
+                      setExpandedImage({ src: musician.avatar_url!, alt: musician.full_name })
+                    }
+                  />
+                </div>
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
+                  <span className="text-4xl sm:text-5xl font-bold text-gray-500 dark:text-gray-300">
+                    {musician.full_name[0]}
+                  </span>
+                </div>
+              )}
+            </div>
 
-             {isOwnProfile && (
-               <div className="relative flex flex-col items-start gap-2 group">
-                 <div className="flex items-center gap-2">
-                   <motion.label
-                     htmlFor="avatar-upload-input"
-                     whileHover={{ scale: 1.1 }}
-                     whileTap={{ scale: 0.95 }}
-                     className={`bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 p-2.5 sm:p-2 rounded-full shadow-lg transition-colors cursor-pointer ${
-                       uploadingAvatar ? 'opacity-70 cursor-not-allowed' : ''
-                     }`}
-                     aria-label="Alterar foto de perfil"
-                   >
-                     {uploadingAvatar ? (
-                       <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white animate-spin" />
-                     ) : (
-                       <Camera className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
-                     )}
-                   </motion.label>
-                   <input
-                     id="avatar-upload-input"
-                     type="file"
-                     accept="image/jpeg,image/png,image/webp,image/heic,image/*"
-                     onChange={onAvatarChange}
-                     disabled={uploadingAvatar}
-                     className="sr-only"
-                   />
-                   <button
-                     type="button"
-                     onClick={() => setShowAvatarHint((prev) => !prev)}
-                     className="sm:hidden rounded-full border border-white/10 bg-gray-900/70 p-1.5 text-white shadow-lg"
-                     aria-label="Informacoes sobre o upload do avatar"
-                   >
-                     <Info className="h-3.5 w-3.5" />
-                   </button>
-                 </div>
-                 <span
-                   className={`pointer-events-none absolute left-0 -top-9 z-30 w-max max-w-[200px] rounded-lg border border-white/10 bg-gray-900/90 px-2 py-1 text-xs text-white shadow-lg backdrop-blur-md transition-opacity duration-200 ${
-                     showAvatarHint ? 'opacity-100' : 'opacity-0 sm:group-hover:opacity-100'
-                   }`}
-                 >
-                   Avatar: JPG, PNG ou WEBP • até 2MB
-                 </span>
-               </div>
-             )}
+            {isOwnProfile && (
+              <div className="relative flex flex-col items-start gap-2 group">
+                <div className="flex items-center gap-2">
+                  <motion.label
+                    htmlFor="avatar-upload-input"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 p-2.5 sm:p-2 rounded-full shadow-lg transition-colors cursor-pointer ${
+                      uploadingAvatar ? 'opacity-70 cursor-not-allowed' : ''
+                    }`}
+                    aria-label="Alterar foto de perfil"
+                  >
+                    {uploadingAvatar ? (
+                      <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white animate-spin" />
+                    ) : (
+                      <Camera className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
+                    )}
+                  </motion.label>
+                  <input
+                    id="avatar-upload-input"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/heic,image/*"
+                    onChange={onAvatarChange}
+                    disabled={uploadingAvatar}
+                    className="sr-only"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAvatarHint(prev => !prev)}
+                    className="sm:hidden rounded-full border border-white/10 bg-gray-900/70 p-1.5 text-white shadow-lg"
+                    aria-label="Informacoes sobre o upload do avatar"
+                  >
+                    <Info className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <span
+                  className={`pointer-events-none absolute left-0 -top-9 z-30 w-max max-w-[200px] rounded-lg border border-white/10 bg-gray-900/90 px-2 py-1 text-xs text-white shadow-lg backdrop-blur-md transition-opacity duration-200 ${
+                    showAvatarHint ? 'opacity-100' : 'opacity-0 sm:group-hover:opacity-100'
+                  }`}
+                >
+                  Avatar: JPG, PNG ou WEBP • até 2MB
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Name & Info */}
@@ -212,28 +228,31 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               {musician.city && (
                 <div className="flex items-center gap-1">
                   <MapPin className="h-4 w-4" />
-                  <span className="text-sm sm:text-base">{musician.city}{musician.state ? `, ${musician.state}` : ''}</span>
+                  <span className="text-sm sm:text-base">
+                    {musician.city}
+                    {musician.state ? `, ${musician.state}` : ''}
+                  </span>
                 </div>
               )}
 
               <div className="flex flex-wrap gap-2">
-                {musician.instruments && musician.instruments.length > 0 ? (
-                  musician.instruments.slice(0, 3).map((inst, idx) => (
-                    <motion.span
-                      key={idx}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: idx * 0.1 }}
-                      className="px-2 sm:px-3 py-1 backdrop-blur-sm bg-blue-500/20 dark:bg-blue-400/10 text-blue-800 dark:text-blue-300 rounded-full text-xs sm:text-sm border border-blue-200/30 dark:border-blue-400/20 hover:bg-blue-500/30 dark:hover:bg-blue-400/20 transition-colors"
-                    >
-                      {formatInstrumentLabel(inst)}
-                    </motion.span>
-                  ))
-                ) : musician.instrument && (
-                  <span className="px-2 sm:px-3 py-1 backdrop-blur-sm bg-blue-500/20 dark:bg-blue-400/10 text-blue-800 dark:text-blue-300 rounded-full text-xs sm:text-sm border border-blue-200/30 dark:border-blue-400/20">
-                    {formatInstrumentLabel(musician.instrument)}
-                  </span>
-                )}
+                {musician.instruments && musician.instruments.length > 0
+                  ? musician.instruments.slice(0, 3).map((inst, idx) => (
+                      <motion.span
+                        key={idx}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: idx * 0.1 }}
+                        className="px-2 sm:px-3 py-1 backdrop-blur-sm bg-blue-500/20 dark:bg-blue-400/10 text-blue-800 dark:text-blue-300 rounded-full text-xs sm:text-sm border border-blue-200/30 dark:border-blue-400/20 hover:bg-blue-500/30 dark:hover:bg-blue-400/20 transition-colors"
+                      >
+                        {formatInstrumentLabel(inst)}
+                      </motion.span>
+                    ))
+                  : musician.instrument && (
+                      <span className="px-2 sm:px-3 py-1 backdrop-blur-sm bg-blue-500/20 dark:bg-blue-400/10 text-blue-800 dark:text-blue-300 rounded-full text-xs sm:text-sm border border-blue-200/30 dark:border-blue-400/20">
+                        {formatInstrumentLabel(musician.instrument)}
+                      </span>
+                    )}
               </div>
             </div>
 
@@ -256,7 +275,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   {Number(musician.average_rating ?? 0).toFixed(1)}
                 </span>
                 <span className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
-                  ({musician.total_ratings} {musician.total_ratings === 1 ? 'avaliação' : 'avaliações'})
+                  ({musician.total_ratings}{' '}
+                  {musician.total_ratings === 1 ? 'avaliação' : 'avaliações'})
                 </span>
               </div>
             )}
@@ -337,10 +357,10 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 src={expandedImage.src}
                 alt={expandedImage.alt}
                 className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg shadow-2xl"
-                onClick={(event) => event.stopPropagation()}
+                onClick={event => event.stopPropagation()}
               />
             </div>,
-            document.body,
+            document.body
           )
         : null}
     </div>

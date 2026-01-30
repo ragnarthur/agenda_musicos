@@ -33,7 +33,7 @@ const extractLineup = (event: Event): string[] => {
   const names = new Set<string>();
   const availList = event.availabilities || [];
   if (availList.length) {
-    availList.forEach((a) => {
+    availList.forEach(a => {
       const label = toName(a);
       if (label) names.add(label);
     });
@@ -91,17 +91,17 @@ const EventsList: React.FC = () => {
 
   const { events, count, isLoading, isLoadingMore, hasMore, loadMore } = useEvents(params);
 
-    const groups = useMemo(() => {
-      const byDate = new Map<string, Event[]>();
-      events.forEach((event) => {
-        try {
-          const key = format(parseISO(event.event_date), 'yyyy-MM-dd');
-          if (!byDate.has(key)) byDate.set(key, []);
-          byDate.get(key)!.push(event);
-        } catch {
-          // Skip events with invalid dates
-        }
-      });
+  const groups = useMemo(() => {
+    const byDate = new Map<string, Event[]>();
+    events.forEach(event => {
+      try {
+        const key = format(parseISO(event.event_date), 'yyyy-MM-dd');
+        if (!byDate.has(key)) byDate.set(key, []);
+        byDate.get(key)!.push(event);
+      } catch {
+        // Skip events with invalid dates
+      }
+    });
 
     return Array.from(byDate.entries())
       .sort(([a], [b]) => (a < b ? -1 : 1))
@@ -129,8 +129,8 @@ const EventsList: React.FC = () => {
   }, [events]);
 
   const statistics = useMemo(() => {
-    const confirmed = events.filter((ev) => ev.status === 'confirmed' || ev.status === 'approved');
-    const solos = events.filter((ev) => ev.is_solo);
+    const confirmed = events.filter(ev => ev.status === 'confirmed' || ev.status === 'approved');
+    const solos = events.filter(ev => ev.is_solo);
     return {
       total: count || events.length,
       confirmed: confirmed.length,
@@ -159,9 +159,7 @@ const EventsList: React.FC = () => {
           <div className="flex-1">
             <div className="flex items-center gap-2 text-xs uppercase tracking-wide">
               <span className={statusClass}>{statusLabel}</span>
-              {event.is_solo && (
-                <span className="status-chip default">Solo</span>
-              )}
+              {event.is_solo && <span className="status-chip default">Solo</span>}
             </div>
             <h3 className="mt-1 text-lg font-semibold text-gray-900">{event.title}</h3>
             <p className="text-sm text-gray-600">{event.location}</p>
@@ -179,7 +177,7 @@ const EventsList: React.FC = () => {
             )}
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-700">
               <Users className="h-4 w-4 text-gray-500" />
-              {lineup.map((name) => (
+              {lineup.map(name => (
                 <span
                   key={name}
                   className="inline-flex items-center gap-1 rounded-full bg-gray-50 border border-gray-200 px-3 py-1 font-medium text-gray-700"
@@ -218,12 +216,17 @@ const EventsList: React.FC = () => {
                   <p className="text-2xl text-emerald-600">{statistics.confirmed}</p>
                 </div>
                 <div className="rounded-2xl border border-indigo-100/70 bg-gradient-to-br from-indigo-50/80 via-white/90 to-white/70 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur dark:border-indigo-800/60 dark:from-indigo-900/40 dark:via-slate-900/70 dark:to-slate-900/60">
-                  <p className="text-xs uppercase tracking-wide text-gray-500">Apresentações solo</p>
+                  <p className="text-xs uppercase tracking-wide text-gray-500">
+                    Apresentações solo
+                  </p>
                   <p className="text-2xl text-indigo-600">{statistics.solos}</p>
                 </div>
               </div>
             </div>
-            <Link to="/eventos/novo" className="btn-primary flex items-center justify-center gap-2 self-start">
+            <Link
+              to="/eventos/novo"
+              className="btn-primary flex items-center justify-center gap-2 self-start"
+            >
               <Plus className="h-5 w-5" />
               <span>Novo Evento</span>
             </Link>
@@ -237,7 +240,7 @@ const EventsList: React.FC = () => {
               <input
                 type="text"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="w-full rounded-2xl border border-gray-200 bg-gray-50/50 pl-12 pr-12 py-3 text-sm text-gray-800 shadow-inner focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-200"
                 placeholder="Busque por título, local ou contato..."
               />
@@ -257,11 +260,13 @@ const EventsList: React.FC = () => {
           </div>
 
           <div className="mt-5 flex flex-wrap gap-3">
-            {([
-              { value: 'upcoming', label: 'Próximos' },
-              { value: 'past', label: 'Histórico' },
-              { value: 'all', label: 'Todos os períodos' },
-            ] as { value: TimeFilter; label: string }[]).map((item) => (
+            {(
+              [
+                { value: 'upcoming', label: 'Próximos' },
+                { value: 'past', label: 'Histórico' },
+                { value: 'all', label: 'Todos os períodos' },
+              ] as { value: TimeFilter; label: string }[]
+            ).map(item => (
               <button
                 key={item.value}
                 onClick={() => setTimeFilter(item.value)}
@@ -281,7 +286,7 @@ const EventsList: React.FC = () => {
               { value: 'all', label: 'Todos os status' },
               { value: 'proposed', label: 'Propostas' },
               { value: 'confirmed', label: 'Confirmados' },
-            ].map((item) => (
+            ].map(item => (
               <button
                 key={item.value}
                 onClick={() => setFilter(item.value)}
@@ -301,12 +306,18 @@ const EventsList: React.FC = () => {
         {isLoading ? (
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, groupIndex) => (
-              <div key={`events-skeleton-${groupIndex}`} className="rounded-xl p-[1px] bg-gradient-to-br from-gray-200 to-gray-300">
+              <div
+                key={`events-skeleton-${groupIndex}`}
+                className="rounded-xl p-[1px] bg-gradient-to-br from-gray-200 to-gray-300"
+              >
                 <div className="rounded-[14px] p-4 bg-white/80">
                   <div className="h-5 w-56 rounded-full bg-gray-200 animate-pulse" />
                   <div className="mt-4 space-y-3">
                     {Array.from({ length: 2 }).map((__, cardIndex) => (
-                      <div key={`events-card-skeleton-${groupIndex}-${cardIndex}`} className="card-contrast space-y-3">
+                      <div
+                        key={`events-card-skeleton-${groupIndex}-${cardIndex}`}
+                        className="card-contrast space-y-3"
+                      >
                         <div className="h-4 w-40 rounded-full bg-gray-200 animate-pulse" />
                         <div className="h-3 w-64 rounded-full bg-gray-200 animate-pulse" />
                         <div className="flex gap-3">
@@ -331,13 +342,15 @@ const EventsList: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {groups.map((group) => {
+            {groups.map(group => {
               return (
                 <div
                   key={group.dateKey}
                   className={`rounded-xl p-[1px] bg-gradient-to-br ${group.tone.ring} shadow-xl`}
                 >
-                  <div className={`rounded-[14px] border border-white/70 dark:border-white/10 p-4 shadow-lg backdrop-blur ${group.tone.bg}`}>
+                  <div
+                    className={`rounded-[14px] border border-white/70 dark:border-white/10 p-4 shadow-lg backdrop-blur ${group.tone.bg}`}
+                  >
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <div className="pill-date">

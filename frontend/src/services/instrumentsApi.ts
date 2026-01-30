@@ -3,8 +3,8 @@ import { api } from './api';
 
 export interface Instrument {
   id: number;
-  name: string;          // Normalizado (ex: 'violao')
-  display_name: string;  // Exibição (ex: 'Violão')
+  name: string; // Normalizado (ex: 'violao')
+  display_name: string; // Exibição (ex: 'Violão')
   type: 'predefined' | 'community';
   usage_count: number;
 }
@@ -23,7 +23,7 @@ export const instrumentsService = {
    */
   search: async (query: string): Promise<Instrument[]> => {
     const response = await api.get('/instruments/', {
-      params: { q: query }
+      params: { q: query },
     });
     return response.data;
   },
@@ -41,7 +41,7 @@ export const instrumentsService = {
    */
   createCustom: async (displayName: string): Promise<Instrument> => {
     const response = await api.post('/instruments/create_custom/', {
-      display_name: displayName
+      display_name: displayName,
     });
     return response.data;
   },

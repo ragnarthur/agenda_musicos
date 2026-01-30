@@ -40,10 +40,7 @@ const readCache = <T>(key: string): T | null => {
 const writeCache = <T>(key: string, data: T) => {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(
-      key,
-      JSON.stringify({ timestamp: Date.now(), data })
-    );
+    localStorage.setItem(key, JSON.stringify({ timestamp: Date.now(), data }));
   } catch {
     // Ignore cache write errors (storage full or disabled).
   }
@@ -85,12 +82,10 @@ export const fetchIbgeCitiesByUf = async (uf: string): Promise<IbgeCity[]> => {
   }
 
   const states = await fetchIbgeStates();
-  const state = states.find((item) => item.sigla === normalizedUf);
+  const state = states.find(item => item.sigla === normalizedUf);
   if (!state) return [];
 
-  const response = await fetch(
-    `${IBGE_BASE_URL}/estados/${state.id}/municipios?orderBy=nome`
-  );
+  const response = await fetch(`${IBGE_BASE_URL}/estados/${state.id}/municipios?orderBy=nome`);
   if (!response.ok) {
     throw new Error('Falha ao carregar municipios do IBGE');
   }

@@ -1,13 +1,14 @@
 # agenda/cities_views.py
 # Views para registro de interesse em cidades
+import logging
+
+from django.db.models import Q
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework import status
 
-from django.db.models import Q
 from .models import CityInterest
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -30,9 +31,7 @@ def register_city_interest(request):
     city_state = request.data.get("city_state", "").strip()
 
     if not email:
-        return Response(
-            {"detail": "Email é obrigatório."}, status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"detail": "Email é obrigatório."}, status=status.HTTP_400_BAD_REQUEST)
 
     if not city_state or city_state not in CITIES_IN_EXPANSION:
         valid_cities = ", ".join(f'"{k}"' for k in CITIES_IN_EXPANSION.keys())
@@ -44,15 +43,11 @@ def register_city_interest(request):
         )
 
     if "@" not in email or "." not in email:
-        return Response(
-            {"detail": "Email inválido."}, status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"detail": "Email inválido."}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         # Verificar se já existe interesse neste email para esta cidade
-        existing = CityInterest.objects.filter(
-            email=email, city_state=city_state
-        ).first()
+        existing = CityInterest.objects.filter(email=email, city_state=city_state).first()
 
         if existing:
             logger.info(f"Interesse já registrado: {email} - {city_state}")
@@ -70,12 +65,14 @@ def register_city_interest(request):
             email=email,
             city=city,
             state=state,
-            ip_address=request.META.get("REMOTE_ADDR", "")[:45]
-            if request.META.get("REMOTE_ADDR")
-            else "",
-            user_agent=request.META.get("HTTP_USER_AGENT", "")[:200]
-            if request.META.get("HTTP_USER_AGENT")
-            else "",
+            ip_address=(
+                request.META.get("REMOTE_ADDR", "")[:45] if request.META.get("REMOTE_ADDR") else ""
+            ),
+            user_agent=(
+                request.META.get("HTTP_USER_AGENT", "")[:200]
+                if request.META.get("HTTP_USER_AGENT")
+                else ""
+            ),
         )
 
         logger.info(f"Novo interesse registrado: {email} - {city}, {state}")

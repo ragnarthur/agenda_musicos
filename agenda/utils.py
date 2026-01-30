@@ -2,7 +2,9 @@
 """
 Funções utilitárias compartilhadas para o app agenda.
 """
+
 from datetime import timedelta
+
 from django.utils import timezone
 
 
@@ -51,7 +53,7 @@ def split_availability_with_events(availability, events, LeaderAvailabilityModel
 
     # Desativa disponibilidade original
     availability.is_active = False
-    availability.save(update_fields=['is_active'])
+    availability.save(update_fields=["is_active"])
 
     # Cria novas disponibilidades com as sobras
     objs = []
@@ -100,11 +102,11 @@ def get_user_organization(user):
     Returns:
         Organization ou None
     """
-    from .models import Musician, Membership
+    from .models import Membership, Musician
 
-    membership = Membership.objects.filter(
-        user=user, status='active'
-    ).select_related('organization').first()
+    membership = (
+        Membership.objects.filter(user=user, status="active").select_related("organization").first()
+    )
 
     if membership:
         return membership.organization
@@ -122,8 +124,9 @@ def award_badges_for_musician(musician):
     Retorna lista de MusicianBadge recém-criadas.
     Usa get_or_create com tratamento de IntegrityError para evitar race conditions.
     """
-    from .models import MusicianBadge, Availability, Connection
     from django.db import IntegrityError
+
+    from .models import Availability, Connection, MusicianBadge
 
     awarded = []
     now = timezone.now()
@@ -132,9 +135,7 @@ def award_badges_for_musician(musician):
 
     # Eventos tocados (disponível)
     played_events = Availability.objects.filter(
-        musician=musician,
-        response='available',
-        event__event_date__lte=today
+        musician=musician, response="available", event__event_date__lte=today
     )
     total_played = played_events.count()
 
@@ -145,12 +146,22 @@ def award_badges_for_musician(musician):
 
     # Definições de badges
     badges_def = [
-        ('first_show', '🎸 Primeiro Show', 'Completou o primeiro evento', total_played >= 1),
-        ('five_stars', '⭐ 5 Estrelas', 'Manteve média 5.0', musician.average_rating == 5 and musician.total_ratings >= 5),
-        ('hot_month', '🔥 Em Alta', '10 shows no último mês', played_last_30 >= 10),
-        ('top_musician', '👑 Top Músico', 'Destaque pela avaliação', musician.total_ratings >= 10 and musician.average_rating >= 4.5),
-        ('networking', '🤝 Networking', '50 conexões criadas', connections_count >= 50),
-        ('busy_calendar', '📅 Agenda Cheia', '20 shows em 30 dias', played_last_30 >= 20),
+        ("first_show", "🎸 Primeiro Show", "Completou o primeiro evento", total_played >= 1),
+        (
+            "five_stars",
+            "⭐ 5 Estrelas",
+            "Manteve média 5.0",
+            musician.average_rating == 5 and musician.total_ratings >= 5,
+        ),
+        ("hot_month", "🔥 Em Alta", "10 shows no último mês", played_last_30 >= 10),
+        (
+            "top_musician",
+            "👑 Top Músico",
+            "Destaque pela avaliação",
+            musician.total_ratings >= 10 and musician.average_rating >= 4.5,
+        ),
+        ("networking", "🤝 Networking", "50 conexões criadas", connections_count >= 50),
+        ("busy_calendar", "📅 Agenda Cheia", "20 shows em 30 dias", played_last_30 >= 20),
     ]
 
     for slug, name, desc, condition in badges_def:
@@ -161,10 +172,10 @@ def award_badges_for_musician(musician):
                 musician=musician,
                 slug=slug,
                 defaults={
-                    'name': name,
-                    'description': desc,
-                    'icon': name.split(' ')[0],  # Emoji já incluso no nome
-                }
+                    "name": name,
+                    "description": desc,
+                    "icon": name.split(" ")[0],  # Emoji já incluso no nome
+                },
             )
             if created:
                 awarded.append(badge)
@@ -179,7 +190,7 @@ def get_badge_progress(musician):
     """
     Retorna badges conquistadas e disponíveis com progresso.
     """
-    from .models import MusicianBadge, Availability, Connection
+    from .models import Availability, Connection, MusicianBadge
 
     now = timezone.now()
     today = now.date()
@@ -187,9 +198,7 @@ def get_badge_progress(musician):
 
     # Calcula métricas
     played_events = Availability.objects.filter(
-        musician=musician,
-        response='available',
-        event__event_date__lte=today
+        musician=musician, response="available", event__event_date__lte=today
     )
     total_played = played_events.count()
     played_last_30 = played_events.filter(event__event_date__gte=last_30).count()
@@ -200,84 +209,86 @@ def get_badge_progress(musician):
 
     # Busca badges conquistadas
     earned = MusicianBadge.objects.filter(musician=musician)
-    earned_slugs = set(earned.values_list('slug', flat=True))
+    earned_slugs = set(earned.values_list("slug", flat=True))
 
     # Definições de badges com progresso
     badges_definitions = [
         {
-            'slug': 'first_show',
-            'name': '🎸 Primeiro Show',
-            'description': 'Completou o primeiro evento',
-            'icon': '🎸',
-            'current': total_played,
-            'required': 1,
+            "slug": "first_show",
+            "name": "🎸 Primeiro Show",
+            "description": "Completou o primeiro evento",
+            "icon": "🎸",
+            "current": total_played,
+            "required": 1,
         },
         {
-            'slug': 'five_stars',
-            'name': '⭐ 5 Estrelas',
-            'description': 'Manteve média 5.0 com 5+ avaliações',
-            'icon': '⭐',
-            'current': musician.total_ratings,
-            'required': 5,
-            'extra_condition': f'Média atual: {musician.average_rating or 0:.1f}/5.0',
+            "slug": "five_stars",
+            "name": "⭐ 5 Estrelas",
+            "description": "Manteve média 5.0 com 5+ avaliações",
+            "icon": "⭐",
+            "current": musician.total_ratings,
+            "required": 5,
+            "extra_condition": f"Média atual: {musician.average_rating or 0:.1f}/5.0",
         },
         {
-            'slug': 'hot_month',
-            'name': '🔥 Em Alta',
-            'description': '10 shows no último mês',
-            'icon': '🔥',
-            'current': played_last_30,
-            'required': 10,
+            "slug": "hot_month",
+            "name": "🔥 Em Alta",
+            "description": "10 shows no último mês",
+            "icon": "🔥",
+            "current": played_last_30,
+            "required": 10,
         },
         {
-            'slug': 'top_musician',
-            'name': '👑 Top Músico',
-            'description': '10+ avaliações com média 4.5+',
-            'icon': '👑',
-            'current': musician.total_ratings,
-            'required': 10,
-            'extra_condition': f'Média atual: {musician.average_rating or 0:.1f}/4.5',
+            "slug": "top_musician",
+            "name": "👑 Top Músico",
+            "description": "10+ avaliações com média 4.5+",
+            "icon": "👑",
+            "current": musician.total_ratings,
+            "required": 10,
+            "extra_condition": f"Média atual: {musician.average_rating or 0:.1f}/4.5",
         },
         {
-            'slug': 'networking',
-            'name': '🤝 Networking',
-            'description': '50 conexões criadas',
-            'icon': '🤝',
-            'current': connections_count,
-            'required': 50,
+            "slug": "networking",
+            "name": "🤝 Networking",
+            "description": "50 conexões criadas",
+            "icon": "🤝",
+            "current": connections_count,
+            "required": 50,
         },
         {
-            'slug': 'busy_calendar',
-            'name': '📅 Agenda Cheia',
-            'description': '20 shows em 30 dias',
-            'icon': '📅',
-            'current': played_last_30,
-            'required': 20,
+            "slug": "busy_calendar",
+            "name": "📅 Agenda Cheia",
+            "description": "20 shows em 30 dias",
+            "icon": "📅",
+            "current": played_last_30,
+            "required": 20,
         },
     ]
 
     # Separa conquistadas e disponíveis
     available = []
     for badge_def in badges_definitions:
-        if badge_def['slug'] not in earned_slugs:
-            current = badge_def['current']
-            required = badge_def['required']
+        if badge_def["slug"] not in earned_slugs:
+            current = badge_def["current"]
+            required = badge_def["required"]
             percentage = min(100, round((current / required) * 100)) if required > 0 else 0
-            available.append({
-                'slug': badge_def['slug'],
-                'name': badge_def['name'],
-                'description': badge_def['description'],
-                'icon': badge_def['icon'],
-                'current': current,
-                'required': required,
-                'percentage': percentage,
-                'extra_condition': badge_def.get('extra_condition'),
-            })
+            available.append(
+                {
+                    "slug": badge_def["slug"],
+                    "name": badge_def["name"],
+                    "description": badge_def["description"],
+                    "icon": badge_def["icon"],
+                    "current": current,
+                    "required": required,
+                    "percentage": percentage,
+                    "extra_condition": badge_def.get("extra_condition"),
+                }
+            )
 
     # Ordena por porcentagem (mais próximos primeiro)
-    available.sort(key=lambda x: -x['percentage'])
+    available.sort(key=lambda x: -x["percentage"])
 
     return {
-        'earned': list(earned.values('id', 'slug', 'name', 'description', 'icon', 'awarded_at')),
-        'available': available,
+        "earned": list(earned.values("id", "slug", "name", "description", "icon", "awarded_at")),
+        "available": available,
     }

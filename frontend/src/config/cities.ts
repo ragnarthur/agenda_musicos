@@ -21,11 +21,11 @@ export const SUPPORTED_CITIES: City[] = [
 ];
 
 export const getCityBySlug = (slug: string): City | undefined => {
-  return SUPPORTED_CITIES.find((city) => city.slug === slug);
+  return SUPPORTED_CITIES.find(city => city.slug === slug);
 };
 
 export const getActiveCities = (): City[] => {
-  return SUPPORTED_CITIES.filter((city) => city.active);
+  return SUPPORTED_CITIES.filter(city => city.active);
 };
 
 export const getCityDisplayName = (city: City): string => {

@@ -40,40 +40,39 @@ const MeshGradient = memo<{ isStatic?: boolean }>(({ isStatic = false }) => (
 ));
 MeshGradient.displayName = 'MeshGradient';
 
-const AnimatedBackground: React.FC<AnimatedBackgroundProps> = memo(({
-  className = '',
-  enableBlueWaves = false,
-  enableParticles = true,
-}) => {
-  const isLowPower = useLowPowerMode();
+const AnimatedBackground: React.FC<AnimatedBackgroundProps> = memo(
+  ({ className = '', enableBlueWaves = false, enableParticles = true }) => {
+    const isLowPower = useLowPowerMode();
 
-  // Memoizar resultado do matchMedia para evitar recálculo em cada render
-  const isMobile = useMemo(() => {
-    return typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
-  }, []);
+    // Memoizar resultado do matchMedia para evitar recálculo em cada render
+    const isMobile = useMemo(() => {
+      return typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
+    }, []);
 
-  const enableEffects = !isLowPower;
+    const enableEffects = !isLowPower;
 
-  return (
-    <div className={`animated-bg pointer-events-none absolute inset-0 z-0 overflow-hidden ${className}`}>
-      {enableBlueWaves && (
-        enableEffects ? (
-          isMobile ? (
-            // Mobile: mesh gradient estático (sem animação para economizar bateria)
-            <MeshGradient isStatic />
+    return (
+      <div
+        className={`animated-bg pointer-events-none absolute inset-0 z-0 overflow-hidden ${className}`}
+      >
+        {enableBlueWaves &&
+          (enableEffects ? (
+            isMobile ? (
+              // Mobile: mesh gradient estático (sem animação para economizar bateria)
+              <MeshGradient isStatic />
+            ) : (
+              // Desktop: mesh gradient animado completo
+              <MeshGradient />
+            )
           ) : (
-            // Desktop: mesh gradient animado completo
-            <MeshGradient />
-          )
-        ) : (
-          <MeshGradient isStatic />
-        )
-      )}
-      {!enableBlueWaves && <div className="fabric-static" aria-hidden="true" />}
-      {enableEffects && enableParticles && <DustParticles3D />}
-    </div>
-  );
-});
+            <MeshGradient isStatic />
+          ))}
+        {!enableBlueWaves && <div className="fabric-static" aria-hidden="true" />}
+        {enableEffects && enableParticles && <DustParticles3D />}
+      </div>
+    );
+  }
+);
 AnimatedBackground.displayName = 'AnimatedBackground';
 
 export default AnimatedBackground;

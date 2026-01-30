@@ -1,11 +1,11 @@
 # config/settings.py
-from pathlib import Path
 import os
 from datetime import timedelta
-from urllib.parse import urlparse, parse_qs, unquote
+from pathlib import Path
+from urllib.parse import parse_qs, unquote, urlparse
 
-from decouple import config as decouple_config, Config, RepositoryEnv
-
+from decouple import Config, RepositoryEnv
+from decouple import config as decouple_config
 
 # =========================================================
 # Base / Env Loader
@@ -52,14 +52,10 @@ CSP_HEADER = config("CSP_HEADER", default="").strip()
 import secrets
 import sys
 
-IS_TESTING = any(
-    arg == "test" or arg == "pytest" or arg.endswith("pytest") for arg in sys.argv
-)
+IS_TESTING = any(arg == "test" or arg == "pytest" or arg.endswith("pytest") for arg in sys.argv)
 
 if DEBUG or IS_TESTING:
-    ADMIN_URL = config(
-        "ADMIN_URL", default="admin-secret-" + secrets.token_urlsafe(16)
-    )
+    ADMIN_URL = config("ADMIN_URL", default="admin-secret-" + secrets.token_urlsafe(16))
 else:
     ADMIN_URL = config("ADMIN_URL", default="").strip()
     if not ADMIN_URL:
@@ -185,21 +181,14 @@ if DATABASE_URL:
         parsed_port = None
 
     query = parse_qs(parsed.query)
-    sslmode = query.get("sslmode", [None])[0] or (
-        "require" if DB_SSL_REQUIRE else "disable"
-    )
+    sslmode = query.get("sslmode", [None])[0] or ("require" if DB_SSL_REQUIRE else "disable")
 
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": (parsed.path or "").lstrip("/")
-            or config("POSTGRES_DB", default="postgres"),
-            "USER": unquote(
-                parsed.username or config("POSTGRES_USER", default="postgres")
-            ),
-            "PASSWORD": unquote(
-                parsed.password or config("POSTGRES_PASSWORD", default="")
-            ),
+            "NAME": (parsed.path or "").lstrip("/") or config("POSTGRES_DB", default="postgres"),
+            "USER": unquote(parsed.username or config("POSTGRES_USER", default="postgres")),
+            "PASSWORD": unquote(parsed.password or config("POSTGRES_PASSWORD", default="")),
             "HOST": parsed.hostname or "db",
             "PORT": parsed_port or 5432,
             "CONN_MAX_AGE": 60,
@@ -219,9 +208,7 @@ else:
 # Password validation
 # =========================================================
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
@@ -307,18 +294,14 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(
         minutes=max(int(config("JWT_ACCESS_MINUTES", default=60)), 15)
     ),
-    "REFRESH_TOKEN_LIFETIME": timedelta(
-        days=max(int(config("JWT_REFRESH_DAYS", default=7)), 1)
-    ),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=max(int(config("JWT_REFRESH_DAYS", default=7)), 1)),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
 if not DEBUG:
-    REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = (
-        "rest_framework.renderers.JSONRenderer",
-    )
+    REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = ("rest_framework.renderers.JSONRenderer",)
 
 
 # =========================================================

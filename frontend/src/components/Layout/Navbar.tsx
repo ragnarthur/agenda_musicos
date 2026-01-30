@@ -31,9 +31,7 @@ const Navbar: React.FC = memo(() => {
   // Use SWR hook for notifications - shared across Navbar and Dashboard
   const { pendingMyResponse, pendingApproval } = useNotifications();
 
-
-  const displayName =
-    user?.full_name || user?.user?.first_name || user?.user?.username || 'Conta';
+  const displayName = user?.full_name || user?.user?.first_name || user?.user?.username || 'Conta';
   const isStaff = Boolean(user?.user?.is_staff);
 
   const handleLogout = useCallback(async () => {
@@ -65,9 +63,7 @@ const Navbar: React.FC = memo(() => {
             </div>
             <div className="flex flex-col leading-tight">
               <div className="flex items-center gap-2">
-                <span className="text-lg sm:text-xl font-bold logo-animated">
-                  GigFlow
-                </span>
+                <span className="text-lg sm:text-xl font-bold logo-animated">GigFlow</span>
                 <span className="text-xs px-2 py-0.5 bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-500/10 text-amber-100/80 rounded-full border border-amber-400/20 font-light italic tracking-wider">
                   Beta
                 </span>
@@ -78,15 +74,28 @@ const Navbar: React.FC = memo(() => {
 
           {/* Links de Navegação */}
           <div className="hidden md:flex md:flex-wrap lg:flex-nowrap items-center gap-3 md:-ml-1 min-w-0 flex-1">
-            <AppNavLink to="/eventos" icon={<Calendar className="h-5 w-5" />} label="Eventos" badge={pendingMyResponse} />
+            <AppNavLink
+              to="/eventos"
+              icon={<Calendar className="h-5 w-5" />}
+              label="Eventos"
+              badge={pendingMyResponse}
+            />
             <AppNavLink to="/musicos" icon={<Users className="h-5 w-5" />} label="Músicos" />
-            <AppNavLink to="/conexoes" icon={<HeartHandshake className="h-5 w-5" />} label="Rede & Badges" />
-            <AppNavLink to="/disponibilidades" icon={<Clock className="h-5 w-5" />} label="Datas Disponíveis" />
+            <AppNavLink
+              to="/conexoes"
+              icon={<HeartHandshake className="h-5 w-5" />}
+              label="Rede & Badges"
+            />
+            <AppNavLink
+              to="/disponibilidades"
+              icon={<Clock className="h-5 w-5" />}
+              label="Datas Disponíveis"
+            />
             <AppNavLink to="/marketplace" icon={<Megaphone className="h-5 w-5" />} label="Vagas" />
             <div className="relative">
               <button
                 type="button"
-                onClick={() => setOpenDesktopMore((prev) => !prev)}
+                onClick={() => setOpenDesktopMore(prev => !prev)}
                 className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-slate-200 hover:text-white hover:bg-white/10 transition-colors border border-white/5"
                 aria-expanded={openDesktopMore}
                 aria-haspopup="true"
@@ -116,7 +125,9 @@ const Navbar: React.FC = memo(() => {
                     onClick={() => setOpenDesktopMore(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                        isActive ? 'bg-amber-500/10 text-amber-100' : 'text-slate-200 hover:bg-white/5'
+                        isActive
+                          ? 'bg-amber-500/10 text-amber-100'
+                          : 'text-slate-200 hover:bg-white/5'
                       }`
                     }
                   >
@@ -135,7 +146,9 @@ const Navbar: React.FC = memo(() => {
                     onClick={() => setOpenDesktopMore(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                        isActive ? 'bg-emerald-500/10 text-emerald-100' : 'text-slate-200 hover:bg-white/5'
+                        isActive
+                          ? 'bg-emerald-500/10 text-emerald-100'
+                          : 'text-slate-200 hover:bg-white/5'
                       }`
                     }
                   >
@@ -148,7 +161,9 @@ const Navbar: React.FC = memo(() => {
                       onClick={() => setOpenDesktopMore(false)}
                       className={({ isActive }) =>
                         `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                          isActive ? 'bg-blue-500/10 text-blue-100' : 'text-slate-200 hover:bg-white/5'
+                          isActive
+                            ? 'bg-blue-500/10 text-blue-100'
+                            : 'text-slate-200 hover:bg-white/5'
                         }`
                       }
                     >
@@ -164,7 +179,10 @@ const Navbar: React.FC = memo(() => {
           {/* Usuário e Logout */}
           <div className="flex items-center space-x-3 min-w-fit md:min-w-0 flex-shrink-0">
             <div className="hidden md:block text-right min-w-0 flex-1">
-              <p className="text-sm font-medium text-slate-100 leading-snug truncate" title={user?.full_name}>
+              <p
+                className="text-sm font-medium text-slate-100 leading-snug truncate"
+                title={user?.full_name}
+              >
                 {user?.full_name}
               </p>
             </div>
@@ -216,7 +234,7 @@ const Navbar: React.FC = memo(() => {
               Notificações
             </Link>
             <button
-              onClick={() => setOpenMore((prev) => !prev)}
+              onClick={() => setOpenMore(prev => !prev)}
               className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-2.5 text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 whitespace-nowrap sm:gap-2 sm:px-4 sm:py-3 sm:text-xs"
               aria-expanded={openMore}
               aria-controls="mobile-more-menu"
@@ -338,16 +356,24 @@ const Navbar: React.FC = memo(() => {
 });
 Navbar.displayName = 'Navbar';
 
-const AppNavLink: React.FC<{ to: string; icon: React.ReactNode; label: string; badge?: number; accent?: boolean }> = memo(({ to, icon, label, badge, accent }) => (
+const AppNavLink: React.FC<{
+  to: string;
+  icon: React.ReactNode;
+  label: string;
+  badge?: number;
+  accent?: boolean;
+}> = memo(({ to, icon, label, badge, accent }) => (
   <RouterNavLink
     to={to}
     className={({ isActive }) => {
       const hoverTone = accent ? 'hover:bg-amber-500/10' : 'hover:bg-white/10';
-      const activeTone = isActive ? (accent ? 'bg-amber-500/10 text-amber-100' : 'bg-white/10 text-white') : '';
+      const activeTone = isActive
+        ? accent
+          ? 'bg-amber-500/10 text-amber-100'
+          : 'bg-white/10 text-white'
+        : '';
       return `group flex items-center space-x-1 transition-all relative rounded-full px-2 py-1 ${hoverTone} ${activeTone} hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
-        accent
-          ? 'text-amber-200 hover:text-amber-100'
-          : 'text-slate-100 hover:text-white'
+        accent ? 'text-amber-200 hover:text-amber-100' : 'text-slate-100 hover:text-white'
       } after:absolute after:left-0 after:-bottom-0.5 after:h-0.5 after:w-full after:rounded-full after:bg-gradient-to-r after:from-primary-400 after:via-indigo-300 after:to-emerald-300 after:transition-transform after:duration-300 after:origin-left after:scale-x-0 group-hover:after:scale-x-100 group-focus-visible:after:scale-x-100 ${isActive ? 'after:scale-x-100' : ''}`;
     }}
   >

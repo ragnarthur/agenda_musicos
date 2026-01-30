@@ -11,19 +11,34 @@ import {
   Users,
   MessageSquare,
   X,
-  Send
+  Send,
 } from 'lucide-react';
 import { useCompanyAuth } from '../../contexts/CompanyAuthContext';
 import CompanyNavbar from '../../components/navigation/CompanyNavbar';
-import { contactRequestService, publicMusicianService, type ContactRequest, type MusicianPublic } from '../../services/publicApi';
+import {
+  contactRequestService,
+  publicMusicianService,
+  type ContactRequest,
+  type MusicianPublic,
+} from '../../services/publicApi';
 import Loading from '../../components/common/Loading';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const COMMON_INSTRUMENTS = [
-  'Violão', 'Guitarra', 'Baixo', 'Bateria', 'Teclado', 'Piano',
-  'Saxofone', 'Trompete', 'Violino', 'Flauta', 'Canto', 'DJ'
+  'Violão',
+  'Guitarra',
+  'Baixo',
+  'Bateria',
+  'Teclado',
+  'Piano',
+  'Saxofone',
+  'Trompete',
+  'Violino',
+  'Flauta',
+  'Canto',
+  'DJ',
 ];
 
 const JobPostings: React.FC = () => {
@@ -41,7 +56,7 @@ const JobPostings: React.FC = () => {
     eventDate: '',
     eventLocation: '',
     budgetRange: '',
-    instruments: [] as string[]
+    instruments: [] as string[],
   });
   const [sending, setSending] = useState(false);
 
@@ -74,7 +89,7 @@ const JobPostings: React.FC = () => {
       ...prev,
       instruments: prev.instruments.includes(instrument)
         ? prev.instruments.filter(i => i !== instrument)
-        : [...prev.instruments, instrument]
+        : [...prev.instruments, instrument],
     }));
   };
 
@@ -111,9 +126,7 @@ const JobPostings: React.FC = () => {
       }
 
       // Remover duplicatas
-      const uniqueMusicians = Array.from(
-        new Map(allMusicians.map(m => [m.id, m])).values()
-      );
+      const uniqueMusicians = Array.from(new Map(allMusicians.map(m => [m.id, m])).values());
 
       if (uniqueMusicians.length === 0) {
         toast.error('Nenhum músico encontrado com os instrumentos selecionados');
@@ -132,7 +145,7 @@ const JobPostings: React.FC = () => {
             message: formData.description,
             event_date: formData.eventDate || undefined,
             event_location: formData.eventLocation || undefined,
-            budget_range: formData.budgetRange || undefined
+            budget_range: formData.budgetRange || undefined,
           });
           successCount++;
         } catch (error) {
@@ -142,7 +155,9 @@ const JobPostings: React.FC = () => {
       }
 
       if (successCount > 0) {
-        toast.success(`Oportunidade enviada para ${successCount} músico${successCount !== 1 ? 's' : ''}!`);
+        toast.success(
+          `Oportunidade enviada para ${successCount} músico${successCount !== 1 ? 's' : ''}!`
+        );
         setShowCreateModal(false);
         setFormData({
           title: '',
@@ -150,7 +165,7 @@ const JobPostings: React.FC = () => {
           eventDate: '',
           eventLocation: '',
           budgetRange: '',
-          instruments: []
+          instruments: [],
         });
         loadJobPostings(); // Recarregar lista
       }
@@ -198,7 +213,9 @@ const JobPostings: React.FC = () => {
         {jobPostings.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm p-12 text-center">
             <Briefcase className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Nenhuma oportunidade publicada</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Nenhuma oportunidade publicada
+            </h3>
             <p className="text-gray-600 mb-6">
               Comece a publicar vagas para encontrar músicos talentosos
             </p>
@@ -211,7 +228,7 @@ const JobPostings: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {jobPostings.map((job) => (
+            {jobPostings.map(job => (
               <motion.div
                 key={job.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -224,16 +241,19 @@ const JobPostings: React.FC = () => {
                     <div>
                       <h3 className="text-lg font-bold text-gray-900 mb-1">{job.subject}</h3>
                       <p className="text-sm text-gray-500">
-                        Enviada em {format(new Date(job.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+                        Enviada em{' '}
+                        {format(new Date(job.created_at), 'dd/MM/yyyy', { locale: ptBR })}
                       </p>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      job.status === 'replied'
-                        ? 'bg-green-100 text-green-800'
-                        : job.status === 'read'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        job.status === 'replied'
+                          ? 'bg-green-100 text-green-800'
+                          : job.status === 'read'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                      }`}
+                    >
                       {job.status_display}
                     </span>
                   </div>
@@ -270,9 +290,7 @@ const JobPostings: React.FC = () => {
                   </div>
 
                   {/* Mensagem */}
-                  <p className="text-sm text-gray-600 line-clamp-3 mb-4">
-                    {job.message}
-                  </p>
+                  <p className="text-sm text-gray-600 line-clamp-3 mb-4">{job.message}</p>
 
                   {/* Resposta */}
                   {job.reply_message && (
@@ -280,7 +298,9 @@ const JobPostings: React.FC = () => {
                       <div className="flex items-start gap-2">
                         <MessageSquare className="h-4 w-4 text-green-600 mt-0.5" />
                         <div>
-                          <p className="text-xs font-medium text-green-800 mb-1">Resposta recebida:</p>
+                          <p className="text-xs font-medium text-green-800 mb-1">
+                            Resposta recebida:
+                          </p>
                           <p className="text-sm text-green-900 line-clamp-2">{job.reply_message}</p>
                         </div>
                       </div>
@@ -307,7 +327,7 @@ const JobPostings: React.FC = () => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
               className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
             >
               <div className="p-6 border-b border-gray-200 flex items-center justify-between">
@@ -341,7 +361,10 @@ const JobPostings: React.FC = () => {
 
                 {/* Descrição */}
                 <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="description"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Descrição *
                   </label>
                   <textarea
@@ -359,7 +382,10 @@ const JobPostings: React.FC = () => {
                 {/* Data e Local */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="eventDate" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="eventDate"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       <Calendar className="inline h-4 w-4 mr-1" />
                       Data do Evento
                     </label>
@@ -374,7 +400,10 @@ const JobPostings: React.FC = () => {
                   </div>
 
                   <div>
-                    <label htmlFor="eventLocation" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="eventLocation"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       <MapPin className="inline h-4 w-4 mr-1" />
                       Local
                     </label>
@@ -392,7 +421,10 @@ const JobPostings: React.FC = () => {
 
                 {/* Orçamento */}
                 <div>
-                  <label htmlFor="budgetRange" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="budgetRange"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     <DollarSign className="inline h-4 w-4 mr-1" />
                     Faixa de Orçamento
                   </label>
@@ -430,7 +462,9 @@ const JobPostings: React.FC = () => {
                   </div>
                   {formData.instruments.length > 0 && (
                     <p className="mt-2 text-sm text-gray-600">
-                      {formData.instruments.length} instrumento{formData.instruments.length !== 1 ? 's' : ''} selecionado{formData.instruments.length !== 1 ? 's' : ''}
+                      {formData.instruments.length} instrumento
+                      {formData.instruments.length !== 1 ? 's' : ''} selecionado
+                      {formData.instruments.length !== 1 ? 's' : ''}
                     </p>
                   )}
                 </div>

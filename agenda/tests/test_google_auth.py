@@ -2,15 +2,16 @@
 Testes para autenticação Google
 """
 
-from django.test import TestCase, Client, override_settings
-from django.contrib.auth.models import User
 from unittest.mock import patch
 
-from agenda.models import Musician, Organization, Membership
+from django.contrib.auth.models import User
+from django.test import Client, TestCase, override_settings
+
+from agenda.models import Membership, Musician, Organization
 from config.auth_views import (
     GoogleAuthView,
-    GoogleRegisterMusicianView,
     GoogleRegisterCompanyView,
+    GoogleRegisterMusicianView,
 )
 
 

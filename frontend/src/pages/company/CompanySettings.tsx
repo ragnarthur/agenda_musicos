@@ -2,16 +2,7 @@
 // Página de configurações da empresa
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import {
-  Building2,
-  User,
-  Mail,
-  Phone,
-  Globe,
-  MapPin,
-  Save,
-  AlertCircle
-} from 'lucide-react';
+import { Building2, User, Mail, Phone, Globe, MapPin, Save, AlertCircle } from 'lucide-react';
 import { useCompanyAuth } from '../../contexts/CompanyAuthContext';
 import CompanyNavbar from '../../components/navigation/CompanyNavbar';
 import type { Organization } from '../../services/publicApi';
@@ -19,8 +10,33 @@ import Loading from '../../components/common/Loading';
 import { formatPhone } from '../../utils/formatting';
 
 const BRAZILIAN_STATES = [
-  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG',
-  'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+  'AC',
+  'AL',
+  'AP',
+  'AM',
+  'BA',
+  'CE',
+  'DF',
+  'ES',
+  'GO',
+  'MA',
+  'MT',
+  'MS',
+  'MG',
+  'PA',
+  'PB',
+  'PR',
+  'PE',
+  'PI',
+  'RJ',
+  'RN',
+  'RS',
+  'RO',
+  'RR',
+  'SC',
+  'SP',
+  'SE',
+  'TO',
 ];
 
 const CompanySettings: React.FC = () => {
@@ -35,7 +51,7 @@ const CompanySettings: React.FC = () => {
     website: '',
     description: '',
     city: '',
-    state: ''
+    state: '',
   });
 
   const [saving, setSaving] = useState(false);
@@ -52,14 +68,16 @@ const CompanySettings: React.FC = () => {
         website: organization.website || '',
         description: organization.description || '',
         city: organization.city || '',
-        state: organization.state || ''
+        state: organization.state || '',
       });
     }
   }, [organization]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    
+
     if (name === 'phone') {
       setFormData(prev => ({ ...prev, [name]: formatPhone(value) }));
     } else {
@@ -76,7 +94,7 @@ const CompanySettings: React.FC = () => {
 
       // Filtrar apenas campos que foram alterados
       const updates: Partial<Organization> = {};
-      Object.keys(formData).forEach((key) => {
+      Object.keys(formData).forEach(key => {
         const formKey = key as keyof typeof formData;
         const orgKey = key as keyof Organization;
         if (formData[formKey] !== (organization?.[orgKey] || '')) {
@@ -104,7 +122,7 @@ const CompanySettings: React.FC = () => {
         website: organization.website || '',
         description: organization.description || '',
         city: organization.city || '',
-        state: organization.state || ''
+        state: organization.state || '',
       });
       setHasChanges(false);
     }
@@ -163,7 +181,10 @@ const CompanySettings: React.FC = () => {
 
               {/* Descrição */}
               <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="description"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Descrição
                 </label>
                 <textarea
@@ -230,7 +251,9 @@ const CompanySettings: React.FC = () => {
                   >
                     <option value="">Selecione...</option>
                     {BRAZILIAN_STATES.map(state => (
-                      <option key={state} value={state}>{state}</option>
+                      <option key={state} value={state}>
+                        {state}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -255,7 +278,10 @@ const CompanySettings: React.FC = () => {
             <div className="p-6 space-y-6">
               {/* Nome do Responsável */}
               <div>
-                <label htmlFor="contact_name" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="contact_name"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Nome do Responsável
                 </label>
                 <input
@@ -271,7 +297,10 @@ const CompanySettings: React.FC = () => {
 
               {/* Email de Contato */}
               <div>
-                <label htmlFor="contact_email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="contact_email"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   <Mail className="inline h-4 w-4 mr-1" />
                   Email de Contato
                 </label>
@@ -317,7 +346,9 @@ const CompanySettings: React.FC = () => {
               <div className="flex items-start gap-2">
                 <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-yellow-800">Você tem alterações não salvas</p>
+                  <p className="text-sm font-medium text-yellow-800">
+                    Você tem alterações não salvas
+                  </p>
                   <p className="text-sm text-yellow-700 mt-1">
                     Não esqueça de salvar suas mudanças antes de sair da página.
                   </p>

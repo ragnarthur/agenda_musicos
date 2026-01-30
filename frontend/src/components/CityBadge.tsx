@@ -91,9 +91,9 @@ const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' 
     setCityError(null);
 
     fetchIbgeCitiesByUf(manualState)
-      .then((data) => {
+      .then(data => {
         if (!active) return;
-        setCityOptions(data.map((cityItem) => cityItem.nome));
+        setCityOptions(data.map(cityItem => cityItem.nome));
       })
       .catch(() => {
         if (!active) return;
@@ -135,10 +135,7 @@ const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' 
       ? 'bg-white text-indigo-600 border-indigo-200 hover:bg-indigo-50'
       : 'bg-slate-900/80 text-amber-100 border-amber-400/30 hover:bg-slate-800/80';
 
-  const dotClasses =
-    variant === 'light'
-      ? 'bg-indigo-500/70'
-      : 'bg-amber-400/70';
+  const dotClasses = variant === 'light' ? 'bg-indigo-500/70' : 'bg-amber-400/70';
 
   const handleSave = (event: React.FormEvent) => {
     event.preventDefault();
@@ -170,40 +167,46 @@ const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' 
         type="button"
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
-        onClick={() => setMenuOpen((prev) => !prev)}
+        onClick={() => setMenuOpen(prev => !prev)}
         whileHover={{ y: -1, scale: 1.02 }}
         className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold border transition-all duration-200 ${label ? baseClasses : actionClasses} hover:shadow-lg hover:border-amber-300/60`}
         title={badgeTitle}
         disabled={isLoading && !label}
       >
         <span className="relative flex h-2.5 w-2.5">
-          <span className={`absolute inline-flex h-full w-full animate-ping rounded-full ${dotClasses}`} />
+          <span
+            className={`absolute inline-flex h-full w-full animate-ping rounded-full ${dotClasses}`}
+          />
           <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${dotClasses}`} />
         </span>
         <MapPin className="h-4 w-4" />
-        <span className="truncate max-w-[180px] sm:max-w-[200px]">{isLoading && !label ? 'Detectando...' : badgeText}</span>
+        <span className="truncate max-w-[180px] sm:max-w-[200px]">
+          {isLoading && !label ? 'Detectando...' : badgeText}
+        </span>
       </motion.button>
 
       {menuOpen && (
         <div
           className={`absolute right-0 mt-2 w-[min(calc(100vw-2rem),320px)] sm:w-80 max-h-[min(60vh,400px)] rounded-2xl border p-3 sm:p-4 shadow-2xl ring-1 ring-black/20 z-50 overflow-y-auto ${
-            variant === 'light'
-              ? 'bg-white border-gray-200'
-              : 'bg-slate-950 border-amber-400/30'
+            variant === 'light' ? 'bg-white border-gray-200' : 'bg-slate-950 border-amber-400/30'
           }`}
         >
-          <div className={`text-xs font-semibold mb-3 ${variant === 'light' ? 'text-gray-700' : 'text-slate-200'}`}>
+          <div
+            className={`text-xs font-semibold mb-3 ${variant === 'light' ? 'text-gray-700' : 'text-slate-200'}`}
+          >
             Escolher cidade
           </div>
 
           <form onSubmit={handleSave} className="space-y-3">
             <div>
-              <label className={`block text-xs mb-1 ${variant === 'light' ? 'text-gray-500' : 'text-slate-400'}`}>
+              <label
+                className={`block text-xs mb-1 ${variant === 'light' ? 'text-gray-500' : 'text-slate-400'}`}
+              >
                 Estado
               </label>
               <select
                 value={manualState}
-                onChange={(event) => {
+                onChange={event => {
                   const next = event.target.value;
                   setManualState(next);
                   if (next !== manualState) {
@@ -225,13 +228,15 @@ const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' 
               </select>
             </div>
             <div>
-              <label className={`block text-xs mb-1 ${variant === 'light' ? 'text-gray-500' : 'text-slate-400'}`}>
+              <label
+                className={`block text-xs mb-1 ${variant === 'light' ? 'text-gray-500' : 'text-slate-400'}`}
+              >
                 Cidade
               </label>
               <input
                 type="text"
                 value={manualCity}
-                onChange={(event) => setManualCity(event.target.value)}
+                onChange={event => setManualCity(event.target.value)}
                 placeholder={manualState ? 'Ex: Uberlândia' : 'Selecione um estado primeiro'}
                 list={datalistId}
                 disabled={!manualState}
@@ -242,11 +247,13 @@ const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' 
                 } ${!manualState ? 'opacity-60 cursor-not-allowed' : ''}`}
               />
               <datalist id={datalistId}>
-                {cityOptions.map((cityName) => (
+                {cityOptions.map(cityName => (
                   <option key={cityName} value={cityName} />
                 ))}
               </datalist>
-              <div className={`mt-1 text-xs ${variant === 'light' ? 'text-gray-500' : 'text-slate-400'}`}>
+              <div
+                className={`mt-1 text-xs ${variant === 'light' ? 'text-gray-500' : 'text-slate-400'}`}
+              >
                 {!manualState
                   ? 'Selecione o estado para carregar as cidades.'
                   : loadingCities
@@ -254,7 +261,9 @@ const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' 
                     : 'Digite para filtrar as cidades.'}
               </div>
               {cityError && (
-                <div className={`mt-1 text-xs ${variant === 'light' ? 'text-red-500' : 'text-red-300'}`}>
+                <div
+                  className={`mt-1 text-xs ${variant === 'light' ? 'text-red-500' : 'text-red-300'}`}
+                >
                   {cityError}
                 </div>
               )}
@@ -295,7 +304,9 @@ const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' 
                 setMenuOpen(false);
               }}
               className={`mt-3 text-xs underline underline-offset-2 ${
-                variant === 'light' ? 'text-gray-500 hover:text-gray-700' : 'text-slate-300 hover:text-slate-100'
+                variant === 'light'
+                  ? 'text-gray-500 hover:text-gray-700'
+                  : 'text-slate-300 hover:text-slate-100'
               }`}
             >
               Limpar preferência

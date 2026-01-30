@@ -5,7 +5,11 @@ import { motion } from 'framer-motion';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import Loading from '../components/common/Loading';
 import { getCityBySlug, getCityDisplayName, type City } from '../config/cities';
-import { publicMusicianService, type MusicianPublic, type Organization } from '../services/publicApi';
+import {
+  publicMusicianService,
+  type MusicianPublic,
+  type Organization,
+} from '../services/publicApi';
 import { formatInstrumentLabel } from '../utils/formatting';
 
 const CityLanding: React.FC = () => {
@@ -57,9 +61,9 @@ const CityLanding: React.FC = () => {
   // Get unique instruments from musicians
   const instruments = useMemo(() => {
     const instrumentSet = new Set<string>();
-    musicians.forEach((m) => {
+    musicians.forEach(m => {
       if (m.instrument) instrumentSet.add(m.instrument);
-      if (m.instruments) m.instruments.forEach((i) => instrumentSet.add(i));
+      if (m.instruments) m.instruments.forEach(i => instrumentSet.add(i));
     });
     return Array.from(instrumentSet).sort();
   }, [musicians]);
@@ -68,7 +72,7 @@ const CityLanding: React.FC = () => {
   const filteredMusicians = useMemo(() => {
     if (selectedInstrument === 'all') return musicians;
     return musicians.filter(
-      (m) =>
+      m =>
         m.instrument === selectedInstrument ||
         (m.instruments && m.instruments.includes(selectedInstrument))
     );
@@ -121,7 +125,7 @@ const CityLanding: React.FC = () => {
                 Patrocinadores de {city.name}
               </h2>
               <div className="flex flex-wrap justify-center gap-6">
-                {sponsors.map((sponsor) => (
+                {sponsors.map(sponsor => (
                   <a
                     key={sponsor.id}
                     href={sponsor.website || '#'}
@@ -148,15 +152,15 @@ const CityLanding: React.FC = () => {
                             sponsor.sponsor_tier === 'gold'
                               ? 'bg-amber-500/20 text-amber-300'
                               : sponsor.sponsor_tier === 'silver'
-                              ? 'bg-gray-400/20 text-gray-300'
-                              : 'bg-orange-700/20 text-orange-300'
+                                ? 'bg-gray-400/20 text-gray-300'
+                                : 'bg-orange-700/20 text-orange-300'
                           }`}
                         >
                           {sponsor.sponsor_tier === 'gold'
                             ? 'Ouro'
                             : sponsor.sponsor_tier === 'silver'
-                            ? 'Prata'
-                            : 'Bronze'}
+                              ? 'Prata'
+                              : 'Bronze'}
                         </span>
                       )}
                     </div>
@@ -185,7 +189,7 @@ const CityLanding: React.FC = () => {
             >
               Todos
             </button>
-            {instruments.map((instrument) => (
+            {instruments.map(instrument => (
               <button
                 key={instrument}
                 onClick={() => setSelectedInstrument(instrument)}
@@ -228,7 +232,12 @@ const CityLanding: React.FC = () => {
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
             >
               {filteredMusicians.map((musician, index) => (
-                <MusicianCard key={musician.id} musician={musician} delay={index * 0.05} city={city} />
+                <MusicianCard
+                  key={musician.id}
+                  musician={musician}
+                  delay={index * 0.05}
+                  city={city}
+                />
               ))}
             </motion.div>
           )}
@@ -250,15 +259,13 @@ const CityLanding: React.FC = () => {
                 to="/cadastro-empresa"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-lg"
               >
-                <Building2 className="h-5 w-5" />
-                É empresa? Cadastre-se
+                <Building2 className="h-5 w-5" />É empresa? Cadastre-se
               </Link>
               <Link
                 to="/solicitar-acesso"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border-2 border-white/30 hover:border-white/50 transition-all text-lg"
               >
-                <UserPlus className="h-5 w-5" />
-                É músico? Solicite acesso
+                <UserPlus className="h-5 w-5" />É músico? Solicite acesso
               </Link>
             </div>
           </motion.div>
@@ -266,9 +273,7 @@ const CityLanding: React.FC = () => {
 
         {/* Footer */}
         <footer className="container mx-auto px-4 py-8 text-center">
-          <p className="text-gray-400 text-sm">
-            © 2026 DXM Tech. Todos os direitos reservados.
-          </p>
+          <p className="text-gray-400 text-sm">© 2026 DXM Tech. Todos os direitos reservados.</p>
         </footer>
       </div>
     </FullscreenBackground>
@@ -297,11 +302,7 @@ const MusicianCard: React.FC<MusicianCardProps> = ({ musician, delay, city }) =>
         {/* Cover Image */}
         <div className="h-24 bg-gradient-to-r from-primary-600/30 to-indigo-600/30 relative">
           {musician.cover_image_url && (
-            <img
-              src={musician.cover_image_url}
-              alt=""
-              className="w-full h-full object-cover"
-            />
+            <img src={musician.cover_image_url} alt="" className="w-full h-full object-cover" />
           )}
         </div>
 
@@ -336,7 +337,8 @@ const MusicianCard: React.FC<MusicianCardProps> = ({ musician, delay, city }) =>
                 {Number(musician.average_rating).toFixed(1)}
               </span>
               <span className="text-gray-400 text-sm">
-                ({musician.total_ratings} {musician.total_ratings === 1 ? 'avaliação' : 'avaliações'})
+                ({musician.total_ratings}{' '}
+                {musician.total_ratings === 1 ? 'avaliação' : 'avaliações'})
               </span>
             </div>
           )}
@@ -349,7 +351,7 @@ const MusicianCard: React.FC<MusicianCardProps> = ({ musician, delay, city }) =>
               </span>
             )}
             {musician.instruments?.slice(0, 2).map(
-              (inst) =>
+              inst =>
                 inst !== musician.instrument && (
                   <span
                     key={inst}

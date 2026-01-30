@@ -41,8 +41,8 @@ const RatingModal: React.FC<RatingModalProps> = ({
     if (!isOpen) return;
 
     const initialRatings: MusicianRatingState[] = availabilities
-      .filter((a) => a.response === 'available')
-      .map((a) => ({
+      .filter(a => a.response === 'available')
+      .map(a => ({
         musician_id: a.musician.id,
         musician_name:
           a.musician.full_name ||
@@ -57,32 +57,26 @@ const RatingModal: React.FC<RatingModalProps> = ({
     setRatings(initialRatings);
   }, [availabilities]);
 
-
-
   if (!isOpen) return null;
 
   const handleRatingChange = (musicianId: number, rating: number) => {
-    setRatings((prev) =>
-      prev.map((r) => (r.musician_id === musicianId ? { ...r, rating } : r))
-    );
+    setRatings(prev => prev.map(r => (r.musician_id === musicianId ? { ...r, rating } : r)));
     setError('');
   };
 
   const handleCommentChange = (musicianId: number, comment: string) => {
-    setRatings((prev) =>
-      prev.map((r) => (r.musician_id === musicianId ? { ...r, comment } : r))
-    );
+    setRatings(prev => prev.map(r => (r.musician_id === musicianId ? { ...r, comment } : r)));
   };
 
   const handleSubmit = async () => {
     // Valida que todos têm rating
-    const missingRatings = ratings.filter((r) => r.rating === 0);
+    const missingRatings = ratings.filter(r => r.rating === 0);
     if (missingRatings.length > 0) {
       setError(`Avalie todos os músicos antes de enviar.`);
       return;
     }
 
-    const ratingsToSubmit: RatingInput[] = ratings.map((r) => ({
+    const ratingsToSubmit: RatingInput[] = ratings.map(r => ({
       musician_id: r.musician_id,
       rating: r.rating,
       comment: r.comment || undefined,
@@ -94,15 +88,13 @@ const RatingModal: React.FC<RatingModalProps> = ({
   const renderStars = (musicianId: number, currentRating: number) => {
     return (
       <div className="flex items-center gap-0.5 sm:gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
+        {[1, 2, 3, 4, 5].map(star => (
           <button
             key={star}
             type="button"
             onClick={() => handleRatingChange(musicianId, star)}
             className={`p-2 sm:p-3 transition-all hover:scale-110 active:scale-95 touch-manipulation ${
-              star <= currentRating
-                ? 'text-yellow-400'
-                : 'text-gray-300 hover:text-yellow-200'
+              star <= currentRating ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-200'
             }`}
             aria-label={`${star} estrelas`}
           >
@@ -128,86 +120,83 @@ const RatingModal: React.FC<RatingModalProps> = ({
     >
       <SwipeToDismissWrapper isOpen={isOpen} onClose={onClose}>
         <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl max-w-lg w-full max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col pb-safe pt-safe">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-100">
-          <div>
-            <h3
-              id="rating-modal-title"
-              className="text-xl font-bold text-gray-900 flex items-center gap-2"
-            >
-              <Star className="h-5 w-5 text-yellow-500" />
-              Avaliar Músicos
-            </h3>
-            <p className="text-sm text-gray-500 mt-1">{eventTitle}</p>
-          </div>
-          <button
-            onClick={onClose}
-            disabled={loading}
-            className="p-3 sm:p-2 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation"
-            aria-label="Fechar"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 sm:space-y-6">
-          {ratings.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">
-              Nenhum músico disponível para avaliação.
-            </p>
-          ) : (
-            ratings.map((r) => (
-              <div
-                key={r.musician_id}
-                className="bg-gray-50 rounded-xl p-4 space-y-3"
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-100">
+            <div>
+              <h3
+                id="rating-modal-title"
+                className="text-xl font-bold text-gray-900 flex items-center gap-2"
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-gray-900">{r.musician_name}</p>
-                    <p className="text-sm text-gray-500">{r.instrument}</p>
-                  </div>
-                </div>
-
-                {renderStars(r.musician_id, r.rating)}
-
-                <textarea
-                  value={r.comment}
-                  onChange={(e) => handleCommentChange(r.musician_id, e.target.value)}
-                  placeholder="Comentário opcional..."
-                  rows={2}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 resize-none"
-                />
-              </div>
-            ))
-          )}
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-              {error}
+                <Star className="h-5 w-5 text-yellow-500" />
+                Avaliar Músicos
+              </h3>
+              <p className="text-sm text-gray-500 mt-1">{eventTitle}</p>
             </div>
-          )}
-        </div>
+            <button
+              onClick={onClose}
+              disabled={loading}
+              className="p-3 sm:p-2 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation"
+              aria-label="Fechar"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
 
-        {/* Footer */}
-        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-3 p-4 sm:p-5 border-t border-gray-100 bg-gray-50">
-          <button
-            onClick={onClose}
-            disabled={loading}
-            className="w-full sm:w-auto px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={loading || ratings.length === 0}
-            className="w-full sm:w-auto px-4 py-2.5 sm:py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
-          >
-            <Send className="h-4 w-4" />
-            <span>{loading ? 'Enviando...' : 'Enviar Avaliações'}</span>
-          </button>
+          {/* Body */}
+          <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 sm:space-y-6">
+            {ratings.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">
+                Nenhum músico disponível para avaliação.
+              </p>
+            ) : (
+              ratings.map(r => (
+                <div key={r.musician_id} className="bg-gray-50 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-gray-900">{r.musician_name}</p>
+                      <p className="text-sm text-gray-500">{r.instrument}</p>
+                    </div>
+                  </div>
+
+                  {renderStars(r.musician_id, r.rating)}
+
+                  <textarea
+                    value={r.comment}
+                    onChange={e => handleCommentChange(r.musician_id, e.target.value)}
+                    placeholder="Comentário opcional..."
+                    rows={2}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 resize-none"
+                  />
+                </div>
+              ))
+            )}
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-3 p-4 sm:p-5 border-t border-gray-100 bg-gray-50">
+            <button
+              onClick={onClose}
+              disabled={loading}
+              className="w-full sm:w-auto px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={loading || ratings.length === 0}
+              className="w-full sm:w-auto px-4 py-2.5 sm:py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+            >
+              <Send className="h-4 w-4" />
+              <span>{loading ? 'Enviando...' : 'Enviar Avaliações'}</span>
+            </button>
+          </div>
         </div>
-      </div>
       </SwipeToDismissWrapper>
     </div>
   );

@@ -1,75 +1,70 @@
 # agenda/urls.py
-from django.urls import path, include
+from django.conf import settings
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from .views import (
-    MusicianViewSet,
-    EventViewSet,
-    AvailabilityViewSet,
-    LeaderAvailabilityViewSet,
-    ConnectionViewSet,
-    BadgeViewSet,
-    InstrumentViewSet,
-    upload_avatar,
-    upload_cover,
-    get_musician_connections,
-    get_musician_reviews,
-    get_musician_badges,
-    get_musician_stats,
-    get_musician_connection_status,
-    # Musician Request views
-    create_musician_request,
-    list_musician_requests,
-    get_musician_request,
-    approve_musician_request,
-    reject_musician_request,
-    validate_invite_token,
-    # Contact Request views
-    create_contact_request,
-    list_received_contact_requests,
-    list_sent_contact_requests,
-    get_contact_request,
-    reply_contact_request,
-    archive_contact_request,
-    # Public views
-    list_musicians_by_city,
-    list_sponsors,
-    get_musician_public_profile,
-    # Company views
-    get_company_dashboard,
-    update_company_profile,
-    get_musician_for_company,
-    get_unread_messages_count,
-)
+
 from .admin_views import (
-    dashboard_stats,
-    booking_requests_list,
-    booking_request_detail,
-    approve_booking_request,
-    reject_booking_request,
     admin_events_list,
     admin_reports,
+    approve_booking_request,
+    booking_request_detail,
+    booking_requests_list,
+    dashboard_stats,
     public_request_status,
-)
-from .registration_views import (
-    RegisterView,
-    RegisterWithInviteView,
-    RegisterCompanyView,
-    update_avatar,
+    reject_booking_request,
 )
 from .password_views import (
-    PasswordResetRequestView,
     PasswordResetConfirmView,
+    PasswordResetRequestView,
 )
-from django.conf import settings
+from .registration_views import (
+    RegisterCompanyView,
+    RegisterView,
+    RegisterWithInviteView,
+    update_avatar,
+)
+from .views import (  # Musician Request views; Contact Request views; Public views; Company views
+    AvailabilityViewSet,
+    BadgeViewSet,
+    ConnectionViewSet,
+    EventViewSet,
+    InstrumentViewSet,
+    LeaderAvailabilityViewSet,
+    MusicianViewSet,
+    approve_musician_request,
+    archive_contact_request,
+    create_contact_request,
+    create_musician_request,
+    get_company_dashboard,
+    get_contact_request,
+    get_musician_badges,
+    get_musician_connection_status,
+    get_musician_connections,
+    get_musician_for_company,
+    get_musician_public_profile,
+    get_musician_request,
+    get_musician_reviews,
+    get_musician_stats,
+    get_unread_messages_count,
+    list_musician_requests,
+    list_musicians_by_city,
+    list_received_contact_requests,
+    list_sent_contact_requests,
+    list_sponsors,
+    reject_musician_request,
+    reply_contact_request,
+    update_company_profile,
+    upload_avatar,
+    upload_cover,
+    validate_invite_token,
+)
 
 # Router do DRF gera automaticamente as URLs
 router = DefaultRouter()
 router.register("musicians", MusicianViewSet, basename="musician")
 router.register("events", EventViewSet, basename="event")
 router.register("availabilities", AvailabilityViewSet, basename="availability")
-router.register(
-    "leader-availabilities", LeaderAvailabilityViewSet, basename="leader-availability"
-)
+router.register("leader-availabilities", LeaderAvailabilityViewSet, basename="leader-availability")
 router.register("connections", ConnectionViewSet, basename="connection")
 router.register("badges", BadgeViewSet, basename="badge")
 router.register("instruments", InstrumentViewSet, basename="instrument")
@@ -109,9 +104,7 @@ urlpatterns = [
         get_musician_badges,
         name="musician-badges",
     ),
-    path(
-        "musicians/<int:musician_id>/stats/", get_musician_stats, name="musician-stats"
-    ),
+    path("musicians/<int:musician_id>/stats/", get_musician_stats, name="musician-stats"),
     path(
         "musicians/<int:musician_id>/connection-status/",
         get_musician_connection_status,

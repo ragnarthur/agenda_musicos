@@ -8,9 +8,9 @@ interface EventCardProps {
 }
 
 const EventCard: React.FC<EventCardProps> = memo(({ event }) => {
-  const startTime = event.start_datetime || (event.event_date && event.start_time 
-    ? `${event.event_date}T${event.start_time}`
-    : '');
+  const startTime =
+    event.start_datetime ||
+    (event.event_date && event.start_time ? `${event.event_date}T${event.start_time}` : '');
 
   const formatDateTime = (dateTimeString: string) => {
     try {
@@ -39,9 +39,7 @@ const EventCard: React.FC<EventCardProps> = memo(({ event }) => {
           {timeDisplay}
         </span>
       </div>
-      <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-        {event.title}
-      </h3>
+      <h3 className="text-base font-semibold text-gray-900 dark:text-white">{event.title}</h3>
       <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
         {event.location || 'Local não definido'}
       </p>

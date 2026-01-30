@@ -55,12 +55,12 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
 
     setLoadingCities(true);
     setCityError(null);
-    setFormData((prev) => ({ ...prev, city: '' }));
+    setFormData(prev => ({ ...prev, city: '' }));
 
     fetchIbgeCitiesByUf(formData.state)
-      .then((data) => {
+      .then(data => {
         if (!active) return;
-        setCityOptions(data.map((cityItem) => cityItem.nome));
+        setCityOptions(data.map(cityItem => cityItem.nome));
       })
       .catch(() => {
         if (!active) return;
@@ -78,11 +78,11 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
   }, [formData.state]);
 
   const handleStateSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFormData((prev) => ({ ...prev, state: e.target.value, city: '' }));
+    setFormData(prev => ({ ...prev, state: e.target.value, city: '' }));
   };
 
   const handleCitySelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, city: e.target.value }));
+    setFormData(prev => ({ ...prev, city: e.target.value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -93,9 +93,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
     }
 
     const normalizedCity = formData.city.trim().toLowerCase();
-    const isCityValid = cityOptions.some(
-      (cityName) => cityName.toLowerCase() === normalizedCity
-    );
+    const isCityValid = cityOptions.some(cityName => cityName.toLowerCase() === normalizedCity);
 
     if (!isCityValid) {
       setCityError('Por favor, selecione uma cidade válida da lista.');
@@ -171,9 +169,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
               <p className="text-red-100 font-medium text-xs sm:text-sm mb-2 break-words">
                 Não foi possível detectar sua localização
               </p>
-              <p className="text-red-200/85 text-xs leading-relaxed break-words">
-                {error}
-              </p>
+              <p className="text-red-200/85 text-xs leading-relaxed break-words">{error}</p>
               <button
                 onClick={reset}
                 className="mt-3 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-100 text-sm font-medium rounded-lg transition-all"
@@ -237,105 +233,110 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
           transition={{ duration: 0.4 }}
           className="fixed top-4 sm:top-6 md:top-8 left-0 right-0 mx-4 sm:mx-auto z-50 w-auto sm:w-[calc(100%-2rem)] md:w-auto max-w-2xl"
         >
-          <div className={`${
-            isMonteCarmelo
-              ? 'bg-gradient-to-r from-amber-500/25 via-amber-400/28 to-amber-500/25'
-              : 'bg-amber-500/25'
-          } backdrop-blur-md rounded-2xl border border-amber-500/30 px-2.5 py-2.5 sm:px-6 sm:py-4 shadow-2xl w-full`}>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className={`${
-              isMonteCarmelo ? 'bg-amber-500/20' : 'bg-amber-500/10'
-            } p-1.5 sm:p-2 rounded-full flex-shrink-0`}>
-              <MapPin className={`h-5 w-5 sm:h-6 sm:w-6 ${isMonteCarmelo ? 'text-amber-300' : 'text-amber-400'}`} />
-            </div>
+          <div
+            className={`${
+              isMonteCarmelo
+                ? 'bg-gradient-to-r from-amber-500/25 via-amber-400/28 to-amber-500/25'
+                : 'bg-amber-500/25'
+            } backdrop-blur-md rounded-2xl border border-amber-500/30 px-2.5 py-2.5 sm:px-6 sm:py-4 shadow-2xl w-full`}
+          >
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div
+                className={`${
+                  isMonteCarmelo ? 'bg-amber-500/20' : 'bg-amber-500/10'
+                } p-1.5 sm:p-2 rounded-full flex-shrink-0`}
+              >
+                <MapPin
+                  className={`h-5 w-5 sm:h-6 sm:w-6 ${isMonteCarmelo ? 'text-amber-300' : 'text-amber-400'}`}
+                />
+              </div>
 
-            <div className="flex-1 min-w-0">
-              {isMonteCarmelo ? (
-                <>
-                  <p className="text-amber-100 font-bold text-sm sm:text-base md:text-lg mb-1 flex items-start gap-2 break-words">
-                    🎉 Monte Carmelo é parceiro do GigFlow!
-                  </p>
-                  <p className="text-amber-200/90 text-xs sm:text-sm break-words">
-                    Que bom ver você por aqui. A plataforma já está ativa na sua região.
-                  </p>
-                  <div className="flex flex-col xs:flex-row flex-wrap gap-2 mt-3">
-                    <button
-                      onClick={() => setShowForm(true)}
-                      className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-all text-sm shadow-lg hover:shadow-xl"
-                    >
-                      Solicitar Acesso
-                    </button>
-                    <button
-                      onClick={handleDismiss}
-                      className="px-4 py-2 bg-white/10 hover:bg-white/20 text-amber-200 hover:text-amber-100 font-medium rounded-lg transition-all text-sm border border-amber-500/20"
-                    >
-                      Ver depois
-                    </button>
-                  </div>
-                  <p className="text-amber-200/70 text-xs mt-3">
-                    Também estamos chegando em:
-                  </p>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {CITIES_IN_SOON.map((cityOption) => (
+              <div className="flex-1 min-w-0">
+                {isMonteCarmelo ? (
+                  <>
+                    <p className="text-amber-100 font-bold text-sm sm:text-base md:text-lg mb-1 flex items-start gap-2 break-words">
+                      🎉 Monte Carmelo é parceiro do GigFlow!
+                    </p>
+                    <p className="text-amber-200/90 text-xs sm:text-sm break-words">
+                      Que bom ver você por aqui. A plataforma já está ativa na sua região.
+                    </p>
+                    <div className="flex flex-col xs:flex-row flex-wrap gap-2 mt-3">
                       <button
-                        key={cityOption.value}
-                        onClick={() => handleQuickCity()}
-                        className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-amber-100 text-xs rounded-full border border-amber-500/20 transition-all"
+                        onClick={() => setShowForm(true)}
+                        className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-all text-sm shadow-lg hover:shadow-xl"
                       >
-                        {cityOption.label}
+                        Solicitar Acesso
                       </button>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p className="text-amber-100 font-semibold text-sm sm:text-base mb-1 break-words">
-                    Olá! Detectamos você em {city}, {state}.
-                  </p>
-                  <p className="text-amber-200/85 text-xs sm:text-sm mb-3 break-words">
-                    Estamos abrindo novas cidades agora — quer ser avisado quando chegar na sua região?
-                  </p>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {CITIES_IN_SOON.map((cityOption) => (
                       <button
-                        key={cityOption.value}
-                        onClick={() => handleQuickCity()}
-                        className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-amber-100 text-xs rounded-full border border-amber-500/20 transition-all"
+                        onClick={handleDismiss}
+                        className="px-4 py-2 bg-white/10 hover:bg-white/20 text-amber-200 hover:text-amber-100 font-medium rounded-lg transition-all text-sm border border-amber-500/20"
                       >
-                        {cityOption.label}
+                        Ver depois
                       </button>
-                    ))}
-                  </div>
-                  <div className="flex flex-col xs:flex-row flex-wrap gap-2">
-                    <button
-                      onClick={() => setShowForm(true)}
-                      className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-all text-sm shadow-lg hover:shadow-xl"
-                    >
-                      Quero ser avisado
-                    </button>
-                    <button
-                      onClick={handleDismiss}
-                      className="px-4 py-2 bg-white/10 hover:bg-white/20 text-amber-200 hover:text-amber-100 font-medium rounded-lg transition-all text-sm border border-amber-500/20"
-                    >
-                      Fechar
-                    </button>
-                  </div>
-                  <p className="text-amber-200/70 text-xs mt-2">
-                    Esta mensagem fecha automaticamente em alguns segundos.
-                  </p>
-                </>
-              )}
-            </div>
+                    </div>
+                    <p className="text-amber-200/70 text-xs mt-3">Também estamos chegando em:</p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {CITIES_IN_SOON.map(cityOption => (
+                        <button
+                          key={cityOption.value}
+                          onClick={() => handleQuickCity()}
+                          className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-amber-100 text-xs rounded-full border border-amber-500/20 transition-all"
+                        >
+                          {cityOption.label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-amber-100 font-semibold text-sm sm:text-base mb-1 break-words">
+                      Olá! Detectamos você em {city}, {state}.
+                    </p>
+                    <p className="text-amber-200/85 text-xs sm:text-sm mb-3 break-words">
+                      Estamos abrindo novas cidades agora — quer ser avisado quando chegar na sua
+                      região?
+                    </p>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {CITIES_IN_SOON.map(cityOption => (
+                        <button
+                          key={cityOption.value}
+                          onClick={() => handleQuickCity()}
+                          className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-amber-100 text-xs rounded-full border border-amber-500/20 transition-all"
+                        >
+                          {cityOption.label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex flex-col xs:flex-row flex-wrap gap-2">
+                      <button
+                        onClick={() => setShowForm(true)}
+                        className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-all text-sm shadow-lg hover:shadow-xl"
+                      >
+                        Quero ser avisado
+                      </button>
+                      <button
+                        onClick={handleDismiss}
+                        className="px-4 py-2 bg-white/10 hover:bg-white/20 text-amber-200 hover:text-amber-100 font-medium rounded-lg transition-all text-sm border border-amber-500/20"
+                      >
+                        Fechar
+                      </button>
+                    </div>
+                    <p className="text-amber-200/70 text-xs mt-2">
+                      Esta mensagem fecha automaticamente em alguns segundos.
+                    </p>
+                  </>
+                )}
+              </div>
 
-            <button
-              onClick={handleDismiss}
-              className="text-amber-400 hover:text-amber-300 transition-colors flex-shrink-0"
-            >
-              <X className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
+              <button
+                onClick={handleDismiss}
+                className="text-amber-400 hover:text-amber-300 transition-colors flex-shrink-0"
+              >
+                <X className="h-4 w-4 sm:h-5 sm:w-5" />
+              </button>
+            </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
       )}
 
       {showForm && (
@@ -362,14 +363,17 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
 
                 <form onSubmit={handleSubmit} className="space-y-3">
                   <div>
-                    <label htmlFor="email" className="block text-amber-100 text-sm font-medium mb-1.5">
+                    <label
+                      htmlFor="email"
+                      className="block text-amber-100 text-sm font-medium mb-1.5"
+                    >
                       Email
                     </label>
                     <input
                       type="email"
                       id="email"
                       value={formData.email}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+                      onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
                       placeholder="seu@email.com"
                       required
                       className="w-full px-4 py-2.5 bg-white/10 border border-amber-500/30 rounded-lg text-amber-100 placeholder:text-amber-300/60 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-500/50 text-sm"
@@ -378,7 +382,10 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
                   </div>
 
                   <div>
-                    <label htmlFor="state" className="block text-amber-100 text-sm font-medium mb-1.5">
+                    <label
+                      htmlFor="state"
+                      className="block text-amber-100 text-sm font-medium mb-1.5"
+                    >
                       Estado
                     </label>
                     <select
@@ -399,7 +406,10 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
                   </div>
 
                   <div>
-                    <label htmlFor="city" className="block text-amber-100 text-sm font-medium mb-1.5">
+                    <label
+                      htmlFor="city"
+                      className="block text-amber-100 text-sm font-medium mb-1.5"
+                    >
                       Cidade
                     </label>
                     <input
@@ -407,14 +417,16 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
                       id="city"
                       value={formData.city}
                       onChange={handleCitySelect}
-                      placeholder={formData.state ? 'Ex: Uberlândia' : 'Selecione o estado primeiro'}
+                      placeholder={
+                        formData.state ? 'Ex: Uberlândia' : 'Selecione o estado primeiro'
+                      }
                       list={datalistId.current}
                       required
                       disabled={!formData.state || loadingCities || formStatus === 'submitting'}
                       className="w-full px-4 py-2.5 bg-white/10 border border-amber-500/30 rounded-lg text-amber-100 placeholder:text-amber-300/60 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-500/50 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <datalist id={datalistId.current}>
-                      {cityOptions.map((cityName) => (
+                      {cityOptions.map(cityName => (
                         <option key={cityName} value={cityName} />
                       ))}
                     </datalist>

@@ -20,9 +20,7 @@ const FullscreenBackground: React.FC<FullscreenBackgroundProps> = ({
     <div className={`relative min-h-screen overflow-hidden ${className}`}>
       {/* Eu mantenho as partículas só nas telas-chave para ficar bonito e leve */}
       <AnimatedBackground enableBlueWaves={enableBlueWaves} enableParticles={enableParticles} />
-      <div className={`relative z-10 min-h-screen ${contentClassName}`}>
-        {children}
-      </div>
+      <div className={`relative z-10 min-h-screen ${contentClassName}`}>{children}</div>
     </div>
   );
 };

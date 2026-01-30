@@ -165,28 +165,13 @@ type CardBrandRowProps = {
 const CardBrandRow: React.FC<CardBrandRowProps> = ({ className = '' }) => {
   return (
     <div className={`grid grid-cols-4 gap-2 place-items-center ${className}`.trim()}>
-      <span
-        role="img"
-        aria-label="Visa"
-        title="Visa"
-        className={badgeClassName}
-      >
+      <span role="img" aria-label="Visa" title="Visa" className={badgeClassName}>
         <VisaLogo />
       </span>
-      <span
-        role="img"
-        aria-label="Mastercard"
-        title="Mastercard"
-        className={badgeClassName}
-      >
+      <span role="img" aria-label="Mastercard" title="Mastercard" className={badgeClassName}>
         <MastercardLogo />
       </span>
-      <span
-        role="img"
-        aria-label="Elo"
-        title="Elo"
-        className={badgeClassName}
-      >
+      <span role="img" aria-label="Elo" title="Elo" className={badgeClassName}>
         <EloLogo />
       </span>
       <span
@@ -197,36 +182,16 @@ const CardBrandRow: React.FC<CardBrandRowProps> = ({ className = '' }) => {
       >
         <AmexLogo />
       </span>
-      <span
-        role="img"
-        aria-label="Hipercard"
-        title="Hipercard"
-        className={badgeClassName}
-      >
+      <span role="img" aria-label="Hipercard" title="Hipercard" className={badgeClassName}>
         <HipercardLogo />
       </span>
-      <span
-        role="img"
-        aria-label="Diners Club"
-        title="Diners Club"
-        className={badgeClassName}
-      >
+      <span role="img" aria-label="Diners Club" title="Diners Club" className={badgeClassName}>
         <DinersLogo />
       </span>
-      <span
-        role="img"
-        aria-label="Discover"
-        title="Discover"
-        className={badgeClassName}
-      >
+      <span role="img" aria-label="Discover" title="Discover" className={badgeClassName}>
         <DiscoverLogo />
       </span>
-      <span
-        role="img"
-        aria-label="Maestro"
-        title="Maestro"
-        className={badgeClassName}
-      >
+      <span role="img" aria-label="Maestro" title="Maestro" className={badgeClassName}>
         <MaestroLogo />
       </span>
     </div>

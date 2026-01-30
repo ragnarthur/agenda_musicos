@@ -22,10 +22,11 @@ const Musicians: React.FC = () => {
     return () => clearTimeout(timer);
   }, [search]);
 
-  const { musicians, count, hasNext, hasPrevious, isLoading, error, mutate } = useMusiciansPaginated({
-    page,
-    search: debouncedSearch || undefined,
-  });
+  const { musicians, count, hasNext, hasPrevious, isLoading, error, mutate } =
+    useMusiciansPaginated({
+      page,
+      search: debouncedSearch || undefined,
+    });
 
   const getInstrumentEmoji = (instrument: string, bio?: string) => {
     // Se é vocalista e a bio menciona violão/violonista, mostra emoji combinado
@@ -113,7 +114,7 @@ const Musicians: React.FC = () => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   value={search}
-                  onChange={(event) => setSearch(event.target.value)}
+                  onChange={event => setSearch(event.target.value)}
                   placeholder="Buscar por nome, usuario ou instrumento"
                   className="w-full rounded-full border border-gray-200 bg-white/80 py-2 pl-9 pr-3 text-sm text-gray-700 shadow-sm focus:border-primary-300 focus:ring-2 focus:ring-primary-200"
                 />
@@ -146,7 +147,9 @@ const Musicians: React.FC = () => {
           </div>
         ) : error ? (
           <div className="card-contrast bg-red-50/70 border-red-200 text-center">
-            <p className="text-red-800 mb-4">Não foi possível carregar os músicos. Tente novamente.</p>
+            <p className="text-red-800 mb-4">
+              Não foi possível carregar os músicos. Tente novamente.
+            </p>
             <button onClick={() => mutate()} className="btn-primary">
               Tentar Novamente
             </button>
@@ -188,18 +191,24 @@ const Musicians: React.FC = () => {
                     {/* Header do Card */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center space-x-3">
-                      <div className="h-12 w-12 rounded-full overflow-hidden bg-primary-100 transition-transform duration-400 group-hover:-translate-y-0.5 group-hover:scale-105 flex items-center justify-center">
-                        {avatarUrl ? (
-                          <img src={avatarUrl} alt={musician.full_name} className="h-full w-full object-cover" />
-                        ) : (
-                          <span className="text-2xl">{emoji}</span>
-                        )}
-                      </div>
+                        <div className="h-12 w-12 rounded-full overflow-hidden bg-primary-100 transition-transform duration-400 group-hover:-translate-y-0.5 group-hover:scale-105 flex items-center justify-center">
+                          {avatarUrl ? (
+                            <img
+                              src={avatarUrl}
+                              alt={musician.full_name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-2xl">{emoji}</span>
+                          )}
+                        </div>
                         <div>
                           <h3 className="font-semibold text-gray-900 flex items-center space-x-2">
                             <span>{musician.full_name}</span>
                           </h3>
-                          {username && <p className="text-sm text-gray-600">@{username.replace('@', '')}</p>}
+                          {username && (
+                            <p className="text-sm text-gray-600">@{username.replace('@', '')}</p>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -215,21 +224,21 @@ const Musicians: React.FC = () => {
 
                       {musician.phone && (
                         <div className="flex items-center space-x-2 text-gray-600">
-                        <Phone className="h-4 w-4 transition-transform duration-400 group-hover:scale-105" />
+                          <Phone className="h-4 w-4 transition-transform duration-400 group-hover:scale-105" />
                           <span className="text-sm">{musician.phone}</span>
                         </div>
                       )}
 
                       {contactEmail && (
                         <div className="flex items-center space-x-2 text-gray-600">
-                        <Mail className="h-4 w-4 transition-transform duration-400 group-hover:scale-105" />
+                          <Mail className="h-4 w-4 transition-transform duration-400 group-hover:scale-105" />
                           <span className="text-sm">{contactEmail}</span>
                         </div>
                       )}
 
                       {musician.instagram && (
                         <div className="flex items-center space-x-2 text-gray-600">
-                        <Instagram className="h-4 w-4 transition-transform duration-400 group-hover:scale-105" />
+                          <Instagram className="h-4 w-4 transition-transform duration-400 group-hover:scale-105" />
                           <span className="text-sm">{musician.instagram}</span>
                         </div>
                       )}
@@ -238,8 +247,11 @@ const Musicians: React.FC = () => {
                     {/* Badges de Instrumentos */}
                     <div className="mt-4 flex flex-wrap gap-2">
                       {musician.instruments && musician.instruments.length > 0 ? (
-                        musician.instruments.map((inst) => (
-                          <span key={inst} className="status-chip default transition-transform duration-400 group-hover:-translate-y-0.5">
+                        musician.instruments.map(inst => (
+                          <span
+                            key={inst}
+                            className="status-chip default transition-transform duration-400 group-hover:-translate-y-0.5"
+                          >
                             {getInstrumentLabel(inst)}
                           </span>
                         ))
@@ -263,22 +275,22 @@ const Musicians: React.FC = () => {
               <Users className="h-5 w-5 text-primary-600 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-primary-800">
-                  Total: {count || musicians.length} músico{(count || musicians.length) !== 1 ? 's' : ''}
+                  Total: {count || musicians.length} músico
+                  {(count || musicians.length) !== 1 ? 's' : ''}
                 </p>
                 <p className="text-sm text-primary-700 mt-1">
-                  Todos os músicos podem se conectar para formar duos e trios, com contatos disponíveis para combinar diretamente.
+                  Todos os músicos podem se conectar para formar duos e trios, com contatos
+                  disponíveis para combinar diretamente.
                 </p>
               </div>
             </div>
             <div className="flex items-center justify-between gap-3 flex-wrap">
-              <p className="text-sm text-gray-600">
-                Página {page}
-              </p>
+              <p className="text-sm text-gray-600">Página {page}</p>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   className="btn-secondary"
-                  onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                  onClick={() => setPage(prev => Math.max(1, prev - 1))}
                   disabled={!hasPrevious || page === 1}
                 >
                   Anterior
@@ -286,7 +298,7 @@ const Musicians: React.FC = () => {
                 <button
                   type="button"
                   className="btn-primary"
-                  onClick={() => setPage((prev) => prev + 1)}
+                  onClick={() => setPage(prev => prev + 1)}
                   disabled={!hasNext}
                 >
                   Proxima

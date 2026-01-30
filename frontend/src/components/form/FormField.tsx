@@ -33,11 +33,11 @@ const FormField: React.FC<FormFieldProps> = ({
         )}
         {children}
       </div>
-      {hint && !error && (
-        <p className="mt-1 text-xs text-gray-500">{hint}</p>
-      )}
+      {hint && !error && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
       {error && (
-        <p className="mt-1 text-xs text-red-600" role="alert">{error}</p>
+        <p className="mt-1 text-xs text-red-600" role="alert">
+          {error}
+        </p>
       )}
     </div>
   );

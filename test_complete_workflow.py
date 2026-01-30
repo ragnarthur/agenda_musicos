@@ -4,52 +4,55 @@ Script de teste completo do sistema de agenda de músicos.
 Testa funcionalidades principais incluindo shows solo e convites.
 """
 
-import requests
 import json
 import os
 from datetime import datetime, timedelta
 
+import requests
+
 # Configuração: use BASE_URL do ambiente (ex.: https://unamazedly-percussional-chandra.ngrok-free.dev/api)
 # Default ajustado para o domínio ngrok; sobrescreva via env se necessário.
-BASE_URL = os.getenv("BASE_URL", "https://unamazedly-percussional-chandra.ngrok-free.dev/api").rstrip("/")
+BASE_URL = os.getenv(
+    "BASE_URL", "https://unamazedly-percussional-chandra.ngrok-free.dev/api"
+).rstrip("/")
 CREDENTIALS = {
     "arthur": {"username": "arthur", "password": "arthur2026@"},
     "roberto": {"username": "roberto", "password": "roberto2026@"},
     "sara": {"username": "sara", "password": "sara2026@"},
 }
 
+
 def print_section(title):
     print(f"\n{'='*60}")
     print(f"  {title}")
     print(f"{'='*60}")
 
+
 def login(username, password):
     """Faz login e retorna o token"""
-    response = requests.post(f"{BASE_URL}/token/", json={
-        "username": username,
-        "password": password
-    })
+    response = requests.post(
+        f"{BASE_URL}/token/", json={"username": username, "password": password}
+    )
     if response.status_code == 200:
         data = response.json()
         print(f"✓ Login bem-sucedido: {username}")
-        return data['access']
+        return data["access"]
     else:
         print(f"✗ Erro no login: {response.status_code}")
         print(response.text)
         return None
 
+
 def get_headers(token):
     """Retorna headers com autenticação"""
-    return {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
+    return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+
 
 def test_create_regular_event(token):
     """Testa criação de evento normal (com convites)"""
     print_section("Teste 1: Criar Evento Normal (com banda)")
 
-    tomorrow = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
+    tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
 
     event_data = {
         "title": "Show no Bar do João",
@@ -60,14 +63,10 @@ def test_create_regular_event(token):
         "start_time": "20:00",
         "end_time": "23:00",
         "payment_amount": "500.00",
-        "is_solo": False
+        "is_solo": False,
     }
 
-    response = requests.post(
-        f"{BASE_URL}/events/",
-        headers=get_headers(token),
-        json=event_data
-    )
+    response = requests.post(f"{BASE_URL}/events/", headers=get_headers(token), json=event_data)
 
     if response.status_code == 201:
         event = response.json()
@@ -76,17 +75,18 @@ def test_create_regular_event(token):
         print(f"  - Título: {event['title']}")
         print(f"  - Status: {event.get('status_display', event.get('status', 'N/A'))}")
         print(f"  - É solo?: {event.get('is_solo', False)}")
-        return event['id']
+        return event["id"]
     else:
         print(f"✗ Erro ao criar evento: {response.status_code}")
         print(response.text)
         return None
 
+
 def test_create_solo_event(token):
     """Testa criação de evento solo (não requer convites)"""
     print_section("Teste 2: Criar Show Solo")
 
-    in_two_days = (datetime.now() + timedelta(days=2)).strftime('%Y-%m-%d')
+    in_two_days = (datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d")
 
     event_data = {
         "title": "Show Solo - Arthur no Café Cultural",
@@ -96,42 +96,38 @@ def test_create_solo_event(token):
         "start_time": "19:00",
         "end_time": "21:00",
         "payment_amount": "200.00",
-        "is_solo": True
+        "is_solo": True,
     }
 
-    response = requests.post(
-        f"{BASE_URL}/events/",
-        headers=get_headers(token),
-        json=event_data
-    )
+    response = requests.post(f"{BASE_URL}/events/", headers=get_headers(token), json=event_data)
 
     if response.status_code == 201:
         event = response.json()
         print(f"✓ Show solo criado com sucesso!")
         print(f"  - ID: {event['id']}")
         print(f"  - Título: {event['title']}")
-        print(f"  - Status: {event.get('status_display', event.get('status', 'N/A'))} (deve ser 'Confirmado')")
+        print(
+            f"  - Status: {event.get('status_display', event.get('status', 'N/A'))} (deve ser 'Confirmado')"
+        )
         print(f"  - É solo?: {event.get('is_solo', False)}")
 
-        if event['status'] == 'confirmed':
+        if event["status"] == "confirmed":
             print(f"  ✓ Show solo foi confirmado automaticamente!")
         else:
             print(f"  ✗ ERRO: Show solo deveria ser confirmado automaticamente!")
 
-        return event['id']
+        return event["id"]
     else:
         print(f"✗ Erro ao criar show solo: {response.status_code}")
         print(response.text)
         return None
 
+
 def test_approve_event(token, event_id):
     """Testa confirmação de evento pelo convidado"""
     print_section(f"Teste 3: Confirmar Evento #{event_id}")
 
-    response = requests.post(
-        f"{BASE_URL}/events/{event_id}/approve/",
-        headers=get_headers(token)
-    )
+    response = requests.post(f"{BASE_URL}/events/{event_id}/approve/", headers=get_headers(token))
 
     if response.status_code == 200:
         event = response.json()
@@ -144,6 +140,7 @@ def test_approve_event(token, event_id):
         print(response.text)
         return False
 
+
 def test_edit_event(token, event_id):
     """Testa edição de evento"""
     print_section(f"Teste 4: Editar Evento #{event_id}")
@@ -153,17 +150,15 @@ def test_edit_event(token, event_id):
         "description": "Show atualizado com a banda completa",
         "location": "Bar do João - Centro (novo endereço)",
         "venue_contact": "(34) 98888-9999",
-        "event_date": (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d'),
+        "event_date": (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d"),
         "start_time": "20:30",
         "end_time": "23:30",
         "payment_amount": "600.00",
-        "is_solo": False
+        "is_solo": False,
     }
 
     response = requests.put(
-        f"{BASE_URL}/events/{event_id}/",
-        headers=get_headers(token),
-        json=updated_data
+        f"{BASE_URL}/events/{event_id}/", headers=get_headers(token), json=updated_data
     )
 
     if response.status_code == 200:
@@ -177,6 +172,7 @@ def test_edit_event(token, event_id):
         print(response.text)
         return False
 
+
 def test_create_leader_availability(token):
     """Testa cadastro de disponibilidade do baterista"""
     print_section("Teste 5: Cadastrar Disponibilidade do Baterista")
@@ -184,23 +180,21 @@ def test_create_leader_availability(token):
     # Criar 3 disponibilidades
     availabilities = []
     for i in range(3, 6):  # Dias 3, 4, 5
-        date = (datetime.now() + timedelta(days=i)).strftime('%Y-%m-%d')
+        date = (datetime.now() + timedelta(days=i)).strftime("%Y-%m-%d")
         avail_data = {
             "date": date,
             "start_time": "18:00",
             "end_time": "23:00",
-            "notes": f"Disponível para shows no dia {date}"
+            "notes": f"Disponível para shows no dia {date}",
         }
 
         response = requests.post(
-            f"{BASE_URL}/leader-availabilities/",
-            headers=get_headers(token),
-            json=avail_data
+            f"{BASE_URL}/leader-availabilities/", headers=get_headers(token), json=avail_data
         )
 
         if response.status_code == 201:
             avail = response.json()
-            availabilities.append(avail['id'])
+            availabilities.append(avail["id"])
             print(f"✓ Disponibilidade {i-2}/3 cadastrada!")
             print(f"  - Data: {avail['date']}")
             print(f"  - Horário: {avail['start_time']} - {avail['end_time']}")
@@ -211,20 +205,20 @@ def test_create_leader_availability(token):
 
     return availabilities
 
+
 def test_get_leader_availabilities(token):
     """Testa listagem de disponibilidades do baterista"""
     print_section("Teste 6: Listar Disponibilidades do Baterista")
 
     response = requests.get(
-        f"{BASE_URL}/leader-availabilities/?upcoming=true",
-        headers=get_headers(token)
+        f"{BASE_URL}/leader-availabilities/?upcoming=true", headers=get_headers(token)
     )
 
     if response.status_code == 200:
         availabilities = response.json()
         # Pode vir como lista ou objeto paginado
-        if isinstance(availabilities, dict) and 'results' in availabilities:
-            availabilities = availabilities['results']
+        if isinstance(availabilities, dict) and "results" in availabilities:
+            availabilities = availabilities["results"]
 
         print(f"✓ {len(availabilities)} disponibilidade(s) encontrada(s)!")
         for avail in availabilities:
@@ -235,14 +229,12 @@ def test_get_leader_availabilities(token):
         print(response.text)
         return False
 
+
 def test_delete_event(token, event_id):
     """Testa deleção de evento"""
     print_section(f"Teste 7: Deletar Evento #{event_id}")
 
-    response = requests.delete(
-        f"{BASE_URL}/events/{event_id}/",
-        headers=get_headers(token)
-    )
+    response = requests.delete(f"{BASE_URL}/events/{event_id}/", headers=get_headers(token))
 
     if response.status_code == 204:
         print(f"✓ Evento deletado com sucesso!")
@@ -257,7 +249,7 @@ def test_cross_midnight_event(token_creator, token_approver):
     """Cria evento que cruza meia-noite (23:00–02:00) e confirma."""
     print_section("Teste 8: Evento cruzando meia-noite")
 
-    date_24 = (datetime.now() + timedelta(days=3)).strftime('%Y-%m-%d')
+    date_24 = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")
 
     payload = {
         "title": "Virada de Natal",
@@ -267,7 +259,7 @@ def test_cross_midnight_event(token_creator, token_approver):
         "start_time": "23:00",
         "end_time": "02:00",  # madrugada do dia seguinte
         "payment_amount": "800.00",
-        "is_solo": False
+        "is_solo": False,
     }
 
     resp = requests.post(f"{BASE_URL}/events/", headers=get_headers(token_creator), json=payload)
@@ -280,7 +272,9 @@ def test_cross_midnight_event(token_creator, token_approver):
     print(f"✓ Evento criado (cruza meia-noite): ID {event['id']}, status {event['status']}")
 
     # Confirmar com o baterista
-    resp_appr = requests.post(f"{BASE_URL}/events/{event['id']}/approve/", headers=get_headers(token_approver))
+    resp_appr = requests.post(
+        f"{BASE_URL}/events/{event['id']}/approve/", headers=get_headers(token_approver)
+    )
     if resp_appr.status_code != 200:
         print(f"✗ Falha ao confirmar evento cruzando meia-noite: {resp_appr.status_code}")
         print(resp_appr.text)
@@ -289,26 +283,24 @@ def test_cross_midnight_event(token_creator, token_approver):
     print("✓ Evento cruzando meia-noite confirmado com sucesso")
     return True
 
+
 def main():
     """Executa todos os testes"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print(f"  TESTE COMPLETO DO SISTEMA - AGENDA DE MÚSICOS (BASE_URL={BASE_URL})")
-    print("="*60)
+    print("=" * 60)
 
     # Login dos usuários
     print_section("Fazendo login dos usuários")
-    arthur_token = login("arthur", CREDENTIALS['arthur']['password'])
-    roberto_token = login("roberto", CREDENTIALS['roberto']['password'])
+    arthur_token = login("arthur", CREDENTIALS["arthur"]["password"])
+    roberto_token = login("roberto", CREDENTIALS["roberto"]["password"])
 
     if not arthur_token or not roberto_token:
         print("\n✗ Erro nos logins. Abortando testes.")
         return
 
     # Executar testes
-    results = {
-        "passed": 0,
-        "failed": 0
-    }
+    results = {"passed": 0, "failed": 0}
 
     # Teste 1: Criar evento normal (Arthur)
     event_id = test_create_regular_event(arthur_token)
@@ -367,10 +359,11 @@ def main():
     print(f"✗ Testes falhados: {results['failed']}")
     print(f"\nTotal: {results['passed'] + results['failed']} testes executados")
 
-    if results['failed'] == 0:
+    if results["failed"] == 0:
         print("\n🎉 TODOS OS TESTES PASSARAM! Sistema está funcionando corretamente.")
     else:
         print("\n⚠️  Alguns testes falharam. Verifique os erros acima.")
+
 
 if __name__ == "__main__":
     main()

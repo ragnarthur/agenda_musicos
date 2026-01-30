@@ -1,15 +1,7 @@
 // pages/EventForm.tsx
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import {
-  Save,
-  X,
-  CheckCircle,
-  Info,
-  Sparkles,
-  Users,
-  UserPlus,
-} from 'lucide-react';
+import { Save, X, CheckCircle, Info, Sparkles, Users, UserPlus } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import ConflictPreview from '../components/event/ConflictPreview';
 import ProposalSummary from '../components/event/ProposalSummary';
@@ -45,7 +37,11 @@ const resolveInstrumentLabel = (instrument: string): string => {
 const EventForm: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const prefilledData = location.state as { date?: string; start_time?: string; end_time?: string } | null;
+  const prefilledData = location.state as {
+    date?: string;
+    start_time?: string;
+    end_time?: string;
+  } | null;
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -110,26 +106,27 @@ const EventForm: React.FC = () => {
       return;
     }
 
-      let cancelled = false;
-      const loadMusicians = async () => {
-        setLoadingMusicians(true);
-        try {
-          const aggregated: Musician[] = [];
-          let page = 1;
-          let hasNext = true;
-          while (hasNext && !cancelled) {
-            const pageData = await musicianService.getAllPaginated({ page, page_size: 50 });
-            aggregated.push(...pageData.results);
-            hasNext = Boolean(pageData?.next);
-            page += 1;
-          }
-          const musicians = aggregated;
-          const mapped = musicians.map((musician) => {
-            const instruments = (musician.instruments && musician.instruments.length > 0)
+    let cancelled = false;
+    const loadMusicians = async () => {
+      setLoadingMusicians(true);
+      try {
+        const aggregated: Musician[] = [];
+        let page = 1;
+        let hasNext = true;
+        while (hasNext && !cancelled) {
+          const pageData = await musicianService.getAllPaginated({ page, page_size: 50 });
+          aggregated.push(...pageData.results);
+          hasNext = Boolean(pageData?.next);
+          page += 1;
+        }
+        const musicians = aggregated;
+        const mapped = musicians.map(musician => {
+          const instruments =
+            musician.instruments && musician.instruments.length > 0
               ? musician.instruments
               : musician.instrument
-              ? [musician.instrument]
-              : [];
+                ? [musician.instrument]
+                : [];
           const primary = instruments[0] || musician.instrument;
           return {
             musician_id: musician.id,
@@ -163,29 +160,31 @@ const EventForm: React.FC = () => {
     };
 
     loadMusicians();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [formData.is_solo]);
 
   const instrumentOptions = useMemo(() => {
     const counts: Record<string, number> = {};
-    availableMusicians.forEach((m) => {
+    availableMusicians.forEach(m => {
       const list = m.instruments && m.instruments.length > 0 ? m.instruments : [m.instrument];
       list.forEach((inst: string) => {
         counts[inst] = (counts[inst] || 0) + 1;
       });
     });
-    const options = Object.keys(counts).map((instrument) => ({
+    const options = Object.keys(counts).map(instrument => ({
       value: instrument,
       label: resolveInstrumentLabel(instrument),
       count: counts[instrument],
     }));
     if (!instrumentQuery.trim()) return options;
     const query = instrumentQuery.toLowerCase();
-    return options.filter((opt) => opt.label.toLowerCase().includes(query));
+    return options.filter(opt => opt.label.toLowerCase().includes(query));
   }, [availableMusicians, instrumentQuery]);
 
   const filteredMusicians = useMemo(() => {
-    return availableMusicians.filter((m) => {
+    return availableMusicians.filter(m => {
       const list = m.instruments && m.instruments.length > 0 ? m.instruments : [m.instrument];
       const byFilter = instrumentFilter === 'all' ? true : list.includes(instrumentFilter);
       const labelsConcat = list.map(resolveInstrumentLabel).join(' ').toLowerCase();
@@ -197,15 +196,16 @@ const EventForm: React.FC = () => {
   }, [availableMusicians, instrumentFilter, instrumentQuery]);
 
   const getInstrumentDisplay = (musician: AvailableMusician): string => {
-    const list = musician.instruments && musician.instruments.length > 0 ? musician.instruments : [musician.instrument];
+    const list =
+      musician.instruments && musician.instruments.length > 0
+        ? musician.instruments
+        : [musician.instrument];
     return list.map(resolveInstrumentLabel).join(' · ');
   };
 
   const toggleMusicianSelection = (musicianId: number) => {
     setSelectedMusicians(prev =>
-      prev.includes(musicianId)
-        ? prev.filter(id => id !== musicianId)
-        : [...prev, musicianId]
+      prev.includes(musicianId) ? prev.filter(id => id !== musicianId) : [...prev, musicianId]
     );
   };
 
@@ -251,7 +251,8 @@ const EventForm: React.FC = () => {
 
     if (limited.length <= 2) return limited;
     if (limited.length <= 6) return `(${limited.slice(0, 2)}) ${limited.slice(2)}`;
-    if (limited.length <= 10) return `(${limited.slice(0, 2)}) ${limited.slice(2, 6)}-${limited.slice(6)}`;
+    if (limited.length <= 10)
+      return `(${limited.slice(0, 2)}) ${limited.slice(2, 6)}-${limited.slice(6)}`;
     return `(${limited.slice(0, 2)}) ${limited.slice(2, 7)}-${limited.slice(7)}`;
   };
 
@@ -352,7 +353,11 @@ const EventForm: React.FC = () => {
             <div className="rounded-2xl border border-white/60 bg-white/80 px-6 py-4 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur">
               <p className="text-xs uppercase tracking-wide text-gray-500">Formato</p>
               <p className="text-lg text-primary-700">
-                {formData.is_solo ? 'Show Solo' : selectedMusicians.length > 0 ? `Banda (${selectedMusicians.length + 1} músicos)` : 'Selecione músicos'}
+                {formData.is_solo
+                  ? 'Show Solo'
+                  : selectedMusicians.length > 0
+                    ? `Banda (${selectedMusicians.length + 1} músicos)`
+                    : 'Selecione músicos'}
               </p>
               <p className="mt-2 text-xs uppercase tracking-wide text-gray-500">Duração estimada</p>
               <p className="text-lg text-gray-900">{durationPreview ?? 'Defina os horários'}</p>
@@ -363,7 +368,10 @@ const EventForm: React.FC = () => {
         <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
           <form onSubmit={handleSubmit} className="card space-y-6">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg" role="alert">
+              <div
+                className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg"
+                role="alert"
+              >
                 {error}
               </div>
             )}
@@ -371,7 +379,10 @@ const EventForm: React.FC = () => {
             {prefilledData && (
               <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center space-x-2">
                 <Info className="h-5 w-5" />
-                <span>Data e horários preenchidos automaticamente a partir de uma disponibilidade publicada.</span>
+                <span>
+                  Data e horários preenchidos automaticamente a partir de uma disponibilidade
+                  publicada.
+                </span>
               </div>
             )}
 
@@ -419,7 +430,10 @@ const EventForm: React.FC = () => {
 
             {/* Contato do Local */}
             <div>
-              <label htmlFor="venue_contact" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="venue_contact"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Contato do Local
               </label>
               <div className="relative">
@@ -438,7 +452,10 @@ const EventForm: React.FC = () => {
 
             {/* Cachê */}
             <div>
-              <label htmlFor="payment_amount" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="payment_amount"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Cachê (opcional)
               </label>
               <div className="relative">
@@ -461,7 +478,10 @@ const EventForm: React.FC = () => {
             {/* Data e Horários */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="md:col-span-3">
-                <label htmlFor="event_date" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="event_date"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Data *
                 </label>
                 <div className="relative">
@@ -479,11 +499,13 @@ const EventForm: React.FC = () => {
                     {...getMobileInputProps('date')}
                   />
                 </div>
-
               </div>
 
               <div>
-                <label htmlFor="start_time" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="start_time"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Início *
                 </label>
                 <div className="relative">
@@ -536,13 +558,20 @@ const EventForm: React.FC = () => {
             {/* Show Solo */}
             <div className="flex items-start space-x-3 rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 via-white to-indigo-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 p-4">
               <div className="relative flex items-start">
-                <input type="checkbox" id="is_solo" name="is_solo" checked={formData.is_solo} onChange={(e) => setFormData(prev => ({ ...prev, is_solo: e.target.checked }))} className="sr-only" />
+                <input
+                  type="checkbox"
+                  id="is_solo"
+                  name="is_solo"
+                  checked={formData.is_solo}
+                  onChange={e => setFormData(prev => ({ ...prev, is_solo: e.target.checked }))}
+                  className="sr-only"
+                />
                 <div
                   role="checkbox"
                   tabIndex={0}
                   aria-checked={formData.is_solo}
                   onClick={() => setFormData(prev => ({ ...prev, is_solo: !prev.is_solo }))}
-                  onKeyDown={(e) => {
+                  onKeyDown={e => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
                       setFormData(prev => ({ ...prev, is_solo: !prev.is_solo }));
@@ -552,19 +581,32 @@ const EventForm: React.FC = () => {
                   style={{ touchAction: 'manipulation' }}
                 >
                   {formData.is_solo && (
-                    <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    <svg
+                      className="h-6 w-6 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                   )}
                 </div>
               </div>
               <div className="flex-1">
-                <label htmlFor="is_solo" className="block text-sm font-medium text-gray-900 cursor-pointer">
+                <label
+                  htmlFor="is_solo"
+                  className="block text-sm font-medium text-gray-900 cursor-pointer"
+                >
                   Show Solo
                 </label>
                 <p className="text-sm text-gray-600 mt-1">
-                  Marque se você for tocar sozinho. O evento é confirmado automaticamente sem precisar
-                  de confirmação de outros músicos.
+                  Marque se você for tocar sozinho. O evento é confirmado automaticamente sem
+                  precisar de confirmação de outros músicos.
                 </p>
               </div>
             </div>
@@ -588,7 +630,7 @@ const EventForm: React.FC = () => {
                       <input
                         type="text"
                         value={instrumentQuery}
-                        onChange={(e) => setInstrumentQuery(e.target.value)}
+                        onChange={e => setInstrumentQuery(e.target.value)}
                         placeholder="Digite violão, teclado, bateria..."
                         className="input-field"
                       />
@@ -625,7 +667,7 @@ const EventForm: React.FC = () => {
                     >
                       Todos
                     </button>
-                    {instrumentOptions.map((opt) => (
+                    {instrumentOptions.map(opt => (
                       <button
                         key={opt.value}
                         type="button"
@@ -666,11 +708,11 @@ const EventForm: React.FC = () => {
                 ) : (
                   <>
                     <p className="text-sm text-gray-600 mb-3">
-                      Escolha primeiro o instrumento e, em seguida, os músicos que tocarão no evento.
-                      Eles receberão uma notificação e precisarão confirmar a participação.
+                      Escolha primeiro o instrumento e, em seguida, os músicos que tocarão no
+                      evento. Eles receberão uma notificação e precisarão confirmar a participação.
                     </p>
                     <div className="space-y-2">
-                      {filteredMusicians.map((musician) => (
+                      {filteredMusicians.map(musician => (
                         <div
                           key={musician.musician_id}
                           onClick={() => toggleMusicianSelection(musician.musician_id)}
@@ -706,20 +748,27 @@ const EventForm: React.FC = () => {
                               </p>
                               <p className="text-xs text-gray-500">
                                 {getInstrumentDisplay(musician)}
-                                {musician.has_availability && musician.start_time && musician.end_time && (
-                                  <span className="text-green-600"> • {musician.start_time} às {musician.end_time}</span>
-                                )}
+                                {musician.has_availability &&
+                                  musician.start_time &&
+                                  musician.end_time && (
+                                    <span className="text-green-600">
+                                      {' '}
+                                      • {musician.start_time} às {musician.end_time}
+                                    </span>
+                                  )}
                               </p>
                               {musician.has_availability && musician.notes && (
                                 <p className="text-xs text-gray-400 mt-0.5">{musician.notes}</p>
                               )}
                             </div>
                           </div>
-                          <div className={`flex items-center justify-center w-6 h-6 rounded-full border-2 ${
-                            selectedMusicians.includes(musician.musician_id)
-                              ? 'border-purple-500 bg-purple-500'
-                              : 'border-gray-300'
-                          }`}>
+                          <div
+                            className={`flex items-center justify-center w-6 h-6 rounded-full border-2 ${
+                              selectedMusicians.includes(musician.musician_id)
+                                ? 'border-purple-500 bg-purple-500'
+                                : 'border-gray-300'
+                            }`}
+                          >
                             {selectedMusicians.includes(musician.musician_id) && (
                               <CheckCircle className="h-4 w-4 text-white" />
                             )}
@@ -732,7 +781,9 @@ const EventForm: React.FC = () => {
                         <div className="flex items-center gap-2 text-sm text-purple-700">
                           <UserPlus className="h-4 w-4" />
                           <span>
-                            {selectedMusicians.length} músico{selectedMusicians.length > 1 ? 's' : ''} selecionado{selectedMusicians.length > 1 ? 's' : ''}
+                            {selectedMusicians.length} músico
+                            {selectedMusicians.length > 1 ? 's' : ''} selecionado
+                            {selectedMusicians.length > 1 ? 's' : ''}
                           </span>
                         </div>
                       </div>

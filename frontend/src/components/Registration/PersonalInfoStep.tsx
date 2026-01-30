@@ -41,7 +41,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
 
   const handleChange = (e: InputChange) => {
     const { name, value } = e.target;
-    
+
     if (name === 'whatsapp') {
       onChange({ target: { name, value: formatPhone(value) } });
     } else {
@@ -144,9 +144,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
               {...getMobileInputProps('tel')}
             />
           </div>
-          <p className="mt-1 text-xs text-gray-500">
-            Link direto para conversar no WhatsApp
-          </p>
+          <p className="mt-1 text-xs text-gray-500">Link direto para conversar no WhatsApp</p>
         </div>
 
         {/* Instagram */}
@@ -166,7 +164,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
               name="instagram"
               type="text"
               value={formData.instagram.replace('@', '')}
-              onChange={(e) => {
+              onChange={e => {
                 const value = e.target.value.replace('@', '');
                 onChange({ target: { name: 'instagram', value: `@${value}` } });
               }}
@@ -193,8 +191,12 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
               id="city"
               name="city"
               type="text"
-              value={formData.city && formData.state ? `${formData.city} - ${formData.state}` : formData.city}
-              onChange={(e) => {
+              value={
+                formData.city && formData.state
+                  ? `${formData.city} - ${formData.state}`
+                  : formData.city
+              }
+              onChange={e => {
                 const value = e.target.value;
                 if (!value.trim()) {
                   emitChange('city', '');
@@ -219,7 +221,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
             {/* City Suggestions Dropdown */}
             {showCitySuggestions && filteredCities.length > 0 && (
               <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-                {filteredCities.slice(0, 10).map((cityObj) => (
+                {filteredCities.slice(0, 10).map(cityObj => (
                   <button
                     key={`${cityObj.city}-${cityObj.state}`}
                     type="button"

@@ -17,16 +17,13 @@ export const StatCard: React.FC<StatCardProps> = ({
   accent,
   className,
   icon: Icon,
-  iconColor = 'text-primary-500'
+  iconColor = 'text-primary-500',
 }) => {
   return (
     <motion.div
       className={`
         rounded-xl p-4 border shadow-sm
-        ${accent
-          ? 'bg-amber-50 border-amber-100'
-          : 'bg-white/95 border-gray-100'
-        }
+        ${accent ? 'bg-amber-50 border-amber-100' : 'bg-white/95 border-gray-100'}
         ${className || ''}
       `}
       initial={{ opacity: 0, y: 10 }}
@@ -35,7 +32,7 @@ export const StatCard: React.FC<StatCardProps> = ({
       whileHover={{
         y: -2,
         boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-        transition: { duration: 0.2 }
+        transition: { duration: 0.2 },
       }}
       whileTap={{ scale: 0.98 }}
     >

@@ -1,13 +1,14 @@
 # agenda/models.py
-from django.db import models
+import re
+import unicodedata
+from datetime import datetime
+
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
+from django.db import models
 from django.utils import timezone
-from django.conf import settings
-from datetime import datetime
-import re
-import unicodedata
 
 
 class Instrument(models.Model):
@@ -18,30 +19,24 @@ class Instrument(models.Model):
         max_length=50,
         unique=True,
         db_index=True,
-        help_text="Nome normalizado do instrumento (ex: 'violao')"
+        help_text="Nome normalizado do instrumento (ex: 'violao')",
     )
 
     # Nome de exibição (com formatação original)
     display_name = models.CharField(
-        max_length=50,
-        help_text="Nome formatado para exibição (ex: 'Violão')"
+        max_length=50, help_text="Nome formatado para exibição (ex: 'Violão')"
     )
 
     # Tipo do instrumento
     INSTRUMENT_TYPE_CHOICES = [
-        ('predefined', 'Pré-definido'),  # Instrumentos oficiais do sistema
-        ('community', 'Comunidade'),     # Criados por usuários
+        ("predefined", "Pré-definido"),  # Instrumentos oficiais do sistema
+        ("community", "Comunidade"),  # Criados por usuários
     ]
-    type = models.CharField(
-        max_length=20,
-        choices=INSTRUMENT_TYPE_CHOICES,
-        default='community'
-    )
+    type = models.CharField(max_length=20, choices=INSTRUMENT_TYPE_CHOICES, default="community")
 
     # Estatísticas de uso
     usage_count = models.PositiveIntegerField(
-        default=0,
-        help_text="Quantos músicos usam este instrumento"
+        default=0, help_text="Quantos músicos usam este instrumento"
     )
 
     # Auditoria
@@ -51,20 +46,19 @@ class Instrument(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='instruments_created',
-        help_text="Usuário que adicionou este instrumento (se community)"
+        related_name="instruments_created",
+        help_text="Usuário que adicionou este instrumento (se community)",
     )
 
     # Moderação
     is_approved = models.BooleanField(
-        default=True,
-        help_text="Se False, precisa aprovação de admin"
+        default=True, help_text="Se False, precisa aprovação de admin"
     )
 
     class Meta:
-        ordering = ['-usage_count', 'display_name']
-        verbose_name = 'Instrumento'
-        verbose_name_plural = 'Instrumentos'
+        ordering = ["-usage_count", "display_name"]
+        verbose_name = "Instrumento"
+        verbose_name_plural = "Instrumentos"
 
     def __str__(self):
         return self.display_name
@@ -74,18 +68,18 @@ class Instrument(models.Model):
         """Normaliza nome do instrumento (lowercase, sem acentos)."""
         name = name.strip().lower()
         # Remove acentos
-        name = unicodedata.normalize('NFKD', name)
-        name = ''.join([c for c in name if not unicodedata.combining(c)])
+        name = unicodedata.normalize("NFKD", name)
+        name = "".join([c for c in name if not unicodedata.combining(c)])
         # Remove caracteres especiais (mantém apenas letras, números, espaços, hífens)
-        name = re.sub(r'[^a-z0-9\s\-]', '', name)
+        name = re.sub(r"[^a-z0-9\s\-]", "", name)
         # Substitui múltiplos espaços por um único
-        name = re.sub(r'\s+', ' ', name)
+        name = re.sub(r"\s+", " ", name)
         return name
 
     def increment_usage(self):
         """Incrementa contador de uso."""
-        self.usage_count = models.F('usage_count') + 1
-        self.save(update_fields=['usage_count'])
+        self.usage_count = models.F("usage_count") + 1
+        self.save(update_fields=["usage_count"])
         # Refresh para ter o valor atualizado
         self.refresh_from_db()
 
@@ -133,12 +127,8 @@ class Organization(models.Model):
         upload_to="org_logos/", blank=True, null=True, help_text="Logo da organização"
     )
     website = models.URLField(blank=True, null=True, help_text="Site da empresa")
-    phone = models.CharField(
-        max_length=20, blank=True, null=True, help_text="Telefone de contato"
-    )
-    contact_email = models.EmailField(
-        blank=True, null=True, help_text="Email de contato"
-    )
+    phone = models.CharField(max_length=20, blank=True, null=True, help_text="Telefone de contato")
+    contact_email = models.EmailField(blank=True, null=True, help_text="Email de contato")
     contact_name = models.CharField(
         max_length=150, blank=True, null=True, help_text="Nome do responsável"
     )
@@ -148,9 +138,7 @@ class Organization(models.Model):
     state = models.CharField(max_length=2, blank=True, null=True, help_text="UF")
 
     # Patrocínio
-    is_sponsor = models.BooleanField(
-        default=False, help_text="É patrocinador da plataforma"
-    )
+    is_sponsor = models.BooleanField(default=False, help_text="É patrocinador da plataforma")
     sponsor_tier = models.CharField(
         max_length=20,
         choices=SPONSOR_TIER_CHOICES,
@@ -235,9 +223,7 @@ class Musician(models.Model):
         ("member", "Membro"),
     ]
 
-    user = models.OneToOneField(
-        User, on_delete=models.CASCADE, related_name="musician_profile"
-    )
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="musician_profile")
     organization = models.ForeignKey(
         Organization,
         on_delete=models.CASCADE,
@@ -245,9 +231,7 @@ class Musician(models.Model):
         null=True,
         blank=True,
     )
-    instrument = models.CharField(
-        max_length=50, help_text="Instrumento principal do músico"
-    )
+    instrument = models.CharField(max_length=50, help_text="Instrumento principal do músico")
     instruments = models.JSONField(
         default=list,
         blank=True,
@@ -277,9 +261,7 @@ class Musician(models.Model):
         decimal_places=2,
         null=True,
         blank=True,
-        validators=[
-            MinValueValidator(0, message="Valor do cachê não pode ser negativo.")
-        ],
+        validators=[MinValueValidator(0, message="Valor do cachê não pode ser negativo.")],
         help_text="Valor base de cachê do músico",
     )
     travel_fee_per_km = models.DecimalField(
@@ -287,9 +269,7 @@ class Musician(models.Model):
         decimal_places=2,
         null=True,
         blank=True,
-        validators=[
-            MinValueValidator(0, message="Valor por km não pode ser negativo.")
-        ],
+        validators=[MinValueValidator(0, message="Valor por km não pode ser negativo.")],
         help_text="Valor cobrado por km deslocado",
     )
     equipment_items = models.JSONField(
@@ -298,9 +278,7 @@ class Musician(models.Model):
     city = models.CharField(
         max_length=100, blank=True, null=True, help_text="Cidade onde o músico reside"
     )
-    state = models.CharField(
-        max_length=2, blank=True, null=True, help_text="UF (sigla do estado)"
-    )
+    state = models.CharField(max_length=2, blank=True, null=True, help_text="UF (sigla do estado)")
     is_active = models.BooleanField(default=True)
 
     # Campos de rating (agregados/cached)
@@ -351,9 +329,7 @@ class Event(models.Model):
     ]
 
     title = models.CharField(max_length=200, help_text="Nome do evento/show")
-    description = models.TextField(
-        blank=True, null=True, help_text="Detalhes do evento"
-    )
+    description = models.TextField(blank=True, null=True, help_text="Detalhes do evento")
     location = models.CharField(max_length=300, help_text="Local do show")
     venue_contact = models.CharField(
         max_length=200, blank=True, null=True, help_text="Contato do local"
@@ -443,9 +419,7 @@ class Event(models.Model):
         # Valida data (não pode ser no passado para novas propostas)
         if self.event_date and not self.pk:  # Apenas na criação
             if self.event_date < timezone.now().date():
-                errors["event_date"] = (
-                    "Não é possível criar eventos com datas passadas."
-                )
+                errors["event_date"] = "Não é possível criar eventos com datas passadas."
 
         if errors:
             raise ValidationError(errors)
@@ -467,14 +441,14 @@ class Event(models.Model):
             else:
                 end_date = self.event_date
 
-            self.end_datetime = timezone.make_aware(
-                datetime.combine(end_date, self.end_time)
-            )
+            self.end_datetime = timezone.make_aware(datetime.combine(end_date, self.end_time))
 
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.title} - {self.event_date.strftime('%d/%m/%Y')} - {self.get_status_display()}"
+        return (
+            f"{self.title} - {self.event_date.strftime('%d/%m/%Y')} - {self.get_status_display()}"
+        )
 
     def can_be_approved(self):
         """Compat: aprovação foi substituída por confirmação via convites."""
@@ -518,9 +492,7 @@ class EventLog(models.Model):
     ]
 
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="logs")
-    performed_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True
-    )
+    performed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     action = models.CharField(max_length=30, choices=ACTION_CHOICES)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -551,18 +523,12 @@ class Availability(models.Model):
         ("maybe", "Talvez"),  # Depende
     ]
 
-    musician = models.ForeignKey(
-        Musician, on_delete=models.CASCADE, related_name="availabilities"
-    )
-    event = models.ForeignKey(
-        Event, on_delete=models.CASCADE, related_name="availabilities"
-    )
+    musician = models.ForeignKey(Musician, on_delete=models.CASCADE, related_name="availabilities")
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="availabilities")
     response = models.CharField(
         max_length=20, choices=RESPONSE_CHOICES, default="pending", db_index=True
     )
-    notes = models.TextField(
-        blank=True, null=True, help_text="Observações sobre a disponibilidade"
-    )
+    notes = models.TextField(blank=True, null=True, help_text="Observações sobre a disponibilidade")
     responded_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -606,9 +572,7 @@ class LeaderAvailability(models.Model):
     date = models.DateField(help_text="Data disponível")
     start_time = models.TimeField(help_text="Hora de início da disponibilidade")
     end_time = models.TimeField(help_text="Hora de término da disponibilidade")
-    notes = models.TextField(
-        blank=True, null=True, help_text="Observações sobre a disponibilidade"
-    )
+    notes = models.TextField(blank=True, null=True, help_text="Observações sobre a disponibilidade")
 
     # Para facilitar queries
     start_datetime = models.DateTimeField(help_text="Data/hora início completa")
@@ -644,9 +608,7 @@ class LeaderAvailability(models.Model):
 
         # Valida data (não pode ser no passado)
         if self.date and self.date < timezone.now().date():
-            errors["date"] = (
-                "Não é possível cadastrar disponibilidades em datas passadas."
-            )
+            errors["date"] = "Não é possível cadastrar disponibilidades em datas passadas."
 
         if errors:
             raise ValidationError(errors)
@@ -687,9 +649,7 @@ class LeaderAvailability(models.Model):
             raise ValidationError(errors)
 
         if self.date and self.start_time:
-            self.start_datetime = timezone.make_aware(
-                datetime.combine(self.date, self.start_time)
-            )
+            self.start_datetime = timezone.make_aware(datetime.combine(self.date, self.start_time))
         if self.date and self.end_time:
             from datetime import timedelta as td
 
@@ -699,9 +659,7 @@ class LeaderAvailability(models.Model):
                 if self.start_time and self.end_time <= self.start_time
                 else self.date
             )
-            self.end_datetime = timezone.make_aware(
-                datetime.combine(end_date, self.end_time)
-            )
+            self.end_datetime = timezone.make_aware(datetime.combine(end_date, self.end_time))
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -722,10 +680,7 @@ class LeaderAvailability(models.Model):
         # Busca eventos que sobrepõem com o período (incluindo buffer), mesmo que cruzem datas
         conflicting_events = Event.objects.filter(
             status__in=["proposed", "approved", "confirmed"]
-        ).filter(
-            models.Q(start_datetime__lt=buffer_end)
-            & models.Q(end_datetime__gt=buffer_start)
-        )
+        ).filter(models.Q(start_datetime__lt=buffer_end) & models.Q(end_datetime__gt=buffer_start))
 
         org = self.organization or getattr(self.leader, "organization", None)
         if org:
@@ -746,12 +701,8 @@ class EventInstrument(models.Model):
     Permite especificar quantidade de cada instrumento.
     """
 
-    event = models.ForeignKey(
-        Event, on_delete=models.CASCADE, related_name="required_instruments"
-    )
-    instrument = models.CharField(
-        max_length=50, help_text="Tipo de instrumento necessário"
-    )
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="required_instruments")
+    instrument = models.CharField(max_length=50, help_text="Tipo de instrumento necessário")
     quantity = models.PositiveIntegerField(
         default=1, help_text="Quantidade de músicos deste instrumento"
     )
@@ -798,9 +749,7 @@ class MusicianRating(models.Model):
         related_name="ratings_given",
         help_text="Usuário que fez a avaliação",
     )
-    rating = models.PositiveIntegerField(
-        choices=RATING_CHOICES, help_text="Nota de 1 a 5 estrelas"
-    )
+    rating = models.PositiveIntegerField(choices=RATING_CHOICES, help_text="Nota de 1 a 5 estrelas")
     comment = models.TextField(
         blank=True, null=True, help_text="Comentário opcional sobre o músico"
     )
@@ -911,17 +860,11 @@ class MusicianBadge(models.Model):
     As definições estão no código e só guardamos slug/nome/descrição no momento da premiação.
     """
 
-    musician = models.ForeignKey(
-        Musician, on_delete=models.CASCADE, related_name="badges"
-    )
-    slug = models.CharField(
-        max_length=50, help_text="Identificador da badge (ex: first_show)"
-    )
+    musician = models.ForeignKey(Musician, on_delete=models.CASCADE, related_name="badges")
+    slug = models.CharField(max_length=50, help_text="Identificador da badge (ex: first_show)")
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=255, blank=True, null=True)
-    icon = models.CharField(
-        max_length=10, blank=True, null=True, help_text="Emoji opcional"
-    )
+    icon = models.CharField(max_length=10, blank=True, null=True, help_text="Emoji opcional")
     awarded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -954,9 +897,7 @@ class MusicianRequest(models.Model):
 
     # Dados musicais
     instrument = models.CharField(max_length=100, help_text="Instrumento principal")
-    instruments = models.JSONField(
-        default=list, blank=True, help_text="Lista de instrumentos"
-    )
+    instruments = models.JSONField(default=list, blank=True, help_text="Lista de instrumentos")
     bio = models.TextField(blank=True, null=True)
 
     # Localização
@@ -1069,9 +1010,7 @@ class ContactRequest(models.Model):
     # Conteúdo
     subject = models.CharField(max_length=200, help_text="Assunto da mensagem")
     message = models.TextField(help_text="Mensagem/descrição do evento")
-    event_date = models.DateField(
-        null=True, blank=True, help_text="Data do evento (opcional)"
-    )
+    event_date = models.DateField(null=True, blank=True, help_text="Data do evento (opcional)")
     event_location = models.CharField(
         max_length=200, blank=True, null=True, help_text="Local do evento"
     )

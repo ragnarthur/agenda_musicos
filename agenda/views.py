@@ -1,80 +1,78 @@
 # agenda/views.py
 import logging
+from datetime import date, datetime, time, timedelta
 from io import BytesIO
 from uuid import uuid4
-from datetime import timedelta, datetime, time, date
 
-from django.db import models, transaction, connection
-from django.db.models import Q, Count
+from django.core.files.base import ContentFile
+from django.db import connection, models, transaction
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-
-from rest_framework import viewsets, status
-from rest_framework.decorators import action, throttle_classes
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from django.core.files.base import ContentFile
 from PIL import Image, ImageOps, UnidentifiedImageError, features
+from rest_framework import status, viewsets
+from rest_framework.decorators import action, throttle_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 logger = logging.getLogger(__name__)
-from rest_framework.exceptions import ValidationError, PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 
-from .throttles import (
-    CreateEventRateThrottle,
-    PreviewConflictsRateThrottle,
-    BurstRateThrottle,
-    PublicRateThrottle,
-)
-
+from .instrument_utils import INSTRUMENT_LABELS, get_instrument_label
 from .models import (
-    Musician,
-    Event,
     Availability,
-    LeaderAvailability,
-    EventLog,
-    EventInstrument,
-    Organization,
-    Membership,
-    MusicianRating,
     Connection,
-    MusicianBadge,
-    MusicianRequest,
     ContactRequest,
+    Event,
+    EventInstrument,
+    EventLog,
     Instrument,
+    LeaderAvailability,
+    Membership,
+    Musician,
+    MusicianBadge,
+    MusicianRating,
+    MusicianRequest,
+    Organization,
 )
+from .pagination import StandardResultsSetPagination
+from .permissions import IsOwnerOrReadOnly
 from .serializers import (
-    MusicianSerializer,
-    MusicianUpdateSerializer,
-    EventListSerializer,
-    EventDetailSerializer,
-    EventCreateSerializer,
     AvailabilitySerializer,
-    LeaderAvailabilitySerializer,
-    MusicianRatingSerializer,
-    RatingSubmitSerializer,
     ConnectionSerializer,
-    MusicianBadgeSerializer,
-    MusicianRequestSerializer,
-    MusicianRequestCreateSerializer,
-    MusicianRequestAdminSerializer,
-    ContactRequestSerializer,
     ContactRequestCreateSerializer,
     ContactRequestReplySerializer,
-    MusicianPublicSerializer,
-    OrganizationSerializer,
-    OrganizationPublicSerializer,
-    InstrumentSerializer,
+    ContactRequestSerializer,
+    EventCreateSerializer,
+    EventDetailSerializer,
+    EventListSerializer,
     InstrumentCreateSerializer,
+    InstrumentSerializer,
+    LeaderAvailabilitySerializer,
+    MusicianBadgeSerializer,
+    MusicianPublicSerializer,
+    MusicianRatingSerializer,
+    MusicianRequestAdminSerializer,
+    MusicianRequestCreateSerializer,
+    MusicianRequestSerializer,
+    MusicianSerializer,
+    MusicianUpdateSerializer,
+    OrganizationPublicSerializer,
+    OrganizationSerializer,
+    RatingSubmitSerializer,
 )
-from .validators import sanitize_string
-from .permissions import IsOwnerOrReadOnly
+from .throttles import (
+    BurstRateThrottle,
+    CreateEventRateThrottle,
+    PreviewConflictsRateThrottle,
+    PublicRateThrottle,
+)
 from .utils import (
+    award_badges_for_musician,
     get_user_organization,
     split_availability_with_events,
-    award_badges_for_musician,
 )
-from .instrument_utils import INSTRUMENT_LABELS, get_instrument_label
-from .pagination import StandardResultsSetPagination
+from .validators import sanitize_string
 
 
 class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
@@ -197,8 +195,9 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
         GET /musicians/with_availability/
         Retorna músicos que possuem disponibilidades públicas futuras
         """
-        from .models import LeaderAvailability
         from django.utils import timezone
+
+        from .models import LeaderAvailability
 
         # IDs de músicos com disponibilidades públicas futuras
         availability_qs = LeaderAvailability.objects.filter(
@@ -234,9 +233,7 @@ class EventViewSet(viewsets.ModelViewSet):
     """
 
     queryset = (
-        Event.objects.prefetch_related(
-            "availabilities__musician__user", "logs__performed_by"
-        )
+        Event.objects.prefetch_related("availabilities__musician__user", "logs__performed_by")
         .select_related("created_by", "approved_by")
         .all()
     )
@@ -290,18 +287,12 @@ class EventViewSet(viewsets.ModelViewSet):
 
         # Adiciona anotações para contagem de disponibilidades (otimização N+1)
         queryset = queryset.annotate(
-            avail_pending=Count(
-                "availabilities", filter=Q(availabilities__response="pending")
-            ),
-            avail_available=Count(
-                "availabilities", filter=Q(availabilities__response="available")
-            ),
+            avail_pending=Count("availabilities", filter=Q(availabilities__response="pending")),
+            avail_available=Count("availabilities", filter=Q(availabilities__response="available")),
             avail_unavailable=Count(
                 "availabilities", filter=Q(availabilities__response="unavailable")
             ),
-            avail_maybe=Count(
-                "availabilities", filter=Q(availabilities__response="maybe")
-            ),
+            avail_maybe=Count("availabilities", filter=Q(availabilities__response="maybe")),
             avail_total=Count("availabilities"),
         )
 
@@ -347,12 +338,8 @@ class EventViewSet(viewsets.ModelViewSet):
         if search:
             # Limita tamanho da query para prevenir DoS
             if len(search) > 100:
-                raise ValidationError(
-                    {"search": "Busca não pode ter mais de 100 caracteres."}
-                )
-            queryset = queryset.filter(
-                Q(title__icontains=search) | Q(location__icontains=search)
-            )
+                raise ValidationError({"search": "Busca não pode ter mais de 100 caracteres."})
+            queryset = queryset.filter(Q(title__icontains=search) | Q(location__icontains=search))
 
         # Eventos passados
         if self.request.query_params.get("past") == "true":
@@ -401,18 +388,14 @@ class EventViewSet(viewsets.ModelViewSet):
             )
             .select_related("created_by", "approved_by")
             .annotate(
-                avail_pending=Count(
-                    "availabilities", filter=Q(availabilities__response="pending")
-                ),
+                avail_pending=Count("availabilities", filter=Q(availabilities__response="pending")),
                 avail_available=Count(
                     "availabilities", filter=Q(availabilities__response="available")
                 ),
                 avail_unavailable=Count(
                     "availabilities", filter=Q(availabilities__response="unavailable")
                 ),
-                avail_maybe=Count(
-                    "availabilities", filter=Q(availabilities__response="maybe")
-                ),
+                avail_maybe=Count("availabilities", filter=Q(availabilities__response="maybe")),
                 avail_total=Count("availabilities"),
             )
         )
@@ -426,9 +409,7 @@ class EventViewSet(viewsets.ModelViewSet):
             except Musician.DoesNotExist:
                 conflicts = conflicts.filter(created_by=request.user)
 
-        serializer = EventListSerializer(
-            conflicts, many=True, context={"request": request}
-        )
+        serializer = EventListSerializer(conflicts, many=True, context={"request": request})
         return Response(
             {
                 "has_conflicts": conflicts.exists(),
@@ -468,9 +449,7 @@ class EventViewSet(viewsets.ModelViewSet):
                     approved_by=self.request.user,
                     approved_at=timezone.now(),
                 )
-                self._log_event(
-                    event, "created", "Show solo confirmado automaticamente."
-                )
+                self._log_event(event, "created", "Show solo confirmado automaticamente.")
             else:
                 event = serializer.save(
                     created_by=self.request.user,
@@ -532,9 +511,7 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         Apenas o criador pode deletar o evento de forma definitiva.
         """
-        request_user = (
-            getattr(self, "request", None).user if hasattr(self, "request") else None
-        )
+        request_user = getattr(self, "request", None).user if hasattr(self, "request") else None
         if request_user and instance.created_by and instance.created_by != request_user:
             raise PermissionDenied("Apenas o criador pode deletar este evento.")
 
@@ -589,9 +566,7 @@ class EventViewSet(viewsets.ModelViewSet):
         """Cria registro de histórico do evento"""
         EventLog.objects.create(
             event=event,
-            performed_by=getattr(self.request, "user", None)
-            if hasattr(self, "request")
-            else None,
+            performed_by=getattr(self.request, "user", None) if hasattr(self, "request") else None,
             action=action,
             description=description,
         )
@@ -610,9 +585,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
         event_end = event.end_datetime
         if not event_end and event.event_date and event.end_time:
-            event_end = timezone.make_aware(
-                datetime.combine(event.event_date, event.end_time)
-            )
+            event_end = timezone.make_aware(datetime.combine(event.event_date, event.end_time))
 
         if event_end and event_end >= timezone.now():
             return (
@@ -621,9 +594,7 @@ class EventViewSet(viewsets.ModelViewSet):
                 status.HTTP_400_BAD_REQUEST,
             )
 
-        already_rated = MusicianRating.objects.filter(
-            event=event, rated_by=user
-        ).exists()
+        already_rated = MusicianRating.objects.filter(event=event, rated_by=user).exists()
         if already_rated:
             return (
                 False,
@@ -674,9 +645,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
         if created or availability.response == "available":
             approver_name = request.user.get_full_name() or request.user.username
-            self._log_event(
-                event, "availability", f"Convite confirmado por {approver_name}."
-            )
+            self._log_event(event, "availability", f"Convite confirmado por {approver_name}.")
 
         self._check_and_confirm_event(event, confirmed_by=request.user)
         serializer = EventDetailSerializer(event, context={"request": request})
@@ -833,11 +802,7 @@ class EventViewSet(viewsets.ModelViewSet):
                 "pending": "Pendente",
             }
             response_label = response_labels.get(response_value, response_value)
-            if (
-                created
-                or prev_response != response_value
-                or prev_notes != (sanitized_notes or "")
-            ):
+            if created or prev_response != response_value or prev_notes != (sanitized_notes or ""):
                 self._log_event(
                     event,
                     "availability",
@@ -861,16 +826,12 @@ class EventViewSet(viewsets.ModelViewSet):
         with transaction.atomic():
             # Re-busca o evento com lock exclusivo e tratamento de erro
             try:
-                locked_event = Event.objects.select_for_update(nowait=False).get(
-                    pk=event.pk
-                )
+                locked_event = Event.objects.select_for_update(nowait=False).get(pk=event.pk)
             except Exception as e:
                 logger.error(f"Erro ao obter lock do evento {event.pk}: {e}")
                 from rest_framework.exceptions import ValidationError
 
-                raise ValidationError(
-                    {"detail": "Conflito ao confirmar evento. Tente novamente."}
-                )
+                raise ValidationError({"detail": "Conflito ao confirmar evento. Tente novamente."})
 
             # Verifica se já foi confirmado (por outra requisição concorrente)
             if locked_event.status == "confirmed":
@@ -892,9 +853,7 @@ class EventViewSet(viewsets.ModelViewSet):
                 )
 
             if invitee_availabilities.exists():
-                has_confirmation = invitee_availabilities.filter(
-                    response="available"
-                ).exists()
+                has_confirmation = invitee_availabilities.filter(response="available").exists()
                 if not has_confirmation:
                     return
             else:
@@ -921,9 +880,7 @@ class EventViewSet(viewsets.ModelViewSet):
                 approver_name = approver.get_full_name() or approver.username
 
             description = (
-                f"Evento confirmado por {approver_name}."
-                if approver_name
-                else "Evento confirmado."
+                f"Evento confirmado por {approver_name}." if approver_name else "Evento confirmado."
             )
             self._log_event(locked_event, "approved", description)
 
@@ -955,9 +912,7 @@ class EventViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         ratings_data = serializer.validated_data["ratings"]
 
-        allowed_musician_ids = set(
-            event.availabilities.values_list("musician_id", flat=True)
-        )
+        allowed_musician_ids = set(event.availabilities.values_list("musician_id", flat=True))
         if not allowed_musician_ids:
             return Response(
                 {"detail": "Evento não possui músicos associados para avaliação."},
@@ -995,9 +950,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
             if musician_id in seen_ids:
                 return Response(
-                    {
-                        "detail": "Não é permitido avaliar o mesmo músico mais de uma vez."
-                    },
+                    {"detail": "Não é permitido avaliar o mesmo músico mais de uma vez."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -1072,9 +1025,7 @@ class EventViewSet(viewsets.ModelViewSet):
                         "availabilities",
                         filter=Q(availabilities__response="unavailable"),
                     ),
-                    avail_maybe=Count(
-                        "availabilities", filter=Q(availabilities__response="maybe")
-                    ),
+                    avail_maybe=Count("availabilities", filter=Q(availabilities__response="maybe")),
                     avail_total=Count("availabilities"),
                 )
             )
@@ -1114,16 +1065,12 @@ class EventViewSet(viewsets.ModelViewSet):
                         "availabilities",
                         filter=Q(availabilities__response="unavailable"),
                     ),
-                    avail_maybe=Count(
-                        "availabilities", filter=Q(availabilities__response="maybe")
-                    ),
+                    avail_maybe=Count("availabilities", filter=Q(availabilities__response="maybe")),
                     avail_total=Count("availabilities"),
                 )
             )
 
-            serializer = EventListSerializer(
-                events, many=True, context={"request": request}
-            )
+            serializer = EventListSerializer(events, many=True, context={"request": request})
             return Response(serializer.data)
         except Musician.DoesNotExist:
             return Response([], status=status.HTTP_200_OK)
@@ -1172,9 +1119,7 @@ class AvailabilityViewSet(viewsets.ModelViewSet):
             if not event:
                 raise ValidationError({"event": "Evento é obrigatório."})
 
-            existing = Availability.objects.filter(
-                musician=musician, event=event
-            ).first()
+            existing = Availability.objects.filter(musician=musician, event=event).first()
             if not existing:
                 raise PermissionDenied("Você não foi convidado para este evento.")
 
@@ -1194,9 +1139,7 @@ class AvailabilityViewSet(viewsets.ModelViewSet):
             if serializer.instance.musician != musician:
                 from rest_framework.exceptions import PermissionDenied
 
-                raise PermissionDenied(
-                    "Você não pode editar disponibilidades de outros músicos."
-                )
+                raise PermissionDenied("Você não pode editar disponibilidades de outros músicos.")
             serializer.save()
         except Musician.DoesNotExist:
             raise ValidationError({"detail": "Usuário não possui perfil de músico."})
@@ -1209,9 +1152,7 @@ class AvailabilityViewSet(viewsets.ModelViewSet):
             if instance.musician != musician:
                 from rest_framework.exceptions import PermissionDenied
 
-                raise PermissionDenied(
-                    "Você não pode deletar disponibilidades de outros músicos."
-                )
+                raise PermissionDenied("Você não pode deletar disponibilidades de outros músicos.")
             super().perform_destroy(instance)
         except Musician.DoesNotExist:
             raise ValidationError({"detail": "Usuário não possui perfil de músico."})
@@ -1257,9 +1198,7 @@ class ConnectionViewSet(viewsets.ModelViewSet):
 
         target = serializer.validated_data.get("target")
         if target == musician:
-            raise ValidationError(
-                {"detail": "Não é possível criar conexão consigo mesmo."}
-            )
+            raise ValidationError({"detail": "Não é possível criar conexão consigo mesmo."})
 
         serializer.save(follower=musician)
 
@@ -1319,9 +1258,7 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         - ?mine=true (apenas minhas)
         - ?instrument=<instrument> (filtrar por instrumento do músico)
         """
-        queryset = LeaderAvailability.objects.filter(is_active=True).select_related(
-            "leader__user"
-        )
+        queryset = LeaderAvailability.objects.filter(is_active=True).select_related("leader__user")
 
         mine_param = self.request.query_params.get("mine") == "true"
         public_param = self.request.query_params.get("public") == "true"
@@ -1438,9 +1375,7 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_update(self, serializer):
         """
@@ -1453,9 +1388,7 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
             if serializer.instance.leader != musician:
                 from rest_framework.exceptions import PermissionDenied
 
-                raise PermissionDenied(
-                    "Você não pode editar disponibilidades de outros músicos."
-                )
+                raise PermissionDenied("Você não pode editar disponibilidades de outros músicos.")
 
             instance = serializer.save()
             buffer = timedelta(minutes=40)
@@ -1482,9 +1415,7 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
             if instance.leader != musician:
                 from rest_framework.exceptions import PermissionDenied
 
-                raise PermissionDenied(
-                    "Você não pode excluir disponibilidades de outros músicos."
-                )
+                raise PermissionDenied("Você não pode excluir disponibilidades de outros músicos.")
 
             super().perform_destroy(instance)
         except Musician.DoesNotExist:
@@ -1501,9 +1432,7 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
 
         from .serializers import EventListSerializer
 
-        serializer = EventListSerializer(
-            conflicting, many=True, context={"request": request}
-        )
+        serializer = EventListSerializer(conflicting, many=True, context={"request": request})
         return Response(serializer.data)
 
     @action(detail=False, methods=["get"])
@@ -1587,16 +1516,12 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         for avail in availabilities:
             availabilities_map.setdefault(avail.leader_id, []).append(avail)
 
-        only_available = (
-            request.query_params.get("only_available", "").lower() == "true"
-        )
+        only_available = request.query_params.get("only_available", "").lower() == "true"
 
         result = []
         for musician in musicians:
             avail_list = availabilities_map.get(musician.id, [])
-            primary_avail = (
-                min(avail_list, key=lambda x: x.start_time) if avail_list else None
-            )
+            primary_avail = min(avail_list, key=lambda x: x.start_time) if avail_list else None
 
             # Se only_available=true, pula músicos sem disponibilidade
             if only_available and not primary_avail:
@@ -1614,18 +1539,13 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
 
             musician_data = {
                 "musician_id": musician.id,
-                "musician_name": musician.user.get_full_name()
-                or musician.user.username,
+                "musician_name": musician.user.get_full_name() or musician.user.username,
                 "instrument": musician.instrument,
                 "instrument_display": get_instrument_label(musician.instrument),
                 "has_availability": primary_avail is not None,
                 "availability_id": primary_avail.id if primary_avail else None,
-                "start_time": primary_avail.start_time.strftime("%H:%M")
-                if primary_avail
-                else None,
-                "end_time": primary_avail.end_time.strftime("%H:%M")
-                if primary_avail
-                else None,
+                "start_time": primary_avail.start_time.strftime("%H:%M") if primary_avail else None,
+                "end_time": primary_avail.end_time.strftime("%H:%M") if primary_avail else None,
                 "notes": primary_avail.notes if primary_avail else None,
                 "availability_count": len(avail_list),
                 "availability_slots": availability_slots,
@@ -1646,9 +1566,7 @@ MAX_COVER_SIZE = (1600, 900)
 MAX_IMAGE_PIXELS = 12_000_000
 
 
-def _process_profile_image(
-    uploaded_file, *, max_bytes, max_size, crop_square, quality, prefix
-):
+def _process_profile_image(uploaded_file, *, max_bytes, max_size, crop_square, quality, prefix):
     if uploaded_file.size > max_bytes:
         size_mb = max_bytes // (1024 * 1024)
         raise ValueError(f"Arquivo muito grande. Tamanho máximo: {size_mb}MB.")
@@ -1658,9 +1576,7 @@ def _process_profile_image(
         image_format = (image.format or "").upper()
         image = ImageOps.exif_transpose(image)
     except (UnidentifiedImageError, Image.DecompressionBombError) as exc:
-        raise ValueError(
-            "Arquivo inválido. Envie uma imagem JPG, PNG ou WEBP."
-        ) from exc
+        raise ValueError("Arquivo inválido. Envie uma imagem JPG, PNG ou WEBP.") from exc
 
     if not image_format:
         content_type = getattr(uploaded_file, "content_type", "") or ""
@@ -1677,9 +1593,7 @@ def _process_profile_image(
     if image.width * image.height > MAX_IMAGE_PIXELS:
         raise ValueError("Imagem muito grande. Reduza a resolução.")
 
-    has_alpha = image.mode in ("RGBA", "LA") or (
-        image.mode == "P" and "transparency" in image.info
-    )
+    has_alpha = image.mode in ("RGBA", "LA") or (image.mode == "P" and "transparency" in image.info)
     image = image.convert("RGBA" if has_alpha else "RGB")
 
     if crop_square:
@@ -1689,13 +1603,9 @@ def _process_profile_image(
             width, height = max_size
             aspect = image.width / image.height
             if aspect > width / height:
-                image = ImageOps.fit(
-                    image, (width, int(width / aspect)), method=Image.LANCZOS
-                )
+                image = ImageOps.fit(image, (width, int(width / aspect)), method=Image.LANCZOS)
             else:
-                image = ImageOps.fit(
-                    image, (int(height * aspect), height), method=Image.LANCZOS
-                )
+                image = ImageOps.fit(image, (int(height * aspect), height), method=Image.LANCZOS)
         else:
             image.thumbnail((max_size, max_size), Image.LANCZOS)
 
@@ -1773,9 +1683,7 @@ def upload_avatar(request):
             "Upload de avatar sem perfil de músico | user_id=%s",
             getattr(request.user, "id", None),
         )
-        return Response(
-            {"detail": "Perfil não encontrado"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"detail": "Perfil não encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except ValueError as e:
         logger.warning(
             "Upload de avatar inválido | user_id=%s",
@@ -1787,9 +1695,7 @@ def upload_avatar(request):
             "Erro inesperado no upload de avatar | user_id=%s",
             getattr(request.user, "id", None),
         )
-        return Response(
-            {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["POST"])
@@ -1836,9 +1742,7 @@ def upload_cover(request):
             "Upload de capa sem perfil de músico | user_id=%s",
             getattr(request.user, "id", None),
         )
-        return Response(
-            {"detail": "Perfil não encontrado"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"detail": "Perfil não encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except ValueError as e:
         logger.warning(
             "Upload de capa inválido | user_id=%s",
@@ -1850,9 +1754,7 @@ def upload_cover(request):
             "Erro inesperado no upload de capa | user_id=%s",
             getattr(request.user, "id", None),
         )
-        return Response(
-            {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["GET"])
@@ -1911,9 +1813,9 @@ def get_musician_connections(request, musician_id):
                     "id": target.id,
                     "full_name": target.user.get_full_name() or target.user.username,
                     "instrument": target.instrument,
-                    "avatar": request.build_absolute_uri(target.avatar.url)
-                    if target.avatar
-                    else None,
+                    "avatar": (
+                        request.build_absolute_uri(target.avatar.url) if target.avatar else None
+                    ),
                 }
             )
 
@@ -1928,9 +1830,7 @@ def get_musician_connections(request, musician_id):
         )
 
     except Musician.DoesNotExist:
-        return Response(
-            {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         logger.exception("Erro ao buscar conexões")
         return Response(
@@ -1956,20 +1856,14 @@ def get_musician_reviews(request, musician_id):
             .order_by("-created_at")[:10]
         )
 
-        serializer = MusicianRatingSerializer(
-            reviews, many=True, context={"request": request}
-        )
+        serializer = MusicianRatingSerializer(reviews, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     except Musician.DoesNotExist:
-        return Response(
-            {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         logging.exception("Erro ao buscar avaliações")
-        return Response(
-            {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["GET"])
@@ -1993,23 +1887,17 @@ def get_musician_badges(request, musician_id):
                     "name": badge.get_badge_type_display(),
                     "description": badge.description,
                     "icon": badge.icon,
-                    "awarded_at": badge.awarded_at.isoformat()
-                    if badge.awarded_at
-                    else None,
+                    "awarded_at": badge.awarded_at.isoformat() if badge.awarded_at else None,
                 }
             )
 
         return Response(badge_data, status=status.HTTP_200_OK)
 
     except Musician.DoesNotExist:
-        return Response(
-            {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         logging.exception("Erro ao buscar badges")
-        return Response(
-            {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["GET"])
@@ -2060,14 +1948,10 @@ def get_musician_stats(request, musician_id):
         )
 
     except Musician.DoesNotExist:
-        return Response(
-            {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         logging.exception("Erro ao buscar estatísticas")
-        return Response(
-            {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["GET"])
@@ -2119,14 +2003,10 @@ def get_musician_connection_status(request, musician_id):
             )
 
     except Musician.DoesNotExist:
-        return Response(
-            {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         logging.exception("Erro ao verificar conexão")
-        return Response(
-            {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # =============================================================================
@@ -2214,9 +2094,7 @@ def approve_musician_request(request, request_id):
 
     if musician_request.status != "pending":
         return Response(
-            {
-                "detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"
-            },
+            {"detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -2225,10 +2103,11 @@ def approve_musician_request(request, request_id):
 
     # Enviar email com link de convite
     try:
+        import logging
+
+        from django.conf import settings
         from django.core.mail import send_mail
         from django.template.loader import render_to_string
-        from django.conf import settings
-        import logging
 
         logger = logging.getLogger(__name__)
 
@@ -2306,9 +2185,7 @@ def reject_musician_request(request, request_id):
 
     if musician_request.status != "pending":
         return Response(
-            {
-                "detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"
-            },
+            {"detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -2330,9 +2207,7 @@ def validate_invite_token(request):
     """
     token = request.query_params.get("token")
     if not token:
-        return Response(
-            {"detail": "Token não fornecido"}, status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"detail": "Token não fornecido"}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         musician_request = MusicianRequest.objects.get(invite_token=token)
@@ -2345,9 +2220,7 @@ def validate_invite_token(request):
                 {"detail": "Este convite já foi utilizado"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        return Response(
-            {"detail": "Convite expirado"}, status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"detail": "Convite expirado"}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response(
         {
@@ -2428,16 +2301,12 @@ def list_received_contact_requests(request):
         )
 
     status_filter = request.query_params.get("status")
-    queryset = ContactRequest.objects.filter(to_musician=musician).order_by(
-        "-created_at"
-    )
+    queryset = ContactRequest.objects.filter(to_musician=musician).order_by("-created_at")
 
     if status_filter:
         queryset = queryset.filter(status=status_filter)
 
-    serializer = ContactRequestSerializer(
-        queryset, many=True, context={"request": request}
-    )
+    serializer = ContactRequestSerializer(queryset, many=True, context={"request": request})
     return Response(serializer.data)
 
 
@@ -2460,13 +2329,11 @@ def list_sent_contact_requests(request):
             status=status.HTTP_403_FORBIDDEN,
         )
 
-    queryset = ContactRequest.objects.filter(
-        from_organization=membership.organization
-    ).order_by("-created_at")
-
-    serializer = ContactRequestSerializer(
-        queryset, many=True, context={"request": request}
+    queryset = ContactRequest.objects.filter(from_organization=membership.organization).order_by(
+        "-created_at"
     )
+
+    serializer = ContactRequestSerializer(queryset, many=True, context={"request": request})
     return Response(serializer.data)
 
 
@@ -2510,9 +2377,7 @@ def reply_contact_request(request, contact_id):
     try:
         musician = request.user.musician_profile
         if contact_request.to_musician != musician:
-            return Response(
-                {"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN
-            )
+            return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
     except Musician.DoesNotExist:
         return Response(
             {"detail": "Perfil de músico não encontrado"},
@@ -2524,9 +2389,7 @@ def reply_contact_request(request, contact_id):
 
     contact_request.reply(serializer.validated_data["reply_message"])
 
-    return Response(
-        ContactRequestSerializer(contact_request, context={"request": request}).data
-    )
+    return Response(ContactRequestSerializer(contact_request, context={"request": request}).data)
 
 
 @api_view(["POST"])
@@ -2589,9 +2452,7 @@ def list_musicians_by_city(request):
             Q(instrument__iexact=instrument) | Q(instruments__icontains=instrument)
         )
 
-    serializer = MusicianPublicSerializer(
-        queryset, many=True, context={"request": request}
-    )
+    serializer = MusicianPublicSerializer(queryset, many=True, context={"request": request})
     return Response(serializer.data)
 
 
@@ -2626,9 +2487,7 @@ def list_sponsors(request):
         day_offset = date.today().toordinal() % len(sponsors)
         sponsors = sponsors[day_offset:] + sponsors[:day_offset]
 
-    serializer = OrganizationPublicSerializer(
-        sponsors, many=True, context={"request": request}
-    )
+    serializer = OrganizationPublicSerializer(sponsors, many=True, context={"request": request})
     return Response(serializer.data)
 
 
@@ -2678,9 +2537,7 @@ def get_company_dashboard(request):
 
     return Response(
         {
-            "organization": OrganizationSerializer(
-                organization, context={"request": request}
-            ).data,
+            "organization": OrganizationSerializer(organization, context={"request": request}).data,
             "stats": {
                 "total_sent": total_sent,
                 "pending_replies": pending_replies,
@@ -2814,15 +2671,11 @@ class InstrumentViewSet(viewsets.ReadOnlyModelViewSet):
         POST /api/instruments/create_custom/
         Body: { "display_name": "Cavaquinho" }
         """
-        serializer = InstrumentCreateSerializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = InstrumentCreateSerializer(data=request.data, context={"request": request})
 
         if serializer.is_valid():
             instrument = serializer.save()
-            return Response(
-                InstrumentSerializer(instrument).data, status=status.HTTP_201_CREATED
-            )
+            return Response(InstrumentSerializer(instrument).data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

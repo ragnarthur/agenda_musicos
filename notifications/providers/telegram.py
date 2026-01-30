@@ -1,4 +1,5 @@
 import logging
+
 import requests
 from django.conf import settings
 
@@ -20,11 +21,11 @@ class TelegramProvider(BaseProvider):
 
     @property
     def channel_name(self) -> str:
-        return 'telegram'
+        return "telegram"
 
     @property
     def bot_token(self) -> str:
-        return getattr(settings, 'TELEGRAM_BOT_TOKEN', '')
+        return getattr(settings, "TELEGRAM_BOT_TOKEN", "")
 
     def is_configured(self) -> bool:
         return bool(self.bot_token)
@@ -41,18 +42,14 @@ class TelegramProvider(BaseProvider):
 
     def send(self, payload: NotificationPayload, user) -> NotificationResult:
         if not self.is_configured():
-            return NotificationResult(
-                success=False,
-                error_message="Telegram nao configurado"
-            )
+            return NotificationResult(success=False, error_message="Telegram nao configurado")
 
         try:
             prefs = user.notification_preferences
             chat_id = prefs.telegram_chat_id
         except Exception:
             return NotificationResult(
-                success=False,
-                error_message="Usuario sem chat_id configurado"
+                success=False, error_message="Usuario sem chat_id configurado"
             )
 
         # Formata mensagem para Telegram (suporta Markdown)
@@ -60,27 +57,24 @@ class TelegramProvider(BaseProvider):
 
         try:
             response = requests.post(
-                self._get_api_url('sendMessage'),
+                self._get_api_url("sendMessage"),
                 json={
-                    'chat_id': chat_id,
-                    'text': message,
-                    'parse_mode': 'Markdown',
-                    'disable_web_page_preview': False,
+                    "chat_id": chat_id,
+                    "text": message,
+                    "parse_mode": "Markdown",
+                    "disable_web_page_preview": False,
                 },
-                timeout=10
+                timeout=10,
             )
 
             data = response.json()
 
-            if data.get('ok'):
-                message_id = data.get('result', {}).get('message_id')
+            if data.get("ok"):
+                message_id = data.get("result", {}).get("message_id")
                 logger.info(f"Telegram enviado para chat_id {chat_id}")
-                return NotificationResult(
-                    success=True,
-                    external_id=str(message_id)
-                )
+                return NotificationResult(success=True, external_id=str(message_id))
             else:
-                error = data.get('description', 'Erro desconhecido')
+                error = data.get("description", "Erro desconhecido")
                 logger.error(f"Telegram API error: {error}")
                 return NotificationResult(success=False, error_message=error)
 
@@ -100,7 +94,7 @@ class TelegramProvider(BaseProvider):
         ]
 
         # Adiciona link se disponivel
-        url = payload.data.get('url')
+        url = payload.data.get("url")
         if url:
             lines.append("")
             lines.append(f"[Ver detalhes]({url})")
@@ -110,12 +104,33 @@ class TelegramProvider(BaseProvider):
     def _escape_markdown(self, text: str) -> str:
         """Escapa caracteres especiais do Markdown"""
         # Caracteres que precisam ser escapados no Markdown v1
-        special_chars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+        special_chars = [
+            "_",
+            "*",
+            "[",
+            "]",
+            "(",
+            ")",
+            "~",
+            "`",
+            ">",
+            "#",
+            "+",
+            "-",
+            "=",
+            "|",
+            "{",
+            "}",
+            ".",
+            "!",
+        ]
         for char in special_chars:
-            text = text.replace(char, f'\\{char}')
+            text = text.replace(char, f"\\{char}")
         return text
 
-    def send_message(self, chat_id: str, text: str, parse_mode: str = 'Markdown') -> NotificationResult:
+    def send_message(
+        self, chat_id: str, text: str, parse_mode: str = "Markdown"
+    ) -> NotificationResult:
         """
         Envia mensagem generica para um chat_id.
         Util para mensagens de sistema como verificacao.
@@ -125,20 +140,24 @@ class TelegramProvider(BaseProvider):
 
         try:
             response = requests.post(
-                self._get_api_url('sendMessage'),
+                self._get_api_url("sendMessage"),
                 json={
-                    'chat_id': chat_id,
-                    'text': text,
-                    'parse_mode': parse_mode,
+                    "chat_id": chat_id,
+                    "text": text,
+                    "parse_mode": parse_mode,
                 },
-                timeout=10
+                timeout=10,
             )
 
             data = response.json()
-            if data.get('ok'):
-                return NotificationResult(success=True, external_id=str(data.get('result', {}).get('message_id')))
+            if data.get("ok"):
+                return NotificationResult(
+                    success=True, external_id=str(data.get("result", {}).get("message_id"))
+                )
             else:
-                return NotificationResult(success=False, error_message=data.get('description', 'Erro'))
+                return NotificationResult(
+                    success=False, error_message=data.get("description", "Erro")
+                )
 
         except Exception as e:
             logger.exception("Erro ao enviar mensagem Telegram")
@@ -150,10 +169,10 @@ class TelegramProvider(BaseProvider):
             return {}
 
         try:
-            response = requests.get(self._get_api_url('getMe'), timeout=10)
+            response = requests.get(self._get_api_url("getMe"), timeout=10)
             data = response.json()
-            if data.get('ok'):
-                return data.get('result', {})
+            if data.get("ok"):
+                return data.get("result", {})
         except Exception:
             pass
 
