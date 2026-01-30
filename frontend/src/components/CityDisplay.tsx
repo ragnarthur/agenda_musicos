@@ -78,7 +78,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
         transition={{ duration: 0.4 }}
         className="fixed top-4 sm:top-6 md:top-8 left-0 right-0 mx-4 sm:mx-auto z-50 w-auto sm:w-[calc(100%-2rem)] md:w-auto max-w-2xl"
       >
-        <div className="bg-amber-500/15 backdrop-blur-md rounded-2xl border border-amber-500/30 px-2.5 py-2.5 sm:px-6 sm:py-4 shadow-2xl w-full">
+        <div className="bg-amber-500/25 backdrop-blur-md rounded-2xl border border-amber-500/30 px-2.5 py-2.5 sm:px-6 sm:py-4 shadow-2xl w-full">
           <div className="flex items-center gap-3">
             <div className="animate-spin flex-shrink-0">
               <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-amber-400" />
@@ -103,7 +103,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
         transition={{ duration: 0.4 }}
         className="fixed top-4 sm:top-6 md:top-8 left-0 right-0 mx-4 sm:mx-auto z-50 w-auto sm:w-[calc(100%-2rem)] md:w-auto max-w-2xl"
       >
-        <div className="bg-red-500/15 backdrop-blur-md rounded-2xl border border-red-500/30 px-2.5 py-2.5 sm:px-6 sm:py-4 shadow-2xl w-full">
+        <div className="bg-red-500/25 backdrop-blur-md rounded-2xl border border-red-500/30 px-2.5 py-2.5 sm:px-6 sm:py-4 shadow-2xl w-full">
           <div className="flex items-center gap-2 sm:gap-3">
             <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-red-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
@@ -141,7 +141,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
         transition={{ duration: 0.4 }}
         className="fixed top-4 sm:top-6 md:top-8 left-0 right-0 mx-4 sm:mx-auto z-50 w-auto sm:w-[calc(100%-2rem)] md:w-auto max-w-md"
       >
-        <div className="bg-green-500/15 backdrop-blur-md rounded-2xl border border-green-500/30 px-2.5 py-2.5 sm:px-8 sm:py-6 shadow-2xl w-full">
+        <div className="bg-green-500/25 backdrop-blur-md rounded-2xl border border-green-500/30 px-2.5 py-2.5 sm:px-8 sm:py-6 shadow-2xl w-full">
           <div className="flex flex-col items-center gap-3">
             <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-500/20 rounded-full flex items-center justify-center">
               <Check className="h-6 w-6 sm:h-8 sm:w-8 text-green-400" />
@@ -178,8 +178,8 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
         >
           <div className={`${
             isMonteCarmelo
-              ? 'bg-gradient-to-r from-amber-500/15 via-amber-400/18 to-amber-500/15'
-              : 'bg-amber-500/15'
+              ? 'bg-gradient-to-r from-amber-500/25 via-amber-400/28 to-amber-500/25'
+              : 'bg-amber-500/25'
           } backdrop-blur-md rounded-2xl border border-amber-500/30 px-2.5 py-2.5 sm:px-6 sm:py-4 shadow-2xl w-full`}>
           <div className="flex items-center gap-2 sm:gap-3">
             <div className={`${
@@ -285,7 +285,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
           transition={{ duration: 0.3 }}
           className="fixed top-4 sm:top-6 md:top-8 left-0 right-0 mx-4 sm:mx-auto z-50 w-auto sm:w-[calc(100%-2rem)] md:w-auto max-w-md"
         >
-          <div className="bg-amber-500/15 backdrop-blur-md rounded-2xl border border-amber-500/30 px-2.5 py-2.5 sm:px-6 sm:py-5 shadow-2xl w-full">
+          <div className="bg-amber-500/25 backdrop-blur-md rounded-2xl border border-amber-500/30 px-2.5 py-2.5 sm:px-6 sm:py-5 shadow-2xl w-full">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="bg-amber-500/10 p-2 sm:p-2.5 rounded-full flex-shrink-0">
                 <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-amber-400" />
