@@ -1,10 +1,11 @@
 # agenda/services/email_service.py
 # Serviço centralizado para envio de emails no sistema
-from django.core.mail import send_mail, EmailMessage
-from django.template.loader import render_to_string
-from django.conf import settings
-from django.utils.html import strip_tags
 import logging
+
+from django.conf import settings
+from django.core.mail import EmailMessage, send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 logger = logging.getLogger(__name__)
 
@@ -42,9 +43,7 @@ class EmailService:
         """
         try:
             # Lista de emails administradores (do settings ou fixo)
-            admin_emails = getattr(
-                settings, "ADMIN_EMAILS", ["gigflowagenda@gmail.com"]
-            )
+            admin_emails = getattr(settings, "ADMIN_EMAILS", ["gigflowagenda@gmail.com"])
 
             if isinstance(admin_emails, str):
                 admin_emails = [email.strip() for email in admin_emails.split(",")]
@@ -56,9 +55,7 @@ class EmailService:
                 "emails/new_request_admin.html",
                 {
                     "musician_request": musician_request,
-                    "frontend_url": getattr(
-                        settings, "FRONTEND_URL", "http://localhost:5173"
-                    ),
+                    "frontend_url": getattr(settings, "FRONTEND_URL", "http://localhost:5173"),
                     "admin_panel_url": f"{getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')}/admin/solicitacoes",
                 },
             )
@@ -97,9 +94,7 @@ class EmailService:
                 {
                     "musician_request": musician_request,
                     "credentials": credentials,
-                    "frontend_url": getattr(
-                        settings, "FRONTEND_URL", "http://localhost:5173"
-                    ),
+                    "frontend_url": getattr(settings, "FRONTEND_URL", "http://localhost:5173"),
                     "login_url": f"{getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')}/login",
                 },
             )
@@ -136,9 +131,7 @@ class EmailService:
                     "musician_request": musician_request,
                     "rejection_reason": rejection_reason
                     or "Não atendemos nossos critérios no momento.",
-                    "frontend_url": getattr(
-                        settings, "FRONTEND_URL", "http://localhost:5173"
-                    ),
+                    "frontend_url": getattr(settings, "FRONTEND_URL", "http://localhost:5173"),
                     "request_url": f"{getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')}/solicitar-acesso",
                 },
             )
@@ -180,9 +173,7 @@ class EmailService:
                 template,
                 {
                     "user": user,
-                    "frontend_url": getattr(
-                        settings, "FRONTEND_URL", "http://localhost:5173"
-                    ),
+                    "frontend_url": getattr(settings, "FRONTEND_URL", "http://localhost:5173"),
                     **extra_context,
                 },
             )
@@ -219,9 +210,7 @@ class EmailService:
                     "musician": musician,
                     "company": company,
                     "contact_request": contact_request,
-                    "frontend_url": getattr(
-                        settings, "FRONTEND_URL", "http://localhost:5173"
-                    ),
+                    "frontend_url": getattr(settings, "FRONTEND_URL", "http://localhost:5173"),
                     "messages_url": f"{getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')}/musicos/mensagens",
                 },
             )
@@ -236,9 +225,7 @@ class EmailService:
             )
 
             if success:
-                logger.info(
-                    f"Notificação de contato enviada para músico {musician.user.email}"
-                )
+                logger.info(f"Notificação de contato enviada para músico {musician.user.email}")
 
             return success
 

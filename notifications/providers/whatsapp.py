@@ -1,4 +1,5 @@
 import logging
+
 import requests
 from django.conf import settings
 
@@ -22,10 +23,10 @@ class WhatsAppProvider(BaseProvider):
 
     @property
     def channel_name(self) -> str:
-        return 'whatsapp'
+        return "whatsapp"
 
     def is_configured(self) -> bool:
-        service_url = getattr(settings, 'WHATSAPP_SERVICE_URL', '')
+        service_url = getattr(settings, "WHATSAPP_SERVICE_URL", "")
         return bool(service_url)
 
     def can_send_to(self, user) -> bool:
@@ -48,7 +49,7 @@ class WhatsAppProvider(BaseProvider):
         if not self.is_configured():
             return NotificationResult(
                 success=False,
-                error_message="WhatsApp nao configurado. Configure WHATSAPP_SERVICE_URL."
+                error_message="WhatsApp nao configurado. Configure WHATSAPP_SERVICE_URL.",
             )
 
         try:
@@ -56,12 +57,11 @@ class WhatsAppProvider(BaseProvider):
             phone = prefs.whatsapp_number
         except Exception:
             return NotificationResult(
-                success=False,
-                error_message="Usuario sem WhatsApp configurado"
+                success=False, error_message="Usuario sem WhatsApp configurado"
             )
 
-        service_url = getattr(settings, 'WHATSAPP_SERVICE_URL', '')
-        service_secret = getattr(settings, 'WHATSAPP_SERVICE_SECRET', '')
+        service_url = getattr(settings, "WHATSAPP_SERVICE_URL", "")
+        service_secret = getattr(settings, "WHATSAPP_SERVICE_SECRET", "")
 
         message = self._format_whatsapp_message(payload)
 
@@ -69,23 +69,20 @@ class WhatsAppProvider(BaseProvider):
             response = requests.post(
                 f"{service_url}/send",
                 json={
-                    'phone': phone,
-                    'message': message,
+                    "phone": phone,
+                    "message": message,
                 },
                 headers={
-                    'X-Service-Secret': service_secret,
-                    'Content-Type': 'application/json',
+                    "X-Service-Secret": service_secret,
+                    "Content-Type": "application/json",
                 },
-                timeout=30
+                timeout=30,
             )
 
             if response.status_code == 200:
                 data = response.json()
                 logger.info(f"WhatsApp enviado para {phone}")
-                return NotificationResult(
-                    success=True,
-                    external_id=data.get('message_id')
-                )
+                return NotificationResult(success=True, external_id=data.get("message_id"))
             else:
                 error = f"HTTP {response.status_code}: {response.text}"
                 logger.error(f"Erro WhatsApp: {error}")
@@ -105,7 +102,7 @@ class WhatsAppProvider(BaseProvider):
             payload.body,
         ]
 
-        url = payload.data.get('url')
+        url = payload.data.get("url")
         if url:
             lines.append("")
             lines.append(url)

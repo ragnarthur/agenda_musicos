@@ -1,13 +1,13 @@
-from datetime import datetime, timedelta, time
+from datetime import datetime, time, timedelta
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from agenda.models import Musician, LeaderAvailability, Event
+from agenda.models import Event, LeaderAvailability, Musician
 
 
 class Command(BaseCommand):
-    help = 'Cria disponibilidades fictícias para músicos demo (e base) para facilitar convites'
+    help = "Cria disponibilidades fictícias para músicos demo (e base) para facilitar convites"
 
     def handle(self, *args, **options):
         # Agenda base: próxima semana, slots variados
@@ -21,13 +21,13 @@ class Command(BaseCommand):
         ]
 
         musicians = Musician.objects.filter(is_active=True)
-        events = Event.objects.filter(
-            status__in=['proposed', 'approved', 'confirmed']
-        ).only('start_datetime', 'end_datetime')
+        events = Event.objects.filter(status__in=["proposed", "approved", "confirmed"]).only(
+            "start_datetime", "end_datetime"
+        )
         buffer = timedelta(minutes=40)
 
         # Limpa slots demo antigos para evitar acumular conflitos
-        LeaderAvailability.objects.filter(notes__icontains='slot demo').delete()
+        LeaderAvailability.objects.filter(notes__icontains="slot demo").delete()
 
         created = 0
         for musician in musicians:
@@ -50,11 +50,15 @@ class Command(BaseCommand):
                         start_time=start_time,
                         end_time=end_time,
                         defaults={
-                            'notes': 'Disponível para gigs (slot demo)',
-                            'is_public': True,
-                        }
+                            "notes": "Disponível para gigs (slot demo)",
+                            "is_public": True,
+                        },
                     )
                     created += 1
                     break  # encontrou um slot sem conflito para este dia/músico
 
-        self.stdout.write(self.style.SUCCESS(f'Disponibilidades demo criadas para {musicians.count()} músicos (total de {created} slots).'))
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Disponibilidades demo criadas para {musicians.count()} músicos (total de {created} slots)."
+            )
+        )

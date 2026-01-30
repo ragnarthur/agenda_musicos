@@ -1,6 +1,8 @@
 from rest_framework import serializers
+
 from agenda.validators import sanitize_string
-from .models import NotificationPreference, NotificationLog, NotificationChannel
+
+from .models import NotificationChannel, NotificationLog, NotificationPreference
 
 
 class NotificationPreferenceSerializer(serializers.ModelSerializer):
@@ -13,29 +15,29 @@ class NotificationPreferenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = NotificationPreference
         fields = [
-            'preferred_channel',
-            'fallback_to_email',
-            'telegram_chat_id',
-            'telegram_verified',
-            'telegram_connected',
-            'whatsapp_number',
-            'whatsapp_verified',
-            'whatsapp_connected',
-            'notify_event_invites',
-            'notify_event_reminders',
-            'notify_event_confirmations',
-            'notify_availability_responses',
-            'available_channels',
-            'updated_at',
+            "preferred_channel",
+            "fallback_to_email",
+            "telegram_chat_id",
+            "telegram_verified",
+            "telegram_connected",
+            "whatsapp_number",
+            "whatsapp_verified",
+            "whatsapp_connected",
+            "notify_event_invites",
+            "notify_event_reminders",
+            "notify_event_confirmations",
+            "notify_availability_responses",
+            "available_channels",
+            "updated_at",
         ]
         read_only_fields = [
-            'telegram_chat_id',
-            'telegram_verified',
-            'telegram_connected',
-            'whatsapp_verified',
-            'whatsapp_connected',
-            'available_channels',
-            'updated_at',
+            "telegram_chat_id",
+            "telegram_verified",
+            "telegram_connected",
+            "whatsapp_verified",
+            "whatsapp_connected",
+            "available_channels",
+            "updated_at",
         ]
 
     def get_telegram_connected(self, obj):
@@ -50,25 +52,25 @@ class NotificationPreferenceSerializer(serializers.ModelSerializer):
 
         channels = [
             {
-                'id': 'email',
-                'name': 'Email',
-                'available': True,
-                'connected': bool(obj.user.email),
-                'configured': bool(getattr(settings, 'EMAIL_HOST_USER', '')),
+                "id": "email",
+                "name": "Email",
+                "available": True,
+                "connected": bool(obj.user.email),
+                "configured": bool(getattr(settings, "EMAIL_HOST_USER", "")),
             },
             {
-                'id': 'telegram',
-                'name': 'Telegram',
-                'available': True,
-                'connected': bool(obj.telegram_chat_id and obj.telegram_verified),
-                'configured': bool(getattr(settings, 'TELEGRAM_BOT_TOKEN', '')),
+                "id": "telegram",
+                "name": "Telegram",
+                "available": True,
+                "connected": bool(obj.telegram_chat_id and obj.telegram_verified),
+                "configured": bool(getattr(settings, "TELEGRAM_BOT_TOKEN", "")),
             },
             {
-                'id': 'whatsapp',
-                'name': 'WhatsApp',
-                'available': False,  # Futuro
-                'connected': bool(obj.whatsapp_number and obj.whatsapp_verified),
-                'configured': bool(getattr(settings, 'WHATSAPP_SERVICE_URL', '')),
+                "id": "whatsapp",
+                "name": "WhatsApp",
+                "available": False,  # Futuro
+                "connected": bool(obj.whatsapp_number and obj.whatsapp_verified),
+                "configured": bool(getattr(settings, "WHATSAPP_SERVICE_URL", "")),
             },
         ]
 
@@ -87,14 +89,14 @@ class NotificationLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = NotificationLog
         fields = [
-            'id',
-            'notification_type',
-            'channel',
-            'subject',
-            'message',
-            'status',
-            'created_at',
-            'sent_at',
+            "id",
+            "notification_type",
+            "channel",
+            "subject",
+            "message",
+            "status",
+            "created_at",
+            "sent_at",
         ]
         read_only_fields = fields
 

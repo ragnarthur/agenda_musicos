@@ -5,15 +5,19 @@ Mantenha apenas como referência histórica do fluxo antigo.
 """
 
 import os
+
 import django
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
+
+from datetime import datetime, time, timedelta
 
 from django.contrib.auth.models import User
 from django.utils import timezone
-from datetime import datetime, timedelta, time
-from agenda.models import Musician, Event, LeaderAvailability
+
+from agenda.models import Event, LeaderAvailability, Musician
+
 
 def setup_test_data():
     """Cria dados de teste: usuários, músicos e disponibilidade inicial"""
@@ -21,44 +25,30 @@ def setup_test_data():
 
     # Busca ou cria usuários
     sara, _ = User.objects.get_or_create(
-        username='sara',
-        defaults={
-            'first_name': 'Sara',
-            'last_name': 'Carmo',
-            'email': 'sara@example.com'
-        }
+        username="sara",
+        defaults={"first_name": "Sara", "last_name": "Carmo", "email": "sara@example.com"},
     )
-    sara.set_password('sara2026@')
+    sara.set_password("sara2026@")
     sara.save()
 
     roberto, _ = User.objects.get_or_create(
-        username='roberto',
+        username="roberto",
         defaults={
-            'first_name': 'Roberto',
-            'last_name': 'Guimarães',
-            'email': 'roberto@example.com'
-        }
+            "first_name": "Roberto",
+            "last_name": "Guimarães",
+            "email": "roberto@example.com",
+        },
     )
-    roberto.set_password('roberto2026@')
+    roberto.set_password("roberto2026@")
     roberto.save()
 
     # Busca ou cria músicos
     sara_musician, _ = Musician.objects.get_or_create(
-        user=sara,
-        defaults={
-            'instrument': 'vocal',
-            'role': 'member',
-            'is_active': True
-        }
+        user=sara, defaults={"instrument": "vocal", "role": "member", "is_active": True}
     )
 
     roberto_musician, _ = Musician.objects.get_or_create(
-        user=roberto,
-        defaults={
-            'instrument': 'drums',
-            'role': 'member',
-            'is_active': True
-        }
+        user=roberto, defaults={"instrument": "drums", "role": "member", "is_active": True}
     )
 
     # Cria disponibilidade do músico para teste
@@ -66,18 +56,15 @@ def setup_test_data():
     tomorrow = timezone.now().date() + timedelta(days=1)
 
     # Remove disponibilidades antigas do músico para esse dia
-    LeaderAvailability.objects.filter(
-        leader=roberto_musician,
-        date=tomorrow
-    ).delete()
+    LeaderAvailability.objects.filter(leader=roberto_musician, date=tomorrow).delete()
 
     avail = LeaderAvailability.objects.create(
         leader=roberto_musician,
         date=tomorrow,
         start_time=time(18, 0),
         end_time=time(23, 0),
-        notes='Disponibilidade de teste',
-        is_active=True
+        notes="Disponibilidade de teste",
+        is_active=True,
     )
 
     print(f"✅ Disponibilidade criada: {avail.date} {avail.start_time}-{avail.end_time}")
@@ -87,18 +74,16 @@ def setup_test_data():
 
 def test_reject_restores_availability(sara, roberto, sara_musician, roberto_musician, test_date):
     """Teste 1: Rejeitar evento deve restaurar disponibilidade"""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("🧪 TESTE 1: Rejeição de Evento")
-    print("="*70)
+    print("=" * 70)
 
     # Limpa eventos antigos
     Event.objects.filter(event_date=test_date).delete()
 
     # Verifica disponibilidades iniciais
     initial_count = LeaderAvailability.objects.filter(
-        leader=roberto_musician,
-        date=test_date,
-        is_active=True
+        leader=roberto_musician, date=test_date, is_active=True
     ).count()
     print(f"📊 Disponibilidades ativas iniciais: {initial_count}")
 
@@ -110,21 +95,20 @@ def test_reject_restores_availability(sara, roberto, sara_musician, roberto_musi
         start_time=time(20, 0),
         end_time=time(22, 0),
         created_by=sara,
-        status='proposed',
-        is_solo=False
+        status="proposed",
+        is_solo=False,
     )
     print(f"📅 Evento criado: {event.title} ({event.start_time}-{event.end_time})")
 
     # Força consumo de disponibilidade (simula perform_create)
     from agenda.views import EventViewSet
+
     viewset = EventViewSet()
     viewset._consume_leader_availability(event)
 
     # Verifica fragmentação
     after_create_count = LeaderAvailability.objects.filter(
-        leader=roberto_musician,
-        date=test_date,
-        is_active=True
+        leader=roberto_musician, date=test_date, is_active=True
     ).count()
     print(f"📊 Disponibilidades após criação: {after_create_count}")
 
@@ -138,17 +122,13 @@ def test_reject_restores_availability(sara, roberto, sara_musician, roberto_musi
 
     # Verifica restauração
     after_reject_count = LeaderAvailability.objects.filter(
-        leader=roberto_musician,
-        date=test_date,
-        is_active=True
+        leader=roberto_musician, date=test_date, is_active=True
     ).count()
     print(f"📊 Disponibilidades após rejeição: {after_reject_count}")
 
     availabilities = LeaderAvailability.objects.filter(
-        leader=roberto_musician,
-        date=test_date,
-        is_active=True
-    ).order_by('start_time')
+        leader=roberto_musician, date=test_date, is_active=True
+    ).order_by("start_time")
 
     print("\n📋 Disponibilidades ativas após rejeição:")
     for avail in availabilities:
@@ -161,7 +141,7 @@ def test_reject_restores_availability(sara, roberto, sara_musician, roberto_musi
         date=test_date,
         start_time=time(20, 0),
         end_time=time(22, 0),
-        is_active=True
+        is_active=True,
     ).exists()
 
     if restored:
@@ -174,26 +154,23 @@ def test_reject_restores_availability(sara, roberto, sara_musician, roberto_musi
 
 def test_delete_restores_availability(sara, roberto, sara_musician, roberto_musician, test_date):
     """Teste 2: Deletar evento deve restaurar disponibilidade"""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("🧪 TESTE 2: Deleção de Evento")
-    print("="*70)
+    print("=" * 70)
 
     # Limpa eventos antigos
     Event.objects.filter(event_date=test_date).delete()
 
     # Recria disponibilidade inicial
-    LeaderAvailability.objects.filter(
-        leader=roberto_musician,
-        date=test_date
-    ).delete()
+    LeaderAvailability.objects.filter(leader=roberto_musician, date=test_date).delete()
 
     LeaderAvailability.objects.create(
         leader=roberto_musician,
         date=test_date,
         start_time=time(18, 0),
         end_time=time(23, 0),
-        notes='Disponibilidade inicial',
-        is_active=True
+        notes="Disponibilidade inicial",
+        is_active=True,
     )
 
     # Cria evento
@@ -204,20 +181,19 @@ def test_delete_restores_availability(sara, roberto, sara_musician, roberto_musi
         start_time=time(19, 0),
         end_time=time(21, 0),
         created_by=sara,
-        status='proposed',
-        is_solo=False
+        status="proposed",
+        is_solo=False,
     )
     print(f"📅 Evento criado: {event.title} ({event.start_time}-{event.end_time})")
 
     # Consome disponibilidade
     from agenda.views import EventViewSet
+
     viewset = EventViewSet()
     viewset._consume_leader_availability(event)
 
     before_delete = LeaderAvailability.objects.filter(
-        leader=roberto_musician,
-        date=test_date,
-        is_active=True
+        leader=roberto_musician, date=test_date, is_active=True
     ).count()
     print(f"📊 Disponibilidades antes de deletar: {before_delete}")
 
@@ -228,17 +204,13 @@ def test_delete_restores_availability(sara, roberto, sara_musician, roberto_musi
 
     # Verifica restauração
     after_delete = LeaderAvailability.objects.filter(
-        leader=roberto_musician,
-        date=test_date,
-        is_active=True
+        leader=roberto_musician, date=test_date, is_active=True
     ).count()
     print(f"📊 Disponibilidades após deleção: {after_delete}")
 
     availabilities = LeaderAvailability.objects.filter(
-        leader=roberto_musician,
-        date=test_date,
-        is_active=True
-    ).order_by('start_time')
+        leader=roberto_musician, date=test_date, is_active=True
+    ).order_by("start_time")
 
     print("\n📋 Disponibilidades ativas após deleção:")
     for avail in availabilities:
@@ -250,7 +222,7 @@ def test_delete_restores_availability(sara, roberto, sara_musician, roberto_musi
         date=test_date,
         start_time=time(19, 0),
         end_time=time(21, 0),
-        is_active=True
+        is_active=True,
     ).exists()
 
     if restored:
@@ -263,26 +235,23 @@ def test_delete_restores_availability(sara, roberto, sara_musician, roberto_musi
 
 def test_cancel_restores_availability(sara, roberto, sara_musician, roberto_musician, test_date):
     """Teste 3: Cancelar evento aprovado deve restaurar disponibilidade"""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("🧪 TESTE 3: Cancelamento de Evento Aprovado")
-    print("="*70)
+    print("=" * 70)
 
     # Limpa eventos antigos
     Event.objects.filter(event_date=test_date).delete()
 
     # Recria disponibilidade inicial
-    LeaderAvailability.objects.filter(
-        leader=roberto_musician,
-        date=test_date
-    ).delete()
+    LeaderAvailability.objects.filter(leader=roberto_musician, date=test_date).delete()
 
     LeaderAvailability.objects.create(
         leader=roberto_musician,
         date=test_date,
         start_time=time(18, 0),
         end_time=time(23, 0),
-        notes='Disponibilidade inicial',
-        is_active=True
+        notes="Disponibilidade inicial",
+        is_active=True,
     )
 
     # Cria e aprova evento
@@ -293,13 +262,14 @@ def test_cancel_restores_availability(sara, roberto, sara_musician, roberto_musi
         start_time=time(20, 30),
         end_time=time(22, 30),
         created_by=sara,
-        status='proposed',
-        is_solo=False
+        status="proposed",
+        is_solo=False,
     )
     print(f"📅 Evento criado: {event.title} ({event.start_time}-{event.end_time})")
 
     # Consome disponibilidade
     from agenda.views import EventViewSet
+
     viewset = EventViewSet()
     viewset._consume_leader_availability(event)
 
@@ -308,17 +278,15 @@ def test_cancel_restores_availability(sara, roberto, sara_musician, roberto_musi
     print(f"✅ Evento aprovado")
 
     # Cancela
-    event.status = 'cancelled'
+    event.status = "cancelled"
     event.save()
     viewset._restore_leader_availability(event)
     print(f"🚫 Evento cancelado e disponibilidade restaurada")
 
     # Verifica restauração
     availabilities = LeaderAvailability.objects.filter(
-        leader=roberto_musician,
-        date=test_date,
-        is_active=True
-    ).order_by('start_time')
+        leader=roberto_musician, date=test_date, is_active=True
+    ).order_by("start_time")
 
     print("\n📋 Disponibilidades ativas após cancelamento:")
     for avail in availabilities:
@@ -330,7 +298,7 @@ def test_cancel_restores_availability(sara, roberto, sara_musician, roberto_musi
         date=test_date,
         start_time=time(20, 30),
         end_time=time(22, 30),
-        is_active=True
+        is_active=True,
     ).exists()
 
     if restored:
@@ -342,14 +310,14 @@ def test_cancel_restores_availability(sara, roberto, sara_musician, roberto_musi
 
 
 def main():
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("⚠️  SCRIPT LEGADO: restauração automática foi removida")
-    print("="*70)
+    print("=" * 70)
     print("Nada a executar no fluxo atual.")
     return
 
     # Setup e testes antigos removidos do fluxo atual.
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

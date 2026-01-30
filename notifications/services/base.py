@@ -1,7 +1,7 @@
-from abc import ABC, abstractmethod
-from typing import Optional, Dict, Any
-from dataclasses import dataclass
 import logging
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -9,17 +9,19 @@ logger = logging.getLogger(__name__)
 @dataclass
 class NotificationPayload:
     """Payload padronizado para todas as notificacoes"""
+
     recipient_id: int
     notification_type: str
     title: str
     body: str
     data: Dict[str, Any]
-    priority: str = 'normal'
+    priority: str = "normal"
 
 
 @dataclass
 class NotificationResult:
     """Resultado do envio"""
+
     success: bool
     external_id: Optional[str] = None
     error_message: Optional[str] = None
@@ -83,7 +85,7 @@ class NotificationService:
         title: str,
         body: str,
         data: Dict[str, Any] = None,
-        force_channel: str = None
+        force_channel: str = None,
     ) -> NotificationResult:
         """
         Envia notificacao para o usuario usando canal preferido.
@@ -99,15 +101,23 @@ class NotificationService:
         Returns:
             NotificationResult
         """
-        from notifications.models import NotificationPreference, NotificationLog, NotificationChannel
+        from notifications.models import (
+            NotificationChannel,
+            NotificationLog,
+            NotificationPreference,
+        )
 
         # Busca ou cria preferencias
         prefs, _ = NotificationPreference.objects.get_or_create(user=user)
 
         # Verifica se usuario quer receber este tipo de notificacao
         if not self._should_notify(prefs, notification_type):
-            logger.info(f"Usuario {user.username} desabilitou notificacoes do tipo {notification_type}")
-            return NotificationResult(success=True, error_message="Notificacao desabilitada pelo usuario")
+            logger.info(
+                f"Usuario {user.username} desabilitou notificacoes do tipo {notification_type}"
+            )
+            return NotificationResult(
+                success=True, error_message="Notificacao desabilitada pelo usuario"
+            )
 
         # Determina canal
         if force_channel:
@@ -121,7 +131,7 @@ class NotificationService:
             notification_type=notification_type,
             title=title,
             body=body,
-            data=data or {}
+            data=data or {},
         )
 
         # Tenta enviar
@@ -129,11 +139,11 @@ class NotificationService:
         provider = self.get_provider(channel)
         if not provider or not provider.is_configured():
             # Fallback para email
-            if channel != 'email' and prefs.fallback_to_email:
+            if channel != "email" and prefs.fallback_to_email:
                 logger.info(f"Fallback para email (provider {channel} nao disponivel)")
-                provider = self.get_provider('email')
-                channel = 'email'
-                used_channel = 'email'
+                provider = self.get_provider("email")
+                channel = "email"
+                used_channel = "email"
 
         if not provider:
             logger.error("Nenhum provider disponivel")
@@ -146,8 +156,8 @@ class NotificationService:
             channel=channel,
             subject=title,
             message=body,
-            content_type=data.get('content_type', '') if data else '',
-            object_id=data.get('object_id') if data else None,
+            content_type=data.get("content_type", "") if data else "",
+            object_id=data.get("object_id") if data else None,
         )
 
         # Envia
@@ -159,17 +169,19 @@ class NotificationService:
                 logger.info(f"Notificacao enviada para {user.username} via {channel}")
             else:
                 log.mark_failed(result.error_message)
-                logger.warning(f"Falha ao enviar para {user.username} via {channel}: {result.error_message}")
+                logger.warning(
+                    f"Falha ao enviar para {user.username} via {channel}: {result.error_message}"
+                )
 
                 # Tenta fallback se configurado
-                if not result.success and channel != 'email' and prefs.fallback_to_email:
-                    email_provider = self.get_provider('email')
+                if not result.success and channel != "email" and prefs.fallback_to_email:
+                    email_provider = self.get_provider("email")
                     if email_provider and email_provider.can_send_to(user):
                         logger.info(f"Tentando fallback para email...")
                         result = email_provider.send(payload, user)
                         if result.success:
-                            used_channel = 'email'
-                            log.channel = 'email'
+                            used_channel = "email"
+                            log.channel = "email"
                             log.mark_sent(result.external_id)
                             logger.info(f"Fallback para email bem sucedido")
 

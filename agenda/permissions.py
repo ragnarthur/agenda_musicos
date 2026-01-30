@@ -1,5 +1,6 @@
 ﻿# agenda/permissions.py
 from rest_framework import permissions
+
 from .models import Musician
 
 
@@ -27,11 +28,11 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
     """
     Permissão: apenas o criador pode editar/deletar.
     """
-    
+
     def has_object_permission(self, request, view, obj):
         # Leitura permitida
         if request.method in permissions.SAFE_METHODS:
             return True
-        
+
         # Escrita apenas para o criador
         return obj.created_by == request.user

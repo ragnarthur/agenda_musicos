@@ -1,23 +1,24 @@
 # config/auth_views.py
 import logging
 from datetime import timedelta
+
 from django.conf import settings
 from django.contrib.auth import authenticate
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 try:
-    from google.oauth2 import id_token
     from google.auth.transport import requests as google_requests
+    from google.oauth2 import id_token
 except Exception:  # pragma: no cover - fallback when deps are missing
     id_token = None
     google_requests = None
 
-from agenda.throttles import LoginRateThrottle
 from agenda.models import Membership
+from agenda.throttles import LoginRateThrottle
 
 logger = logging.getLogger(__name__)
 
@@ -167,9 +168,7 @@ class CookieTokenLogoutView(CookieTokenMixin, APIView):
     permission_classes = []
 
     def post(self, request):
-        response = Response(
-            {"detail": "Logout realizado com sucesso."}, status=status.HTTP_200_OK
-        )
+        response = Response({"detail": "Logout realizado com sucesso."}, status=status.HTTP_200_OK)
         self.clear_auth_cookies(response)
         return response
 
@@ -256,7 +255,8 @@ class GoogleAuthView(CookieTokenMixin, APIView):
             )
 
         from django.contrib.auth.models import User
-        from agenda.models import Musician, Organization, Membership
+
+        from agenda.models import Membership, Musician, Organization
 
         # Verifica se usuário já existe
         try:
@@ -336,9 +336,11 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
     throttle_scope = "google_register"
 
     def post(self, request, *args, **kwargs):
-        from django.db import transaction
-        from agenda.models import Musician, Organization, Membership, MusicianRequest
         import os
+
+        from django.db import transaction
+
+        from agenda.models import Membership, Musician, MusicianRequest, Organization
 
         credential = request.data.get("credential")
         invite_token = request.data.get("invite_token")
@@ -396,9 +398,7 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
 
             if email != musician_request.email:
                 return Response(
-                    {
-                        "detail": "O email da conta Google deve ser o mesmo da solicitação."
-                    },
+                    {"detail": "O email da conta Google deve ser o mesmo da solicitação."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -435,8 +435,7 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
                     username=username,
                     email=email,
                     first_name=given_name or musician_request.full_name.split()[0],
-                    last_name=family_name
-                    or " ".join(musician_request.full_name.split()[1:]),
+                    last_name=family_name or " ".join(musician_request.full_name.split()[1:]),
                 )
                 user.set_unusable_password()  # Login apenas via Google
                 user.save()
@@ -444,10 +443,7 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
 
                 # Cria músico
                 instruments = musician_request.instruments or []
-                if (
-                    musician_request.instrument
-                    and musician_request.instrument not in instruments
-                ):
+                if musician_request.instrument and musician_request.instrument not in instruments:
                     instruments.insert(0, musician_request.instrument)
 
                 musician = Musician.objects.create(
@@ -519,9 +515,11 @@ class GoogleRegisterCompanyView(CookieTokenMixin, APIView):
     throttle_scope = "google_register"
 
     def post(self, request, *args, **kwargs):
-        from django.db import transaction
-        from agenda.models import Organization, Membership
         import os
+
+        from django.db import transaction
+
+        from agenda.models import Membership, Organization
 
         credential = request.data.get("credential")
         company_name = request.data.get("company_name", "").strip()

@@ -18,23 +18,23 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.utils import timezone
 from django.db import transaction
-
+from django.utils import timezone
 from rest_framework import status
-from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from notifications.services.email_service import send_welcome_email
 
 from .models import (
-    Musician,
-    Organization,
     Membership,
+    Musician,
     MusicianRequest,
+    Organization,
 )
 from .throttles import BurstRateThrottle
-from notifications.services.email_service import send_welcome_email
 
 logger = logging.getLogger(__name__)
 
@@ -92,9 +92,7 @@ class RegisterWithInviteView(APIView):
                     {"error": "Este convite já foi utilizado."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            return Response(
-                {"error": "Convite expirado."}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "Convite expirado."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Validações de campos
         required_fields = ["password"]
@@ -111,16 +109,12 @@ class RegisterWithInviteView(APIView):
         try:
             validate_password(password)
         except DjangoValidationError as e:
-            return Response(
-                {"password": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"password": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
 
         # Usa dados do MusicianRequest ou permite override
         email = musician_request.email
         first_name = data.get("first_name") or musician_request.full_name.split()[0]
-        last_name = data.get("last_name") or " ".join(
-            musician_request.full_name.split()[1:]
-        )
+        last_name = data.get("last_name") or " ".join(musician_request.full_name.split()[1:])
         username = data.get("username") or email.split("@")[0]
 
         # Validação de username único
@@ -153,10 +147,7 @@ class RegisterWithInviteView(APIView):
 
                 # Cria músico
                 instruments = musician_request.instruments or []
-                if (
-                    musician_request.instrument
-                    and musician_request.instrument not in instruments
-                ):
+                if musician_request.instrument and musician_request.instrument not in instruments:
                     instruments.insert(0, musician_request.instrument)
 
                 musician = Musician.objects.create(
@@ -255,9 +246,7 @@ class RegisterCompanyView(APIView):
         try:
             validate_password(password)
         except DjangoValidationError as e:
-            return Response(
-                {"password": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"password": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
 
         # Validação de username único
         username = email.split("@")[0]

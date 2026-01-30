@@ -1,22 +1,28 @@
-import secrets
 import logging
+import secrets
 from datetime import timedelta
 
-from django.utils import timezone
 from django.conf import settings
+from django.utils import timezone
 from rest_framework import status
-from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.views import APIView
 
-from .models import NotificationPreference, NotificationLog, TelegramVerification, NotificationChannel
 from agenda.validators import sanitize_string
-from .serializers import (
-    NotificationPreferenceSerializer,
-    NotificationLogSerializer,
-    TelegramConnectSerializer,
+
+from .models import (
+    NotificationChannel,
+    NotificationLog,
+    NotificationPreference,
+    TelegramVerification,
 )
 from .providers.telegram import TelegramProvider
+from .serializers import (
+    NotificationLogSerializer,
+    NotificationPreferenceSerializer,
+    TelegramConnectSerializer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +32,7 @@ class NotificationPreferenceView(APIView):
     GET/PUT /api/notifications/preferences/
     Gerencia preferencias de notificacao do usuario logado.
     """
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -49,6 +56,7 @@ class NotificationLogListView(APIView):
     GET /api/notifications/logs/
     Lista historico de notificacoes do usuario.
     """
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -63,6 +71,7 @@ class TelegramConnectView(APIView):
     Inicia processo de conexao com Telegram.
     Retorna codigo de verificacao que usuario deve enviar ao bot.
     """
+
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -70,8 +79,8 @@ class TelegramConnectView(APIView):
         provider = TelegramProvider()
         if not provider.is_configured():
             return Response(
-                {'detail': 'Telegram nao configurado no servidor'},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE
+                {"detail": "Telegram nao configurado no servidor"},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
         # Gera codigo unico de 6 caracteres
@@ -87,14 +96,16 @@ class TelegramConnectView(APIView):
             expires_at=timezone.now() + timedelta(minutes=10),
         )
 
-        bot_username = getattr(settings, 'TELEGRAM_BOT_USERNAME', '@GigFlowAgendaBot')
+        bot_username = getattr(settings, "TELEGRAM_BOT_USERNAME", "@GigFlowAgendaBot")
 
-        return Response({
-            'code': code,
-            'bot_username': bot_username,
-            'expires_in_minutes': 10,
-            'instructions': f"Envie o codigo {code} para {bot_username} no Telegram",
-        })
+        return Response(
+            {
+                "code": code,
+                "bot_username": bot_username,
+                "expires_in_minutes": 10,
+                "instructions": f"Envie o codigo {code} para {bot_username} no Telegram",
+            }
+        )
 
 
 class TelegramDisconnectView(APIView):
@@ -102,6 +113,7 @@ class TelegramDisconnectView(APIView):
     POST /api/notifications/telegram/disconnect/
     Desconecta Telegram da conta.
     """
+
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -116,16 +128,10 @@ class TelegramDisconnectView(APIView):
 
             prefs.save()
 
-            return Response({
-                'success': True,
-                'message': 'Telegram desconectado com sucesso'
-            })
+            return Response({"success": True, "message": "Telegram desconectado com sucesso"})
 
         except NotificationPreference.DoesNotExist:
-            return Response({
-                'success': True,
-                'message': 'Nenhuma conexao ativa'
-            })
+            return Response({"success": True, "message": "Nenhuma conexao ativa"})
 
 
 class TelegramStatusView(APIView):
@@ -133,6 +139,7 @@ class TelegramStatusView(APIView):
     GET /api/notifications/telegram/status/
     Verifica status da conexao Telegram (polling para frontend).
     """
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -142,9 +149,11 @@ class TelegramStatusView(APIView):
         except NotificationPreference.DoesNotExist:
             connected = False
 
-        return Response({
-            'connected': connected,
-        })
+        return Response(
+            {
+                "connected": connected,
+            }
+        )
 
 
 class TelegramWebhookView(APIView):
@@ -153,31 +162,42 @@ class TelegramWebhookView(APIView):
     Recebe atualizacoes do Telegram Bot API.
     Processa mensagens de verificacao e comandos.
     """
+
     permission_classes = [AllowAny]
 
     def post(self, request):
         data = request.data
 
         # Extrai mensagem
-        message = data.get('message', {})
-        chat_id = str(message.get('chat', {}).get('id', ''))
-        text = sanitize_string(message.get('text', ''), max_length=200, allow_empty=True) or ''
-        username = sanitize_string(message.get('from', {}).get('username', ''), max_length=150, allow_empty=True) or ''
-        first_name = sanitize_string(message.get('from', {}).get('first_name', ''), max_length=150, allow_empty=True) or ''
+        message = data.get("message", {})
+        chat_id = str(message.get("chat", {}).get("id", ""))
+        text = sanitize_string(message.get("text", ""), max_length=200, allow_empty=True) or ""
+        username = (
+            sanitize_string(
+                message.get("from", {}).get("username", ""), max_length=150, allow_empty=True
+            )
+            or ""
+        )
+        first_name = (
+            sanitize_string(
+                message.get("from", {}).get("first_name", ""), max_length=150, allow_empty=True
+            )
+            or ""
+        )
 
         if not chat_id:
-            return Response({'ok': True})
+            return Response({"ok": True})
 
         logger.info(f"Webhook Telegram: chat_id={chat_id}, text={text}")
 
         # Comandos especiais
-        if text.upper() == '/START':
+        if text.upper() == "/START":
             self._send_welcome(chat_id)
-            return Response({'ok': True})
+            return Response({"ok": True})
 
-        if text.upper() == '/STATUS':
+        if text.upper() == "/STATUS":
             self._send_status(chat_id)
-            return Response({'ok': True})
+            return Response({"ok": True})
 
         # Tenta verificar codigo (6 caracteres hex)
         code = text.upper().strip()
@@ -187,14 +207,12 @@ class TelegramWebhookView(APIView):
             # Mensagem nao e um codigo - verifica se chat esta conectado
             self._handle_unknown_message(chat_id, text)
 
-        return Response({'ok': True})
+        return Response({"ok": True})
 
     def _try_verify_code(self, chat_id: str, code: str, first_name: str):
         """Tenta verificar codigo de conexao"""
         verification = TelegramVerification.objects.filter(
-            verification_code=code,
-            used=False,
-            expires_at__gt=timezone.now()
+            verification_code=code, used=False, expires_at__gt=timezone.now()
         ).first()
 
         provider = TelegramProvider()
@@ -210,7 +228,9 @@ class TelegramWebhookView(APIView):
             verification.used = True
             verification.save()
 
-            logger.info(f"Usuario {verification.user.username} conectou Telegram (chat_id: {chat_id})")
+            logger.info(
+                f"Usuario {verification.user.username} conectou Telegram (chat_id: {chat_id})"
+            )
 
             # Envia confirmacao
             name = first_name or verification.user.first_name or verification.user.username
@@ -221,7 +241,7 @@ class TelegramWebhookView(APIView):
                 f"- Convites para eventos\n"
                 f"- Confirmacoes de shows\n"
                 f"- Respostas de disponibilidade\n\n"
-                f"Para desconectar, acesse o app em Configuracoes > Notificacoes."
+                f"Para desconectar, acesse o app em Configuracoes > Notificacoes.",
             )
         else:
             # Codigo invalido ou expirado
@@ -232,7 +252,7 @@ class TelegramWebhookView(APIView):
                 "1. Acesse o app GigFlow\n"
                 "2. Va em Configuracoes > Notificacoes\n"
                 "3. Clique em 'Conectar Telegram'\n"
-                "4. Envie o codigo gerado aqui"
+                "4. Envie o codigo gerado aqui",
             )
 
     def _send_welcome(self, chat_id: str):
@@ -249,7 +269,7 @@ class TelegramWebhookView(APIView):
                 "4. Envie o codigo de 6 caracteres aqui\n\n"
                 "Comandos disponiveis:\n"
                 "/start - Ver esta mensagem\n"
-                "/status - Verificar status da conexao"
+                "/status - Verificar status da conexao",
             )
 
     def _handle_unknown_message(self, chat_id: str, text: str):
@@ -260,8 +280,7 @@ class TelegramWebhookView(APIView):
 
         # Verifica se chat_id ja esta conectado a alguma conta
         is_connected = NotificationPreference.objects.filter(
-            telegram_chat_id=chat_id,
-            telegram_verified=True
+            telegram_chat_id=chat_id, telegram_verified=True
         ).exists()
 
         if is_connected:
@@ -278,7 +297,7 @@ class TelegramWebhookView(APIView):
             "2. Va em Configuracoes > Notificacoes\n"
             "3. Clique em 'Conectar Telegram'\n"
             "4. Envie o codigo de 6 caracteres aqui\n\n"
-            "_Se ja tem um codigo, envie-o agora!_"
+            "_Se ja tem um codigo, envie-o agora!_",
         )
 
     def _send_status(self, chat_id: str):
@@ -290,8 +309,7 @@ class TelegramWebhookView(APIView):
         # Busca usuario conectado a este chat_id
         try:
             prefs = NotificationPreference.objects.get(
-                telegram_chat_id=chat_id,
-                telegram_verified=True
+                telegram_chat_id=chat_id, telegram_verified=True
             )
             user = prefs.user
             name = user.get_full_name() or user.username
@@ -302,7 +320,7 @@ class TelegramWebhookView(APIView):
                 f"Conta: {name}\n"
                 f"Email: {user.email}\n\n"
                 f"Voce esta recebendo notificacoes neste chat.\n\n"
-                f"_Se precisar reconectar (ex: banco resetado), va em Configuracoes > Notificacoes no app e clique em 'Reconectar'._"
+                f"_Se precisar reconectar (ex: banco resetado), va em Configuracoes > Notificacoes no app e clique em 'Reconectar'._",
             )
         except NotificationPreference.DoesNotExist:
             provider.send_message(
@@ -314,7 +332,7 @@ class TelegramWebhookView(APIView):
                 "2. Va em Configuracoes > Notificacoes\n"
                 "3. Clique em 'Conectar Telegram' ou 'Reconectar'\n"
                 "4. Envie o codigo de 6 caracteres aqui\n\n"
-                "_Se voce ja tem um codigo, envie agora!_"
+                "_Se voce ja tem um codigo, envie agora!_",
             )
 
 
@@ -324,19 +342,19 @@ class TestNotificationView(APIView):
     Envia notificacao de teste para o usuario logado.
     Apenas para debug em ambiente de desenvolvimento.
     """
+
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         if not settings.DEBUG:
             return Response(
-                {'detail': 'Disponivel apenas em modo debug'},
-                status=status.HTTP_403_FORBIDDEN
+                {"detail": "Disponivel apenas em modo debug"}, status=status.HTTP_403_FORBIDDEN
             )
 
-        from .services.base import notification_service
         from .models import NotificationType
+        from .services.base import notification_service
 
-        channel = request.data.get('channel')  # Opcional: forca canal especifico
+        channel = request.data.get("channel")  # Opcional: forca canal especifico
 
         result = notification_service.send_notification(
             user=request.user,
@@ -344,14 +362,16 @@ class TestNotificationView(APIView):
             title="Teste de Notificacao",
             body="Esta e uma notificacao de teste do sistema GigFlow.\n\nSe voce recebeu esta mensagem, tudo esta funcionando!",
             data={
-                'url': getattr(settings, 'FRONTEND_URL', 'http://localhost:5173'),
-                'content_type': 'test',
+                "url": getattr(settings, "FRONTEND_URL", "http://localhost:5173"),
+                "content_type": "test",
             },
-            force_channel=channel
+            force_channel=channel,
         )
 
-        return Response({
-            'success': result.success,
-            'detail': result.error_message,
-            'external_id': result.external_id,
-        })
+        return Response(
+            {
+                "success": result.success,
+                "detail": result.error_message,
+                "external_id": result.external_id,
+            }
+        )

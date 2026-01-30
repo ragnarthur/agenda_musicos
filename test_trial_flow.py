@@ -2,23 +2,27 @@
 """
 Teste do fluxo de trial de 7 dias.
 """
+
 import os
-import sys
-import django
-import requests
 import random
 import string
+import sys
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
-os.environ.setdefault('DJANGO_ENV', 'development')
+import django
+import requests
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+os.environ.setdefault("DJANGO_ENV", "development")
 django.setup()
 
-from agenda.models import PendingRegistration, Musician, User
+from agenda.models import Musician, PendingRegistration, User
 
-BASE_URL = 'http://localhost:8000/api'
+BASE_URL = "http://localhost:8000/api"
+
 
 def random_string(length=8):
-    return ''.join(random.choices(string.ascii_lowercase, k=length))
+    return "".join(random.choices(string.ascii_lowercase, k=length))
+
 
 def test_trial_flow():
     print("\n=== TESTE DO FLUXO DE TRIAL ===\n")
@@ -30,17 +34,20 @@ def test_trial_flow():
 
     # 1. Registro inicial
     print("1. Registrando novo usuário...")
-    response = requests.post(f'{BASE_URL}/register/', json={
-        'email': email,
-        'username': username,
-        'password': 'Test123!@#',
-        'first_name': 'Trial',
-        'last_name': 'Test',
-        'instrument': 'guitar',
-        'bio': 'Musico de teste para validacao.',
-        'city': 'Sao Paulo',
-        'state': 'SP',
-    })
+    response = requests.post(
+        f"{BASE_URL}/register/",
+        json={
+            "email": email,
+            "username": username,
+            "password": "Test123!@#",
+            "first_name": "Trial",
+            "last_name": "Test",
+            "instrument": "guitar",
+            "bio": "Musico de teste para validacao.",
+            "city": "Sao Paulo",
+            "state": "SP",
+        },
+    )
 
     if response.status_code != 201:
         print(f"   ERRO: {response.status_code} - {response.text}")
@@ -55,24 +62,20 @@ def test_trial_flow():
 
     # 3. Verifica email
     print("\n2. Verificando email...")
-    response = requests.post(f'{BASE_URL}/verify-email/', json={
-        'token': email_token
-    })
+    response = requests.post(f"{BASE_URL}/verify-email/", json={"token": email_token})
 
     if response.status_code != 200:
         print(f"   ERRO: {response.status_code} - {response.text}")
         return False
 
     data = response.json()
-    payment_token = data.get('payment_token')
+    payment_token = data.get("payment_token")
     print(f"   OK - Email verificado")
     print(f"   Payment token: {payment_token[:20]}...")
 
     # 4. Inicia trial (em vez de pagamento)
     print("\n3. Iniciando período de teste...")
-    response = requests.post(f'{BASE_URL}/start-trial/', json={
-        'payment_token': payment_token
-    })
+    response = requests.post(f"{BASE_URL}/start-trial/", json={"payment_token": payment_token})
 
     if response.status_code != 201:
         print(f"   ERRO: {response.status_code} - {response.text}")
@@ -99,10 +102,9 @@ def test_trial_flow():
     # 6. Testa login
     print("\n5. Testando login...")
     session = requests.Session()
-    response = session.post(f'{BASE_URL}/token/', json={
-        'username': username,
-        'password': 'Test123!@#'
-    })
+    response = session.post(
+        f"{BASE_URL}/token/", json={"username": username, "password": "Test123!@#"}
+    )
 
     if response.status_code != 200:
         print(f"   ERRO: {response.status_code} - {response.text}")
@@ -112,14 +114,14 @@ def test_trial_flow():
 
     # 7. Verifica endpoint /me/ retorna subscription_info
     print("\n6. Verificando dados de assinatura no endpoint /me/...")
-    response = session.get(f'{BASE_URL}/musicians/me/')
+    response = session.get(f"{BASE_URL}/musicians/me/")
 
     if response.status_code != 200:
         print(f"   ERRO: {response.status_code} - {response.text}")
         return False
 
     data = response.json()
-    subscription_info = data.get('subscription_info')
+    subscription_info = data.get("subscription_info")
 
     if not subscription_info:
         print("   ERRO: subscription_info não retornado!")
@@ -145,6 +147,7 @@ def test_trial_flow():
 
     return True
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     success = test_trial_flow()
     sys.exit(0 if success else 1)

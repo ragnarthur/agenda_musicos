@@ -92,8 +92,8 @@ class MaxRequestSizeMiddleware:
             except (TypeError, ValueError):
                 content_length = None
         if content_length and content_length > self.max_size:
-            from rest_framework.response import Response
             from rest_framework import status
+            from rest_framework.response import Response
 
             return Response(
                 {"detail": "Payload muito grande. Máximo: 10MB."},

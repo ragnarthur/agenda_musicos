@@ -1,13 +1,15 @@
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.response import Response
-from rest_framework import status
-from django.db.models import Count, Sum, Q
-from django.utils import timezone
-from datetime import datetime, timedelta
 from calendar import month_name
-from .models import MusicianRequest, Event
-from .serializers import MusicianRequestSerializer, EventListSerializer
+from datetime import datetime, timedelta
+
+from django.db.models import Count, Q, Sum
+from django.utils import timezone
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+
+from .models import Event, MusicianRequest
+from .serializers import EventListSerializer, MusicianRequestSerializer
 
 
 @api_view(["GET"])
@@ -16,9 +18,7 @@ def dashboard_stats(request):
     """Get dashboard statistics for admin panel"""
     try:
         now = timezone.now()
-        current_month_start = now.replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
-        )
+        current_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
         # Request counts
         total_requests = MusicianRequest.objects.count()
@@ -59,9 +59,7 @@ def booking_request_detail(request, pk):
         serializer = MusicianRequestSerializer(request_obj)
         return Response(serializer.data)
     except MusicianRequest.DoesNotExist:
-        return Response(
-            {"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -87,9 +85,7 @@ def approve_booking_request(request, pk):
         # Email is sent via email_service.send_approval_notification in views.py
         return Response({"message": "Request approved successfully"})
     except MusicianRequest.DoesNotExist:
-        return Response(
-            {"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -117,9 +113,7 @@ def reject_booking_request(request, pk):
         # Email is sent via email_service.send_rejection_notification in views.py
         return Response({"message": "Request rejected successfully"})
     except MusicianRequest.DoesNotExist:
-        return Response(
-            {"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -152,9 +146,7 @@ def public_request_status(request):
 
         if email:
             # Search by email, return the most recent request
-            requests = MusicianRequest.objects.filter(email__iexact=email).order_by(
-                "-created_at"
-            )
+            requests = MusicianRequest.objects.filter(email__iexact=email).order_by("-created_at")
             if not requests.exists():
                 return Response([], status=status.HTTP_200_OK)
 
@@ -169,9 +161,7 @@ def public_request_status(request):
                 serializer = MusicianRequestSerializer(request_obj)
                 return Response(serializer.data)
             except MusicianRequest.DoesNotExist:
-                return Response(
-                    {"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND
-                )
+                return Response({"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND)
 
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

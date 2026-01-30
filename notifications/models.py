@@ -1,21 +1,21 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
 from django.utils import timezone
 
 
 class NotificationChannel(models.TextChoices):
-    EMAIL = 'email', 'Email'
-    TELEGRAM = 'telegram', 'Telegram'
-    WHATSAPP = 'whatsapp', 'WhatsApp'
-    SMS = 'sms', 'SMS'
+    EMAIL = "email", "Email"
+    TELEGRAM = "telegram", "Telegram"
+    WHATSAPP = "whatsapp", "WhatsApp"
+    SMS = "sms", "SMS"
 
 
 class NotificationType(models.TextChoices):
-    EVENT_INVITE = 'event_invite', 'Convite para Evento'
-    EVENT_REMINDER = 'event_reminder', 'Lembrete de Evento'
-    EVENT_CONFIRMED = 'event_confirmed', 'Evento Confirmado'
-    EVENT_CANCELLED = 'event_cancelled', 'Evento Cancelado'
-    AVAILABILITY_RESPONSE = 'availability_response', 'Resposta de Disponibilidade'
+    EVENT_INVITE = "event_invite", "Convite para Evento"
+    EVENT_REMINDER = "event_reminder", "Lembrete de Evento"
+    EVENT_CONFIRMED = "event_confirmed", "Evento Confirmado"
+    EVENT_CANCELLED = "event_cancelled", "Evento Cancelado"
+    AVAILABILITY_RESPONSE = "availability_response", "Resposta de Disponibilidade"
 
 
 class NotificationPreference(models.Model):
@@ -23,17 +23,14 @@ class NotificationPreference(models.Model):
     Preferencias de notificacao por usuario.
     Define canal preferido e configuracoes de cada canal.
     """
+
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='notification_preferences'
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notification_preferences"
     )
 
     # Canal principal preferido
     preferred_channel = models.CharField(
-        max_length=20,
-        choices=NotificationChannel.choices,
-        default=NotificationChannel.EMAIL
+        max_length=20, choices=NotificationChannel.choices, default=NotificationChannel.EMAIL
     )
 
     # Fallback para email se canal preferido falhar
@@ -61,8 +58,8 @@ class NotificationPreference(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Preferencia de Notificacao'
-        verbose_name_plural = 'Preferencias de Notificacao'
+        verbose_name = "Preferencia de Notificacao"
+        verbose_name_plural = "Preferencias de Notificacao"
 
     def __str__(self):
         return f"{self.user.username} - {self.preferred_channel}"
@@ -88,29 +85,22 @@ class NotificationLog(models.Model):
     Log de todas as notificacoes enviadas.
     Permite auditoria e re-envio se necessario.
     """
+
     STATUS_CHOICES = [
-        ('pending', 'Pendente'),
-        ('sent', 'Enviado'),
-        ('delivered', 'Entregue'),
-        ('failed', 'Falhou'),
-        ('read', 'Lido'),
+        ("pending", "Pendente"),
+        ("sent", "Enviado"),
+        ("delivered", "Entregue"),
+        ("failed", "Falhou"),
+        ("read", "Lido"),
     ]
 
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='notification_logs'
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notification_logs"
     )
 
-    notification_type = models.CharField(
-        max_length=30,
-        choices=NotificationType.choices
-    )
+    notification_type = models.CharField(max_length=30, choices=NotificationType.choices)
 
-    channel = models.CharField(
-        max_length=20,
-        choices=NotificationChannel.choices
-    )
+    channel = models.CharField(max_length=20, choices=NotificationChannel.choices)
 
     # Referencia ao objeto relacionado (Event, Availability, etc)
     content_type = models.CharField(max_length=50, blank=True)
@@ -121,7 +111,7 @@ class NotificationLog(models.Model):
     message = models.TextField()
 
     # Status e rastreamento
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     external_id = models.CharField(max_length=100, blank=True, null=True)
     error_message = models.TextField(blank=True, null=True)
 
@@ -132,26 +122,26 @@ class NotificationLog(models.Model):
     read_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        ordering = ['-created_at']
-        verbose_name = 'Log de Notificacao'
-        verbose_name_plural = 'Logs de Notificacao'
+        ordering = ["-created_at"]
+        verbose_name = "Log de Notificacao"
+        verbose_name_plural = "Logs de Notificacao"
         indexes = [
-            models.Index(fields=['user', 'status']),
-            models.Index(fields=['notification_type', 'created_at']),
+            models.Index(fields=["user", "status"]),
+            models.Index(fields=["notification_type", "created_at"]),
         ]
 
     def __str__(self):
         return f"{self.user.username} - {self.notification_type} - {self.status}"
 
     def mark_sent(self, external_id=None):
-        self.status = 'sent'
+        self.status = "sent"
         self.sent_at = timezone.now()
         if external_id:
             self.external_id = external_id
         self.save()
 
     def mark_failed(self, error_message):
-        self.status = 'failed'
+        self.status = "failed"
         self.error_message = error_message
         self.save()
 
@@ -161,10 +151,9 @@ class TelegramVerification(models.Model):
     Tokens temporarios para verificacao do Telegram.
     Usuario recebe codigo, envia para o bot, e o sistema verifica.
     """
+
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='telegram_verifications'
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="telegram_verifications"
     )
     verification_code = models.CharField(max_length=10, unique=True)
     expires_at = models.DateTimeField()
@@ -172,8 +161,8 @@ class TelegramVerification(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = 'Verificacao Telegram'
-        verbose_name_plural = 'Verificacoes Telegram'
+        verbose_name = "Verificacao Telegram"
+        verbose_name_plural = "Verificacoes Telegram"
 
     def __str__(self):
         return f"{self.user.username} - {self.verification_code}"

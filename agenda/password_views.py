@@ -3,19 +3,19 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .throttles import BurstRateThrottle
 from notifications.services.email_service import send_password_reset_email
+
+from .throttles import BurstRateThrottle
 
 logger = logging.getLogger(__name__)
 token_generator = PasswordResetTokenGenerator()
@@ -26,11 +26,11 @@ class PasswordResetRequestView(APIView):
     throttle_classes = [BurstRateThrottle]
 
     def post(self, request):
-        email = str(request.data.get('email', '')).strip().lower()
+        email = str(request.data.get("email", "")).strip().lower()
 
-        if not email or '@' not in email:
+        if not email or "@" not in email:
             return Response(
-                {'email': 'Informe um email válido.'},
+                {"email": "Informe um email válido."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -39,16 +39,16 @@ class PasswordResetRequestView(APIView):
             try:
                 self._send_reset_email(user)
             except Exception as exc:
-                logger.error('Erro ao enviar email de redefinição: %s', exc)
+                logger.error("Erro ao enviar email de redefinição: %s", exc)
 
         return Response(
-            {'message': 'Se este email estiver cadastrado, enviaremos um link para redefinição.'},
+            {"message": "Se este email estiver cadastrado, enviaremos um link para redefinição."},
             status=status.HTTP_200_OK,
         )
 
     def _send_reset_email(self, user: User) -> None:
         """Envia email de redefinição de senha usando o EmailService"""
-        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = token_generator.make_token(user)
         reset_url = f"{frontend_url}/redefinir-senha?uid={uid}&token={token}"
@@ -64,19 +64,19 @@ class PasswordResetConfirmView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        uid = request.data.get('uid')
-        token = request.data.get('token')
-        new_password = request.data.get('new_password')
+        uid = request.data.get("uid")
+        token = request.data.get("token")
+        new_password = request.data.get("new_password")
 
         if not uid or not token:
             return Response(
-                {'error': 'Link inválido. Solicite uma nova redefinição.'},
+                {"error": "Link inválido. Solicite uma nova redefinição."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         if not new_password:
             return Response(
-                {'new_password': 'A nova senha é obrigatória.'},
+                {"new_password": "A nova senha é obrigatória."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -85,13 +85,13 @@ class PasswordResetConfirmView(APIView):
             user = User.objects.get(pk=user_id)
         except (User.DoesNotExist, ValueError, TypeError):
             return Response(
-                {'error': 'Link inválido. Solicite uma nova redefinição.'},
+                {"error": "Link inválido. Solicite uma nova redefinição."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         if not token_generator.check_token(user, token):
             return Response(
-                {'error': 'Link expirado ou inválido. Solicite uma nova redefinição.'},
+                {"error": "Link expirado ou inválido. Solicite uma nova redefinição."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -100,14 +100,14 @@ class PasswordResetConfirmView(APIView):
             validate_password(new_password, user=user)
         except DjangoValidationError as e:
             return Response(
-                {'new_password': list(e.messages)},
+                {"new_password": list(e.messages)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         user.set_password(str(new_password))
-        user.save(update_fields=['password'])
+        user.save(update_fields=["password"])
 
         return Response(
-            {'message': 'Senha atualizada com sucesso.'},
+            {"message": "Senha atualizada com sucesso."},
             status=status.HTTP_200_OK,
         )

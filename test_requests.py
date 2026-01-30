@@ -1,6 +1,7 @@
 # Test script for musician requests
-import requests
 import json
+
+import requests
 
 # Configuração
 BASE_URL = "http://localhost:8000"
@@ -87,18 +88,14 @@ def test_approval_flow(request_id):
         # Teste 3: Validar token
         if data.get("invite_token"):
             token = data.get("invite_token")
-            validation_response = requests.get(
-                f"{API_URL}/validate-invite/?token={token}"
-            )
+            validation_response = requests.get(f"{API_URL}/validate-invite/?token={token}")
 
             if validation_response.status_code == 200:
                 print("✅ Token validado com sucesso!")
                 validation_data = validation_response.json()
                 print(f"Email: {validation_data['email']}")
                 print(f"Nome: {validation_data['full_name']}")
-                print(
-                    f"Token: {token[:20]}..."
-                )  # Mostra apenas primeiros 20 caracteres
+                print(f"Token: {token[:20]}...")  # Mostra apenas primeiros 20 caracteres
                 return token
             else:
                 print(f"❌ Token inválido: {validation_response.status_code}")

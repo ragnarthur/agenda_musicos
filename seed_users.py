@@ -1,7 +1,9 @@
 import os
-from django.contrib.auth.models import User
-from agenda.models import Musician, Organization, Membership
 import secrets
+
+from django.contrib.auth.models import User
+
+from agenda.models import Membership, Musician, Organization
 
 users = [
     {
@@ -59,9 +61,7 @@ def get_password(username):
     return secrets.token_urlsafe(16)
 
 
-admin, _ = User.objects.get_or_create(
-    username="admin", defaults={"email": "admin@example.com"}
-)
+admin, _ = User.objects.get_or_create(username="admin", defaults={"email": "admin@example.com"})
 admin_password = os.environ.get("ADMIN_PASSWORD") or (
     f"admin2026@" if os.environ.get("DEBUG") == "True" else secrets.token_urlsafe(16)
 )
@@ -94,9 +94,7 @@ for u in users:
     org_defaults = {"subscription_status": "active"}
     if u["username"] == "roberto":
         org_defaults["owner"] = user
-    org, _ = Organization.objects.get_or_create(
-        name="Banda Principal", defaults=org_defaults
-    )
+    org, _ = Organization.objects.get_or_create(name="Banda Principal", defaults=org_defaults)
     if org.owner is None and u["username"] == "roberto":
         org.owner = user
         org.save(update_fields=["owner"])

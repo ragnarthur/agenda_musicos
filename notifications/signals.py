@@ -1,4 +1,5 @@
 import logging
+
 from django.conf import settings
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
@@ -12,31 +13,33 @@ logger = logging.getLogger(__name__)
 # Guarda status anterior do evento para detectar mudancas
 _event_previous_status = {}
 
+
 def _format_relative_day(event_date):
     """Retorna um texto relativo para a data do evento."""
     if not event_date:
-        return ''
+        return ""
 
     today = timezone.localdate()
     delta = (event_date - today).days
 
     if delta == 0:
-        return 'hoje'
+        return "hoje"
     if delta == 1:
-        return 'amanha'
+        return "amanha"
     if delta > 1:
-        return f'em {delta} dias'
+        return f"em {delta} dias"
     if delta == -1:
-        return 'ontem'
+        return "ontem"
     if delta < -1:
-        return f'ha {abs(delta)} dias'
-    return ''
+        return f"ha {abs(delta)} dias"
+    return ""
+
 
 def _format_event_lines(event):
     """Monta linhas padronizadas do evento para notificacoes."""
-    event_date = event.event_date.strftime('%d/%m/%Y')
-    start_time = event.start_time.strftime('%H:%M') if event.start_time else '--:--'
-    end_time = event.end_time.strftime('%H:%M') if event.end_time else '--:--'
+    event_date = event.event_date.strftime("%d/%m/%Y")
+    start_time = event.start_time.strftime("%H:%M") if event.start_time else "--:--"
+    end_time = event.end_time.strftime("%H:%M") if event.end_time else "--:--"
     relative = _format_relative_day(event.event_date)
     date_label = f"{event_date} ({relative})" if relative else event_date
 
@@ -46,6 +49,7 @@ def _format_event_lines(event):
         f"- Local: {event.location}",
     ]
     return lines
+
 
 @receiver(pre_save, sender=Event)
 def store_previous_event_status(sender, instance, **kwargs):
@@ -67,7 +71,7 @@ def notify_on_availability_created(sender, instance, created, **kwargs):
     if not created:
         return
 
-    if instance.response != 'pending':
+    if instance.response != "pending":
         return
 
     # Nao notifica o proprio criador do evento
@@ -83,23 +87,19 @@ def notify_on_availability_created(sender, instance, created, **kwargs):
     from notifications.services.base import notification_service
 
     # Monta URL do evento
-    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+    frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
     event_url = f"{frontend_url}/eventos/{event.id}"
 
     # Nome de quem convidou
-    inviter_name = ''
+    inviter_name = ""
     if event.created_by:
         inviter_name = event.created_by.get_full_name() or event.created_by.username
 
     title = f"Convite para show: {event.title}"
     event_lines = _format_event_lines(event)
     event_lines_text = "\n".join(event_lines)
-    event_date = event.event_date.strftime('%d/%m/%Y')
-    body = (
-        f"Voce recebeu um convite para tocar.\n\n"
-        f"Resumo do evento\n"
-        f"{event_lines_text}\n"
-    )
+    event_date = event.event_date.strftime("%d/%m/%Y")
+    body = f"Voce recebeu um convite para tocar.\n\n" f"Resumo do evento\n" f"{event_lines_text}\n"
 
     if inviter_name:
         body += f"- Convidado por: {inviter_name}\n"
@@ -113,19 +113,19 @@ def notify_on_availability_created(sender, instance, created, **kwargs):
             title=title,
             body=body,
             data={
-                'content_type': 'event',
-                'object_id': event.id,
-                'url': event_url,
-                'event_title': event.title,
-                'event_date': event_date,
-            }
+                "content_type": "event",
+                "object_id": event.id,
+                "url": event_url,
+                "event_title": event.title,
+                "event_date": event_date,
+            },
         )
-        if result.success and result.channel == 'telegram':
+        if result.success and result.channel == "telegram":
             EventLog.objects.create(
                 event=event,
                 performed_by=None,
-                action='notification',
-                description=f"Convite enviado via Telegram para {musician_name}."
+                action="notification",
+                description=f"Convite enviado via Telegram para {musician_name}.",
             )
         logger.info(f"Notificacao de convite enviada para {user.username}")
     except Exception as e:
@@ -140,7 +140,7 @@ def notify_on_availability_response(sender, instance, created, **kwargs):
     if created:
         return  # Ignora criacao
 
-    if instance.response == 'pending':
+    if instance.response == "pending":
         return  # Ignora se ainda pendente
 
     event = instance.event
@@ -158,14 +158,14 @@ def notify_on_availability_response(sender, instance, created, **kwargs):
     musician_name = instance.musician.user.get_full_name() or instance.musician.user.username
 
     response_labels = {
-        'available': 'confirmou presenca',
-        'unavailable': 'nao podera comparecer',
-        'maybe': 'ainda esta em duvida',
+        "available": "confirmou presenca",
+        "unavailable": "nao podera comparecer",
+        "maybe": "ainda esta em duvida",
     }
 
-    response_text = response_labels.get(instance.response, 'respondeu')
+    response_text = response_labels.get(instance.response, "respondeu")
 
-    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+    frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
     event_url = f"{frontend_url}/eventos/{event.id}"
 
     title = f"Resposta recebida: {event.title}"
@@ -185,19 +185,19 @@ def notify_on_availability_response(sender, instance, created, **kwargs):
             title=title,
             body=body,
             data={
-                'content_type': 'availability',
-                'object_id': instance.id,
-                'url': event_url,
-                'musician_name': musician_name,
-                'response': instance.response,
-            }
+                "content_type": "availability",
+                "object_id": instance.id,
+                "url": event_url,
+                "musician_name": musician_name,
+                "response": instance.response,
+            },
         )
-        if result.success and result.channel == 'telegram':
+        if result.success and result.channel == "telegram":
             EventLog.objects.create(
                 event=event,
                 performed_by=None,
-                action='notification',
-                description="Aviso de resposta enviado via Telegram para o organizador."
+                action="notification",
+                description="Aviso de resposta enviado via Telegram para o organizador.",
             )
         logger.info(f"Notificacao de resposta enviada para {user.username}")
     except Exception as e:
@@ -217,13 +217,13 @@ def notify_on_event_confirmed(sender, instance, created, **kwargs):
     if previous_status == instance.status:
         return  # Status nao mudou
 
-    if instance.status != 'confirmed':
+    if instance.status != "confirmed":
         return
 
     from notifications.models import NotificationType
     from notifications.services.base import notification_service
 
-    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+    frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
     event_url = f"{frontend_url}/eventos/{instance.id}"
     title = f"Evento confirmado: {instance.title}"
     event_lines = _format_event_lines(instance)
@@ -237,7 +237,7 @@ def notify_on_event_confirmed(sender, instance, created, **kwargs):
 
     # Notifica todos os musicos que aceitaram
     telegram_sent = 0
-    for availability in instance.availabilities.filter(response='available'):
+    for availability in instance.availabilities.filter(response="available"):
         user = availability.musician.user
 
         try:
@@ -247,24 +247,24 @@ def notify_on_event_confirmed(sender, instance, created, **kwargs):
                 title=title,
                 body=body,
                 data={
-                    'content_type': 'event',
-                    'object_id': instance.id,
-                    'url': event_url,
-                }
+                    "content_type": "event",
+                    "object_id": instance.id,
+                    "url": event_url,
+                },
             )
-            if result.success and result.channel == 'telegram':
+            if result.success and result.channel == "telegram":
                 telegram_sent += 1
             logger.info(f"Notificacao de confirmacao enviada para {user.username}")
         except Exception as e:
             logger.error(f"Erro ao notificar {user.username}: {e}")
 
     if telegram_sent:
-        label = 'musico' if telegram_sent == 1 else 'musicos'
+        label = "musico" if telegram_sent == 1 else "musicos"
         EventLog.objects.create(
             event=instance,
             performed_by=None,
-            action='notification',
-            description=f"Aviso de confirmacao enviado via Telegram para {telegram_sent} {label}."
+            action="notification",
+            description=f"Aviso de confirmacao enviado via Telegram para {telegram_sent} {label}.",
         )
 
 
@@ -280,13 +280,13 @@ def notify_on_event_cancelled(sender, instance, created, **kwargs):
     if previous_status == instance.status:
         return
 
-    if instance.status != 'cancelled':
+    if instance.status != "cancelled":
         return
 
     from notifications.models import NotificationType
     from notifications.services.base import notification_service
 
-    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+    frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
     title = f"Evento cancelado: {instance.title}"
     event_lines = _format_event_lines(instance)
     event_lines_text = "\n".join(event_lines)
@@ -313,21 +313,21 @@ def notify_on_event_cancelled(sender, instance, created, **kwargs):
                 title=title,
                 body=body,
                 data={
-                    'content_type': 'event',
-                    'object_id': instance.id,
-                }
+                    "content_type": "event",
+                    "object_id": instance.id,
+                },
             )
-            if result.success and result.channel == 'telegram':
+            if result.success and result.channel == "telegram":
                 telegram_sent += 1
             logger.info(f"Notificacao de cancelamento enviada para {user.username}")
         except Exception as e:
             logger.error(f"Erro ao notificar {user.username}: {e}")
 
     if telegram_sent:
-        label = 'musico' if telegram_sent == 1 else 'musicos'
+        label = "musico" if telegram_sent == 1 else "musicos"
         EventLog.objects.create(
             event=instance,
             performed_by=None,
-            action='notification',
-            description=f"Aviso de cancelamento enviado via Telegram para {telegram_sent} {label}."
+            action="notification",
+            description=f"Aviso de cancelamento enviado via Telegram para {telegram_sent} {label}.",
         )
