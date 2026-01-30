@@ -76,7 +76,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.4 }}
-        className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] md:w-auto max-w-2xl px-2 sm:px-0"
+        className="fixed top-4 sm:top-6 md:top-8 left-0 right-0 mx-4 sm:mx-auto z-50 w-auto sm:w-[calc(100%-2rem)] md:w-auto max-w-2xl"
       >
         <div className="bg-amber-500/10 backdrop-blur-md rounded-2xl border border-amber-500/30 px-2.5 py-2.5 sm:px-6 sm:py-4 shadow-2xl w-full">
           <div className="flex items-center gap-3">
@@ -101,10 +101,10 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.4 }}
-        className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] md:w-auto max-w-2xl px-2 sm:px-0"
+        className="fixed top-4 sm:top-6 md:top-8 left-0 right-0 mx-4 sm:mx-auto z-50 w-auto sm:w-[calc(100%-2rem)] md:w-auto max-w-2xl"
       >
         <div className="bg-red-500/10 backdrop-blur-md rounded-2xl border border-red-500/30 px-2.5 py-2.5 sm:px-6 sm:py-4 shadow-2xl w-full">
-          <div className="flex items-start gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-red-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <p className="text-red-100 font-medium text-xs sm:text-sm mb-2 break-words">
@@ -139,7 +139,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.4 }}
-        className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] md:w-auto max-w-md px-2 sm:px-0"
+        className="fixed top-4 sm:top-6 md:top-8 left-0 right-0 mx-4 sm:mx-auto z-50 w-auto sm:w-[calc(100%-2rem)] md:w-auto max-w-md"
       >
         <div className="bg-green-500/10 backdrop-blur-md rounded-2xl border border-green-500/30 px-2.5 py-2.5 sm:px-8 sm:py-6 shadow-2xl w-full">
           <div className="flex flex-col items-center gap-3">
@@ -174,14 +174,14 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.4 }}
-          className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] md:w-auto max-w-2xl px-2 sm:px-0"
+          className="fixed top-4 sm:top-6 md:top-8 left-0 right-0 mx-4 sm:mx-auto z-50 w-auto sm:w-[calc(100%-2rem)] md:w-auto max-w-2xl"
         >
           <div className={`${
             isMonteCarmelo
               ? 'bg-gradient-to-r from-amber-500/10 via-amber-400/12 to-amber-500/10'
               : 'bg-amber-500/10'
           } backdrop-blur-md rounded-2xl border border-amber-500/30 px-2.5 py-2.5 sm:px-6 sm:py-4 shadow-2xl w-full`}>
-          <div className="flex items-start gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <div className={`${
               isMonteCarmelo ? 'bg-amber-500/20' : 'bg-amber-500/10'
             } p-1.5 sm:p-2 rounded-full flex-shrink-0`}>
@@ -283,10 +283,10 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.3 }}
-          className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] md:w-auto max-w-md px-2 sm:px-0"
+          className="fixed top-4 sm:top-6 md:top-8 left-0 right-0 mx-4 sm:mx-auto z-50 w-auto sm:w-[calc(100%-2rem)] md:w-auto max-w-md"
         >
           <div className="bg-amber-500/10 backdrop-blur-md rounded-2xl border border-amber-500/30 px-2.5 py-2.5 sm:px-6 sm:py-5 shadow-2xl w-full">
-            <div className="flex items-start gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <div className="bg-amber-500/10 p-2 sm:p-2.5 rounded-full flex-shrink-0">
                 <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-amber-400" />
               </div>
