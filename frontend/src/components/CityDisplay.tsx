@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { MapPin, X, Mail, Check, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGeolocation } from '../hooks/useGeolocation';
+import { fetchIbgeCitiesByUf } from '../services/ibge';
+import { BRAZILIAN_STATE_OPTIONS } from '../config/locations';
 
 const CITIES_IN_SOON = [
   { value: 'sao_paulo_sp', label: 'São Paulo, SP' },
@@ -19,9 +21,13 @@ const AUTO_DISMISS_MS = 12000;
 const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
   const { city, state, isMonteCarmelo, isLoading, error, reset } = useGeolocation();
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ email: '', city: '' });
+  const [formData, setFormData] = useState({ email: '', state: '', city: '' });
   const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
   const [isVisible, setIsVisible] = useState(true);
+  const [cityOptions, setCityOptions] = useState<string[]>([]);
+  const [loadingCities, setLoadingCities] = useState(false);
+  const [cityError, setCityError] = useState<string | null>(null);
+  const datalistId = useRef(`cities-datalist-${Math.random().toString(36).substr(2, 9)}`);
 
   useEffect(() => {
     if (!isVisible) return;
@@ -35,20 +41,76 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
     return () => clearTimeout(timer);
   }, [isVisible, isLoading, error, showForm, formStatus, onDismiss]);
 
-  const handleCitySelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  useEffect(() => {
+    let active = true;
+
+    if (!formData.state) {
+      setCityOptions([]);
+      setCityError(null);
+      setLoadingCities(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    setLoadingCities(true);
+    setCityError(null);
+    setFormData((prev) => ({ ...prev, city: '' }));
+
+    fetchIbgeCitiesByUf(formData.state)
+      .then((data) => {
+        if (!active) return;
+        setCityOptions(data.map((cityItem) => cityItem.nome));
+      })
+      .catch(() => {
+        if (!active) return;
+        setCityOptions([]);
+        setCityError('Não foi possível carregar as cidades.');
+      })
+      .finally(() => {
+        if (!active) return;
+        setLoadingCities(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [formData.state]);
+
+  const handleStateSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFormData((prev) => ({ ...prev, state: e.target.value, city: '' }));
+  };
+
+  const handleCitySelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, city: e.target.value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.state || !formData.city) {
+      return;
+    }
+
+    const normalizedCity = formData.city.trim().toLowerCase();
+    const isCityValid = cityOptions.some(
+      (cityName) => cityName.toLowerCase() === normalizedCity
+    );
+
+    if (!isCityValid) {
+      setCityError('Por favor, selecione uma cidade válida da lista.');
+      return;
+    }
+
     setFormStatus('submitting');
+    setCityError(null);
 
     setTimeout(() => {
       setFormStatus('success');
       setTimeout(() => {
         setShowForm(false);
         setFormStatus('idle');
-        setFormData({ email: '', city: '' });
+        setFormData({ email: '', state: '', city: '' });
       }, 2000);
     }, 1000);
   };
@@ -60,8 +122,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
     onDismiss?.();
   };
 
-  const handleQuickCity = (value: string) => {
-    setFormData((prev) => ({ ...prev, city: value }));
+  const handleQuickCity = () => {
     setShowForm(true);
   };
 
@@ -218,7 +279,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
                     {CITIES_IN_SOON.map((cityOption) => (
                       <button
                         key={cityOption.value}
-                        onClick={() => handleQuickCity(cityOption.value)}
+                        onClick={() => handleQuickCity()}
                         className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-amber-100 text-xs rounded-full border border-amber-500/20 transition-all"
                       >
                         {cityOption.label}
@@ -238,7 +299,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
                     {CITIES_IN_SOON.map((cityOption) => (
                       <button
                         key={cityOption.value}
-                        onClick={() => handleQuickCity(cityOption.value)}
+                        onClick={() => handleQuickCity()}
                         className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-amber-100 text-xs rounded-full border border-amber-500/20 transition-all"
                       >
                         {cityOption.label}
@@ -317,24 +378,55 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
                   </div>
 
                   <div>
-                    <label htmlFor="city" className="block text-amber-100 text-sm font-medium mb-1.5">
-                      Cidade de Interesse
+                    <label htmlFor="state" className="block text-amber-100 text-sm font-medium mb-1.5">
+                      Estado
                     </label>
                     <select
-                      id="city"
-                      value={formData.city}
-                      onChange={handleCitySelect}
+                      id="state"
+                      value={formData.state}
+                      onChange={handleStateSelect}
                       required
                       disabled={formStatus === 'submitting'}
                       className="w-full px-4 py-2.5 bg-white/10 border border-amber-500/30 rounded-lg text-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-500/50 text-sm cursor-pointer disabled:opacity-50"
                     >
-                      <option value="">Selecione sua cidade...</option>
-                      {CITIES_IN_SOON.map((city) => (
-                        <option key={city.value} value={city.value}>
-                          {city.label}
+                      <option value="">Selecione o estado...</option>
+                      {BRAZILIAN_STATE_OPTIONS.map(({ value, label }) => (
+                        <option key={value} value={value}>
+                          {label}
                         </option>
                       ))}
                     </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="city" className="block text-amber-100 text-sm font-medium mb-1.5">
+                      Cidade
+                    </label>
+                    <input
+                      type="text"
+                      id="city"
+                      value={formData.city}
+                      onChange={handleCitySelect}
+                      placeholder={formData.state ? 'Ex: Uberlândia' : 'Selecione o estado primeiro'}
+                      list={datalistId.current}
+                      required
+                      disabled={!formData.state || loadingCities || formStatus === 'submitting'}
+                      className="w-full px-4 py-2.5 bg-white/10 border border-amber-500/30 rounded-lg text-amber-100 placeholder:text-amber-300/60 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-500/50 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                    <datalist id={datalistId.current}>
+                      {cityOptions.map((cityName) => (
+                        <option key={cityName} value={cityName} />
+                      ))}
+                    </datalist>
+                    <div className="mt-1 text-xs text-amber-200/70">
+                      {!formData.state
+                        ? 'Selecione o estado para carregar as cidades.'
+                        : loadingCities
+                          ? 'Carregando cidades...'
+                          : cityError
+                            ? cityError
+                            : 'Digite para filtrar as cidades.'}
+                    </div>
                   </div>
 
                   <div className="flex gap-2">
