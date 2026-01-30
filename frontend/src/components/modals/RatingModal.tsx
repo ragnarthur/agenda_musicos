@@ -54,6 +54,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
         rating: 0,
         comment: '',
       }));
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRatings(initialRatings);
   }, [availabilities]);
 

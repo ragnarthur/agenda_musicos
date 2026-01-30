@@ -8,8 +8,14 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
-from .models import Event, MusicianRequest
-from .serializers import EventListSerializer, MusicianRequestSerializer
+from .models import City, Event, Musician, MusicianRequest
+from .serializers import (
+    CityCreateSerializer,
+    CitySerializer,
+    EventListSerializer,
+    MusicianRequestAdminSerializer,
+    MusicianRequestSerializer,
+)
 
 
 @api_view(["GET"])
@@ -220,3 +226,231 @@ def admin_reports(request):
         )
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# =============================================================================
+# City Management Endpoints
+# =============================================================================
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def dashboard_stats_extended(request):
+    """Get extended dashboard statistics including city breakdown"""
+    try:
+        # Basic request counts
+        total_requests = MusicianRequest.objects.count()
+        pending_requests = MusicianRequest.objects.filter(status="pending").count()
+        approved_requests = MusicianRequest.objects.filter(status="approved").count()
+        rejected_requests = MusicianRequest.objects.filter(status="rejected").count()
+
+        # Musician counts
+        total_musicians = Musician.objects.filter(is_active=True).count()
+
+        # City stats
+        partner_cities = City.objects.filter(status="partner", is_active=True).count()
+        expansion_cities = City.objects.filter(status="expansion", is_active=True).count()
+        planning_cities = City.objects.filter(status="planning", is_active=True).count()
+
+        # Top cities by requests
+        top_cities = (
+            MusicianRequest.objects.values("city", "state")
+            .annotate(
+                total=Count("id"),
+                pending=Count("id", filter=Q(status="pending")),
+            )
+            .order_by("-total")[:5]
+        )
+
+        return Response(
+            {
+                "requests": {
+                    "total": total_requests,
+                    "pending": pending_requests,
+                    "approved": approved_requests,
+                    "rejected": rejected_requests,
+                },
+                "musicians": {
+                    "total": total_musicians,
+                },
+                "cities": {
+                    "partner": partner_cities,
+                    "expansion": expansion_cities,
+                    "planning": planning_cities,
+                },
+                "top_cities": list(top_cities),
+            }
+        )
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def requests_by_city(request):
+    """Get requests grouped by city"""
+    try:
+        # Aggregate requests by city/state
+        city_stats = (
+            MusicianRequest.objects.values("city", "state")
+            .annotate(
+                total_requests=Count("id"),
+                pending_requests=Count("id", filter=Q(status="pending")),
+                approved_requests=Count("id", filter=Q(status="approved")),
+                rejected_requests=Count("id", filter=Q(status="rejected")),
+            )
+            .order_by("-total_requests")
+        )
+
+        # Add active musicians count for each city
+        result = []
+        for stat in city_stats:
+            active_musicians = Musician.objects.filter(
+                city__iexact=stat["city"], state__iexact=stat["state"], is_active=True
+            ).count()
+
+            stat["active_musicians"] = active_musicians
+
+            # Check if city is registered
+            try:
+                city_obj = City.objects.get(
+                    name__iexact=stat["city"], state__iexact=stat["state"]
+                )
+                stat["city_obj"] = {
+                    "id": city_obj.id,
+                    "status": city_obj.status,
+                    "status_display": city_obj.get_status_display(),
+                    "is_active": city_obj.is_active,
+                }
+            except City.DoesNotExist:
+                stat["city_obj"] = None
+
+            result.append(stat)
+
+        return Response(result)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def requests_by_city_detail(request, city, state):
+    """Get requests for a specific city"""
+    try:
+        status_filter = request.GET.get("status")
+
+        requests_qs = MusicianRequest.objects.filter(
+            city__iexact=city, state__iexact=state
+        ).order_by("-created_at")
+
+        if status_filter and status_filter != "all":
+            requests_qs = requests_qs.filter(status=status_filter)
+
+        serializer = MusicianRequestAdminSerializer(requests_qs, many=True)
+
+        # Get city info if registered
+        city_info = None
+        try:
+            city_obj = City.objects.get(name__iexact=city, state__iexact=state)
+            city_info = CitySerializer(city_obj).data
+        except City.DoesNotExist:
+            pass
+
+        return Response(
+            {
+                "city": city,
+                "state": state,
+                "city_info": city_info,
+                "requests": serializer.data,
+            }
+        )
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def city_list_create(request):
+    """List all cities or create a new one"""
+    try:
+        if request.method == "GET":
+            status_filter = request.GET.get("status")
+            cities = City.objects.filter(is_active=True)
+
+            if status_filter:
+                cities = cities.filter(status=status_filter)
+
+            serializer = CitySerializer(cities, many=True)
+            return Response(serializer.data)
+
+        elif request.method == "POST":
+            serializer = CityCreateSerializer(data=request.data)
+            if serializer.is_valid():
+                city = serializer.save(created_by=request.user)
+                return Response(
+                    CitySerializer(city).data, status=status.HTTP_201_CREATED
+                )
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["GET", "PUT", "DELETE"])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def city_detail(request, pk):
+    """Get, update or delete a city"""
+    try:
+        city = City.objects.get(pk=pk)
+    except City.DoesNotExist:
+        return Response({"error": "Cidade não encontrada"}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        if request.method == "GET":
+            serializer = CitySerializer(city)
+            return Response(serializer.data)
+
+        elif request.method == "PUT":
+            serializer = CityCreateSerializer(city, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(CitySerializer(city).data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        elif request.method == "DELETE":
+            # Soft delete - just mark as inactive
+            city.is_active = False
+            city.save()
+            return Response({"message": "Cidade desativada com sucesso"})
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def city_change_status(request, pk):
+    """Change city status"""
+    try:
+        city = City.objects.get(pk=pk)
+    except City.DoesNotExist:
+        return Response({"error": "Cidade não encontrada"}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        new_status = request.data.get("status")
+
+        if new_status not in ["partner", "expansion", "planning"]:
+            return Response(
+                {"error": "Status inválido. Use: partner, expansion ou planning"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        city.status = new_status
+        city.save()
+
+        return Response(
+            {
+                "message": f"Status alterado para {city.get_status_display()}",
+                "city": CitySerializer(city).data,
+            }
+        )

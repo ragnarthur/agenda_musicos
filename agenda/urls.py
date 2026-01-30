@@ -9,9 +9,15 @@ from .admin_views import (
     approve_booking_request,
     booking_request_detail,
     booking_requests_list,
+    city_change_status,
+    city_detail,
+    city_list_create,
     dashboard_stats,
+    dashboard_stats_extended,
     public_request_status,
     reject_booking_request,
+    requests_by_city,
+    requests_by_city_detail,
 )
 from .password_views import (
     PasswordResetConfirmView,
@@ -230,6 +236,39 @@ urlpatterns = [
         "admin/reports/",
         admin_reports,
         name="admin-reports",
+    ),
+    # =========================================================================
+    # Admin - Extended Stats & City Management
+    # =========================================================================
+    path(
+        "admin/dashboard-stats-extended/",
+        dashboard_stats_extended,
+        name="admin-dashboard-stats-extended",
+    ),
+    path(
+        "admin/requests-by-city/",
+        requests_by_city,
+        name="admin-requests-by-city",
+    ),
+    path(
+        "admin/requests-by-city/<str:city>/<str:state>/",
+        requests_by_city_detail,
+        name="admin-requests-by-city-detail",
+    ),
+    path(
+        "admin/cities/",
+        city_list_create,
+        name="admin-cities",
+    ),
+    path(
+        "admin/cities/<int:pk>/",
+        city_detail,
+        name="admin-city-detail",
+    ),
+    path(
+        "admin/cities/<int:pk>/change-status/",
+        city_change_status,
+        name="admin-city-change-status",
     ),
     # =========================================================================
     # Public Status Page

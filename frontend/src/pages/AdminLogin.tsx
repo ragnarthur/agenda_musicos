@@ -27,7 +27,7 @@ const AdminLogin: React.FC = () => {
 
       showToast.success('Login realizado com sucesso!');
       navigate('/admin/dashboard');
-    } catch (error: any) {
+    } catch (error: unknown) {
       showToast.apiError(error);
     } finally {
       setLoading(false);

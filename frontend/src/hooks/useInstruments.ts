@@ -72,10 +72,11 @@ export const useInstruments = () => {
 
       showToast.success(`Instrumento "${newInstrument.display_name}" adicionado!`);
       return newInstrument;
-    } catch (err: any) {
+    } catch (err: unknown) {
       const message =
-        err?.response?.data?.display_name?.[0] ||
-        err?.response?.data?.detail ||
+        (err as { response?: { data?: { display_name?: string[]; detail?: string } } })?.response
+          ?.data?.display_name?.[0] ||
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         'Erro ao criar instrumento';
       showToast.error(message);
       return null;

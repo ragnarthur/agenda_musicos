@@ -64,7 +64,7 @@ const AdminDashboard: React.FC = () => {
         showToast.error('Acesso negado. Esta área é restrita a administradores.');
         navigate('/admin/login');
       }
-    } catch (error) {
+    } catch {
       navigate('/admin/login');
     }
   }, [navigate]);
@@ -84,8 +84,8 @@ const AdminDashboard: React.FC = () => {
       ]);
       setStats(statsResponse.data);
       setRequests(requestsResponse);
-    } catch (error: any) {
-      const status = error?.response?.status;
+    } catch (error: unknown) {
+      const status = (error as { response?: { status?: number } })?.response?.status;
       if (status === 401 || status === 403) {
         setIsForbidden(true);
       } else {
@@ -116,7 +116,7 @@ const AdminDashboard: React.FC = () => {
       await fetchDashboardData();
       setSelectedRequest(null);
       setAdminNotes('');
-    } catch (error: any) {
+    } catch (error: unknown) {
       showToast.apiError(error);
     } finally {
       setActionLoading(null);
@@ -131,7 +131,7 @@ const AdminDashboard: React.FC = () => {
       await fetchDashboardData();
       setSelectedRequest(null);
       setAdminNotes('');
-    } catch (error: any) {
+    } catch (error: unknown) {
       showToast.apiError(error);
     } finally {
       setActionLoading(null);

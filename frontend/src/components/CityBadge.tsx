@@ -21,23 +21,15 @@ interface CityBadgeProps {
 const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' }) => {
   const { city, state, isLoading, error, getLocation } = useGeolocation({ autoStart: false });
   const [menuOpen, setMenuOpen] = useState(false);
-  const [preference, setPreference] = useState<LocationPreference | null>(null);
-  const [manualCity, setManualCity] = useState('');
-  const [manualState, setManualState] = useState('');
+  const initialPreference = useMemo(() => getLocationPreference(), []);
+  const [preference, setPreference] = useState<LocationPreference | null>(initialPreference);
+  const [manualCity, setManualCity] = useState(initialPreference?.city ?? '');
+  const [manualState, setManualState] = useState(initialPreference?.state ?? '');
   const [cityOptions, setCityOptions] = useState<string[]>([]);
   const [loadingCities, setLoadingCities] = useState(false);
   const [cityError, setCityError] = useState<string | null>(null);
   const datalistId = useId();
   const menuRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const existing = getLocationPreference();
-    if (existing) {
-      setPreference(existing);
-      setManualCity(existing.city);
-      setManualState(existing.state);
-    }
-  }, []);
 
   useEffect(() => {
     const onPreferenceUpdated = (event: Event) => {
@@ -53,6 +45,9 @@ const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' 
       setPreference(null);
       setManualCity('');
       setManualState('');
+      setCityOptions([]);
+      setCityError(null);
+      setLoadingCities(false);
     };
 
     window.addEventListener('location:preference-updated', onPreferenceUpdated);
@@ -79,9 +74,6 @@ const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' 
     let active = true;
 
     if (!manualState) {
-      setCityOptions([]);
-      setCityError(null);
-      setLoadingCities(false);
       return () => {
         active = false;
       };
@@ -211,6 +203,11 @@ const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' 
                   setManualState(next);
                   if (next !== manualState) {
                     setManualCity('');
+                  }
+                  if (!next) {
+                    setCityOptions([]);
+                    setCityError(null);
+                    setLoadingCities(false);
                   }
                 }}
                 className={`w-full rounded-lg px-3 py-2 text-sm border focus:ring-2 ${
