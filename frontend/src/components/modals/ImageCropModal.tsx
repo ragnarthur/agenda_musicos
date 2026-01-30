@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 type CropTarget = 'avatar' | 'cover';
 
@@ -201,6 +202,8 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   onClose,
   onConfirm,
 }) => {
+  useBodyScrollLock(isOpen);
+
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [naturalSize, setNaturalSize] = useState({ width: 0, height: 0 });
 
@@ -882,7 +885,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                 style={{ width: frameSize.width || undefined }}
               >
                 <span>Ajuste</span>
-                <span className="text-[11px] font-normal text-gray-400">Arraste para mover e use o zoom</span>
+                <span className="text-xs font-normal text-gray-400">Arraste para mover e use o zoom</span>
               </div>
 
               <div className="relative">
@@ -943,7 +946,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                       >
                         <img src={previewUrl} alt="Preview final" className="h-full w-full object-cover" />
                       </div>
-                      <span className="hidden sm:inline text-[11px] text-white/80">
+                      <span className="hidden sm:inline text-xs text-white/80">
                         {outputSize.width}×{outputSize.height}
                       </span>
                     </div>
@@ -990,7 +993,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                         +
                       </button>
 
-                      <span className="w-10 text-center text-[11px] font-medium tabular-nums">{zoomPercent}%</span>
+                      <span className="w-10 text-center text-xs font-medium tabular-nums">{zoomPercent}%</span>
                       <span className="h-3 w-px bg-white/20" />
 
                       <button
@@ -1036,7 +1039,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                   <img src={previewUrl} alt="Preview final" className="h-full w-full object-cover" />
                 </div>
 
-                <p className="mt-2 text-[11px] text-gray-400">
+                <p className="mt-2 text-xs text-gray-400">
                   Saida {outputSize.width} x {outputSize.height}
                 </p>
               </div>
@@ -1120,7 +1123,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
               aria-controls="mobile-crop-settings"
             >
               <span>Ajustes</span>
-              <span className="text-[11px] text-gray-400 dark:text-gray-400 tabular-nums">{zoomPercent}%</span>
+              <span className="text-xs text-gray-400 dark:text-gray-400 tabular-nums">{zoomPercent}%</span>
               <svg
                 className={`h-4 w-4 transition-transform ${mobileSettingsOpen ? 'rotate-180' : ''}`}
                 viewBox="0 0 20 20"
@@ -1169,7 +1172,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
             }`}
           >
             <div className="px-4 pb-3">
-              <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                 Enquadramento
               </p>
 
@@ -1187,7 +1190,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                 ))}
               </div>
 
-              <p className="mt-3 text-[11px] text-gray-400 dark:text-gray-400">
+              <p className="mt-3 text-xs text-gray-400 dark:text-gray-400">
                 Dica: pinça para zoom, arraste para mover.
               </p>
             </div>

@@ -4,6 +4,7 @@ import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import ConfirmModal from '../components/modals/ConfirmModal';
 import { useAuth } from '../contexts/AuthContext';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { marketplaceService } from '../services/api';
 import type { MarketplaceGig, MarketplaceApplication } from '../types';
 import { logError } from '../utils/logger';
@@ -42,6 +43,9 @@ const Marketplace: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  useBodyScrollLock(showCreateModal);
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -55,7 +59,6 @@ const Marketplace: React.FC = () => {
     contact_phone: '',
   });
   const [applyForms, setApplyForms] = useState<Record<number, ApplyForm>>({});
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingGig, setEditingGig] = useState<MarketplaceGig | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<MarketplaceGig | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);

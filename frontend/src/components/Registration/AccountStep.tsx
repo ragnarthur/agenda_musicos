@@ -249,7 +249,8 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors, o
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              className="absolute inset-y-0 right-0 flex items-center justify-center w-12 h-12 sm:w-10 sm:h-10 touch-manipulation"
+              aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
             >
               {showPassword ? (
                 <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
@@ -320,7 +321,8 @@ const AccountStep: React.FC<AccountStepProps> = ({ formData, onChange, errors, o
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              className="absolute inset-y-0 right-0 flex items-center justify-center w-12 h-12 sm:w-10 sm:h-10 touch-manipulation"
+              aria-label={showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'}
             >
               {showConfirmPassword ? (
                 <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />

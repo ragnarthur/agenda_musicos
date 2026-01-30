@@ -98,7 +98,6 @@ api.interceptors.response.use(
       '/register/',
       '/check-email/',
       '/verify-email/',
-      '/registration-status/',
       '/resend-verification/',
       '/password-reset/',
       '/password-reset-confirm/',

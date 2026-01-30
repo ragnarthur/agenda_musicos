@@ -68,11 +68,11 @@ const Navbar: React.FC = memo(() => {
                 <span className="text-lg sm:text-xl font-bold logo-animated">
                   GigFlow
                 </span>
-                <span className="text-[9px] px-2 py-0.5 bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-500/10 text-amber-100/80 rounded-full border border-amber-400/20 font-light italic tracking-wider">
+                <span className="text-xs px-2 py-0.5 bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-500/10 text-amber-100/80 rounded-full border border-amber-400/20 font-light italic tracking-wider">
                   Beta
                 </span>
               </div>
-              <span className="text-[11px] text-slate-300 hidden sm:block">Agenda para músicos</span>
+              <span className="text-xs text-slate-300 hidden sm:block">Agenda para músicos</span>
             </div>
           </Link>
 
@@ -123,7 +123,7 @@ const Navbar: React.FC = memo(() => {
                     <div className="relative">
                       <UserCheck className="h-4 w-4" />
                       {pendingApproval > 0 && (
-                        <span className="absolute -top-2 -right-2 bg-yellow-500 text-white text-[10px] font-bold rounded-full h-4 min-w-4 px-1 flex items-center justify-center">
+                        <span className="absolute -top-2 -right-2 bg-yellow-500 text-white text-xs font-bold rounded-full h-4 min-w-4 px-1 flex items-center justify-center">
                           {pendingApproval}
                         </span>
                       )}
@@ -191,40 +191,40 @@ const Navbar: React.FC = memo(() => {
           <div className="flex flex-wrap items-center gap-1.5 -ml-1">
             <Link
               to="/eventos"
-              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-2.5 text-[11px] font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 whitespace-nowrap sm:gap-2 sm:px-4 sm:py-3 sm:text-xs"
+              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-2.5 text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 whitespace-nowrap sm:gap-2 sm:px-4 sm:py-3 sm:text-xs"
             >
               <Calendar className="h-4 w-4" />
               Eventos
               {pendingMyResponse > 0 && (
-                <span className="ml-1 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                <span className="ml-1 rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
                   {pendingMyResponse}
                 </span>
               )}
             </Link>
             <Link
               to="/disponibilidades"
-              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-2.5 text-[11px] font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 whitespace-nowrap sm:gap-2 sm:px-4 sm:py-3 sm:text-xs"
+              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-2.5 text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 whitespace-nowrap sm:gap-2 sm:px-4 sm:py-3 sm:text-xs"
             >
               <Clock className="h-4 w-4" />
               Datas
             </Link>
             <Link
               to="/configuracoes/notificacoes"
-              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-2.5 text-[11px] font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 whitespace-nowrap sm:gap-2 sm:px-4 sm:py-3 sm:text-xs"
+              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-2.5 text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 whitespace-nowrap sm:gap-2 sm:px-4 sm:py-3 sm:text-xs"
             >
               <Bell className="h-4 w-4" />
               Notificações
             </Link>
             <button
               onClick={() => setOpenMore((prev) => !prev)}
-              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-2.5 text-[11px] font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 whitespace-nowrap sm:gap-2 sm:px-4 sm:py-3 sm:text-xs"
+              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-2.5 text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 whitespace-nowrap sm:gap-2 sm:px-4 sm:py-3 sm:text-xs"
               aria-expanded={openMore}
               aria-controls="mobile-more-menu"
             >
               {openMore ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
               Mais
               {pendingApproval > 0 && (
-                <span className="ml-1 rounded-full bg-yellow-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                <span className="ml-1 rounded-full bg-yellow-500 px-2 py-0.5 text-xs font-bold text-white">
                   {pendingApproval}
                 </span>
               )}

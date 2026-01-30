@@ -164,6 +164,15 @@
     background: var(--color-primary-light);
     color: #fff;
   }
+
+  /* Prevent iOS zoom on input focus */
+  input, textarea, select, button {
+    touch-action: manipulation;
+  }
+
+  input, textarea, select {
+    font-size: 16px;
+  }
 }
 
 @layer components {
@@ -709,6 +718,8 @@
     @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
            bg-white text-gray-900 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600
            placeholder:text-gray-400 dark:placeholder:text-slate-400;
+    touch-action: manipulation;
+    font-size: 16px;
   }
 
   .input-field option {
@@ -777,7 +788,7 @@
   }
 
   .status-chip {
-    @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide;
+    @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide;
     letter-spacing: 0.02em;
   }
 
@@ -796,6 +807,31 @@
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Safe Area Utilities for Notched Devices */
+  .pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .pt-safe {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+
+  .pl-safe {
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+  }
+
+  .pr-safe {
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+  }
+
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .mt-safe {
+    margin-top: env(safe-area-inset-top, 0px);
   }
 
   /* Animações utilitárias */

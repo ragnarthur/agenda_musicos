@@ -4,6 +4,7 @@ import { Star, X, Send } from 'lucide-react';
 import type { Availability, RatingInput } from '../../types';
 import { formatInstrumentLabel } from '../../utils/formatting';
 import SwipeToDismissWrapper from './SwipeToDismissWrapper';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface RatingModalProps {
   isOpen: boolean;
@@ -33,6 +34,8 @@ const RatingModal: React.FC<RatingModalProps> = ({
   // Inicializa ratings para cada músico (apenas os que aceitaram)
   const [ratings, setRatings] = useState<MusicianRatingState[]>([]);
   const [error, setError] = useState<string>('');
+
+  useBodyScrollLock(isOpen);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -140,7 +143,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
           <button
             onClick={onClose}
             disabled={loading}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-3 sm:p-2 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation"
             aria-label="Fechar"
           >
             <X className="h-5 w-5" />

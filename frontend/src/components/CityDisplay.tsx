@@ -76,14 +76,14 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.4 }}
-        className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] md:w-auto"
+        className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-2rem)] sm:w-[calc(100%-2rem)] md:w-auto max-w-2xl"
       >
-        <div className="bg-amber-500/10 backdrop-blur-md rounded-2xl border border-amber-500/30 px-3 py-3 sm:px-6 sm:py-4 shadow-2xl max-w-2xl">
+        <div className="bg-amber-500/10 backdrop-blur-md rounded-2xl border border-amber-500/30 px-3 py-3 sm:px-6 sm:py-4 shadow-2xl w-full">
           <div className="flex items-center gap-3">
-            <div className="animate-spin">
-              <MapPin className="h-6 w-6 text-amber-400" />
+            <div className="animate-spin flex-shrink-0">
+              <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-amber-400" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <p className="text-amber-100 font-medium text-sm">
                 Detectando sua localização...
               </p>
@@ -101,16 +101,16 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.4 }}
-        className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] md:w-auto"
+        className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-2rem)] sm:w-[calc(100%-2rem)] md:w-auto max-w-2xl"
       >
-        <div className="bg-red-500/10 backdrop-blur-md rounded-2xl border border-red-500/30 px-3 py-3 sm:px-6 sm:py-4 shadow-2xl max-w-2xl">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-6 w-6 text-red-400 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
+        <div className="bg-red-500/10 backdrop-blur-md rounded-2xl border border-red-500/30 px-3 py-3 sm:px-6 sm:py-4 shadow-2xl w-full">
+          <div className="flex items-start gap-2 sm:gap-3">
+            <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-red-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
               <p className="text-red-100 font-medium text-sm mb-2">
                 Não foi possível detectar sua localização
               </p>
-              <p className="text-red-200/70 text-xs leading-relaxed">
+              <p className="text-red-200/70 text-xs leading-relaxed break-words">
                 {error}
               </p>
               <button
@@ -122,9 +122,9 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
             </div>
             <button
               onClick={handleDismiss}
-              className="text-red-400 hover:text-red-300 transition-colors"
+              className="text-red-400 hover:text-red-300 transition-colors flex-shrink-0"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
         </div>
@@ -139,15 +139,15 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.4 }}
-        className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] md:w-auto"
+        className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-2rem)] sm:w-[calc(100%-2rem)] md:w-auto max-w-md"
       >
-        <div className="bg-green-500/10 backdrop-blur-md rounded-2xl border border-green-500/30 px-4 py-4 sm:px-8 sm:py-6 shadow-2xl max-w-md">
+        <div className="bg-green-500/10 backdrop-blur-md rounded-2xl border border-green-500/30 px-4 py-4 sm:px-8 sm:py-6 shadow-2xl w-full">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center">
-              <Check className="h-8 w-8 text-green-400" />
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-500/20 rounded-full flex items-center justify-center">
+              <Check className="h-6 w-6 sm:h-8 sm:w-8 text-green-400" />
             </div>
             <div className="text-center">
-              <p className="text-green-100 font-semibold text-lg mb-1">
+              <p className="text-green-100 font-semibold text-base sm:text-lg mb-1">
                 Registrado com Sucesso!
               </p>
               <p className="text-green-200/70 text-sm">
@@ -174,21 +174,21 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.4 }}
-          className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] md:w-auto"
+          className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-2rem)] sm:w-[calc(100%-2rem)] md:w-auto max-w-2xl"
         >
           <div className={`${
             isMonteCarmelo
               ? 'bg-gradient-to-r from-amber-500/10 via-amber-400/12 to-amber-500/10'
               : 'bg-amber-500/10'
-          } backdrop-blur-md rounded-2xl border border-amber-500/30 px-3 py-3 sm:px-6 sm:py-4 shadow-2xl max-w-2xl`}>
-          <div className="flex items-start gap-3">
+          } backdrop-blur-md rounded-2xl border border-amber-500/30 px-3 py-3 sm:px-6 sm:py-4 shadow-2xl w-full`}>
+          <div className="flex items-start gap-2 sm:gap-3">
             <div className={`${
               isMonteCarmelo ? 'bg-amber-500/20' : 'bg-amber-500/10'
-            } p-2 rounded-full`}>
-              <MapPin className={`h-6 w-6 ${isMonteCarmelo ? 'text-amber-300' : 'text-amber-400'}`} />
+            } p-1.5 sm:p-2 rounded-full flex-shrink-0`}>
+              <MapPin className={`h-5 w-5 sm:h-6 sm:w-6 ${isMonteCarmelo ? 'text-amber-300' : 'text-amber-400'}`} />
             </div>
 
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               {isMonteCarmelo ? (
                 <>
                   <p className="text-amber-100 font-bold text-lg mb-1 flex items-center gap-2">
@@ -270,7 +270,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
               onClick={handleDismiss}
               className="text-amber-400 hover:text-amber-300 transition-colors flex-shrink-0"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
         </div>
@@ -283,15 +283,15 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.3 }}
-          className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] md:w-auto"
+          className="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-2rem)] sm:w-[calc(100%-2rem)] md:w-auto max-w-md"
         >
-          <div className="bg-amber-500/10 backdrop-blur-md rounded-2xl border border-amber-500/30 px-4 py-4 sm:px-6 sm:py-5 shadow-2xl max-w-md w-full">
-            <div className="flex items-start gap-3">
-              <div className="bg-amber-500/10 p-2.5 rounded-full">
-                <Mail className="h-6 w-6 text-amber-400" />
+          <div className="bg-amber-500/10 backdrop-blur-md rounded-2xl border border-amber-500/30 px-4 py-4 sm:px-6 sm:py-5 shadow-2xl w-full">
+            <div className="flex items-start gap-2 sm:gap-3">
+              <div className="bg-amber-500/10 p-2 sm:p-2.5 rounded-full flex-shrink-0">
+                <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-amber-400" />
               </div>
 
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <h3 className="text-amber-100 font-bold text-lg mb-1">
                   Receber Notificações
                 </h3>
@@ -368,7 +368,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
                 onClick={handleDismiss}
                 className="text-amber-400 hover:text-amber-300 transition-colors flex-shrink-0 absolute top-3 right-3"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
             </div>
           </div>

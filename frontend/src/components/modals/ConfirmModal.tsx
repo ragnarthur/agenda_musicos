@@ -1,6 +1,7 @@
 // components/modals/ConfirmModal.tsx
 import React, { memo } from 'react';
 import SwipeToDismissWrapper from './SwipeToDismissWrapper';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -27,6 +28,8 @@ const ConfirmModal: React.FC<ConfirmModalProps> = memo(({
   loading = false,
   icon,
 }) => {
+  useBodyScrollLock(isOpen);
+
   if (!isOpen) return null;
 
   const variantClasses = {

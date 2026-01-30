@@ -207,7 +207,7 @@ const MusicProfileStep: React.FC<MusicProfileStepProps> = ({
                     />
                     <span
                       className={`
-                        h-4 w-4 rounded border flex items-center justify-center text-[10px]
+                        h-4 w-4 rounded border flex items-center justify-center text-xs
                         ${
                           checked
                             ? 'bg-sky-600 border-sky-600 text-white'

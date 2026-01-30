@@ -2,6 +2,7 @@
 import React from 'react';
 import { ThumbsDown } from 'lucide-react';
 import SwipeToDismissWrapper from './SwipeToDismissWrapper';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface RejectModalProps {
   isOpen: boolean;
@@ -24,6 +25,8 @@ const RejectModal: React.FC<RejectModalProps> = ({
   title = 'Rejeitar Evento',
   placeholder = 'Explique o motivo da rejeição...',
 }) => {
+  useBodyScrollLock(isOpen);
+
   if (!isOpen) return null;
 
   const isValid = reason.trim().length > 0;

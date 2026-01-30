@@ -117,7 +117,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               <Info className="h-3.5 w-3.5" />
             </button>
             <span
-              className={`pointer-events-none absolute right-0 top-11 z-30 w-max max-w-[220px] rounded-lg border border-white/10 bg-gray-900/90 px-2.5 py-1.5 text-[11px] sm:text-xs text-white shadow-lg backdrop-blur-md transition-opacity duration-200 ${
+              className={`pointer-events-none absolute right-0 top-11 z-30 w-max max-w-[220px] rounded-lg border border-white/10 bg-gray-900/90 px-2.5 py-1.5 text-xs text-white shadow-lg backdrop-blur-md transition-opacity duration-200 ${
                 showCoverHint ? 'opacity-100' : 'opacity-0 sm:group-hover:opacity-100'
               }`}
             >
@@ -192,7 +192,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                    </button>
                  </div>
                  <span
-                   className={`pointer-events-none absolute left-0 -top-9 z-30 w-max max-w-[200px] rounded-lg border border-white/10 bg-gray-900/90 px-2 py-1 text-[11px] sm:text-xs text-white shadow-lg backdrop-blur-md transition-opacity duration-200 ${
+                   className={`pointer-events-none absolute left-0 -top-9 z-30 w-max max-w-[200px] rounded-lg border border-white/10 bg-gray-900/90 px-2 py-1 text-xs text-white shadow-lg backdrop-blur-md transition-opacity duration-200 ${
                      showAvatarHint ? 'opacity-100' : 'opacity-0 sm:group-hover:opacity-100'
                    }`}
                  >

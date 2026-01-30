@@ -181,12 +181,12 @@ const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' 
           <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${dotClasses}`} />
         </span>
         <MapPin className="h-4 w-4" />
-        <span className="truncate max-w-[200px]">{isLoading && !label ? 'Detectando...' : badgeText}</span>
+        <span className="truncate max-w-[140px] sm:max-w-[200px]">{isLoading && !label ? 'Detectando...' : badgeText}</span>
       </motion.button>
 
       {menuOpen && (
         <div
-          className={`absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-[320px] sm:w-80 rounded-2xl border p-3 sm:p-4 shadow-2xl ring-1 ring-black/20 z-50 ${
+          className={`absolute right-0 mt-2 w-[min(calc(100vw-2rem),320px)] sm:w-80 max-h-[min(60vh,400px)] rounded-2xl border p-3 sm:p-4 shadow-2xl ring-1 ring-black/20 z-50 overflow-y-auto ${
             variant === 'light'
               ? 'bg-white border-gray-200'
               : 'bg-slate-950 border-amber-400/30'
@@ -246,7 +246,7 @@ const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' 
                   <option key={cityName} value={cityName} />
                 ))}
               </datalist>
-              <div className={`mt-1 text-[11px] ${variant === 'light' ? 'text-gray-500' : 'text-slate-400'}`}>
+              <div className={`mt-1 text-xs ${variant === 'light' ? 'text-gray-500' : 'text-slate-400'}`}>
                 {!manualState
                   ? 'Selecione o estado para carregar as cidades.'
                   : loadingCities
@@ -254,7 +254,7 @@ const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' 
                     : 'Digite para filtrar as cidades.'}
               </div>
               {cityError && (
-                <div className={`mt-1 text-[11px] ${variant === 'light' ? 'text-red-500' : 'text-red-300'}`}>
+                <div className={`mt-1 text-xs ${variant === 'light' ? 'text-red-500' : 'text-red-300'}`}>
                   {cityError}
                 </div>
               )}

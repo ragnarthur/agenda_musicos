@@ -231,8 +231,8 @@ const Login: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
-                  aria-label={showPassword ? 'Mostrar senha' : 'Ocultar senha'}
+                  className="absolute inset-y-0 right-0 flex items-center justify-center w-12 h-12 sm:w-10 sm:h-10 text-gray-500 hover:text-gray-700 touch-manipulation"
+                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                 >
                   {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                 </button>

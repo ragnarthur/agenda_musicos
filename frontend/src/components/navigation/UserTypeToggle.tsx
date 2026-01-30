@@ -39,14 +39,14 @@ const UserTypeToggle: React.FC<UserTypeToggleProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-1 border border-white/20">
+      <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-1 border border-white/20 max-w-full">
         <div className="flex gap-1">
           {toggleOptions.map(({ type, label, icon, description }) => (
             <motion.button
               key={type}
               onClick={() => !disabled && onChange(type)}
               disabled={disabled}
-              className={`relative px-6 py-3 rounded-xl font-medium transition-all flex flex-col items-center gap-2 min-w-[140px] ${
+              className={`relative px-6 py-3 rounded-xl font-medium transition-all flex flex-col items-center gap-2 min-w-[120px] sm:min-w-[140px] ${
                 selected === type
                   ? 'bg-primary-600 text-white shadow-lg'
                   : 'text-white/70 hover:text-white hover:bg-white/10'

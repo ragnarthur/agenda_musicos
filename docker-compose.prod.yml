@@ -60,29 +60,9 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL:-/api}
-        VITE_PAYMENT_API_URL: ${VITE_PAYMENT_API_URL:-/payments/api}
         VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID}
     expose:
       - "80"
-    depends_on:
-      - backend
-    restart: unless-stopped
-    networks:
-      - internal
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  payment-service:
-    build:
-      context: ./payment-service
-      dockerfile: Dockerfile
-    env_file:
-      - payment-service/.env.prod
-    expose:
-      - "3001"
     depends_on:
       - backend
     restart: unless-stopped
@@ -108,7 +88,6 @@ services:
     depends_on:
       - backend
       - frontend
-      - payment-service
     restart: unless-stopped
     networks:
       - internal
