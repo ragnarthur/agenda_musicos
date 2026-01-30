@@ -87,7 +87,8 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
 
       toast.success(`Bem-vindo(a) à ${response.organization.name}!`);
     } catch (error: any) {
-      const message = error?.response?.data?.detail || 'Erro ao fazer login. Verifique suas credenciais.';
+      const message =
+        error?.response?.data?.detail || 'Erro ao fazer login. Verifique suas credenciais.';
       toast.error(message);
       throw error;
     } finally {
@@ -95,7 +96,11 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
     }
   };
 
-  const setSession = (payload: { organization: Organization; access?: string; refresh?: string }) => {
+  const setSession = (payload: {
+    organization: Organization;
+    access?: string;
+    refresh?: string;
+  }) => {
     // Marcar sessão como ativa
     sessionStorage.setItem(SESSION_KEY, 'true');
 
@@ -108,7 +113,7 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
     // Revogar token do Google se existir
     const organizationEmail = organization?.contact_email;
     if (organizationEmail && window.google?.accounts?.id) {
-      window.google.accounts.id.revoke(organizationEmail, (done) => {
+      window.google.accounts.id.revoke(organizationEmail, done => {
         if (done.error) {
           console.warn('Erro ao revogar Google token:', done.error);
         } else {
@@ -166,11 +171,7 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
     updateOrganization,
   };
 
-  return (
-    <CompanyAuthContext.Provider value={value}>
-      {children}
-    </CompanyAuthContext.Provider>
-  );
+  return <CompanyAuthContext.Provider value={value}>{children}</CompanyAuthContext.Provider>;
 };
 
 // Hook para usar o contexto

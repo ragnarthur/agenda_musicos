@@ -1,6 +1,15 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Calendar, Users, Award, Megaphone, Search, MessageSquare, Shield, Briefcase } from 'lucide-react';
+import {
+  Calendar,
+  Users,
+  Award,
+  Megaphone,
+  Search,
+  MessageSquare,
+  Shield,
+  Briefcase,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import OwlMascot from '../components/ui/OwlMascot';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
@@ -37,8 +46,8 @@ const Landing: React.FC = () => {
   const [userType, setUserType] = useState<UserType>('musician');
 
   const musicianContent: UserContent = {
-    hero: "Sua Carreira Musical Organizada",
-    subtitle: "Agenda inteligente para shows, networking e oportunidades profissionais",
+    hero: 'Sua Carreira Musical Organizada',
+    subtitle: 'Agenda inteligente para shows, networking e oportunidades profissionais',
     phrases: [
       'Sua Carreira Musical Organizada',
       'Agenda inteligente para shows',
@@ -60,38 +69,42 @@ const Landing: React.FC = () => {
     features: [
       {
         icon: <Calendar className="h-12 w-12" />,
-        title: "Gestão de Agenda e Eventos",
-        description: "Sistema completo de convites, propostas de datas, disponibilidade e confirmação de eventos. Organize sua carreira profissionalmente."
+        title: 'Gestão de Agenda e Eventos',
+        description:
+          'Sistema completo de convites, propostas de datas, disponibilidade e confirmação de eventos. Organize sua carreira profissionalmente.',
       },
       {
         icon: <Megaphone className="h-12 w-12" />,
-        title: "Marketplace de Oportunidades",
-        description: "Divulgue vagas, encontre substitutos e descubra novas oportunidades de shows. Conecte-se com a comunidade musical."
+        title: 'Marketplace de Oportunidades',
+        description:
+          'Divulgue vagas, encontre substitutos e descubra novas oportunidades de shows. Conecte-se com a comunidade musical.',
       },
       {
         icon: <Users className="h-12 w-12" />,
-        title: "Rede de Conexões Profissionais",
-        description: "Networking inteligente para músicos. Indique colegas, acompanhe colaborações e construa relacionamentos profissionais."
+        title: 'Rede de Conexões Profissionais',
+        description:
+          'Networking inteligente para músicos. Indique colegas, acompanhe colaborações e construa relacionamentos profissionais.',
       },
       {
         icon: <Award className="h-12 w-12" />,
-        title: "Sistema de Badges e Conquistas",
-        description: "Gamificação baseada em shows, avaliações e networking. Destaque-se profissionalmente e construa sua reputação."
-      }
+        title: 'Sistema de Badges e Conquistas',
+        description:
+          'Gamificação baseada em shows, avaliações e networking. Destaque-se profissionalmente e construa sua reputação.',
+      },
     ],
     primaryCTA: {
-      text: "Solicitar Acesso",
-      to: "/solicitar-acesso"
+      text: 'Solicitar Acesso',
+      to: '/solicitar-acesso',
     },
     secondaryCTA: {
-      text: "Entrar",
-      to: "/login"
-    }
+      text: 'Entrar',
+      to: '/login',
+    },
   };
 
   const companyContent: UserContent = {
-    hero: "Encontre os Melhores Músicos",
-    subtitle: "Contrate talentos musicais profissionais para seus eventos",
+    hero: 'Encontre os Melhores Músicos',
+    subtitle: 'Contrate talentos musicais profissionais para seus eventos',
     phrases: [
       'Encontre os Melhores Músicos',
       'Talentos musicais profissionais',
@@ -113,43 +126,44 @@ const Landing: React.FC = () => {
     features: [
       {
         icon: <Search className="h-12 w-12" />,
-        title: "Busca Avançada de Músicos",
-        description: "Filtre por instrumento, cidade, avaliação, disponibilidade e muito mais. Encontre exatamente o talento que seu evento precisa."
+        title: 'Busca Avançada de Músicos',
+        description:
+          'Filtre por instrumento, cidade, avaliação, disponibilidade e muito mais. Encontre exatamente o talento que seu evento precisa.',
       },
       {
         icon: <MessageSquare className="h-12 w-12" />,
-        title: "Contato Direto e Rápido",
-        description: "Fale diretamente com músicos sem intermediários. Negocie detalhes, tire dúvidas e feche contratações em uma plataforma só."
+        title: 'Contato Direto e Rápido',
+        description:
+          'Fale diretamente com músicos sem intermediários. Negocie detalhes, tire dúvidas e feche contratações em uma plataforma só.',
       },
       {
         icon: <Shield className="h-12 w-12" />,
-        title: "Músicos Verificados e Avaliados",
-        description: "Todos os músicos passam por validação e têm histórico de avaliações. Contrate com total segurança e confiança."
+        title: 'Músicos Verificados e Avaliados',
+        description:
+          'Todos os músicos passam por validação e têm histórico de avaliações. Contrate com total segurança e confiança.',
       },
       {
         icon: <Briefcase className="h-12 w-12" />,
-        title: "Gestão Profissional de Eventos",
-        description: "Organize todas as suas contratações em um só lugar. Histórico, feedbacks e muito mais."
-      }
+        title: 'Gestão Profissional de Eventos',
+        description:
+          'Organize todas as suas contratações em um só lugar. Histórico, feedbacks e muito mais.',
+      },
     ],
     primaryCTA: {
-      text: "Cadastrar Empresa",
-      to: "/cadastro-empresa"
+      text: 'Cadastrar Empresa',
+      to: '/cadastro-empresa',
     },
     secondaryCTA: {
-      text: "Entrar",
-      to: "/login-empresa"
-    }
+      text: 'Entrar',
+      to: '/login-empresa',
+    },
   };
   const currentContent = useMemo(
-    () => userType === 'musician' ? musicianContent : companyContent,
+    () => (userType === 'musician' ? musicianContent : companyContent),
     [userType]
   );
 
-  const heroPhrases = useMemo(
-    () => currentContent.phrases,
-    [currentContent]
-  );
+  const heroPhrases = useMemo(() => currentContent.phrases, [currentContent]);
 
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [displayText, setDisplayText] = useState('');
@@ -209,7 +223,7 @@ const Landing: React.FC = () => {
           break;
         case 'waiting':
           timeoutRef.current = setTimeout(() => {
-            setCurrentPhraseIndex((prev) => (prev + 1) % heroPhrases.length);
+            setCurrentPhraseIndex(prev => (prev + 1) % heroPhrases.length);
             setPhase('typing');
           }, 500);
           break;
@@ -240,17 +254,12 @@ const Landing: React.FC = () => {
   }, [navigate]);
 
   return (
-    <FullscreenBackground
-      enableBlueWaves
-    >
+    <FullscreenBackground enableBlueWaves>
       <div className="relative z-10">
         {/* Hero Section */}
         <section className="container mx-auto px-4 py-20 text-center">
           {/* User Type Toggle */}
-          <UserTypeToggle 
-            selected={userType} 
-            onChange={setUserType}
-          />
+          <UserTypeToggle selected={userType} onChange={setUserType} />
           {/* Logo */}
           <motion.div
             className="flex justify-center mb-1"
@@ -317,7 +326,7 @@ const Landing: React.FC = () => {
                 className="bg-gradient-to-r from-white via-gray-200 to-white bg-clip-text"
                 style={{
                   display: 'inline-block',
-                  minWidth: displayText.length > 0 ? 'auto' : '0.5em'
+                  minWidth: displayText.length > 0 ? 'auto' : '0.5em',
                 }}
               >
                 {displayText}
@@ -396,7 +405,7 @@ const Landing: React.FC = () => {
                   icon={feature.icon}
                   title={feature.title}
                   description={feature.description}
-                  delay={0.2 + (index * 0.1)}
+                  delay={0.2 + index * 0.1}
                 />
               ))}
             </div>
@@ -414,10 +423,9 @@ const Landing: React.FC = () => {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
             >
-              {userType === 'musician' 
+              {userType === 'musician'
                 ? 'Junte-se a centenas de músicos profissionais'
-                : 'Centenas de empresas já confiam no GigFlow'
-              }
+                : 'Centenas de empresas já confiam no GigFlow'}
             </motion.p>
           </AnimatePresence>
         </section>
@@ -435,8 +443,7 @@ const Landing: React.FC = () => {
             >
               {userType === 'musician'
                 ? 'Pronto para organizar sua carreira?'
-                : 'Pronto para encontrar os melhores músicos?'
-              }
+                : 'Pronto para encontrar os melhores músicos?'}
             </motion.h3>
           </AnimatePresence>
 
@@ -495,15 +502,9 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, del
       whileHover={{ y: -5, boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}
       key={`${title}-${delay}`}
     >
-      <div className="text-primary-400 mb-4">
-        {icon}
-      </div>
-      <h3 className="text-2xl font-bold text-white mb-3">
-        {title}
-      </h3>
-      <p className="text-gray-300 leading-relaxed">
-        {description}
-      </p>
+      <div className="text-primary-400 mb-4">{icon}</div>
+      <h3 className="text-2xl font-bold text-white mb-3">{title}</h3>
+      <p className="text-gray-300 leading-relaxed">{description}</p>
     </motion.div>
   );
 };

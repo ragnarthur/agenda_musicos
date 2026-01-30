@@ -13,7 +13,11 @@ import {
 import { motion } from 'framer-motion';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import Loading from '../components/common/Loading';
-import { publicMusicianService, type MusicianPublic, type Organization } from '../services/publicApi';
+import {
+  publicMusicianService,
+  type MusicianPublic,
+  type Organization,
+} from '../services/publicApi';
 import { useCompanyAuth } from '../contexts/CompanyAuthContext';
 import { formatInstrumentLabel } from '../utils/formatting';
 import { getCityDisplayName, getActiveCities, type City } from '../config/cities';
@@ -39,7 +43,7 @@ const MusicianPublicProfile: React.FC = () => {
       // Find matching city from config
       const activeCities = getActiveCities();
       const matchedCity = activeCities.find(
-        (c) => c.name.toLowerCase() === cityParam.toLowerCase() && c.state === stateParam
+        c => c.name.toLowerCase() === cityParam.toLowerCase() && c.state === stateParam
       );
       if (matchedCity) {
         setCity(matchedCity);
@@ -150,11 +154,7 @@ const MusicianPublicProfile: React.FC = () => {
             {/* Cover Image */}
             <div className="h-48 md:h-64 bg-gradient-to-r from-primary-600/30 to-indigo-600/30 relative">
               {musician.cover_image_url && (
-                <img
-                  src={musician.cover_image_url}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
+                <img src={musician.cover_image_url} alt="" className="w-full h-full object-cover" />
               )}
             </div>
 
@@ -191,7 +191,8 @@ const MusicianPublicProfile: React.FC = () => {
                       {Number(musician.average_rating).toFixed(1)}
                     </span>
                     <span className="text-gray-400">
-                      ({musician.total_ratings} {musician.total_ratings === 1 ? 'avaliação' : 'avaliações'})
+                      ({musician.total_ratings}{' '}
+                      {musician.total_ratings === 1 ? 'avaliação' : 'avaliações'})
                     </span>
                   </div>
                 )}
@@ -205,7 +206,7 @@ const MusicianPublicProfile: React.FC = () => {
                     </span>
                   )}
                   {musician.instruments?.map(
-                    (inst) =>
+                    inst =>
                       inst !== musician.instrument && (
                         <span
                           key={inst}
@@ -284,7 +285,7 @@ const MusicianPublicProfile: React.FC = () => {
                 Patrocinadores de {getCityDisplayName(city)}
               </h2>
               <div className="flex flex-wrap justify-center gap-6">
-                {sponsors.map((sponsor) => (
+                {sponsors.map(sponsor => (
                   <a
                     key={sponsor.id}
                     href={sponsor.website || '#'}
@@ -311,15 +312,15 @@ const MusicianPublicProfile: React.FC = () => {
                             sponsor.sponsor_tier === 'gold'
                               ? 'bg-amber-500/20 text-amber-300'
                               : sponsor.sponsor_tier === 'silver'
-                              ? 'bg-gray-400/20 text-gray-300'
-                              : 'bg-orange-700/20 text-orange-300'
+                                ? 'bg-gray-400/20 text-gray-300'
+                                : 'bg-orange-700/20 text-orange-300'
                           }`}
                         >
                           {sponsor.sponsor_tier === 'gold'
                             ? 'Ouro'
                             : sponsor.sponsor_tier === 'silver'
-                            ? 'Prata'
-                            : 'Bronze'}
+                              ? 'Prata'
+                              : 'Bronze'}
                         </span>
                       )}
                     </div>
@@ -346,15 +347,13 @@ const MusicianPublicProfile: React.FC = () => {
                 to="/cadastro-empresa"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-lg"
               >
-                <Building2 className="h-5 w-5" />
-                É empresa? Cadastre-se
+                <Building2 className="h-5 w-5" />É empresa? Cadastre-se
               </Link>
               <Link
                 to="/solicitar-acesso"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border-2 border-white/30 hover:border-white/50 transition-all text-lg"
               >
-                <UserPlus className="h-5 w-5" />
-                É músico? Solicite acesso
+                <UserPlus className="h-5 w-5" />É músico? Solicite acesso
               </Link>
             </div>
           </motion.div>
@@ -362,9 +361,7 @@ const MusicianPublicProfile: React.FC = () => {
 
         {/* Footer */}
         <footer className="container mx-auto px-4 py-8 text-center">
-          <p className="text-gray-400 text-sm">
-            © 2026 DXM Tech. Todos os direitos reservados.
-          </p>
+          <p className="text-gray-400 text-sm">© 2026 DXM Tech. Todos os direitos reservados.</p>
         </footer>
       </div>
     </FullscreenBackground>

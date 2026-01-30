@@ -33,7 +33,10 @@ const ForgotPassword: React.FC = () => {
       <div className="w-full max-w-lg">
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="mb-6">
-            <Link to="/login" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800">
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+            >
               <ArrowLeft className="h-4 w-4" />
               Voltar ao login
             </Link>
@@ -71,7 +74,7 @@ const ForgotPassword: React.FC = () => {
                   className="input-field"
                   placeholder="seu@email.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   required
                   {...getMobileInputProps('email')}
                 />

@@ -78,7 +78,7 @@ const SwipeToDismissWrapper: React.FC<SwipeToDismissWrapperProps> = ({
       dragPropagation={false}
       onDragEnd={handleDragEnd}
       initial={{ opacity: 0, y: swipeDirection === 'y' ? 0 : undefined }}
-      animate={{ opacity: isOpen ? 1 : 0, y: isOpen ? 0 : (swipeDirection === 'y' ? 50 : undefined) }}
+      animate={{ opacity: isOpen ? 1 : 0, y: isOpen ? 0 : swipeDirection === 'y' ? 50 : undefined }}
       exit={{ opacity: 0, y: swipeDirection === 'y' ? 50 : undefined }}
       transition={{ duration: 0.25, type: 'spring' }}
       className="relative"

@@ -52,7 +52,11 @@ const ProposalSummary: React.FC<ProposalSummaryProps> = ({
           <div className="flex justify-between">
             <dt className="text-gray-500">Formato</dt>
             <dd className="font-semibold text-gray-900">
-              {isSolo ? 'Show solo' : selectedMusicians.length > 0 ? `${selectedMusicians.length + 1} músicos` : 'Aguardando seleção'}
+              {isSolo
+                ? 'Show solo'
+                : selectedMusicians.length > 0
+                  ? `${selectedMusicians.length + 1} músicos`
+                  : 'Aguardando seleção'}
             </dd>
           </div>
         </dl>
@@ -68,14 +72,16 @@ const ProposalSummary: React.FC<ProposalSummaryProps> = ({
                 <li key={m.musician_id} className="text-xs flex items-center gap-1">
                   • {m.musician_name} ({m.instrument_display})
                   {m.has_availability && (
-                    <CheckCircle className="h-3 w-3 text-green-600" aria-label="Disponibilidade confirmada" />
+                    <CheckCircle
+                      className="h-3 w-3 text-green-600"
+                      aria-label="Disponibilidade confirmada"
+                    />
                   )}
                 </li>
               ))}
             </ul>
           </div>
         )}
-
       </div>
 
       <div className="rounded-2xl border border-white/40 bg-white/85 p-5 text-sm shadow-lg backdrop-blur">
@@ -85,16 +91,20 @@ const ProposalSummary: React.FC<ProposalSummaryProps> = ({
         </div>
         <ul className="space-y-3 text-gray-700">
           <li>
-            <strong className="text-gray-900">Escolha por instrumento:</strong> filtre e convide quem toca exatamente o que você precisa.
+            <strong className="text-gray-900">Escolha por instrumento:</strong> filtre e convide
+            quem toca exatamente o que você precisa.
           </li>
           <li>
-            <strong className="text-gray-900">Confirmação:</strong> o evento confirma quando todos aceitarem; acompanhe no box ao lado.
+            <strong className="text-gray-900">Confirmação:</strong> o evento confirma quando todos
+            aceitarem; acompanhe no box ao lado.
           </li>
           <li>
-            <strong className="text-gray-900">Buffer inteligente:</strong> o sistema bloqueia janelas próximas (±40min) para evitar choque de agenda.
+            <strong className="text-gray-900">Buffer inteligente:</strong> o sistema bloqueia
+            janelas próximas (±40min) para evitar choque de agenda.
           </li>
           <li>
-            <strong className="text-gray-900">Show solo:</strong> marque se for sozinho — confirma automaticamente sem aguardar outros músicos.
+            <strong className="text-gray-900">Show solo:</strong> marque se for sozinho — confirma
+            automaticamente sem aguardar outros músicos.
           </li>
         </ul>
       </div>

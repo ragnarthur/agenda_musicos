@@ -1,7 +1,17 @@
 // pages/FinancialSettings.tsx
 import React, { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Coins, Plus, Trash2, Wallet, CarFront, Sparkles, Loader2, FileText } from 'lucide-react';
+import {
+  ChevronLeft,
+  Coins,
+  Plus,
+  Trash2,
+  Wallet,
+  CarFront,
+  Sparkles,
+  Loader2,
+  FileText,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import Layout from '../components/Layout/Layout';
 import { musicianService } from '../services/api';
@@ -44,15 +54,17 @@ const maskCurrencyInput = (raw: string): string => {
   return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
-const handleCurrencyChange = (setter: (val: string) => void) => (event: React.ChangeEvent<HTMLInputElement>) => {
-  const masked = maskCurrencyInput(event.target.value);
-  setter(masked);
-};
+const handleCurrencyChange =
+  (setter: (val: string) => void) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    const masked = maskCurrencyInput(event.target.value);
+    setter(masked);
+  };
 
-const handleCurrencyBlur = (setter: (val: string) => void) => (event: React.FocusEvent<HTMLInputElement>) => {
-  const masked = formatCurrencyMask(event.target.value);
-  setter(masked);
-};
+const handleCurrencyBlur =
+  (setter: (val: string) => void) => (event: React.FocusEvent<HTMLInputElement>) => {
+    const masked = formatCurrencyMask(event.target.value);
+    setter(masked);
+  };
 
 const FinancialSettings: React.FC = () => {
   const { refreshUser, user } = useAuth();
@@ -97,15 +109,15 @@ const FinancialSettings: React.FC = () => {
   }, [loadProfile]);
 
   const handleAddEquipment = () => {
-    setEquipmentRows((prev) => [...prev, { name: '', price: '' }]);
+    setEquipmentRows(prev => [...prev, { name: '', price: '' }]);
   };
 
   const handleRemoveEquipment = (index: number) => {
-    setEquipmentRows((prev) => prev.filter((_, idx) => idx !== index));
+    setEquipmentRows(prev => prev.filter((_, idx) => idx !== index));
   };
 
   const handleEquipmentChange = (index: number, field: keyof EquipmentRow, value: string) => {
-    setEquipmentRows((prev) =>
+    setEquipmentRows(prev =>
       prev.map((item, idx) => (idx === index ? { ...item, [field]: value } : item))
     );
   };
@@ -119,11 +131,11 @@ const FinancialSettings: React.FC = () => {
       base_fee: parseDecimal(baseFee),
       travel_fee_per_km: parseDecimal(travelFee),
       equipment_items: equipmentRows
-        .map((item) => ({
+        .map(item => ({
           name: sanitizeText(item.name, 80),
           price: parseDecimal(item.price),
         }))
-        .filter((item) => item.name.length > 0),
+        .filter(item => item.name.length > 0),
     };
 
     try {
@@ -200,15 +212,13 @@ const FinancialSettings: React.FC = () => {
             <div>
               <textarea
                 value={bio}
-                onChange={(e) => setBio(e.target.value)}
+                onChange={e => setBio(e.target.value)}
                 maxLength={350}
                 rows={4}
                 placeholder="Conte um pouco sobre sua experiência musical..."
                 className="w-full rounded-lg bg-slate-900 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-slate-100 placeholder:text-slate-500 px-4 py-3 resize-none"
               />
-              <p className="text-xs text-slate-400 mt-1">
-                {bio.length}/350 caracteres
-              </p>
+              <p className="text-xs text-slate-400 mt-1">{bio.length}/350 caracteres</p>
             </div>
           </div>
 
@@ -227,7 +237,9 @@ const FinancialSettings: React.FC = () => {
               <label className="block">
                 <span className="text-sm text-slate-300">Cachê</span>
                 <div className="mt-1 relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">R$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">
+                    R$
+                  </span>
                   <input
                     type="text"
                     inputMode="decimal"
@@ -244,7 +256,9 @@ const FinancialSettings: React.FC = () => {
                 <span className="text-sm text-slate-200">Valor por km (R$)</span>
                 <div className="flex items-center gap-2 mt-1">
                   <div className="flex-1 relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-300">R$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-300">
+                      R$
+                    </span>
                     <input
                       type="text"
                       inputMode="decimal"
@@ -270,7 +284,8 @@ const FinancialSettings: React.FC = () => {
                 <div>
                   <h2 className="text-lg font-semibold text-white">Pacotes de equipamentos</h2>
                   <p className="text-slate-300 text-sm">
-                    Liste os recursos que você leva (som, mesa, microfones, luz, etc) e seus valores.
+                    Liste os recursos que você leva (som, mesa, microfones, luz, etc) e seus
+                    valores.
                   </p>
                 </div>
               </div>
@@ -295,7 +310,7 @@ const FinancialSettings: React.FC = () => {
                     <input
                       type="text"
                       value={item.name}
-                      onChange={(e) => handleEquipmentChange(index, 'name', e.target.value)}
+                      onChange={e => handleEquipmentChange(index, 'name', e.target.value)}
                       placeholder="Ex: Som completo"
                       className="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-slate-100 placeholder:text-slate-500 px-3 py-2"
                     />
@@ -303,13 +318,19 @@ const FinancialSettings: React.FC = () => {
                   <div className="sm:col-span-4">
                     <label className="text-sm text-slate-200">Valor (R$)</label>
                     <div className="mt-1 relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-300">R$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-300">
+                        R$
+                      </span>
                       <input
                         type="text"
                         inputMode="decimal"
                         value={item.price}
-                        onChange={(e) => handleEquipmentChange(index, 'price', maskCurrencyInput(e.target.value))}
-                        onBlur={(e) => handleEquipmentChange(index, 'price', formatCurrencyMask(e.target.value))}
+                        onChange={e =>
+                          handleEquipmentChange(index, 'price', maskCurrencyInput(e.target.value))
+                        }
+                        onBlur={e =>
+                          handleEquipmentChange(index, 'price', formatCurrencyMask(e.target.value))
+                        }
                         placeholder="0,00"
                         className="w-full rounded-lg bg-slate-900 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-slate-100 placeholder:text-slate-500 px-8 py-2"
                       />
@@ -328,7 +349,9 @@ const FinancialSettings: React.FC = () => {
                 </div>
               ))}
               {equipmentRows.length === 0 && (
-                <p className="text-sm text-slate-300">Adicione itens para ofertar seus equipamentos.</p>
+                <p className="text-sm text-slate-300">
+                  Adicione itens para ofertar seus equipamentos.
+                </p>
               )}
             </div>
           </div>
@@ -349,7 +372,7 @@ const FinancialSettings: React.FC = () => {
                 Km: {formatCurrency(parseDecimal(travelFee))}
               </div>
               <div className="px-3 py-2 rounded-lg bg-indigo-500/15 border border-indigo-500/20 text-indigo-100">
-                {equipmentRows.filter((i) => i.name.trim()).length} itens
+                {equipmentRows.filter(i => i.name.trim()).length} itens
               </div>
             </div>
           </div>

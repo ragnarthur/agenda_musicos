@@ -80,27 +80,28 @@ export function useMusiciansInfinite(params?: MusiciansParams) {
     return buildKey('/musicians', { ...params, page: pageIndex + 1 });
   };
 
-  const { data, error, isLoading, isValidating, mutate, size, setSize } = useSWRInfinite<PaginatedResult>(
-    getKey,
-    (key) => {
-      const query = key.split('?')[1] || '';
-      const searchParams = new URLSearchParams(query);
-      const page = Number(searchParams.get('page') || 1);
-      return musicianService.getAllPaginated({ ...params, page, page_size: PAGE_SIZE });
-    },
-    {
-      revalidateOnFocus: false,
-      dedupingInterval: 30000,
-      keepPreviousData: true,
-    }
-  );
+  const { data, error, isLoading, isValidating, mutate, size, setSize } =
+    useSWRInfinite<PaginatedResult>(
+      getKey,
+      key => {
+        const query = key.split('?')[1] || '';
+        const searchParams = new URLSearchParams(query);
+        const page = Number(searchParams.get('page') || 1);
+        return musicianService.getAllPaginated({ ...params, page, page_size: PAGE_SIZE });
+      },
+      {
+        revalidateOnFocus: false,
+        dedupingInterval: 30000,
+        keepPreviousData: true,
+      }
+    );
 
   const pages = data ?? [];
-  const musicians = pages.flatMap((page) => page.results);
+  const musicians = pages.flatMap(page => page.results);
   const count = pages[0]?.count ?? 0;
   const hasMore = pages.length > 0 ? Boolean(pages[pages.length - 1]?.next) : false;
   const isLoadingMore = isValidating && size > 0;
-  const loadMore = useCallback(() => setSize((current) => current + 1), [setSize]);
+  const loadMore = useCallback(() => setSize(current => current + 1), [setSize]);
   const reset = useCallback(() => setSize(1), [setSize]);
 
   return {

@@ -18,7 +18,13 @@ const FALLBACK_INSTRUMENTS: Instrument[] = [
   { id: 11, name: 'violino', display_name: 'Violino', type: 'predefined', usage_count: 0 },
   { id: 12, name: 'viola', display_name: 'Viola', type: 'predefined', usage_count: 0 },
   { id: 13, name: 'violoncelo', display_name: 'Violoncelo', type: 'predefined', usage_count: 0 },
-  { id: 14, name: 'contrabaixo acustico', display_name: 'Contrabaixo acústico', type: 'predefined', usage_count: 0 },
+  {
+    id: 14,
+    name: 'contrabaixo acustico',
+    display_name: 'Contrabaixo acústico',
+    type: 'predefined',
+    usage_count: 0,
+  },
   { id: 15, name: 'saxofone', display_name: 'Saxofone', type: 'predefined', usage_count: 0 },
   { id: 16, name: 'trompete', display_name: 'Trompete', type: 'predefined', usage_count: 0 },
   { id: 17, name: 'trombone', display_name: 'Trombone', type: 'predefined', usage_count: 0 },
@@ -67,9 +73,10 @@ export const useInstruments = () => {
       showToast.success(`Instrumento "${newInstrument.display_name}" adicionado!`);
       return newInstrument;
     } catch (err: any) {
-      const message = err?.response?.data?.display_name?.[0] ||
-                      err?.response?.data?.detail ||
-                      'Erro ao criar instrumento';
+      const message =
+        err?.response?.data?.display_name?.[0] ||
+        err?.response?.data?.detail ||
+        'Erro ao criar instrumento';
       showToast.error(message);
       return null;
     }
@@ -90,6 +97,6 @@ export const useInstruments = () => {
     error,
     createCustomInstrument,
     searchInstruments,
-    refreshInstruments: loadInstruments
+    refreshInstruments: loadInstruments,
   };
 };

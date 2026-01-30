@@ -107,11 +107,12 @@ class GeocodingService {
 
       if (data && data.address) {
         const geocodeData: GeocodeData = {
-          city: data.address.city ||
-                data.address.town ||
-                data.address.village ||
-                data.address.municipality ||
-                null,
+          city:
+            data.address.city ||
+            data.address.town ||
+            data.address.village ||
+            data.address.municipality ||
+            null,
           state: data.address.state || null,
           country: data.address.country || null,
         };
@@ -138,7 +139,11 @@ class GeocodingService {
    * @param country País (opcional)
    * @returns { lat, lon } ou null em caso de erro
    */
-  async geocode(city: string, state?: string, country = 'Brasil'): Promise<{ lat: number; lon: number } | null> {
+  async geocode(
+    city: string,
+    state?: string,
+    country = 'Brasil'
+  ): Promise<{ lat: number; lon: number } | null> {
     try {
       // Respeitar rate limit
       await this.waitForRateLimit();

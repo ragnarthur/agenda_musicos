@@ -27,7 +27,11 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
         {/* Avatar */}
         <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex-shrink-0 ring-2 ring-blue-500/10 dark:ring-blue-400/10">
           {review.rated_by_avatar ? (
-            <img src={review.rated_by_avatar} alt={review.rated_by_name} className="w-full h-full object-cover" />
+            <img
+              src={review.rated_by_avatar}
+              alt={review.rated_by_name}
+              className="w-full h-full object-cover"
+            />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-blue-600 text-white font-bold">
               {review.rated_by_name[0]}

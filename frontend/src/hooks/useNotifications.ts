@@ -54,7 +54,8 @@ async function fetchDashboardNotifications(): Promise<DashboardNotificationsData
 
   return {
     pendingApprovalsCount: approvalsResult.status === 'fulfilled' ? approvalsResult.value.count : 0,
-    pendingResponsesCount: responsesResult.status === 'fulfilled' ? responsesResult.value.length : 0,
+    pendingResponsesCount:
+      responsesResult.status === 'fulfilled' ? responsesResult.value.length : 0,
   };
 }
 

@@ -3,19 +3,14 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  Search, 
-  MessageSquare, 
-  Users, 
-  TrendingUp,
-  Clock,
-  Send,
-  MapPin,
-  Star
-} from 'lucide-react';
+import { Search, MessageSquare, Users, TrendingUp, Clock, Send, MapPin, Star } from 'lucide-react';
 import { useCompanyAuth } from '../../contexts/CompanyAuthContext';
 import CompanyNavbar from '../../components/navigation/CompanyNavbar';
-import { companyService, contactRequestService, publicMusicianService } from '../../services/publicApi';
+import {
+  companyService,
+  contactRequestService,
+  publicMusicianService,
+} from '../../services/publicApi';
 import type { CompanyDashboard, ContactRequest, MusicianPublic } from '../../services/publicApi';
 import Loading from '../../components/common/Loading';
 
@@ -92,7 +87,9 @@ const CompanyDashboard: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Não foi possível carregar sua organização</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Não foi possível carregar sua organização
+          </h2>
           <Link to="/login-empresa" className="text-indigo-600 hover:text-indigo-700">
             Voltar para login
           </Link>
@@ -117,7 +114,7 @@ const CompanyDashboard: React.FC = () => {
             <p className="text-indigo-100 text-lg">
               Encontre os melhores músicos para seus eventos
             </p>
-            
+
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
               <StatCard
@@ -164,7 +161,6 @@ const CompanyDashboard: React.FC = () => {
               action="Ver Conversas"
               to="/empresa/contatos"
               badge={dashboardData?.stats.pending_replies}
-
             />
           </div>
         </motion.section>
@@ -184,15 +180,11 @@ const CompanyDashboard: React.FC = () => {
               </span>
             )}
           </div>
-          
+
           {topMusicians.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {topMusicians.map((musician, index) => (
-                <MusicianCard 
-                  key={musician.id} 
-                  musician={musician} 
-                  index={index}
-                />
+                <MusicianCard key={musician.id} musician={musician} index={index} />
               ))}
             </div>
           ) : (
@@ -215,16 +207,16 @@ const CompanyDashboard: React.FC = () => {
           >
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Contatos Recentes</h2>
-              <Link 
+              <Link
                 to="/empresa/contatos"
                 className="text-indigo-600 hover:text-indigo-700 font-medium"
               >
                 Ver todos →
               </Link>
             </div>
-            
+
             <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-              {recentContacts.map((contact) => (
+              {recentContacts.map(contact => (
                 <ContactItem key={contact.id} contact={contact} />
               ))}
             </div>
@@ -281,9 +273,7 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, highlight }) =>
       <div className="flex items-center justify-between">
         <div>
           <p className="text-indigo-100 text-sm font-medium">{label}</p>
-          <p className={`text-3xl font-bold text-white`}>
-            {value}
-          </p>
+          <p className={`text-3xl font-bold text-white`}>{value}</p>
         </div>
         <div className={`p-3 bg-white/20 rounded-lg ${highlight ? 'animate-pulse' : ''}`}>
           {icon}
@@ -302,8 +292,13 @@ interface QuickActionCardProps {
   badge?: number;
 }
 
-const QuickActionCard: React.FC<QuickActionCardProps> = ({ 
-  title, description, icon, action, to, badge 
+const QuickActionCard: React.FC<QuickActionCardProps> = ({
+  title,
+  description,
+  icon,
+  action,
+  to,
+  badge,
 }) => {
   return (
     <Link
@@ -350,8 +345,8 @@ const MusicianCard: React.FC<MusicianCardProps> = ({ musician, index }) => {
     >
       <div className="flex items-center gap-4 mb-4">
         {musician.avatar_url ? (
-          <img 
-            src={musician.avatar_url} 
+          <img
+            src={musician.avatar_url}
             alt={musician.full_name}
             className="w-12 h-12 rounded-full object-cover"
           />
@@ -371,25 +366,22 @@ const MusicianCard: React.FC<MusicianCardProps> = ({ musician, index }) => {
           </div>
         )}
       </div>
-      
+
       <div className="flex flex-wrap gap-2 mb-4">
         {musician.instruments.slice(0, 3).map((instrument, idx) => (
-          <span 
-            key={idx}
-            className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
-          >
+          <span key={idx} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
             {instrument}
           </span>
         ))}
       </div>
-      
+
       {musician.city && (
         <div className="flex items-center gap-1 text-sm text-gray-500 mb-4">
           <MapPin className="w-3 h-3" />
           {musician.city} - {musician.state}
         </div>
       )}
-      
+
       <button className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors">
         Ver Perfil
       </button>
@@ -406,7 +398,7 @@ const ContactItem: React.FC<ContactItemProps> = ({ contact }) => {
     pending: 'bg-amber-100 text-amber-800',
     read: 'bg-blue-100 text-blue-800',
     replied: 'bg-green-100 text-green-800',
-    archived: 'bg-gray-100 text-gray-800'
+    archived: 'bg-gray-100 text-gray-800',
   };
 
   return (
@@ -415,7 +407,9 @@ const ContactItem: React.FC<ContactItemProps> = ({ contact }) => {
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h4 className="font-medium text-gray-900">{contact.to_musician_name}</h4>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[contact.status]}`}>
+            <span
+              className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[contact.status]}`}
+            >
               {contact.status_display}
             </span>
           </div>

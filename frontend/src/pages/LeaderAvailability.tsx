@@ -1,7 +1,19 @@
 // pages/LeaderAvailability.tsx
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar as CalendarIcon, Clock, Plus, Edit, Trash2, AlertCircle, Info, Users, Search, Share, Music } from 'lucide-react';
+import {
+  Calendar as CalendarIcon,
+  Clock,
+  Plus,
+  Edit,
+  Trash2,
+  AlertCircle,
+  Info,
+  Users,
+  Search,
+  Share,
+  Music,
+} from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { leaderAvailabilityService, musicianService, type InstrumentOption } from '../services/api';
@@ -203,8 +215,8 @@ const LeaderAvailabilityPage: React.FC = () => {
             <div className="space-y-2">
               <h1 className="text-3xl font-bold text-gray-900">Disponibilidades compartilhadas</h1>
               <p className="text-gray-600 max-w-2xl text-sm sm:text-base">
-                Cadastre horários disponíveis, defina visibilidade e receba convites com controle de conflitos.
-                O sistema respeita 40 minutos de buffer entre apresentações.
+                Cadastre horários disponíveis, defina visibilidade e receba convites com controle de
+                conflitos. O sistema respeita 40 minutos de buffer entre apresentações.
               </p>
               <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -229,7 +241,8 @@ const LeaderAvailabilityPage: React.FC = () => {
             <div className="flex-1 text-sm text-primary-800">
               <p className="font-medium mb-1">Buffer automático de 40 minutos</p>
               <p>
-                Bloqueamos 40 minutos antes/depois de cada apresentação para deslocamento e preparação. Isso evita conflitos e mantém sua agenda realista.
+                Bloqueamos 40 minutos antes/depois de cada apresentação para deslocamento e
+                preparação. Isso evita conflitos e mantém sua agenda realista.
               </p>
             </div>
           </div>
@@ -270,7 +283,7 @@ const LeaderAvailabilityPage: React.FC = () => {
                 { value: 'upcoming', label: 'Próximas' },
                 { value: 'all', label: 'Todas' },
                 { value: 'past', label: 'Passadas' },
-              ].map((item) => (
+              ].map(item => (
                 <button
                   key={item.value}
                   onClick={() => setTimeFilter(item.value as 'upcoming' | 'past' | 'all')}
@@ -295,7 +308,7 @@ const LeaderAvailabilityPage: React.FC = () => {
                     className="pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary-500 w-full md:w-auto"
                     placeholder="Buscar músico (ex: Bruno)"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={e => setSearchTerm(e.target.value)}
                   />
                 </div>
                 <div className="flex items-center space-x-2">
@@ -303,11 +316,11 @@ const LeaderAvailabilityPage: React.FC = () => {
                   <select
                     className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
                     value={instrumentFilter}
-                    onChange={(e) => setInstrumentFilter(e.target.value)}
+                    onChange={e => setInstrumentFilter(e.target.value)}
                     aria-label="Filtrar por instrumento"
                   >
                     <option value="all">Todos os instrumentos</option>
-                    {instruments.map((inst) => (
+                    {instruments.map(inst => (
                       <option key={inst.value} value={inst.value}>
                         {inst.label} ({inst.count})
                       </option>
@@ -336,7 +349,7 @@ const LeaderAvailabilityPage: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
-            {availabilities.map((availability) => {
+            {availabilities.map(availability => {
               const isOwner = availability.leader === user?.id;
               return (
                 <div
@@ -364,7 +377,8 @@ const LeaderAvailabilityPage: React.FC = () => {
                       <div className="flex items-center space-x-3 mb-2">
                         <Clock className="h-5 w-5 text-gray-500" />
                         <span className="text-gray-700">
-                          {availability.start_time.slice(0, 5)} - {availability.end_time.slice(0, 5)}
+                          {availability.start_time.slice(0, 5)} -{' '}
+                          {availability.end_time.slice(0, 5)}
                         </span>
                       </div>
                       {availability.notes && (
@@ -378,8 +392,8 @@ const LeaderAvailabilityPage: React.FC = () => {
                               {availability.conflicting_events_count === 1
                                 ? 'Existe 1 conflito'
                                 : `${availability.conflicting_events_count} conflitos encontrados`}
-                            </strong>
-                            {' '}para este intervalo. Ajuste o horário ou libere o evento conflitante.
+                            </strong>{' '}
+                            para este intervalo. Ajuste o horário ou libere o evento conflitante.
                             (Cálculo inclui buffer de 40 min antes/depois)
                           </p>
                         </div>
@@ -406,13 +420,15 @@ const LeaderAvailabilityPage: React.FC = () => {
                         </>
                       ) : (
                         <button
-                          onClick={() => navigate('/eventos/novo', {
-                            state: {
-                              date: availability.date,
-                              start_time: availability.start_time,
-                              end_time: availability.end_time
-                            }
-                          })}
+                          onClick={() =>
+                            navigate('/eventos/novo', {
+                              state: {
+                                date: availability.date,
+                                start_time: availability.start_time,
+                                end_time: availability.end_time,
+                              },
+                            })
+                          }
                           className="btn-primary flex items-center space-x-2"
                         >
                           <Plus className="h-5 w-5" />
@@ -452,7 +468,7 @@ const LeaderAvailabilityPage: React.FC = () => {
                     name="date"
                     type="date"
                     value={formData.date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                    onChange={e => setFormData(prev => ({ ...prev, date: e.target.value }))}
                     className="input-field"
                     required
                   />
@@ -461,7 +477,10 @@ const LeaderAvailabilityPage: React.FC = () => {
                 {/* Horários */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="start_time" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="start_time"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Início *
                     </label>
                     <input
@@ -469,13 +488,16 @@ const LeaderAvailabilityPage: React.FC = () => {
                       name="start_time"
                       type="time"
                       value={formData.start_time}
-                      onChange={(e) => setFormData(prev => ({ ...prev, start_time: e.target.value }))}
+                      onChange={e => setFormData(prev => ({ ...prev, start_time: e.target.value }))}
                       className="input-field"
                       required
                     />
                   </div>
                   <div>
-                    <label htmlFor="end_time" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="end_time"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Término *
                     </label>
                     <input
@@ -483,7 +505,7 @@ const LeaderAvailabilityPage: React.FC = () => {
                       name="end_time"
                       type="time"
                       value={formData.end_time}
-                      onChange={(e) => setFormData(prev => ({ ...prev, end_time: e.target.value }))}
+                      onChange={e => setFormData(prev => ({ ...prev, end_time: e.target.value }))}
                       className="input-field"
                       required
                     />
@@ -499,7 +521,7 @@ const LeaderAvailabilityPage: React.FC = () => {
                     id="notes"
                     name="notes"
                     value={formData.notes}
-                    onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                    onChange={e => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                     rows={3}
                     className="input-field"
                     placeholder="Ex: Disponível para eventos até 3h de duração"
@@ -511,7 +533,7 @@ const LeaderAvailabilityPage: React.FC = () => {
                   <input
                     type="checkbox"
                     checked={Boolean(formData.is_public)}
-                    onChange={(e) => setFormData(prev => ({ ...prev, is_public: e.target.checked }))}
+                    onChange={e => setFormData(prev => ({ ...prev, is_public: e.target.checked }))}
                     className="rounded border-gray-300"
                   />
                   <span className="flex items-center space-x-1">

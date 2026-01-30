@@ -32,8 +32,12 @@ const AvailabilityPicker: React.FC<AvailabilityPickerProps> = ({
       <p className="text-sm text-gray-600 mb-3">
         Escolha uma destas datas para facilitar a confirmação do evento:
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" role="listbox" aria-label="Datas disponíveis">
-        {displayedAvailabilities.map((availability) => (
+      <div
+        className="grid grid-cols-1 sm:grid-cols-2 gap-2"
+        role="listbox"
+        aria-label="Datas disponíveis"
+      >
+        {displayedAvailabilities.map(availability => (
           <button
             key={availability.id}
             type="button"

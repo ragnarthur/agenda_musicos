@@ -58,7 +58,7 @@ const RejectModal: React.FC<RejectModalProps> = ({
             <textarea
               id="rejection-reason"
               value={reason}
-              onChange={(e) => onReasonChange(e.target.value)}
+              onChange={e => onReasonChange(e.target.value)}
               rows={3}
               className="input-field text-base"
               placeholder={placeholder}

@@ -1,6 +1,18 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Clock, CheckCircle, XCircle, AlertCircle, TrendingUp, Search, Copy, Mail, MapPin, Phone, Music2 } from 'lucide-react';
+import {
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  TrendingUp,
+  Search,
+  Copy,
+  Mail,
+  MapPin,
+  Phone,
+  Music2,
+} from 'lucide-react';
 import { api, musicianService } from '../services/api';
 import { musicianRequestService, type MusicianRequest } from '../services/publicApi';
 import { showToast } from '../utils/toast';
@@ -129,7 +141,7 @@ const AdminDashboard: React.FC = () => {
   // Sort and filter handler
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+      setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortField(field);
       setSortOrder('asc');
@@ -160,8 +172,9 @@ const AdminDashboard: React.FC = () => {
         comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       } else if (sortField === 'status') {
         const statusOrder = { pending: 1, approved: 2, rejected: 3 };
-        comparison = (statusOrder[a.status as keyof typeof statusOrder] || 99) -
-                     (statusOrder[b.status as keyof typeof statusOrder] || 99);
+        comparison =
+          (statusOrder[a.status as keyof typeof statusOrder] || 99) -
+          (statusOrder[b.status as keyof typeof statusOrder] || 99);
       }
 
       return sortOrder === 'asc' ? comparison : -comparison;
@@ -195,11 +208,13 @@ const AdminDashboard: React.FC = () => {
       pending: 'bg-yellow-100 text-yellow-800',
       approved: 'bg-green-100 text-green-800',
       rejected: 'bg-red-100 text-red-800',
-      cancelled: 'bg-gray-100 text-gray-800'
+      cancelled: 'bg-gray-100 text-gray-800',
     };
 
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variants[status as keyof typeof variants] || 'bg-gray-100 text-gray-800'}`}>
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variants[status as keyof typeof variants] || 'bg-gray-100 text-gray-800'}`}
+      >
         {getStatusIcon(status)}
         <span className="ml-1">{status.charAt(0).toUpperCase() + status.slice(1)}</span>
       </span>
@@ -274,7 +289,10 @@ const AdminDashboard: React.FC = () => {
               <p className="text-xs text-emerald-700 break-all">{inviteLink}</p>
               {inviteExpiresAt && (
                 <p className="text-xs text-emerald-600 mt-1">
-                  Expira em {format(parseISO(inviteExpiresAt), "dd 'de' MMMM 'de' yyyy, HH:mm", { locale: ptBR })}
+                  Expira em{' '}
+                  {format(parseISO(inviteExpiresAt), "dd 'de' MMMM 'de' yyyy, HH:mm", {
+                    locale: ptBR,
+                  })}
                 </p>
               )}
             </div>
@@ -393,7 +411,7 @@ const AdminDashboard: React.FC = () => {
             <input
               type="text"
               value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
+              onChange={event => setSearchTerm(event.target.value)}
               placeholder="Buscar por nome, email, cidade ou instrumento"
               className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-400/40"
             />
@@ -427,34 +445,55 @@ const AdminDashboard: React.FC = () => {
         {sortedAndFilteredRequests.length === 0 ? (
           <div className="bg-white rounded-xl shadow p-10 text-center">
             <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma solicitação encontrada</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Nenhuma solicitação encontrada
+            </h3>
             <p className="text-gray-600">
-              {searchTerm ? 'Tente ajustar os filtros ou buscar por outro termo.' : 'Nenhuma solicitação neste status.'}
+              {searchTerm
+                ? 'Tente ajustar os filtros ou buscar por outro termo.'
+                : 'Nenhuma solicitação neste status.'}
             </p>
           </div>
         ) : (
           <>
             <div className="grid gap-4 transition-opacity duration-200">
-              {paginatedRequests.map((request) => (
+              {paginatedRequests.map(request => (
                 <div key={request.id} className="bg-white rounded-xl shadow p-4 sm:p-5">
                   <div className="space-y-3">
                     {/* Header with name and status */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                      <span className="text-lg font-semibold text-gray-900">{request.full_name}</span>
+                      <span className="text-lg font-semibold text-gray-900">
+                        {request.full_name}
+                      </span>
                       {getStatusBadge(request.status)}
                     </div>
 
                     {/* Info with improved wrapping */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
-                      <span className="flex items-center gap-2"><Mail className="h-4 w-4 flex-shrink-0" />{request.email}</span>
-                      <span className="flex items-center gap-2"><Phone className="h-4 w-4 flex-shrink-0" />{request.phone}</span>
-                      <span className="flex items-center gap-2"><Music2 className="h-4 w-4 flex-shrink-0" />{request.instrument}</span>
-                      <span className="flex items-center gap-2"><MapPin className="h-4 w-4 flex-shrink-0" />{request.city}, {request.state}</span>
+                      <span className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 flex-shrink-0" />
+                        {request.email}
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 flex-shrink-0" />
+                        {request.phone}
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <Music2 className="h-4 w-4 flex-shrink-0" />
+                        {request.instrument}
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 flex-shrink-0" />
+                        {request.city}, {request.state}
+                      </span>
                     </div>
 
                     {/* Date */}
                     <p className="text-xs text-gray-500">
-                      Enviado em {format(parseISO(request.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                      Enviado em{' '}
+                      {format(parseISO(request.created_at), "dd/MM/yyyy 'às' HH:mm", {
+                        locale: ptBR,
+                      })}
                     </p>
 
                     {/* Actions - Full width on mobile */}
@@ -479,7 +518,9 @@ const AdminDashboard: React.FC = () => {
                                 <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
                                 Aprovando...
                               </span>
-                            ) : 'Aprovar'}
+                            ) : (
+                              'Aprovar'
+                            )}
                           </button>
                           <button
                             type="button"
@@ -504,7 +545,10 @@ const AdminDashboard: React.FC = () => {
             {totalPages > 1 && (
               <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
                 <p className="text-sm text-gray-600">
-                  Mostrando {Math.min((currentPage - 1) * itemsPerPage + 1, sortedAndFilteredRequests.length)} - {Math.min(currentPage * itemsPerPage, sortedAndFilteredRequests.length)} de {sortedAndFilteredRequests.length} resultados
+                  Mostrando{' '}
+                  {Math.min((currentPage - 1) * itemsPerPage + 1, sortedAndFilteredRequests.length)}{' '}
+                  - {Math.min(currentPage * itemsPerPage, sortedAndFilteredRequests.length)} de{' '}
+                  {sortedAndFilteredRequests.length} resultados
                 </p>
                 <div className="flex gap-2">
                   <button
@@ -514,7 +558,9 @@ const AdminDashboard: React.FC = () => {
                   >
                     Anterior
                   </button>
-                  <span className="px-3 py-1">Página {currentPage} de {totalPages}</span>
+                  <span className="px-3 py-1">
+                    Página {currentPage} de {totalPages}
+                  </span>
                   <button
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
@@ -546,12 +592,22 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               <div className="grid gap-3 md:grid-cols-2 text-sm text-gray-600">
-                <div><strong>Telefone:</strong> {selectedRequest.phone}</div>
-                <div><strong>Instrumento:</strong> {selectedRequest.instrument}</div>
-                <div><strong>Cidade:</strong> {selectedRequest.city}, {selectedRequest.state}</div>
-                <div><strong>Status:</strong> {selectedRequest.status_display}</div>
+                <div>
+                  <strong>Telefone:</strong> {selectedRequest.phone}
+                </div>
+                <div>
+                  <strong>Instrumento:</strong> {selectedRequest.instrument}
+                </div>
+                <div>
+                  <strong>Cidade:</strong> {selectedRequest.city}, {selectedRequest.state}
+                </div>
+                <div>
+                  <strong>Status:</strong> {selectedRequest.status_display}
+                </div>
                 {selectedRequest.instagram && (
-                  <div><strong>Instagram:</strong> {selectedRequest.instagram}</div>
+                  <div>
+                    <strong>Instagram:</strong> {selectedRequest.instagram}
+                  </div>
                 )}
               </div>
 
@@ -563,10 +619,12 @@ const AdminDashboard: React.FC = () => {
 
               {selectedRequest.status === 'pending' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Notas do admin (opcional)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Notas do admin (opcional)
+                  </label>
                   <textarea
                     value={adminNotes}
-                    onChange={(event) => setAdminNotes(event.target.value)}
+                    onChange={event => setAdminNotes(event.target.value)}
                     rows={3}
                     className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40"
                     placeholder="Observações internas ou motivo da recusa"
@@ -595,7 +653,9 @@ const AdminDashboard: React.FC = () => {
                           <div className="animate-spin h-4 w-4 border-2 border-red-600 border-t-transparent rounded-full"></div>
                           Rejeitando...
                         </span>
-                      ) : 'Rejeitar'}
+                      ) : (
+                        'Rejeitar'
+                      )}
                     </button>
                     <button
                       type="button"
@@ -608,7 +668,9 @@ const AdminDashboard: React.FC = () => {
                           <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
                           Aprovando...
                         </span>
-                      ) : 'Aprovar'}
+                      ) : (
+                        'Aprovar'
+                      )}
                     </button>
                   </>
                 )}

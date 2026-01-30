@@ -42,48 +42,54 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleGoogleCallback = useCallback(async (response: { credential: string }) => {
-    if (isGoogleLoading) return; // Prevenir múltiplas chamadas
+  const handleGoogleCallback = useCallback(
+    async (response: { credential: string }) => {
+      if (isGoogleLoading) return; // Prevenir múltiplas chamadas
 
-    setIsGoogleLoading(true);
-    try {
-      const result = await googleAuthService.authenticate(response.credential, 'musician');
-      if (result.new_user) {
-        // Salvar dados do Google em sessionStorage ao invés de query params
-        sessionStorage.setItem('_googleRegisterData', JSON.stringify({
-          email: result.email,
-          firstName: result.first_name,
-          lastName: result.last_name,
-          picture: result.picture,
-        }));
+      setIsGoogleLoading(true);
+      try {
+        const result = await googleAuthService.authenticate(response.credential, 'musician');
+        if (result.new_user) {
+          // Salvar dados do Google em sessionStorage ao invés de query params
+          sessionStorage.setItem(
+            '_googleRegisterData',
+            JSON.stringify({
+              email: result.email,
+              firstName: result.first_name,
+              lastName: result.last_name,
+              picture: result.picture,
+            })
+          );
 
-        showToast.error('Conta não encontrada. Solicite acesso primeiro.');
-        navigate('/solicitar-acesso');
-        return;
+          showToast.error('Conta não encontrada. Solicite acesso primeiro.');
+          navigate('/solicitar-acesso');
+          return;
+        }
+
+        if (result.user_type === 'musician') {
+          await setSession();
+          showToast.success('Login realizado com sucesso!');
+          navigate('/dashboard');
+        } else {
+          showToast.error('Esta conta não é de músico');
+        }
+      } catch (error: any) {
+        console.error('Google OAuth error:', error);
+        const message = error?.response?.data?.detail;
+
+        if (error?.response?.status === 401) {
+          showToast.error(message || 'Token do Google inválido ou expirado');
+        } else if (error?.response?.status === 400) {
+          showToast.error(message || 'Dados inválidos do Google');
+        } else {
+          showToast.error(message || 'Erro ao autenticar com Google');
+        }
+      } finally {
+        setIsGoogleLoading(false);
       }
-
-      if (result.user_type === 'musician') {
-        await setSession();
-        showToast.success('Login realizado com sucesso!');
-        navigate('/dashboard');
-      } else {
-        showToast.error('Esta conta não é de músico');
-      }
-    } catch (error: any) {
-      console.error('Google OAuth error:', error);
-      const message = error?.response?.data?.detail;
-
-      if (error?.response?.status === 401) {
-        showToast.error(message || 'Token do Google inválido ou expirado');
-      } else if (error?.response?.status === 400) {
-        showToast.error(message || 'Dados inválidos do Google');
-      } else {
-        showToast.error(message || 'Erro ao autenticar com Google');
-      }
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  }, [navigate, setSession, isGoogleLoading]);
+    },
+    [navigate, setSession, isGoogleLoading]
+  );
 
   useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -141,7 +147,9 @@ const Login: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center justify-center gap-2 mb-3">
-            <h1 className="text-5xl font-bold text-white logo-animated drop-shadow-xl leading-tight">GigFlow</h1>
+            <h1 className="text-5xl font-bold text-white logo-animated drop-shadow-xl leading-tight">
+              GigFlow
+            </h1>
             <span className="text-[12px] px-2 py-0.5 bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-500/10 text-amber-100/80 rounded-full border border-amber-400/20 font-light italic tracking-wider">
               Beta
             </span>
@@ -204,7 +212,7 @@ const Login: React.FC = () => {
                 id="username"
                 type="text"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={e => setUsername(e.target.value)}
                 className="input-field"
                 placeholder="Digite seu usuário"
                 required
@@ -222,7 +230,7 @@ const Login: React.FC = () => {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={e => setPassword(e.target.value)}
                   className="input-field pr-12"
                   placeholder="Digite sua senha"
                   required
@@ -230,7 +238,7 @@ const Login: React.FC = () => {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
+                  onClick={() => setShowPassword(prev => !prev)}
                   className="absolute inset-y-0 right-0 flex items-center justify-center w-12 h-12 sm:w-10 sm:h-10 text-gray-500 hover:text-gray-700 touch-manipulation"
                   aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                 >
@@ -238,7 +246,10 @@ const Login: React.FC = () => {
                 </button>
               </div>
               <div className="mt-2 text-right">
-                <Link to="/esqueci-senha" className="text-xs font-medium text-primary-600 hover:text-primary-700">
+                <Link
+                  to="/esqueci-senha"
+                  className="text-xs font-medium text-primary-600 hover:text-primary-700"
+                >
                   Esqueceu sua senha?
                 </Link>
               </div>
@@ -265,7 +276,10 @@ const Login: React.FC = () => {
 
           <div className="mt-4 text-center text-sm text-gray-600">
             Ainda não tem conta?{' '}
-            <Link to="/solicitar-acesso" className="text-primary-600 hover:text-primary-700 font-medium">
+            <Link
+              to="/solicitar-acesso"
+              className="text-primary-600 hover:text-primary-700 font-medium"
+            >
               Solicitar Acesso
             </Link>
           </div>

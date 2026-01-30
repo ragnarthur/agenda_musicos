@@ -95,7 +95,7 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
 
   const requestPermission = useCallback(async () => {
     if (!navigator.geolocation) {
-      setData((prev) => ({
+      setData(prev => ({
         ...prev,
         isLoading: false,
         error: 'Geolocalização não é suportada neste navegador',
@@ -105,14 +105,14 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
 
     try {
       const permission = await navigator.permissions.query({
-        name: 'geolocation'
+        name: 'geolocation',
       } as PermissionDescriptor);
 
       if (permission.state === 'granted') {
-        setData((prev) => ({ ...prev, hasPermission: true }));
+        setData(prev => ({ ...prev, hasPermission: true }));
         return true;
       } else if (permission.state === 'denied') {
-        setData((prev) => ({
+        setData(prev => ({
           ...prev,
           isLoading: false,
           error: 'Permissão de localização negada',
@@ -120,143 +120,154 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
         }));
         return false;
       } else if (permission.state === 'prompt') {
-        setData((prev) => ({ ...prev, hasPermission: true }));
+        setData(prev => ({ ...prev, hasPermission: true }));
         return true;
       }
     } catch {
       console.log('API de permissões não disponível, tentando geolocalização direta');
-      setData((prev) => ({ ...prev, hasPermission: true }));
+      setData(prev => ({ ...prev, hasPermission: true }));
       return true;
     }
 
     return false;
   }, []);
 
-  const getLocation = useCallback(async (retryWithLowAccuracy = false) => {
-    if (!navigator.geolocation) {
-      setData((prev) => ({
-        ...prev,
-        isLoading: false,
-        error: 'Geolocalização não é suportada neste navegador',
-      }));
-      return;
-    }
-
-    try {
-      await requestPermission();
-      setData((prev) => ({ ...prev, isLoading: true, error: null }));
-
-      const timeoutDuration = getGeolocationTimeout();
-      const positionTimeout = getPositionTimeout();
-
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        const timeoutId = setTimeout(() => {
-          const error = new Error('Timeout ao obter localização') as GeolocationError;
-          error.code = 3;
-          error.PERMISSION_DENIED = 1;
-          error.POSITION_UNAVAILABLE = 2;
-          error.TIMEOUT = 3;
-          reject(error);
-        }, timeoutDuration);
-
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            clearTimeout(timeoutId);
-            resolve(position);
-          },
-          (error) => {
-            clearTimeout(timeoutId);
-            reject(error);
-          },
-          {
-            enableHighAccuracy: !retryWithLowAccuracy,
-            timeout: positionTimeout,
-            maximumAge: retryWithLowAccuracy ? 300000 : 0, // 5 min cache on retry
-          }
-        );
-      });
-
-      // Extrair coordenadas
-      const { latitude, longitude } = position.coords;
-      const coords = { latitude, longitude };
-
-      console.log('Coordenadas obtidas:', coords);
-
-      // Fazer reverse geocoding para obter cidade/estado/país
-      const locationInfo = await geocodingService.reverseGeocode(latitude, longitude);
-
-      if (locationInfo) {
-        // Verificar se é Monte Carmelo
-        const isMonteCarmelo = locationInfo.city?.toLowerCase().includes('monte carmelo') || false;
-
-        // Atualizar estado com todos os dados
-        const newData: GeolocationData = {
-          city: locationInfo.city,
-          state: locationInfo.state,
-          country: locationInfo.country,
-          coordinates: coords,
-          isLoading: false,
-          error: null,
-          hasPermission: true,
-          isMonteCarmelo,
-        };
-
-        setData(newData);
-        saveCache(newData); // Salvar no cache para evitar novas requisições
-
-        console.log('Localização completa obtida:', newData);
-      } else {
-        // Geocoding falhou, mas temos coordenadas
-        console.warn('Geocoding retornou nulo, salvando apenas coordenadas');
-        setData((prev) => ({
+  const getLocation = useCallback(
+    async (retryWithLowAccuracy = false) => {
+      if (!navigator.geolocation) {
+        setData(prev => ({
           ...prev,
-          coordinates: coords,
           isLoading: false,
-          error: 'Não foi possível identificar sua cidade',
-          hasPermission: true,
+          error: 'Geolocalização não é suportada neste navegador',
+        }));
+        return;
+      }
+
+      try {
+        await requestPermission();
+        setData(prev => ({ ...prev, isLoading: true, error: null }));
+
+        const timeoutDuration = getGeolocationTimeout();
+        const positionTimeout = getPositionTimeout();
+
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          const timeoutId = setTimeout(() => {
+            const error = new Error('Timeout ao obter localização') as GeolocationError;
+            error.code = 3;
+            error.PERMISSION_DENIED = 1;
+            error.POSITION_UNAVAILABLE = 2;
+            error.TIMEOUT = 3;
+            reject(error);
+          }, timeoutDuration);
+
+          navigator.geolocation.getCurrentPosition(
+            position => {
+              clearTimeout(timeoutId);
+              resolve(position);
+            },
+            error => {
+              clearTimeout(timeoutId);
+              reject(error);
+            },
+            {
+              enableHighAccuracy: !retryWithLowAccuracy,
+              timeout: positionTimeout,
+              maximumAge: retryWithLowAccuracy ? 300000 : 0, // 5 min cache on retry
+            }
+          );
+        });
+
+        // Extrair coordenadas
+        const { latitude, longitude } = position.coords;
+        const coords = { latitude, longitude };
+
+        console.log('Coordenadas obtidas:', coords);
+
+        // Fazer reverse geocoding para obter cidade/estado/país
+        const locationInfo = await geocodingService.reverseGeocode(latitude, longitude);
+
+        if (locationInfo) {
+          // Verificar se é Monte Carmelo
+          const isMonteCarmelo =
+            locationInfo.city?.toLowerCase().includes('monte carmelo') || false;
+
+          // Atualizar estado com todos os dados
+          const newData: GeolocationData = {
+            city: locationInfo.city,
+            state: locationInfo.state,
+            country: locationInfo.country,
+            coordinates: coords,
+            isLoading: false,
+            error: null,
+            hasPermission: true,
+            isMonteCarmelo,
+          };
+
+          setData(newData);
+          saveCache(newData); // Salvar no cache para evitar novas requisições
+
+          console.log('Localização completa obtida:', newData);
+        } else {
+          // Geocoding falhou, mas temos coordenadas
+          console.warn('Geocoding retornou nulo, salvando apenas coordenadas');
+          setData(prev => ({
+            ...prev,
+            coordinates: coords,
+            isLoading: false,
+            error: 'Não foi possível identificar sua cidade',
+            hasPermission: true,
+          }));
+        }
+      } catch (error: unknown) {
+        console.error('Erro ao obter localização:', error);
+
+        // Verifica se o erro tem propriedade code (erro da Geolocation API)
+        const hasErrorCode =
+          error !== null &&
+          typeof error === 'object' &&
+          'code' in error &&
+          typeof error.code === 'number';
+
+        // Se falhou com alta precisão e não tentamos ainda, tentar com baixa precisão
+        if (!retryWithLowAccuracy && hasErrorCode && error.code === 3) {
+          // Timeout
+          console.log('Tentando novamente com precisão reduzida...');
+          return getLocation(true);
+        }
+
+        let errorMessage = 'Erro ao obter localização';
+
+        const isIOSDevice = isIOSSafari();
+
+        // Mensagens específicas para iOS/Safari
+        if (hasErrorCode && error.code === 1) {
+          if (isIOSDevice) {
+            errorMessage =
+              'Permissão de localização negada. Vá em Ajustes > Safari > Localização e permita o acesso.';
+          } else {
+            errorMessage = 'Permissão de localização negada';
+          }
+        } else if (hasErrorCode && error.code === 2) {
+          errorMessage = 'Localização indisponível. Verifique se o GPS está ativado.';
+        } else if (hasErrorCode && error.code === 3) {
+          if (isIOSDevice) {
+            errorMessage =
+              'Timeout ao obter localização. O GPS pode estar desativado ou o sinal está fraco.';
+          } else {
+            errorMessage = 'Timeout ao obter localização';
+          }
+        }
+
+        setData(prev => ({
+          ...prev,
+          isLoading: false,
+          error: errorMessage,
+          hasPermission: !hasErrorCode || error.code !== 1, // Se negado, não tem permissão
         }));
       }
-    } catch (error: unknown) {
-      console.error('Erro ao obter localização:', error);
-
-      // Verifica se o erro tem propriedade code (erro da Geolocation API)
-      const hasErrorCode = error !== null && typeof error === 'object' && 'code' in error && typeof error.code === 'number';
-
-      // Se falhou com alta precisão e não tentamos ainda, tentar com baixa precisão
-      if (!retryWithLowAccuracy && hasErrorCode && error.code === 3) { // Timeout
-        console.log('Tentando novamente com precisão reduzida...');
-        return getLocation(true);
-      }
-
-      let errorMessage = 'Erro ao obter localização';
-
-      const isIOSDevice = isIOSSafari();
-
-      // Mensagens específicas para iOS/Safari
-      if (hasErrorCode && error.code === 1) {
-        if (isIOSDevice) {
-          errorMessage = 'Permissão de localização negada. Vá em Ajustes > Safari > Localização e permita o acesso.';
-        } else {
-          errorMessage = 'Permissão de localização negada';
-        }
-      } else if (hasErrorCode && error.code === 2) {
-        errorMessage = 'Localização indisponível. Verifique se o GPS está ativado.';
-      } else if (hasErrorCode && error.code === 3) {
-        if (isIOSDevice) {
-          errorMessage = 'Timeout ao obter localização. O GPS pode estar desativado ou o sinal está fraco.';
-        } else {
-          errorMessage = 'Timeout ao obter localização';
-        }
-      }
-
-      setData((prev) => ({
-        ...prev,
-        isLoading: false,
-        error: errorMessage,
-        hasPermission: !hasErrorCode || error.code !== 1, // Se negado, não tem permissão
-      }));
-    }
-  }, [requestPermission, saveCache]);
+    },
+    [requestPermission, saveCache]
+  );
 
   useEffect(() => {
     const initGeolocation = async () => {
@@ -269,7 +280,7 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
       }
 
       if (!autoStart) {
-        setData((prev) => ({ ...prev, isLoading: false }));
+        setData(prev => ({ ...prev, isLoading: false }));
         return;
       }
 
@@ -291,7 +302,7 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
 
       const isMonteCarmelo = detail.data?.city?.toLowerCase().includes('monte carmelo') || false;
 
-      setData((prev) => ({
+      setData(prev => ({
         ...prev,
         city: detail.data?.city ?? prev.city,
         state: detail.data?.state ?? prev.state,

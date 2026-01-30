@@ -37,17 +37,21 @@ const PRESETS = {
   ],
 } as const;
 
-type CropPreset = typeof PRESETS.avatar[number]['id'] | typeof PRESETS.cover[number]['id'];
+type CropPreset = (typeof PRESETS.avatar)[number]['id'] | (typeof PRESETS.cover)[number]['id'];
 
 const isJpeg = (file: File) => file.type === 'image/jpeg' || file.type === 'image/jpg';
 
 const canvasToBlob = (canvas: HTMLCanvasElement, type: string, quality: number) =>
   new Promise<Blob>((resolve, reject) => {
     if (canvas.toBlob) {
-      canvas.toBlob((blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error('Falha ao processar imagem.'));
-      }, type, quality);
+      canvas.toBlob(
+        blob => {
+          if (blob) resolve(blob);
+          else reject(new Error('Falha ao processar imagem.'));
+        },
+        type,
+        quality
+      );
       return;
     }
 
@@ -490,7 +494,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
       return;
     }
 
-    setOffset((prev) => clampOffset(prev.x, prev.y, scale));
+    setOffset(prev => clampOffset(prev.x, prev.y, scale));
   }, [
     baseScale,
     clampOffset,
@@ -525,16 +529,20 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
 
     ctx.drawImage(imgRef.current, sx, sy, sw, sh, 0, 0, output.width, output.height);
 
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-      const url = URL.createObjectURL(blob);
+    canvas.toBlob(
+      blob => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
 
-      setPreviewUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        previewUrlRef.current = url;
-        return url;
-      });
-    }, 'image/jpeg', 0.7);
+        setPreviewUrl(prev => {
+          if (prev) URL.revokeObjectURL(prev);
+          previewUrlRef.current = url;
+          return url;
+        });
+      },
+      'image/jpeg',
+      0.7
+    );
   }, [zoom, offset, cropSize, naturalSize, baseScale, isOpen, target]);
 
   // Cleanup preview url
@@ -572,11 +580,14 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     let nextOffset = { ...centered };
 
     if (preset === 'top') nextOffset = { x: centered.x, y: 0 };
-    if (preset === 'bottom') nextOffset = { x: centered.x, y: cropSize.height - naturalSize.height * scale };
+    if (preset === 'bottom')
+      nextOffset = { x: centered.x, y: cropSize.height - naturalSize.height * scale };
     if (preset === 'left') nextOffset = { x: 0, y: centered.y };
-    if (preset === 'right') nextOffset = { x: cropSize.width - naturalSize.width * scale, y: centered.y };
+    if (preset === 'right')
+      nextOffset = { x: cropSize.width - naturalSize.width * scale, y: centered.y };
 
-    if (preset === 'portrait') nextOffset = { x: centered.x, y: centered.y - cropSize.height * 0.08 };
+    if (preset === 'portrait')
+      nextOffset = { x: centered.x, y: centered.y - cropSize.height * 0.08 };
     if (preset === 'close') nextOffset = { x: centered.x, y: centered.y - cropSize.height * 0.12 };
 
     setZoom(nextZoom);
@@ -607,7 +618,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     if (dx || dy) {
       event.preventDefault();
       const scale = baseScale * zoom;
-      setOffset((prev) => clampOffset(prev.x + dx, prev.y + dy, scale));
+      setOffset(prev => clampOffset(prev.x + dx, prev.y + dy, scale));
       return;
     }
 
@@ -646,7 +657,9 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     const deltaY = event.clientY - dragRef.current.startY;
     const scale = baseScale * zoom;
 
-    setOffset(clampOffset(dragRef.current.originX + deltaX, dragRef.current.originY + deltaY, scale));
+    setOffset(
+      clampOffset(dragRef.current.originX + deltaX, dragRef.current.originY + deltaY, scale)
+    );
   };
 
   const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -843,7 +856,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="crop-title"
-      onClick={(e) => e.target === e.currentTarget && !isSaving && onClose()}
+      onClick={e => e.target === e.currentTarget && !isSaving && onClose()}
     >
       <div className="flex w-full max-w-5xl flex-col bg-white shadow-2xl dark:bg-gray-900 sm:max-h-[92vh] sm:rounded-2xl sm:overflow-hidden max-h-[100dvh] rounded-t-2xl">
         {/* Header */}
@@ -852,7 +865,9 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
             <h2 id="crop-title" className="text-base font-semibold text-gray-900 dark:text-white">
               Ajustar {isAvatar ? 'foto de perfil' : 'foto de capa'}
             </h2>
-            {isPreparing && <span className="text-xs text-gray-400 animate-pulse">Carregando...</span>}
+            {isPreparing && (
+              <span className="text-xs text-gray-400 animate-pulse">Carregando...</span>
+            )}
           </div>
 
           <button
@@ -862,7 +877,13 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
             className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300 disabled:opacity-50"
             aria-label="Fechar"
           >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -885,7 +906,9 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                 style={{ width: frameSize.width || undefined }}
               >
                 <span>Ajuste</span>
-                <span className="text-xs font-normal text-gray-400">Arraste para mover e use o zoom</span>
+                <span className="text-xs font-normal text-gray-400">
+                  Arraste para mover e use o zoom
+                </span>
               </div>
 
               <div className="relative">
@@ -919,11 +942,13 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                       ref={imgRef}
                       src={imageUrl}
                       alt="Pré-visualização"
-                      onLoad={(event) => {
+                      onLoad={event => {
                         const img = event.currentTarget;
                         setNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
                       }}
-                      onError={() => setLoadError('Não foi possível abrir esta foto. Use JPG, PNG ou WEBP.')}
+                      onError={() =>
+                        setLoadError('Não foi possível abrir esta foto. Use JPG, PNG ou WEBP.')
+                      }
                       // FIX CRÍTICO: Tailwind preflight limita img com max-width:100% — isso quebra o crop.
                       className="absolute left-0 top-0 select-none pointer-events-none max-w-none max-h-none"
                       style={{
@@ -944,7 +969,11 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                         }`}
                         style={{ width: 34, height: 34 }}
                       >
-                        <img src={previewUrl} alt="Preview final" className="h-full w-full object-cover" />
+                        <img
+                          src={previewUrl}
+                          alt="Preview final"
+                          className="h-full w-full object-cover"
+                        />
                       </div>
                       <span className="hidden sm:inline text-xs text-white/80">
                         {outputSize.width}×{outputSize.height}
@@ -956,9 +985,9 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                   {naturalSize.width > 0 && (
                     <div
                       className="absolute bottom-2.5 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/15 bg-black/55 px-2 py-1 text-xs text-white shadow-lg backdrop-blur-sm"
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onPointerUp={(e) => e.stopPropagation()}
-                      onClick={(e) => e.stopPropagation()}
+                      onPointerDown={e => e.stopPropagation()}
+                      onPointerUp={e => e.stopPropagation()}
+                      onClick={e => e.stopPropagation()}
                       style={{ touchAction: 'auto' }}
                     >
                       <button
@@ -977,7 +1006,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                         max={zoomMax}
                         step={0.01}
                         value={zoom}
-                        onChange={(e) => updateZoom(Number(e.target.value))}
+                        onChange={e => updateZoom(Number(e.target.value))}
                         disabled={isPreparing}
                         className="h-1 w-14 sm:w-20 appearance-none rounded-full bg-white/25 accent-white cursor-pointer"
                         aria-label="Controle de zoom"
@@ -993,7 +1022,9 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                         +
                       </button>
 
-                      <span className="w-10 text-center text-xs font-medium tabular-nums">{zoomPercent}%</span>
+                      <span className="w-10 text-center text-xs font-medium tabular-nums">
+                        {zoomPercent}%
+                      </span>
                       <span className="h-3 w-px bg-white/20" />
 
                       <button
@@ -1036,7 +1067,11 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                   }`}
                   style={{ width: isAvatar ? 120 : 180, height: isAvatar ? 120 : 101 }}
                 >
-                  <img src={previewUrl} alt="Preview final" className="h-full w-full object-cover" />
+                  <img
+                    src={previewUrl}
+                    alt="Preview final"
+                    className="h-full w-full object-cover"
+                  />
                 </div>
 
                 <p className="mt-2 text-xs text-gray-400">
@@ -1051,7 +1086,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
               </p>
 
               <div className="grid grid-cols-1 gap-1.5">
-                {presets.map((preset) => (
+                {presets.map(preset => (
                   <button
                     key={preset.id}
                     type="button"
@@ -1094,7 +1129,15 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
               {isSaving ? (
                 <>
                   <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
                     <path
                       className="opacity-75"
                       fill="currentColor"
@@ -1116,14 +1159,16 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
           <div className="flex items-center justify-between px-4 pt-3 pb-2">
             <button
               type="button"
-              onClick={() => setMobileSettingsOpen((v) => !v)}
+              onClick={() => setMobileSettingsOpen(v => !v)}
               disabled={!naturalSize.width || isPreparing}
               className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white/70 px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-white disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900/60 dark:text-gray-200"
               aria-expanded={mobileSettingsOpen}
               aria-controls="mobile-crop-settings"
             >
               <span>Ajustes</span>
-              <span className="text-xs text-gray-400 dark:text-gray-400 tabular-nums">{zoomPercent}%</span>
+              <span className="text-xs text-gray-400 dark:text-gray-400 tabular-nums">
+                {zoomPercent}%
+              </span>
               <svg
                 className={`h-4 w-4 transition-transform ${mobileSettingsOpen ? 'rotate-180' : ''}`}
                 viewBox="0 0 20 20"
@@ -1177,7 +1222,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
               </p>
 
               <div className="mt-2 -mx-1 px-1 flex gap-2 overflow-x-auto no-scrollbar">
-                {presets.map((preset) => (
+                {presets.map(preset => (
                   <button
                     key={preset.id}
                     type="button"
@@ -1207,7 +1252,15 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
               {isSaving ? (
                 <>
                   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
                     <path
                       className="opacity-75"
                       fill="currentColor"

@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { Search, Clock, CheckCircle, XCircle, AlertCircle, Mail, Calendar, Music } from 'lucide-react';
+import {
+  Search,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Mail,
+  Calendar,
+  Music,
+} from 'lucide-react';
 
 interface RequestStatus {
   id: number;
@@ -34,7 +43,7 @@ const StatusPage: React.FC = () => {
 
     try {
       let url = 'http://localhost:8000/api/public/request-status/';
-      
+
       if (searchType === 'email') {
         url += `?email=${encodeURIComponent(email)}`;
       } else {
@@ -85,11 +94,13 @@ const StatusPage: React.FC = () => {
       pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
       approved: 'bg-green-100 text-green-800 border-green-200',
       rejected: 'bg-red-100 text-red-800 border-red-200',
-      cancelled: 'bg-gray-100 text-gray-800 border-gray-200'
+      cancelled: 'bg-gray-100 text-gray-800 border-gray-200',
     };
 
     return (
-      <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium border ${variants[status as keyof typeof variants] || 'bg-gray-100 text-gray-800'}`}>
+      <span
+        className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium border ${variants[status as keyof typeof variants] || 'bg-gray-100 text-gray-800'}`}
+      >
         {getStatusIcon(status)}
         <span className="ml-2">{status.charAt(0).toUpperCase() + status.slice(1)}</span>
       </span>
@@ -99,7 +110,7 @@ const StatusPage: React.FC = () => {
   const getStatusMessage = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'Your request is being reviewed by our team. We\'ll get back to you soon!';
+        return "Your request is being reviewed by our team. We'll get back to you soon!";
       case 'approved':
         return 'Congratulations! Your request has been approved. Check your email for next steps.';
       case 'rejected':
@@ -117,7 +128,7 @@ const StatusPage: React.FC = () => {
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -148,7 +159,7 @@ const StatusPage: React.FC = () => {
                     name="searchType"
                     value="email"
                     checked={searchType === 'email'}
-                    onChange={(e) => setSearchType(e.target.value as 'email' | 'id')}
+                    onChange={e => setSearchType(e.target.value as 'email' | 'id')}
                     className="mr-2"
                   />
                   Search by Email
@@ -159,7 +170,7 @@ const StatusPage: React.FC = () => {
                     name="searchType"
                     value="id"
                     checked={searchType === 'id'}
-                    onChange={(e) => setSearchType(e.target.value as 'email' | 'id')}
+                    onChange={e => setSearchType(e.target.value as 'email' | 'id')}
                     className="mr-2"
                   />
                   Search by Request ID
@@ -177,7 +188,7 @@ const StatusPage: React.FC = () => {
                   <input
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={e => setEmail(e.target.value)}
                     placeholder="Enter your email address"
                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
@@ -186,15 +197,13 @@ const StatusPage: React.FC = () => {
               </div>
             ) : (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Request ID
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Request ID</label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
                     type="text"
                     value={requestId}
-                    onChange={(e) => setRequestId(e.target.value)}
+                    onChange={e => setRequestId(e.target.value)}
                     placeholder="Enter your request ID"
                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
@@ -298,7 +307,9 @@ const StatusPage: React.FC = () => {
 
                 {requestStatus.rejection_reason && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-500">Reason for Rejection</label>
+                    <label className="block text-sm font-medium text-gray-500">
+                      Reason for Rejection
+                    </label>
                     <p className="text-red-800 bg-red-50 p-3 rounded-md border border-red-200">
                       {requestStatus.rejection_reason}
                     </p>
@@ -307,7 +318,9 @@ const StatusPage: React.FC = () => {
 
                 {requestStatus.estimated_budget && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-500">Estimated Budget</label>
+                    <label className="block text-sm font-medium text-gray-500">
+                      Estimated Budget
+                    </label>
                     <p className="text-gray-900">${requestStatus.estimated_budget.toFixed(2)}</p>
                   </div>
                 )}
@@ -344,8 +357,8 @@ const StatusPage: React.FC = () => {
             <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No requests found</h3>
             <p className="text-gray-600">
-              We couldn't find any requests matching your search criteria.
-              Please double-check your information and try again.
+              We couldn't find any requests matching your search criteria. Please double-check your
+              information and try again.
             </p>
           </div>
         )}

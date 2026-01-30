@@ -49,7 +49,7 @@ const DustParticles3D: React.FC = memo(() => {
     const init = () => {
       resetArea();
       particles.length = 0;
-      
+
       // Mobile: partículas menores e mais rápidas
       if (isSmallScreen) {
         const featherCount = 8;
@@ -66,7 +66,7 @@ const DustParticles3D: React.FC = memo(() => {
         }
         return;
       }
-      
+
       // Desktop: sistema completo de partículas (otimizado para 25 partículas)
       const density = {
         min: 20,
@@ -135,7 +135,7 @@ const DustParticles3D: React.FC = memo(() => {
       ctx.clearRect(0, 0, width, height);
       ctx.globalCompositeOperation = isSmallScreen ? 'source-over' : 'lighter';
 
-      particles.forEach((particle) => {
+      particles.forEach(particle => {
         if (isSmallScreen) {
           // Mobile: partículas menores com movimento mais rápido
           const driftX = Math.sin(time * 0.0008 + particle.phase) * particle.sway;

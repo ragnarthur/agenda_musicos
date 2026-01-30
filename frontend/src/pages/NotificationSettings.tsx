@@ -72,7 +72,10 @@ const NotificationSettings: React.FC = () => {
     return () => clearInterval(interval);
   }, [telegramCode, loadPreferences]);
 
-  const handleUpdatePreference = async (key: keyof NotificationPreference, value: boolean | string) => {
+  const handleUpdatePreference = async (
+    key: keyof NotificationPreference,
+    value: boolean | string
+  ) => {
     if (!preferences) return;
 
     try {
@@ -190,8 +193,8 @@ const NotificationSettings: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {preferences?.available_channels
-              .filter((ch) => ch.available)
-              .map((channel) => {
+              .filter(ch => ch.available)
+              .map(channel => {
                 const isSelected = preferences.preferred_channel === channel.id;
                 const isConnected = channel.connected;
 
@@ -210,21 +213,25 @@ const NotificationSettings: React.FC = () => {
                       isSelected
                         ? 'border-violet-500 bg-violet-500/10'
                         : isConnected
-                        ? 'border-slate-600 bg-slate-700/30 hover:border-slate-500'
-                        : 'border-slate-700 bg-slate-800/30 opacity-60'
+                          ? 'border-slate-600 bg-slate-700/30 hover:border-slate-500'
+                          : 'border-slate-700 bg-slate-800/30 opacity-60'
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <div
                         className={`p-2 rounded-lg ${
-                          isSelected ? 'bg-violet-500/20 text-violet-400' : 'bg-slate-700 text-slate-300'
+                          isSelected
+                            ? 'bg-violet-500/20 text-violet-400'
+                            : 'bg-slate-700 text-slate-300'
                         }`}
                       >
                         {channelIcons[channel.id]}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <span className={`font-medium ${isSelected ? 'text-white' : 'text-slate-200'}`}>
+                          <span
+                            className={`font-medium ${isSelected ? 'text-white' : 'text-slate-200'}`}
+                          >
                             {channel.name}
                           </span>
                           {isConnected && (
@@ -255,12 +262,14 @@ const NotificationSettings: React.FC = () => {
               <input
                 type="checkbox"
                 checked={preferences?.fallback_to_email ?? true}
-                onChange={(e) => handleUpdatePreference('fallback_to_email', e.target.checked)}
+                onChange={e => handleUpdatePreference('fallback_to_email', e.target.checked)}
                 className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-violet-500 focus:ring-violet-500"
               />
               <div>
                 <span className="text-slate-200">Usar email como fallback</span>
-                <p className="text-xs text-slate-400">Se o canal preferido falhar, enviar por email</p>
+                <p className="text-xs text-slate-400">
+                  Se o canal preferido falhar, enviar por email
+                </p>
               </div>
             </label>
           </div>
@@ -276,7 +285,10 @@ const NotificationSettings: React.FC = () => {
                 </div>
                 <h3 className="text-lg font-semibold text-white">Conectar Telegram</h3>
               </div>
-              <button onClick={() => setTelegramCode(null)} className="text-slate-300 hover:text-white">
+              <button
+                onClick={() => setTelegramCode(null)}
+                className="text-slate-300 hover:text-white"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -296,7 +308,9 @@ const NotificationSettings: React.FC = () => {
                     <Copy className="h-5 w-5 text-slate-200" />
                   </button>
                 </div>
-                <p className="text-xs text-slate-400 mt-2">Expira em {telegramCode.expires_in_minutes} minutos</p>
+                <p className="text-xs text-slate-400 mt-2">
+                  Expira em {telegramCode.expires_in_minutes} minutos
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -316,7 +330,10 @@ const NotificationSettings: React.FC = () => {
                     </a>
                   </li>
                   <li>
-                    Envie a mensagem: <code className="text-white bg-slate-700 px-2 py-0.5 rounded">{telegramCode.code}</code>
+                    Envie a mensagem:{' '}
+                    <code className="text-white bg-slate-700 px-2 py-0.5 rounded">
+                      {telegramCode.code}
+                    </code>
                   </li>
                 </ol>
               </div>
@@ -394,7 +411,7 @@ const NotificationSettings: React.FC = () => {
                 description: 'Lembretes antes dos shows (em breve)',
                 disabled: true,
               },
-            ].map((item) => (
+            ].map(item => (
               <label
                 key={item.key}
                 className={`flex items-center gap-4 p-4 bg-slate-700/30 rounded-xl cursor-pointer hover:bg-slate-700/50 transition-colors ${
@@ -404,9 +421,12 @@ const NotificationSettings: React.FC = () => {
                 <input
                   type="checkbox"
                   checked={preferences?.[item.key as keyof NotificationPreference] as boolean}
-                  onChange={(e) => {
+                  onChange={e => {
                     if (!item.disabled) {
-                      handleUpdatePreference(item.key as keyof NotificationPreference, e.target.checked);
+                      handleUpdatePreference(
+                        item.key as keyof NotificationPreference,
+                        e.target.checked
+                      );
                     }
                   }}
                   disabled={item.disabled || saving}

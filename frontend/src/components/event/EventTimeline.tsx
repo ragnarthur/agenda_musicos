@@ -29,7 +29,7 @@ const EventTimeline: React.FC<EventTimelineProps> = memo(({ logs, maxItems = 20 
       </div>
 
       <div className="space-y-3" role="list" aria-label="Histórico do evento">
-        {displayedLogs.map((log) => (
+        {displayedLogs.map(log => (
           <div
             key={log.id}
             className="flex items-start space-x-3 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3"
@@ -41,7 +41,8 @@ const EventTimeline: React.FC<EventTimelineProps> = memo(({ logs, maxItems = 20 
             <div className="flex-1">
               <p className="text-sm font-semibold text-gray-900">{log.description}</p>
               <p className="text-xs text-gray-600">
-                {log.performed_by_name} • {format(parseISO(log.created_at), "dd/MM/yyyy 'às' HH:mm")}
+                {log.performed_by_name} •{' '}
+                {format(parseISO(log.created_at), "dd/MM/yyyy 'às' HH:mm")}
               </p>
             </div>
           </div>

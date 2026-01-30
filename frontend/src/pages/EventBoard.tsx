@@ -26,7 +26,7 @@ const toName = (availability: Availability): string => {
 const extractNames = (event: Event): string[] => {
   const names = new Set<string>();
   if (event.availabilities?.length) {
-    event.availabilities.forEach((a) => {
+    event.availabilities.forEach(a => {
       const label = toName(a);
       if (label) names.add(label);
     });
@@ -116,15 +116,15 @@ const EventBoard: React.FC = () => {
       // event.created_by é User.id, user.user.id é User.id
       if (event.created_by === user.user.id) return true;
       // a.musician.id é Musician.id, user.id é Musician.id
-      return (event.availabilities || []).some((a) => a.musician?.id === user.id);
+      return (event.availabilities || []).some(a => a.musician?.id === user.id);
     },
-    [user],
+    [user]
   );
 
   const groupedByDate = useMemo(() => {
     const mine = events.filter(isMyEvent);
     const groups = new Map<string, Event[]>();
-    mine.forEach((event) => {
+    mine.forEach(event => {
       if (!event.event_date) return;
       const key = event.event_date;
       if (!groups.has(key)) groups.set(key, []);
@@ -157,9 +157,7 @@ const EventBoard: React.FC = () => {
           <div className="flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <span className={statusClass}>{computedStatus.label}</span>
-              {event.is_solo && (
-                <span className="status-chip default">Solo</span>
-              )}
+              {event.is_solo && <span className="status-chip default">Solo</span>}
             </div>
             <h3 className="mt-1 text-lg font-semibold text-gray-900">{event.title}</h3>
             <p className="text-sm text-gray-600">{event.location}</p>
@@ -169,7 +167,7 @@ const EventBoard: React.FC = () => {
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-700">
               <Users className="h-4 w-4 text-gray-500" />
-              {lineup.map((name) => (
+              {lineup.map(name => (
                 <span
                   key={name}
                   className="inline-flex items-center gap-1 rounded-full bg-gray-50 border border-gray-200 px-3 py-1 font-medium text-gray-700"
@@ -202,7 +200,9 @@ const EventBoard: React.FC = () => {
             <div>
               <p className="text-sm font-semibold text-primary-700">Grade de eventos</p>
               <h1 className="text-3xl font-bold text-gray-900">Meus eventos</h1>
-              <p className="text-gray-600">Eventos organizados por data sob sua gestão ou participação.</p>
+              <p className="text-gray-600">
+                Eventos organizados por data sob sua gestão ou participação.
+              </p>
             </div>
             <div className="flex gap-3">
               <Link
@@ -223,7 +223,7 @@ const EventBoard: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {(['upcoming', 'all', 'past'] as TimeFilter[]).map((value) => (
+          {(['upcoming', 'all', 'past'] as TimeFilter[]).map(value => (
             <button
               key={value}
               onClick={() => setTimeFilter(value)}
@@ -244,7 +244,7 @@ const EventBoard: React.FC = () => {
             <p className="text-gray-600">Nenhum evento encontrado para este filtro.</p>
           </div>
         ) : (
-          groupedByDate.map((group) => (
+          groupedByDate.map(group => (
             <div key={group.dateKey} className="card-contrast">
               <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-3">
@@ -254,9 +254,7 @@ const EventBoard: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <div className="space-y-3">
-                {group.events.map(renderEventCard)}
-              </div>
+              <div className="space-y-3">{group.events.map(renderEventCard)}</div>
             </div>
           ))
         )}

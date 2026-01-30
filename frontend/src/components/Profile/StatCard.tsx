@@ -22,7 +22,9 @@ const StatCard: React.FC<StatCardProps> = ({ icon, value, label, color = 'blue' 
       transition={{ duration: 0.3 }}
       className="bg-white dark:bg-gray-800/50 backdrop-blur-md rounded-xl p-6 shadow-md hover:shadow-2xl transition-all border border-gray-100 dark:border-gray-700/50"
     >
-      <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center mb-4 shadow-lg`}>
+      <div
+        className={`w-12 h-12 rounded-lg bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center mb-4 shadow-lg`}
+      >
         {icon}
       </div>
       <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">{value}</div>

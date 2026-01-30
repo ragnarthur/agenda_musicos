@@ -159,7 +159,11 @@ export const musicianRequestService = {
   },
 
   // Admin - listar solicitações
-  list: async (params?: { status?: string; city?: string; state?: string }): Promise<MusicianRequest[]> => {
+  list: async (params?: {
+    status?: string;
+    city?: string;
+    state?: string;
+  }): Promise<MusicianRequest[]> => {
     const response = await api.get('/admin/musician-requests/', { params });
     return response.data;
   },
@@ -171,14 +175,21 @@ export const musicianRequestService = {
   },
 
   // Admin - aprovar
-  approve: async (id: number, adminNotes?: string): Promise<{ message: string; invite_token: string; invite_expires_at: string }> => {
-    const response = await api.post(`/admin/musician-requests/${id}/approve/`, { admin_notes: adminNotes });
+  approve: async (
+    id: number,
+    adminNotes?: string
+  ): Promise<{ message: string; invite_token: string; invite_expires_at: string }> => {
+    const response = await api.post(`/admin/musician-requests/${id}/approve/`, {
+      admin_notes: adminNotes,
+    });
     return response.data;
   },
 
   // Admin - rejeitar
   reject: async (id: number, adminNotes?: string): Promise<{ message: string }> => {
-    const response = await api.post(`/admin/musician-requests/${id}/reject/`, { admin_notes: adminNotes });
+    const response = await api.post(`/admin/musician-requests/${id}/reject/`, {
+      admin_notes: adminNotes,
+    });
     return response.data;
   },
 };
@@ -214,7 +225,9 @@ export const contactRequestService = {
 
   // Músico - responder
   reply: async (id: number, replyMessage: string): Promise<ContactRequest> => {
-    const response = await api.post(`/contact-requests/${id}/reply/`, { reply_message: replyMessage });
+    const response = await api.post(`/contact-requests/${id}/reply/`, {
+      reply_message: replyMessage,
+    });
     return response.data;
   },
 
@@ -237,7 +250,11 @@ export const contactRequestService = {
 
 export const publicMusicianService = {
   // Listar músicos por cidade (público)
-  listByCity: async (city: string, state: string, instrument?: string): Promise<MusicianPublic[]> => {
+  listByCity: async (
+    city: string,
+    state: string,
+    instrument?: string
+  ): Promise<MusicianPublic[]> => {
     const response = await api.get('/musicians/public-by-city/', {
       params: { city, state, instrument },
     });
@@ -265,13 +282,18 @@ export const publicMusicianService = {
 
 export const companyService = {
   // Registro de empresa
-  register: async (data: CompanyRegisterData): Promise<{ message: string; username: string; email: string; company_name: string }> => {
+  register: async (
+    data: CompanyRegisterData
+  ): Promise<{ message: string; username: string; email: string; company_name: string }> => {
     const response = await api.post('/register-company/', data);
     return response.data;
   },
 
   // Login de empresa
-  login: async (email: string, password: string): Promise<{
+  login: async (
+    email: string,
+    password: string
+  ): Promise<{
     detail: string;
     access: string;
     refresh: string;
@@ -331,7 +353,10 @@ export const inviteRegisterService = {
 
 export const googleAuthService = {
   // Autenticar com Google
-  authenticate: async (credential: string, userType: 'musician' | 'company' = 'musician'): Promise<{
+  authenticate: async (
+    credential: string,
+    userType: 'musician' | 'company' = 'musician'
+  ): Promise<{
     new_user: boolean;
     email?: string;
     first_name?: string;
@@ -347,7 +372,10 @@ export const googleAuthService = {
   },
 
   // Registrar músico via Google
-  registerMusician: async (credential: string, inviteToken: string): Promise<{
+  registerMusician: async (
+    credential: string,
+    inviteToken: string
+  ): Promise<{
     detail: string;
     access: string;
     refresh: string;
@@ -361,13 +389,16 @@ export const googleAuthService = {
   },
 
   // Registrar empresa via Google
-  registerCompany: async (credential: string, data: {
-    company_name: string;
-    phone?: string;
-    city: string;
-    state: string;
-    org_type?: 'company' | 'venue';
-  }): Promise<{
+  registerCompany: async (
+    credential: string,
+    data: {
+      company_name: string;
+      phone?: string;
+      city: string;
+      state: string;
+      org_type?: 'company' | 'venue';
+    }
+  ): Promise<{
     detail: string;
     access: string;
     refresh: string;

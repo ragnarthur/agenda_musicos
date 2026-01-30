@@ -10,14 +10,21 @@ import { publicMusicianService, type MusicianPublic } from '../../services/publi
 import Loading from '../../components/common/Loading';
 import toast from 'react-hot-toast';
 import { BRAZILIAN_STATES } from '../../config/locations';
-import {
-  clearLocationPreference,
-  getLocationPreference,
-} from '../../utils/locationPreference';
+import { clearLocationPreference, getLocationPreference } from '../../utils/locationPreference';
 
 const COMMON_INSTRUMENTS = [
-  'Violão', 'Guitarra', 'Baixo', 'Bateria', 'Teclado', 'Piano',
-  'Saxofone', 'Trompete', 'Violino', 'Flauta', 'Canto', 'DJ'
+  'Violão',
+  'Guitarra',
+  'Baixo',
+  'Bateria',
+  'Teclado',
+  'Piano',
+  'Saxofone',
+  'Trompete',
+  'Violino',
+  'Flauta',
+  'Canto',
+  'DJ',
 ];
 
 const MusicianSearch: React.FC = () => {
@@ -92,18 +99,18 @@ const MusicianSearch: React.FC = () => {
     // Filtro por termo de busca (nome ou instrumento)
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(m =>
-        m.full_name.toLowerCase().includes(term) ||
-        m.instrument?.toLowerCase().includes(term) ||
-        m.instruments?.some(i => i.toLowerCase().includes(term))
+      filtered = filtered.filter(
+        m =>
+          m.full_name.toLowerCase().includes(term) ||
+          m.instrument?.toLowerCase().includes(term) ||
+          m.instruments?.some(i => i.toLowerCase().includes(term))
       );
     }
 
     // Filtro por instrumento específico
     if (selectedInstrument) {
-      filtered = filtered.filter(m =>
-        m.instrument === selectedInstrument ||
-        m.instruments?.includes(selectedInstrument)
+      filtered = filtered.filter(
+        m => m.instrument === selectedInstrument || m.instruments?.includes(selectedInstrument)
       );
     }
 
@@ -140,7 +147,9 @@ const MusicianSearch: React.FC = () => {
     }
   };
 
-  const hasActiveFilters = searchTerm || selectedInstrument ||
+  const hasActiveFilters =
+    searchTerm ||
+    selectedInstrument ||
     (organization?.city && selectedCity !== organization.city) ||
     (organization?.state && selectedState !== organization.state);
 
@@ -174,7 +183,7 @@ const MusicianSearch: React.FC = () => {
                   type="text"
                   placeholder="Buscar por nome ou instrumento..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={e => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
               </div>
@@ -191,7 +200,9 @@ const MusicianSearch: React.FC = () => {
           </div>
 
           {/* Filtros (desktop sempre visível, mobile toggle) */}
-          <div className={`${showFilters ? 'block' : 'hidden'} lg:block mt-4 pt-4 border-t border-gray-200`}>
+          <div
+            className={`${showFilters ? 'block' : 'hidden'} lg:block mt-4 pt-4 border-t border-gray-200`}
+          >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Cidade */}
               <div>
@@ -199,7 +210,7 @@ const MusicianSearch: React.FC = () => {
                 <input
                   type="text"
                   value={selectedCity}
-                  onChange={(e) => setSelectedCity(e.target.value)}
+                  onChange={e => setSelectedCity(e.target.value)}
                   placeholder="Ex: Monte Carmelo"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
@@ -210,12 +221,14 @@ const MusicianSearch: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
                 <select
                   value={selectedState}
-                  onChange={(e) => setSelectedState(e.target.value)}
+                  onChange={e => setSelectedState(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 >
                   <option value="">Selecione...</option>
                   {BRAZILIAN_STATES.map(state => (
-                    <option key={state} value={state}>{state}</option>
+                    <option key={state} value={state}>
+                      {state}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -225,12 +238,14 @@ const MusicianSearch: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Instrumento</label>
                 <select
                   value={selectedInstrument}
-                  onChange={(e) => setSelectedInstrument(e.target.value)}
+                  onChange={e => setSelectedInstrument(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 >
                   <option value="">Todos</option>
                   {COMMON_INSTRUMENTS.map(instrument => (
-                    <option key={instrument} value={instrument}>{instrument}</option>
+                    <option key={instrument} value={instrument}>
+                      {instrument}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -240,7 +255,7 @@ const MusicianSearch: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Ordenar por</label>
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as 'rating' | 'name')}
+                  onChange={e => setSortBy(e.target.value as 'rating' | 'name')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 >
                   <option value="rating">Avaliação</option>
@@ -266,7 +281,8 @@ const MusicianSearch: React.FC = () => {
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-500">
                 <MapPin className="h-4 w-4 text-indigo-500" />
                 <span>
-                  Buscando em {selectedCity || 'cidade'}{selectedState ? `, ${selectedState}` : ''}
+                  Buscando em {selectedCity || 'cidade'}
+                  {selectedState ? `, ${selectedState}` : ''}
                 </span>
                 <button
                   type="button"
@@ -289,9 +305,7 @@ const MusicianSearch: React.FC = () => {
           <div className="bg-white rounded-lg shadow-sm p-12 text-center">
             <Search className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Nenhum músico encontrado</h3>
-            <p className="text-gray-600 mb-6">
-              Tente ajustar os filtros ou buscar em outra cidade
-            </p>
+            <p className="text-gray-600 mb-6">Tente ajustar os filtros ou buscar em outra cidade</p>
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
@@ -304,11 +318,12 @@ const MusicianSearch: React.FC = () => {
         ) : (
           <>
             <div className="mb-4 text-sm text-gray-600">
-              {filteredMusicians.length} músico{filteredMusicians.length !== 1 ? 's' : ''} encontrado{filteredMusicians.length !== 1 ? 's' : ''}
+              {filteredMusicians.length} músico{filteredMusicians.length !== 1 ? 's' : ''}{' '}
+              encontrado{filteredMusicians.length !== 1 ? 's' : ''}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredMusicians.map((musician) => (
+              {filteredMusicians.map(musician => (
                 <motion.div
                   key={musician.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -364,18 +379,19 @@ const MusicianSearch: React.FC = () => {
                     <div className="flex items-center gap-2 mb-4">
                       <div className="flex items-center gap-1">
                         <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="font-semibold">{musician.average_rating?.toFixed(1) || '0.0'}</span>
+                        <span className="font-semibold">
+                          {musician.average_rating?.toFixed(1) || '0.0'}
+                        </span>
                       </div>
                       <span className="text-sm text-gray-500">
-                        ({musician.total_ratings || 0} avaliação{musician.total_ratings !== 1 ? 'ões' : ''})
+                        ({musician.total_ratings || 0} avaliação
+                        {musician.total_ratings !== 1 ? 'ões' : ''})
                       </span>
                     </div>
 
                     {/* Bio */}
                     {musician.bio && (
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-4">
-                        {musician.bio}
-                      </p>
+                      <p className="text-sm text-gray-600 line-clamp-2 mb-4">{musician.bio}</p>
                     )}
 
                     {/* Botão Ver Perfil */}

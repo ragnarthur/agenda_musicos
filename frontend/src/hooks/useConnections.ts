@@ -48,7 +48,7 @@ export function useConnectionsPaginated(params?: ConnectionsParams) {
 
   const { data, error, isLoading, isValidating, mutate, size, setSize } = useSWRInfinite(
     getKey,
-    (key) => {
+    key => {
       const query = key.split('?')[1] || '';
       const searchParams = new URLSearchParams(query);
       const page = Number(searchParams.get('page') || 1);
@@ -62,11 +62,11 @@ export function useConnectionsPaginated(params?: ConnectionsParams) {
   );
 
   const pages = data ?? [];
-  const connections = pages.flatMap((page) => page.results);
+  const connections = pages.flatMap(page => page.results);
   const count = pages[0]?.count ?? 0;
   const hasMore = pages.length > 0 ? Boolean(pages[pages.length - 1]?.next) : false;
   const isLoadingMore = isValidating && size > 0;
-  const loadMore = useCallback(() => setSize((current) => current + 1), [setSize]);
+  const loadMore = useCallback(() => setSize(current => current + 1), [setSize]);
   const reset = useCallback(() => setSize(1), [setSize]);
 
   return {
@@ -102,9 +102,22 @@ export function useBadgeProgress() {
   };
 }
 
-export function useConnectionsPage(params?: { musicianSearch?: string; musicianInstrument?: string }) {
-  const { connections, isLoading: loadingConnections, error: connectionsError, mutate: mutateConnections } = useConnections();
-  const { badgeData, isLoading: loadingBadges, error: badgesError, mutate: mutateBadges } = useBadgeProgress();
+export function useConnectionsPage(params?: {
+  musicianSearch?: string;
+  musicianInstrument?: string;
+}) {
+  const {
+    connections,
+    isLoading: loadingConnections,
+    error: connectionsError,
+    mutate: mutateConnections,
+  } = useConnections();
+  const {
+    badgeData,
+    isLoading: loadingBadges,
+    error: badgesError,
+    mutate: mutateBadges,
+  } = useBadgeProgress();
 
   const {
     musicians,

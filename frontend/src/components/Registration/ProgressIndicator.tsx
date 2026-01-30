@@ -33,29 +33,19 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
                       isCompleted
                         ? 'bg-sky-600 text-white'
                         : isCurrent
-                        ? 'bg-sky-600 text-white ring-4 ring-sky-200'
-                        : 'bg-gray-300 text-gray-600'
+                          ? 'bg-sky-600 text-white ring-4 ring-sky-200'
+                          : 'bg-gray-300 text-gray-600'
                     }
                   `}
                 >
-                  {isCompleted ? (
-                    <Check className="h-5 w-5" />
-                  ) : (
-                    stepNumber
-                  )}
+                  {isCompleted ? <Check className="h-5 w-5" /> : stepNumber}
                 </div>
 
                 {/* Step Name */}
                 <div
                   className={`
                     mt-2 text-xs sm:text-sm font-medium text-center px-1
-                    ${
-                      isCurrent
-                        ? 'text-sky-600'
-                        : isCompleted
-                        ? 'text-gray-700'
-                        : 'text-gray-500'
-                    }
+                    ${isCurrent ? 'text-sky-600' : isCompleted ? 'text-gray-700' : 'text-gray-500'}
                   `}
                 >
                   {stepNames[index]}

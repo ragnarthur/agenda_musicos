@@ -52,9 +52,7 @@ const EventDetail: React.FC = () => {
       const data = await eventService.getById(parseInt(id));
       setEvent(data);
 
-      const myAvailability = data.availabilities?.find(
-        (a) => a.musician.user.id === user?.user.id
-      );
+      const myAvailability = data.availabilities?.find(a => a.musician.user.id === user?.user.id);
 
       if (myAvailability) {
         setSelectedResponse(myAvailability.response);
@@ -82,7 +80,7 @@ const EventDetail: React.FC = () => {
 
   const handleSetAvailability = useCallback(async () => {
     if (!id) return;
-    
+
     try {
       setActionLoading(true);
       await eventService.setAvailability(parseInt(id), selectedResponse, notes);
@@ -97,7 +95,7 @@ const EventDetail: React.FC = () => {
 
   const handleDelete = useCallback(async () => {
     if (!id) return;
-    
+
     try {
       setActionLoading(true);
       await eventService.delete(parseInt(id));
@@ -113,7 +111,7 @@ const EventDetail: React.FC = () => {
 
   const handleCancel = useCallback(async () => {
     if (!id) return;
-    
+
     try {
       setActionLoading(true);
       await eventService.cancel(parseInt(id));
@@ -127,22 +125,25 @@ const EventDetail: React.FC = () => {
     }
   }, [id, loadEvent]);
 
-  const handleSubmitRatings = useCallback(async (ratings: RatingInput[]) => {
-    if (!id) return;
-    
-    try {
-      setActionLoading(true);
-      await eventService.submitRatings(parseInt(id), ratings);
-      showToast.ratingsSubmitted();
-      setRatingSuccess(false);
-      setShowRatingModal(false);
-      await loadEvent();
-    } catch (error) {
-      showToast.apiError(error);
-    } finally {
-      setActionLoading(false);
-    }
-  }, [id, loadEvent]);
+  const handleSubmitRatings = useCallback(
+    async (ratings: RatingInput[]) => {
+      if (!id) return;
+
+      try {
+        setActionLoading(true);
+        await eventService.submitRatings(parseInt(id), ratings);
+        showToast.ratingsSubmitted();
+        setRatingSuccess(false);
+        setShowRatingModal(false);
+        await loadEvent();
+      } catch (error) {
+        showToast.apiError(error);
+      } finally {
+        setActionLoading(false);
+      }
+    },
+    [id, loadEvent]
+  );
 
   if (loading || !event) {
     return (
@@ -174,7 +175,9 @@ const EventDetail: React.FC = () => {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">{event.title}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">
+                {event.title}
+              </h1>
               <p className="mt-2 text-gray-600 text-sm sm:text-base">{event.description}</p>
             </div>
             <div className="flex items-center justify-between sm:justify-end gap-3 flex-wrap">
@@ -352,8 +355,8 @@ const EventDetail: React.FC = () => {
           title="Excluir Evento"
           message={
             <>
-              <strong>Atenção:</strong> Esta ação é irreversível! O evento será excluído permanentemente
-              do sistema e não poderá ser recuperado.
+              <strong>Atenção:</strong> Esta ação é irreversível! O evento será excluído
+              permanentemente do sistema e não poderá ser recuperado.
             </>
           }
           confirmText="Excluir Permanentemente"

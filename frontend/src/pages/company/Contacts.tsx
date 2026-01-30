@@ -14,7 +14,7 @@ import {
   Inbox,
   Mail,
   MailCheck,
-  ArchiveX
+  ArchiveX,
 } from 'lucide-react';
 import { useCompanyAuth } from '../../contexts/CompanyAuthContext';
 import CompanyNavbar from '../../components/navigation/CompanyNavbar';
@@ -32,29 +32,29 @@ const STATUS_CONFIG = {
     icon: Mail,
     color: 'text-yellow-600',
     bgColor: 'bg-yellow-50',
-    borderColor: 'border-yellow-200'
+    borderColor: 'border-yellow-200',
   },
   read: {
     label: 'Lida',
     icon: MailCheck,
     color: 'text-blue-600',
     bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200'
+    borderColor: 'border-blue-200',
   },
   replied: {
     label: 'Respondida',
     icon: CheckCheck,
     color: 'text-green-600',
     bgColor: 'bg-green-50',
-    borderColor: 'border-green-200'
+    borderColor: 'border-green-200',
   },
   archived: {
     label: 'Arquivada',
     icon: ArchiveX,
     color: 'text-gray-600',
     bgColor: 'bg-gray-50',
-    borderColor: 'border-gray-200'
-  }
+    borderColor: 'border-gray-200',
+  },
 };
 
 const Contacts: React.FC = () => {
@@ -94,9 +94,7 @@ const Contacts: React.FC = () => {
     if (contact.status === 'pending') {
       try {
         // Atualizar localmente
-        setContacts(prev => prev.map(c =>
-          c.id === contact.id ? { ...c, status: 'read' } : c
-        ));
+        setContacts(prev => prev.map(c => (c.id === contact.id ? { ...c, status: 'read' } : c)));
       } catch (error) {
         console.error('Erro ao marcar como lida:', error);
       }
@@ -117,7 +115,7 @@ const Contacts: React.FC = () => {
     all: contacts.length,
     pending: contacts.filter(c => c.status === 'pending').length,
     replied: contacts.filter(c => c.status === 'replied').length,
-    archived: contacts.filter(c => c.status === 'archived').length
+    archived: contacts.filter(c => c.status === 'archived').length,
   };
 
   if (authLoading || loading) {
@@ -201,12 +199,16 @@ const Contacts: React.FC = () => {
               {filteredContacts.length === 0 ? (
                 <div className="p-8 text-center">
                   <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-600">Nenhuma mensagem {filter !== 'all' && `${STATUS_CONFIG[filter].label.toLowerCase()}`}</p>
+                  <p className="text-gray-600">
+                    Nenhuma mensagem{' '}
+                    {filter !== 'all' && `${STATUS_CONFIG[filter].label.toLowerCase()}`}
+                  </p>
                 </div>
               ) : (
                 <div className="divide-y divide-gray-200 max-h-[calc(100vh-24rem)] overflow-y-auto">
-                  {filteredContacts.map((contact) => {
-                    const StatusIcon = STATUS_CONFIG[contact.status as keyof typeof STATUS_CONFIG]?.icon || Mail;
+                  {filteredContacts.map(contact => {
+                    const StatusIcon =
+                      STATUS_CONFIG[contact.status as keyof typeof STATUS_CONFIG]?.icon || Mail;
                     const isSelected = selectedContact?.id === contact.id;
 
                     return (
@@ -219,7 +221,9 @@ const Contacts: React.FC = () => {
                       >
                         <div className="flex items-start gap-3">
                           <div className="mt-1">
-                            <StatusIcon className={`h-5 w-5 ${STATUS_CONFIG[contact.status as keyof typeof STATUS_CONFIG]?.color || 'text-gray-400'}`} />
+                            <StatusIcon
+                              className={`h-5 w-5 ${STATUS_CONFIG[contact.status as keyof typeof STATUS_CONFIG]?.color || 'text-gray-400'}`}
+                            />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2 mb-1">
@@ -233,9 +237,7 @@ const Contacts: React.FC = () => {
                             <p className="text-sm font-medium text-indigo-600 truncate mb-1">
                               {contact.subject}
                             </p>
-                            <p className="text-sm text-gray-600 line-clamp-2">
-                              {contact.message}
-                            </p>
+                            <p className="text-sm text-gray-600 line-clamp-2">{contact.message}</p>
                           </div>
                         </div>
                       </button>
@@ -270,16 +272,28 @@ const Contacts: React.FC = () => {
                         {selectedContact.to_musician_name}
                       </h2>
                       <div className="flex items-center gap-2">
-                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
-                          STATUS_CONFIG[selectedContact.status as keyof typeof STATUS_CONFIG]?.bgColor || 'bg-gray-50'
-                        } ${
-                          STATUS_CONFIG[selectedContact.status as keyof typeof STATUS_CONFIG]?.color || 'text-gray-600'
-                        }`}>
-                          {React.createElement(STATUS_CONFIG[selectedContact.status as keyof typeof STATUS_CONFIG]?.icon || Mail, { className: 'h-4 w-4' })}
-                          {STATUS_CONFIG[selectedContact.status as keyof typeof STATUS_CONFIG]?.label || selectedContact.status}
+                        <span
+                          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
+                            STATUS_CONFIG[selectedContact.status as keyof typeof STATUS_CONFIG]
+                              ?.bgColor || 'bg-gray-50'
+                          } ${
+                            STATUS_CONFIG[selectedContact.status as keyof typeof STATUS_CONFIG]
+                              ?.color || 'text-gray-600'
+                          }`}
+                        >
+                          {React.createElement(
+                            STATUS_CONFIG[selectedContact.status as keyof typeof STATUS_CONFIG]
+                              ?.icon || Mail,
+                            { className: 'h-4 w-4' }
+                          )}
+                          {STATUS_CONFIG[selectedContact.status as keyof typeof STATUS_CONFIG]
+                            ?.label || selectedContact.status}
                         </span>
                         <span className="text-sm text-gray-500">
-                          Enviada em {format(new Date(selectedContact.created_at), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+                          Enviada em{' '}
+                          {format(new Date(selectedContact.created_at), "dd 'de' MMMM 'às' HH:mm", {
+                            locale: ptBR,
+                          })}
                         </span>
                       </div>
                     </div>
@@ -296,7 +310,9 @@ const Contacts: React.FC = () => {
                   </div>
 
                   {/* Detalhes do evento */}
-                  {(selectedContact.event_date || selectedContact.event_location || selectedContact.budget_range) && (
+                  {(selectedContact.event_date ||
+                    selectedContact.event_location ||
+                    selectedContact.budget_range) && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
                       {selectedContact.event_date && (
                         <div className="flex items-start gap-2">
@@ -304,7 +320,9 @@ const Contacts: React.FC = () => {
                           <div>
                             <p className="text-xs text-gray-500">Data do Evento</p>
                             <p className="text-sm font-medium text-gray-900">
-                              {format(new Date(selectedContact.event_date), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                              {format(new Date(selectedContact.event_date), "dd 'de' MMMM, yyyy", {
+                                locale: ptBR,
+                              })}
                             </p>
                           </div>
                         </div>
@@ -314,7 +332,9 @@ const Contacts: React.FC = () => {
                           <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
                           <div>
                             <p className="text-xs text-gray-500">Local</p>
-                            <p className="text-sm font-medium text-gray-900">{selectedContact.event_location}</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {selectedContact.event_location}
+                            </p>
                           </div>
                         </div>
                       )}
@@ -323,7 +343,9 @@ const Contacts: React.FC = () => {
                           <DollarSign className="h-5 w-5 text-gray-400 mt-0.5" />
                           <div>
                             <p className="text-xs text-gray-500">Orçamento</p>
-                            <p className="text-sm font-medium text-gray-900">{selectedContact.budget_range}</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {selectedContact.budget_range}
+                            </p>
                           </div>
                         </div>
                       )}
@@ -341,12 +363,21 @@ const Contacts: React.FC = () => {
                   {/* Resposta do músico */}
                   {selectedContact.reply_message && (
                     <div>
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2">Resposta do músico:</h4>
+                      <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                        Resposta do músico:
+                      </h4>
                       <div className="bg-green-50 border-l-4 border-green-600 p-4 rounded">
-                        <p className="text-gray-800 whitespace-pre-wrap">{selectedContact.reply_message}</p>
+                        <p className="text-gray-800 whitespace-pre-wrap">
+                          {selectedContact.reply_message}
+                        </p>
                         {selectedContact.replied_at && (
                           <p className="text-xs text-gray-500 mt-2">
-                            Respondida em {format(new Date(selectedContact.replied_at), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+                            Respondida em{' '}
+                            {format(
+                              new Date(selectedContact.replied_at),
+                              "dd 'de' MMMM 'às' HH:mm",
+                              { locale: ptBR }
+                            )}
                           </p>
                         )}
                       </div>

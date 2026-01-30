@@ -100,7 +100,9 @@ const MusicianProfile: React.FC = () => {
 
       if (connectionsRes.status === 'fulfilled') {
         setConnections(connectionsRes.value.connections || []);
-        setConnectionsTotal(connectionsRes.value.total ?? connectionsRes.value.connections?.length ?? 0);
+        setConnectionsTotal(
+          connectionsRes.value.total ?? connectionsRes.value.connections?.length ?? 0
+        );
       }
       if (reviewsRes.status === 'fulfilled') {
         setReviews(reviewsRes.value || []);
@@ -182,12 +184,12 @@ const MusicianProfile: React.FC = () => {
     showToast.promise(uploadPromise, {
       loading: 'Atualizando foto de perfil...',
       success: 'Foto de perfil atualizada!',
-      error: (err) => getErrorMessage(err, 'Não foi possível atualizar a foto de perfil.'),
+      error: err => getErrorMessage(err, 'Não foi possível atualizar a foto de perfil.'),
     });
 
     try {
       const response = await uploadPromise;
-      setMusician((prev) => (prev ? { ...prev, avatar_url: response.avatar } : prev));
+      setMusician(prev => (prev ? { ...prev, avatar_url: response.avatar } : prev));
       await refreshUser();
     } catch {
       // Erro já tratado pelo toast
@@ -202,12 +204,12 @@ const MusicianProfile: React.FC = () => {
     showToast.promise(uploadPromise, {
       loading: 'Atualizando imagem de capa...',
       success: 'Imagem de capa atualizada!',
-      error: (err) => getErrorMessage(err, 'Não foi possível atualizar a imagem de capa.'),
+      error: err => getErrorMessage(err, 'Não foi possível atualizar a imagem de capa.'),
     });
 
     try {
       const response = await uploadPromise;
-      setMusician((prev) => (prev ? { ...prev, cover_image_url: response.cover_image } : prev));
+      setMusician(prev => (prev ? { ...prev, cover_image_url: response.cover_image } : prev));
       await refreshUser();
     } catch {
       // Erro já tratado pelo toast
@@ -361,7 +363,9 @@ const MusicianProfile: React.FC = () => {
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white">Sobre</h2>
                 </div>
                 {musician.bio ? (
-                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{musician.bio}</p>
+                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                    {musician.bio}
+                  </p>
                 ) : (
                   <p className="text-gray-400 dark:text-gray-500 italic">
                     {isOwnProfile
@@ -380,7 +384,7 @@ const MusicianProfile: React.FC = () => {
                   </div>
                   {badges.length > 0 ? (
                     <div className="flex flex-wrap gap-3">
-                      {badges.map((badge) => (
+                      {badges.map(badge => (
                         <motion.div
                           key={badge.id}
                           initial={{ opacity: 0, scale: 0.8 }}
@@ -389,9 +393,13 @@ const MusicianProfile: React.FC = () => {
                         >
                           <span className="text-xl">{badge.icon || '🏆'}</span>
                           <div>
-                            <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">{badge.name}</p>
+                            <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                              {badge.name}
+                            </p>
                             {badge.description && (
-                              <p className="text-xs text-amber-600 dark:text-amber-400">{badge.description}</p>
+                              <p className="text-xs text-amber-600 dark:text-amber-400">
+                                {badge.description}
+                              </p>
                             )}
                           </div>
                         </motion.div>
@@ -399,7 +407,9 @@ const MusicianProfile: React.FC = () => {
                     </div>
                   ) : (
                     <p className="text-gray-400 dark:text-gray-500 italic">
-                      {isOwnProfile ? 'Continue usando a plataforma para desbloquear conquistas!' : 'Nenhuma conquista ainda.'}
+                      {isOwnProfile
+                        ? 'Continue usando a plataforma para desbloquear conquistas!'
+                        : 'Nenhuma conquista ainda.'}
                     </p>
                   )}
                   {isOwnProfile && (
@@ -417,7 +427,9 @@ const MusicianProfile: React.FC = () => {
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
                 <div className="flex items-center gap-2 mb-4">
                   <Package className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Equipamentos e Serviços</h2>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                    Equipamentos e Serviços
+                  </h2>
                 </div>
                 {musician.equipment_items && musician.equipment_items.length > 0 ? (
                   <ul className="space-y-3">
@@ -460,7 +472,7 @@ const MusicianProfile: React.FC = () => {
                 </div>
                 {reviews.length > 0 ? (
                   <div className="space-y-4">
-                    {reviews.map((review) => (
+                    {reviews.map(review => (
                       <ReviewCard key={review.id} review={review} />
                     ))}
                   </div>
@@ -481,7 +493,9 @@ const MusicianProfile: React.FC = () => {
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
                   <div className="flex items-center gap-2 mb-4">
                     <Music className="h-5 w-5 text-indigo-500" />
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">Instrumentos</h2>
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                      Instrumentos
+                    </h2>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {musician.instruments.map((inst, idx) => (
@@ -542,7 +556,9 @@ const MusicianProfile: React.FC = () => {
 
                   {!musician.phone && !musician.whatsapp && !musician.instagram && (
                     <p className="text-gray-400 dark:text-gray-500 italic text-sm">
-                      {isOwnProfile ? 'Adicione informações de contato no seu perfil.' : 'Informações de contato não disponíveis.'}
+                      {isOwnProfile
+                        ? 'Adicione informações de contato no seu perfil.'
+                        : 'Informações de contato não disponíveis.'}
                     </p>
                   )}
                 </div>
@@ -553,7 +569,10 @@ const MusicianProfile: React.FC = () => {
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white">Conexões</h2>
                   {connectionsTotal > 6 && (
-                    <Link to="/conexoes" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                    <Link
+                      to="/conexoes"
+                      className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                    >
                       Ver todas
                     </Link>
                   )}
@@ -561,7 +580,7 @@ const MusicianProfile: React.FC = () => {
 
                 {connections.length > 0 ? (
                   <div className="grid grid-cols-3 gap-3">
-                    {connections.slice(0, 6).map((conn) => (
+                    {connections.slice(0, 6).map(conn => (
                       <Link
                         key={conn.id}
                         to={`/musicos/${conn.id}`}
@@ -569,20 +588,28 @@ const MusicianProfile: React.FC = () => {
                       >
                         <div className="w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-2 overflow-hidden ring-2 ring-blue-500/10 dark:ring-blue-400/10">
                           {conn.avatar ? (
-                            <img src={conn.avatar} alt={conn.full_name} className="w-full h-full object-cover" />
+                            <img
+                              src={conn.avatar}
+                              alt={conn.full_name}
+                              className="w-full h-full object-cover"
+                            />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-blue-600 text-white font-bold">
                               {conn.full_name[0]}
                             </div>
                           )}
                         </div>
-                        <p className="text-xs text-gray-700 dark:text-gray-300 truncate">{conn.full_name.split(' ')[0]}</p>
+                        <p className="text-xs text-gray-700 dark:text-gray-300 truncate">
+                          {conn.full_name.split(' ')[0]}
+                        </p>
                       </Link>
                     ))}
                   </div>
                 ) : (
                   <p className="text-gray-400 dark:text-gray-500 italic text-sm">
-                    {isOwnProfile ? 'Conecte-se com outros músicos da plataforma!' : 'Nenhuma conexão ainda.'}
+                    {isOwnProfile
+                      ? 'Conecte-se com outros músicos da plataforma!'
+                      : 'Nenhuma conexão ainda.'}
                   </p>
                 )}
 

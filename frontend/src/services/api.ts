@@ -80,7 +80,7 @@ const refreshAuthToken = async (): Promise<void> => {
       .then(() => {
         refreshingPromise = null;
       })
-      .catch((error) => {
+      .catch(error => {
         refreshingPromise = null;
         throw error;
       });
@@ -89,7 +89,7 @@ const refreshAuthToken = async (): Promise<void> => {
 };
 
 api.interceptors.response.use(
-  (response) => response,
+  response => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as typeof error.config & { _retry?: boolean };
 
@@ -104,7 +104,7 @@ api.interceptors.response.use(
     ];
 
     const isPublicAuthPath = originalRequest?.url
-      ? publicAuthPaths.some((path) => originalRequest.url?.includes(path))
+      ? publicAuthPaths.some(path => originalRequest.url?.includes(path))
       : false;
 
     const publicRoutes = [
@@ -119,7 +119,7 @@ api.interceptors.response.use(
       '/esqueci-senha',
       '/redefinir-senha',
     ];
-    const isOnPublicRoute = publicRoutes.some((route) => window.location.pathname.startsWith(route));
+    const isOnPublicRoute = publicRoutes.some(route => window.location.pathname.startsWith(route));
 
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       if (isPublicAuthPath) {
@@ -134,7 +134,12 @@ api.interceptors.response.use(
         const isUserProfileCall = originalRequest.url?.includes('/musicians/me/');
 
         // Em rotas públicas, não redirecionamos para login (ex: verificação de email)
-        if (!isPublicAuthPath && !isOnPublicRoute && !isUserProfileCall && window.location.pathname !== '/login') {
+        if (
+          !isPublicAuthPath &&
+          !isOnPublicRoute &&
+          !isUserProfileCall &&
+          window.location.pathname !== '/login'
+        ) {
           toast.error('Sessão expirada. Faça login novamente.');
           setTimeout(() => {
             if (window.location.pathname.startsWith('/empresa')) {
@@ -192,7 +197,12 @@ export const musicianService = {
     return response.data.results || response.data;
   },
 
-  getAllPaginated: async (params?: { search?: string; instrument?: string; page?: number; page_size?: number }): Promise<PaginatedResponse<Musician>> => {
+  getAllPaginated: async (params?: {
+    search?: string;
+    instrument?: string;
+    page?: number;
+    page_size?: number;
+  }): Promise<PaginatedResponse<Musician>> => {
     const response = await api.get('/musicians/', { params });
     const data = response.data;
     if (Array.isArray(data)) {
@@ -273,7 +283,18 @@ export const musicianService = {
     };
   },
 
-  getReviews: async (musicianId: number): Promise<Array<{ id: number; rated_by_name: string; rated_by_avatar: string | null; rating: number; comment: string; time_ago: string }>> => {
+  getReviews: async (
+    musicianId: number
+  ): Promise<
+    Array<{
+      id: number;
+      rated_by_name: string;
+      rated_by_avatar: string | null;
+      rating: number;
+      comment: string;
+      time_ago: string;
+    }>
+  > => {
     const response = await api.get(`/musicians/${musicianId}/reviews/`);
     return response.data;
   },
@@ -283,12 +304,20 @@ export const musicianService = {
     return response.data;
   },
 
-  getStats: async (musicianId: number): Promise<{ total_events: number; events_as_leader: number; events_as_member: number }> => {
+  getStats: async (
+    musicianId: number
+  ): Promise<{ total_events: number; events_as_leader: number; events_as_member: number }> => {
     const response = await api.get(`/musicians/${musicianId}/stats/`);
     return response.data;
   },
 
-  checkConnection: async (musicianId: number): Promise<{ is_connected: boolean; connection_id: number | null; connection_type: string | null }> => {
+  checkConnection: async (
+    musicianId: number
+  ): Promise<{
+    is_connected: boolean;
+    connection_id: number | null;
+    connection_type: string | null;
+  }> => {
     const response = await api.get(`/musicians/${musicianId}/connection-status/`);
     return response.data;
   },
@@ -414,7 +443,6 @@ export const eventService = {
     const response = await api.post(`/events/${id}/submit_ratings/`, { ratings });
     return response.data;
   },
-
 };
 
 // Availability Service
@@ -432,10 +460,13 @@ export const availabilityService = {
     return response.data;
   },
 
-  update: async (id: number, data: {
-    response: AvailabilityResponse;
-    notes?: string;
-  }): Promise<Availability> => {
+  update: async (
+    id: number,
+    data: {
+      response: AvailabilityResponse;
+      notes?: string;
+    }
+  ): Promise<Availability> => {
     const response = await api.put(`/availabilities/${id}/`, data);
     return response.data;
   },
@@ -467,7 +498,10 @@ export const leaderAvailabilityService = {
     return response.data;
   },
 
-  update: async (id: number, data: Partial<LeaderAvailabilityCreate>): Promise<LeaderAvailability> => {
+  update: async (
+    id: number,
+    data: Partial<LeaderAvailabilityCreate>
+  ): Promise<LeaderAvailability> => {
     const response = await api.put(`/leader-availabilities/${id}/`, data);
     return response.data;
   },
@@ -481,7 +515,10 @@ export const leaderAvailabilityService = {
     return response.data;
   },
 
-  getAvailableMusicians: async (params: { date: string; instrument?: string }): Promise<AvailableMusician[]> => {
+  getAvailableMusicians: async (params: {
+    date: string;
+    instrument?: string;
+  }): Promise<AvailableMusician[]> => {
     const response = await api.get('/leader-availabilities/available_musicians/', { params });
     return response.data;
   },
@@ -489,12 +526,21 @@ export const leaderAvailabilityService = {
 
 // Connections Service
 export const connectionService = {
-  getAll: async (params?: { type?: string; all?: boolean; page?: number; page_size?: number }): Promise<Connection[]> => {
+  getAll: async (params?: {
+    type?: string;
+    all?: boolean;
+    page?: number;
+    page_size?: number;
+  }): Promise<Connection[]> => {
     const response = await api.get('/connections/', { params });
     return response.data.results || response.data;
   },
 
-  getAllPaginated: async (params?: { type?: string; page?: number; page_size?: number }): Promise<PaginatedResponse<Connection>> => {
+  getAllPaginated: async (params?: {
+    type?: string;
+    page?: number;
+    page_size?: number;
+  }): Promise<PaginatedResponse<Connection>> => {
     const response = await api.get('/connections/', { params });
     const data = response.data;
     if (Array.isArray(data)) {
@@ -513,7 +559,11 @@ export const connectionService = {
     };
   },
 
-  create: async (payload: { target_id: number; connection_type: string; notes?: string }): Promise<Connection> => {
+  create: async (payload: {
+    target_id: number;
+    connection_type: string;
+    notes?: string;
+  }): Promise<Connection> => {
     const response = await api.post('/connections/', payload);
     return response.data;
   },
@@ -597,11 +647,16 @@ export const marketplaceService = {
   },
 
   hireApplication: async (gigId: number, applicationId: number): Promise<MarketplaceGig> => {
-    const response = await api.post(`/marketplace/gigs/${gigId}/hire/`, { application_id: applicationId });
+    const response = await api.post(`/marketplace/gigs/${gigId}/hire/`, {
+      application_id: applicationId,
+    });
     return response.data;
   },
 
-  closeGig: async (gigId: number, status: 'closed' | 'cancelled' = 'closed'): Promise<MarketplaceGig> => {
+  closeGig: async (
+    gigId: number,
+    status: 'closed' | 'cancelled' = 'closed'
+  ): Promise<MarketplaceGig> => {
     const response = await api.post(`/marketplace/gigs/${gigId}/close/`, { status });
     return response.data;
   },
@@ -641,7 +696,6 @@ export const registrationService = {
     return response.data;
   },
 };
-
 
 // Notification Types
 export interface NotificationChannel {
@@ -687,7 +741,9 @@ export const notificationService = {
     return response.data;
   },
 
-  updatePreferences: async (data: Partial<NotificationPreference>): Promise<NotificationPreference> => {
+  updatePreferences: async (
+    data: Partial<NotificationPreference>
+  ): Promise<NotificationPreference> => {
     const response = await api.put('/notifications/preferences/', data);
     return response.data;
   },

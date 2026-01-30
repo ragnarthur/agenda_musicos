@@ -25,32 +25,36 @@ const getStartDateTime = (event: Event): number => {
   return 0;
 };
 
-  const isEventToday = (event: Event): boolean => {
-    if (event.event_date) {
-      try {
-        return isToday(parseISO(event.event_date));
-      } catch {
-        return false;
-      }
+const isEventToday = (event: Event): boolean => {
+  if (event.event_date) {
+    try {
+      return isToday(parseISO(event.event_date));
+    } catch {
+      return false;
     }
+  }
 
-    if (event.start_datetime) {
-      try {
-        return isToday(parseISO(event.start_datetime));
-      } catch {
-        return false;
-      }
+  if (event.start_datetime) {
+    try {
+      return isToday(parseISO(event.start_datetime));
+    } catch {
+      return false;
     }
+  }
 
-    return false;
-  };
+  return false;
+};
 
 const Dashboard: React.FC = memo(() => {
   const { user } = useAuth();
   const prefersReducedMotion = useReducedMotion();
 
   const { events: upcomingEvents, isLoading: loadingEvents } = useUpcomingEvents();
-  const { pendingApprovalsCount, pendingResponsesCount, isLoading: loadingNotifications } = useDashboardNotifications();
+  const {
+    pendingApprovalsCount,
+    pendingResponsesCount,
+    isLoading: loadingNotifications,
+  } = useDashboardNotifications();
 
   const loading = loadingEvents || loadingNotifications;
 
@@ -89,7 +93,11 @@ const Dashboard: React.FC = memo(() => {
           className="hero-panel"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={prefersReducedMotion ? { duration: 0.3 } : { type: 'spring', stiffness: 120, damping: 18 }}
+          transition={
+            prefersReducedMotion
+              ? { duration: 0.3 }
+              : { type: 'spring', stiffness: 120, damping: 18 }
+          }
         >
           <div className="hero-animated" />
 
@@ -129,22 +137,28 @@ const Dashboard: React.FC = memo(() => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={prefersReducedMotion ? { duration: 0.3 } : { type: 'spring', stiffness: 120, damping: 18, delay: 0.05 }}
+          transition={
+            prefersReducedMotion
+              ? { duration: 0.3 }
+              : { type: 'spring', stiffness: 120, damping: 18, delay: 0.05 }
+          }
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={prefersReducedMotion ? { duration: 0.3 } : { type: 'spring', stiffness: 120, damping: 18, delay: 0.05 }}
+              transition={
+                prefersReducedMotion
+                  ? { duration: 0.3 }
+                  : { type: 'spring', stiffness: 120, damping: 18, delay: 0.05 }
+              }
             >
               <Link
                 to="/eventos"
                 className="bg-white dark:bg-gray-800 rounded-2xl border-2xl border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl hover:-translate-y-0.5] transition-all block"
               >
                 <Briefcase className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-                <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                  {agendaCount}
-                </p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">{agendaCount}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Eventos Agendados</p>
               </Link>
             </motion.div>
@@ -152,7 +166,11 @@ const Dashboard: React.FC = memo(() => {
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={prefersReducedMotion ? { duration: 0.3 } : { type: 'spring', stiffness: 120, damping: 18, delay: 0.1 }}
+              transition={
+                prefersReducedMotion
+                  ? { duration: 0.3 }
+                  : { type: 'spring', stiffness: 120, damping: 18, delay: 0.1 }
+              }
             >
               <Link
                 to="/eventos"
@@ -169,7 +187,11 @@ const Dashboard: React.FC = memo(() => {
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={prefersReducedMotion ? { duration: 0.3 } : { type: 'spring', stiffness: 120, damping: 18, delay: 0.15 }}
+              transition={
+                prefersReducedMotion
+                  ? { duration: 0.3 }
+                  : { type: 'spring', stiffness: 120, damping: 18, delay: 0.15 }
+              }
             >
               <Link
                 to="/eventos"
@@ -186,7 +208,11 @@ const Dashboard: React.FC = memo(() => {
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={prefersReducedMotion ? { duration: 0.3 } : { type: 'spring', stiffness: 120, damping: 18, delay: 0.2 }}
+              transition={
+                prefersReducedMotion
+                  ? { duration: 0.3 }
+                  : { type: 'spring', stiffness: 120, damping: 18, delay: 0.2 }
+              }
             >
               <Link
                 to="/disponibilidades"
@@ -207,7 +233,11 @@ const Dashboard: React.FC = memo(() => {
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={prefersReducedMotion ? { duration: 0.3 } : { type: 'spring', stiffness: 140, damping: 20, delay: 0.1 }}
+            transition={
+              prefersReducedMotion
+                ? { duration: 0.3 }
+                : { type: 'spring', stiffness: 140, damping: 20, delay: 0.1 }
+            }
           >
             <Link
               to={`/eventos/${nextEvent.id}`}
@@ -235,12 +265,13 @@ const Dashboard: React.FC = memo(() => {
           <motion.div
             initial={{ opacity: 0, y: 60 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={prefersReducedMotion ? { duration: 0.3 } : { type: 'spring', stiffness: 140, damping: 20, delay: 0.15 }}
+            transition={
+              prefersReducedMotion
+                ? { duration: 0.3 }
+                : { type: 'spring', stiffness: 140, damping: 20, delay: 0.15 }
+            }
           >
-            <Link
-              to="/eventos"
-              className="block"
-            >
+            <Link to="/eventos" className="block">
               <p className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <ListChecks className="h-5 w-5 text-gray-700 dark:text-gray-300" />
                 Próximos {Math.min(events.length, 5)} Eventos
@@ -254,12 +285,13 @@ const Dashboard: React.FC = memo(() => {
           <motion.div
             initial={{ opacity: 0, y: 80 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={prefersReducedMotion ? { duration: 0.3 } : { type: 'spring', stiffness: 140, damping: 20, delay: 0.2 }}
+            transition={
+              prefersReducedMotion
+                ? { duration: 0.3 }
+                : { type: 'spring', stiffness: 140, damping: 20, delay: 0.2 }
+            }
           >
-            <Link
-              to="/eventos"
-              className="block"
-            >
+            <Link to="/eventos" className="block">
               <p className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <CalendarClock className="h-5 w-5 text-red-600 dark:text-red-400" />
                 Hoje ({todayEvents.length})
@@ -273,7 +305,11 @@ const Dashboard: React.FC = memo(() => {
           <motion.div
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={prefersReducedMotion ? { duration: 0.3 } : { type: 'spring', stiffness: 120, damping: 18 }}
+            transition={
+              prefersReducedMotion
+                ? { duration: 0.3 }
+                : { type: 'spring', stiffness: 120, damping: 18 }
+            }
           >
             <div className="flex flex-col items-center justify-center py-20">
               <div className="text-center">
@@ -282,7 +318,8 @@ const Dashboard: React.FC = memo(() => {
                   Você ainda não tem eventos agendados.
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {user?.user?.first_name || user?.user?.username || 'Músico'}! Vamos criar o primeiro.
+                  {user?.user?.first_name || user?.user?.username || 'Músico'}! Vamos criar o
+                  primeiro.
                 </p>
                 <Link
                   to="/eventos/novo"
@@ -301,7 +338,11 @@ const Dashboard: React.FC = memo(() => {
           <motion.div
             initial={{ opacity: 0, y: 120 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={prefersReducedMotion ? { duration: 0.3 } : { type: 'spring', stiffness: 120, damping: 18 }}
+            transition={
+              prefersReducedMotion
+                ? { duration: 0.3 }
+                : { type: 'spring', stiffness: 120, damping: 18 }
+            }
             className="bg-white dark:bg-gray-800 rounded-t-3xl rounded-b-none sm:rounded-xl shadow-xl max-w-md mx-auto pb-safe pt-safe"
           >
             <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 pb-3">
@@ -317,8 +358,8 @@ const Dashboard: React.FC = memo(() => {
                 </Link>
               </div>
             </div>
-              <div className="pb-4 overflow-y-auto max-h-[50vh]">
-                {(events || []).slice(5).map((event) => (
+            <div className="pb-4 overflow-y-auto max-h-[50vh]">
+              {(events || []).slice(5).map(event => (
                 <Link
                   key={event.id}
                   to={`/eventos/${event.id}`}
@@ -344,7 +385,7 @@ const Dashboard: React.FC = memo(() => {
                 </Link>
               ))}
             </div>
-        </motion.div>
+          </motion.div>
         )}
 
         <div className="mt-8 flex items-center gap-2">
@@ -362,7 +403,7 @@ const Dashboard: React.FC = memo(() => {
       <div id="events-section">
         {/* Todos os Eventos */}
         <div className="flex flex-col gap-6">
-          {events.map((event) => (
+          {events.map(event => (
             <Link
               key={event.id}
               to={`/eventos/${event.id}`}
@@ -394,7 +435,7 @@ const Dashboard: React.FC = memo(() => {
         {/* Eventos de Hoje */}
         {todayEvents.length > 0 && (
           <div className="flex flex-col gap-6">
-            {todayEvents.map((event) => (
+            {todayEvents.map(event => (
               <Link
                 key={event.id}
                 to={`/eventos/${event.id}`}
@@ -432,7 +473,8 @@ const Dashboard: React.FC = memo(() => {
               Você ainda não tem eventos agendados.
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {user?.user?.first_name || user?.user?.username || 'Músico'}! Vamos criar o primeiro evento.
+              {user?.user?.first_name || user?.user?.username || 'Músico'}! Vamos criar o primeiro
+              evento.
             </p>
           </div>
           <div className="flex items-center gap-2 mt-6">

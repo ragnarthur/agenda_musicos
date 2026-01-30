@@ -22,14 +22,7 @@ const iconMap: Record<string, string> = {
  */
 export const InstrumentIcon: React.FC<Props> = ({ instrument, className, size = 22 }) => {
   const icon = iconMap[instrument] || 'mdi:music-circle';
-  return (
-    <Icon
-      icon={icon}
-      width={size}
-      height={size}
-      className={className}
-    />
-  );
+  return <Icon icon={icon} width={size} height={size} className={className} />;
 };
 
 export default InstrumentIcon;

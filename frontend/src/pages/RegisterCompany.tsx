@@ -19,7 +19,12 @@ export default function RegisterCompany() {
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [googleUserInfo, setGoogleUserInfo] = useState<{ email: string; first_name: string; last_name: string; picture?: string } | null>(null);
+  const [googleUserInfo, setGoogleUserInfo] = useState<{
+    email: string;
+    first_name: string;
+    last_name: string;
+    picture?: string;
+  } | null>(null);
 
   const {
     register,
@@ -60,7 +65,7 @@ export default function RegisterCompany() {
       const err = error as { response?: { data?: Record<string, string | string[]> } };
       if (err.response?.data) {
         const messages = Object.values(err.response.data).flat();
-        messages.forEach((msg) => toast.error(String(msg)));
+        messages.forEach(msg => toast.error(String(msg)));
       } else {
         toast.error('Erro ao cadastrar. Tente novamente.');
       }
@@ -69,54 +74,57 @@ export default function RegisterCompany() {
     }
   };
 
-  const handleGoogleCallback = useCallback(async (response: { credential: string }) => {
-    if (isGoogleLoading) return; // Prevenir múltiplas chamadas
+  const handleGoogleCallback = useCallback(
+    async (response: { credential: string }) => {
+      if (isGoogleLoading) return; // Prevenir múltiplas chamadas
 
-    setIsGoogleLoading(true);
-    try {
-      const result = await googleAuthService.authenticate(response.credential, 'company');
-      if (result.new_user) {
-        // Novo usuário - salvar apenas os DADOS (não o credential que expira)
-        setGoogleUserInfo({
-          email: result.email || '',
-          first_name: result.first_name || '',
-          last_name: result.last_name || '',
-          picture: result.picture,
-        });
+      setIsGoogleLoading(true);
+      try {
+        const result = await googleAuthService.authenticate(response.credential, 'company');
+        if (result.new_user) {
+          // Novo usuário - salvar apenas os DADOS (não o credential que expira)
+          setGoogleUserInfo({
+            email: result.email || '',
+            first_name: result.first_name || '',
+            last_name: result.last_name || '',
+            picture: result.picture,
+          });
 
-        // Salvar picture para usar como avatar inicial (opcional)
-        if (result.picture) {
-          sessionStorage.setItem('_googlePicture', result.picture);
+          // Salvar picture para usar como avatar inicial (opcional)
+          if (result.picture) {
+            sessionStorage.setItem('_googlePicture', result.picture);
+          }
+
+          toast.success('Conta Google conectada! Complete os dados da empresa.');
+        } else if (result.user_type === 'company' && result.organization) {
+          // Usuário já existe - fazer login
+          setSession({
+            organization: result.organization as any,
+            access: result.access,
+            refresh: result.refresh,
+          });
+          toast.success('Login realizado!');
+          navigate('/empresa/dashboard');
+        } else {
+          toast.error('Esta conta Google não é de empresa');
         }
+      } catch (error: any) {
+        console.error('Google OAuth error:', error);
+        const message = error?.response?.data?.detail;
 
-        toast.success('Conta Google conectada! Complete os dados da empresa.');
-      } else if (result.user_type === 'company' && result.organization) {
-        // Usuário já existe - fazer login
-        setSession({
-          organization: result.organization as any,
-          access: result.access,
-          refresh: result.refresh,
-        });
-        toast.success('Login realizado!');
-        navigate('/empresa/dashboard');
-      } else {
-        toast.error('Esta conta Google não é de empresa');
+        if (error?.response?.status === 401) {
+          toast.error(message || 'Token do Google inválido ou expirado');
+        } else if (error?.response?.status === 400) {
+          toast.error(message || 'Dados inválidos do Google');
+        } else {
+          toast.error(message || 'Erro ao conectar com Google. Tente novamente.');
+        }
+      } finally {
+        setIsGoogleLoading(false);
       }
-    } catch (error: any) {
-      console.error('Google OAuth error:', error);
-      const message = error?.response?.data?.detail;
-
-      if (error?.response?.status === 401) {
-        toast.error(message || 'Token do Google inválido ou expirado');
-      } else if (error?.response?.status === 400) {
-        toast.error(message || 'Dados inválidos do Google');
-      } else {
-        toast.error(message || 'Erro ao conectar com Google. Tente novamente.');
-      }
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  }, [navigate, setSession, isGoogleLoading]);
+    },
+    [navigate, setSession, isGoogleLoading]
+  );
 
   // Renderiza botão do Google
   useEffect(() => {
@@ -228,7 +236,9 @@ export default function RegisterCompany() {
               <div className="w-full border-t border-gray-300 dark:border-gray-600" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">ou preencha o formulário</span>
+              <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">
+                ou preencha o formulário
+              </span>
             </div>
           </div>
 
@@ -271,7 +281,9 @@ export default function RegisterCompany() {
               <input
                 type="text"
                 {...register('contact_name', { required: 'Nome do responsável é obrigatório' })}
-                defaultValue={googleUserInfo ? `${googleUserInfo.first_name} ${googleUserInfo.last_name}` : ''}
+                defaultValue={
+                  googleUserInfo ? `${googleUserInfo.first_name} ${googleUserInfo.last_name}` : ''
+                }
                 className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
                 placeholder="Seu nome completo"
               />
@@ -374,9 +386,7 @@ export default function RegisterCompany() {
                   className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
                   placeholder="Sua cidade"
                 />
-                {errors.city && (
-                  <p className="mt-1 text-sm text-red-600">{errors.city.message}</p>
-                )}
+                {errors.city && <p className="mt-1 text-sm text-red-600">{errors.city.message}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -387,7 +397,7 @@ export default function RegisterCompany() {
                   className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="">UF</option>
-                  {BRAZILIAN_STATES.map((s) => (
+                  {BRAZILIAN_STATES.map(s => (
                     <option key={s.value} value={s.value}>
                       {s.value}
                     </option>
@@ -425,7 +435,10 @@ export default function RegisterCompany() {
 
           <p className="mt-2 text-center text-sm text-gray-500 dark:text-gray-400">
             É músico?{' '}
-            <Link to="/solicitar-acesso" className="text-indigo-600 hover:text-indigo-700 font-medium">
+            <Link
+              to="/solicitar-acesso"
+              className="text-indigo-600 hover:text-indigo-700 font-medium"
+            >
               Solicite acesso
             </Link>
           </p>

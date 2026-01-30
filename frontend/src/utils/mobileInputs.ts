@@ -58,7 +58,7 @@ export const getMobileInputProps = (type: string): InputHTMLAttributes<HTMLInput
       autoCorrect: 'off',
     },
   };
-  
+
   return props[type] ?? {};
 };
 

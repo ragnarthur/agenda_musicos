@@ -7,7 +7,11 @@ import { CheckCircle, Lock, Mail, MapPin, Music2 } from 'lucide-react';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import OwlMascot from '../components/ui/OwlMascot';
 import { showToast } from '../utils/toast';
-import { musicianRequestService, googleAuthService, inviteRegisterService } from '../services/publicApi';
+import {
+  musicianRequestService,
+  googleAuthService,
+  inviteRegisterService,
+} from '../services/publicApi';
 import { authService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -62,34 +66,37 @@ const RegisterInvite: React.FC = () => {
     loadInvite();
   }, [inviteToken]);
 
-  const handleGoogleCallback = useCallback(async (response: { credential: string }) => {
-    if (isGoogleLoading) return; // Prevenir múltiplas chamadas
+  const handleGoogleCallback = useCallback(
+    async (response: { credential: string }) => {
+      if (isGoogleLoading) return; // Prevenir múltiplas chamadas
 
-    setIsGoogleLoading(true);
-    try {
-      const result = await googleAuthService.registerMusician(response.credential, inviteToken);
-      if (result.user_type === 'musician') {
-        await setSession();
-        showToast.success('Cadastro concluído com Google!');
-        navigate('/dashboard');
-      } else {
-        showToast.error('Cadastro inválido para músico.');
-      }
-    } catch (error: any) {
-      console.error('Google OAuth error:', error);
-      const message = error?.response?.data?.detail;
+      setIsGoogleLoading(true);
+      try {
+        const result = await googleAuthService.registerMusician(response.credential, inviteToken);
+        if (result.user_type === 'musician') {
+          await setSession();
+          showToast.success('Cadastro concluído com Google!');
+          navigate('/dashboard');
+        } else {
+          showToast.error('Cadastro inválido para músico.');
+        }
+      } catch (error: any) {
+        console.error('Google OAuth error:', error);
+        const message = error?.response?.data?.detail;
 
-      if (error?.response?.status === 401) {
-        showToast.error(message || 'Token do Google inválido ou expirado');
-      } else if (error?.response?.status === 400) {
-        showToast.error(message || 'Dados inválidos do Google');
-      } else {
-        showToast.error(message || 'Erro ao concluir cadastro com Google');
+        if (error?.response?.status === 401) {
+          showToast.error(message || 'Token do Google inválido ou expirado');
+        } else if (error?.response?.status === 400) {
+          showToast.error(message || 'Dados inválidos do Google');
+        } else {
+          showToast.error(message || 'Erro ao concluir cadastro com Google');
+        }
+      } finally {
+        setIsGoogleLoading(false);
       }
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  }, [inviteToken, navigate, setSession, isGoogleLoading]);
+    },
+    [inviteToken, navigate, setSession, isGoogleLoading]
+  );
 
   useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -192,7 +199,11 @@ const RegisterInvite: React.FC = () => {
   }
 
   return (
-    <FullscreenBackground className="px-4 py-10" contentClassName="flex items-center justify-center" enableBlueWaves>
+    <FullscreenBackground
+      className="px-4 py-10"
+      contentClassName="flex items-center justify-center"
+      enableBlueWaves
+    >
       <div className="max-w-4xl w-full grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="flex items-center gap-4 mb-6">
@@ -248,7 +259,7 @@ const RegisterInvite: React.FC = () => {
                   <input
                     type="password"
                     value={password}
-                    onChange={(event) => setPassword(event.target.value)}
+                    onChange={event => setPassword(event.target.value)}
                     className="w-full input-field pr-10"
                     placeholder="Crie sua senha"
                     required
@@ -257,12 +268,14 @@ const RegisterInvite: React.FC = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar senha</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirmar senha
+                </label>
                 <div className="relative">
                   <input
                     type="password"
                     value={confirmPassword}
-                    onChange={(event) => setConfirmPassword(event.target.value)}
+                    onChange={event => setConfirmPassword(event.target.value)}
                     className="w-full input-field pr-10"
                     placeholder="Repita a senha"
                     required
@@ -296,8 +309,8 @@ const RegisterInvite: React.FC = () => {
               </div>
             </div>
             <p className="text-sm text-slate-200">
-              Seu acesso foi liberado. Ao concluir, você já pode receber convites,
-              organizar sua agenda e aparecer para empresas da sua região.
+              Seu acesso foi liberado. Ao concluir, você já pode receber convites, organizar sua
+              agenda e aparecer para empresas da sua região.
             </p>
           </div>
           <Link to="/" className="mt-6 text-sm text-amber-200 hover:text-amber-100">

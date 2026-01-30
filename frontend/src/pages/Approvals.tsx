@@ -51,24 +51,24 @@ const Approvals: React.FC = () => {
         ) : events.length === 0 ? (
           <div className="card text-center py-12">
             <UserCheck className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Nenhum convite pendente
-            </h3>
-            <p className="text-gray-600">
-              Não há eventos aguardando sua resposta no momento.
-            </p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhum convite pendente</h3>
+            <p className="text-gray-600">Não há eventos aguardando sua resposta no momento.</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {events.map((event) => (
+            {events.map(event => (
               <div key={event.id} className="card hover:shadow-lg transition-shadow">
                 {/* Header do card - responsivo */}
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-4">
                   <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
                     <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary-600 mt-0.5 flex-shrink-0" />
                     <div className="min-w-0">
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 break-words">{event.title}</h3>
-                      <p className="text-gray-600 mt-1 text-sm sm:text-base line-clamp-2">{event.description}</p>
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 break-words">
+                        {event.title}
+                      </h3>
+                      <p className="text-gray-600 mt-1 text-sm sm:text-base line-clamp-2">
+                        {event.description}
+                      </p>
                     </div>
                   </div>
                   <span className="badge badge-proposed self-start flex-shrink-0">

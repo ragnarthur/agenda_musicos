@@ -49,7 +49,9 @@ export const hasEventEnded = (event: Event, reference: Date = new Date()): boole
   return end.getTime() < reference.getTime();
 };
 
-export const getEventComputedStatus = (event: Event): { status: ComputedEventStatus; label: string } => {
+export const getEventComputedStatus = (
+  event: Event
+): { status: ComputedEventStatus; label: string } => {
   const ended = hasEventEnded(event);
   const isRealized = ended && (event.status === 'confirmed' || event.status === 'approved');
 
