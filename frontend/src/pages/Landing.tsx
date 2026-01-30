@@ -263,9 +263,6 @@ const Landing: React.FC = () => {
             </div>
           </motion.div>
           <CityDisplay />
-          <div className="flex justify-center mb-6">
-            <CityBadge />
-          </div>
 
           {/* Título */}
           <motion.div
@@ -291,6 +288,9 @@ const Landing: React.FC = () => {
               Beta
             </motion.span>
           </motion.div>
+          <div className="flex justify-center mb-6">
+            <CityBadge />
+          </div>
 
           <AnimatePresence mode="wait">
             <motion.div
