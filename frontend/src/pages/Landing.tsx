@@ -269,13 +269,13 @@ const Landing: React.FC = () => {
 
           {/* Título */}
           <motion.div
-            className="flex items-center justify-center gap-3 mb-5"
+            className="flex items-center justify-center gap-2 mb-5"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <motion.h1
-              className="relative z-20 text-4xl xs:text-5xl sm:text-6xl md:text-7xl font-bold text-white pb-1 md:pb-2 leading-tight max-w-[90vw] mx-auto logo-animated"
+              className="relative z-20 text-4xl xs:text-5xl sm:text-6xl md:text-7xl font-bold text-white pb-1 md:pb-2 leading-tight logo-animated"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
