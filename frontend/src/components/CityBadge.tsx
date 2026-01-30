@@ -172,7 +172,7 @@ const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' 
         animate={{ opacity: 1, y: 0 }}
         onClick={() => setMenuOpen((prev) => !prev)}
         whileHover={{ y: -1, scale: 1.02 }}
-        className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold border transition-all duration-200 ${label ? baseClasses : actionClasses} hover:shadow-lg hover:border-amber-300/60`}
+        className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold border transition-all duration-200 ${label ? baseClasses : actionClasses} hover:shadow-lg hover:border-amber-300/60`}
         title={badgeTitle}
         disabled={isLoading && !label}
       >
@@ -181,7 +181,7 @@ const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' 
           <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${dotClasses}`} />
         </span>
         <MapPin className="h-4 w-4" />
-        <span className="truncate max-w-[140px] sm:max-w-[200px]">{isLoading && !label ? 'Detectando...' : badgeText}</span>
+        <span className="truncate max-w-[180px] sm:max-w-[200px]">{isLoading && !label ? 'Detectando...' : badgeText}</span>
       </motion.button>
 
       {menuOpen && (
