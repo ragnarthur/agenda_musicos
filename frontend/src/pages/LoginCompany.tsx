@@ -140,7 +140,7 @@ export default function LoginCompany() {
           <div className="relative mb-6">
             <div
               id="google-signin-button"
-              className={`flex justify-center transition-opacity ${isGoogleLoading ? 'opacity-50 pointer-events-none' : ''}`}
+              className={`flex justify-center items-center transition-opacity min-h-[44px] ${isGoogleLoading ? 'opacity-50 pointer-events-none' : ''}`}
             />
             {isGoogleLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">

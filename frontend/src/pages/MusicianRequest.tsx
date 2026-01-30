@@ -338,7 +338,7 @@ export default function MusicianRequest() {
           </div>
 
           {/* Google Sign-In - Botão oficial */}
-          <div id="google-signin-request" className="mb-6 flex justify-center" />
+          <div id="google-signin-request" className="mb-6 flex justify-center items-center min-h-[44px]" />
 
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
