@@ -66,7 +66,7 @@ const StatusPage: React.FC = () => {
       } else {
         setError(data.error || 'Failed to fetch request status');
       }
-    } catch (error) {
+    } catch {
       setError('Network error. Please try again.');
     } finally {
       setLoading(false);

@@ -8,6 +8,7 @@ from rest_framework import serializers
 
 from .models import (
     Availability,
+    City,
     Connection,
     ContactRequest,
     Event,
@@ -1564,3 +1565,131 @@ class InstrumentCreateSerializer(serializers.Serializer):
         )
 
         return instrument
+
+
+# =============================================================================
+# City Serializers
+# =============================================================================
+
+
+class CitySerializer(serializers.ModelSerializer):
+    """Serializer de cidade com contagens de músicos e solicitações"""
+
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
+    created_by_name = serializers.SerializerMethodField()
+    musicians_count = serializers.SerializerMethodField()
+    requests_count = serializers.SerializerMethodField()
+    pending_requests_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = City
+        fields = [
+            "id",
+            "name",
+            "state",
+            "slug",
+            "status",
+            "status_display",
+            "description",
+            "is_active",
+            "priority",
+            "musicians_count",
+            "requests_count",
+            "pending_requests_count",
+            "created_by",
+            "created_by_name",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "slug", "created_by", "created_at", "updated_at"]
+
+    def get_created_by_name(self, obj):
+        if obj.created_by:
+            return obj.created_by.get_full_name() or obj.created_by.username
+        return None
+
+    def get_musicians_count(self, obj):
+        """Conta músicos ativos na cidade"""
+        return Musician.objects.filter(
+            city__iexact=obj.name, state__iexact=obj.state, is_active=True
+        ).count()
+
+    def get_requests_count(self, obj):
+        """Conta total de solicitações da cidade"""
+        return MusicianRequest.objects.filter(
+            city__iexact=obj.name, state__iexact=obj.state
+        ).count()
+
+    def get_pending_requests_count(self, obj):
+        """Conta solicitações pendentes da cidade"""
+        return MusicianRequest.objects.filter(
+            city__iexact=obj.name, state__iexact=obj.state, status="pending"
+        ).count()
+
+
+class CityCreateSerializer(serializers.ModelSerializer):
+    """Serializer para criação/atualização de cidade"""
+
+    class Meta:
+        model = City
+        fields = [
+            "name",
+            "state",
+            "status",
+            "description",
+            "is_active",
+            "priority",
+        ]
+
+    def validate_name(self, value):
+        return sanitize_string(value, max_length=100, allow_empty=False)
+
+    def validate_state(self, value):
+        return sanitize_string(value, max_length=2, allow_empty=False, to_upper=True)
+
+    def validate_description(self, value):
+        if value:
+            return sanitize_string(value, max_length=1000, allow_empty=True)
+        return value
+
+    def validate(self, attrs):
+        """Valida unicidade de nome+estado"""
+        name = attrs.get("name")
+        state = attrs.get("state")
+
+        if name and state:
+            existing = City.objects.filter(name__iexact=name, state__iexact=state)
+            if self.instance:
+                existing = existing.exclude(pk=self.instance.pk)
+            if existing.exists():
+                raise serializers.ValidationError(
+                    {"name": f"Já existe uma cidade {name}, {state} cadastrada."}
+                )
+
+        return attrs
+
+
+class CityStatsSerializer(serializers.Serializer):
+    """Serializer para estatísticas de cidade (agrupamento por cidade/estado)"""
+
+    city = serializers.CharField()
+    state = serializers.CharField()
+    total_requests = serializers.IntegerField()
+    pending_requests = serializers.IntegerField()
+    approved_requests = serializers.IntegerField()
+    rejected_requests = serializers.IntegerField()
+    active_musicians = serializers.IntegerField()
+    city_obj = serializers.SerializerMethodField()
+
+    def get_city_obj(self, obj):
+        """Retorna dados da cidade cadastrada, se existir"""
+        try:
+            city = City.objects.get(name__iexact=obj["city"], state__iexact=obj["state"])
+            return {
+                "id": city.id,
+                "status": city.status,
+                "status_display": city.get_status_display(),
+                "is_active": city.is_active,
+            }
+        except City.DoesNotExist:
+            return None

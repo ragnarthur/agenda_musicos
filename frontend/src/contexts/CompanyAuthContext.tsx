@@ -86,9 +86,10 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
       sessionStorage.setItem('companyOrganization', JSON.stringify(response.organization));
 
       toast.success(`Bem-vindo(a) à ${response.organization.name}!`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       const message =
-        error?.response?.data?.detail || 'Erro ao fazer login. Verifique suas credenciais.';
+        (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        'Erro ao fazer login. Verifique suas credenciais.';
       toast.error(message);
       throw error;
     } finally {
@@ -153,8 +154,10 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
       setOrganization(updatedOrg);
       sessionStorage.setItem('companyOrganization', JSON.stringify(updatedOrg));
       toast.success('Perfil atualizado com sucesso!');
-    } catch (error: any) {
-      const message = error?.response?.data?.detail || 'Erro ao atualizar perfil.';
+    } catch (error: unknown) {
+      const message =
+        (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        'Erro ao atualizar perfil.';
       toast.error(message);
       throw error;
     }
@@ -175,6 +178,7 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
 };
 
 // Hook para usar o contexto
+// eslint-disable-next-line react-refresh/only-export-components
 export const useCompanyAuth = (): CompanyAuthContextType => {
   const context = useContext(CompanyAuthContext);
   if (!context) {
@@ -184,17 +188,19 @@ export const useCompanyAuth = (): CompanyAuthContextType => {
 };
 
 // Hook customizado para interceptar requisições da API
+// eslint-disable-next-line react-refresh/only-export-components
 export const useCompanyApi = () => {
   const { logout, refreshToken } = useCompanyAuth();
 
   // Interceptador para requisições que falham com 401
-  const handleApiError = async (error: any) => {
-    if (error?.response?.status === 401) {
+  const handleApiError = async (error: unknown) => {
+    const status = (error as { response?: { status?: number } })?.response?.status;
+    if (status === 401) {
       try {
         await refreshToken();
         // Tentar a requisição novamente aqui se necessário
         return true;
-      } catch (refreshError) {
+      } catch {
         logout();
         return false;
       }

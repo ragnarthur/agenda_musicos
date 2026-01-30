@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useId } from 'react';
 import { MapPin, X, Mail, Check, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGeolocation } from '../hooks/useGeolocation';
@@ -27,7 +27,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
   const [cityOptions, setCityOptions] = useState<string[]>([]);
   const [loadingCities, setLoadingCities] = useState(false);
   const [cityError, setCityError] = useState<string | null>(null);
-  const datalistId = useRef(`cities-datalist-${Math.random().toString(36).substr(2, 9)}`);
+  const datalistId = useId();
 
   useEffect(() => {
     if (!isVisible) return;
@@ -420,12 +420,12 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
                       placeholder={
                         formData.state ? 'Ex: Uberlândia' : 'Selecione o estado primeiro'
                       }
-                      list={datalistId.current}
+                      list={datalistId}
                       required
                       disabled={!formData.state || loadingCities || formStatus === 'submitting'}
                       className="w-full px-4 py-2.5 bg-white/10 border border-amber-500/30 rounded-lg text-amber-100 placeholder:text-amber-300/60 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-500/50 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     />
-                    <datalist id={datalistId.current}>
+                    <datalist id={datalistId}>
                       {cityOptions.map(cityName => (
                         <option key={cityName} value={cityName} />
                       ))}

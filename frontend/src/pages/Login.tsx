@@ -73,13 +73,15 @@ const Login: React.FC = () => {
         } else {
           showToast.error('Esta conta não é de músico');
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Google OAuth error:', error);
-        const message = error?.response?.data?.detail;
+        const message = (error as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail;
+        const status = (error as { response?: { status?: number } })?.response?.status;
 
-        if (error?.response?.status === 401) {
+        if (status === 401) {
           showToast.error(message || 'Token do Google inválido ou expirado');
-        } else if (error?.response?.status === 400) {
+        } else if (status === 400) {
           showToast.error(message || 'Dados inválidos do Google');
         } else {
           showToast.error(message || 'Erro ao autenticar com Google');
@@ -126,7 +128,7 @@ const Login: React.FC = () => {
     return () => {
       try {
         document.body.removeChild(script);
-      } catch (e) {
+      } catch {
         // Script já removido
       }
     };

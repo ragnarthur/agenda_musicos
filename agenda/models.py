@@ -1062,6 +1062,73 @@ class ContactRequest(models.Model):
 # PendingRegistration model removido - agora usamos MusicianRequest com aprovação admin
 
 
+class City(models.Model):
+    """
+    Cidade cadastrada no sistema.
+    Controla status de parceria e expansão da plataforma.
+    """
+
+    STATUS_CHOICES = [
+        ("partner", "Parceiro"),  # Cidade ativa
+        ("expansion", "Em Expansão"),  # Coletando interesse
+        ("planning", "Em Planejamento"),  # Sendo avaliada
+    ]
+
+    name = models.CharField(max_length=100, help_text="Nome da cidade")
+    state = models.CharField(max_length=2, help_text="UF (sigla do estado)")
+    slug = models.SlugField(max_length=120, unique=True, help_text="Identificador único (URL)")
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="planning",
+        help_text="Status da cidade na plataforma",
+    )
+    description = models.TextField(
+        blank=True, null=True, help_text="Descrição ou notas sobre a cidade"
+    )
+    is_active = models.BooleanField(default=True, help_text="Se a cidade está ativa no sistema")
+    priority = models.PositiveIntegerField(
+        default=0, help_text="Prioridade de exibição (maior = mais importante)"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="cities_created",
+        help_text="Admin que criou a cidade",
+    )
+
+    class Meta:
+        ordering = ["-priority", "name"]
+        verbose_name = "Cidade"
+        verbose_name_plural = "Cidades"
+        unique_together = [("name", "state")]
+        indexes = [
+            models.Index(fields=["status", "is_active"]),
+            models.Index(fields=["state"]),
+        ]
+
+    def __str__(self):
+        return f"{self.name}, {self.state}"
+
+    def save(self, *args, **kwargs):
+        """Gera slug automaticamente se não fornecido"""
+        if not self.slug:
+            import unicodedata
+
+            # Normaliza e remove acentos
+            name_normalized = unicodedata.normalize("NFKD", self.name.lower())
+            name_clean = "".join([c for c in name_normalized if not unicodedata.combining(c)])
+            # Substitui espaços por hífens e remove caracteres especiais
+            name_clean = re.sub(r"[^a-z0-9\s-]", "", name_clean)
+            name_clean = re.sub(r"\s+", "-", name_clean.strip())
+            self.slug = f"{name_clean}-{self.state.lower()}"
+        super().save(*args, **kwargs)
+
+
 class AuditLog(models.Model):
     """
     Log de auditoria para ações críticas.
