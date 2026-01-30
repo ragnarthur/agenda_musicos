@@ -78,7 +78,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
         transition={{ duration: 0.4 }}
         className="fixed top-4 sm:top-6 md:top-8 left-0 right-0 mx-4 sm:mx-auto z-50 w-auto sm:w-[calc(100%-2rem)] md:w-auto max-w-2xl"
       >
-        <div className="bg-amber-500/10 backdrop-blur-md rounded-2xl border border-amber-500/30 px-2.5 py-2.5 sm:px-6 sm:py-4 shadow-2xl w-full">
+        <div className="bg-amber-500/15 backdrop-blur-md rounded-2xl border border-amber-500/30 px-2.5 py-2.5 sm:px-6 sm:py-4 shadow-2xl w-full">
           <div className="flex items-center gap-3">
             <div className="animate-spin flex-shrink-0">
               <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-amber-400" />
@@ -103,14 +103,14 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
         transition={{ duration: 0.4 }}
         className="fixed top-4 sm:top-6 md:top-8 left-0 right-0 mx-4 sm:mx-auto z-50 w-auto sm:w-[calc(100%-2rem)] md:w-auto max-w-2xl"
       >
-        <div className="bg-red-500/10 backdrop-blur-md rounded-2xl border border-red-500/30 px-2.5 py-2.5 sm:px-6 sm:py-4 shadow-2xl w-full">
+        <div className="bg-red-500/15 backdrop-blur-md rounded-2xl border border-red-500/30 px-2.5 py-2.5 sm:px-6 sm:py-4 shadow-2xl w-full">
           <div className="flex items-center gap-2 sm:gap-3">
             <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-red-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <p className="text-red-100 font-medium text-xs sm:text-sm mb-2 break-words">
                 Não foi possível detectar sua localização
               </p>
-              <p className="text-red-200/70 text-xs leading-relaxed break-words">
+              <p className="text-red-200/85 text-xs leading-relaxed break-words">
                 {error}
               </p>
               <button
@@ -141,7 +141,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
         transition={{ duration: 0.4 }}
         className="fixed top-4 sm:top-6 md:top-8 left-0 right-0 mx-4 sm:mx-auto z-50 w-auto sm:w-[calc(100%-2rem)] md:w-auto max-w-md"
       >
-        <div className="bg-green-500/10 backdrop-blur-md rounded-2xl border border-green-500/30 px-2.5 py-2.5 sm:px-8 sm:py-6 shadow-2xl w-full">
+        <div className="bg-green-500/15 backdrop-blur-md rounded-2xl border border-green-500/30 px-2.5 py-2.5 sm:px-8 sm:py-6 shadow-2xl w-full">
           <div className="flex flex-col items-center gap-3">
             <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-500/20 rounded-full flex items-center justify-center">
               <Check className="h-6 w-6 sm:h-8 sm:w-8 text-green-400" />
@@ -150,7 +150,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
               <p className="text-green-100 font-semibold text-sm sm:text-base md:text-lg mb-1 break-words">
                 Registrado com Sucesso!
               </p>
-              <p className="text-green-200/70 text-xs sm:text-sm break-words">
+              <p className="text-green-200/85 text-xs sm:text-sm break-words">
                 Você será notificado quando chegarmos em sua cidade.
               </p>
               <button
@@ -178,8 +178,8 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
         >
           <div className={`${
             isMonteCarmelo
-              ? 'bg-gradient-to-r from-amber-500/10 via-amber-400/12 to-amber-500/10'
-              : 'bg-amber-500/10'
+              ? 'bg-gradient-to-r from-amber-500/15 via-amber-400/18 to-amber-500/15'
+              : 'bg-amber-500/15'
           } backdrop-blur-md rounded-2xl border border-amber-500/30 px-2.5 py-2.5 sm:px-6 sm:py-4 shadow-2xl w-full`}>
           <div className="flex items-center gap-2 sm:gap-3">
             <div className={`${
@@ -194,7 +194,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
                   <p className="text-amber-100 font-bold text-sm sm:text-base md:text-lg mb-1 flex items-start gap-2 break-words">
                     🎉 Monte Carmelo é parceiro do GigFlow!
                   </p>
-                  <p className="text-amber-200/80 text-xs sm:text-sm break-words">
+                  <p className="text-amber-200/90 text-xs sm:text-sm break-words">
                     Que bom ver você por aqui. A plataforma já está ativa na sua região.
                   </p>
                   <div className="flex flex-col xs:flex-row flex-wrap gap-2 mt-3">
@@ -231,7 +231,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
                   <p className="text-amber-100 font-semibold text-sm sm:text-base mb-1 break-words">
                     Olá! Detectamos você em {city}, {state}.
                   </p>
-                  <p className="text-amber-200/70 text-xs sm:text-sm mb-3 break-words">
+                  <p className="text-amber-200/85 text-xs sm:text-sm mb-3 break-words">
                     Estamos abrindo novas cidades agora — quer ser avisado quando chegar na sua região?
                   </p>
                   <div className="flex flex-wrap gap-2 mb-3">
@@ -259,7 +259,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
                       Fechar
                     </button>
                   </div>
-                  <p className="text-amber-200/50 text-xs mt-2">
+                  <p className="text-amber-200/70 text-xs mt-2">
                     Esta mensagem fecha automaticamente em alguns segundos.
                   </p>
                 </>
@@ -285,7 +285,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
           transition={{ duration: 0.3 }}
           className="fixed top-4 sm:top-6 md:top-8 left-0 right-0 mx-4 sm:mx-auto z-50 w-auto sm:w-[calc(100%-2rem)] md:w-auto max-w-md"
         >
-          <div className="bg-amber-500/10 backdrop-blur-md rounded-2xl border border-amber-500/30 px-2.5 py-2.5 sm:px-6 sm:py-5 shadow-2xl w-full">
+          <div className="bg-amber-500/15 backdrop-blur-md rounded-2xl border border-amber-500/30 px-2.5 py-2.5 sm:px-6 sm:py-5 shadow-2xl w-full">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="bg-amber-500/10 p-2 sm:p-2.5 rounded-full flex-shrink-0">
                 <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-amber-400" />
@@ -295,7 +295,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
                 <h3 className="text-amber-100 font-bold text-sm sm:text-base md:text-lg mb-1 break-words">
                   Receber Notificações
                 </h3>
-                <p className="text-amber-200/70 text-xs sm:text-sm mb-4 break-words">
+                <p className="text-amber-200/85 text-xs sm:text-sm mb-4 break-words">
                   Seja notificado quando o GigFlow chegar em sua região!
                 </p>
 
@@ -311,7 +311,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
                       onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
                       placeholder="seu@email.com"
                       required
-                      className="w-full px-4 py-2.5 bg-white/5 border border-amber-500/30 rounded-lg text-amber-100 placeholder:text-amber-300/50 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-500/50 text-sm"
+                      className="w-full px-4 py-2.5 bg-white/10 border border-amber-500/30 rounded-lg text-amber-100 placeholder:text-amber-300/60 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-500/50 text-sm"
                       disabled={formStatus === 'submitting'}
                     />
                   </div>
@@ -326,7 +326,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
                       onChange={handleCitySelect}
                       required
                       disabled={formStatus === 'submitting'}
-                      className="w-full px-4 py-2.5 bg-white/5 border border-amber-500/30 rounded-lg text-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-500/50 text-sm cursor-pointer disabled:opacity-50"
+                      className="w-full px-4 py-2.5 bg-white/10 border border-amber-500/30 rounded-lg text-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-500/50 text-sm cursor-pointer disabled:opacity-50"
                     >
                       <option value="">Selecione sua cidade...</option>
                       {CITIES_IN_SOON.map((city) => (
