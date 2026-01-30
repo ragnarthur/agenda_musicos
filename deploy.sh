@@ -63,7 +63,7 @@ build_and_deploy() {
     docker compose -f docker-compose.prod.yml down || true
 
     print_step "Construindo e iniciando containers..."
-    docker compose -f docker-compose.prod.yml up -d --build
+    docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
 
     print_step "Aguardando containers iniciarem..."
     sleep 15
@@ -192,7 +192,7 @@ main() {
             check_health
             ;;
         stop)
-            docker compose -f docker-compose.prod.yml down
+            docker compose -f docker-compose.prod.yml down --remove-orphans
             print_step "Containers parados"
             ;;
         help|--help|-h)

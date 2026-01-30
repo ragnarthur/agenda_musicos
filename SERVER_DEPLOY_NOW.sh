@@ -27,7 +27,7 @@ echo "✅ Build do frontend concluído"
 echo ""
 
 echo "🔄 3. Reiniciando serviço do frontend..."
-docker compose -f docker-compose.prod.yml up -d frontend
+docker compose -f docker-compose.prod.yml up -d frontend --remove-orphans
 echo "✅ Frontend reiniciado"
 echo ""
 
