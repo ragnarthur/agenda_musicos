@@ -230,10 +230,8 @@ class AdminTokenObtainPairView(CookieTokenMixin, TokenObtainPairView):
             return response
 
         # Extrai username/email do request para validar is_staff
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        login_field = serializer.validated_data.get("username")
+        # Pega diretamente do request, não do serializer.validated_data
+        login_field = request.data.get("username")
 
         # Busca usuário por username ou email
         user = User.objects.filter(username=login_field).first()
