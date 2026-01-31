@@ -5,7 +5,7 @@ import { useSWRConfig } from 'swr';
 import { Calendar, MapPin, Clock, Phone, FileText, Save, X, Coins } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
-import { eventService } from '../services/api';
+import { eventService } from '../services/eventService';
 import type { EventCreate } from '../types';
 import { logError } from '../utils/logger';
 import { sanitizeOptionalText, sanitizeText } from '../utils/sanitize';

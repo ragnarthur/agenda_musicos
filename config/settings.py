@@ -52,7 +52,9 @@ CSP_HEADER = config("CSP_HEADER", default="").strip()
 import secrets
 import sys
 
-IS_TESTING = any(arg == "test" or arg == "pytest" or arg.endswith("pytest") for arg in sys.argv)
+IS_TESTING = any(
+    arg == "test" or arg == "pytest" or arg.endswith("pytest") for arg in sys.argv
+)
 
 if DEBUG or IS_TESTING:
     ADMIN_URL = config("ADMIN_URL", default="admin-secret-" + secrets.token_urlsafe(16))
@@ -113,6 +115,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
+    "drf_spectacular",
     # Local
     "agenda",
     "marketplace",
@@ -181,14 +184,21 @@ if DATABASE_URL:
         parsed_port = None
 
     query = parse_qs(parsed.query)
-    sslmode = query.get("sslmode", [None])[0] or ("require" if DB_SSL_REQUIRE else "disable")
+    sslmode = query.get("sslmode", [None])[0] or (
+        "require" if DB_SSL_REQUIRE else "disable"
+    )
 
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": (parsed.path or "").lstrip("/") or config("POSTGRES_DB", default="postgres"),
-            "USER": unquote(parsed.username or config("POSTGRES_USER", default="postgres")),
-            "PASSWORD": unquote(parsed.password or config("POSTGRES_PASSWORD", default="")),
+            "NAME": (parsed.path or "").lstrip("/")
+            or config("POSTGRES_DB", default="postgres"),
+            "USER": unquote(
+                parsed.username or config("POSTGRES_USER", default="postgres")
+            ),
+            "PASSWORD": unquote(
+                parsed.password or config("POSTGRES_PASSWORD", default="")
+            ),
             "HOST": parsed.hostname or "db",
             "PORT": parsed_port or 5432,
             "CONN_MAX_AGE": 60,
@@ -208,7 +218,9 @@ else:
 # Password validation
 # =========================================================
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
@@ -263,6 +275,7 @@ if DEBUG:
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": tuple(DEFAULT_AUTH_CLASSES),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_THROTTLE_CLASSES": ("rest_framework.throttling.ScopedRateThrottle",),
     "DEFAULT_THROTTLE_RATES": {
         # Auth
@@ -294,14 +307,18 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(
         minutes=max(int(config("JWT_ACCESS_MINUTES", default=60)), 15)
     ),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=max(int(config("JWT_REFRESH_DAYS", default=7)), 1)),
+    "REFRESH_TOKEN_LIFETIME": timedelta(
+        days=max(int(config("JWT_REFRESH_DAYS", default=7)), 1)
+    ),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
 if not DEBUG:
-    REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = ("rest_framework.renderers.JSONRenderer",)
+    REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = (
+        "rest_framework.renderers.JSONRenderer",
+    )
 
 
 # =========================================================
@@ -375,4 +392,42 @@ LOGGING = {
         "handlers": ["console"],
         "level": LOG_LEVEL,
     },
+}
+
+# =========================================================
+# API Documentation (OpenAPI/Swagger) - drf-spectacular
+# =========================================================
+SPECTACULAR_SETTINGS = {
+    "TITLE": "GigFlow API",
+    "DESCRIPTION": """
+    API para gerenciamento de agenda de músicos e eventos.
+    
+    Funcionalidades principais:
+    - Gestão de músicos e perfis
+    - Criação e gerenciamento de eventos
+    - Sistema de disponibilidades
+    - Marketplace de gigs
+    - Sistema de avaliações
+    - Notificações
+    """,
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "COMPONENT_SPLIT_PATCH": True,
+    "SCHEMA_PATH_PREFIX": r"/api",
+    "SCHEMA_PATH_PREFIX_TRIM": True,
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+        "persistAuthorization": True,
+        "displayOperationId": True,
+    },
+    "TAGS": [
+        {"name": "Auth", "description": "Autenticação e autorização"},
+        {"name": "Musicians", "description": "Gerenciamento de músicos"},
+        {"name": "Events", "description": "Gerenciamento de eventos"},
+        {"name": "Availabilities", "description": "Disponibilidades de músicos"},
+        {"name": "Connections", "description": "Conexões entre músicos"},
+        {"name": "Marketplace", "description": "Marketplace de gigs"},
+        {"name": "Notifications", "description": "Sistema de notificações"},
+    ],
 }

@@ -7,7 +7,7 @@ interface Review {
   rated_by_name: string;
   rated_by_avatar: string | null;
   rating: number;
-  comment: string;
+  comment?: string;
   time_ago: string;
 }
 

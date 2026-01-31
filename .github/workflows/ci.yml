@@ -7,7 +7,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  backend-tests:
+  # =========================================================
+  # BACKEND - Tests, Formatting, Linting
+  # =========================================================
+  backend:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -41,9 +44,24 @@ jobs:
       - name: Install backend dependencies
         run: pip install -r requirements.txt
 
-      - name: Run backend tests
-        run: python manage.py test
+      - name: Check code formatting (Black)
+        run: black --check .
 
+      - name: Check import sorting (isort)
+        run: isort --check-only .
+
+      - name: Lint with flake8
+        run: flake8 .
+
+      - name: Run Django system checks
+        run: python manage.py check
+
+      - name: Run backend tests
+        run: python manage.py test --verbosity=2
+
+  # =========================================================
+  # FRONTEND - Tests, Formatting, Linting, Build
+  # =========================================================
   frontend:
     runs-on: ubuntu-latest
     steps:
@@ -60,17 +78,28 @@ jobs:
         run: npm ci
         working-directory: frontend
 
+      - name: Check formatting (Prettier)
+        run: npm run format:check
+        working-directory: frontend
+
       - name: Lint frontend
         run: npm run lint
+        working-directory: frontend
+
+      - name: Run frontend tests
+        run: npm run test:ci
         working-directory: frontend
 
       - name: Build frontend
         run: npm run build
         working-directory: frontend
 
+  # =========================================================
+  # END-TO-END Tests (require backend + frontend build)
+  # =========================================================
   e2e:
     runs-on: ubuntu-latest
-    needs: [backend-tests, frontend]
+    needs: [backend, frontend]
     services:
       postgres:
         image: postgres:15

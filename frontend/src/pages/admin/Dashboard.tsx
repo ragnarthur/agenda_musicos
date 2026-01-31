@@ -27,7 +27,7 @@ const AdminDashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {[1, 2, 3, 4].map((i) => (
+        {[1, 2, 3, 4].map(i => (
           <div key={i} className="bg-white rounded-lg shadow p-4 animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-12 mb-2"></div>
             <div className="h-4 bg-gray-200 rounded w-20"></div>
@@ -53,7 +53,9 @@ const AdminDashboard: React.FC = () => {
               <TrendingUp className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{extendedStats?.requests.total || 0}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {extendedStats?.requests.total || 0}
+              </p>
               <p className="text-xs text-gray-500">Total Solicitações</p>
             </div>
           </div>
@@ -65,7 +67,9 @@ const AdminDashboard: React.FC = () => {
               <TrendingUp className="h-5 w-5 text-yellow-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{extendedStats?.requests.pending || 0}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {extendedStats?.requests.pending || 0}
+              </p>
               <p className="text-xs text-gray-500">Pendentes</p>
             </div>
           </div>
@@ -77,7 +81,9 @@ const AdminDashboard: React.FC = () => {
               <Users className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{extendedStats?.musicians.total || 0}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {extendedStats?.musicians.total || 0}
+              </p>
               <p className="text-xs text-gray-500">Músicos Ativos</p>
             </div>
           </div>
@@ -89,7 +95,9 @@ const AdminDashboard: React.FC = () => {
               <Building2 className="h-5 w-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{extendedStats?.cities.partner || 0}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {extendedStats?.cities.partner || 0}
+              </p>
               <p className="text-xs text-gray-500">Cidades Parceiras</p>
             </div>
           </div>
@@ -110,9 +118,7 @@ const AdminDashboard: React.FC = () => {
                   <span className="font-medium text-gray-900">
                     {city.city}, {city.state}
                   </span>
-                  <span className="ml-3 text-sm text-gray-600">
-                    {city.total} solicitações
-                  </span>
+                  <span className="ml-3 text-sm text-gray-600">{city.total} solicitações</span>
                 </div>
                 <span className="text-sm text-yellow-600 font-medium">
                   {city.pending} pendentes

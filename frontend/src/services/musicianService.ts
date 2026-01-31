@@ -1,11 +1,6 @@
 // services/musicianService.ts
 import { api, uploadApi } from './api';
-import type {
-  Musician,
-  MusicianUpdatePayload,
-  MusicianRating,
-  MusicianBadge,
-} from '../types';
+import type { Musician, MusicianUpdatePayload, MusicianRating, MusicianBadge } from '../types';
 import type { ConnectionsResponse, PaginatedResponse } from './types';
 
 export interface InstrumentOption {
@@ -107,9 +102,7 @@ export const musicianService = {
     return response.data;
   },
 
-  updateAvatar: async (
-    avatarUrl: string
-  ): Promise<{ detail: string; avatar_url: string }> => {
+  updateAvatar: async (avatarUrl: string): Promise<{ detail: string; avatar_url: string }> => {
     const response = await api.patch('/musicians/avatar/', { avatar_url: avatarUrl });
     return response.data;
   },

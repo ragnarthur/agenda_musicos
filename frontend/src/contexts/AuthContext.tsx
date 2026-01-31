@@ -50,20 +50,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     bootstrap();
   }, []);
 
-  const login = useCallback(
-    async (credentials: LoginCredentials) => {
-      try {
-        await authService.login(credentials);
-        sessionStorage.setItem(SESSION_KEY, 'true');
-        const musician = await musicianService.getMe();
-        setUser(musician);
-      } catch (error) {
-        logError('Erro no login:', error);
-        throw error;
-      }
-    },
-    []
-  );
+  const login = useCallback(async (credentials: LoginCredentials) => {
+    try {
+      await authService.login(credentials);
+      sessionStorage.setItem(SESSION_KEY, 'true');
+      const musician = await musicianService.getMe();
+      setUser(musician);
+    } catch (error) {
+      logError('Erro no login:', error);
+      throw error;
+    }
+  }, []);
 
   const setSession = useCallback(async () => {
     try {

@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  Users,
-  MapPin,
-  LogOut,
-  Shield,
-  Menu,
-  X,
-} from 'lucide-react';
+import { LayoutDashboard, Users, MapPin, LogOut, Shield, Menu, X } from 'lucide-react';
 import { authService } from '../../services/api';
 import { musicianService } from '../../services/api';
 import { showToast } from '../../utils/toast';
@@ -123,9 +115,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path ||
-                            (item.path !== '/admin/dashboard' && location.pathname.startsWith(item.path));
+          {navItems.map(item => {
+            const isActive =
+              location.pathname === item.path ||
+              (item.path !== '/admin/dashboard' && location.pathname.startsWith(item.path));
             const Icon = item.icon;
 
             return (
@@ -135,9 +128,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 onClick={() => setSidebarOpen(false)}
                 className={`
                   flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  ${isActive
-                    ? 'bg-amber-50 text-amber-700'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ${
+                    isActive
+                      ? 'bg-amber-50 text-amber-700'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }
                 `}
               >
@@ -162,9 +156,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
       {/* Main Content */}
       <main className="lg:ml-64 min-h-screen">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {children ?? <Outlet />}
-        </div>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">{children ?? <Outlet />}</div>
       </main>
     </div>
   );

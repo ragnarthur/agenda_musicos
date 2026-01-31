@@ -255,11 +255,14 @@ export interface MarketplaceGig {
 export interface MusicianRating {
   id: number;
   event: number;
+  event_title?: string;
   musician: number;
   musician_name: string;
   rated_by: number;
   rated_by_name: string;
+  rated_by_avatar: string | null;
   rating: 1 | 2 | 3 | 4 | 5;
   comment?: string;
+  time_ago: string;
   created_at: string;
 }

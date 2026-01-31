@@ -18,7 +18,7 @@ import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { StatCard } from '../components/ui/StatCard';
 import TiltCard from '../components/common/TiltCard';
-import { connectionService } from '../services/api';
+import { connectionService } from '../services/connectionService';
 import { useConnectionsPage, useConnectionsPaginated } from '../hooks/useConnections';
 import type { Connection, ConnectionType, Musician } from '../types';
 import { INSTRUMENT_LABELS } from '../utils/formatting';
@@ -702,7 +702,9 @@ const Connections: React.FC = () => {
                             {badge.name}
                           </p>
                           <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                            {new Date(badge.awarded_at).toLocaleDateString('pt-BR')}
+                            {badge.awarded_at
+                              ? new Date(badge.awarded_at).toLocaleDateString('pt-BR')
+                              : '—'}
                           </p>
                         </div>
                       </motion.div>

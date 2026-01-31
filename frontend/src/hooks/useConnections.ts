@@ -2,7 +2,8 @@
 import { useCallback } from 'react';
 import useSWR from 'swr';
 import useSWRInfinite from 'swr/infinite';
-import { connectionService, badgeService, type BadgeProgressResponse } from '../services/api';
+import { badgeService, type BadgeProgressResponse } from '../services/api';
+import { connectionService } from '../services/connectionService';
 import type { Connection } from '../types';
 import { useMusiciansInfinite } from './useMusicians';
 

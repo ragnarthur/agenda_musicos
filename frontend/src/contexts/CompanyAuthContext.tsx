@@ -1,6 +1,13 @@
 // contexts/CompanyAuthContext.tsx
 // Contexto para gerenciar autenticação e estado de empresas
-import React, { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import toast from 'react-hot-toast';
 import { companyService, type Organization } from '../services/publicApi';
 

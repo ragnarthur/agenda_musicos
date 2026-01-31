@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Calendar, MapPin, Clock, UserCheck } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
-import { eventService } from '../services/api';
+import { eventService } from '../services/eventService';
 import type { Event } from '../types';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

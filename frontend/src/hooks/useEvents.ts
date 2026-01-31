@@ -1,7 +1,7 @@
 // hooks/useEvents.ts
 import useSWR from 'swr';
 import useSWRInfinite from 'swr/infinite';
-import { eventService } from '../services/api';
+import { eventService } from '../services/eventService';
 import type { Event } from '../types';
 
 interface EventsParams {

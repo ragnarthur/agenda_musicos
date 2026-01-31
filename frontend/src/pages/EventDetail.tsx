@@ -21,7 +21,7 @@ import EventTimeline from '../components/event/EventTimeline';
 import ConfirmModal from '../components/modals/ConfirmModal';
 import RatingModal from '../components/modals/RatingModal';
 import { useAuth } from '../contexts/AuthContext';
-import { eventService } from '../services/api';
+import { eventService } from '../services/eventService';
 import { showToast } from '../utils/toast';
 import type { Event, AvailabilityResponse, RatingInput } from '../types';
 import { format, parseISO } from 'date-fns';

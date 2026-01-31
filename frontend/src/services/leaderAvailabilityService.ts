@@ -3,7 +3,9 @@ import { api } from './api';
 import type { LeaderAvailability, LeaderAvailabilityCreate } from '../types';
 
 export const leaderAvailabilityService = {
-  getAll: async (params?: Record<string, string | number | boolean>): Promise<LeaderAvailability[]> => {
+  getAll: async (
+    params?: Record<string, string | number | boolean>
+  ): Promise<LeaderAvailability[]> => {
     const response = await api.get('/leader-availabilities/', { params });
     return response.data;
   },

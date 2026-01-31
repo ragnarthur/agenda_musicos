@@ -1,6 +1,6 @@
 // hooks/useNotifications.ts
 import useSWR from 'swr';
-import { eventService } from '../services/api';
+import { eventService } from '../services/eventService';
 
 interface NotificationCounts {
   pendingMyResponse: number;

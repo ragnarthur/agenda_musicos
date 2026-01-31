@@ -109,11 +109,18 @@ api.interceptors.response.use(
 
 // Re-export de serviços e tipos para manter compatibilidade
 export { authService } from './authService';
-export { musicianService, type InstrumentOption, type ConnectionStatusResponse } from './musicianService';
-export { eventService, type EventListParams } from './eventService';
-export { connectionService } from './connectionService';
+export {
+  musicianService,
+  type InstrumentOption,
+  type ConnectionStatusResponse,
+} from './musicianService';
+// eventService/connectionService são importados diretamente para evitar chunks circulares
 export { badgeService, type BadgeProgressResponse } from './badgeService';
 export { leaderAvailabilityService } from './leaderAvailabilityService';
 export { marketplaceService } from './marketplaceService';
-export { notificationService, type NotificationPreference, type TelegramConnectResponse } from './notificationService';
+export {
+  notificationService,
+  type NotificationPreference,
+  type TelegramConnectResponse,
+} from './notificationService';
 export { registrationService } from './registrationService';

@@ -169,9 +169,9 @@ const Cities: React.FC = () => {
 
   const citiesByStatus = useMemo(() => {
     return {
-      partner: cities.filter((c) => c.status === 'partner'),
-      expansion: cities.filter((c) => c.status === 'expansion'),
-      planning: cities.filter((c) => c.status === 'planning'),
+      partner: cities.filter(c => c.status === 'partner'),
+      expansion: cities.filter(c => c.status === 'expansion'),
+      planning: cities.filter(c => c.status === 'planning'),
     };
   }, [cities]);
 
@@ -270,7 +270,7 @@ const Cities: React.FC = () => {
                   <input
                     type="text"
                     value={searchTerm}
-                    onChange={(event) => setSearchTerm(event.target.value)}
+                    onChange={event => setSearchTerm(event.target.value)}
                     placeholder="Buscar por nome, email ou instrumento"
                     className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-400/40"
                   />
@@ -279,7 +279,7 @@ const Cities: React.FC = () => {
 
               {loading ? (
                 <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
+                  {[1, 2, 3].map(i => (
                     <div key={i} className="bg-white rounded-xl shadow p-5 animate-pulse">
                       <div className="h-5 bg-gray-200 rounded w-1/3 mb-2"></div>
                       <div className="h-4 bg-gray-200 rounded w-2/3"></div>
@@ -295,7 +295,7 @@ const Cities: React.FC = () => {
                 </div>
               ) : (
                 <div className="grid gap-4">
-                  {cityRequests.map((request) => (
+                  {cityRequests.map(request => (
                     <div key={request.id} className="bg-white rounded-xl shadow p-4">
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
@@ -327,7 +327,7 @@ const Cities: React.FC = () => {
             <>
               {cityStatsLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                  {[1, 2, 3, 4, 5, 6].map(i => (
                     <div key={i} className="bg-white rounded-xl shadow p-4 animate-pulse">
                       <div className="h-5 bg-gray-200 rounded w-2/3 mb-3"></div>
                       <div className="grid grid-cols-2 gap-2">
@@ -349,7 +349,7 @@ const Cities: React.FC = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {cityStats.map((cs) => (
+                  {cityStats.map(cs => (
                     <button
                       key={`${cs.city}-${cs.state}`}
                       onClick={() => setSelectedCity({ city: cs.city, state: cs.state })}
@@ -416,11 +416,11 @@ const Cities: React.FC = () => {
 
           {citiesLoading ? (
             <div className="space-y-8">
-              {[1, 2, 3].map((i) => (
+              {[1, 2, 3].map(i => (
                 <div key={i}>
                   <div className="h-6 bg-gray-200 rounded w-32 mb-4"></div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {[1, 2].map((j) => (
+                    {[1, 2].map(j => (
                       <div key={j} className="h-32 bg-gray-200 rounded-xl animate-pulse"></div>
                     ))}
                   </div>
@@ -450,8 +450,11 @@ const Cities: React.FC = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Parceiras</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                    {citiesByStatus.partner.map((city) => (
-                      <div key={city.id} className={`rounded-xl border-2 p-4 ${statusColors[city.status]}`}>
+                    {citiesByStatus.partner.map(city => (
+                      <div
+                        key={city.id}
+                        className={`rounded-xl border-2 p-4 ${statusColors[city.status]}`}
+                      >
                         <div className="flex items-start justify-between mb-3">
                           <div>
                             <h3 className="font-semibold text-gray-900">
@@ -481,7 +484,9 @@ const Cities: React.FC = () => {
                         </div>
 
                         {city.description && (
-                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{city.description}</p>
+                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                            {city.description}
+                          </p>
                         )}
 
                         <div className="flex items-center justify-between text-sm">
@@ -512,8 +517,11 @@ const Cities: React.FC = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Em Expansão</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                    {citiesByStatus.expansion.map((city) => (
-                      <div key={city.id} className={`rounded-xl border-2 p-4 ${statusColors[city.status]}`}>
+                    {citiesByStatus.expansion.map(city => (
+                      <div
+                        key={city.id}
+                        className={`rounded-xl border-2 p-4 ${statusColors[city.status]}`}
+                      >
                         <div className="flex items-start justify-between mb-3">
                           <div>
                             <h3 className="font-semibold text-gray-900">
@@ -543,7 +551,9 @@ const Cities: React.FC = () => {
                         </div>
 
                         {city.description && (
-                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{city.description}</p>
+                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                            {city.description}
+                          </p>
                         )}
 
                         <div className="flex items-center justify-between text-sm">
@@ -574,8 +584,11 @@ const Cities: React.FC = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Em Planejamento</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {citiesByStatus.planning.map((city) => (
-                      <div key={city.id} className={`rounded-xl border-2 p-4 ${statusColors[city.status]}`}>
+                    {citiesByStatus.planning.map(city => (
+                      <div
+                        key={city.id}
+                        className={`rounded-xl border-2 p-4 ${statusColors[city.status]}`}
+                      >
                         <div className="flex items-start justify-between mb-3">
                           <div>
                             <h3 className="font-semibold text-gray-900">
@@ -605,7 +618,9 @@ const Cities: React.FC = () => {
                         </div>
 
                         {city.description && (
-                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{city.description}</p>
+                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                            {city.description}
+                          </p>
                         )}
 
                         <div className="flex items-center justify-between text-sm">
@@ -646,11 +661,13 @@ const Cities: React.FC = () => {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Cidade</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nome da Cidade
+                </label>
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={e => setFormData({ ...formData, name: e.target.value })}
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40"
                   placeholder="Ex: Monte Carmelo"
                   required
@@ -662,7 +679,7 @@ const Cities: React.FC = () => {
                 <input
                   type="text"
                   value={formData.state}
-                  onChange={(e) =>
+                  onChange={e =>
                     setFormData({ ...formData, state: e.target.value.toUpperCase().slice(0, 2) })
                   }
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40"
@@ -676,7 +693,7 @@ const Cities: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                 <select
                   value={formData.status}
-                  onChange={(e) =>
+                  onChange={e =>
                     setFormData({ ...formData, status: e.target.value as CityCreate['status'] })
                   }
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40"
@@ -693,7 +710,7 @@ const Cities: React.FC = () => {
                 </label>
                 <textarea
                   value={formData.description || ''}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={e => setFormData({ ...formData, description: e.target.value })}
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40"
                   rows={3}
                   placeholder="Notas sobre a cidade..."
@@ -705,7 +722,9 @@ const Cities: React.FC = () => {
                 <input
                   type="number"
                   value={formData.priority}
-                  onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })}
+                  onChange={e =>
+                    setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })
+                  }
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40"
                   min={0}
                 />
@@ -718,7 +737,13 @@ const Cities: React.FC = () => {
                   onClick={() => {
                     setCityFormOpen(false);
                     setEditingCity(null);
-                    setFormData({ name: '', state: '', status: 'planning', description: '', priority: 0 });
+                    setFormData({
+                      name: '',
+                      state: '',
+                      status: 'planning',
+                      description: '',
+                      priority: 0,
+                    });
                   }}
                   className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
                 >

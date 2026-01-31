@@ -5,7 +5,8 @@ import { Save, X, CheckCircle, Info, Sparkles, Users, UserPlus } from 'lucide-re
 import Layout from '../components/Layout/Layout';
 import ConflictPreview from '../components/event/ConflictPreview';
 import ProposalSummary from '../components/event/ProposalSummary';
-import { eventService, musicianService } from '../services/api';
+import { eventService } from '../services/eventService';
+import { musicianService } from '../services/api';
 import { getErrorMessage, showToast } from '../utils/toast';
 import { logError } from '../utils/logger';
 import type { Event, EventCreate, AvailableMusician, Musician } from '../types';

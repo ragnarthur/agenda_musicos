@@ -23,7 +23,8 @@ import ProfileHeader from '../components/Profile/ProfileHeader';
 import StatCard from '../components/Profile/StatCard';
 import ReviewCard from '../components/Profile/ReviewCard';
 import ImageCropModal from '../components/modals/ImageCropModal';
-import { musicianService, connectionService } from '../services/api';
+import { musicianService } from '../services/api';
+import { connectionService } from '../services/connectionService';
 import { useAuth } from '../contexts/AuthContext';
 import { getErrorMessage, showToast } from '../utils/toast';
 import { logError } from '../utils/logger';
@@ -42,7 +43,7 @@ interface Review {
   rated_by_name: string;
   rated_by_avatar: string | null;
   rating: number;
-  comment: string;
+  comment?: string;
   time_ago: string;
 }
 

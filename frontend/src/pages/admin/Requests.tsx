@@ -35,7 +35,9 @@ const Requests: React.FC = () => {
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await musicianRequestService.list({ status: filter === 'all' ? undefined : filter });
+      const response = await musicianRequestService.list({
+        status: filter === 'all' ? undefined : filter,
+      });
       setRequests(response);
     } catch (error) {
       console.error('Error fetching requests:', error);
@@ -88,7 +90,7 @@ const Requests: React.FC = () => {
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+      setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortField(field);
       setSortOrder('asc');
@@ -96,7 +98,7 @@ const Requests: React.FC = () => {
   };
 
   const sortedAndFilteredRequests = useMemo(() => {
-    const filtered = requests.filter((request) => {
+    const filtered = requests.filter(request => {
       const term = searchTerm.trim().toLowerCase();
       if (!term) return true;
       return (
@@ -167,7 +169,7 @@ const Requests: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
+        {[1, 2, 3].map(i => (
           <div key={i} className="bg-white rounded-xl shadow p-5 animate-pulse">
             <div className="space-y-2 flex-1">
               <div className="h-5 bg-gray-200 rounded w-1/3"></div>
@@ -228,7 +230,7 @@ const Requests: React.FC = () => {
           <input
             type="text"
             value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
+            onChange={event => setSearchTerm(event.target.value)}
             placeholder="Buscar por nome, email, cidade ou instrumento"
             className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-400/40"
           />
@@ -262,9 +264,7 @@ const Requests: React.FC = () => {
       {sortedAndFilteredRequests.length === 0 ? (
         <div className="bg-white rounded-xl shadow p-10 text-center">
           <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Nenhuma solicitação encontrada
-          </h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma solicitação encontrada</h3>
           <p className="text-gray-600">
             {searchTerm
               ? 'Tente ajustar os filtros ou buscar por outro termo.'
@@ -274,13 +274,11 @@ const Requests: React.FC = () => {
       ) : (
         <>
           <div className="grid gap-4">
-            {paginatedRequests.map((request) => (
+            {paginatedRequests.map(request => (
               <div key={request.id} className="bg-white rounded-xl shadow p-4 sm:p-5">
                 <div className="space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <span className="text-lg font-semibold text-gray-900">
-                      {request.full_name}
-                    </span>
+                    <span className="text-lg font-semibold text-gray-900">{request.full_name}</span>
                     {getStatusBadge(request.status)}
                   </div>
 
@@ -359,16 +357,13 @@ const Requests: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
               <p className="text-sm text-gray-600">
                 Mostrando{' '}
-                {Math.min(
-                  (currentPage - 1) * itemsPerPage + 1,
-                  sortedAndFilteredRequests.length
-                )}{' '}
-                - {Math.min(currentPage * itemsPerPage, sortedAndFilteredRequests.length)} de{' '}
+                {Math.min((currentPage - 1) * itemsPerPage + 1, sortedAndFilteredRequests.length)} -{' '}
+                {Math.min(currentPage * itemsPerPage, sortedAndFilteredRequests.length)} de{' '}
                 {sortedAndFilteredRequests.length} resultados
               </p>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
                   className="px-3 py-1 rounded border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                 >
@@ -378,7 +373,7 @@ const Requests: React.FC = () => {
                   Página {currentPage} de {totalPages}
                 </span>
                 <button
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
                   className="px-3 py-1 rounded border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                 >

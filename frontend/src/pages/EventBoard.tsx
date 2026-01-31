@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Calendar, ArrowLeft, Users, Clock } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
-import { eventService } from '../services/api';
+import { eventService } from '../services/eventService';
 import { showToast } from '../utils/toast';
 import { logError } from '../utils/logger';
 import { useAuth } from '../contexts/AuthContext';

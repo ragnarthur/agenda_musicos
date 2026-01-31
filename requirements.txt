@@ -17,3 +17,6 @@ google-auth-httplib2==0.2.0
 google-auth-oauthlib==1.2.1
 google-api-python-client==2.154.0
 requests-oauthlib==2.0.0
+
+# API Documentation (OpenAPI/Swagger)
+drf-spectacular==0.27.2

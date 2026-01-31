@@ -45,119 +45,125 @@ const Landing: React.FC = () => {
   const navigate = useNavigate();
   const [userType, setUserType] = useState<UserType>('musician');
 
-  const musicianContent = useMemo<UserContent>(() => ({
-    hero: 'Sua Carreira Musical Organizada',
-    subtitle: 'Agenda inteligente para shows, networking e oportunidades profissionais',
-    phrases: [
-      'Sua Carreira Musical Organizada',
-      'Agenda inteligente para shows',
-      'Conexões com outros músicos',
-      'Eventos profissionalmente gerenciados',
-      'Networking musical simplificado',
-      'Oportunidades em um clique',
-      'Encontre músicos para seu evento',
-      'Gerencie convites e confirmações',
-      'Conquiste badges e destaque-se',
-      'Marketplace de vagas musicais',
-      'Controle total da sua agenda',
-      'Notificações em tempo real',
-      'Avaliações entre músicos',
-      'Seu próximo show começa aqui',
-      'Construa sua reputação musical',
-      'Disponibilidades sincronizadas',
-    ],
-    features: [
-      {
-        icon: <Calendar className="h-12 w-12" />,
-        title: 'Gestão de Agenda e Eventos',
-        description:
-          'Sistema completo de convites, propostas de datas, disponibilidade e confirmação de eventos. Organize sua carreira profissionalmente.',
+  const musicianContent = useMemo<UserContent>(
+    () => ({
+      hero: 'Sua Carreira Musical Organizada',
+      subtitle: 'Agenda inteligente para shows, networking e oportunidades profissionais',
+      phrases: [
+        'Sua Carreira Musical Organizada',
+        'Agenda inteligente para shows',
+        'Conexões com outros músicos',
+        'Eventos profissionalmente gerenciados',
+        'Networking musical simplificado',
+        'Oportunidades em um clique',
+        'Encontre músicos para seu evento',
+        'Gerencie convites e confirmações',
+        'Conquiste badges e destaque-se',
+        'Marketplace de vagas musicais',
+        'Controle total da sua agenda',
+        'Notificações em tempo real',
+        'Avaliações entre músicos',
+        'Seu próximo show começa aqui',
+        'Construa sua reputação musical',
+        'Disponibilidades sincronizadas',
+      ],
+      features: [
+        {
+          icon: <Calendar className="h-12 w-12" />,
+          title: 'Gestão de Agenda e Eventos',
+          description:
+            'Sistema completo de convites, propostas de datas, disponibilidade e confirmação de eventos. Organize sua carreira profissionalmente.',
+        },
+        {
+          icon: <Megaphone className="h-12 w-12" />,
+          title: 'Marketplace de Oportunidades',
+          description:
+            'Divulgue vagas, encontre substitutos e descubra novas oportunidades de shows. Conecte-se com a comunidade musical.',
+        },
+        {
+          icon: <Users className="h-12 w-12" />,
+          title: 'Rede de Conexões Profissionais',
+          description:
+            'Networking inteligente para músicos. Indique colegas, acompanhe colaborações e construa relacionamentos profissionais.',
+        },
+        {
+          icon: <Award className="h-12 w-12" />,
+          title: 'Sistema de Badges e Conquistas',
+          description:
+            'Gamificação baseada em shows, avaliações e networking. Destaque-se profissionalmente e construa sua reputação.',
+        },
+      ],
+      primaryCTA: {
+        text: 'Solicitar Acesso',
+        to: '/solicitar-acesso',
       },
-      {
-        icon: <Megaphone className="h-12 w-12" />,
-        title: 'Marketplace de Oportunidades',
-        description:
-          'Divulgue vagas, encontre substitutos e descubra novas oportunidades de shows. Conecte-se com a comunidade musical.',
+      secondaryCTA: {
+        text: 'Entrar',
+        to: '/login',
       },
-      {
-        icon: <Users className="h-12 w-12" />,
-        title: 'Rede de Conexões Profissionais',
-        description:
-          'Networking inteligente para músicos. Indique colegas, acompanhe colaborações e construa relacionamentos profissionais.',
-      },
-      {
-        icon: <Award className="h-12 w-12" />,
-        title: 'Sistema de Badges e Conquistas',
-        description:
-          'Gamificação baseada em shows, avaliações e networking. Destaque-se profissionalmente e construa sua reputação.',
-      },
-    ],
-    primaryCTA: {
-      text: 'Solicitar Acesso',
-      to: '/solicitar-acesso',
-    },
-    secondaryCTA: {
-      text: 'Entrar',
-      to: '/login',
-    },
-  }), []);
+    }),
+    []
+  );
 
-  const companyContent = useMemo<UserContent>(() => ({
-    hero: 'Encontre os Melhores Músicos',
-    subtitle: 'Contrate talentos musicais profissionais para seus eventos',
-    phrases: [
-      'Encontre os Melhores Músicos',
-      'Talentos musicais profissionais',
-      'Contrate com confiança',
-      'Músicos verificados e avaliados',
-      'Busca inteligente por perfil',
-      'Contato direto com artistas',
-      'Organize seus eventos musicais',
-      'Gestão simplificada de contratações',
-      'Encontre o talento perfeito',
-      'Evento memorável garantido',
-      'Músicos selecionados por cidade',
-      'Processo de contratação simples',
-      'Avaliações confiáveis',
-      'Comunidade musical qualificada',
-      'O melhor palco para seu evento',
-      'Talentos que sua audiência ama',
-    ],
-    features: [
-      {
-        icon: <Search className="h-12 w-12" />,
-        title: 'Busca Avançada de Músicos',
-        description:
-          'Filtre por instrumento, cidade, avaliação, disponibilidade e muito mais. Encontre exatamente o talento que seu evento precisa.',
+  const companyContent = useMemo<UserContent>(
+    () => ({
+      hero: 'Encontre os Melhores Músicos',
+      subtitle: 'Contrate talentos musicais profissionais para seus eventos',
+      phrases: [
+        'Encontre os Melhores Músicos',
+        'Talentos musicais profissionais',
+        'Contrate com confiança',
+        'Músicos verificados e avaliados',
+        'Busca inteligente por perfil',
+        'Contato direto com artistas',
+        'Organize seus eventos musicais',
+        'Gestão simplificada de contratações',
+        'Encontre o talento perfeito',
+        'Evento memorável garantido',
+        'Músicos selecionados por cidade',
+        'Processo de contratação simples',
+        'Avaliações confiáveis',
+        'Comunidade musical qualificada',
+        'O melhor palco para seu evento',
+        'Talentos que sua audiência ama',
+      ],
+      features: [
+        {
+          icon: <Search className="h-12 w-12" />,
+          title: 'Busca Avançada de Músicos',
+          description:
+            'Filtre por instrumento, cidade, avaliação, disponibilidade e muito mais. Encontre exatamente o talento que seu evento precisa.',
+        },
+        {
+          icon: <MessageSquare className="h-12 w-12" />,
+          title: 'Contato Direto e Rápido',
+          description:
+            'Fale diretamente com músicos sem intermediários. Negocie detalhes, tire dúvidas e feche contratações em uma plataforma só.',
+        },
+        {
+          icon: <Shield className="h-12 w-12" />,
+          title: 'Músicos Verificados e Avaliados',
+          description:
+            'Todos os músicos passam por validação e têm histórico de avaliações. Contrate com total segurança e confiança.',
+        },
+        {
+          icon: <Briefcase className="h-12 w-12" />,
+          title: 'Gestão Profissional de Eventos',
+          description:
+            'Organize todas as suas contratações em um só lugar. Histórico, feedbacks e muito mais.',
+        },
+      ],
+      primaryCTA: {
+        text: 'Cadastrar Empresa',
+        to: '/cadastro-empresa',
       },
-      {
-        icon: <MessageSquare className="h-12 w-12" />,
-        title: 'Contato Direto e Rápido',
-        description:
-          'Fale diretamente com músicos sem intermediários. Negocie detalhes, tire dúvidas e feche contratações em uma plataforma só.',
+      secondaryCTA: {
+        text: 'Entrar',
+        to: '/login-empresa',
       },
-      {
-        icon: <Shield className="h-12 w-12" />,
-        title: 'Músicos Verificados e Avaliados',
-        description:
-          'Todos os músicos passam por validação e têm histórico de avaliações. Contrate com total segurança e confiança.',
-      },
-      {
-        icon: <Briefcase className="h-12 w-12" />,
-        title: 'Gestão Profissional de Eventos',
-        description:
-          'Organize todas as suas contratações em um só lugar. Histórico, feedbacks e muito mais.',
-      },
-    ],
-    primaryCTA: {
-      text: 'Cadastrar Empresa',
-      to: '/cadastro-empresa',
-    },
-    secondaryCTA: {
-      text: 'Entrar',
-      to: '/login-empresa',
-    },
-  }), []);
+    }),
+    []
+  );
   const currentContent = useMemo(
     () => (userType === 'musician' ? musicianContent : companyContent),
     [companyContent, musicianContent, userType]

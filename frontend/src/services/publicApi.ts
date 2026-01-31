@@ -535,7 +535,10 @@ export const cityAdminService = {
     return response.data;
   },
 
-  changeStatus: async (id: number, status: CityStatus): Promise<{ message: string; city: City }> => {
+  changeStatus: async (
+    id: number,
+    status: CityStatus
+  ): Promise<{ message: string; city: City }> => {
     const response = await api.post(`/admin/cities/${id}/change-status/`, { status });
     return response.data;
   },
