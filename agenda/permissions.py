@@ -1,4 +1,4 @@
-﻿# agenda/permissions.py
+# agenda/permissions.py
 from rest_framework import permissions
 
 from .models import Musician
@@ -36,3 +36,33 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 
         # Escrita apenas para o criador
         return obj.created_by == request.user
+
+
+class IsAppOwner(permissions.BasePermission):
+    """
+    Permissão que verifica se o usuário é um dono do app.
+    Considera donos:
+    - Proprietários de Organization (role=owner)
+    - Superusers (apenas para verificação)
+    """
+
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+
+        # Superusers sempre têm acesso
+        if request.user.is_superuser:
+            return True
+
+        # Verifica se é owner de alguma organização
+        from .models import Membership
+
+        has_owner_membership = Membership.objects.filter(
+            user=request.user, role="owner", status="active"
+        ).exists()
+
+        return has_owner_membership
+
+    def has_object_permission(self, request, view, obj):
+        # Donos podem modificar qualquer User
+        return self.has_permission(request, view)

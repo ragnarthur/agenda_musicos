@@ -3,6 +3,14 @@ from django.conf import settings
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
+from .admin_management_views import (
+    create_admin_user,
+    delete_admin_user,
+    get_admin_user,
+    list_admin_users,
+    reset_admin_password,
+    update_admin_user,
+)
 from .admin_views import (
     admin_events_list,
     admin_reports,
@@ -70,7 +78,9 @@ router = DefaultRouter()
 router.register("musicians", MusicianViewSet, basename="musician")
 router.register("events", EventViewSet, basename="event")
 router.register("availabilities", AvailabilityViewSet, basename="availability")
-router.register("leader-availabilities", LeaderAvailabilityViewSet, basename="leader-availability")
+router.register(
+    "leader-availabilities", LeaderAvailabilityViewSet, basename="leader-availability"
+)
 router.register("connections", ConnectionViewSet, basename="connection")
 router.register("badges", BadgeViewSet, basename="badge")
 router.register("instruments", InstrumentViewSet, basename="instrument")
@@ -110,7 +120,9 @@ urlpatterns = [
         get_musician_badges,
         name="musician-badges",
     ),
-    path("musicians/<int:musician_id>/stats/", get_musician_stats, name="musician-stats"),
+    path(
+        "musicians/<int:musician_id>/stats/", get_musician_stats, name="musician-stats"
+    ),
     path(
         "musicians/<int:musician_id>/connection-status/",
         get_musician_connection_status,
@@ -269,6 +281,23 @@ urlpatterns = [
         "admin/cities/<int:pk>/change-status/",
         city_change_status,
         name="admin-city-change-status",
+    ),
+    # =========================================================================
+    # Admin - User Management (apenas owners)
+    # =========================================================================
+    path("admin/users/", list_admin_users, name="admin-users-list"),
+    path("admin/users/<int:pk>/", get_admin_user, name="admin-users-detail"),
+    path("admin/users/create/", create_admin_user, name="admin-users-create"),
+    path("admin/users/<int:pk>/update/", update_admin_user, name="admin-users-update"),
+    path(
+        "admin/users/<int:pk>/delete/",
+        delete_admin_user,
+        name="admin-users-delete",
+    ),
+    path(
+        "admin/users/<int:pk>/reset-password/",
+        reset_admin_password,
+        name="admin-users-reset-password",
     ),
     # =========================================================================
     # Public Status Page

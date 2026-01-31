@@ -1,6 +1,6 @@
 // pages/MusicianRequest.tsx
 // Formulário público para músicos solicitarem acesso à plataforma
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
@@ -84,6 +84,7 @@ export default function MusicianRequest() {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customInstrumentName, setCustomInstrumentName] = useState('');
   const { instruments, loading: loadingInstruments, createCustomInstrument } = useInstruments();
+  const googleCallbackRef = useRef<(response: { credential: string }) => void>(() => {});
 
   const {
     register,
@@ -169,7 +170,7 @@ export default function MusicianRequest() {
       if (window.google) {
         window.google.accounts.id.initialize({
           client_id: clientId,
-          callback: handleGoogleCallback,
+          callback: response => googleCallbackRef.current(response),
         });
 
         // Renderizar botão oficial do Google
@@ -190,7 +191,7 @@ export default function MusicianRequest() {
     return () => {
       try {
         document.body.removeChild(script);
-      } catch (e) {
+      } catch {
         // Script já removido
       }
     };
@@ -248,13 +249,15 @@ export default function MusicianRequest() {
 
       showToast.error('Usuário já cadastrado. Faça login.');
       navigate('/login');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Google OAuth error:', error);
-      const message = error?.response?.data?.detail;
+      const message = (error as { response?: { data?: { detail?: string } } })?.response?.data
+        ?.detail;
+      const status = (error as { response?: { status?: number } })?.response?.status;
 
-      if (error?.response?.status === 401) {
+      if (status === 401) {
         showToast.error(message || 'Token do Google inválido ou expirado');
-      } else if (error?.response?.status === 400) {
+      } else if (status === 400) {
         showToast.error(message || 'Dados inválidos do Google');
       } else {
         showToast.error(message || 'Erro ao autenticar com Google');
@@ -263,6 +266,8 @@ export default function MusicianRequest() {
       setIsGoogleLoading(false);
     }
   };
+
+  googleCallbackRef.current = handleGoogleCallback;
 
   const onSubmit = async (data: MusicianRequestCreate) => {
     // Validação adicional de instrumentos

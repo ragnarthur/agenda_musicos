@@ -1,4 +1,4 @@
-﻿# agenda/serializers.py
+# agenda/serializers.py
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
@@ -33,7 +33,15 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "username", "first_name", "last_name", "email", "full_name", "is_staff"]
+        fields = [
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "full_name",
+            "is_staff",
+        ]
         read_only_fields = ["id"]
 
     def get_full_name(self, obj):
@@ -161,7 +169,9 @@ class MusicianUpdateSerializer(serializers.ModelSerializer):
         if value in [None, ""]:
             return []
         if not isinstance(value, list):
-            raise serializers.ValidationError("Equipamentos devem ser enviados como lista.")
+            raise serializers.ValidationError(
+                "Equipamentos devem ser enviados como lista."
+            )
         if len(value) > 30:
             raise serializers.ValidationError("Máximo de 30 equipamentos/serviços.")
 
@@ -188,10 +198,14 @@ class MusicianUpdateSerializer(serializers.ModelSerializer):
                 try:
                     price_decimal = Decimal(str(raw_price))
                 except (InvalidOperation, TypeError):
-                    raise serializers.ValidationError(f"Valor inválido para o equipamento {name}.")
+                    raise serializers.ValidationError(
+                        f"Valor inválido para o equipamento {name}."
+                    )
 
                 if price_decimal < 0:
-                    raise serializers.ValidationError(f"O valor de {name} não pode ser negativo.")
+                    raise serializers.ValidationError(
+                        f"O valor de {name} não pode ser negativo."
+                    )
 
             cleaned_items.append(
                 {
@@ -235,10 +249,14 @@ class MusicianUpdateSerializer(serializers.ModelSerializer):
                 attrs["instruments"] = [attrs["instrument"], *cleaned]
 
         if "bio" in attrs:
-            attrs["bio"] = sanitize_string(attrs.get("bio"), max_length=350, allow_empty=True)
+            attrs["bio"] = sanitize_string(
+                attrs.get("bio"), max_length=350, allow_empty=True
+            )
 
         if "phone" in attrs:
-            attrs["phone"] = sanitize_string(attrs.get("phone"), max_length=20, allow_empty=True)
+            attrs["phone"] = sanitize_string(
+                attrs.get("phone"), max_length=20, allow_empty=True
+            )
 
         if "whatsapp" in attrs:
             attrs["whatsapp"] = sanitize_string(
@@ -246,13 +264,17 @@ class MusicianUpdateSerializer(serializers.ModelSerializer):
             )
 
         if "instagram" in attrs:
-            instagram = sanitize_string(attrs.get("instagram"), max_length=100, allow_empty=True)
+            instagram = sanitize_string(
+                attrs.get("instagram"), max_length=100, allow_empty=True
+            )
             if instagram and not instagram.startswith("@"):
                 instagram = f"@{instagram}"
             attrs["instagram"] = instagram
 
         if "city" in attrs:
-            attrs["city"] = sanitize_string(attrs.get("city"), max_length=100, allow_empty=True)
+            attrs["city"] = sanitize_string(
+                attrs.get("city"), max_length=100, allow_empty=True
+            )
 
         if "state" in attrs:
             attrs["state"] = sanitize_string(
@@ -279,7 +301,9 @@ class MusicianUpdateSerializer(serializers.ModelSerializer):
         removed = old_instruments - new_instruments
         for inst_name in removed:
             try:
-                instrument = Instrument.objects.get(name=Instrument.normalize_name(inst_name))
+                instrument = Instrument.objects.get(
+                    name=Instrument.normalize_name(inst_name)
+                )
                 instrument.usage_count = max(0, instrument.usage_count - 1)
                 instrument.save(update_fields=["usage_count"])
             except Instrument.DoesNotExist:
@@ -289,7 +313,9 @@ class MusicianUpdateSerializer(serializers.ModelSerializer):
         added = new_instruments - old_instruments
         for inst_name in added:
             try:
-                instrument = Instrument.objects.get(name=Instrument.normalize_name(inst_name))
+                instrument = Instrument.objects.get(
+                    name=Instrument.normalize_name(inst_name)
+                )
                 instrument.increment_usage()
             except Instrument.DoesNotExist:
                 # Criar se não existir
@@ -335,14 +361,18 @@ class AvailabilitySerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if self.instance and "musician" in attrs:
             raise serializers.ValidationError(
-                {"musician_id": "Não é permitido alterar o músico desta disponibilidade."}
+                {
+                    "musician_id": "Não é permitido alterar o músico desta disponibilidade."
+                }
             )
         if self.instance and "event" in attrs and attrs["event"] != self.instance.event:
             raise serializers.ValidationError(
                 {"event": "Não é permitido alterar o evento desta disponibilidade."}
             )
         if "notes" in attrs:
-            attrs["notes"] = sanitize_string(attrs.get("notes"), max_length=1000, allow_empty=True)
+            attrs["notes"] = sanitize_string(
+                attrs.get("notes"), max_length=1000, allow_empty=True
+            )
         return attrs
 
 
@@ -392,7 +422,9 @@ class EventListSerializer(serializers.ModelSerializer):
 
             # Busca o último músico que aceitou
             last_available = (
-                obj.availabilities.filter(response="available", responded_at__isnull=False)
+                obj.availabilities.filter(
+                    response="available", responded_at__isnull=False
+                )
                 .order_by("-responded_at")
                 .first()
             )
@@ -432,7 +464,13 @@ class EventListSerializer(serializers.ModelSerializer):
             }
 
         # Fallback: calcula com uma única iteração (evita 5 queries)
-        summary = {"pending": 0, "available": 0, "unavailable": 0, "maybe": 0, "total": 0}
+        summary = {
+            "pending": 0,
+            "available": 0,
+            "unavailable": 0,
+            "maybe": 0,
+            "total": 0,
+        }
         for availability in obj.availabilities.all():
             response = availability.response
             if response in summary:
@@ -448,7 +486,14 @@ class EventLogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EventLog
-        fields = ["id", "action", "description", "performed_by", "performed_by_name", "created_at"]
+        fields = [
+            "id",
+            "action",
+            "description",
+            "performed_by",
+            "performed_by_name",
+            "created_at",
+        ]
         read_only_fields = fields
 
     def get_performed_by_name(self, obj):
@@ -548,7 +593,9 @@ class EventDetailSerializer(serializers.ModelSerializer):
 
             # Busca o último músico que aceitou
             last_available = (
-                obj.availabilities.filter(response="available", responded_at__isnull=False)
+                obj.availabilities.filter(
+                    response="available", responded_at__isnull=False
+                )
                 .order_by("-responded_at")
                 .first()
             )
@@ -611,13 +658,17 @@ class EventDetailSerializer(serializers.ModelSerializer):
         # Evento deve estar no passado (considera término real)
         event_end = obj.end_datetime
         if not event_end and obj.event_date and obj.end_time:
-            event_end = timezone.make_aware(datetime.combine(obj.event_date, obj.end_time))
+            event_end = timezone.make_aware(
+                datetime.combine(obj.event_date, obj.end_time)
+            )
 
         if event_end and event_end >= timezone.now():
             return False
 
         # Verifica se já avaliou algum músico neste evento
-        already_rated = MusicianRating.objects.filter(event=obj, rated_by=request.user).exists()
+        already_rated = MusicianRating.objects.filter(
+            event=obj, rated_by=request.user
+        ).exists()
 
         return not already_rated
 
@@ -733,7 +784,9 @@ class EventCreateSerializer(serializers.ModelSerializer):
         normalized = {}
         for item in value:
             if not isinstance(item, dict):
-                raise serializers.ValidationError("Cada instrumento deve ser um objeto.")
+                raise serializers.ValidationError(
+                    "Cada instrumento deve ser um objeto."
+                )
 
             instrument_raw = item.get("instrument", "")
             instrument = str(instrument_raw).strip()
@@ -744,7 +797,9 @@ class EventCreateSerializer(serializers.ModelSerializer):
             try:
                 quantity = int(quantity_raw)
             except (TypeError, ValueError):
-                raise serializers.ValidationError("Quantidade inválida para instrumento.")
+                raise serializers.ValidationError(
+                    "Quantidade inválida para instrumento."
+                )
 
             if quantity <= 0:
                 raise serializers.ValidationError("Quantidade deve ser maior que zero.")
@@ -780,7 +835,9 @@ class EventCreateSerializer(serializers.ModelSerializer):
         for field, (max_len, allow_empty) in max_lengths.items():
             value = data.get(field, "")
             try:
-                data[field] = sanitize_string(value, max_length=max_len, allow_empty=allow_empty)
+                data[field] = sanitize_string(
+                    value, max_length=max_len, allow_empty=allow_empty
+                )
             except serializers.ValidationError as e:
                 errors[field] = str(e.detail[0])
 
@@ -912,7 +969,9 @@ class LeaderAvailabilitySerializer(serializers.ModelSerializer):
         # Valida data (não pode ser no passado)
         date = data.get("date")
         if date and date < timezone.now().date():
-            errors["date"] = "Não é possível cadastrar disponibilidades em datas passadas."
+            errors["date"] = (
+                "Não é possível cadastrar disponibilidades em datas passadas."
+            )
 
         if "notes" in data:
             try:
@@ -977,10 +1036,15 @@ class MusicianRatingSerializer(serializers.ModelSerializer):
 
     def get_rated_by_avatar(self, obj):
         """Retorna avatar do avaliador se ele tiver perfil de músico"""
-        if hasattr(obj.rated_by, "musician_profile") and obj.rated_by.musician_profile.avatar:
+        if (
+            hasattr(obj.rated_by, "musician_profile")
+            and obj.rated_by.musician_profile.avatar
+        ):
             request = self.context.get("request")
             if request:
-                return request.build_absolute_uri(obj.rated_by.musician_profile.avatar.url)
+                return request.build_absolute_uri(
+                    obj.rated_by.musician_profile.avatar.url
+                )
         return None
 
     def get_time_ago(self, obj):
@@ -1004,11 +1068,15 @@ class RatingSubmitSerializer(serializers.Serializer):
     def validate_ratings(self, value):
         """Valida lista de ratings"""
         if not value:
-            raise serializers.ValidationError("Lista de avaliações não pode estar vazia.")
+            raise serializers.ValidationError(
+                "Lista de avaliações não pode estar vazia."
+            )
 
         for item in value:
             if "musician_id" not in item:
-                raise serializers.ValidationError("Cada avaliação deve conter musician_id.")
+                raise serializers.ValidationError(
+                    "Cada avaliação deve conter musician_id."
+                )
             if "rating" not in item:
                 raise serializers.ValidationError("Cada avaliação deve conter rating.")
             try:
@@ -1066,9 +1134,13 @@ class ConnectionSerializer(serializers.ModelSerializer):
         if request and hasattr(request.user, "musician_profile") and target:
             follower = request.user.musician_profile
             if follower == target:
-                raise serializers.ValidationError("Você não pode criar conexão consigo mesmo.")
+                raise serializers.ValidationError(
+                    "Você não pode criar conexão consigo mesmo."
+                )
         if "notes" in attrs:
-            attrs["notes"] = sanitize_string(attrs.get("notes"), max_length=255, allow_empty=True)
+            attrs["notes"] = sanitize_string(
+                attrs.get("notes"), max_length=255, allow_empty=True
+            )
         return attrs
 
 
@@ -1201,9 +1273,15 @@ class MusicianRequestSerializer(serializers.ModelSerializer):
         from django.contrib.auth.models import User
 
         if User.objects.filter(email__iexact=value).exists():
-            raise serializers.ValidationError("Este email já está cadastrado no sistema.")
-        if MusicianRequest.objects.filter(email__iexact=value, status="pending").exists():
-            raise serializers.ValidationError("Já existe uma solicitação pendente para este email.")
+            raise serializers.ValidationError(
+                "Este email já está cadastrado no sistema."
+            )
+        if MusicianRequest.objects.filter(
+            email__iexact=value, status="pending"
+        ).exists():
+            raise serializers.ValidationError(
+                "Já existe uma solicitação pendente para este email."
+            )
         return value.lower()
 
     def validate(self, attrs):
@@ -1212,21 +1290,29 @@ class MusicianRequestSerializer(serializers.ModelSerializer):
                 attrs["full_name"], max_length=150, allow_empty=False
             )
         if "phone" in attrs:
-            attrs["phone"] = sanitize_string(attrs["phone"], max_length=20, allow_empty=False)
+            attrs["phone"] = sanitize_string(
+                attrs["phone"], max_length=20, allow_empty=False
+            )
         if "instrument" in attrs:
             attrs["instrument"] = sanitize_string(
                 attrs["instrument"], max_length=100, allow_empty=False
             )
         if "bio" in attrs:
-            attrs["bio"] = sanitize_string(attrs.get("bio"), max_length=500, allow_empty=True)
+            attrs["bio"] = sanitize_string(
+                attrs.get("bio"), max_length=500, allow_empty=True
+            )
         if "city" in attrs:
-            attrs["city"] = sanitize_string(attrs["city"], max_length=100, allow_empty=False)
+            attrs["city"] = sanitize_string(
+                attrs["city"], max_length=100, allow_empty=False
+            )
         if "state" in attrs:
             attrs["state"] = sanitize_string(
                 attrs["state"], max_length=2, allow_empty=False, to_upper=True
             )
         if "instagram" in attrs:
-            instagram = sanitize_string(attrs.get("instagram"), max_length=100, allow_empty=True)
+            instagram = sanitize_string(
+                attrs.get("instagram"), max_length=100, allow_empty=True
+            )
             if instagram and not instagram.startswith("@"):
                 instagram = f"@{instagram}"
             attrs["instagram"] = instagram
@@ -1254,9 +1340,15 @@ class MusicianRequestCreateSerializer(serializers.ModelSerializer):
         from django.contrib.auth.models import User
 
         if User.objects.filter(email__iexact=value).exists():
-            raise serializers.ValidationError("Este email já está cadastrado no sistema.")
-        if MusicianRequest.objects.filter(email__iexact=value, status="pending").exists():
-            raise serializers.ValidationError("Já existe uma solicitação pendente para este email.")
+            raise serializers.ValidationError(
+                "Este email já está cadastrado no sistema."
+            )
+        if MusicianRequest.objects.filter(
+            email__iexact=value, status="pending"
+        ).exists():
+            raise serializers.ValidationError(
+                "Já existe uma solicitação pendente para este email."
+            )
         return value.lower()
 
     def validate(self, attrs):
@@ -1265,21 +1357,29 @@ class MusicianRequestCreateSerializer(serializers.ModelSerializer):
                 attrs["full_name"], max_length=150, allow_empty=False
             )
         if "phone" in attrs:
-            attrs["phone"] = sanitize_string(attrs["phone"], max_length=20, allow_empty=False)
+            attrs["phone"] = sanitize_string(
+                attrs["phone"], max_length=20, allow_empty=False
+            )
         if "instrument" in attrs:
             attrs["instrument"] = sanitize_string(
                 attrs["instrument"], max_length=100, allow_empty=False
             )
         if "bio" in attrs:
-            attrs["bio"] = sanitize_string(attrs.get("bio"), max_length=500, allow_empty=True)
+            attrs["bio"] = sanitize_string(
+                attrs.get("bio"), max_length=500, allow_empty=True
+            )
         if "city" in attrs:
-            attrs["city"] = sanitize_string(attrs["city"], max_length=100, allow_empty=False)
+            attrs["city"] = sanitize_string(
+                attrs["city"], max_length=100, allow_empty=False
+            )
         if "state" in attrs:
             attrs["state"] = sanitize_string(
                 attrs["state"], max_length=2, allow_empty=False, to_upper=True
             )
         if "instagram" in attrs:
-            instagram = sanitize_string(attrs.get("instagram"), max_length=100, allow_empty=True)
+            instagram = sanitize_string(
+                attrs.get("instagram"), max_length=100, allow_empty=True
+            )
             if instagram and not instagram.startswith("@"):
                 instagram = f"@{instagram}"
             attrs["instagram"] = instagram
@@ -1386,7 +1486,11 @@ class ContactRequestSerializer(serializers.ModelSerializer):
         return obj.from_organization.name if obj.from_organization else None
 
     def get_from_user_name(self, obj):
-        return obj.from_user.get_full_name() or obj.from_user.username if obj.from_user else None
+        return (
+            obj.from_user.get_full_name() or obj.from_user.username
+            if obj.from_user
+            else None
+        )
 
     def get_to_musician_name(self, obj):
         return (
@@ -1412,9 +1516,13 @@ class ContactRequestCreateSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if "subject" in attrs:
-            attrs["subject"] = sanitize_string(attrs["subject"], max_length=200, allow_empty=False)
+            attrs["subject"] = sanitize_string(
+                attrs["subject"], max_length=200, allow_empty=False
+            )
         if "message" in attrs:
-            attrs["message"] = sanitize_string(attrs["message"], max_length=2000, allow_empty=False)
+            attrs["message"] = sanitize_string(
+                attrs["message"], max_length=2000, allow_empty=False
+            )
         if "event_location" in attrs:
             attrs["event_location"] = sanitize_string(
                 attrs.get("event_location"), max_length=200, allow_empty=True
@@ -1508,8 +1616,12 @@ class CompanyRegisterSerializer(serializers.Serializer):
             attrs["contact_name"], max_length=150, allow_empty=False
         )
         if "phone" in attrs:
-            attrs["phone"] = sanitize_string(attrs.get("phone"), max_length=20, allow_empty=True)
-        attrs["city"] = sanitize_string(attrs["city"], max_length=100, allow_empty=False)
+            attrs["phone"] = sanitize_string(
+                attrs.get("phone"), max_length=20, allow_empty=True
+            )
+        attrs["city"] = sanitize_string(
+            attrs["city"], max_length=100, allow_empty=False
+        )
         attrs["state"] = sanitize_string(
             attrs["state"], max_length=2, allow_empty=False, to_upper=True
         )
@@ -1548,7 +1660,9 @@ class InstrumentCreateSerializer(serializers.Serializer):
         # Verifica se já existe (case-insensitive)
         if Instrument.objects.filter(name=normalized).exists():
             existing = Instrument.objects.get(name=normalized)
-            raise serializers.ValidationError(f"Instrumento já existe: '{existing.display_name}'")
+            raise serializers.ValidationError(
+                f"Instrumento já existe: '{existing.display_name}'"
+            )
 
         return value
 
@@ -1684,7 +1798,9 @@ class CityStatsSerializer(serializers.Serializer):
     def get_city_obj(self, obj):
         """Retorna dados da cidade cadastrada, se existir"""
         try:
-            city = City.objects.get(name__iexact=obj["city"], state__iexact=obj["state"])
+            city = City.objects.get(
+                name__iexact=obj["city"], state__iexact=obj["state"]
+            )
             return {
                 "id": city.id,
                 "status": city.status,
@@ -1693,3 +1809,57 @@ class CityStatsSerializer(serializers.Serializer):
             }
         except City.DoesNotExist:
             return None
+
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    """Serializer para gerenciar usuários admin"""
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "is_staff",
+            "is_superuser",
+            "is_active",
+            "date_joined",
+        ]
+        read_only_fields = ["id", "date_joined"]
+
+
+class AdminCreateSerializer(serializers.ModelSerializer):
+    """Serializer para criar novo admin (apenas owners)"""
+
+    password = serializers.CharField(write_only=True, required=True, min_length=8)
+
+    class Meta:
+        model = User
+        fields = ["username", "email", "password", "first_name", "last_name"]
+
+    def create(self, validated_data):
+        user = User(**validated_data)
+        user.set_password(validated_data.pop("password"))
+        user.is_staff = True
+        user.is_superuser = True
+        user.save()
+        return user
+
+
+class AdminUpdateSerializer(serializers.ModelSerializer):
+    """Serializer para atualizar admin (apenas owners)"""
+
+    password = serializers.CharField(write_only=True, required=False, allow_null=True)
+
+    class Meta:
+        model = User
+        fields = ["email", "first_name", "last_name", "password", "is_active"]
+        read_only_fields = ["id", "username"]
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop("password", None)
+        if password:
+            instance.set_password(password)
+        return super().update(instance, validated_data)

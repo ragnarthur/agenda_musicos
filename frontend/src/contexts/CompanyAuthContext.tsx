@@ -1,6 +1,6 @@
 // contexts/CompanyAuthContext.tsx
 // Contexto para gerenciar autenticação e estado de empresas
-import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import toast from 'react-hot-toast';
 import { companyService, type Organization } from '../services/publicApi';
 
@@ -28,6 +28,7 @@ interface CompanyAuthProviderProps {
 export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ children }) => {
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
+  const logoutRef = useRef<() => void>(() => {});
 
   // Verificar se já existe uma sessão ativa
   useEffect(() => {
@@ -59,12 +60,12 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
             if (status !== 401) {
               console.error('Erro ao validar sessão:', error);
             }
-            logout();
+            logoutRef.current();
           }
         }
       } catch (error) {
         console.error('Erro ao inicializar auth:', error);
-        logout();
+        logoutRef.current();
       } finally {
         setLoading(false);
       }
@@ -133,6 +134,8 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
 
     toast.success('Logout realizado com sucesso!');
   };
+
+  logoutRef.current = logout;
 
   const refreshToken = async (): Promise<void> => {
     try {

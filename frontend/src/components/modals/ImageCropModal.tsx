@@ -338,10 +338,13 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     setOffset(clampOffset(nextOffsetX, nextOffsetY, nextScale));
   };
 
-  const getCenteredOffset = (scale: number) => ({
-    x: (cropSize.width - naturalSize.width * scale) / 2,
-    y: (cropSize.height - naturalSize.height * scale) / 2,
-  });
+  const getCenteredOffset = useCallback(
+    (scale: number) => ({
+      x: (cropSize.width - naturalSize.width * scale) / 2,
+      y: (cropSize.height - naturalSize.height * scale) / 2,
+    }),
+    [cropSize.height, cropSize.width, naturalSize.height, naturalSize.width]
+  );
 
   const getDefaultFocus = useCallback(() => {
     const aspect = naturalSize.height / naturalSize.width;
@@ -501,6 +504,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     cropSize.height,
     cropSize.width,
     getDefaultFocus,
+    getCenteredOffset,
     isOpen,
     naturalSize.height,
     naturalSize.width,

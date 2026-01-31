@@ -79,6 +79,7 @@ const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' 
       };
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoadingCities(true);
     setCityError(null);
 

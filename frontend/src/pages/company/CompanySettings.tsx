@@ -39,11 +39,24 @@ const BRAZILIAN_STATES = [
   'TO',
 ];
 
+type CompanySettingsFormData = {
+  name: string;
+  contact_name: string;
+  contact_email: string;
+  phone: string;
+  website: string;
+  description: string;
+  city: string;
+  state: string;
+};
+
+type EditableOrganizationField = keyof CompanySettingsFormData;
+
 const CompanySettings: React.FC = () => {
   const { organization, updateOrganization, loading: authLoading } = useCompanyAuth();
 
   // Estados do formulário
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CompanySettingsFormData>({
     name: '',
     contact_name: '',
     contact_email: '',
@@ -93,18 +106,16 @@ const CompanySettings: React.FC = () => {
       setSaving(true);
 
       // Filtrar apenas campos que foram alterados
-      const updates: Partial<Organization> = {};
-      Object.keys(formData).forEach(key => {
-        const formKey = key as keyof typeof formData;
-        const orgKey = key as keyof Organization;
-        if (formData[formKey] !== (organization?.[orgKey] || '')) {
-          updates[orgKey] = formData[formKey] as any;
+      const updates: Partial<Pick<Organization, EditableOrganizationField>> = {};
+      (Object.keys(formData) as EditableOrganizationField[]).forEach(key => {
+        if (formData[key] !== (organization?.[key] || '')) {
+          updates[key] = formData[key];
         }
       });
 
       await updateOrganization(updates);
       setHasChanges(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao salvar:', error);
       // O toast já é mostrado pelo updateOrganization
     } finally {

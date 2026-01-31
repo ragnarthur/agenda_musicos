@@ -1,6 +1,6 @@
 // pages/MusicianMessages.tsx
 // Página de mensagens recebidas de empresas
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Mail,
   MailOpen,
@@ -25,11 +25,7 @@ export default function MusicianMessages() {
   const [sending, setSending] = useState(false);
   const [filter, setFilter] = useState<string>('all');
 
-  useEffect(() => {
-    loadMessages();
-  }, [filter]);
-
-  const loadMessages = async () => {
+  const loadMessages = useCallback(async () => {
     setLoading(true);
     try {
       const status = filter === 'all' ? undefined : filter;
@@ -40,7 +36,11 @@ export default function MusicianMessages() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    loadMessages();
+  }, [loadMessages]);
 
   const handleSelectMessage = async (message: ContactRequest) => {
     setSelectedMessage(message);

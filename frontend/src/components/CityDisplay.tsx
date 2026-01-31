@@ -45,6 +45,7 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
     let active = true;
 
     if (!formData.state) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCityOptions([]);
       setCityError(null);
       setLoadingCities(false);

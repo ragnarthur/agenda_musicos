@@ -1,6 +1,6 @@
 // pages/company/MusicianSearch.tsx
 // Página de busca e descoberta de músicos para empresas
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, MapPin, Star, Filter, X } from 'lucide-react';
@@ -85,13 +85,6 @@ const MusicianSearch: React.FC = () => {
     };
   }, [organization]);
 
-  // Carregar músicos quando cidade/estado mudar
-  useEffect(() => {
-    if (selectedCity && selectedState) {
-      loadMusicians();
-    }
-  }, [selectedCity, selectedState]);
-
   // Aplicar filtros e ordenação
   useEffect(() => {
     let filtered = [...musicians];
@@ -124,18 +117,25 @@ const MusicianSearch: React.FC = () => {
     setFilteredMusicians(filtered);
   }, [musicians, searchTerm, selectedInstrument, sortBy]);
 
-  const loadMusicians = async () => {
+  const loadMusicians = useCallback(async () => {
     try {
       setLoading(true);
       const data = await publicMusicianService.listByCity(selectedCity, selectedState);
       setMusicians(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao carregar músicos:', error);
       toast.error('Erro ao carregar músicos. Tente novamente.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedCity, selectedState]);
+
+  // Carregar músicos quando cidade/estado mudar
+  useEffect(() => {
+    if (selectedCity && selectedState) {
+      loadMusicians();
+    }
+  }, [loadMusicians, selectedCity, selectedState]);
 
   const clearFilters = () => {
     setSearchTerm('');

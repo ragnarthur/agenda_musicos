@@ -45,7 +45,7 @@ const Landing: React.FC = () => {
   const navigate = useNavigate();
   const [userType, setUserType] = useState<UserType>('musician');
 
-  const musicianContent: UserContent = {
+  const musicianContent = useMemo<UserContent>(() => ({
     hero: 'Sua Carreira Musical Organizada',
     subtitle: 'Agenda inteligente para shows, networking e oportunidades profissionais',
     phrases: [
@@ -100,9 +100,9 @@ const Landing: React.FC = () => {
       text: 'Entrar',
       to: '/login',
     },
-  };
+  }), []);
 
-  const companyContent: UserContent = {
+  const companyContent = useMemo<UserContent>(() => ({
     hero: 'Encontre os Melhores Músicos',
     subtitle: 'Contrate talentos musicais profissionais para seus eventos',
     phrases: [
@@ -157,10 +157,10 @@ const Landing: React.FC = () => {
       text: 'Entrar',
       to: '/login-empresa',
     },
-  };
+  }), []);
   const currentContent = useMemo(
     () => (userType === 'musician' ? musicianContent : companyContent),
-    [userType]
+    [companyContent, musicianContent, userType]
   );
 
   const heroPhrases = useMemo(() => currentContent.phrases, [currentContent]);

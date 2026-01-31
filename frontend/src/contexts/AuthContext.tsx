@@ -62,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
     },
-    [logError]
+    []
   );
 
   const setSession = useCallback(async () => {
@@ -86,7 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logError('Erro ao iniciar sessão:', error);
       throw error;
     }
-  }, [logError]);
+  }, []);
 
   const refreshUser = useCallback(async () => {
     try {
@@ -100,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       sessionStorage.removeItem(SESSION_KEY);
     }
-  }, [logError]);
+  }, []);
 
   const logout = useCallback(async () => {
     try {
