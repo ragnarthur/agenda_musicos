@@ -18,7 +18,11 @@ except Exception:  # pragma: no cover - fallback when deps are missing
     google_requests = None
 
 from agenda.image_download import RemoteImageError, download_image_from_url
-from agenda.image_processing import MAX_AVATAR_BYTES, MAX_AVATAR_SIZE, _process_profile_image
+from agenda.image_processing import (
+    MAX_AVATAR_BYTES,
+    MAX_AVATAR_SIZE,
+    _process_profile_image,
+)
 from agenda.models import Membership
 from agenda.throttles import LoginRateThrottle
 
@@ -200,13 +204,18 @@ class CookieTokenLogoutView(CookieTokenMixin, APIView):
         return response
 
 
+from config.serializers import EmailOrUsernameTokenObtainPairSerializer
+
+
 class AdminTokenObtainPairView(CookieTokenMixin, TokenObtainPairView):
     """
     POST /api/admin/token/
     Endpoint específico para login de administradores.
+    Aceita email ou username para autenticação.
     Valida que o usuário tem is_staff=True.
     """
 
+    serializer_class = EmailOrUsernameTokenObtainPairSerializer
     throttle_classes = [LoginRateThrottle]
 
     def post(self, request, *args, **kwargs):
@@ -218,12 +227,16 @@ class AdminTokenObtainPairView(CookieTokenMixin, TokenObtainPairView):
         if response.status_code != status.HTTP_200_OK:
             return response
 
-        # Extrai username do request para validar is_staff
+        # Extrai username/email do request para validar is_staff
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        username = serializer.validated_data.get("username")
-        user = User.objects.filter(username=username).first()
+        login_field = serializer.validated_data.get("username")
+
+        # Busca usuário por username ou email
+        user = User.objects.filter(username=login_field).first()
+        if not user:
+            user = User.objects.filter(email=login_field).first()
 
         # Valida se usuário tem is_staff
         if not user or not user.is_staff:
