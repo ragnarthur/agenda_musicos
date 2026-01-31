@@ -219,7 +219,9 @@ class AdminTokenObtainPairView(CookieTokenMixin, TokenObtainPairView):
     throttle_classes = [LoginRateThrottle]
 
     def post(self, request, *args, **kwargs):
-        from django.contrib.auth.models import User
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
 
         response = super().post(request, *args, **kwargs)
 
