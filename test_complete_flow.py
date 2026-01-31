@@ -26,8 +26,8 @@ from agenda.models import (
     LeaderAvailability,
     Membership,
     Musician,
+    MusicianRequest,
     Organization,
-    PendingRegistration,
 )
 
 # Colors for terminal output
@@ -73,7 +73,7 @@ class FlowTester:
     def cleanup(self):
         """Remove dados de teste anteriores"""
         print_info("Limpando dados de teste anteriores...")
-        PendingRegistration.objects.filter(email__contains="teste_").delete()
+        MusicianRequest.objects.filter(email__contains="teste_").delete()
         User.objects.filter(username__startswith="teste_").delete()
         print_success("Dados de teste limpos")
 
@@ -81,36 +81,16 @@ class FlowTester:
         """Testa o fluxo completo de registro"""
         print_header("1. TESTE DE REGISTRO")
 
-        # 1.1 Registro com dados inválidos (sem email)
-        print_info("Testando validação de campos obrigatórios...")
+        # 1.1 Solicitação de acesso (musician-request)
+        print_info("Testando solicitação de acesso com dados válidos...")
         response = self.client.post(
-            "/api/register/",
-            {
-                "username": self.test_username,
-                "password": self.test_password,
-                "first_name": "Teste",
-            },
-            content_type="application/json",
-        )
-
-        if response.status_code == 400:
-            print_success("Validação de email obrigatório funcionando")
-        else:
-            print_error(f"Validação falhou: {response.status_code}")
-            self.errors.append("Validação de email obrigatório não funcionou")
-
-        # 1.2 Registro com dados válidos
-        print_info("Testando registro com dados válidos...")
-        response = self.client.post(
-            "/api/register/",
+            "/api/musician-request/",
             {
                 "email": self.test_email,
-                "username": self.test_username,
-                "password": self.test_password,
-                "first_name": "Usuário",
-                "last_name": "Teste",
+                "full_name": "Usuário Teste",
                 "phone": "11999999999",
                 "instrument": "guitar",
+                "instruments": ["guitar"],
                 "bio": "Músico de teste para validação",
                 "city": "Sao Paulo",
                 "state": "SP",
@@ -119,131 +99,95 @@ class FlowTester:
         )
 
         if response.status_code == 201:
-            print_success(f"Registro criado com sucesso para {self.test_email}")
-            self.successes.append("Registro criado")
+            data = response.json()
+            self.request_id = data.get("id")
+            print_success(f"Solicitação criada com sucesso para {self.test_email}")
+            self.successes.append("Solicitação criada")
         else:
-            print_error(f"Falha no registro: {response.status_code} - {response.content}")
-            self.errors.append("Registro falhou")
+            print_error(
+                f"Falha ao criar solicitação: {response.status_code} - {response.content}"
+            )
+            self.errors.append("Solicitação falhou")
             return False
 
-        # 1.3 Verificar se PendingRegistration foi criado
-        pending = PendingRegistration.objects.filter(email=self.test_email).first()
+        # 1.2 Verificar se MusicianRequest foi criado
+        pending = MusicianRequest.objects.filter(email=self.test_email).first()
         if pending:
-            print_success(f"PendingRegistration criado com status: {pending.status}")
-            self.email_token = pending.email_token
+            print_success(f"MusicianRequest criado com status: {pending.status}")
         else:
-            print_error("PendingRegistration não foi criado")
-            self.errors.append("PendingRegistration não criado")
+            print_error("MusicianRequest não foi criado")
+            self.errors.append("MusicianRequest não criado")
             return False
 
         return True
 
-    def test_email_verification(self):
-        """Testa verificação de email"""
-        print_header("2. TESTE DE VERIFICAÇÃO DE EMAIL")
+    def test_admin_approval(self):
+        """Testa aprovação da solicitação pelo admin"""
+        print_header("2. TESTE DE APROVAÇÃO ADMIN")
 
-        if not hasattr(self, "email_token"):
-            print_error("Token de email não disponível. Execute test_registration_flow primeiro.")
+        if not hasattr(self, "request_id"):
+            print_error("ID da solicitação não disponível. Execute test_registration_flow primeiro.")
             return False
 
-        # 2.1 Verificação com token inválido
-        print_info("Testando verificação com token inválido...")
-        response = self.client.post(
-            "/api/verify-email/",
-            {
-                "token": "token_invalido_12345",
-            },
-            content_type="application/json",
-        )
+        admin_user = User.objects.filter(username="admin_teste").first()
+        if not admin_user:
+            admin_user = User.objects.create_user(
+                username="admin_teste",
+                email="admin_teste@example.com",
+                password="admin123",
+                is_staff=True,
+            )
 
-        if response.status_code == 400:
-            print_success("Rejeição de token inválido funcionando")
-        else:
-            print_error(f"Token inválido não foi rejeitado: {response.status_code}")
+        self.client.force_login(admin_user)
 
-        # 2.2 Verificação com token válido
-        print_info("Testando verificação com token válido...")
         response = self.client.post(
-            "/api/verify-email/",
-            {
-                "token": self.email_token,
-            },
+            f"/api/admin/musician-requests/{self.request_id}/approve/",
+            {"admin_notes": "Aprovado pelo teste automatizado"},
             content_type="application/json",
         )
 
         if response.status_code == 200:
             data = response.json()
-            print_success(f"Email verificado! Status: {data.get('status')}")
-            self.payment_token = data.get("payment_token")
-            self.successes.append("Email verificado")
+            self.invite_token = data.get("invite_token")
+            print_success("Solicitação aprovada e invite gerado")
+            self.successes.append("Solicitação aprovada")
         else:
-            print_error(f"Verificação falhou: {response.status_code} - {response.content}")
-            self.errors.append("Verificação de email falhou")
+            print_error(f"Aprovação falhou: {response.status_code} - {response.content}")
+            self.errors.append("Aprovação admin falhou")
             return False
-
-        # 2.3 Verificar status atualizado
-        pending = PendingRegistration.objects.get(email=self.test_email)
-        if pending.status == "email_verified":
-            print_success("Status atualizado para 'email_verified'")
-        else:
-            print_error(f"Status incorreto: {pending.status}")
 
         return True
 
-    def test_payment_flow(self):
-        """Testa o fluxo de pagamento"""
-        print_header("3. TESTE DE PAGAMENTO")
+    def test_register_with_invite(self):
+        """Testa registro com convite"""
+        print_header("3. TESTE DE REGISTRO COM CONVITE")
 
-        if not hasattr(self, "payment_token"):
-            print_error(
-                "Token de pagamento não disponível. Execute test_email_verification primeiro."
-            )
+        if not hasattr(self, "invite_token"):
+            print_error("Token de convite não disponível. Execute test_admin_approval primeiro.")
             return False
 
-        # 3.1 Pagamento com cartão inválido (começa com 0000)
-        print_info("Testando pagamento com cartão inválido...")
         response = self.client.post(
-            "/api/process-payment/",
+            "/api/register-with-invite/",
             {
-                "payment_token": self.payment_token,
-                "card_number": "0000111122223333",
-                "card_holder": "TESTE INVALIDO",
-                "card_expiry": "12/25",
-                "card_cvv": "123",
-            },
-            content_type="application/json",
-        )
-
-        if response.status_code == 400:
-            print_success("Cartão inválido rejeitado corretamente")
-        else:
-            print_warning(f"Cartão inválido não foi rejeitado: {response.status_code}")
-
-        # 3.2 Pagamento com cartão válido
-        print_info("Testando pagamento com cartão válido...")
-        response = self.client.post(
-            "/api/process-payment/",
-            {
-                "payment_token": self.payment_token,
-                "card_number": "4111111111111111",
-                "card_holder": "USUARIO TESTE",
-                "card_expiry": "12/25",
-                "card_cvv": "123",
+                "invite_token": self.invite_token,
+                "password": self.test_password,
+                "username": self.test_username,
             },
             content_type="application/json",
         )
 
         if response.status_code == 201:
             data = response.json()
-            print_success(f"Pagamento aprovado! Usuário: {data.get('username')}")
-            self.successes.append("Pagamento processado")
+            self.registered_username = data.get("username", self.test_username)
+            print_success(f"Conta criada: {self.registered_username}")
+            self.successes.append("Registro com convite")
         else:
-            print_error(f"Pagamento falhou: {response.status_code} - {response.content}")
-            self.errors.append("Pagamento falhou")
+            print_error(f"Registro falhou: {response.status_code} - {response.content}")
+            self.errors.append("Registro com convite falhou")
             return False
 
         # 3.3 Verificar se User e Musician foram criados
-        user = User.objects.filter(username=self.test_username).first()
+        user = User.objects.filter(username=self.registered_username).first()
         if user:
             print_success(f"Usuário criado: {user.username} ({user.email})")
 
@@ -299,7 +243,7 @@ class FlowTester:
         response = self.client.post(
             "/api/token/",
             {
-                "username": self.test_username,
+                "username": getattr(self, "registered_username", self.test_username),
                 "password": self.test_password,
             },
             content_type="application/json",
@@ -324,7 +268,7 @@ class FlowTester:
         self.client.post(
             "/api/token/",
             {
-                "username": self.test_username,
+                "username": getattr(self, "registered_username", self.test_username),
                 "password": self.test_password,
             },
             content_type="application/json",
@@ -390,7 +334,7 @@ class FlowTester:
         self.client.post(
             "/api/token/",
             {
-                "username": self.test_username,
+                "username": getattr(self, "registered_username", self.test_username),
                 "password": self.test_password,
             },
             content_type="application/json",
@@ -468,12 +412,12 @@ def main():
             print_error("Fluxo de registro falhou. Abortando testes.")
             return 1
 
-        if not tester.test_email_verification():
-            print_error("Verificação de email falhou. Abortando testes.")
+        if not tester.test_admin_approval():
+            print_error("Aprovação de solicitação falhou. Abortando testes.")
             return 1
 
-        if not tester.test_payment_flow():
-            print_error("Fluxo de pagamento falhou. Abortando testes.")
+        if not tester.test_register_with_invite():
+            print_error("Registro com convite falhou. Abortando testes.")
             return 1
 
         if not tester.test_login():

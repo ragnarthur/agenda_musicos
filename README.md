@@ -37,17 +37,14 @@ O script `setup.sh` irá automaticamente:
 
 ### Após a Instalação
 
-Acesse: **http://45.237.131.177:2030**
+Acesse: **http://<seu-servidor>:2030** (ou **http://localhost:2030** em ambiente local)
 
-**Credenciais de Login:**
-- Sara (Vocalista): `sara / sara2026@`
-- Arthur (Vocalista): `arthur / arthur2026@`
-- Roberto (Baterista): `roberto / roberto2026@`
+**Credenciais de Login (dev/demo):**
+- Utilize os usuários seedados via `seed_users.py` ou crie novos usuários no Django Admin.
 
 **Admin Django:**
-- URL: http://45.237.131.177:2030/admin/
-- User: `admin`
-- Pass: `admin2026@`
+- URL: http://<seu-servidor>:2030/admin/
+- Crie o superuser com `python manage.py createsuperuser`
 
 ## 📚 Documentação da API
 
@@ -324,6 +321,8 @@ agenda-musicos/
 │   │   ├── availabilities.py       # AvailabilityViewSet
 │   │   ├── leader_availabilities.py # LeaderAvailabilityViewSet
 │   │   └── events.py               # EventViewSet (852 linhas)
+│   ├── view_functions.py           # Views funcionais extraídas do legado
+│   ├── views_legacy.py             # Arquivo monolítico legado (referência)
 │   ├── serializers.py              # DRF Serializers
 │   ├── permissions.py              # Permissões customizadas
 │   ├── throttles.py                # Rate limiting
@@ -331,8 +330,8 @@ agenda-musicos/
 │   ├── pagination.py               # Paginação
 │   └── tests/                      # Testes organizados
 │       ├── test_models.py
-│       ├── test_views.py
-│       └── test_serializers.py
+│       ├── test_event_invites.py
+│       └── test_google_auth.py
 ├── marketplace/                     # App de marketplace
 ├── notifications/                   # App de notificações
 ├── frontend/                        # React + TypeScript
@@ -351,7 +350,6 @@ agenda-musicos/
 │   │   │   └── ...
 │   │   ├── test/                   # 🆕 Testes (Vitest + RTL)
 │   │   │   ├── setup.ts
-│   │   │   └── example.test.tsx
 │   │   └── types/                  # Tipos TypeScript
 │   ├── vitest.config.ts            # 🆕 Config Vitest
 │   └── package.json

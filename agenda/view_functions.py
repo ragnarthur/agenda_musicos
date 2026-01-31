@@ -1,6 +1,6 @@
 # agenda/view_functions.py
 """
-Views funcionais (api_view) extraidas do views.py monolitico.
+Views funcionais (api_view) extraidas do views_legacy.py monolitico.
 Mantem compatibilidade com as rotas em agenda/urls.py.
 """
 

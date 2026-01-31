@@ -52,9 +52,14 @@ class ConnectionAndBadgeAPITest(APITestCase):
 
         list_resp = self.client.get(url)
         self.assertEqual(list_resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(list_resp.data), 1)
-        self.assertEqual(list_resp.data[0]["connection_type"], "follow")
-        self.assertEqual(list_resp.data[0]["target"]["id"], self.target.id)
+        payload = (
+            list_resp.data.get("results", list_resp.data)
+            if isinstance(list_resp.data, dict)
+            else list_resp.data
+        )
+        self.assertEqual(len(payload), 1)
+        self.assertEqual(payload[0]["connection_type"], "follow")
+        self.assertEqual(payload[0]["target"]["id"], self.target.id)
 
     def test_prevent_self_connection(self):
         """Impede conexões consigo mesmo."""

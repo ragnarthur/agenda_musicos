@@ -9,16 +9,20 @@ import {
   MessageSquare,
   Building2,
   UserPlus,
+  X,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import Loading from '../components/common/Loading';
 import {
+  contactRequestService,
   publicMusicianService,
   type MusicianPublic,
   type Organization,
 } from '../services/publicApi';
 import { useCompanyAuth } from '../contexts/CompanyAuthContext';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
+import { showToast } from '../utils/toast';
 import { formatInstrumentLabel } from '../utils/formatting';
 import { getCityDisplayName, getActiveCities, type City } from '../config/cities';
 
@@ -33,6 +37,17 @@ const MusicianPublicProfile: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [city, setCity] = useState<City | null>(null);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [sendingContact, setSendingContact] = useState(false);
+  const [contactForm, setContactForm] = useState({
+    subject: '',
+    message: '',
+    event_date: '',
+    event_location: '',
+    budget_range: '',
+  });
+
+  useBodyScrollLock(showContactModal);
 
   // Get city from query params or use first active city
   useEffect(() => {
@@ -91,11 +106,58 @@ const MusicianPublicProfile: React.FC = () => {
 
   const handleContactClick = () => {
     if (isCompanyAuth) {
-      // TODO: Open contact modal
-      alert('Funcionalidade de contato em desenvolvimento');
+      setShowContactModal(true);
     } else {
       // Redirect to company registration
       navigate('/cadastro-empresa');
+    }
+  };
+
+  const handleContactChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = event.target;
+    setContactForm(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleContactSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!musician || sendingContact) return;
+
+    const subject = contactForm.subject.trim();
+    const message = contactForm.message.trim();
+
+    if (!subject || !message) {
+      showToast.error('Preencha o assunto e a mensagem.');
+      return;
+    }
+
+    setSendingContact(true);
+    try {
+      await contactRequestService.create({
+        to_musician: musician.id,
+        subject,
+        message,
+        event_date: contactForm.event_date || undefined,
+        event_location: contactForm.event_location.trim() || undefined,
+        budget_range: contactForm.budget_range.trim() || undefined,
+      });
+      showToast.success('Contato enviado com sucesso!');
+      setShowContactModal(false);
+      setContactForm({
+        subject: '',
+        message: '',
+        event_date: '',
+        event_location: '',
+        budget_range: '',
+      });
+    } catch (contactError) {
+      showToast.apiError(contactError);
+    } finally {
+      setSendingContact(false);
     }
   };
 
@@ -364,6 +426,151 @@ const MusicianPublicProfile: React.FC = () => {
           <p className="text-gray-400 text-sm">© 2026 DXM Tech. Todos os direitos reservados.</p>
         </footer>
       </div>
+
+      {/* Contact Modal */}
+      <AnimatePresence>
+        {showContactModal && musician && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50"
+            onClick={() => !sendingContact && setShowContactModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={event => event.stopPropagation()}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            >
+              <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Solicitar contato</h2>
+                  <p className="text-sm text-gray-500">
+                    Envie uma mensagem para {musician.full_name}
+                  </p>
+                </div>
+                <button
+                  onClick={() => !sendingContact && setShowContactModal(false)}
+                  disabled={sendingContact}
+                  className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                  aria-label="Fechar"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              <form onSubmit={handleContactSubmit} className="p-6 space-y-5">
+                <div>
+                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                    Assunto *
+                  </label>
+                  <input
+                    id="subject"
+                    name="subject"
+                    type="text"
+                    value={contactForm.subject}
+                    onChange={handleContactChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    placeholder="Ex: Proposta para show em bar"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                    Mensagem *
+                  </label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    rows={5}
+                    value={contactForm.message}
+                    onChange={handleContactChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    placeholder="Conte detalhes sobre o evento e sua necessidade"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      htmlFor="event_date"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Data do evento
+                    </label>
+                    <input
+                      id="event_date"
+                      name="event_date"
+                      type="date"
+                      value={contactForm.event_date}
+                      onChange={handleContactChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="event_location"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Local
+                    </label>
+                    <input
+                      id="event_location"
+                      name="event_location"
+                      type="text"
+                      value={contactForm.event_location}
+                      onChange={handleContactChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      placeholder="Ex: Centro da cidade"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="budget_range"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Faixa de orçamento
+                  </label>
+                  <input
+                    id="budget_range"
+                    name="budget_range"
+                    type="text"
+                    value={contactForm.budget_range}
+                    onChange={handleContactChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    placeholder="Ex: R$ 800 - R$ 1.200"
+                  />
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowContactModal(false)}
+                    disabled={sendingContact}
+                    className="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={sendingContact}
+                    className="px-6 py-2 rounded-lg bg-primary-600 text-white font-semibold hover:bg-primary-700 disabled:opacity-50"
+                  >
+                    {sendingContact ? 'Enviando...' : 'Enviar contato'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </FullscreenBackground>
   );
 };

@@ -92,7 +92,7 @@ def approve_booking_request(request, pk):
         request_obj.reviewed_at = timezone.now()
         request_obj.save()
 
-        # Email is sent via email_service.send_approval_notification in views.py
+        # Email is sent via email_service.send_approval_notification in view_functions.py
         return Response({"message": "Request approved successfully"})
     except MusicianRequest.DoesNotExist:
         return Response(
@@ -122,7 +122,7 @@ def reject_booking_request(request, pk):
         request_obj.reviewed_at = timezone.now()
         request_obj.save()
 
-        # Email is sent via email_service.send_rejection_notification in views.py
+        # Email is sent via email_service.send_rejection_notification in view_functions.py
         return Response({"message": "Request rejected successfully"})
     except MusicianRequest.DoesNotExist:
         return Response(
