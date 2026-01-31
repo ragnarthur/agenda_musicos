@@ -38,14 +38,7 @@ from .registration_views import (
     RegisterWithInviteView,
     update_avatar,
 )
-from .views import (  # Musician Request views; Contact Request views; Public views; Company views
-    AvailabilityViewSet,
-    BadgeViewSet,
-    ConnectionViewSet,
-    EventViewSet,
-    InstrumentViewSet,
-    LeaderAvailabilityViewSet,
-    MusicianViewSet,
+from .view_functions import (  # Musician Request views; Contact Request views; Public views; Company views
     approve_musician_request,
     archive_contact_request,
     create_contact_request,
@@ -72,6 +65,15 @@ from .views import (  # Musician Request views; Contact Request views; Public vi
     upload_avatar,
     upload_cover,
     validate_invite_token,
+)
+from .views import (
+    AvailabilityViewSet,
+    BadgeViewSet,
+    ConnectionViewSet,
+    EventViewSet,
+    InstrumentViewSet,
+    LeaderAvailabilityViewSet,
+    MusicianViewSet,
 )
 
 # Router do DRF gera automaticamente as URLs
