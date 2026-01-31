@@ -51,6 +51,7 @@ api.interceptors.response.use(
       '/resend-verification/',
       '/password-reset/',
       '/password-reset-confirm/',
+      '/admin/token/',
     ];
 
     const isPublicAuthPath = originalRequest?.url
@@ -68,8 +69,10 @@ api.interceptors.response.use(
       '/verificar-email',
       '/esqueci-senha',
       '/redefinir-senha',
+      '/admin/login',
     ];
     const isOnPublicRoute = publicRoutes.some(route => window.location.pathname.startsWith(route));
+    const isAdminRoute = window.location.pathname.startsWith('/admin');
 
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       if (isPublicAuthPath) {
@@ -84,15 +87,12 @@ api.interceptors.response.use(
         const isUserProfileCall = originalRequest.url?.includes('/musicians/me/');
 
         // Em rotas públicas, não redirecionamos para login (ex: verificação de email)
-        if (
-          !isPublicAuthPath &&
-          !isOnPublicRoute &&
-          !isUserProfileCall &&
-          window.location.pathname !== '/login'
-        ) {
+        if (!isPublicAuthPath && !isOnPublicRoute && !isUserProfileCall) {
           toast.error('Sessão expirada. Faça login novamente.');
           setTimeout(() => {
-            if (window.location.pathname.startsWith('/empresa')) {
+            if (isAdminRoute) {
+              window.location.href = '/admin/login';
+            } else if (window.location.pathname.startsWith('/empresa')) {
               window.location.href = '/login-empresa';
             } else {
               window.location.href = '/login';
@@ -109,6 +109,7 @@ api.interceptors.response.use(
 
 // Re-export de serviços e tipos para manter compatibilidade
 export { authService } from './authService';
+export { adminService } from './adminService';
 export {
   musicianService,
   type InstrumentOption,

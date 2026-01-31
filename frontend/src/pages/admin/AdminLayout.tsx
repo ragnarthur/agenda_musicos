@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Users, MapPin, LogOut, Shield, Menu, X } from 'lucide-react';
-import { authService } from '../../services/api';
-import { musicianService } from '../../services/api';
+import { adminService, authService } from '../../services/api';
 import { showToast } from '../../utils/toast';
 
 interface AdminLayoutProps {
@@ -18,8 +17,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   useEffect(() => {
     const checkAdminAccess = async () => {
       try {
-        const musician = await musicianService.getMe();
-        if (!musician.user?.is_staff && !musician.user?.is_superuser) {
+        const admin = await adminService.getMe();
+        if (!admin.is_staff && !admin.is_superuser) {
           showToast.error('Acesso negado. Esta área é restrita a administradores.');
           navigate('/admin/login');
         }

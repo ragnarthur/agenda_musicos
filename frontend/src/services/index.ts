@@ -9,6 +9,7 @@ export { dedupeById } from './types';
 
 // Serviços individuais
 export { authService } from './authService';
+export { adminService } from './adminService';
 
 export { badgeService } from './badgeService';
 export { connectionService } from './connectionService';

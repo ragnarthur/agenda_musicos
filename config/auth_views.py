@@ -5,6 +5,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.contrib.auth import authenticate
 from rest_framework import status
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -269,6 +270,29 @@ class AdminTokenObtainPairView(CookieTokenMixin, TokenObtainPairView):
             "user_type": "admin",
         }
         return response
+
+
+class AdminMeView(APIView):
+    """
+    GET /api/admin/me/
+    Retorna dados básicos do usuário admin autenticado.
+    """
+
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get(self, request):
+        user = request.user
+        return Response(
+            {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "is_staff": user.is_staff,
+                "is_superuser": user.is_superuser,
+            }
+        )
 
 
 class GoogleAuthView(CookieTokenMixin, APIView):

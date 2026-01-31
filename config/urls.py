@@ -14,6 +14,7 @@ from drf_spectacular.views import (
 )
 
 from config.auth_views import (
+    AdminMeView,
     AdminTokenObtainPairView,
     CompanyTokenObtainPairView,
     CookieTokenLogoutView,
@@ -40,6 +41,7 @@ urlpatterns = [
         AdminTokenObtainPairView.as_view(),
         name="admin_token_obtain",
     ),
+    path("api/admin/me/", AdminMeView.as_view(), name="admin_me"),
     path("api/token/", CookieTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", CookieTokenRefreshView.as_view(), name="token_refresh"),
     path("api/token/logout/", CookieTokenLogoutView.as_view(), name="token_logout"),

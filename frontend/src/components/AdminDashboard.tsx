@@ -13,7 +13,7 @@ import {
   Phone,
   Music2,
 } from 'lucide-react';
-import { api, musicianService } from '../services/api';
+import { adminService, api } from '../services/api';
 import { musicianRequestService, type MusicianRequest } from '../services/publicApi';
 import { showToast } from '../utils/toast';
 import { format, parseISO } from 'date-fns';
@@ -59,8 +59,8 @@ const AdminDashboard: React.FC = () => {
   // Check admin access
   const checkAdminAccess = useCallback(async () => {
     try {
-      const musician = await musicianService.getMe();
-      if (!musician.user?.is_staff && !musician.user?.is_superuser) {
+      const admin = await adminService.getMe();
+      if (!admin.is_staff && !admin.is_superuser) {
         showToast.error('Acesso negado. Esta área é restrita a administradores.');
         navigate('/admin/login');
       }
