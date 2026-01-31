@@ -32,7 +32,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 import requests
 
-from .views import MAX_AVATAR_BYTES, MAX_AVATAR_SIZE, _process_profile_image
+from .image_processing import MAX_AVATAR_BYTES, MAX_AVATAR_SIZE, _process_profile_image
 
 from notifications.services.email_service import send_welcome_email
 
