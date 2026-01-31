@@ -95,3 +95,8 @@ export const fetchIbgeCitiesByUf = async (uf: string): Promise<IbgeCity[]> => {
   writeCache(cacheKey, data);
   return data;
 };
+
+export const ibgeService = {
+  fetchStates: fetchIbgeStates,
+  fetchCitiesByState: fetchIbgeCitiesByUf,
+};

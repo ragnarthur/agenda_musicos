@@ -16,6 +16,7 @@ export { eventService } from './eventService';
 export { geocodingService } from './geocoding';
 export { ibgeService } from './ibge';
 export { instrumentsApi } from './instrumentsApi';
+export { fetchIbgeStates, fetchIbgeCitiesByUf } from './ibge';
 export { leaderAvailabilityService } from './leaderAvailabilityService';
 export { marketplaceService } from './marketplaceService';
 export { musicianService } from './musicianService';

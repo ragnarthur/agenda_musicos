@@ -9,7 +9,7 @@ export interface Instrument {
   usage_count: number;
 }
 
-export const instrumentsService = {
+export const instrumentsApi = {
   /**
    * Lista todos os instrumentos disponíveis.
    */
