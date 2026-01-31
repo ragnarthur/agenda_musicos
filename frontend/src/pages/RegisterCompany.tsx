@@ -5,7 +5,12 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { Building2, CheckCircle, Eye, EyeOff } from 'lucide-react';
-import { companyService, googleAuthService, type CompanyRegisterData } from '../services/publicApi';
+import {
+  companyService,
+  googleAuthService,
+  type CompanyRegisterData,
+  type Organization,
+} from '../services/publicApi';
 import { BRAZILIAN_STATES } from '../config/cities';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import { useCompanyAuth } from '../contexts/CompanyAuthContext';
@@ -99,7 +104,7 @@ export default function RegisterCompany() {
         } else if (result.user_type === 'company' && result.organization) {
           // Usuário já existe - fazer login
           setSession({
-            organization: result.organization as any,
+            organization: result.organization as Organization,
             access: result.access,
             refresh: result.refresh,
           });
@@ -108,13 +113,15 @@ export default function RegisterCompany() {
         } else {
           toast.error('Esta conta Google não é de empresa');
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Google OAuth error:', error);
-        const message = error?.response?.data?.detail;
+        const message = (error as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail;
+        const status = (error as { response?: { status?: number } })?.response?.status;
 
-        if (error?.response?.status === 401) {
+        if (status === 401) {
           toast.error(message || 'Token do Google inválido ou expirado');
-        } else if (error?.response?.status === 400) {
+        } else if (status === 400) {
           toast.error(message || 'Dados inválidos do Google');
         } else {
           toast.error(message || 'Erro ao conectar com Google. Tente novamente.');
@@ -162,7 +169,7 @@ export default function RegisterCompany() {
     return () => {
       try {
         document.body.removeChild(script);
-      } catch (e) {
+      } catch {
         // Script já removido
       }
     };

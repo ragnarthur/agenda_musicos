@@ -78,7 +78,7 @@ const Contacts: React.FC = () => {
       setLoading(true);
       const data = await contactRequestService.listSent();
       setContacts(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao carregar contatos:', error);
       toast.error('Erro ao carregar contatos');
     } finally {

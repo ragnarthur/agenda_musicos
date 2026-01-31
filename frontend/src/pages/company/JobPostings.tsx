@@ -71,7 +71,7 @@ const JobPostings: React.FC = () => {
       setLoading(true);
       const contacts = await contactRequestService.listSent();
       setJobPostings(contacts);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao carregar vagas:', error);
       toast.error('Erro ao carregar vagas');
     } finally {
@@ -173,7 +173,7 @@ const JobPostings: React.FC = () => {
       if (errorCount > 0) {
         toast.error(`Erro ao enviar para ${errorCount} músico${errorCount !== 1 ? 's' : ''}`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao publicar vaga:', error);
       toast.error('Erro ao publicar oportunidade');
     } finally {

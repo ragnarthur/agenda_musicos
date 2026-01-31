@@ -9,6 +9,7 @@ from django.http import JsonResponse
 from django.urls import include, path
 
 from config.auth_views import (
+    AdminTokenObtainPairView,
     CompanyTokenObtainPairView,
     CookieTokenLogoutView,
     CookieTokenObtainPairView,
@@ -28,6 +29,12 @@ urlpatterns = [
     path("api/", include("agenda.urls")),
     path("api/marketplace/", include("marketplace.urls")),
     path("api/notifications/", include("notifications.urls")),
+    path("api/admin/", include("config.admin_urls")),
+    path(
+        "api/admin/token/",
+        AdminTokenObtainPairView.as_view(),
+        name="admin_token_obtain",
+    ),
     path("api/token/", CookieTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", CookieTokenRefreshView.as_view(), name="token_refresh"),
     path("api/token/logout/", CookieTokenLogoutView.as_view(), name="token_logout"),

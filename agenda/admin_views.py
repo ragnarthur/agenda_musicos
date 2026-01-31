@@ -24,7 +24,9 @@ def dashboard_stats(request):
     """Get dashboard statistics for admin panel"""
     try:
         now = timezone.now()
-        current_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        current_month_start = now.replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        )
 
         # Request counts
         total_requests = MusicianRequest.objects.count()
@@ -65,7 +67,9 @@ def booking_request_detail(request, pk):
         serializer = MusicianRequestSerializer(request_obj)
         return Response(serializer.data)
     except MusicianRequest.DoesNotExist:
-        return Response({"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND
+        )
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -91,7 +95,9 @@ def approve_booking_request(request, pk):
         # Email is sent via email_service.send_approval_notification in views.py
         return Response({"message": "Request approved successfully"})
     except MusicianRequest.DoesNotExist:
-        return Response({"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND
+        )
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -119,7 +125,9 @@ def reject_booking_request(request, pk):
         # Email is sent via email_service.send_rejection_notification in views.py
         return Response({"message": "Request rejected successfully"})
     except MusicianRequest.DoesNotExist:
-        return Response({"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND
+        )
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -152,7 +160,9 @@ def public_request_status(request):
 
         if email:
             # Search by email, return the most recent request
-            requests = MusicianRequest.objects.filter(email__iexact=email).order_by("-created_at")
+            requests = MusicianRequest.objects.filter(email__iexact=email).order_by(
+                "-created_at"
+            )
             if not requests.exists():
                 return Response([], status=status.HTTP_200_OK)
 
@@ -167,7 +177,9 @@ def public_request_status(request):
                 serializer = MusicianRequestSerializer(request_obj)
                 return Response(serializer.data)
             except MusicianRequest.DoesNotExist:
-                return Response({"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND)
+                return Response(
+                    {"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND
+                )
 
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -249,7 +261,9 @@ def dashboard_stats_extended(request):
 
         # City stats
         partner_cities = City.objects.filter(status="partner", is_active=True).count()
-        expansion_cities = City.objects.filter(status="expansion", is_active=True).count()
+        expansion_cities = City.objects.filter(
+            status="expansion", is_active=True
+        ).count()
         planning_cities = City.objects.filter(status="planning", is_active=True).count()
 
         # Top cities by requests
@@ -403,7 +417,9 @@ def city_detail(request, pk):
     try:
         city = City.objects.get(pk=pk)
     except City.DoesNotExist:
-        return Response({"error": "Cidade não encontrada"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"error": "Cidade não encontrada"}, status=status.HTTP_404_NOT_FOUND
+        )
 
     try:
         if request.method == "GET":
@@ -434,7 +450,9 @@ def city_change_status(request, pk):
     try:
         city = City.objects.get(pk=pk)
     except City.DoesNotExist:
-        return Response({"error": "Cidade não encontrada"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"error": "Cidade não encontrada"}, status=status.HTTP_404_NOT_FOUND
+        )
 
     try:
         new_status = request.data.get("status")
@@ -454,3 +472,5 @@ def city_change_status(request, pk):
                 "city": CitySerializer(city).data,
             }
         )
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

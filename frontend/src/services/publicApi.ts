@@ -142,6 +142,86 @@ export interface CompanyDashboard {
 }
 
 // =============================================================================
+// Admin - City Management Types
+// =============================================================================
+
+export type CityStatus = 'partner' | 'expansion' | 'planning';
+
+export interface City {
+  id: number;
+  name: string;
+  state: string;
+  slug?: string;
+  status: CityStatus;
+  status_display: string;
+  description?: string | null;
+  is_active?: boolean;
+  priority: number;
+  musicians_count: number;
+  requests_count: number;
+  pending_requests_count?: number;
+  created_by?: number;
+  created_by_name?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CityCreate {
+  name: string;
+  state: string;
+  status: CityStatus;
+  description?: string | null;
+  is_active?: boolean;
+  priority?: number;
+}
+
+export interface CityStats {
+  city: string;
+  state: string;
+  total_requests: number;
+  pending_requests: number;
+  approved_requests: number;
+  rejected_requests: number;
+  active_musicians: number;
+  city_obj?: {
+    id: number;
+    status: CityStatus;
+    status_display: string;
+    is_active: boolean;
+  } | null;
+}
+
+export interface DashboardStatsExtended {
+  requests: {
+    total: number;
+    pending: number;
+    approved: number;
+    rejected: number;
+  };
+  musicians: {
+    total: number;
+  };
+  cities: {
+    partner: number;
+    expansion: number;
+    planning: number;
+  };
+  top_cities: Array<{
+    city: string;
+    state: string;
+    total: number;
+    pending: number;
+  }>;
+}
+
+export interface CityRequestsDetail {
+  city: string;
+  state: string;
+  city_info: City | null;
+  requests: MusicianRequest[];
+}
+
+// =============================================================================
 // Musician Request Service (Solicitação de Acesso)
 // =============================================================================
 
@@ -409,6 +489,54 @@ export const googleAuthService = {
       credential,
       ...data,
     });
+    return response.data;
+  },
+};
+
+// =============================================================================
+// Admin - City Management Service
+// =============================================================================
+
+export const cityAdminService = {
+  getExtendedStats: async (): Promise<DashboardStatsExtended> => {
+    const response = await api.get('/admin/dashboard-stats-extended/');
+    return response.data;
+  },
+
+  getRequestsByCity: async (): Promise<CityStats[]> => {
+    const response = await api.get('/admin/requests-by-city/');
+    return response.data;
+  },
+
+  getRequestsByCityDetail: async (city: string, state: string): Promise<CityRequestsDetail> => {
+    const response = await api.get(
+      `/admin/requests-by-city/${encodeURIComponent(city)}/${encodeURIComponent(state)}/`
+    );
+    return response.data;
+  },
+
+  list: async (params?: { status?: CityStatus }): Promise<City[]> => {
+    const response = await api.get('/admin/cities/', { params });
+    return response.data;
+  },
+
+  create: async (payload: CityCreate): Promise<City> => {
+    const response = await api.post('/admin/cities/', payload);
+    return response.data;
+  },
+
+  update: async (id: number, payload: CityCreate): Promise<City> => {
+    const response = await api.put(`/admin/cities/${id}/`, payload);
+    return response.data;
+  },
+
+  delete: async (id: number): Promise<{ message: string }> => {
+    const response = await api.delete(`/admin/cities/${id}/`);
+    return response.data;
+  },
+
+  changeStatus: async (id: number, status: CityStatus): Promise<{ message: string; city: City }> => {
+    const response = await api.post(`/admin/cities/${id}/change-status/`, { status });
     return response.data;
   },
 };

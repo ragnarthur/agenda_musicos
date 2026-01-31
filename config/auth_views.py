@@ -168,8 +168,56 @@ class CookieTokenLogoutView(CookieTokenMixin, APIView):
     permission_classes = []
 
     def post(self, request):
-        response = Response({"detail": "Logout realizado com sucesso."}, status=status.HTTP_200_OK)
+        response = Response(
+            {"detail": "Logout realizado com sucesso."}, status=status.HTTP_200_OK
+        )
         self.clear_auth_cookies(response)
+        return response
+
+
+class AdminTokenObtainPairView(CookieTokenMixin, TokenObtainPairView):
+    """
+    POST /api/admin/token/
+    Endpoint específico para login de administradores.
+    Valida que o usuário tem is_staff=True.
+    """
+
+    throttle_classes = [LoginRateThrottle]
+
+    def post(self, request, *args, **kwargs):
+        from django.contrib.auth.models import User
+
+        response = super().post(request, *args, **kwargs)
+
+        # Se o login falhou, retorna a resposta original
+        if response.status_code != status.HTTP_200_OK:
+            return response
+
+        # Extrai username do request para validar is_staff
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        username = serializer.validated_data.get("username")
+        user = User.objects.filter(username=username).first()
+
+        # Valida se usuário tem is_staff
+        if not user or not user.is_staff:
+            return Response(
+                {
+                    "detail": "Acesso negado. Este endpoint é restrito a administradores."
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        tokens = dict(response.data)
+        self.set_auth_cookies(response, tokens)
+
+        response.data = {
+            "detail": "Autenticado com sucesso como administrador.",
+            "access": tokens.get("access"),
+            "refresh": tokens.get("refresh"),
+            "user_type": "admin",
+        }
         return response
 
 
@@ -398,7 +446,9 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
 
             if email != musician_request.email:
                 return Response(
-                    {"detail": "O email da conta Google deve ser o mesmo da solicitação."},
+                    {
+                        "detail": "O email da conta Google deve ser o mesmo da solicitação."
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -435,7 +485,8 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
                     username=username,
                     email=email,
                     first_name=given_name or musician_request.full_name.split()[0],
-                    last_name=family_name or " ".join(musician_request.full_name.split()[1:]),
+                    last_name=family_name
+                    or " ".join(musician_request.full_name.split()[1:]),
                 )
                 user.set_unusable_password()  # Login apenas via Google
                 user.save()
@@ -443,7 +494,10 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
 
                 # Cria músico
                 instruments = musician_request.instruments or []
-                if musician_request.instrument and musician_request.instrument not in instruments:
+                if (
+                    musician_request.instrument
+                    and musician_request.instrument not in instruments
+                ):
                     instruments.insert(0, musician_request.instrument)
 
                 musician = Musician.objects.create(

@@ -1,6 +1,6 @@
 // pages/company/CompanyDashboard.tsx
 // Dashboard principal para empresas contratantes de músicos
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, MessageSquare, Users, TrendingUp, Clock, Send, MapPin, Star } from 'lucide-react';
@@ -35,33 +35,25 @@ const CompanyDashboard: React.FC = () => {
   const [topMusicians, setTopMusicians] = useState<MusicianPublic[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
-  useEffect(() => {
-    if (!loading && organization) {
-      loadDashboardData();
-      loadRecentContacts();
-      loadTopMusicians();
-    }
-  }, [loading, organization]);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       const data = await companyService.getDashboard();
       setDashboardData(data);
     } catch (error) {
       console.error('Erro ao carregar dashboard:', error);
     }
-  };
+  }, []);
 
-  const loadRecentContacts = async () => {
+  const loadRecentContacts = useCallback(async () => {
     try {
       const contacts = await contactRequestService.listSent();
       setRecentContacts(contacts.slice(0, 5)); // Apenas os 5 mais recentes
     } catch (error) {
       console.error('Erro ao carregar contatos:', error);
     }
-  };
+  }, []);
 
-  const loadTopMusicians = async () => {
+  const loadTopMusicians = useCallback(async () => {
     try {
       // Buscar músicos da cidade da empresa (se disponível)
       const city = organization?.city || 'Monte Carmelo';
@@ -73,7 +65,15 @@ const CompanyDashboard: React.FC = () => {
     } finally {
       setDataLoading(false);
     }
-  };
+  }, [organization?.city, organization?.state]);
+
+  useEffect(() => {
+    if (!loading && organization) {
+      loadDashboardData();
+      loadRecentContacts();
+      loadTopMusicians();
+    }
+  }, [loading, organization, loadDashboardData, loadRecentContacts, loadTopMusicians]);
 
   if (loading || dataLoading) {
     return (

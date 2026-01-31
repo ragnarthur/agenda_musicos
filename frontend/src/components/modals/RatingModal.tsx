@@ -56,7 +56,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
       }));
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRatings(initialRatings);
-  }, [availabilities]);
+  }, [availabilities, isOpen]);
 
   if (!isOpen) return null;
 

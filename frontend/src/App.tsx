@@ -9,8 +9,11 @@ import Loading from './components/common/Loading';
 
 // Lazy load de páginas para otimizar o bundle inicial
 const Landing = lazy(() => import('./pages/Landing'));
-const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 const AdminLogin = lazy(() => import('./pages/AdminLogin'));
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
+const AdminDashboardPage = lazy(() => import('./pages/admin/Dashboard'));
+const AdminRequests = lazy(() => import('./pages/admin/Requests'));
+const AdminCities = lazy(() => import('./pages/admin/Cities'));
 const StatusPage = lazy(() => import('./components/StatusPage'));
 const Login = lazy(() => import('./pages/Login'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -138,14 +141,13 @@ const PublicRoute: React.FC<{ children: React.ReactElement }> = ({ children }) =
 
 // Componente para rotas administrativas (requer is_staff)
 const AdminProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
-  const { user } = useAuth();
+  const { isAuthenticated, loading, user: musicianUser } = useAuth();
 
   if (loading) {
     return <PageLoader />;
   }
 
-  if (!isAuthenticated || !user?.user?.is_staff) {
+  if (!isAuthenticated || !musicianUser?.user?.is_staff) {
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -437,7 +439,29 @@ function AppRoutes() {
           path="/admin/dashboard"
           element={
             <AdminProtectedRoute>
-              <AdminDashboard />
+              <AdminLayout>
+                <AdminDashboardPage />
+              </AdminLayout>
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/solicitacoes"
+          element={
+            <AdminProtectedRoute>
+              <AdminLayout>
+                <AdminRequests />
+              </AdminLayout>
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/cidades"
+          element={
+            <AdminProtectedRoute>
+              <AdminLayout>
+                <AdminCities />
+              </AdminLayout>
             </AdminProtectedRoute>
           }
         />

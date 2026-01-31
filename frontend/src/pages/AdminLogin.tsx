@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Mail, Lock, LogIn } from 'lucide-react';
-import { authService, musicianService } from '../services/api';
+import { musicianService } from '../services/api';
 import { showToast } from '../utils/toast';
 
 const AdminLogin: React.FC = () => {
@@ -15,13 +15,26 @@ const AdminLogin: React.FC = () => {
     setLoading(true);
 
     try {
-      await authService.login({ username: email, password });
+      // Usar endpoint específico de admin
+      const response = await fetch('/api/admin/token/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username: email, password }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Erro ao fazer login');
+      }
+
+      await response.json();
 
       // Verificar se o usuário é admin
       const musician = await musicianService.getMe();
       if (!musician.user?.is_staff && !musician.user?.is_superuser) {
         showToast.error('Acesso negado. Esta área é restrita a administradores.');
-        await authService.logout();
         return;
       }
 
