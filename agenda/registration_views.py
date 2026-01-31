@@ -11,16 +11,12 @@ Fluxo de registro de empresas:
 1. POST /register-company/ - Empresa se registra diretamente (sem aprovação)
 """
 
-import ipaddress
 import logging
-import socket
-from io import BytesIO
 from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
-from django.core.files.base import ContentFile
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
 from django.db import transaction
@@ -30,8 +26,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-import requests
 
+from .image_download import RemoteImageError, download_image_from_url
 from .image_processing import MAX_AVATAR_BYTES, MAX_AVATAR_SIZE, _process_profile_image
 
 from notifications.services.email_service import send_welcome_email
@@ -395,147 +391,18 @@ def update_avatar(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # Validar URL com whitelist de esquemas permitidos
-    from urllib.parse import urlparse
-
-    parsed = urlparse(avatar_url)
-
-    # Whitelist de esquemas permitidos
-    ALLOWED_SCHEMES = {"http", "https"}
-
-    if not parsed.scheme or not parsed.netloc:
-        return Response(
-            {"detail": "URL inválida."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    if parsed.scheme not in ALLOWED_SCHEMES:
-        return Response(
-            {"detail": "Apenas URLs http/https são permitidas."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    # Validações adicionais contra XSS
-    avatar_url_lower = avatar_url.lower()
-    if "javascript:" in avatar_url_lower:
-        return Response(
-            {"detail": "URL não permitida."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    if "data:" in avatar_url_lower:
-        return Response(
-            {"detail": "URLs data: não são permitidas. Use upload de arquivo."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    if "vbscript:" in avatar_url_lower:
-        return Response(
-            {"detail": "URL não permitida."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
     try:
         musician = request.user.musician_profile
     except Musician.DoesNotExist:
         return Response({"detail": "Perfil não encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
-    parsed_host = parsed.hostname or ""
     try:
-        if parsed.port and parsed.port not in (80, 443):
-            return Response(
-                {"detail": "URL não permitida."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-    except ValueError:
-        return Response({"detail": "URL inválida."}, status=status.HTTP_400_BAD_REQUEST)
-
-    if not parsed_host or parsed_host in {"localhost"} or parsed_host.endswith(".local"):
-        return Response({"detail": "URL não permitida."}, status=status.HTTP_400_BAD_REQUEST)
-
-    try:
-        addresses = socket.getaddrinfo(parsed_host, parsed.port or 443)
-    except socket.gaierror:
-        return Response({"detail": "URL inválida."}, status=status.HTTP_400_BAD_REQUEST)
-
-    for addr in addresses:
-        ip = addr[4][0]
-        try:
-            ip_obj = ipaddress.ip_address(ip)
-        except ValueError:
-            return Response({"detail": "URL inválida."}, status=status.HTTP_400_BAD_REQUEST)
-        if (
-            ip_obj.is_private
-            or ip_obj.is_loopback
-            or ip_obj.is_link_local
-            or ip_obj.is_reserved
-            or ip_obj.is_multicast
-            or ip_obj.is_unspecified
-        ):
-            return Response({"detail": "URL não permitida."}, status=status.HTTP_400_BAD_REQUEST)
-
-    try:
-        response = requests.get(
+        content = download_image_from_url(
             avatar_url,
-            stream=True,
-            timeout=(3.05, 5),
-            allow_redirects=False,
-            headers={"User-Agent": "GigFlowAvatar/1.0"},
+            max_bytes=MAX_AVATAR_BYTES,
+            label="avatar",
+            user_agent="GigFlowAvatar/1.0",
         )
-    except requests.RequestException:
-        return Response(
-            {"detail": "Não foi possível baixar a imagem do avatar."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    if response.status_code != 200:
-        return Response(
-            {"detail": "Não foi possível baixar a imagem do avatar."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    content_type = (response.headers.get("Content-Type") or "").split(";")[0].lower()
-    if not content_type.startswith("image/"):
-        return Response(
-            {"detail": "URL não aponta para uma imagem válida."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    content_length = response.headers.get("Content-Length")
-    if content_length:
-        try:
-            if int(content_length) > MAX_AVATAR_BYTES:
-                return Response(
-                    {"detail": "Imagem muito grande. Use uma imagem menor."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-        except (TypeError, ValueError):
-            pass
-
-    buffer = BytesIO()
-    total_read = 0
-    for chunk in response.iter_content(chunk_size=8192):
-        if not chunk:
-            continue
-        total_read += len(chunk)
-        if total_read > MAX_AVATAR_BYTES:
-            return Response(
-                {"detail": "Imagem muito grande. Use uma imagem menor."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        buffer.write(chunk)
-
-    if total_read == 0:
-        return Response(
-            {"detail": "Não foi possível baixar a imagem do avatar."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    buffer.seek(0)
-    content = ContentFile(buffer.read(), name="avatar-remote")
-    content.content_type = content_type
-
-    try:
         processed_file = _process_profile_image(
             content,
             max_bytes=MAX_AVATAR_BYTES,
@@ -544,6 +411,8 @@ def update_avatar(request):
             quality=88,
             prefix="avatar",
         )
+    except RemoteImageError as exc:
+        return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
     except ValueError as exc:
         return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 

@@ -17,6 +17,8 @@ except Exception:  # pragma: no cover - fallback when deps are missing
     id_token = None
     google_requests = None
 
+from agenda.image_download import RemoteImageError, download_image_from_url
+from agenda.image_processing import MAX_AVATAR_BYTES, MAX_AVATAR_SIZE, _process_profile_image
 from agenda.models import Membership
 from agenda.throttles import LoginRateThrottle
 
@@ -64,6 +66,29 @@ def _cookie_settings():
 
 def _max_age(delta: timedelta) -> int:
     return int(delta.total_seconds())
+
+
+def _process_google_picture(picture_url: str, *, label: str, prefix: str):
+    if not picture_url:
+        return None
+    try:
+        content = download_image_from_url(
+            picture_url,
+            max_bytes=MAX_AVATAR_BYTES,
+            label=label,
+            user_agent="GigFlowGoogle/1.0",
+        )
+        return _process_profile_image(
+            content,
+            max_bytes=MAX_AVATAR_BYTES,
+            max_size=MAX_AVATAR_SIZE,
+            crop_square=True,
+            quality=88,
+            prefix=prefix,
+        )
+    except (RemoteImageError, ValueError) as exc:
+        logger.warning("Falha ao processar %s do Google: %s", label, exc)
+        return None
 
 
 class CookieTokenMixin:
@@ -490,7 +515,6 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
                 )
                 user.set_unusable_password()  # Login apenas via Google
                 user.save()
-                # TODO: Salvar picture no perfil do Musician se necessário
 
                 # Cria músico
                 instruments = musician_request.instruments or []
@@ -512,6 +536,17 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
                     role="member",
                     is_active=True,
                 )
+
+                avatar_file = _process_google_picture(
+                    picture,
+                    label="avatar",
+                    prefix="avatar",
+                )
+                if avatar_file:
+                    if musician.avatar:
+                        musician.avatar.delete(save=False)
+                    musician.avatar = avatar_file
+                    musician.save(update_fields=["avatar"])
 
                 # Cria organização pessoal
                 org, _ = Organization.objects.get_or_create(
@@ -669,7 +704,6 @@ class GoogleRegisterCompanyView(CookieTokenMixin, APIView):
                 )
                 user.set_unusable_password()
                 user.save()
-                # TODO: Salvar picture no perfil da Organization se necessário
 
                 # Cria organização
                 organization = Organization.objects.create(
@@ -682,6 +716,17 @@ class GoogleRegisterCompanyView(CookieTokenMixin, APIView):
                     city=city,
                     state=state,
                 )
+
+                logo_file = _process_google_picture(
+                    picture,
+                    label="logo",
+                    prefix="logo",
+                )
+                if logo_file:
+                    if organization.logo:
+                        organization.logo.delete(save=False)
+                    organization.logo = logo_file
+                    organization.save(update_fields=["logo"])
 
                 # Cria membership
                 Membership.objects.create(
