@@ -143,7 +143,7 @@ const Dashboard: React.FC = memo(() => {
               : { type: 'spring', stiffness: 120, damping: 18, delay: 0.05 }
           }
         >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 xs:grid-cols-2 md:grid-cols-3 gap-3 xs:gap-4">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
