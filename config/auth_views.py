@@ -240,8 +240,20 @@ class AdminTokenObtainPairView(CookieTokenMixin, TokenObtainPairView):
         if not user:
             user = User.objects.filter(email=login_field).first()
 
+        # DEBUG logs
+        logger.info(
+            f"DEBUG: login_field={login_field}, user={user}, user_id={user.id if user else None}"
+        )
+        if user:
+            logger.info(
+                f"DEBUG: user.is_staff={user.is_staff}, user.is_superuser={user.is_superuser}"
+            )
+
         # Valida se usuário tem is_staff
         if not user or not user.is_staff:
+            logger.error(
+                f"DEBUG: Access denied - user={user}, is_staff={user.is_staff if user else 'N/A'}"
+            )
             return Response(
                 {
                     "detail": "Acesso negado. Este endpoint é restrito a administradores."
