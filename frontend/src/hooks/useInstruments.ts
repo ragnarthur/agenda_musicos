@@ -1,6 +1,6 @@
 // hooks/useInstruments.ts
 import { useEffect, useState } from 'react';
-import { instrumentsService, type Instrument } from '../services/instrumentsApi';
+import { instrumentsApi, type Instrument } from '../services/instrumentsApi';
 import { showToast } from '../utils/toast';
 
 // Fallback para lista hardcoded (se API falhar)
@@ -51,7 +51,7 @@ export const useInstruments = () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await instrumentsService.list();
+      const data = await instrumentsApi.list();
       setInstruments(data);
     } catch (err) {
       console.error('Erro ao carregar instrumentos:', err);
@@ -65,7 +65,7 @@ export const useInstruments = () => {
 
   const createCustomInstrument = async (displayName: string): Promise<Instrument | null> => {
     try {
-      const newInstrument = await instrumentsService.createCustom(displayName);
+      const newInstrument = await instrumentsApi.createCustom(displayName);
 
       // Adiciona à lista local
       setInstruments(prev => [...prev, newInstrument]);
@@ -85,7 +85,7 @@ export const useInstruments = () => {
 
   const searchInstruments = async (query: string): Promise<Instrument[]> => {
     try {
-      return await instrumentsService.search(query);
+      return await instrumentsApi.search(query);
     } catch (err) {
       console.error('Erro ao buscar instrumentos:', err);
       return [];
