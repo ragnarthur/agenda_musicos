@@ -62,18 +62,20 @@ const AdminLogin: React.FC = () => {
         {/* Login Form */}
         <div className="bg-gray-800 rounded-2xl shadow-2xl p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email */}
+            {/* Email ou Username */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Email ou Usuário
+              </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
                 <input
-                  type="email"
+                  type="text"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   required
                   className="w-full pl-11 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-400 focus:border-transparent"
-                  placeholder="admin@gigflow.com"
+                  placeholder="admin_1 ou admin_1@gigflow.com.br"
                 />
               </div>
             </div>
