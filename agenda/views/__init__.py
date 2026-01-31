@@ -11,11 +11,12 @@ from .connections import ConnectionViewSet
 from .instruments import InstrumentViewSet
 
 # ViewSets médios (Phase 2)
+from .availabilities import AvailabilityViewSet
 from .musicians import MusicianViewSet
 
 # TODO: Refatorar ViewSets grandes do views.py antigo:
 # from .events import EventViewSet
-# from .availabilities import AvailabilityViewSet, LeaderAvailabilityViewSet
+# from .availabilities import LeaderAvailabilityViewSet
 
 __all__ = [
     # ViewSets já modularizados
@@ -23,9 +24,9 @@ __all__ = [
     "ConnectionViewSet",
     "InstrumentViewSet",
     # Phase 2 - ViewSets médios
+    "AvailabilityViewSet",
     "MusicianViewSet",
     # TODO: Adicionar quando refatorados
     # "EventViewSet",
-    # "AvailabilityViewSet",
     # "LeaderAvailabilityViewSet",
 ]
