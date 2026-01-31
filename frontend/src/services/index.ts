@@ -10,11 +10,23 @@ export { dedupeById } from './types';
 // Serviços individuais
 export { authService } from './authService';
 
-// TODO: Extrair dos outros services do api.ts antigo:
-// export { musicianService } from './musicianService';
-// export { eventService } from './eventService';
-// export { availabilityService } from './availabilityService';
-// export { connectionService } from './connectionService';
-// export { marketplaceService } from './marketplaceService';
-// export { registrationService } from './registrationService';
-// export { notificationService } from './notificationService';
+export { badgeService } from './badgeService';
+export { connectionService } from './connectionService';
+export { eventService } from './eventService';
+export { geocodingService } from './geocoding';
+export { ibgeService } from './ibge';
+export { instrumentsApi } from './instrumentsApi';
+export { leaderAvailabilityService } from './leaderAvailabilityService';
+export { marketplaceService } from './marketplaceService';
+export { musicianService } from './musicianService';
+export { notificationService } from './notificationService';
+export {
+  cityAdminService,
+  companyService,
+  contactRequestService,
+  googleAuthService,
+  inviteRegisterService,
+  musicianRequestService,
+  publicMusicianService,
+} from './publicApi';
+export { registrationService } from './registrationService';
