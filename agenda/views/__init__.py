@@ -10,8 +10,10 @@ from .badges import BadgeViewSet
 from .connections import ConnectionViewSet
 from .instruments import InstrumentViewSet
 
-# TODO: Refatorar ViewSets maiores do views.py antigo:
-# from .musicians import MusicianViewSet
+# ViewSets médios (Phase 2)
+from .musicians import MusicianViewSet
+
+# TODO: Refatorar ViewSets grandes do views.py antigo:
 # from .events import EventViewSet
 # from .availabilities import AvailabilityViewSet, LeaderAvailabilityViewSet
 
@@ -20,8 +22,9 @@ __all__ = [
     "BadgeViewSet",
     "ConnectionViewSet",
     "InstrumentViewSet",
+    # Phase 2 - ViewSets médios
+    "MusicianViewSet",
     # TODO: Adicionar quando refatorados
-    # "MusicianViewSet",
     # "EventViewSet",
     # "AvailabilityViewSet",
     # "LeaderAvailabilityViewSet",
