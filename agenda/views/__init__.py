@@ -2,7 +2,7 @@
 """
 Exports centralizados dos ViewSets.
 
-Esta estrutura modular substitui o monolítico views.py (2.692 linhas).
+Esta estrutura modular substitui o monolítico views_legacy.py (2.692 linhas).
 Refatoração completa - todos os ViewSets foram migrados para módulos separados.
 """
 

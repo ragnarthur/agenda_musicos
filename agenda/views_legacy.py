@@ -1,4 +1,4 @@
-# agenda/views.py
+# agenda/views_legacy.py
 import logging
 from datetime import date, datetime, time, timedelta
 from django.db import connection, models, transaction
