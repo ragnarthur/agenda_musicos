@@ -32,6 +32,7 @@ from .password_views import (
     PasswordResetRequestView,
 )
 from .registration_views import (
+    CheckEmailView,
     RegisterCompanyView,
     RegisterView,
     RegisterWithInviteView,
@@ -88,6 +89,7 @@ router.register("instruments", InstrumentViewSet, basename="instrument")
 urlpatterns = [
     # Registro de novos usuários (público)
     path("register/", RegisterView.as_view(), name="register"),
+    path("check-email/", CheckEmailView.as_view(), name="check-email"),
     path(
         "register-with-invite/",
         RegisterWithInviteView.as_view(),

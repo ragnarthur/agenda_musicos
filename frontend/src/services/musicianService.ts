@@ -19,13 +19,34 @@ export const musicianService = {
   getAll: async (params?: {
     search?: string;
     instrument?: string;
-    page?: number;
     page_size?: number;
+    fetchAll?: boolean;
   }): Promise<Musician[]> => {
-    const response = await api.get('/musicians/', { params });
-    const data = response.data as PaginatedResponse<Musician> | Musician[];
-    if (Array.isArray(data)) return data;
-    return data.results ?? [];
+    const pageSize = params?.page_size ?? 50;
+    const baseParams = { ...params, page_size: pageSize };
+
+    if (!params?.fetchAll) {
+      const response = await api.get('/musicians/', { params: { ...baseParams, page: 1 } });
+      const data = response.data as PaginatedResponse<Musician> | Musician[];
+      if (Array.isArray(data)) return data;
+      return data.results ?? [];
+    }
+
+    const results: Musician[] = [];
+    let page = 1;
+
+    while (true) {
+      const response = await api.get('/musicians/', {
+        params: { ...baseParams, page },
+      });
+      const data = response.data as PaginatedResponse<Musician> | Musician[];
+      if (Array.isArray(data)) return data;
+      results.push(...(data.results ?? []));
+      if (!data.next) break;
+      page += 1;
+    }
+
+    return results;
   },
 
   getAllPaginated: async (params?: {

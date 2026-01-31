@@ -64,6 +64,10 @@ A documentação inclui:
 - Exemplos de uso
 - Teste interativo direto no navegador
 
+### Notas rápidas de endpoints
+- `GET /api/check-email/?email=...` valida disponibilidade de email para cadastro.
+- `PATCH /api/musicians/avatar/` aceita uma URL (http/https) e salva o avatar no perfil do músico.
+
 ## 🔄 Atualizar Aplicação
 
 Após fazer mudanças no código e fazer push para o repositório:
