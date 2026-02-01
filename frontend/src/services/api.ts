@@ -59,6 +59,7 @@ api.interceptors.response.use(
       : false;
 
     const publicRoutes = [
+      '/',
       '/login',
       '/cadastro',
       '/login-empresa',

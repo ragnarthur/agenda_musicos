@@ -2,6 +2,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { adminService, api } from '../services/api';
 
+const SESSION_KEY = 'gigflow_admin_session';
+
 interface AdminUser {
   id: number;
   username: string;
@@ -39,8 +41,13 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       const admin = await adminService.getMe();
       setUser(admin);
-    } catch {
+    } catch (error) {
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      if (status !== 401) {
+        console.error('Erro ao verificar autenticação do admin:', error);
+      }
       setUser(null);
+      sessionStorage.removeItem(SESSION_KEY);
     } finally {
       setLoading(false);
     }
@@ -56,6 +63,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         throw new Error('Acesso negado. Esta área é restrita a administradores.');
       }
 
+      sessionStorage.setItem(SESSION_KEY, 'true');
       await checkAuth();
     },
     [checkAuth]
@@ -67,12 +75,25 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      sessionStorage.removeItem(SESSION_KEY);
       setUser(null);
     }
   }, []);
 
   useEffect(() => {
-    checkAuth();
+    const bootstrap = async () => {
+      const hasActiveSession = sessionStorage.getItem(SESSION_KEY);
+
+      if (!hasActiveSession) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      await checkAuth();
+    };
+
+    bootstrap();
   }, [checkAuth]);
 
   const value: AdminAuthContextType = {
