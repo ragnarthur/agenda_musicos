@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import AnimatedBackground from '../../Layout/AnimatedBackground';
+import AnimatedBackground from '../Layout/AnimatedBackground';
 import type { LucideIcon } from 'lucide-react';
 
 interface AdminHeroProps {
