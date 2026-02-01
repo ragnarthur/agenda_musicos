@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { adminService, api } from '../services/api';
+import { clearStoredRefreshToken, setStoredRefreshToken } from '../utils/tokenStorage';
 
 const SESSION_KEY = 'gigflow_admin_session';
 
@@ -48,6 +49,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
       setUser(null);
       sessionStorage.removeItem(SESSION_KEY);
+      clearStoredRefreshToken();
     } finally {
       setLoading(false);
     }
@@ -63,6 +65,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         throw new Error('Acesso negado. Esta área é restrita a administradores.');
       }
 
+      setStoredRefreshToken(data.refresh);
       sessionStorage.setItem(SESSION_KEY, 'true');
       await checkAuth();
     },
@@ -76,6 +79,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       console.error('Logout error:', error);
     } finally {
       sessionStorage.removeItem(SESSION_KEY);
+      clearStoredRefreshToken();
       setUser(null);
     }
   }, []);

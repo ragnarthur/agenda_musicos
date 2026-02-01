@@ -1,6 +1,7 @@
 // services/api.ts - Configuração base do Axios
 import axios, { AxiosError } from 'axios';
 import toast from 'react-hot-toast';
+import { getStoredRefreshToken, setStoredRefreshToken } from '../utils/tokenStorage';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -22,17 +23,46 @@ export const uploadApi = axios.create({
 
 let refreshingPromise: Promise<void> | null = null;
 
+const shouldFallbackToStoredRefresh = (error: unknown): boolean => {
+  if (!axios.isAxiosError(error)) return false;
+  const status = error.response?.status;
+  const detail = (error.response?.data as { detail?: string } | undefined)?.detail || '';
+  return status === 401 && detail.toLowerCase().includes('refresh token ausente');
+};
+
 const refreshAuthToken = async (): Promise<void> => {
   if (!refreshingPromise) {
-    refreshingPromise = axios
-      .post(`${API_URL}/token/refresh/`, {}, { withCredentials: true })
-      .then(() => {
-        refreshingPromise = null;
-      })
-      .catch(error => {
-        refreshingPromise = null;
-        throw error;
-      });
+    const doRefresh = async () => {
+      try {
+        const response = await axios.post(
+          `${API_URL}/token/refresh/`,
+          {},
+          { withCredentials: true }
+        );
+        setStoredRefreshToken((response.data as { refresh?: string } | undefined)?.refresh);
+        return;
+      } catch (error) {
+        if (!shouldFallbackToStoredRefresh(error)) {
+          throw error;
+        }
+
+        const storedRefresh = getStoredRefreshToken();
+        if (!storedRefresh) {
+          throw error;
+        }
+
+        const response = await axios.post(
+          `${API_URL}/token/refresh/`,
+          { refresh: storedRefresh },
+          { withCredentials: true }
+        );
+        setStoredRefreshToken((response.data as { refresh?: string } | undefined)?.refresh);
+      }
+    };
+
+    refreshingPromise = doRefresh().finally(() => {
+      refreshingPromise = null;
+    });
   }
   return refreshingPromise;
 };
