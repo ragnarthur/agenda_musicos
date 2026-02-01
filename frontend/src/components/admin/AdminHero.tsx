@@ -64,7 +64,7 @@ export const AdminHero: React.FC<AdminHeroProps> = ({ title, description, stats 
         )}
       </div>
 
-      <AnimatedBackground enableBlueWaves={false} enableParticles={true} />
+      <AnimatedBackground enableBlueWaves={true} enableParticles={true} />
     </motion.div>
   );
 };
