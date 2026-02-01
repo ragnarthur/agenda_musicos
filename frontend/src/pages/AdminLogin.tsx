@@ -1,34 +1,38 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Mail, Lock, LogIn } from 'lucide-react';
-import { adminService, api } from '../services/api';
+import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { showToast } from '../utils/toast';
 
 const AdminLogin: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { login } = useAdminAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
     try {
-      // Usar endpoint específico de admin
-      await api.post('/admin/token/', { username: email, password });
-
-      // Verificar se o usuário é admin
-      const admin = await adminService.getMe();
-      if (!admin.is_staff && !admin.is_superuser) {
-        showToast.error('Acesso negado. Esta área é restrita a administradores.');
-        return;
-      }
-
-      showToast.success('Login realizado com sucesso!');
+      await login(email, password);
       navigate('/admin/dashboard');
     } catch (error: unknown) {
-      showToast.apiError(error);
+      console.error('Admin login error:', error);
+      const err = error as { response?: { data?: { detail?: string } } } | { message?: string };
+      let errorMessage = 'Erro ao fazer login. Verifique suas credenciais.';
+
+      if ('response' in err && err.response?.data?.detail) {
+        errorMessage = err.response.data.detail;
+      } else if ('message' in err && err.message) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
+      showToast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -48,7 +52,7 @@ const AdminLogin: React.FC = () => {
 
         {/* Login Form */}
         <div className="bg-gray-800 rounded-2xl shadow-2xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email ou Username */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -62,9 +66,10 @@ const AdminLogin: React.FC = () => {
                   onChange={e => setEmail(e.target.value)}
                   required
                   className="w-full pl-11 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-400 focus:border-transparent"
-                  placeholder="admin_1 ou admin_1@gigflow.com.br"
+                  placeholder="admin_1"
                 />
               </div>
+              {error && <p className="mt-1 text-sm text-red-400">{error}</p>}
             </div>
 
             {/* Password */}

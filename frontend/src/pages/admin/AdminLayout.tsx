@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Users, MapPin, LogOut, Shield, Menu, X } from 'lucide-react';
-import { adminService, authService } from '../../services/api';
+import { useAdminAuth } from '../../contexts/AdminAuthContext';
 import { showToast } from '../../utils/toast';
 
 interface AdminLayoutProps {
@@ -12,30 +12,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const checkAdminAccess = async () => {
-      try {
-        const admin = await adminService.getMe();
-        if (!admin.is_staff && !admin.is_superuser) {
-          showToast.error('Acesso negado. Esta área é restrita a administradores.');
-          navigate('/admin/login');
-        }
-      } catch (error) {
-        console.error('Error checking admin access:', error);
-        navigate('/admin/login');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkAdminAccess();
-  }, [navigate]);
+  const { user, loading, logout } = useAdminAuth();
 
   const handleLogout = async () => {
     try {
-      await authService.logout();
+      await logout();
       showToast.success('Logout realizado com sucesso.');
       navigate('/admin/login');
     } catch (error) {
@@ -61,7 +42,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     },
   ];
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-amber-500"></div>

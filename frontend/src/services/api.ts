@@ -72,7 +72,6 @@ api.interceptors.response.use(
       '/admin/login',
     ];
     const isOnPublicRoute = publicRoutes.some(route => window.location.pathname.startsWith(route));
-    const isAdminRoute = window.location.pathname.startsWith('/admin');
 
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       if (isPublicAuthPath) {
@@ -90,7 +89,10 @@ api.interceptors.response.use(
         if (!isPublicAuthPath && !isOnPublicRoute && !isUserProfileCall) {
           toast.error('Sessão expirada. Faça login novamente.');
           setTimeout(() => {
-            if (isAdminRoute) {
+            if (
+              window.location.pathname.startsWith('/admin') &&
+              !window.location.pathname.startsWith('/admin/login')
+            ) {
               window.location.href = '/admin/login';
             } else if (window.location.pathname.startsWith('/empresa')) {
               window.location.href = '/login-empresa';

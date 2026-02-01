@@ -1,0 +1,88 @@
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { adminService, api } from '../services/api';
+
+interface AdminUser {
+  id: number;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  is_staff: boolean;
+  is_superuser: boolean;
+}
+
+interface AdminAuthContextType {
+  user: AdminUser | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+  login: (username: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  checkAuth: () => Promise<void>;
+}
+
+const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
+
+export const useAdminAuth = () => {
+  const context = useContext(AdminAuthContext);
+  if (context === undefined) {
+    throw new Error('useAdminAuth must be used within an AdminAuthProvider');
+  }
+  return context;
+};
+
+export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<AdminUser | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const checkAuth = useCallback(async () => {
+    try {
+      const admin = await adminService.getMe();
+      setUser(admin);
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const login = useCallback(
+    async (username: string, password: string) => {
+      const response = await api.post('/admin/token/', { username, password });
+
+      const data = response.data;
+
+      if (data.user_type !== 'admin') {
+        throw new Error('Acesso negado. Esta área é restrita a administradores.');
+      }
+
+      await checkAuth();
+    },
+    [checkAuth]
+  );
+
+  const logout = useCallback(async () => {
+    try {
+      await api.post('/token/logout/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  const value: AdminAuthContextType = {
+    user,
+    isAuthenticated: !!user,
+    loading,
+    login,
+    logout,
+    checkAuth,
+  };
+
+  return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>;
+};

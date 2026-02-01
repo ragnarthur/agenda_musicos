@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CompanyAuthProvider, useCompanyAuth } from './contexts/CompanyAuthContext';
+import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext';
 import Loading from './components/common/Loading';
 
 // Lazy load de páginas para otimizar o bundle inicial
@@ -59,11 +60,21 @@ const PageLoader: React.FC = () => (
 const useSmartAuth = () => {
   const { isAuthenticated: musicianAuth, user: musicianUser, loading: musicianLoading } = useAuth();
   const { isAuthenticated: companyAuth, organization, loading: companyLoading } = useCompanyAuth();
+  const { isAuthenticated: adminAuth, user: adminUser, loading: adminLoading } = useAdminAuth();
 
   const getAuthState = () => {
-    const loading = musicianLoading || companyLoading;
+    const loading = musicianLoading || companyLoading || adminLoading;
 
     if (loading) return { loading, isAuthenticated: false, userType: null };
+
+    if (adminAuth) {
+      return {
+        loading: false,
+        isAuthenticated: true,
+        userType: 'admin' as const,
+        user: adminUser,
+      };
+    }
 
     if (musicianAuth) {
       return {
@@ -130,6 +141,9 @@ const PublicRoute: React.FC<{ children: React.ReactElement }> = ({ children }) =
 
   // Se já estiver autenticado, redireciona para o dashboard correto
   if (isAuthenticated) {
+    if (userType === 'admin') {
+      return <Navigate to="/admin/dashboard" replace />;
+    }
     if (userType === 'company') {
       return <Navigate to="/empresa/dashboard" replace />;
     }
@@ -141,14 +155,14 @@ const PublicRoute: React.FC<{ children: React.ReactElement }> = ({ children }) =
 
 // Componente para rotas administrativas (requer is_staff)
 const AdminProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
-  const { isAuthenticated, loading, user: musicianUser } = useAuth();
+  const { isAuthenticated, loading } = useAdminAuth();
 
   if (loading) {
     return <PageLoader />;
   }
 
-  if (!isAuthenticated || !musicianUser?.user?.is_staff) {
-    return <Navigate to="/dashboard" replace />;
+  if (!isAuthenticated) {
+    return <Navigate to="/admin/login" replace />;
   }
 
   return children;
@@ -164,6 +178,9 @@ const LandingRoute: React.FC<{ children: React.ReactElement }> = ({ children }) 
 
   // Se autenticado, redireciona para dashboard correto
   if (isAuthenticated) {
+    if (userType === 'admin') {
+      return <Navigate to="/admin/dashboard" replace />;
+    }
     if (userType === 'company') {
       return <Navigate to="/empresa/dashboard" replace />;
     }
@@ -489,41 +506,31 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <CompanyAuthProvider>
-            <AppRoutes />
-            <Toaster
-              position="top-center"
-              containerStyle={{
-                marginTop: 'env(safe-area-inset-top)',
-                maxWidth: 'calc(100vw - 32px)',
-                padding: '0 16px',
-              }}
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: '#1f2937',
-                  color: '#f9fafb',
-                  borderRadius: '0.75rem',
-                  padding: '12px 16px',
-                  maxWidth: 'calc(100vw - 32px)',
-                  width: 'auto',
-                  wordBreak: 'break-word',
-                  overflowWrap: 'break-word',
-                },
-                success: {
-                  iconTheme: {
-                    primary: '#10b981',
-                    secondary: '#f9fafb',
+            <AdminAuthProvider>
+              <AppRoutes />
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  style: {
+                    background: '#1e293b',
+                    color: '#fff',
                   },
-                },
-                error: {
-                  iconTheme: {
-                    primary: '#ef4444',
-                    secondary: '#f9fafb',
+                  success: {
+                    iconTheme: {
+                      primary: '#22c55e',
+                      secondary: '#f9fafb',
+                    },
                   },
-                  duration: 5000,
-                },
-              }}
-            />
+                  error: {
+                    iconTheme: {
+                      primary: '#ef4444',
+                      secondary: '#f9fafb',
+                    },
+                    duration: 5000,
+                  },
+                }}
+              />
+            </AdminAuthProvider>
           </CompanyAuthProvider>
         </AuthProvider>
       </ThemeProvider>
