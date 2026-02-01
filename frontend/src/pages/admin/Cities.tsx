@@ -25,7 +25,35 @@ import {
 } from '../../services/publicApi';
 import { showToast } from '../../utils/toast';
 
-const VALID_UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
+const VALID_UFS = [
+  'AC',
+  'AL',
+  'AP',
+  'AM',
+  'BA',
+  'CE',
+  'DF',
+  'ES',
+  'GO',
+  'MA',
+  'MT',
+  'MS',
+  'MG',
+  'PA',
+  'PB',
+  'PR',
+  'PE',
+  'PI',
+  'RJ',
+  'RN',
+  'RS',
+  'RO',
+  'RR',
+  'SC',
+  'SP',
+  'SE',
+  'TO',
+];
 
 const Cities: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'stats' | 'management'>('stats');
@@ -42,14 +70,20 @@ const Cities: React.FC = () => {
   const [cityInfo, setCityInfo] = useState<City | null>(null);
   const [cityFormOpen, setCityFormOpen] = useState(false);
   const [editingCity, setEditingCity] = useState<City | null>(null);
-  const [formData, setFormData] = useState<CityCreate>({ name: '', state: '', status: 'planning', description: '', priority: 0 });
-  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+  const [formData, setFormData] = useState<CityCreate>({
+    name: '',
+    state: '',
+    status: 'planning',
+    description: '',
+    priority: 0,
+  });
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [formSubmitting, setFormSubmitting] = useState(false);
 
   const fetchExtendedStats = useCallback(async (signal?: AbortSignal) => {
     try {
       setLoading(true);
-      const data = await cityAdminService.getExtendedStats();
+      const data = await cityAdminService.getExtendedStats(signal);
       if (!signal?.aborted) {
         setExtendedStats(data);
       }
@@ -64,7 +98,7 @@ const Cities: React.FC = () => {
     }
   }, []);
 
-  const fetchCityStatsByStatus = useCallback(async (signal?: AbortSignal) => {
+  const fetchCityStats = useCallback(async (signal?: AbortSignal) => {
     try {
       setCityStatsLoading(true);
       const data = await cityAdminService.getRequestsByCity(signal);
@@ -85,7 +119,7 @@ const Cities: React.FC = () => {
   const fetchCities = useCallback(async (signal?: AbortSignal) => {
     try {
       setCitiesLoading(true);
-      const data = await cityAdminService.list(signal);
+      const data = await cityAdminService.list(undefined, signal);
       if (!signal?.aborted) {
         setCities(data);
       }
@@ -116,43 +150,6 @@ const Cities: React.FC = () => {
       if (!signal?.aborted) {
         setLoading(false);
       }
-    }
-  }, []);
-
-  const fetchCityStats = useCallback(async () => {
-    try {
-      setCityStatsLoading(true);
-      const data = await cityAdminService.getRequestsByCity();
-      setCityStats(data);
-    } catch (error) {
-      showToast.apiError(error);
-    } finally {
-      setCityStatsLoading(false);
-    }
-  }, []);
-
-  const fetchCities = useCallback(async () => {
-    try {
-      setCitiesLoading(true);
-      const data = await cityAdminService.list();
-      setCities(data);
-    } catch (error) {
-      showToast.apiError(error);
-    } finally {
-      setCitiesLoading(false);
-    }
-  }, []);
-
-  const fetchCityDetail = useCallback(async (city: string, state: string) => {
-    try {
-      setLoading(true);
-      const data = await cityAdminService.getRequestsByCityDetail(city, state);
-      setCityRequests(data.requests);
-      setCityInfo(data.city_info);
-    } catch (error) {
-      showToast.apiError(error);
-    } finally {
-      setLoading(false);
     }
   }, []);
 
@@ -232,7 +229,7 @@ const Cities: React.FC = () => {
   };
 
   const validateForm = (): boolean => {
-    const errors: {[key: string]: string} = {};
+    const errors: { [key: string]: string } = {};
 
     if (!formData.name || formData.name.trim().length < 2) {
       errors.name = 'Nome da cidade deve ter no mínimo 2 caracteres';
@@ -250,9 +247,10 @@ const Cities: React.FC = () => {
       errors.description = 'Descrição deve ter no máximo 500 caracteres';
     }
 
-    if (formData.priority < 0) {
+    const priorityValue = formData.priority ?? 0;
+    if (priorityValue < 0) {
       errors.priority = 'Prioridade deve ser no mínimo 0';
-    } else if (formData.priority > 999) {
+    } else if (priorityValue > 999) {
       errors.priority = 'Prioridade deve ser no máximo 999';
     }
 
@@ -792,9 +790,7 @@ const Cities: React.FC = () => {
                   placeholder="Ex: Monte Carmelo"
                   required
                 />
-                {formErrors.name && (
-                  <p className="text-sm text-red-600 mt-1">{formErrors.name}</p>
-                )}
+                {formErrors.name && <p className="text-sm text-red-600 mt-1">{formErrors.name}</p>}
               </div>
 
               <div>
@@ -848,7 +844,9 @@ const Cities: React.FC = () => {
                     }
                   }}
                   className={`w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40 ${
-                    formErrors.description ? 'border-red-500 focus:border-red-500' : 'border-gray-200'
+                    formErrors.description
+                      ? 'border-red-500 focus:border-red-500'
+                      : 'border-gray-200'
                   }`}
                   rows={3}
                   placeholder="Notas sobre a cidade..."
