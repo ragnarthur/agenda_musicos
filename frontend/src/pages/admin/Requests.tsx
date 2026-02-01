@@ -61,8 +61,14 @@ const Requests: React.FC = () => {
       const response = await musicianRequestService.approve(requestId, adminNotes || undefined);
       const origin = window.location.origin;
       const inviteLink = `${origin}/cadastro/invite?token=${response.invite_token}`;
-      await navigator.clipboard.writeText(inviteLink);
-      showToast.success('Solicitação aprovada! Link de convite copiado.');
+      
+      try {
+        await navigator.clipboard.writeText(inviteLink);
+        showToast.success('Solicitação aprovada! Link de convite copiado.');
+      } catch (clipboardError) {
+        showToast.success('Solicitação aprovada! Link: ' + inviteLink);
+      }
+      
       await fetchDashboardData();
       setSelectedRequest(null);
       setAdminNotes('');

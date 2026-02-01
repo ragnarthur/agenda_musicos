@@ -3,7 +3,12 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import type { AuthContextType, LoginCredentials, Musician } from '../types';
 import { authService, musicianService } from '../services/api';
-import { clearStoredRefreshToken, setStoredRefreshToken } from '../utils/tokenStorage';
+import {
+  clearStoredAccessToken,
+  clearStoredRefreshToken,
+  setStoredAccessToken,
+  setStoredRefreshToken,
+} from '../utils/tokenStorage';
 import { logError } from '../utils/logger';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,6 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Ignora erro de logout (pode não haver sessão)
         }
         setUser(null);
+        clearStoredAccessToken();
         clearStoredRefreshToken();
         setLoading(false);
         return;
@@ -45,6 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
         // Remove marcador se sessão expirou
         sessionStorage.removeItem(SESSION_KEY);
+        clearStoredAccessToken();
         clearStoredRefreshToken();
       } finally {
         setLoading(false);
@@ -56,6 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = useCallback(async (credentials: LoginCredentials) => {
     try {
       const data = await authService.login(credentials);
+      setStoredAccessToken(data.access);
       setStoredRefreshToken(data.refresh);
       sessionStorage.setItem(SESSION_KEY, 'true');
       const musician = await musicianService.getMe();
@@ -100,6 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       setUser(null);
       sessionStorage.removeItem(SESSION_KEY);
+      clearStoredAccessToken();
       clearStoredRefreshToken();
     }
   }, []);
@@ -124,6 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       // Remove marcador de sessão
       sessionStorage.removeItem(SESSION_KEY);
+      clearStoredAccessToken();
       clearStoredRefreshToken();
       setUser(null);
     }

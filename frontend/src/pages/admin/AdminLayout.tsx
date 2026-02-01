@@ -42,12 +42,17 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     },
   ];
 
-  if (loading || !user) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-amber-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-indigo-600"></div>
       </div>
     );
+  }
+
+  if (!user) {
+    navigate('/admin/login');
+    return null;
   }
 
   return (
@@ -55,7 +60,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       {/* Mobile Header */}
       <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Shield className="h-6 w-6 text-amber-600" />
+          <Shield className="h-6 w-6 text-indigo-600" />
           <span className="font-semibold text-gray-900">GigFlow Admin</span>
         </div>
         <button
@@ -86,7 +91,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       >
         {/* Logo & Brand */}
         <div className="hidden lg:flex items-center gap-2 px-6 py-4 border-b border-gray-200">
-          <Shield className="h-8 w-8 text-amber-600" />
+          <Shield className="h-8 w-8 text-indigo-600" />
           <div>
             <h1 className="font-bold text-gray-900 text-lg">GigFlow</h1>
             <p className="text-xs text-gray-500">Painel Administrativo</p>
@@ -106,11 +111,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 key={item.path}
                 to={item.path}
                 onClick={() => setSidebarOpen(false)}
-                className={`
+                 className={`
                   flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                   ${
                     isActive
-                      ? 'bg-amber-50 text-amber-700'
+                      ? 'bg-indigo-50 text-indigo-700'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }
                 `}
@@ -136,7 +141,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
       {/* Main Content */}
       <main className="lg:ml-64 min-h-screen">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">{children ?? <Outlet />}</div>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {children ?? <Outlet />}
+        </div>
       </main>
     </div>
   );

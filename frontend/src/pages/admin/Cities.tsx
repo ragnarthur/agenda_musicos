@@ -25,6 +25,8 @@ import {
 } from '../../services/publicApi';
 import { showToast } from '../../utils/toast';
 
+const VALID_UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
+
 const Cities: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'stats' | 'management'>('stats');
   const [extendedStats, setExtendedStats] = useState<DashboardStatsExtended | null>(null);
@@ -35,25 +37,85 @@ const Cities: React.FC = () => {
   const [cityStatsLoading, setCityStatsLoading] = useState(false);
   const [citiesLoading, setCitiesLoading] = useState(false);
   const [selectedCity, setSelectedCity] = useState<{ city: string; state: string } | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [cityRequests, setCityRequests] = useState<MusicianRequest[]>([]);
   const [cityInfo, setCityInfo] = useState<City | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
   const [cityFormOpen, setCityFormOpen] = useState(false);
   const [editingCity, setEditingCity] = useState<City | null>(null);
-  const [formData, setFormData] = useState<CityCreate>({
-    name: '',
-    state: '',
-    status: 'planning',
-    description: '',
-    priority: 0,
-  });
+  const [formData, setFormData] = useState<CityCreate>({ name: '', state: '', status: 'planning', description: '', priority: 0 });
+  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+  const [formSubmitting, setFormSubmitting] = useState(false);
 
-  const fetchExtendedStats = useCallback(async () => {
+  const fetchExtendedStats = useCallback(async (signal?: AbortSignal) => {
     try {
+      setLoading(true);
       const data = await cityAdminService.getExtendedStats();
-      setExtendedStats(data);
+      if (!signal?.aborted) {
+        setExtendedStats(data);
+      }
     } catch (error) {
-      console.error('Error fetching extended stats:', error);
+      if (!signal?.aborted) {
+        showToast.apiError(error);
+      }
+    } finally {
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
+    }
+  }, []);
+
+  const fetchCityStatsByStatus = useCallback(async (signal?: AbortSignal) => {
+    try {
+      setCityStatsLoading(true);
+      const data = await cityAdminService.getRequestsByCity(signal);
+      if (!signal?.aborted) {
+        setCityStats(data);
+      }
+    } catch (error) {
+      if (!signal?.aborted) {
+        showToast.apiError(error);
+      }
+    } finally {
+      if (!signal?.aborted) {
+        setCityStatsLoading(false);
+      }
+    }
+  }, []);
+
+  const fetchCities = useCallback(async (signal?: AbortSignal) => {
+    try {
+      setCitiesLoading(true);
+      const data = await cityAdminService.list(signal);
+      if (!signal?.aborted) {
+        setCities(data);
+      }
+    } catch (error) {
+      if (!signal?.aborted) {
+        showToast.apiError(error);
+      }
+    } finally {
+      if (!signal?.aborted) {
+        setCitiesLoading(false);
+      }
+    }
+  }, []);
+
+  const fetchCityDetail = useCallback(async (city: string, state: string, signal?: AbortSignal) => {
+    try {
+      setLoading(true);
+      const data = await cityAdminService.getRequestsByCityDetail(city, state, signal);
+      if (!signal?.aborted) {
+        setCityRequests(data.requests);
+        setCityInfo(data.city_info);
+      }
+    } catch (error) {
+      if (!signal?.aborted) {
+        showToast.apiError(error);
+      }
+    } finally {
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -95,21 +157,33 @@ const Cities: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchExtendedStats();
+    const abortController = new AbortController();
+    fetchExtendedStats(abortController.signal);
+    return () => {
+      abortController.abort();
+    };
   }, [fetchExtendedStats]);
 
   useEffect(() => {
+    const abortController = new AbortController();
     if (activeTab === 'stats') {
-      fetchCityStats();
+      fetchCityStats(abortController.signal);
     } else {
-      fetchCities();
+      fetchCities(abortController.signal);
     }
+    return () => {
+      abortController.abort();
+    };
   }, [activeTab, fetchCityStats, fetchCities]);
 
   useEffect(() => {
+    const abortController = new AbortController();
     if (selectedCity) {
-      fetchCityDetail(selectedCity.city, selectedCity.state);
+      fetchCityDetail(selectedCity.city, selectedCity.state, abortController.signal);
     }
+    return () => {
+      abortController.abort();
+    };
   }, [selectedCity, fetchCityDetail]);
 
   const handleSaveCity = async (data: CityCreate) => {
@@ -157,13 +231,52 @@ const Cities: React.FC = () => {
     }
   };
 
+  const validateForm = (): boolean => {
+    const errors: {[key: string]: string} = {};
+
+    if (!formData.name || formData.name.trim().length < 2) {
+      errors.name = 'Nome da cidade deve ter no mínimo 2 caracteres';
+    } else if (formData.name.trim().length > 100) {
+      errors.name = 'Nome da cidade deve ter no máximo 100 caracteres';
+    }
+
+    if (!formData.state || formData.state.trim() === '') {
+      errors.state = 'Estado é obrigatório';
+    } else if (!VALID_UFS.includes(formData.state.toUpperCase())) {
+      errors.state = 'Estado inválido. Use uma UF brasileira válida';
+    }
+
+    if (formData.description && formData.description.length > 500) {
+      errors.description = 'Descrição deve ter no máximo 500 caracteres';
+    }
+
+    if (formData.priority < 0) {
+      errors.priority = 'Prioridade deve ser no mínimo 0';
+    } else if (formData.priority > 999) {
+      errors.priority = 'Prioridade deve ser no máximo 999';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (formSubmitting) return;
+    if (!validateForm()) {
+      return;
+    }
+    setFormSubmitting(true);
     try {
       await handleSaveCity(formData);
       setFormData({ name: '', state: '', status: 'planning', description: '', priority: 0 });
+      setFormErrors({});
+      setCityFormOpen(false);
+      setEditingCity(null);
     } catch {
       // Error already handled
+    } finally {
+      setFormSubmitting(false);
     }
   };
 
@@ -667,11 +780,21 @@ const Cities: React.FC = () => {
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40"
+                  onChange={e => {
+                    setFormData({ ...formData, name: e.target.value });
+                    if (formErrors.name) {
+                      setFormErrors({ ...formErrors, name: '' });
+                    }
+                  }}
+                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40 ${
+                    formErrors.name ? 'border-red-500 focus:border-red-500' : 'border-gray-200'
+                  }`}
                   placeholder="Ex: Monte Carmelo"
                   required
                 />
+                {formErrors.name && (
+                  <p className="text-sm text-red-600 mt-1">{formErrors.name}</p>
+                )}
               </div>
 
               <div>
@@ -679,14 +802,22 @@ const Cities: React.FC = () => {
                 <input
                   type="text"
                   value={formData.state}
-                  onChange={e =>
-                    setFormData({ ...formData, state: e.target.value.toUpperCase().slice(0, 2) })
-                  }
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40"
+                  onChange={e => {
+                    setFormData({ ...formData, state: e.target.value.toUpperCase().slice(0, 2) });
+                    if (formErrors.state) {
+                      setFormErrors({ ...formErrors, state: '' });
+                    }
+                  }}
+                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40 ${
+                    formErrors.state ? 'border-red-500 focus:border-red-500' : 'border-gray-200'
+                  }`}
                   placeholder="Ex: MG"
                   maxLength={2}
                   required
                 />
+                {formErrors.state && (
+                  <p className="text-sm text-red-600 mt-1">{formErrors.state}</p>
+                )}
               </div>
 
               <div>
@@ -710,11 +841,24 @@ const Cities: React.FC = () => {
                 </label>
                 <textarea
                   value={formData.description || ''}
-                  onChange={e => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40"
+                  onChange={e => {
+                    setFormData({ ...formData, description: e.target.value });
+                    if (formErrors.description) {
+                      setFormErrors({ ...formErrors, description: '' });
+                    }
+                  }}
+                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40 ${
+                    formErrors.description ? 'border-red-500 focus:border-red-500' : 'border-gray-200'
+                  }`}
                   rows={3}
                   placeholder="Notas sobre a cidade..."
                 />
+                {formErrors.description && (
+                  <p className="text-sm text-red-600 mt-1">{formErrors.description}</p>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  {formData.description?.length || 0}/500 caracteres
+                </p>
               </div>
 
               <div>
@@ -722,13 +866,22 @@ const Cities: React.FC = () => {
                 <input
                   type="number"
                   value={formData.priority}
-                  onChange={e =>
-                    setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })
-                  }
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40"
+                  onChange={e => {
+                    setFormData({ ...formData, priority: parseInt(e.target.value) || 0 });
+                    if (formErrors.priority) {
+                      setFormErrors({ ...formErrors, priority: '' });
+                    }
+                  }}
+                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40 ${
+                    formErrors.priority ? 'border-red-500 focus:border-red-500' : 'border-gray-200'
+                  }`}
                   min={0}
+                  max={999}
                 />
-                <p className="text-xs text-gray-500 mt-1">Maior = mais importante</p>
+                {formErrors.priority && (
+                  <p className="text-sm text-red-600 mt-1">{formErrors.priority}</p>
+                )}
+                <p className="text-xs text-gray-500 mt-1">Maior = mais importante (0-999)</p>
               </div>
 
               <div className="flex justify-end gap-2 pt-4">
@@ -744,6 +897,7 @@ const Cities: React.FC = () => {
                       description: '',
                       priority: 0,
                     });
+                    setFormErrors({});
                   }}
                   className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
                 >
@@ -751,9 +905,10 @@ const Cities: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-lg bg-amber-600 text-white hover:bg-amber-700"
+                  disabled={formSubmitting}
+                  className="px-4 py-2 rounded-lg bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {editingCity ? 'Salvar' : 'Criar'}
+                  {formSubmitting ? 'Salvando...' : editingCity ? 'Salvar' : 'Criar'}
                 </button>
               </div>
             </form>

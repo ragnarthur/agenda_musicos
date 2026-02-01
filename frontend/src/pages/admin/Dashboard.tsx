@@ -1,13 +1,14 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { TrendingUp, Users, Building2 } from 'lucide-react';
 import { cityAdminService, type DashboardStatsExtended } from '../../services/publicApi';
+import { AdminStatCard, AdminHero, AdminCard } from '../../components/admin';
 import { showToast } from '../../utils/toast';
 
 const AdminDashboard: React.FC = () => {
   const [extendedStats, setExtendedStats] = useState<DashboardStatsExtended | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch extended stats
   const fetchExtendedStats = useCallback(async () => {
     try {
       const data = await cityAdminService.getExtendedStats();
@@ -26,93 +27,89 @@ const AdminDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} className="bg-white rounded-lg shadow p-4 animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-12 mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded w-20"></div>
-          </div>
-        ))}
+      <div className="space-y-6">
+        <AdminHero
+          title="Painel Administrativo"
+          description="Gerencie solicitações, cidades e métricas da plataforma"
+        />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => (
+            <AdminStatCard
+              key={i}
+              label="Carregando..."
+              value="..."
+              icon={TrendingUp}
+              color="indigo"
+              className="animate-pulse"
+            />
+          ))}
+        </div>
       </div>
     );
   }
 
+  const heroStats = extendedStats ? [
+    { label: 'Total Solicitações', value: extendedStats.requests.total, icon: TrendingUp },
+    { label: 'Pendentes', value: extendedStats.requests.pending, icon: TrendingUp },
+    { label: 'Músicos Ativos', value: extendedStats.musicians.total, icon: Users },
+    { label: 'Cidades Parceiras', value: extendedStats.cities.partner, icon: Building2 },
+  ] : [];
+
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard</h1>
-        <p className="text-gray-600">Visão geral da plataforma</p>
-      </div>
+      {/* Hero Section */}
+      <AdminHero
+        title="Painel Administrativo"
+        description="Gerencie solicitações, cidades e métricas da plataforma"
+        stats={heroStats}
+      />
 
       {/* Extended Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <TrendingUp className="h-5 w-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">
-                {extendedStats?.requests.total || 0}
-              </p>
-              <p className="text-xs text-gray-500">Total Solicitações</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <TrendingUp className="h-5 w-5 text-yellow-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">
-                {extendedStats?.requests.pending || 0}
-              </p>
-              <p className="text-xs text-gray-500">Pendentes</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Users className="h-5 w-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">
-                {extendedStats?.musicians.total || 0}
-              </p>
-              <p className="text-xs text-gray-500">Músicos Ativos</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Building2 className="h-5 w-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">
-                {extendedStats?.cities.partner || 0}
-              </p>
-              <p className="text-xs text-gray-500">Cidades Parceiras</p>
-            </div>
-          </div>
-        </div>
+        <AdminStatCard
+          label="Total Solicitações"
+          value={extendedStats?.requests.total || 0}
+          icon={TrendingUp}
+          color="blue"
+        />
+        <AdminStatCard
+          label="Pendentes"
+          value={extendedStats?.requests.pending || 0}
+          icon={TrendingUp}
+          color="amber"
+        />
+        <AdminStatCard
+          label="Músicos Ativos"
+          value={extendedStats?.musicians.total || 0}
+          icon={Users}
+          color="green"
+        />
+        <AdminStatCard
+          label="Cidades Parceiras"
+          value={extendedStats?.cities.partner || 0}
+          icon={Building2}
+          color="indigo"
+        />
       </div>
 
       {/* Top Cities */}
       {extendedStats?.top_cities && extendedStats.top_cities.length > 0 && (
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Top Cidades</h2>
+        <AdminCard>
+          <motion.h2
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-2xl font-bold text-gray-900 mb-4"
+          >
+            Top Cidades
+          </motion.h2>
           <div className="space-y-3">
             {extendedStats.top_cities.map((city, index) => (
-              <div
+              <motion.div
                 key={`${city.city}-${city.state}-${index}`}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="flex items-center justify-between p-3 md:p-4 bg-indigo-50/50 rounded-lg hover:bg-indigo-50 transition-colors"
               >
                 <div>
                   <span className="font-medium text-gray-900">
@@ -120,13 +117,13 @@ const AdminDashboard: React.FC = () => {
                   </span>
                   <span className="ml-3 text-sm text-gray-600">{city.total} solicitações</span>
                 </div>
-                <span className="text-sm text-yellow-600 font-medium">
+                <span className="text-sm font-medium text-amber-600">
                   {city.pending} pendentes
                 </span>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </AdminCard>
       )}
     </div>
   );

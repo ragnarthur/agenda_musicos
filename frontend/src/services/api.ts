@@ -1,7 +1,12 @@
 // services/api.ts - Configuração base do Axios
 import axios, { AxiosError } from 'axios';
 import toast from 'react-hot-toast';
-import { getStoredRefreshToken, setStoredRefreshToken } from '../utils/tokenStorage';
+import {
+  getStoredAccessToken,
+  getStoredRefreshToken,
+  setStoredAccessToken,
+  setStoredRefreshToken,
+} from '../utils/tokenStorage';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -39,15 +44,18 @@ const refreshAuthToken = async (): Promise<void> => {
           {},
           { withCredentials: true }
         );
+        setStoredAccessToken((response.data as { access?: string } | undefined)?.access);
         setStoredRefreshToken((response.data as { refresh?: string } | undefined)?.refresh);
         return;
       } catch (error) {
-        if (!shouldFallbackToStoredRefresh(error)) {
+        const storedRefresh = getStoredRefreshToken();
+        const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+
+        if (!storedRefresh) {
           throw error;
         }
 
-        const storedRefresh = getStoredRefreshToken();
-        if (!storedRefresh) {
+        if (status !== 401 && !shouldFallbackToStoredRefresh(error)) {
           throw error;
         }
 
@@ -56,6 +64,7 @@ const refreshAuthToken = async (): Promise<void> => {
           { refresh: storedRefresh },
           { withCredentials: true }
         );
+        setStoredAccessToken((response.data as { access?: string } | undefined)?.access);
         setStoredRefreshToken((response.data as { refresh?: string } | undefined)?.refresh);
       }
     };
@@ -66,6 +75,17 @@ const refreshAuthToken = async (): Promise<void> => {
   }
   return refreshingPromise;
 };
+
+// Interceptor para injetar Authorization quando houver access token armazenado
+api.interceptors.request.use(config => {
+  const accessToken = getStoredAccessToken();
+  if (accessToken) {
+    const headers = config.headers ?? {};
+    headers.Authorization = `Bearer ${accessToken}`;
+    config.headers = headers;
+  }
+  return config;
+});
 
 // Interceptor para refresh de token
 api.interceptors.response.use(

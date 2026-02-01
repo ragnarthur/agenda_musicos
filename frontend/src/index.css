@@ -1598,10 +1598,136 @@
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(-4px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
+
+/* Admin Card Styles */
+.admin-card {
+  @apply bg-white/95 backdrop-blur-sm rounded-xl border border-gray-100 shadow-lg;
+}
+
+.admin-card-hover {
+  @apply hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300;
+}
+
+/* Admin Badge Styles */
+.admin-badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+  }
+
+  .admin-badge-sm {
+    @apply px-2 py-0.5 text-xs;
+  }
+
+  .admin-badge-md {
+    @apply px-3 py-1 text-sm;
+  }
+
+  .admin-badge-pending {
+    @apply bg-amber-100 text-amber-800;
+  }
+
+  .admin-badge-approved,
+  .admin-badge-active {
+    @apply bg-green-100 text-green-800;
+  }
+
+  .admin-badge-rejected,
+  .admin-badge-inactive {
+    @apply bg-red-100 text-red-800;
+  }
+
+  .admin-badge-planned {
+    @apply bg-indigo-100 text-indigo-800;
+  }
+
+  /* Admin Button Styles */
+  .btn-admin-primary {
+    @apply bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-all duration-200;
+  }
+
+  .btn-admin-secondary {
+    @apply bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium rounded-lg transition-all duration-200;
+  }
+
+  .btn-admin-danger {
+    @apply bg-red-50 hover:bg-red-100 text-red-600 font-medium rounded-lg transition-all duration-200;
+  }
+
+  .btn-admin-success {
+    @apply bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all duration-200;
+  }
+
+  .btn-admin-ghost {
+    @apply bg-transparent hover:bg-gray-100 text-gray-700 font-medium rounded-lg transition-all duration-200;
+  }
+
+  /* Admin Hero Styles */
+  .admin-hero {
+    @apply bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-lg relative overflow-hidden;
+  }
+
+  .admin-hero-text {
+    @apply text-white;
+  }
+
+  /* Admin Tab Styles */
+  .admin-tabs {
+    @apply bg-gray-100 rounded-xl p-1 inline-flex gap-1;
+  }
+
+  .admin-tab {
+    @apply px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200;
+  }
+
+  .admin-tab-active {
+    @apply bg-indigo-600 text-white shadow-md;
+  }
+
+  .admin-tab-inactive {
+    @apply text-gray-600 hover:bg-white hover:text-gray-900;
+  }
+
+  /* Animations */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Mobile-specific */
+  @media (max-width: 1024px) {
+    .admin-card {
+      @apply p-4;
+    }
+
+    .admin-stats-grid {
+      @apply grid-cols-2;
+    }
+
+    .admin-tabs {
+      @apply w-full overflow-x-auto;
+    }
+  }
+
+  /* Touch-friendly (mobile) */
+  @media (hover: none) {
+    .admin-card-hover {
+      @apply hover:scale-100 hover:translate-y-0;
+    }
+  }

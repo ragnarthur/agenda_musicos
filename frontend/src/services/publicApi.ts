@@ -498,25 +498,26 @@ export const googleAuthService = {
 // =============================================================================
 
 export const cityAdminService = {
-  getExtendedStats: async (): Promise<DashboardStatsExtended> => {
-    const response = await api.get('/admin/dashboard-stats-extended/');
+  getExtendedStats: async (signal?: AbortSignal): Promise<DashboardStatsExtended> => {
+    const response = await api.get('/admin/dashboard-stats-extended/', { signal });
     return response.data;
   },
 
-  getRequestsByCity: async (): Promise<CityStats[]> => {
-    const response = await api.get('/admin/requests-by-city/');
+  getRequestsByCity: async (signal?: AbortSignal): Promise<CityStats[]> => {
+    const response = await api.get('/admin/requests-by-city/', { signal });
     return response.data;
   },
 
-  getRequestsByCityDetail: async (city: string, state: string): Promise<CityRequestsDetail> => {
+  getRequestsByCityDetail: async (city: string, state: string, signal?: AbortSignal): Promise<CityRequestsDetail> => {
     const response = await api.get(
-      `/admin/requests-by-city/${encodeURIComponent(city)}/${encodeURIComponent(state)}/`
+      `/admin/requests-by-city/${encodeURIComponent(city)}/${encodeURIComponent(state)}/`,
+      { signal }
     );
     return response.data;
   },
 
-  list: async (params?: { status?: CityStatus }): Promise<City[]> => {
-    const response = await api.get('/admin/cities/', { params });
+  list: async (params?: { status?: CityStatus }, signal?: AbortSignal): Promise<City[]> => {
+    const response = await api.get('/admin/cities/', { params, signal });
     return response.data;
   },
 

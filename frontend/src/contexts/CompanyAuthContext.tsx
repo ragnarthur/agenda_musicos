@@ -10,7 +10,12 @@ import React, {
 } from 'react';
 import toast from 'react-hot-toast';
 import { companyService, type Organization } from '../services/publicApi';
-import { clearStoredRefreshToken, setStoredRefreshToken } from '../utils/tokenStorage';
+import {
+  clearStoredAccessToken,
+  clearStoredRefreshToken,
+  setStoredAccessToken,
+  setStoredRefreshToken,
+} from '../utils/tokenStorage';
 
 interface CompanyAuthContextType {
   organization: Organization | null;
@@ -49,6 +54,7 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
         if (!hasActiveSession) {
           // Navegador foi fechado e reaberto - força novo login
           setOrganization(null);
+          clearStoredAccessToken();
           clearStoredRefreshToken();
           setLoading(false);
           return;
@@ -90,6 +96,7 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
 
       // Marcar sessão como ativa
       sessionStorage.setItem(SESSION_KEY, 'true');
+      setStoredAccessToken(response.access);
       setStoredRefreshToken(response.refresh);
 
       // Armazenar dados da organização (tokens ficam em cookies httpOnly)
@@ -115,6 +122,7 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
   }) => {
     // Marcar sessão como ativa
     sessionStorage.setItem(SESSION_KEY, 'true');
+    setStoredAccessToken(payload.access);
     setStoredRefreshToken(payload.refresh);
 
     // Armazenar dados da organização
@@ -138,6 +146,7 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
     // Limpar sessionStorage
     sessionStorage.removeItem(SESSION_KEY);
     sessionStorage.removeItem('companyOrganization');
+    clearStoredAccessToken();
     clearStoredRefreshToken();
 
     // Limpar estado
