@@ -45,9 +45,9 @@ fi
 
 echo "🚀 Iniciando aplicativo..."
 
-# Executar o comando passado como argumento (ou o padrão)
+# Executar o comando como appuser usando gosu
 if [ "$1" = "gunicorn" ]; then
-    exec gunicorn config.wsgi:application \
+    exec gosu appuser gunicorn config.wsgi:application \
         --bind 0.0.0.0:8000 \
         --workers 3 \
         --threads 2 \
@@ -55,5 +55,5 @@ if [ "$1" = "gunicorn" ]; then
         --access-logfile - \
         --error-logfile -
 else
-    exec "$@"
+    exec gosu appuser "$@"
 fi

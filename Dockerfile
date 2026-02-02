@@ -44,9 +44,6 @@ RUN chown -R appuser:appuser /app
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Mudar para usuário não-root
-USER appuser
-
 ENV DJANGO_SETTINGS_MODULE=config.settings
 
 EXPOSE 8000
