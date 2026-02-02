@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Trash2, Shield, UserPlus, Search } from 'lucide-react';
+import { Trash2, Shield, Search, Users, UserCheck, User as UserIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { adminService } from '../../services/adminService';
-import { AdminStatCard, AdminHero, AdminCard } from '../../components/admin';
+import { AdminHero, AdminCard } from '../../components/admin';
 import { showToast } from '../../utils/toast';
 
 interface User {
@@ -124,9 +123,9 @@ const AdminUsers: React.FC = () => {
         title="Gerenciamento de Usuários"
         description="Liste e gerencie todos os usuários da plataforma"
         stats={[
-          { label: 'Total Usuários', value: users.length },
-          { label: 'Staff', value: users.filter(u => u.is_staff).length },
-          { label: 'Superadmins', value: users.filter(u => u.is_superuser).length },
+          { label: 'Total Usuários', value: users.length, icon: Users },
+          { label: 'Staff', value: users.filter(u => u.is_staff).length, icon: Shield },
+          { label: 'Superadmins', value: users.filter(u => u.is_superuser).length, icon: UserCheck },
         ]}
       />
 
@@ -161,7 +160,7 @@ const AdminUsers: React.FC = () => {
               >
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center justify-center w-12 h-12 bg-indigo-100 rounded-full">
-                    <User className="text-indigo-600 w-6 h-6" />
+                    <UserIcon className="text-indigo-600 w-6 h-6" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">

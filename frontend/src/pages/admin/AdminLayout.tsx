@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, MapPin, LogOut, Shield, Menu, X, UserPlus, Trash2 } from 'lucide-react';
+import { LayoutDashboard, Users, MapPin, LogOut, Shield, Menu, X, UserPlus, Building2 } from 'lucide-react';
 import { useAdminAuth } from '../../contexts/AdminAuthContext';
 import { showToast } from '../../utils/toast';
 import AnimatedBackground from '../../components/Layout/AnimatedBackground';
@@ -40,6 +40,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       icon: UserPlus,
       label: 'Usuários',
       path: '/admin/usuarios',
+    },
+    {
+      icon: Building2,
+      label: 'Empresas',
+      path: '/admin/empresas',
     },
     {
       icon: MapPin,

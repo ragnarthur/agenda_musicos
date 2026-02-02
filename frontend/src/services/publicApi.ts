@@ -544,3 +544,22 @@ export const cityAdminService = {
     return response.data;
   },
 };
+
+export interface OrganizationWithOwner extends Omit<Organization, 'owner'> {
+  owner_data: {
+    id: number;
+    username: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    is_staff: boolean;
+    is_superuser: boolean;
+  } | null;
+}
+
+export const adminOrganizationService = {
+  list: async (): Promise<OrganizationWithOwner[]> => {
+    const response = await api.get('/admin/organizations/');
+    return response.data;
+  },
+};

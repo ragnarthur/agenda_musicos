@@ -18,8 +18,9 @@ from .serializers import (
     AdminUserSerializer,
     AdminCreateSerializer,
     AdminUpdateSerializer,
+    OrganizationSerializer,
 )
-from .models import AuditLog, MusicianRequest
+from .models import AuditLog, MusicianRequest, Organization
 from notifications.services.email_service import send_user_deletion_email
 
 User = get_user_model()
@@ -296,5 +297,42 @@ def delete_user(request, pk):
         logger.error(f"Error deleting user {pk}: {str(e)}", exc_info=True)
         return Response(
             {"error": "Erro ao deletar usuário"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def list_organizations(request):
+    """Lista todas as organizações/empresas para admin"""
+    try:
+        organizations = Organization.objects.select_related("owner").order_by(
+            "-created_at"
+        )
+
+        data = []
+        for org in organizations:
+            org_data = OrganizationSerializer(org, context={"request": request}).data
+
+            owner_data = None
+            if org.owner:
+                owner_data = {
+                    "id": org.owner.id,
+                    "username": org.owner.username,
+                    "email": org.owner.email,
+                    "first_name": org.owner.first_name,
+                    "last_name": org.owner.last_name,
+                    "is_staff": org.owner.is_staff,
+                    "is_superuser": org.owner.is_superuser,
+                }
+
+            org_data["owner_data"] = owner_data
+            data.append(org_data)
+
+        return Response(data)
+    except Exception as e:
+        logger.error(f"Error listing organizations: {str(e)}", exc_info=True)
+        return Response(
+            {"error": "Erro ao listar organizações"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )

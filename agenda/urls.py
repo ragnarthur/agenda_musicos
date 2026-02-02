@@ -9,6 +9,7 @@ from .admin_management_views import (
     delete_user,
     get_admin_user,
     list_admin_users,
+    list_organizations,
     reset_admin_password,
     update_admin_user,
 )
@@ -291,6 +292,11 @@ urlpatterns = [
     # Admin - User Management (apenas owners)
     # =========================================================================
     path("admin/users/", list_admin_users, name="admin-users-list"),
+    path(
+        "admin/organizations/",
+        list_organizations,
+        name="admin-organizations-list",
+    ),
     path("admin/users/<int:pk>/", get_admin_user, name="admin-users-detail"),
     path("admin/users/create/", create_admin_user, name="admin-users-create"),
     path("admin/users/<int:pk>/update/", update_admin_user, name="admin-users-update"),

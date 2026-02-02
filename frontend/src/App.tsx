@@ -16,6 +16,7 @@ const AdminDashboardPage = lazy(() => import('./pages/admin/Dashboard'));
 const AdminRequests = lazy(() => import('./pages/admin/Requests'));
 const AdminCities = lazy(() => import('./pages/admin/Cities'));
 const AdminUsers = lazy(() => import('./pages/admin/Users'));
+const AdminOrganizations = lazy(() => import('./pages/admin/Organizations'));
 const StatusPage = lazy(() => import('./components/StatusPage'));
 const Login = lazy(() => import('./pages/Login'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -489,6 +490,16 @@ function AppRoutes() {
             <AdminProtectedRoute>
               <AdminLayout>
                 <AdminUsers />
+              </AdminLayout>
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/empresas"
+          element={
+            <AdminProtectedRoute>
+              <AdminLayout>
+                <AdminOrganizations />
               </AdminLayout>
             </AdminProtectedRoute>
           }
