@@ -3,39 +3,20 @@ import { Trash2, Shield, Search, Users, UserCheck, User as UserIcon } from 'luci
 import { motion } from 'framer-motion';
 import { AdminHero, AdminCard } from '../../components/admin';
 import { showToast } from '../../utils/toast';
-
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  is_staff: boolean;
-  is_superuser: boolean;
-  date_joined: string;
-}
-
-interface UsersListResponse {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: User[];
-}
+import { adminService, type UsersListResponse } from '../../services/adminService';
 
 const AdminUsers: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UsersListResponse['results']>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [deleting, setDeleting] = useState<number | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [userToDelete, setUserToDelete] = useState<UsersListResponse['results'][0] | null>(null);
 
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      // Usar a rota de listagem de músicos para pegar todos os usuários
-      const response = await fetch('/api/musicians/');
-      const data: UsersListResponse = await response.json();
+      const data = await adminService.listUsers();
       setUsers(data.results || []);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -51,14 +32,20 @@ const AdminUsers: React.FC = () => {
 
   const filteredUsers = users.filter(user => {
     const searchLower = searchTerm.toLowerCase();
+    const username = user.username || '';
+    const email = user.email || '';
+    const firstName = user.first_name || '';
+    const lastName = user.last_name || '';
+    const fullName = `${firstName} ${lastName}`.trim();
+
     return (
-      user.username.toLowerCase().includes(searchLower) ||
-      user.email.toLowerCase().includes(searchLower) ||
-      `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchLower)
+      username.toLowerCase().includes(searchLower) ||
+      email.toLowerCase().includes(searchLower) ||
+      fullName.toLowerCase().includes(searchLower)
     );
   });
 
-  const handleDeleteClick = (user: User) => {
+  const handleDeleteClick = (user: UsersListResponse['results'][0]) => {
     setUserToDelete(user);
     setShowConfirmModal(true);
   };

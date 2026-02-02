@@ -9,6 +9,7 @@ from .admin_management_views import (
     delete_user,
     get_admin_user,
     list_admin_users,
+    list_all_users,
     list_organizations,
     reset_admin_password,
     update_admin_user,
@@ -289,8 +290,9 @@ urlpatterns = [
         name="admin-city-change-status",
     ),
     # =========================================================================
-    # Admin - User Management (apenas owners)
+    # Admin - User Management
     # =========================================================================
+    path("admin/users/all/", list_all_users, name="admin-all-users-list"),
     path("admin/users/", list_admin_users, name="admin-users-list"),
     path(
         "admin/organizations/",

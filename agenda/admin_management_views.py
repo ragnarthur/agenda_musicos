@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated, IsAppOwner])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def list_admin_users(request):
     """Lista todos os usuários admin (apenas owners)"""
     admins = User.objects.filter(Q(is_staff=True) | Q(is_superuser=True)).order_by(
@@ -38,6 +38,22 @@ def list_admin_users(request):
 
     serializer = AdminUserSerializer(admins, many=True)
     return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def list_all_users(request):
+    """Lista todos os usuários da plataforma para admin"""
+    try:
+        users = User.objects.all().order_by("-date_joined")
+        serializer = AdminUserSerializer(users, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        logger.error(f"Error listing all users: {str(e)}", exc_info=True)
+        return Response(
+            {"error": "Erro ao listar usuários"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 @api_view(["GET"])
