@@ -6,6 +6,7 @@ from rest_framework.routers import DefaultRouter
 from .admin_management_views import (
     create_admin_user,
     delete_admin_user,
+    delete_user,
     get_admin_user,
     list_admin_users,
     reset_admin_password,
@@ -302,6 +303,11 @@ urlpatterns = [
         "admin/users/<int:pk>/reset-password/",
         reset_admin_password,
         name="admin-users-reset-password",
+    ),
+    path(
+        "users/<int:pk>/delete/",
+        delete_user,
+        name="user-delete",
     ),
     # =========================================================================
     # Public Status Page

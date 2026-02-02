@@ -1,0 +1,21 @@
+Sua conta GigFlow foi deletada
+
+Olá, {{ first_name }}!
+
+Informamos que sua conta no GigFlow foi deletada por um administrador.
+
+Detalhes da deleção:
+- Email da conta: {{ user_email }}
+- Deletada por: {{ admin_name }}
+- Data: {{ timestamp }}
+
+Se você acredita que isso foi um erro ou deseja se cadastrar novamente, você pode acessar:
+{{ frontend_url }}
+
+IMPORTANTE: Todos os seus dados (perfil, eventos, conexões, etc.) foram permanentemente removidos do sistema.
+
+Se você tiver alguma dúvida sobre sua conta, entre em contato conosco.
+
+---
+GigFlow - Sua agenda de shows profissional
+Acesse: {{ frontend_url }}

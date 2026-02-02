@@ -1,0 +1,56 @@
+{% extends 'emails/base.html' %}
+
+{% block title %}Sua conta foi deletada{% endblock %}
+
+{% block preview_text %}Informamos que sua conta no GigFlow foi deletada por um administrador{% endblock %}
+
+{% block content %}
+<h2 style="margin: 0 0 16px 0; color: #1f2937; font-size: 22px; font-weight: 600; line-height: 1.3;">
+    Sua conta foi deletada
+</h2>
+
+<p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+    Olá, <strong style="color: #1f2937;">{{ first_name }}</strong>!
+</p>
+
+<p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+    Informamos que sua conta no <strong style="color: #1f2937;">GigFlow</strong> foi deletada por um administrador do sistema.
+</p>
+
+<!-- Details box -->
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin: 24px 0;">
+    <tr>
+        <td style="background-color: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; padding: 20px;">
+            <p style="margin: 0 0 8px 0; color: #92400e; font-size: 14px; font-weight: 600;">
+                Detalhes da deleção:
+            </p>
+            <p style="margin: 0; color: #78350f; font-size: 15px; line-height: 1.6;">
+                <strong>Email da conta:</strong> {{ user_email }}<br>
+                <strong>Deletada por:</strong> {{ admin_name }}<br>
+                <strong>Data:</strong> {{ timestamp|date:"d/m/Y H:i" }}
+            </p>
+        </td>
+    </tr>
+</table>
+
+<p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+    Se você acredita que isso foi um erro ou deseja se cadastrar novamente, você pode acessar o site e solicitar um novo convite.
+</p>
+
+<!-- Important notice -->
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin: 24px 0;">
+    <tr>
+        <td style="background-color: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; padding: 16px;">
+            <p style="margin: 0; color: #991b1b; font-size: 14px; line-height: 1.5;">
+                <strong>Importante:</strong> Todos os seus dados (perfil, eventos, conexões, etc.) foram permanentemente removidos do sistema. Ao se cadastrar novamente, você precisará preencher todas as informações novamente.
+            </p>
+        </td>
+    </tr>
+</table>
+
+{% include 'emails/components/button.html' with url=frontend_url text='Acessar o GigFlow' show_fallback_link=False %}
+
+<p style="margin: 24px 0 0 0; color: #9ca3af; font-size: 14px; line-height: 1.5;">
+    Se você tiver alguma dúvida sobre sua conta ou quiser entender o motivo da deleção, entre em contato com o suporte.
+</p>
+{% endblock %}

@@ -95,10 +95,14 @@ class EmailService:
         except TemplateDoesNotExist:
             # Generate basic text version from context
             text_content = cls._generate_text_fallback(subject, context)
-            logger.warning(f"Plain text template not found: {text_template}, using fallback")
+            logger.warning(
+                f"Plain text template not found: {text_template}, using fallback"
+            )
 
         # Prepare email
-        sender = from_email or getattr(settings, "DEFAULT_FROM_EMAIL", cls.DEFAULT_FROM_EMAIL)
+        sender = from_email or getattr(
+            settings, "DEFAULT_FROM_EMAIL", cls.DEFAULT_FROM_EMAIL
+        )
 
         email = EmailMultiAlternatives(
             subject=subject,
@@ -168,7 +172,9 @@ class EmailService:
 
 
 # Convenience functions for common email types
-def send_verification_email(to_email: str, first_name: str, verification_url: str) -> bool:
+def send_verification_email(
+    to_email: str, first_name: str, verification_url: str
+) -> bool:
     """Send email verification email."""
     return EmailService.send(
         template_name="verification",
@@ -194,7 +200,9 @@ def send_password_reset_email(to_email: str, first_name: str, reset_url: str) ->
     )
 
 
-def send_welcome_email(to_email: str, first_name: str, username: str, login_url: str) -> bool:
+def send_welcome_email(
+    to_email: str, first_name: str, username: str, login_url: str
+) -> bool:
     """Send welcome email after registration."""
     return EmailService.send(
         template_name="welcome",
@@ -222,5 +230,24 @@ def send_event_notification_email(
         subject=subject,
         context=context,
         show_unsubscribe=True,
+        fail_silently=True,
+    )
+
+
+def send_user_deletion_email(to_email: str, first_name: str, admin_name: str) -> bool:
+    """Send user deletion notification email."""
+    from django.utils import timezone
+
+    return EmailService.send(
+        template_name="user_deleted",
+        to_email=to_email,
+        subject="Sua conta no GigFlow foi deletada",
+        context={
+            "first_name": first_name,
+            "user_email": to_email,
+            "admin_name": admin_name,
+            "timestamp": timezone.now(),
+        },
+        from_email="GigFlow Admin <noreply@gigflowagenda.com.br>",
         fail_silently=True,
     )

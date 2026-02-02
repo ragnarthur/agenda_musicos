@@ -1,13 +1,17 @@
 """
-Views para gerenciamento de administradores.
+Views para gerenciamento de administradores e usuários.
 """
+
+import logging
+from datetime import timedelta
 
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from django.db.models import Q
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from .permissions import IsAppOwner
 from .serializers import (
@@ -15,8 +19,12 @@ from .serializers import (
     AdminCreateSerializer,
     AdminUpdateSerializer,
 )
+from .models import AuditLog, MusicianRequest
+from notifications.services.email_service import send_user_deletion_email
 
 User = get_user_model()
+
+logger = logging.getLogger(__name__)
 
 
 @api_view(["GET"])
@@ -168,4 +176,125 @@ def reset_admin_password(request, pk):
     except User.DoesNotExist:
         return Response(
             {"error": "Usuário não encontrado"}, status=status.HTTP_404_NOT_FOUND
+        )
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def delete_user(request, pk):
+    """
+    Deleta um usuário e todos os dados relacionados.
+
+    Proteções:
+    - Não permite deletar admin_1 ou admin_2
+    - Não permite deletar superusers (is_superuser=True)
+    - Não permite deletar o próprio usuário
+    - Log da ação para auditoria
+    - Envia email de notificação
+    """
+    try:
+        user = User.objects.get(pk=pk)
+        client_ip = request.META.get("REMOTE_ADDR", "")
+        user_agent = request.META.get("HTTP_USER_AGENT", "")
+
+        # Proteção 1: Não pode deletar admin_1 ou admin_2
+        if user.username in ["admin_1", "admin_2"]:
+            logger.warning(
+                f"Attempt to delete protected admin {user.username} "
+                f"by {request.user.username} from {client_ip}"
+            )
+            return Response(
+                {
+                    "error": "admin_1 e admin_2 são usuários protegidos e não podem ser deletados"
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Proteção 2: Não pode deletar superusers
+        if user.is_superuser:
+            logger.warning(
+                f"Attempt to delete superuser {user.username} "
+                f"by {request.user.username} from {client_ip}"
+            )
+            return Response(
+                {"error": "Superadmins não podem ser deletados"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Proteção 3: Não pode deletar o próprio usuário
+        if user == request.user:
+            logger.warning(
+                f"Attempt to delete own account {user.username} "
+                f"by {request.user.username} from {client_ip}"
+            )
+            return Response(
+                {"error": "Você não pode deletar a própria conta"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Salvar informações antes de deletar
+        deleted_user_info = {
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "is_staff": user.is_staff,
+            "is_superuser": user.is_superuser,
+            "date_joined": user.date_joined.isoformat() if user.date_joined else None,
+        }
+
+        # Verificar se é músico para pegar mais informações
+        user_full_name = user.get_full_name() or user.username
+
+        # Enviar email de notificação
+        if user.email:
+            send_user_deletion_email(
+                to_email=user.email,
+                first_name=user_full_name,
+                admin_name=request.user.get_full_name() or request.user.username,
+            )
+
+        # Deletar MusicianRequest relacionado ao email
+        MusicianRequest.objects.filter(email__iexact=user.email).delete()
+
+        # Criar log de auditoria antes de deletar
+        AuditLog.objects.create(
+            user=request.user,
+            action="user_delete",
+            resource_type="user",
+            resource_id=user.id,
+            ip_address=client_ip,
+            user_agent=user_agent,
+        )
+
+        logger.info(
+            f"User deleted | Admin: {request.user.username} | "
+            f"Deleted: {user.username} | "
+            f"Email: {user.email} | "
+            f"Was Superuser: {user.is_superuser} | "
+            f"IP: {client_ip}"
+        )
+
+        # Deletar usuário (cascade deleta Musician, Organization, etc.)
+        user.delete()
+
+        return Response(
+            {
+                "message": f"Usuário {user.username} deletado com sucesso",
+                "deleted_user": deleted_user_info,
+                "deleted_by": request.user.username,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    except User.DoesNotExist:
+        logger.error(f"User not found for deletion: pk={pk}")
+        return Response(
+            {"error": "Usuário não encontrado"}, status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        logger.error(f"Error deleting user {pk}: {str(e)}", exc_info=True)
+        return Response(
+            {"error": "Erro ao deletar usuário"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
