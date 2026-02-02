@@ -11,7 +11,15 @@ export const authService = {
   },
 
   logout: async (): Promise<void> => {
-    await api.post('/token/logout/');
+    try {
+      await api.post('/token/logout/');
+    } finally {
+      // Garantir que tokens sejam limpos mesmo se a requisição falhar
+      const { clearStoredAccessToken, clearStoredRefreshToken } =
+        await import('../utils/tokenStorage');
+      clearStoredAccessToken();
+      clearStoredRefreshToken();
+    }
   },
 
   requestPasswordReset: async (email: string): Promise<{ message: string }> => {

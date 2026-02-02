@@ -229,28 +229,4 @@ export const useCompanyAuth = (): CompanyAuthContextType => {
   return context;
 };
 
-// Hook customizado para interceptar requisições da API
-// eslint-disable-next-line react-refresh/only-export-components
-export const useCompanyApi = () => {
-  const { logout, refreshToken } = useCompanyAuth();
-
-  // Interceptador para requisições que falham com 401
-  const handleApiError = async (error: unknown) => {
-    const status = (error as { response?: { status?: number } })?.response?.status;
-    if (status === 401) {
-      try {
-        await refreshToken();
-        // Tentar a requisição novamente aqui se necessário
-        return true;
-      } catch {
-        logout();
-        return false;
-      }
-    }
-    return false;
-  };
-
-  return { handleApiError };
-};
-
 export default CompanyAuthContext;
