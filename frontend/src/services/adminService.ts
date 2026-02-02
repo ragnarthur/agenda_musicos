@@ -13,9 +13,7 @@ export interface AdminMeResponse {
   date_joined: string;
 }
 
-export interface UsersListResponse {
-  results: AdminMeResponse[];
-}
+export type UsersListResponse = AdminMeResponse[];
 
 export const adminService = {
   getMe: async (): Promise<AdminMeResponse> => {

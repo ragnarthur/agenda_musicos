@@ -6,18 +6,18 @@ import { showToast } from '../../utils/toast';
 import { adminService, type UsersListResponse } from '../../services/adminService';
 
 const AdminUsers: React.FC = () => {
-  const [users, setUsers] = useState<UsersListResponse['results']>([]);
+  const [users, setUsers] = useState<UsersListResponse>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [deleting, setDeleting] = useState<number | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<UsersListResponse['results'][0] | null>(null);
+  const [userToDelete, setUserToDelete] = useState<UsersListResponse[0] | null>(null);
 
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       const data = await adminService.listUsers();
-      setUsers(data.results || []);
+      setUsers(data || []);
     } catch (error) {
       console.error('Error fetching users:', error);
       showToast.apiError(error);
@@ -45,7 +45,7 @@ const AdminUsers: React.FC = () => {
     );
   });
 
-  const handleDeleteClick = (user: UsersListResponse['results'][0]) => {
+  const handleDeleteClick = (user: UsersListResponse[0]) => {
     setUserToDelete(user);
     setShowConfirmModal(true);
   };
