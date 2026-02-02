@@ -22,6 +22,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
     const bootstrap = async () => {
       // Verifica se há uma sessão ativa nesta janela do navegador
       const hasActiveSession = sessionStorage.getItem(SESSION_KEY);
@@ -33,6 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch {
           // Ignora erro de logout (pode não haver sessão)
         }
+        if (!isMounted) return;
         setUser(null);
         clearStoredAccessToken();
         clearStoredRefreshToken();
@@ -42,22 +45,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       try {
         const currentUser = await musicianService.getMe();
+        if (!isMounted) return;
         setUser(currentUser);
       } catch (error) {
         const status = (error as { response?: { status?: number } })?.response?.status;
         if (status !== 401) {
           logError('Erro ao carregar sessão do usuário:', error);
         }
+        if (!isMounted) return;
         setUser(null);
         // Remove marcador se sessão expirou
         sessionStorage.removeItem(SESSION_KEY);
         clearStoredAccessToken();
         clearStoredRefreshToken();
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
     bootstrap();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const login = useCallback(async (credentials: LoginCredentials) => {

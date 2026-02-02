@@ -2,8 +2,10 @@
 // Contexto para gerenciar autenticação e estado de empresas
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -45,6 +47,8 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
 
   // Verificar se já existe uma sessão ativa
   useEffect(() => {
+    let isMounted = true;
+
     const initializeAuth = async () => {
       try {
         // Verifica se há uma sessão ativa nesta janela do navegador
@@ -53,14 +57,16 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
 
         if (!hasActiveSession) {
           // Navegador foi fechado e reaberto - força novo login
-          setOrganization(null);
-          clearStoredAccessToken();
-          clearStoredRefreshToken();
-          setLoading(false);
+          if (isMounted) {
+            setOrganization(null);
+            clearStoredAccessToken();
+            clearStoredRefreshToken();
+            setLoading(false);
+          }
           return;
         }
 
-        if (organizationData) {
+        if (organizationData && isMounted) {
           // Usar dados cached do sessionStorage primeiro
           const org = JSON.parse(organizationData);
           setOrganization(org);
@@ -68,9 +74,12 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
           // Depois validar com backend
           try {
             const dashboard = await companyService.getDashboard();
-            setOrganization(dashboard.organization);
-            sessionStorage.setItem('companyOrganization', JSON.stringify(dashboard.organization));
+            if (isMounted) {
+              setOrganization(dashboard.organization);
+              sessionStorage.setItem('companyOrganization', JSON.stringify(dashboard.organization));
+            }
           } catch (error) {
+            if (!isMounted) return;
             const status = (error as { response?: { status?: number } })?.response?.status;
             if (status !== 401) {
               console.error('Erro ao validar sessão:', error);
@@ -79,17 +88,24 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
           }
         }
       } catch (error) {
+        if (!isMounted) return;
         console.error('Erro ao inicializar auth:', error);
         logoutRef.current();
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     initializeAuth();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const login = async (email: string, password: string): Promise<void> => {
+  const login = useCallback(async (email: string, password: string): Promise<void> => {
     try {
       setLoading(true);
       const response = await companyService.login(email.toLowerCase().trim(), password);
@@ -113,24 +129,23 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const setSession = (payload: {
-    organization: Organization;
-    access?: string;
-    refresh?: string;
-  }) => {
-    // Marcar sessão como ativa
-    sessionStorage.setItem(SESSION_KEY, 'true');
-    setStoredAccessToken(payload.access);
-    setStoredRefreshToken(payload.refresh);
+  const setSession = useCallback(
+    (payload: { organization: Organization; access?: string; refresh?: string }) => {
+      // Marcar sessão como ativa
+      sessionStorage.setItem(SESSION_KEY, 'true');
+      setStoredAccessToken(payload.access);
+      setStoredRefreshToken(payload.refresh);
 
-    // Armazenar dados da organização
-    setOrganization(payload.organization);
-    sessionStorage.setItem('companyOrganization', JSON.stringify(payload.organization));
-  };
+      // Armazenar dados da organização
+      setOrganization(payload.organization);
+      sessionStorage.setItem('companyOrganization', JSON.stringify(payload.organization));
+    },
+    []
+  );
 
-  const logout = (): void => {
+  const logout = useCallback((): void => {
     // Revogar token do Google se existir
     const organizationEmail = organization?.contact_email;
     if (organizationEmail && window.google?.accounts?.id) {
@@ -154,11 +169,11 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
     setLoading(false);
 
     toast.success('Logout realizado com sucesso!');
-  };
+  }, [organization]);
 
   logoutRef.current = logout;
 
-  const refreshToken = async (): Promise<void> => {
+  const refreshToken = useCallback(async (): Promise<void> => {
     try {
       // Tokens agora são gerenciados por cookies httpOnly no backend
       // Este método pode ser usado para validar a sessão se necessário
@@ -170,9 +185,9 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
       logout();
       throw error;
     }
-  };
+  }, [logout]);
 
-  const updateOrganization = async (data: Partial<Organization>): Promise<void> => {
+  const updateOrganization = useCallback(async (data: Partial<Organization>): Promise<void> => {
     try {
       const updatedOrg = await companyService.updateProfile(data);
       setOrganization(updatedOrg);
@@ -185,18 +200,21 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
       toast.error(message);
       throw error;
     }
-  };
+  }, []);
 
-  const value: CompanyAuthContextType = {
-    organization,
-    loading,
-    isAuthenticated: !!organization,
-    login,
-    setSession,
-    logout,
-    refreshToken,
-    updateOrganization,
-  };
+  const value = useMemo<CompanyAuthContextType>(
+    () => ({
+      organization,
+      loading,
+      isAuthenticated: !!organization,
+      login,
+      setSession,
+      logout,
+      refreshToken,
+      updateOrganization,
+    }),
+    [organization, loading, login, setSession, logout, refreshToken, updateOrganization]
+  );
 
   return <CompanyAuthContext.Provider value={value}>{children}</CompanyAuthContext.Provider>;
 };
@@ -209,30 +227,6 @@ export const useCompanyAuth = (): CompanyAuthContextType => {
     throw new Error('useCompanyAuth deve ser usado dentro de um CompanyAuthProvider');
   }
   return context;
-};
-
-// Hook customizado para interceptar requisições da API
-// eslint-disable-next-line react-refresh/only-export-components
-export const useCompanyApi = () => {
-  const { logout, refreshToken } = useCompanyAuth();
-
-  // Interceptador para requisições que falham com 401
-  const handleApiError = async (error: unknown) => {
-    const status = (error as { response?: { status?: number } })?.response?.status;
-    if (status === 401) {
-      try {
-        await refreshToken();
-        // Tentar a requisição novamente aqui se necessário
-        return true;
-      } catch {
-        logout();
-        return false;
-      }
-    }
-    return false;
-  };
-
-  return { handleApiError };
 };
 
 export default CompanyAuthContext;

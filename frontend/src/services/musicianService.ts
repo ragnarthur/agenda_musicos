@@ -34,8 +34,9 @@ export const musicianService = {
 
     const results: Musician[] = [];
     let page = 1;
+    const MAX_PAGES = 100; // Limite de segurança para evitar loop infinito
 
-    while (true) {
+    while (page <= MAX_PAGES) {
       const response = await api.get('/musicians/', {
         params: { ...baseParams, page },
       });
