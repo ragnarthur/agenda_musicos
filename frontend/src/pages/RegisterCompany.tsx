@@ -135,6 +135,7 @@ export default function RegisterCompany() {
 
   // Renderiza botão do Google
   useEffect(() => {
+    let isMounted = true;
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
     if (!clientId) {
@@ -146,10 +147,14 @@ export default function RegisterCompany() {
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
     script.onload = () => {
+      if (!isMounted) return;
       if (window.google) {
         window.google.accounts.id.initialize({
           client_id: clientId,
-          callback: handleGoogleCallback,
+          callback: (response: { credential: string }) => {
+            if (!isMounted) return;
+            handleGoogleCallback(response);
+          },
         });
         const buttonDiv = document.getElementById('google-signin-button');
         if (buttonDiv) {
@@ -167,6 +172,7 @@ export default function RegisterCompany() {
     };
     document.body.appendChild(script);
     return () => {
+      isMounted = false;
       try {
         document.body.removeChild(script);
       } catch {

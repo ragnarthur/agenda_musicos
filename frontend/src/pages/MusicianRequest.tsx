@@ -156,6 +156,7 @@ export default function MusicianRequest() {
 
   // Carregar Google Sign-In
   useEffect(() => {
+    let isMounted = true;
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
     if (!clientId) {
@@ -167,10 +168,14 @@ export default function MusicianRequest() {
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
     script.onload = () => {
+      if (!isMounted) return;
       if (window.google) {
         window.google.accounts.id.initialize({
           client_id: clientId,
-          callback: response => googleCallbackRef.current(response),
+          callback: (response: { credential: string }) => {
+            if (!isMounted) return;
+            googleCallbackRef.current(response);
+          },
         });
 
         // Renderizar botão oficial do Google
@@ -189,6 +194,7 @@ export default function MusicianRequest() {
     };
     document.body.appendChild(script);
     return () => {
+      isMounted = false;
       try {
         document.body.removeChild(script);
       } catch {

@@ -94,6 +94,7 @@ const Login: React.FC = () => {
   );
 
   useEffect(() => {
+    let isMounted = true;
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
     if (!clientId) {
@@ -105,10 +106,14 @@ const Login: React.FC = () => {
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
     script.onload = () => {
+      if (!isMounted) return;
       if (window.google) {
         window.google.accounts.id.initialize({
           client_id: clientId,
-          callback: handleGoogleCallback,
+          callback: (response: { credential: string }) => {
+            if (!isMounted) return;
+            handleGoogleCallback(response);
+          },
         });
         const buttonDiv = document.getElementById('google-signin-button');
         if (buttonDiv) {
@@ -126,6 +131,7 @@ const Login: React.FC = () => {
     };
     document.body.appendChild(script);
     return () => {
+      isMounted = false;
       try {
         document.body.removeChild(script);
       } catch {
