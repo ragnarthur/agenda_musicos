@@ -3,6 +3,7 @@ import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Users, MapPin, LogOut, Shield, Menu, X } from 'lucide-react';
 import { useAdminAuth } from '../../contexts/AdminAuthContext';
 import { showToast } from '../../utils/toast';
+import AnimatedBackground from '../../components/Layout/AnimatedBackground';
 
 interface AdminLayoutProps {
   children?: React.ReactNode;
@@ -56,7 +57,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen relative">
+      <AnimatedBackground enableBlueWaves={true} enableParticles={false} />
+
       {/* Mobile Header */}
       <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -74,7 +77,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          className="lg:hidden fixed inset-0 bg-black/50 z-40 relative"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -82,7 +85,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       {/* Sidebar */}
       <aside
         className={`
-          fixed lg:static inset-y-0 left-0 z-50
+          fixed lg:static inset-y-0 left-0 z-50 relative
           w-64 bg-white border-r border-gray-200
           transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
           transition-transform duration-200 ease-in-out
@@ -111,7 +114,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 key={item.path}
                 to={item.path}
                 onClick={() => setSidebarOpen(false)}
-                 className={`
+                className={`
                   flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                   ${
                     isActive
@@ -140,10 +143,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       </aside>
 
       {/* Main Content */}
-      <main className="lg:ml-64 min-h-screen">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {children ?? <Outlet />}
-        </div>
+      <main className="lg:ml-64 min-h-screen relative z-10">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">{children ?? <Outlet />}</div>
       </main>
     </div>
   );
