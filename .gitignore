@@ -33,11 +33,13 @@ db.sqlite3
 db.sqlite3-journal
 /media
 /staticfiles
-.env
-.env.local
-.env.docker
-.env.prod
-.env.test
+ .env
+ .env.local
+ .env.docker
+ .env.docker.local
+ .env.docker.local.bak
+ .env.prod
+ .env.test
 *.key
 *.pem
 cookies*.txt
