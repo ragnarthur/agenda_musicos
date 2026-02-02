@@ -2,6 +2,8 @@
 import axios, { AxiosError } from 'axios';
 import toast from 'react-hot-toast';
 import {
+  clearStoredAccessToken,
+  clearStoredRefreshToken,
   getStoredAccessToken,
   getStoredRefreshToken,
   setStoredAccessToken,
@@ -72,9 +74,17 @@ const refreshAuthToken = async (): Promise<void> => {
       }
     };
 
-    refreshingPromise = doRefresh().finally(() => {
-      refreshingPromise = null;
-    });
+    refreshingPromise = doRefresh()
+      .then(() => {
+        refreshingPromise = null;
+      })
+      .catch(() => {
+        // Não limpa refreshingPromise em caso de erro para evitar burst de requisições
+        // Aguarda 5 segundos antes de permitir nova tentativa
+        setTimeout(() => {
+          refreshingPromise = null;
+        }, 5000);
+      });
   }
   return refreshingPromise;
 };
@@ -139,6 +149,10 @@ api.interceptors.response.use(
         await refreshAuthToken();
         return api(originalRequest);
       } catch (refreshError) {
+        // Limpar tokens inválidos para evitar loop infinito
+        clearStoredAccessToken();
+        clearStoredRefreshToken();
+
         const isUserProfileCall = originalRequest.url?.includes('/musicians/me/');
 
         // Em rotas públicas, não redirecionamos para login (ex: verificação de email)
