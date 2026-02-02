@@ -23,6 +23,7 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
+    gosu \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -39,10 +40,15 @@ COPY . .
 # Mudar dono dos arquivos para o usuário não-root
 RUN chown -R appuser:appuser /app
 
+# Copiar e configurar entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Mudar para usuário não-root
 USER appuser
 
 ENV DJANGO_SETTINGS_MODULE=config.settings
 
 EXPOSE 8000
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]

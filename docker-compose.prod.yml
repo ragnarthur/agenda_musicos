@@ -29,7 +29,7 @@ services:
       - db
     volumes:
       - staticfiles:/app/staticfiles
-      - media:/app/media
+      - ./media:/app/media  # ALTERADO: bind mount ao invés de named volume
     expose:
       - "8000"
     command:
@@ -82,7 +82,7 @@ services:
     volumes:
       - ./deploy/nginx:/etc/nginx/conf.d:ro
       - staticfiles:/staticfiles:ro
-      - media:/media:ro
+      - ./media:/media:ro  # ALTERADO: bind mount ao invés de named volume
       - ./deploy/certbot/www:/var/www/certbot:ro
       - ./deploy/certbot/conf:/etc/letsencrypt:ro
     depends_on:
@@ -114,4 +114,4 @@ networks:
 volumes:
   postgres_data:
   staticfiles:
-  media:
+  # REMOVIDO: media (agora é bind mount)
