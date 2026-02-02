@@ -6,8 +6,8 @@ ViewSet para gerenciamento de músicos.
 from django.db import connection
 from django.db.models import Count, Q
 from rest_framework import status, viewsets
-from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from ..instrument_utils import INSTRUMENT_LABELS
@@ -23,7 +23,7 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
     """
 
     serializer_class = MusicianSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     pagination_class = StandardResultsSetPagination
 
     def _scope_queryset(self, queryset):
@@ -70,7 +70,9 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
                     )
         return queryset
 
-    @action(detail=False, methods=["get", "patch"])
+    @action(
+        detail=False, methods=["get", "patch"], permission_classes=[IsAuthenticated]
+    )
     def me(self, request):
         """
         GET /musicians/me/
@@ -96,7 +98,7 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = self.get_serializer(musician)
         return Response(serializer.data)
 
-    @action(detail=False, methods=["get"])
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
     def instruments(self, request):
         """
         GET /musicians/instruments/
@@ -128,7 +130,7 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
 
         return Response(result)
 
-    @action(detail=False, methods=["get"])
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
     def with_availability(self, request):
         """
         GET /musicians/with_availability/
