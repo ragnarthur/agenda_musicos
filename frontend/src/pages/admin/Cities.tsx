@@ -287,9 +287,9 @@ const Cities: React.FC = () => {
   }, [cities]);
 
   const statusColors: Record<City['status'], string> = {
-    partner: 'bg-green-100 text-green-800 border-green-200',
-    expansion: 'bg-blue-100 text-blue-800 border-blue-200',
-    planning: 'bg-gray-100 text-gray-800 border-gray-200',
+    partner: 'bg-green-500/20 text-green-400 border-green-500/30',
+    expansion: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    planning: 'bg-slate-800 text-slate-300 border-white/10',
   };
 
   const getStatusIcon = (status: string) => {
@@ -314,19 +314,19 @@ const Cities: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Gestão de Cidades</h1>
-        <p className="text-gray-600">Gerencie cidades e visualize solicitações por região</p>
+      <div className="bg-slate-900/90 backdrop-blur shadow rounded-lg p-6">
+        <h1 className="text-2xl font-bold text-white mb-2">Gestão de Cidades</h1>
+        <p className="text-slate-300">Gerencie cidades e visualize solicitações por região</p>
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-lg shadow p-1 inline-flex">
+      <div className="bg-slate-900/90 backdrop-blur rounded-lg shadow p-1 inline-flex">
         <button
           onClick={() => setActiveTab('stats')}
           className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
             activeTab === 'stats'
-              ? 'bg-amber-100 text-amber-700'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              ? 'bg-amber-500/20 text-amber-400'
+              : 'text-slate-300 hover:text-white hover:bg-white/10'
           }`}
         >
           Por Cidade
@@ -335,8 +335,8 @@ const Cities: React.FC = () => {
           onClick={() => setActiveTab('management')}
           className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
             activeTab === 'management'
-              ? 'bg-amber-100 text-amber-700'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              ? 'bg-amber-500/20 text-amber-400'
+              : 'text-slate-300 hover:text-white hover:bg-white/10'
           }`}
         >
           Gerenciar Cidades
@@ -350,24 +350,24 @@ const Cities: React.FC = () => {
             <>
               <button
                 onClick={() => setSelectedCity(null)}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+                className="flex items-center gap-2 text-slate-300 hover:text-white mb-4"
               >
                 <ChevronRight className="h-4 w-4 rotate-180" />
                 Voltar para lista de cidades
               </button>
 
-              <div className="bg-white rounded-xl shadow p-4 mb-6">
-                <h2 className="text-xl font-bold text-gray-900">
+              <div className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-4 mb-6">
+                <h2 className="text-xl font-bold text-white">
                   {selectedCity.city}, {selectedCity.state}
                 </h2>
                 {cityInfo && (
                   <span
                     className={`inline-block mt-2 px-2 py-0.5 rounded-full text-xs font-medium ${
                       cityInfo.status === 'partner'
-                        ? 'bg-green-100 text-green-800'
+                        ? 'bg-green-500/20 text-green-400'
                         : cityInfo.status === 'expansion'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-gray-100 text-gray-800'
+                          ? 'bg-blue-500/20 text-blue-400'
+                          : 'bg-slate-800 text-slate-300'
                     }`}
                   >
                     {cityInfo.status_display}
@@ -375,15 +375,15 @@ const Cities: React.FC = () => {
                 )}
               </div>
 
-              <div className="bg-white rounded-xl shadow p-4 mb-4">
+              <div className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-4 mb-4">
                 <div className="relative w-full">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <input
                     type="text"
                     value={searchTerm}
                     onChange={event => setSearchTerm(event.target.value)}
                     placeholder="Buscar por nome, email ou instrumento"
-                    className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-400/40"
+                    className="w-full pl-9 pr-3 py-2 border border-slate-600 bg-slate-800 text-white placeholder:text-slate-400 rounded-lg text-sm focus:ring-2 focus:ring-amber-400/40"
                   />
                 </div>
               </div>
@@ -391,34 +391,40 @@ const Cities: React.FC = () => {
               {loading ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map(i => (
-                    <div key={i} className="bg-white rounded-xl shadow p-5 animate-pulse">
-                      <div className="h-5 bg-gray-200 rounded w-1/3 mb-2"></div>
-                      <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                    <div
+                      key={i}
+                      className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-5 animate-pulse"
+                    >
+                      <div className="h-5 bg-slate-700 rounded w-1/3 mb-2"></div>
+                      <div className="h-4 bg-slate-700 rounded w-2/3"></div>
                     </div>
                   ))}
                 </div>
               ) : cityRequests.length === 0 ? (
-                <div className="bg-white rounded-xl shadow p-10 text-center">
-                  <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <div className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-10 text-center">
+                  <AlertCircle className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-white mb-2">
                     Nenhuma solicitação encontrada
                   </h3>
                 </div>
               ) : (
                 <div className="grid gap-4">
                   {cityRequests.map(request => (
-                    <div key={request.id} className="bg-white rounded-xl shadow p-4">
+                    <div
+                      key={request.id}
+                      className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-4"
+                    >
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-lg font-semibold text-gray-900">
+                          <span className="text-lg font-semibold text-white">
                             {request.full_name}
                           </span>
-                          <span className="inline-flex items-center gap-1 text-xs font-medium">
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-300">
                             {getStatusIcon(request.status)}
                             {request.status_display}
                           </span>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                        <div className="grid grid-cols-2 gap-2 text-sm text-slate-300">
                           <span className="flex items-center gap-2">
                             <Mail className="h-4 w-4" />
                             {request.email}
@@ -439,22 +445,25 @@ const Cities: React.FC = () => {
               {cityStatsLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {[1, 2, 3, 4, 5, 6].map(i => (
-                    <div key={i} className="bg-white rounded-xl shadow p-4 animate-pulse">
-                      <div className="h-5 bg-gray-200 rounded w-2/3 mb-3"></div>
+                    <div
+                      key={i}
+                      className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-4 animate-pulse"
+                    >
+                      <div className="h-5 bg-slate-700 rounded w-2/3 mb-3"></div>
                       <div className="grid grid-cols-2 gap-2">
-                        <div className="h-4 bg-gray-200 rounded"></div>
-                        <div className="h-4 bg-gray-200 rounded"></div>
+                        <div className="h-4 bg-slate-700 rounded"></div>
+                        <div className="h-4 bg-slate-700 rounded"></div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : cityStats.length === 0 ? (
-                <div className="bg-white rounded-xl shadow p-10 text-center">
-                  <MapPin className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <div className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-10 text-center">
+                  <MapPin className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-white mb-2">
                     Nenhuma cidade com solicitações
                   </h3>
-                  <p className="text-gray-600">
+                  <p className="text-slate-300">
                     Quando músicos solicitarem acesso, as cidades aparecerão aqui.
                   </p>
                 </div>
@@ -464,40 +473,40 @@ const Cities: React.FC = () => {
                     <button
                       key={`${cs.city}-${cs.state}`}
                       onClick={() => setSelectedCity({ city: cs.city, state: cs.state })}
-                      className="bg-white rounded-xl shadow p-4 text-left hover:shadow-md transition-shadow w-full"
+                      className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-4 text-left hover:shadow-md transition-shadow w-full"
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <h3 className="font-semibold text-gray-900">
+                          <h3 className="font-semibold text-white">
                             {cs.city}, {cs.state}
                           </h3>
                           {cs.city_obj && (
                             <span
-                              className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[cs.city_obj.status] || 'bg-gray-100 text-gray-800'}`}
+                              className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[cs.city_obj.status] || 'bg-slate-800 text-slate-300'}`}
                             >
                               {cs.city_obj.status_display}
                             </span>
                           )}
                         </div>
-                        <ChevronRight className="h-5 w-5 text-gray-400" />
+                        <ChevronRight className="h-5 w-5 text-slate-400" />
                       </div>
 
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div>
-                          <p className="text-gray-500">Total</p>
-                          <p className="font-semibold text-gray-900">{cs.total_requests}</p>
+                          <p className="text-slate-400">Total</p>
+                          <p className="font-semibold text-white">{cs.total_requests}</p>
                         </div>
                         <div>
-                          <p className="text-gray-500">Pendentes</p>
-                          <p className="font-semibold text-yellow-600">{cs.pending_requests}</p>
+                          <p className="text-slate-400">Pendentes</p>
+                          <p className="font-semibold text-amber-400">{cs.pending_requests}</p>
                         </div>
                         <div>
-                          <p className="text-gray-500">Aprovados</p>
-                          <p className="font-semibold text-green-600">{cs.approved_requests}</p>
+                          <p className="text-slate-400">Aprovados</p>
+                          <p className="font-semibold text-emerald-400">{cs.approved_requests}</p>
                         </div>
                         <div>
-                          <p className="text-gray-500">Músicos</p>
-                          <p className="font-semibold text-blue-600">{cs.active_musicians}</p>
+                          <p className="text-slate-400">Músicos</p>
+                          <p className="font-semibold text-blue-400">{cs.active_musicians}</p>
                         </div>
                       </div>
                     </button>
@@ -529,20 +538,20 @@ const Cities: React.FC = () => {
             <div className="space-y-8">
               {[1, 2, 3].map(i => (
                 <div key={i}>
-                  <div className="h-6 bg-gray-200 rounded w-32 mb-4"></div>
+                  <div className="h-6 bg-slate-700 rounded w-32 mb-4"></div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {[1, 2].map(j => (
-                      <div key={j} className="h-32 bg-gray-200 rounded-xl animate-pulse"></div>
+                      <div key={j} className="h-32 bg-slate-800 rounded-xl animate-pulse"></div>
                     ))}
                   </div>
                 </div>
               ))}
             </div>
           ) : cities.length === 0 ? (
-            <div className="bg-white rounded-xl shadow p-10 text-center">
-              <Building2 className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma cidade cadastrada</h3>
-              <p className="text-gray-600 mb-4">
+            <div className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-10 text-center">
+              <Building2 className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-white mb-2">Nenhuma cidade cadastrada</h3>
+              <p className="text-slate-300 mb-4">
                 Cadastre cidades para organizar a expansão da plataforma.
               </p>
               <button
@@ -559,7 +568,7 @@ const Cities: React.FC = () => {
             <>
               {citiesByStatus.partner.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Parceiras</h3>
+                  <h3 className="text-lg font-semibold text-white mb-3">Parceiras</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                     {citiesByStatus.partner.map(city => (
                       <div
@@ -568,7 +577,7 @@ const Cities: React.FC = () => {
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div>
-                            <h3 className="font-semibold text-gray-900">
+                            <h3 className="font-semibold text-white">
                               {city.name}, {city.state}
                             </h3>
                             <span className="text-xs font-medium">{city.status_display}</span>
@@ -579,14 +588,14 @@ const Cities: React.FC = () => {
                                 setEditingCity(city);
                                 setCityFormOpen(true);
                               }}
-                              className="p-1.5 rounded hover:bg-white/50 transition-colors"
+                              className="p-1.5 rounded hover:bg-white/10 transition-colors"
                               title="Editar"
                             >
                               <Edit2 className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteCity(city.id)}
-                              className="p-1.5 rounded hover:bg-white/50 transition-colors text-red-600"
+                              className="p-1.5 rounded hover:bg-white/10 transition-colors text-red-400"
                               title="Excluir"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -595,7 +604,7 @@ const Cities: React.FC = () => {
                         </div>
 
                         {city.description && (
-                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                          <p className="text-sm text-slate-300 mb-3 line-clamp-2">
                             {city.description}
                           </p>
                         )}
@@ -613,7 +622,7 @@ const Cities: React.FC = () => {
                           </div>
                           <button
                             onClick={() => handleChangeStatus(city.id, nextStatus[city.status])}
-                            className="text-xs font-medium px-2 py-1 rounded bg-white/50 hover:bg-white/80 transition-colors"
+                            className="text-xs font-medium px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
                           >
                             → Planejamento
                           </button>
@@ -626,7 +635,7 @@ const Cities: React.FC = () => {
 
               {citiesByStatus.expansion.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Em Expansão</h3>
+                  <h3 className="text-lg font-semibold text-white mb-3">Em Expansão</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                     {citiesByStatus.expansion.map(city => (
                       <div
@@ -635,7 +644,7 @@ const Cities: React.FC = () => {
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div>
-                            <h3 className="font-semibold text-gray-900">
+                            <h3 className="font-semibold text-white">
                               {city.name}, {city.state}
                             </h3>
                             <span className="text-xs font-medium">{city.status_display}</span>
@@ -646,14 +655,14 @@ const Cities: React.FC = () => {
                                 setEditingCity(city);
                                 setCityFormOpen(true);
                               }}
-                              className="p-1.5 rounded hover:bg-white/50 transition-colors"
+                              className="p-1.5 rounded hover:bg-white/10 transition-colors"
                               title="Editar"
                             >
                               <Edit2 className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteCity(city.id)}
-                              className="p-1.5 rounded hover:bg-white/50 transition-colors text-red-600"
+                              className="p-1.5 rounded hover:bg-white/10 transition-colors text-red-400"
                               title="Excluir"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -662,7 +671,7 @@ const Cities: React.FC = () => {
                         </div>
 
                         {city.description && (
-                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                          <p className="text-sm text-slate-300 mb-3 line-clamp-2">
                             {city.description}
                           </p>
                         )}
@@ -680,7 +689,7 @@ const Cities: React.FC = () => {
                           </div>
                           <button
                             onClick={() => handleChangeStatus(city.id, nextStatus[city.status])}
-                            className="text-xs font-medium px-2 py-1 rounded bg-white/50 hover:bg-white/80 transition-colors"
+                            className="text-xs font-medium px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
                           >
                             → Parceiro
                           </button>
@@ -693,7 +702,7 @@ const Cities: React.FC = () => {
 
               {citiesByStatus.planning.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Em Planejamento</h3>
+                  <h3 className="text-lg font-semibold text-white mb-3">Em Planejamento</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {citiesByStatus.planning.map(city => (
                       <div
@@ -702,7 +711,7 @@ const Cities: React.FC = () => {
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div>
-                            <h3 className="font-semibold text-gray-900">
+                            <h3 className="font-semibold text-white">
                               {city.name}, {city.state}
                             </h3>
                             <span className="text-xs font-medium">{city.status_display}</span>
@@ -713,14 +722,14 @@ const Cities: React.FC = () => {
                                 setEditingCity(city);
                                 setCityFormOpen(true);
                               }}
-                              className="p-1.5 rounded hover:bg-white/50 transition-colors"
+                              className="p-1.5 rounded hover:bg-white/10 transition-colors"
                               title="Editar"
                             >
                               <Edit2 className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteCity(city.id)}
-                              className="p-1.5 rounded hover:bg-white/50 transition-colors text-red-600"
+                              className="p-1.5 rounded hover:bg-white/10 transition-colors text-red-400"
                               title="Excluir"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -729,7 +738,7 @@ const Cities: React.FC = () => {
                         </div>
 
                         {city.description && (
-                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                          <p className="text-sm text-slate-300 mb-3 line-clamp-2">
                             {city.description}
                           </p>
                         )}
@@ -747,7 +756,7 @@ const Cities: React.FC = () => {
                           </div>
                           <button
                             onClick={() => handleChangeStatus(city.id, nextStatus[city.status])}
-                            className="text-xs font-medium px-2 py-1 rounded bg-white/50 hover:bg-white/80 transition-colors"
+                            className="text-xs font-medium px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
                           >
                             → Expansão
                           </button>
@@ -764,15 +773,15 @@ const Cities: React.FC = () => {
 
       {/* City Form Modal */}
       {cityFormOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-slate-900/90 backdrop-blur rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <h2 className="text-xl font-bold text-white mb-4">
               {editingCity ? 'Editar Cidade' : 'Nova Cidade'}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-300 mb-1">
                   Nome da Cidade
                 </label>
                 <input
@@ -784,17 +793,17 @@ const Cities: React.FC = () => {
                       setFormErrors({ ...formErrors, name: '' });
                     }
                   }}
-                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40 ${
-                    formErrors.name ? 'border-red-500 focus:border-red-500' : 'border-gray-200'
+                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40 bg-slate-800 text-white placeholder:text-slate-400 ${
+                    formErrors.name ? 'border-red-500 focus:border-red-500' : 'border-slate-600'
                   }`}
                   placeholder="Ex: Monte Carmelo"
                   required
                 />
-                {formErrors.name && <p className="text-sm text-red-600 mt-1">{formErrors.name}</p>}
+                {formErrors.name && <p className="text-sm text-red-400 mt-1">{formErrors.name}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Estado (UF)</label>
+                <label className="block text-sm font-medium text-slate-300 mb-1">Estado (UF)</label>
                 <input
                   type="text"
                   value={formData.state}
@@ -804,26 +813,26 @@ const Cities: React.FC = () => {
                       setFormErrors({ ...formErrors, state: '' });
                     }
                   }}
-                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40 ${
-                    formErrors.state ? 'border-red-500 focus:border-red-500' : 'border-gray-200'
+                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40 bg-slate-800 text-white placeholder:text-slate-400 ${
+                    formErrors.state ? 'border-red-500 focus:border-red-500' : 'border-slate-600'
                   }`}
                   placeholder="Ex: MG"
                   maxLength={2}
                   required
                 />
                 {formErrors.state && (
-                  <p className="text-sm text-red-600 mt-1">{formErrors.state}</p>
+                  <p className="text-sm text-red-400 mt-1">{formErrors.state}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label className="block text-sm font-medium text-slate-300 mb-1">Status</label>
                 <select
                   value={formData.status}
                   onChange={e =>
                     setFormData({ ...formData, status: e.target.value as CityCreate['status'] })
                   }
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40"
+                  className="w-full rounded-lg border border-slate-600 bg-slate-800 text-white px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40"
                 >
                   <option value="planning">Em Planejamento</option>
                   <option value="expansion">Em Expansão</option>
@@ -832,7 +841,7 @@ const Cities: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-300 mb-1">
                   Descrição (opcional)
                 </label>
                 <textarea
@@ -843,24 +852,24 @@ const Cities: React.FC = () => {
                       setFormErrors({ ...formErrors, description: '' });
                     }
                   }}
-                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40 ${
+                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40 bg-slate-800 text-white placeholder:text-slate-400 ${
                     formErrors.description
                       ? 'border-red-500 focus:border-red-500'
-                      : 'border-gray-200'
+                      : 'border-slate-600'
                   }`}
                   rows={3}
                   placeholder="Notas sobre a cidade..."
                 />
                 {formErrors.description && (
-                  <p className="text-sm text-red-600 mt-1">{formErrors.description}</p>
+                  <p className="text-sm text-red-400 mt-1">{formErrors.description}</p>
                 )}
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-slate-400 mt-1">
                   {formData.description?.length || 0}/500 caracteres
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Prioridade</label>
+                <label className="block text-sm font-medium text-slate-300 mb-1">Prioridade</label>
                 <input
                   type="number"
                   value={formData.priority}
@@ -870,16 +879,16 @@ const Cities: React.FC = () => {
                       setFormErrors({ ...formErrors, priority: '' });
                     }
                   }}
-                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40 ${
-                    formErrors.priority ? 'border-red-500 focus:border-red-500' : 'border-gray-200'
+                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40 bg-slate-800 text-white placeholder:text-slate-400 ${
+                    formErrors.priority ? 'border-red-500 focus:border-red-500' : 'border-slate-600'
                   }`}
                   min={0}
                   max={999}
                 />
                 {formErrors.priority && (
-                  <p className="text-sm text-red-600 mt-1">{formErrors.priority}</p>
+                  <p className="text-sm text-red-400 mt-1">{formErrors.priority}</p>
                 )}
-                <p className="text-xs text-gray-500 mt-1">Maior = mais importante (0-999)</p>
+                <p className="text-xs text-slate-400 mt-1">Maior = mais importante (0-999)</p>
               </div>
 
               <div className="flex justify-end gap-2 pt-4">
@@ -897,7 +906,7 @@ const Cities: React.FC = () => {
                     });
                     setFormErrors({});
                   }}
-                  className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 rounded-lg border border-white/10 text-slate-200 hover:bg-white/10"
                 >
                   Cancelar
                 </button>

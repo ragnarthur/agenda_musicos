@@ -61,14 +61,14 @@ const Requests: React.FC = () => {
       const response = await musicianRequestService.approve(requestId, adminNotes || undefined);
       const origin = window.location.origin;
       const inviteLink = `${origin}/cadastro/invite?token=${response.invite_token}`;
-      
+
       try {
         await navigator.clipboard.writeText(inviteLink);
         showToast.success('Solicitação aprovada! Link de convite copiado.');
-      } catch (clipboardError) {
+      } catch {
         showToast.success('Solicitação aprovada! Link: ' + inviteLink);
       }
-      
+
       await fetchDashboardData();
       setSelectedRequest(null);
       setAdminNotes('');
@@ -176,11 +176,14 @@ const Requests: React.FC = () => {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map(i => (
-          <div key={i} className="bg-white rounded-xl shadow p-5 animate-pulse">
+          <div
+            key={i}
+            className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-5 animate-pulse"
+          >
             <div className="space-y-2 flex-1">
-              <div className="h-5 bg-gray-200 rounded w-1/3"></div>
-              <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-5 bg-slate-700 rounded w-1/3"></div>
+              <div className="h-4 bg-slate-700 rounded w-2/3"></div>
+              <div className="h-3 bg-slate-700 rounded w-1/2"></div>
             </div>
           </div>
         ))}
@@ -191,40 +194,40 @@ const Requests: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Solicitações de Acesso</h1>
-        <p className="text-gray-600">Gerencie as solicitações de novos músicos</p>
+      <div className="bg-slate-900/90 backdrop-blur shadow rounded-lg p-6">
+        <h1 className="text-2xl font-bold text-white mb-2">Solicitações de Acesso</h1>
+        <p className="text-slate-300">Gerencie as solicitações de novos músicos</p>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow p-4">
+      <div className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-4">
         <div className="overflow-x-auto pb-2 mb-4">
           <div className="flex items-center gap-2 min-w-max">
             <button
               type="button"
               onClick={() => setFilter('pending')}
-              className={`px-3 py-1.5 rounded-full text-sm font-semibold ${filter === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'}`}
+              className={`px-3 py-1.5 rounded-full text-sm font-semibold ${filter === 'pending' ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-800 text-slate-400'}`}
             >
               Pendentes
             </button>
             <button
               type="button"
               onClick={() => setFilter('approved')}
-              className={`px-3 py-1.5 rounded-full text-sm font-semibold ${filter === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}
+              className={`px-3 py-1.5 rounded-full text-sm font-semibold ${filter === 'approved' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}
             >
               Aprovados
             </button>
             <button
               type="button"
               onClick={() => setFilter('rejected')}
-              className={`px-3 py-1.5 rounded-full text-sm font-semibold ${filter === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}`}
+              className={`px-3 py-1.5 rounded-full text-sm font-semibold ${filter === 'rejected' ? 'bg-red-500/20 text-red-400' : 'bg-slate-800 text-slate-400'}`}
             >
               Rejeitados
             </button>
             <button
               type="button"
               onClick={() => setFilter('all')}
-              className={`px-3 py-1.5 rounded-full text-sm font-semibold ${filter === 'all' ? 'bg-slate-200 text-slate-700' : 'bg-gray-100 text-gray-600'}`}
+              className={`px-3 py-1.5 rounded-full text-sm font-semibold ${filter === 'all' ? 'bg-slate-800 text-slate-300' : 'bg-slate-800 text-slate-400'}`}
             >
               Todos
             </button>
@@ -232,35 +235,35 @@ const Requests: React.FC = () => {
         </div>
 
         <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="text"
             value={searchTerm}
             onChange={event => setSearchTerm(event.target.value)}
             placeholder="Buscar por nome, email, cidade ou instrumento"
-            className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-400/40"
+            className="w-full pl-9 pr-3 py-2 border border-slate-600 bg-slate-800 text-white placeholder:text-slate-400 rounded-lg text-sm focus:ring-2 focus:ring-amber-400/40"
           />
         </div>
       </div>
 
       {/* Sort Controls */}
-      <div className="bg-white rounded-xl shadow p-4 flex flex-wrap gap-3 items-center">
-        <span className="text-sm font-medium text-gray-700">Ordenar por:</span>
+      <div className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-4 flex flex-wrap gap-3 items-center">
+        <span className="text-sm font-medium text-slate-300">Ordenar por:</span>
         <button
           onClick={() => handleSort('name')}
-          className={`px-3 py-1.5 rounded text-sm ${sortField === 'name' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'}`}
+          className={`px-3 py-1.5 rounded text-sm ${sortField === 'name' ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-800 text-slate-300'}`}
         >
           Nome {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
         </button>
         <button
           onClick={() => handleSort('created_at')}
-          className={`px-3 py-1.5 rounded text-sm ${sortField === 'created_at' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'}`}
+          className={`px-3 py-1.5 rounded text-sm ${sortField === 'created_at' ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-800 text-slate-300'}`}
         >
           Data {sortField === 'created_at' && (sortOrder === 'asc' ? '↑' : '↓')}
         </button>
         <button
           onClick={() => handleSort('status')}
-          className={`px-3 py-1.5 rounded text-sm ${sortField === 'status' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'}`}
+          className={`px-3 py-1.5 rounded text-sm ${sortField === 'status' ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-800 text-slate-300'}`}
         >
           Status {sortField === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}
         </button>
@@ -268,10 +271,10 @@ const Requests: React.FC = () => {
 
       {/* Requests List */}
       {sortedAndFilteredRequests.length === 0 ? (
-        <div className="bg-white rounded-xl shadow p-10 text-center">
-          <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma solicitação encontrada</h3>
-          <p className="text-gray-600">
+        <div className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-10 text-center">
+          <AlertCircle className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-white mb-2">Nenhuma solicitação encontrada</h3>
+          <p className="text-slate-300">
             {searchTerm
               ? 'Tente ajustar os filtros ou buscar por outro termo.'
               : 'Nenhuma solicitação neste status.'}
@@ -281,14 +284,17 @@ const Requests: React.FC = () => {
         <>
           <div className="grid gap-4">
             {paginatedRequests.map(request => (
-              <div key={request.id} className="bg-white rounded-xl shadow p-4 sm:p-5">
+              <div
+                key={request.id}
+                className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-4 sm:p-5"
+              >
                 <div className="space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <span className="text-lg font-semibold text-gray-900">{request.full_name}</span>
+                    <span className="text-lg font-semibold text-white">{request.full_name}</span>
                     {getStatusBadge(request.status)}
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-300">
                     <span className="flex items-center gap-2">
                       <Mail className="h-4 w-4 flex-shrink-0" />
                       {request.email}
@@ -307,7 +313,7 @@ const Requests: React.FC = () => {
                     </span>
                   </div>
 
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-slate-400">
                     Enviado em{' '}
                     {format(parseISO(request.created_at), "dd/MM/yyyy 'às' HH:mm", {
                       locale: ptBR,
@@ -318,7 +324,7 @@ const Requests: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setSelectedRequest(request)}
-                      className="w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
+                      className="w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-lg border border-white/10 text-slate-200 hover:bg-white/10"
                     >
                       Detalhes
                     </button>
@@ -346,7 +352,7 @@ const Requests: React.FC = () => {
                             setAdminNotes('');
                           }}
                           disabled={actionLoading === request.id}
-                          className="w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-lg border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/20 disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                           Rejeitar
                         </button>
@@ -361,7 +367,7 @@ const Requests: React.FC = () => {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-slate-300">
                 Mostrando{' '}
                 {Math.min((currentPage - 1) * itemsPerPage + 1, sortedAndFilteredRequests.length)} -{' '}
                 {Math.min(currentPage * itemsPerPage, sortedAndFilteredRequests.length)} de{' '}
@@ -371,17 +377,17 @@ const Requests: React.FC = () => {
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 rounded border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  className="px-3 py-1 rounded border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 text-slate-300"
                 >
                   Anterior
                 </button>
-                <span className="px-3 py-1">
+                <span className="px-3 py-1 text-slate-300">
                   Página {currentPage} de {totalPages}
                 </span>
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 rounded border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  className="px-3 py-1 rounded border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 text-slate-300"
                 >
                   Próxima
                 </button>
@@ -393,52 +399,53 @@ const Requests: React.FC = () => {
 
       {/* Details Modal */}
       {selectedRequest && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Detalhes da Solicitação</h2>
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-slate-900/90 backdrop-blur rounded-2xl shadow-2xl w-full max-w-lg p-6">
+            <h2 className="text-xl font-bold text-white mb-4">Detalhes da Solicitação</h2>
 
-            <div className="space-y-3 text-sm">
+            <div className="space-y-3 text-sm text-slate-300">
               <div>
-                <strong>Nome:</strong> {selectedRequest.full_name}
+                <strong className="text-white">Nome:</strong> {selectedRequest.full_name}
               </div>
               <div>
-                <strong>Email:</strong> {selectedRequest.email}
+                <strong className="text-white">Email:</strong> {selectedRequest.email}
               </div>
               <div>
-                <strong>Telefone:</strong> {selectedRequest.phone}
+                <strong className="text-white">Telefone:</strong> {selectedRequest.phone}
               </div>
               <div>
-                <strong>Instrumento:</strong> {selectedRequest.instrument}
+                <strong className="text-white">Instrumento:</strong> {selectedRequest.instrument}
               </div>
               <div>
-                <strong>Cidade:</strong> {selectedRequest.city}, {selectedRequest.state}
+                <strong className="text-white">Cidade:</strong> {selectedRequest.city},{' '}
+                {selectedRequest.state}
               </div>
               <div>
-                <strong>Status:</strong> {selectedRequest.status_display}
+                <strong className="text-white">Status:</strong> {selectedRequest.status_display}
               </div>
               {selectedRequest.instagram && (
                 <div>
-                  <strong>Instagram:</strong> {selectedRequest.instagram}
+                  <strong className="text-white">Instagram:</strong> {selectedRequest.instagram}
                 </div>
               )}
             </div>
 
             {selectedRequest.bio && (
-              <div className="text-sm text-gray-600">
-                <strong>Bio:</strong> {selectedRequest.bio}
+              <div className="text-sm text-slate-300">
+                <strong className="text-white">Bio:</strong> {selectedRequest.bio}
               </div>
             )}
 
             {selectedRequest.status === 'pending' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-300 mb-1">
                   Notas do admin (opcional)
                 </label>
                 <textarea
                   value={adminNotes}
                   onChange={event => setAdminNotes(event.target.value)}
                   rows={3}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40"
+                  className="w-full rounded-lg border border-slate-600 bg-slate-800 text-white placeholder:text-slate-400 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40"
                   placeholder="Observações internas ou motivo da recusa"
                 />
               </div>
@@ -448,7 +455,7 @@ const Requests: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedRequest(null)}
-                className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
+                className="px-4 py-2 rounded-lg border border-white/10 text-slate-200 hover:bg-white/10"
               >
                 Fechar
               </button>
@@ -458,7 +465,7 @@ const Requests: React.FC = () => {
                     type="button"
                     onClick={() => handleReject(selectedRequest.id, adminNotes)}
                     disabled={actionLoading === selectedRequest.id}
-                    className="px-4 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="px-4 py-2 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/20 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {actionLoading === selectedRequest.id ? (
                       <span className="flex items-center justify-center gap-2">

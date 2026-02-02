@@ -39,7 +39,7 @@ const AdminLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
@@ -47,25 +47,25 @@ const AdminLogin: React.FC = () => {
             <Shield className="h-8 w-8 text-amber-400" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">GigFlow Admin</h1>
-          <p className="text-gray-400">Acesso Administrativo</p>
+          <p className="text-slate-400">Acesso Administrativo</p>
         </div>
 
         {/* Login Form */}
-        <div className="bg-gray-800 rounded-2xl shadow-2xl p-8">
+        <div className="bg-slate-900/90 backdrop-blur rounded-2xl shadow-2xl p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email ou Username */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
                 Email ou Usuário
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <input
                   type="text"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   required
-                  className="w-full pl-11 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder:text-slate-400 focus:ring-2 focus:ring-amber-400 focus:border-transparent"
                   placeholder="admin_1"
                 />
               </div>
@@ -74,15 +74,15 @@ const AdminLogin: React.FC = () => {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Senha</label>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Senha</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <input
                   type="password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   required
-                  className="w-full pl-11 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder:text-slate-400 focus:ring-2 focus:ring-amber-400 focus:border-transparent"
                   placeholder="••••••••"
                 />
               </div>
@@ -113,7 +113,7 @@ const AdminLogin: React.FC = () => {
         <div className="text-center mt-6">
           <button
             onClick={() => navigate('/')}
-            className="text-gray-400 hover:text-white text-sm transition-colors"
+            className="text-slate-400 hover:text-white text-sm transition-colors"
           >
             ← Voltar para o início
           </button>

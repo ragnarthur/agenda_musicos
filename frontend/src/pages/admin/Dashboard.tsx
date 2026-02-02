@@ -48,12 +48,14 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
-  const heroStats = extendedStats ? [
-    { label: 'Total Solicitações', value: extendedStats.requests.total, icon: TrendingUp },
-    { label: 'Pendentes', value: extendedStats.requests.pending, icon: TrendingUp },
-    { label: 'Músicos Ativos', value: extendedStats.musicians.total, icon: Users },
-    { label: 'Cidades Parceiras', value: extendedStats.cities.partner, icon: Building2 },
-  ] : [];
+  const heroStats = extendedStats
+    ? [
+        { label: 'Total Solicitações', value: extendedStats.requests.total, icon: TrendingUp },
+        { label: 'Pendentes', value: extendedStats.requests.pending, icon: TrendingUp },
+        { label: 'Músicos Ativos', value: extendedStats.musicians.total, icon: Users },
+        { label: 'Cidades Parceiras', value: extendedStats.cities.partner, icon: Building2 },
+      ]
+    : [];
 
   return (
     <div className="space-y-6">
@@ -98,7 +100,7 @@ const AdminDashboard: React.FC = () => {
           <motion.h2
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-2xl font-bold text-gray-900 mb-4"
+            className="text-2xl font-bold text-white mb-4"
           >
             Top Cidades
           </motion.h2>
@@ -109,17 +111,15 @@ const AdminDashboard: React.FC = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="flex items-center justify-between p-3 md:p-4 bg-indigo-50/50 rounded-lg hover:bg-indigo-50 transition-colors"
+                className="flex items-center justify-between p-3 md:p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
               >
                 <div>
-                  <span className="font-medium text-gray-900">
+                  <span className="font-medium text-white">
                     {city.city}, {city.state}
                   </span>
-                  <span className="ml-3 text-sm text-gray-600">{city.total} solicitações</span>
+                  <span className="ml-3 text-sm text-slate-300">{city.total} solicitações</span>
                 </div>
-                <span className="text-sm font-medium text-amber-600">
-                  {city.pending} pendentes
-                </span>
+                <span className="text-sm font-medium text-amber-400">{city.pending} pendentes</span>
               </motion.div>
             ))}
           </div>
