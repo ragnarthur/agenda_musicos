@@ -96,7 +96,10 @@ class CheckEmailView(APIView):
         if user_exists:
             return Response({"available": False, "reason": "already_registered"})
         if request_entry:
-            if request_entry.status in ["pending", "approved"] and not request_entry.invite_used:
+            if (
+                request_entry.status in ["pending", "approved"]
+                and not request_entry.invite_used
+            ):
                 return Response({"available": False, "reason": "pending_verification"})
             return Response({"available": False, "reason": request_entry.status})
 
@@ -138,7 +141,9 @@ class RegisterWithInviteView(APIView):
                     {"error": "Este convite já foi utilizado."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            return Response({"error": "Convite expirado."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Convite expirado."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         # Validações de campos
         required_fields = ["password"]
@@ -155,12 +160,16 @@ class RegisterWithInviteView(APIView):
         try:
             validate_password(password)
         except DjangoValidationError as e:
-            return Response({"password": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"password": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         # Usa dados do MusicianRequest ou permite override
         email = musician_request.email
         first_name = data.get("first_name") or musician_request.full_name.split()[0]
-        last_name = data.get("last_name") or " ".join(musician_request.full_name.split()[1:])
+        last_name = data.get("last_name") or " ".join(
+            musician_request.full_name.split()[1:]
+        )
         username = data.get("username") or email.split("@")[0]
 
         # Validação de username único
@@ -192,9 +201,20 @@ class RegisterWithInviteView(APIView):
                 user.save()
 
                 # Cria músico
-                instruments = musician_request.instruments or []
-                if musician_request.instrument and musician_request.instrument not in instruments:
-                    instruments.insert(0, musician_request.instrument)
+                # Remove duplicados da lista de instrumentos antes de criar
+                instruments = list(dict.fromkeys(musician_request.instruments or []))
+
+                if musician_request.instrument:
+                    if musician_request.instrument not in instruments:
+                        instruments.insert(0, musician_request.instrument)
+                    # Se já existe na lista, não duplicar - instrument já será incluído via instruments
+                    else:
+                        # Instrumento principal já está na lista, removemos duplicados
+                        instruments = [musician_request.instrument] + [
+                            inst
+                            for inst in instruments
+                            if inst != musician_request.instrument
+                        ]
 
                 musician = Musician.objects.create(
                     user=user,
@@ -292,7 +312,9 @@ class RegisterCompanyView(APIView):
         try:
             validate_password(password)
         except DjangoValidationError as e:
-            return Response({"password": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"password": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         # Validação de username único
         username = email.split("@")[0]
@@ -394,7 +416,9 @@ def update_avatar(request):
     try:
         musician = request.user.musician_profile
     except Musician.DoesNotExist:
-        return Response({"detail": "Perfil não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"detail": "Perfil não encontrado."}, status=status.HTTP_404_NOT_FOUND
+        )
 
     try:
         content = download_image_from_url(

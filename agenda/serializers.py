@@ -243,10 +243,19 @@ class MusicianUpdateSerializer(serializers.ModelSerializer):
                 )
                 if cleaned_item:
                     cleaned.append(cleaned_item)
+            # Remove duplicados usando dict.fromkeys
             cleaned = list(dict.fromkeys(cleaned))
             attrs["instruments"] = cleaned
-            if attrs.get("instrument") and attrs["instrument"] not in cleaned:
-                attrs["instruments"] = [attrs["instrument"], *cleaned]
+            # Adiciona instrumento principal no início se fornecido e não estiver na lista
+            if attrs.get("instrument"):
+                if attrs["instrument"] not in cleaned:
+                    attrs["instruments"] = [attrs["instrument"], *cleaned]
+                else:
+                    # Instrumento já está na lista, mantém ele como primeiro
+                    cleaned_without_main = [
+                        inst for inst in cleaned if inst != attrs["instrument"]
+                    ]
+                    attrs["instruments"] = [attrs["instrument"], *cleaned_without_main]
 
         if "bio" in attrs:
             attrs["bio"] = sanitize_string(

@@ -267,17 +267,17 @@ const MusicianPublicProfile: React.FC = () => {
                       {formatInstrumentLabel(musician.instrument)}
                     </span>
                   )}
-                  {musician.instruments?.map(
-                    inst =>
-                      inst !== musician.instrument && (
-                        <span
-                          key={inst}
-                          className="px-3 py-1 bg-white/10 text-gray-300 rounded-full text-sm"
-                        >
-                          {formatInstrumentLabel(inst)}
-                        </span>
-                      )
-                  )}
+                  {/* Usa Set para garantir que instrumentos duplicados não sejam exibidos */}
+                  {[...new Set(musician.instruments || [])]
+                    .filter(inst => inst !== musician.instrument)
+                    .map(inst => (
+                      <span
+                        key={inst}
+                        className="px-3 py-1 bg-white/10 text-gray-300 rounded-full text-sm"
+                      >
+                        {formatInstrumentLabel(inst)}
+                      </span>
+                    ))}
                 </div>
 
                 {/* Location */}
