@@ -38,7 +38,14 @@ const shouldFallbackToStoredRefresh = (error: unknown): boolean => {
 const refreshAuthToken = async (): Promise<void> => {
   if (!refreshingPromise) {
     const doRefresh = async () => {
+      const storedRefresh = getStoredRefreshToken();
+
+      if (!storedRefresh) {
+        throw new Error('No refresh token available');
+      }
+
       try {
+        // Tenta refresh com cookie primeiro (pré-rotado)
         const response = await axios.post(
           `${API_URL}/token/refresh/`,
           {},
@@ -48,24 +55,20 @@ const refreshAuthToken = async (): Promise<void> => {
         setStoredRefreshToken((response.data as { refresh?: string } | undefined)?.refresh);
         return;
       } catch (error) {
-        const storedRefresh = getStoredRefreshToken();
         const status = axios.isAxiosError(error) ? error.response?.status : undefined;
 
-        if (!storedRefresh) {
+        // Se o refresh com cookie falhar com 401 ou mensagem específica, tenta com o token armazenado
+        if (status === 401 || shouldFallbackToStoredRefresh(error)) {
+          const response = await axios.post(
+            `${API_URL}/token/refresh/`,
+            { refresh: storedRefresh },
+            { withCredentials: true }
+          );
+          setStoredAccessToken((response.data as { access?: string } | undefined)?.access);
+          setStoredRefreshToken((response.data as { refresh?: string } | undefined)?.refresh);
+        } else {
           throw error;
         }
-
-        if (status !== 401 && !shouldFallbackToStoredRefresh(error)) {
-          throw error;
-        }
-
-        const response = await axios.post(
-          `${API_URL}/token/refresh/`,
-          { refresh: storedRefresh },
-          { withCredentials: true }
-        );
-        setStoredAccessToken((response.data as { access?: string } | undefined)?.access);
-        setStoredRefreshToken((response.data as { refresh?: string } | undefined)?.refresh);
       }
     };
 
@@ -102,6 +105,8 @@ api.interceptors.response.use(
       '/password-reset/',
       '/password-reset-confirm/',
       '/admin/token/',
+      '/admin/me/',
+      '/api/token/refresh/',
     ];
 
     const isPublicAuthPath = originalRequest?.url
