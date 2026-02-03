@@ -60,6 +60,14 @@ const ContractorRequests = lazy(() => import('./pages/ContractorRequests'));
 // Public pages (city landing and public profiles)
 const CityLanding = lazy(() => import('./pages/CityLanding'));
 const MusicianPublicProfile = lazy(() => import('./pages/MusicianPublicProfile'));
+const OurMusicians = lazy(() => import('./pages/OurMusicians'));
+
+// Quote detail pages
+const MusicianQuoteDetail = lazy(() => import('./pages/MusicianQuoteDetail'));
+const ContractorQuoteDetail = lazy(() => import('./pages/ContractorQuoteDetail'));
+
+// Admin pages
+const BookingAudit = lazy(() => import('./pages/admin/BookingAudit'));
 
 // Componente de loading para Suspense
 const PageLoader: React.FC = () => (
@@ -312,6 +320,14 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/musicos/pedidos/:id"
+          element={
+            <ProtectedRoute>
+              <MusicianQuoteDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/musicos"
           element={
             <ProtectedRoute>
@@ -409,7 +425,25 @@ function AppRoutes() {
           }
         />
 
+        {/* Public Route - Our Musicians */}
+        <Route
+          path="/nossos-musicos"
+          element={
+            <PublicRoute>
+              <OurMusicians />
+            </PublicRoute>
+          }
+        />
+
         {/* Contractor Routes */}
+        <Route
+          path="/contratante/pedidos/:id"
+          element={
+            <ContractorProtectedRoute>
+              <ContractorQuoteDetail />
+            </ContractorProtectedRoute>
+          }
+        />
         <Route
           path="/contratante/pedidos"
           element={
@@ -440,6 +474,7 @@ function AppRoutes() {
           <Route path={ADMIN_CHILD_ROUTES.dashboard} element={<AdminDashboardPage />} />
           <Route path={ADMIN_CHILD_ROUTES.requests} element={<AdminRequests />} />
           <Route path={ADMIN_CHILD_ROUTES.requestsDetail} element={<AdminRequests />} />
+          <Route path={ADMIN_CHILD_ROUTES.bookingAudit} element={<BookingAudit />} />
           <Route path={ADMIN_CHILD_ROUTES.cities} element={<AdminCities />} />
           <Route path={ADMIN_CHILD_ROUTES.citiesDetail} element={<AdminCities />} />
           <Route path={ADMIN_CHILD_ROUTES.users} element={<AdminUsers />} />

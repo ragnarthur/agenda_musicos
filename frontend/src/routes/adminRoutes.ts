@@ -1,4 +1,4 @@
-import { Building2, LayoutDashboard, MapPin, UserPlus, Users } from 'lucide-react';
+import { Building2, LayoutDashboard, MapPin, UserPlus, Users, ClipboardList } from 'lucide-react';
 
 export const ADMIN_ROUTES = {
   base: '/admin',
@@ -6,6 +6,7 @@ export const ADMIN_ROUTES = {
   dashboard: '/admin/dashboard',
   requests: '/admin/solicitacoes',
   requestsDetail: (id: string | number) => `/admin/solicitacoes/${id}`,
+  bookingAudit: '/admin/auditoria-reservas',
   cities: '/admin/cidades',
   citiesDetail: (state: string, city: string) =>
     `/admin/cidades/${encodeURIComponent(state)}/${encodeURIComponent(city)}`,
@@ -19,6 +20,7 @@ export const ADMIN_CHILD_ROUTES = {
   dashboard: 'dashboard',
   requests: 'solicitacoes',
   requestsDetail: 'solicitacoes/:id',
+  bookingAudit: 'auditoria-reservas',
   cities: 'cidades',
   citiesDetail: 'cidades/:state/:city',
   users: 'usuarios',
@@ -35,8 +37,13 @@ export const adminNavItems = [
   },
   {
     icon: Users,
-    label: 'Solicitações',
+    label: 'Solicitacões',
     path: ADMIN_ROUTES.requests,
+  },
+  {
+    icon: ClipboardList,
+    label: 'Auditoria de Reservas',
+    path: ADMIN_ROUTES.bookingAudit,
   },
   {
     icon: UserPlus,
