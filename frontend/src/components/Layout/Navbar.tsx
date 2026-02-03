@@ -307,7 +307,7 @@ const Navbar: React.FC = memo(() => {
 
             <div className="flex items-center gap-2">
               <div className="hidden md:block min-w-0 max-w-[180px] lg:max-w-[220px] mr-4">
-                <CityBadge />
+                <CityBadge className="w-full" />
               </div>
               <ThemeToggle />
               <button
