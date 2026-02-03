@@ -28,6 +28,7 @@ from .serializers import (
     NotificationLogSerializer,
     NotificationPreferenceSerializer,
     TelegramConnectSerializer,
+    TelegramDisconnectSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -307,3 +308,156 @@ class TestNotificationView(APIView):
                 "external_id": result.external_id,
             }
         )
+
+
+class NotificationPreferenceView(APIView):
+    """
+    GET/PUT/PATCH /api/notifications/preferences/
+    Retorna e atualiza preferencias de notificacao do usuario logado.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        prefs, _ = NotificationPreference.objects.get_or_create(user=request.user)
+        serializer = NotificationPreferenceSerializer(prefs)
+        return Response(serializer.data)
+
+    def put(self, request):
+        prefs, _ = NotificationPreference.objects.get_or_create(user=request.user)
+        serializer = NotificationPreferenceSerializer(prefs, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    def patch(self, request):
+        prefs, _ = NotificationPreference.objects.get_or_create(user=request.user)
+        serializer = NotificationPreferenceSerializer(
+            prefs, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
+class NotificationLogListView(APIView):
+    """
+    GET /api/notifications/logs/
+    Lista historico de notificacoes do usuario logado.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        limit_raw = request.query_params.get("limit", "50")
+        try:
+            limit = max(1, min(int(limit_raw), 200))
+        except (TypeError, ValueError):
+            limit = 50
+
+        logs = NotificationLog.objects.filter(user=request.user).order_by("-created_at")[
+            :limit
+        ]
+        serializer = NotificationLogSerializer(logs, many=True)
+        return Response(serializer.data)
+
+
+class TelegramConnectView(APIView):
+    """
+    POST /api/notifications/telegram/connect/
+    Gera codigo de verificacao para conectar Telegram.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        provider = TelegramProvider()
+        if not provider.is_configured():
+            return Response(
+                {"detail": "Telegram nao configurado."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        # Invalida codigos antigos
+        TelegramVerification.objects.filter(user=request.user, used=False).update(
+            used=True
+        )
+
+        code = None
+        for _ in range(5):
+            candidate = secrets.token_hex(3).upper()
+            if not TelegramVerification.objects.filter(
+                verification_code=candidate
+            ).exists():
+                code = candidate
+                break
+
+        if not code:
+            return Response(
+                {"detail": "Nao foi possivel gerar codigo."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        expires_in = 10
+        TelegramVerification.objects.create(
+            user=request.user,
+            verification_code=code,
+            expires_at=timezone.now() + timedelta(minutes=expires_in),
+        )
+
+        bot_username = getattr(settings, "TELEGRAM_BOT_USERNAME", "") or ""
+        if bot_username and not bot_username.startswith("@"):
+            bot_username = f"@{bot_username}"
+
+        instructions = (
+            "Abra o Telegram, procure pelo bot e envie o codigo abaixo.\n"
+            "Se nao conseguir encontrar, use o username do bot indicado."
+        )
+
+        payload = {
+            "code": code,
+            "bot_username": bot_username,
+            "expires_in_minutes": expires_in,
+            "instructions": instructions,
+        }
+        serializer = TelegramConnectSerializer(payload)
+        return Response(serializer.data)
+
+
+class TelegramDisconnectView(APIView):
+    """
+    POST /api/notifications/telegram/disconnect/
+    Desconecta Telegram do usuario logado.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        prefs, _ = NotificationPreference.objects.get_or_create(user=request.user)
+        prefs.telegram_chat_id = None
+        prefs.telegram_verified = False
+        if prefs.preferred_channel == NotificationChannel.TELEGRAM:
+            prefs.preferred_channel = NotificationChannel.EMAIL
+        prefs.save()
+
+        TelegramVerification.objects.filter(user=request.user, used=False).update(
+            used=True
+        )
+
+        payload = {"success": True, "message": "Telegram desconectado."}
+        serializer = TelegramDisconnectSerializer(payload)
+        return Response(serializer.data)
+
+
+class TelegramStatusView(APIView):
+    """
+    GET /api/notifications/telegram/status/
+    Retorna status de conexao do Telegram.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        prefs, _ = NotificationPreference.objects.get_or_create(user=request.user)
+        connected = bool(prefs.telegram_chat_id and prefs.telegram_verified)
+        return Response({"connected": connected})

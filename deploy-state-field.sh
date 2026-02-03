@@ -51,6 +51,8 @@ echo ""
 # 4. Restart dos serviços (migrations rodam automaticamente)
 echo "🔄 4. Reiniciando serviços..."
 docker compose -f docker-compose.prod.yml up -d backend frontend
+echo "🔁 Reiniciando nginx para atualizar upstream do backend..."
+docker compose -f docker-compose.prod.yml restart nginx
 echo "✅ Serviços reiniciados"
 echo ""
 

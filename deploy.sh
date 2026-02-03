@@ -64,6 +64,8 @@ build_and_deploy() {
 
     print_step "Construindo e iniciando containers..."
     docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
+    print_step "Reiniciando nginx para atualizar upstream do backend..."
+    docker compose -f docker-compose.prod.yml restart nginx
 
     print_step "Aguardando containers iniciarem..."
     sleep 15
