@@ -588,12 +588,17 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
                     musician.avatar = avatar_file
                     musician.save(update_fields=["avatar"])
 
-                # Cria organização pessoal
-                org, _ = Organization.objects.get_or_create(
+                # Cria organização pessoal com nome único
+                base_org_name = f"Org de {username}"
+                org_name = base_org_name
+                counter = 2
+                while Organization.objects.filter(name=org_name).exists():
+                    org_name = f"{base_org_name} {counter}"
+                    counter += 1
+
+                org = Organization.objects.create(
                     owner=user,
-                    defaults={
-                        "name": f"Org de {username}",
-                    },
+                    name=org_name,
                 )
 
                 Membership.objects.get_or_create(
