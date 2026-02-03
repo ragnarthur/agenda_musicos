@@ -103,7 +103,7 @@ const Marketplace: React.FC = () => {
       setGigs(gigsData);
       setMyApplications(myApplicationsData);
     } catch (err) {
-      logError(err);
+      logError('Marketplace', err);
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);
@@ -139,7 +139,7 @@ const Marketplace: React.FC = () => {
       setShowCreateModal(false);
       await loadData();
     } catch (err) {
-      logError(err);
+      logError('Marketplace', err);
       setError(getErrorMessage(err));
     } finally {
       setCreating(false);
@@ -168,7 +168,7 @@ const Marketplace: React.FC = () => {
       });
       await loadData();
     } catch (err) {
-      logError(err);
+      logError('Marketplace', err);
       setError(getErrorMessage(err));
     }
   };
@@ -281,7 +281,7 @@ const Marketplace: React.FC = () => {
       setDeleteTarget(null);
       await loadData();
     } catch (err) {
-      logError(err);
+      logError('Marketplace', err);
       setError(getErrorMessage(err));
     } finally {
       setDeleteLoading(false);
