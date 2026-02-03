@@ -1,5 +1,7 @@
 # 🎵 Agenda de Músicos - GigFlow
 
+**Versão:** Beta 0.0.1
+
 Sistema completo de gerenciamento de agenda para bandas e músicos.
 
 ## 📋 Descrição

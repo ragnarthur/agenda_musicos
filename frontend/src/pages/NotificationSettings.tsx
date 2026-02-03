@@ -228,7 +228,7 @@ const NotificationSettings: React.FC = () => {
                         {channelIcons[channel.id]}
                       </div>
                       <div className="flex-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 sm:justify-end">
                           <span
                             className={`font-medium ${isSelected ? 'text-white' : 'text-slate-200'}`}
                           >
@@ -353,7 +353,7 @@ const NotificationSettings: React.FC = () => {
         {/* Telegram Conectado */}
         {preferences?.telegram_connected && !telegramCode && (
           <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/30 mb-6">
-            <div className="flex items-center justify-between">
+            <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-green-500/20 rounded-lg">
                   <Check className="h-5 w-5 text-green-400" />
