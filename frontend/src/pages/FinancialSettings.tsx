@@ -38,7 +38,22 @@ const DEFAULT_EQUIPMENTS: EquipmentRow[] = [
 
 const parseDecimal = (value: string): number | null => {
   if (!value) return null;
-  const sanitized = value.replace(/\./g, '').replace(',', '.');
+
+  const cleaned = value.replace(/\s/g, '');
+
+  const hasComma = cleaned.includes(',');
+  const hasDot = cleaned.includes('.');
+
+  let sanitized = cleaned;
+
+  if (hasComma && hasDot) {
+    sanitized = cleaned.replace(/\./g, '').replace(',', '.');
+  } else if (hasComma) {
+    sanitized = cleaned.replace(',', '.');
+  } else {
+    sanitized = cleaned;
+  }
+
   const num = Number(sanitized);
   return Number.isFinite(num) ? Number(num.toFixed(2)) : null;
 };

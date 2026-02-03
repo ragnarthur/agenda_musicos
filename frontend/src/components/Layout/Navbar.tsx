@@ -1,6 +1,6 @@
 // components/Layout/Navbar.tsx
 import React, { useCallback, useEffect, useState, memo } from 'react';
-import { Link, NavLink as RouterNavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink as RouterNavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   Calendar,
   Users,
@@ -25,6 +25,7 @@ import { ADMIN_ROUTES } from '../../routes/adminRoutes';
 const Navbar: React.FC = memo(() => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [openMore, setOpenMore] = useState(false);
   const [openDesktopMore, setOpenDesktopMore] = useState(false);
 
@@ -41,16 +42,30 @@ const Navbar: React.FC = memo(() => {
 
   useEffect(() => {
     if (!openDesktopMore) return;
-    const onPointerDown = (event: PointerEvent) => {
+    const onClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null;
       if (target?.closest('[data-more-menu="desktop"]')) {
         return;
       }
       setOpenDesktopMore(false);
     };
-    document.addEventListener('pointerdown', onPointerDown);
-    return () => document.removeEventListener('pointerdown', onPointerDown);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpenDesktopMore(false);
+      }
+    };
+    document.addEventListener('click', onClickOutside);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('click', onClickOutside);
+      document.removeEventListener('keydown', onKeyDown);
+    };
   }, [openDesktopMore]);
+
+  useEffect(() => {
+    setOpenDesktopMore(false);
+    setOpenMore(false);
+  }, [location.pathname]);
 
   return (
     <nav className="bg-gradient-to-r from-slate-950/90 via-slate-900/85 to-slate-950/90 backdrop-blur-xl shadow-lg shadow-black/30 sticky top-0 z-50 border-b border-white/10 overflow-visible">
@@ -95,7 +110,7 @@ const Navbar: React.FC = memo(() => {
               label="Datas Disponíveis"
             />
             <AppNavLink to="/marketplace" icon={<Megaphone className="h-5 w-5" />} label="Vagas" />
-            <div className="relative" data-more-menu="desktop">
+            <div className="relative z-[60]" data-more-menu="desktop">
               <button
                 type="button"
                 onClick={() => setOpenDesktopMore(prev => !prev)}
@@ -107,12 +122,9 @@ const Navbar: React.FC = memo(() => {
                 <span>Mais</span>
               </button>
               {openDesktopMore && (
-                <div
-                  className="absolute right-0 mt-2 w-60 rounded-xl bg-slate-950/95 border border-white/10 shadow-2xl shadow-black/40 p-2 z-50"
-                >
+                <div className="absolute right-0 mt-2 w-60 rounded-xl bg-slate-950/95 border border-white/10 shadow-2xl shadow-black/40 p-2 z-[70]">
                   <RouterNavLink
                     to="/configuracoes/notificacoes"
-                    onClick={() => setOpenDesktopMore(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                         isActive ? 'bg-white/10 text-white' : 'text-slate-200 hover:bg-white/5'
@@ -124,7 +136,6 @@ const Navbar: React.FC = memo(() => {
                   </RouterNavLink>
                   <RouterNavLink
                     to="/aprovacoes"
-                    onClick={() => setOpenDesktopMore(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                         isActive
@@ -145,7 +156,6 @@ const Navbar: React.FC = memo(() => {
                   </RouterNavLink>
                   <RouterNavLink
                     to="/configuracoes/financeiro"
-                    onClick={() => setOpenDesktopMore(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                         isActive
@@ -160,7 +170,6 @@ const Navbar: React.FC = memo(() => {
                   {isStaff && (
                     <RouterNavLink
                       to={ADMIN_ROUTES.dashboard}
-                      onClick={() => setOpenDesktopMore(false)}
                       className={({ isActive }) =>
                         `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                           isActive
@@ -186,7 +195,7 @@ const Navbar: React.FC = memo(() => {
             />
             <AppNavLinkCompact to="/musicos" icon={<Users className="h-5 w-5" />} label="Músicos" />
             <AppNavLinkCompact to="/marketplace" icon={<Megaphone className="h-5 w-5" />} label="Vagas" />
-            <div className="relative" data-more-menu="desktop">
+            <div className="relative z-[60]" data-more-menu="desktop">
               <button
                 type="button"
                 onClick={() => setOpenDesktopMore(prev => !prev)}
@@ -199,12 +208,9 @@ const Navbar: React.FC = memo(() => {
                 <span className="hidden lg:inline">Mais</span>
               </button>
               {openDesktopMore && (
-                <div
-                  className="absolute right-0 mt-2 w-60 rounded-xl bg-slate-950/95 border border-white/10 shadow-2xl shadow-black/40 p-2 z-50"
-                >
+                <div className="absolute right-0 mt-2 w-60 rounded-xl bg-slate-950/95 border border-white/10 shadow-2xl shadow-black/40 p-2 z-[70]">
                   <RouterNavLink
                     to="/conexoes"
-                    onClick={() => setOpenDesktopMore(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                         isActive ? 'bg-white/10 text-white' : 'text-slate-200 hover:bg-white/5'
@@ -216,7 +222,6 @@ const Navbar: React.FC = memo(() => {
                   </RouterNavLink>
                   <RouterNavLink
                     to="/disponibilidades"
-                    onClick={() => setOpenDesktopMore(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                         isActive ? 'bg-white/10 text-white' : 'text-slate-200 hover:bg-white/5'
@@ -228,7 +233,6 @@ const Navbar: React.FC = memo(() => {
                   </RouterNavLink>
                   <RouterNavLink
                     to="/configuracoes/notificacoes"
-                    onClick={() => setOpenDesktopMore(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                         isActive ? 'bg-white/10 text-white' : 'text-slate-200 hover:bg-white/5'
@@ -240,7 +244,6 @@ const Navbar: React.FC = memo(() => {
                   </RouterNavLink>
                   <RouterNavLink
                     to="/aprovacoes"
-                    onClick={() => setOpenDesktopMore(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                         isActive
@@ -261,7 +264,6 @@ const Navbar: React.FC = memo(() => {
                   </RouterNavLink>
                   <RouterNavLink
                     to="/configuracoes/financeiro"
-                    onClick={() => setOpenDesktopMore(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                         isActive
@@ -276,7 +278,6 @@ const Navbar: React.FC = memo(() => {
                   {isStaff && (
                     <RouterNavLink
                       to={ADMIN_ROUTES.dashboard}
-                      onClick={() => setOpenDesktopMore(false)}
                       className={({ isActive }) =>
                         `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                           isActive
