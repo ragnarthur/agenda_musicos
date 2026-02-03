@@ -306,7 +306,7 @@ const Navbar: React.FC = memo(() => {
             </div>
 
             <div className="flex items-center gap-2">
-              <CityBadge className="hidden md:inline-flex max-w-[180px]" />
+              <CityBadge className="hidden md:inline-flex min-w-0 max-w-[220px] overflow-hidden" />
               <ThemeToggle />
               <button
                 onClick={handleLogout}
