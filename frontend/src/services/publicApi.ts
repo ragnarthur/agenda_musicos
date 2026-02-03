@@ -265,6 +265,14 @@ export const musicianRequestService = {
     return response.data;
   },
 
+  // Admin - reenviar convite
+  resendInvite: async (
+    id: number
+  ): Promise<{ message: string; invite_token: string; invite_expires_at: string | null }> => {
+    const response = await api.post(`/admin/musician-requests/${id}/resend/`);
+    return response.data;
+  },
+
   // Admin - rejeitar
   reject: async (id: number, adminNotes?: string): Promise<{ message: string }> => {
     const response = await api.post(`/admin/musician-requests/${id}/reject/`, {

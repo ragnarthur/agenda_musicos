@@ -79,6 +79,30 @@ const Requests: React.FC = () => {
     }
   };
 
+  const handleResendInvite = async (requestId: number) => {
+    setActionLoading(requestId);
+    try {
+      const response = await musicianRequestService.resendInvite(requestId);
+      const origin = window.location.origin;
+      const inviteLink = `${origin}/cadastro/invite?token=${response.invite_token}`;
+
+      try {
+        await navigator.clipboard.writeText(inviteLink);
+        showToast.success('Email reenviado! Link de convite copiado.');
+      } catch {
+        showToast.success('Email reenviado! Link: ' + inviteLink);
+      }
+
+      await fetchDashboardData();
+      setSelectedRequest(null);
+      setAdminNotes('');
+    } catch (error) {
+      showToast.apiError(error);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleReject = async (requestId: number, reason: string) => {
     setActionLoading(requestId);
     try {
@@ -358,6 +382,23 @@ const Requests: React.FC = () => {
                         </button>
                       </>
                     )}
+                    {request.status === 'approved' && !request.invite_used && (
+                      <button
+                        type="button"
+                        onClick={() => handleResendInvite(request.id)}
+                        disabled={actionLoading === request.id}
+                        className="w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-lg border border-amber-500/40 text-amber-300 hover:bg-amber-500/10 disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {actionLoading === request.id ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <div className="animate-spin h-4 w-4 border-2 border-amber-300 border-t-transparent rounded-full"></div>
+                            Reenviando...
+                          </span>
+                        ) : (
+                          'Reenviar convite'
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -492,6 +533,23 @@ const Requests: React.FC = () => {
                     )}
                   </button>
                 </>
+              )}
+              {selectedRequest.status === 'approved' && !selectedRequest.invite_used && (
+                <button
+                  type="button"
+                  onClick={() => handleResendInvite(selectedRequest.id)}
+                  disabled={actionLoading === selectedRequest.id}
+                  className="px-4 py-2 rounded-lg border border-amber-500/40 text-amber-300 hover:bg-amber-500/10 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {actionLoading === selectedRequest.id ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <div className="animate-spin h-4 w-4 border-2 border-amber-300 border-t-transparent rounded-full"></div>
+                      Reenviando...
+                    </span>
+                  ) : (
+                    'Reenviar convite'
+                  )}
+                </button>
               )}
             </div>
           </div>

@@ -64,6 +64,7 @@ from .view_functions import (  # Musician Request views; Contact Request views; 
     list_sent_contact_requests,
     list_sponsors,
     reject_musician_request,
+    resend_musician_request_invite,
     reply_contact_request,
     update_company_profile,
     upload_avatar,
@@ -156,6 +157,11 @@ urlpatterns = [
         "admin/musician-requests/<int:request_id>/approve/",
         approve_musician_request,
         name="admin-musician-request-approve",
+    ),
+    path(
+        "admin/musician-requests/<int:request_id>/resend/",
+        resend_musician_request_invite,
+        name="admin-musician-request-resend",
     ),
     path(
         "admin/musician-requests/<int:request_id>/reject/",

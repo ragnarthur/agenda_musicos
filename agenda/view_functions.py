@@ -5,7 +5,8 @@ Mantem compatibilidade com as rotas em agenda/urls.py.
 """
 
 import logging
-from datetime import date
+import secrets
+from datetime import date, timedelta
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -429,6 +430,46 @@ def create_musician_request(request):
     )
 
 
+def _send_invite_email(musician_request: MusicianRequest) -> tuple[str, str]:
+    frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
+    invite_url = f"{frontend_url}/cadastro/invite?token={musician_request.invite_token}"
+    expires_at = musician_request.invite_expires_at.strftime("%d/%m/%Y às %H:%M")
+
+    context = {
+        "full_name": musician_request.full_name,
+        "email": musician_request.email,
+        "invite_url": invite_url,
+        "expires_at": expires_at,
+    }
+    html_message = render_to_string("emails/invite_approved.html", context)
+
+    text_message = f"""
+Olá {musician_request.full_name}!
+
+Sua solicitação de acesso ao GigFlow foi aprovada! 🎉
+
+Para completar seu cadastro, clique no link abaixo:
+{invite_url}
+
+Importante: Este convite expira em 7 dias ({expires_at}).
+
+Bem-vindo ao GigFlow!
+
+---
+Este é um email automático. Por favor, não responda.
+    """.strip()
+
+    send_mail(
+        subject="🎉 Sua solicitação foi aprovada - GigFlow",
+        message=text_message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[musician_request.email],
+        html_message=html_message,
+        fail_silently=False,
+    )
+    return invite_url, expires_at
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def list_musician_requests(request):
@@ -482,42 +523,7 @@ def approve_musician_request(request, request_id):
     invite_token = musician_request.approve(request.user, notes)
 
     try:
-        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
-        invite_url = f"{frontend_url}/cadastro/invite?token={invite_token}"
-        expires_at = musician_request.invite_expires_at.strftime("%d/%m/%Y às %H:%M")
-
-        context = {
-            "full_name": musician_request.full_name,
-            "email": musician_request.email,
-            "invite_url": invite_url,
-            "expires_at": expires_at,
-        }
-        html_message = render_to_string("emails/invite_approved.html", context)
-
-        text_message = f"""
-Olá {musician_request.full_name}!
-
-Sua solicitação de acesso ao GigFlow foi aprovada! 🎉
-
-Para completar seu cadastro, clique no link abaixo:
-{invite_url}
-
-Importante: Este convite expira em 7 dias ({expires_at}).
-
-Bem-vindo ao GigFlow!
-
----
-Este é um email automático. Por favor, não responda.
-        """.strip()
-
-        send_mail(
-            subject="🎉 Sua solicitação foi aprovada - GigFlow",
-            message=text_message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[musician_request.email],
-            html_message=html_message,
-            fail_silently=False,
-        )
+        _send_invite_email(musician_request)
 
         logger.info("Email de aprovação enviado para %s", musician_request.email)
 
@@ -529,6 +535,58 @@ Este é um email automático. Por favor, não responda.
             "message": "Solicitação aprovada com sucesso! Email enviado.",
             "invite_token": invite_token,
             "invite_expires_at": musician_request.invite_expires_at.isoformat(),
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def resend_musician_request_invite(request, request_id):
+    if not request.user.is_staff:
+        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
+
+    musician_request = get_object_or_404(MusicianRequest, id=request_id)
+
+    if musician_request.status != "approved":
+        return Response(
+            {"detail": "A solicitação precisa estar aprovada para reenviar o convite."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if musician_request.invite_used:
+        return Response(
+            {"detail": "Este convite já foi utilizado."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if (
+        not musician_request.invite_token
+        or not musician_request.invite_expires_at
+        or musician_request.invite_expires_at < timezone.now()
+    ):
+        musician_request.invite_token = secrets.token_urlsafe(32)
+        musician_request.invite_expires_at = timezone.now() + timedelta(days=7)
+        musician_request.invite_used = False
+        musician_request.save()
+
+    try:
+        _send_invite_email(musician_request)
+        logger.info("Email de aprovação reenviado para %s", musician_request.email)
+    except Exception as exc:
+        logger.error("Erro ao reenviar email de aprovação: %s", exc)
+        return Response(
+            {"detail": "Erro ao enviar email de aprovação."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    return Response(
+        {
+            "message": "Email reenviado com sucesso!",
+            "invite_token": musician_request.invite_token,
+            "invite_expires_at": musician_request.invite_expires_at.isoformat()
+            if musician_request.invite_expires_at
+            else None,
         },
         status=status.HTTP_200_OK,
     )
