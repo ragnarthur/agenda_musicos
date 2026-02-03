@@ -2,6 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
+import BottomNav from './BottomNav';
 import AnimatedBackground from './AnimatedBackground';
 
 interface LayoutProps {
@@ -49,18 +50,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <div className="relative z-10 flex min-h-[100svh] flex-col pt-4 sm:pt-6">
         <main
           ref={mainRef}
-          className="page-shell flex-1 pb-12 sm:pb-16"
+          className="page-shell flex-1 pb-24 md:pb-16"
         >
           {children}
         </main>
 
-        <footer className="border-t border-white/10 bg-white/5 px-4 py-6 text-center text-sm font-semibold text-slate-200 backdrop-blur">
+        <footer className="hidden md:block border-t border-white/10 bg-white/5 px-4 py-6 text-center text-sm font-semibold text-slate-200 backdrop-blur">
           <p className="text-xs sm:text-sm text-slate-200">
             <span className="mr-1 text-base text-primary-700">®</span>
             DXM Tech. Todos os direitos reservados.
           </p>
         </footer>
       </div>
+
+      {/* Bottom Navigation for Mobile */}
+      <BottomNav />
     </div>
   );
 };

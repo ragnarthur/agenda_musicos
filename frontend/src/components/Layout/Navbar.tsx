@@ -14,6 +14,7 @@ import {
   UserCheck,
   Wallet,
   Shield,
+  User,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../hooks/useNotifications';
@@ -329,6 +330,13 @@ const Navbar: React.FC = memo(() => {
           </div>
           <div className="flex items-center gap-1 xs:gap-1.5 overflow-x-auto scrollbar-hide -mx-3 px-3 pb-1">
             <Link
+              to={`/musicos/${user?.id}`}
+              className="inline-flex items-center gap-1 rounded-full border border-primary-400/30 bg-primary-500/20 px-2 xs:px-2.5 py-2 text-[11px] xs:text-xs font-semibold text-primary-100 hover:bg-primary-500/30 transition-colors active:scale-95 whitespace-nowrap flex-shrink-0 min-h-[40px] sm:px-3 sm:py-2.5"
+            >
+              <User className="h-4 w-4 flex-shrink-0" />
+              <span>Perfil</span>
+            </Link>
+            <Link
               to="/eventos"
               className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 xs:px-2.5 py-2 text-[11px] xs:text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors active:scale-95 whitespace-nowrap flex-shrink-0 min-h-[40px] sm:px-3 sm:py-2.5"
             >
@@ -346,13 +354,6 @@ const Navbar: React.FC = memo(() => {
             >
               <Clock className="h-4 w-4 flex-shrink-0" />
               <span>Datas</span>
-            </Link>
-            <Link
-              to="/musicos"
-              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 xs:px-2.5 py-2 text-[11px] xs:text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors active:scale-95 whitespace-nowrap flex-shrink-0 min-h-[40px] sm:px-3 sm:py-2.5"
-            >
-              <Users className="h-4 w-4 flex-shrink-0" />
-              <span>Músicos</span>
             </Link>
             <button
               onClick={() => setOpenMore(prev => !prev)}
