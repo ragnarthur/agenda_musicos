@@ -235,7 +235,7 @@ const EventsList: React.FC = () => {
         </section>
 
         <div className="rounded-2xl border border-white/60 bg-white/90 p-4 sm:p-5 shadow-xl backdrop-blur">
-          <div className="grid gap-4 md:grid-cols-[2fr,1fr]">
+          <div className="grid gap-3 sm:gap-4 sm:grid-cols-[2fr,1fr]">
             <div className="relative">
               <Search className="pointer-events-none absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
               <input

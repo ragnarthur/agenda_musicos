@@ -324,46 +324,46 @@ const Navbar: React.FC = memo(() => {
 
         {/* Navbar Mobile */}
         <div className="md:hidden relative pb-3">
-          <div className="mb-2">
+          <div className="mb-2 max-w-[calc(100vw-2rem)]">
             <CityBadge />
           </div>
-          <div className="flex flex-wrap items-center gap-1.5 -ml-1">
+          <div className="flex items-center gap-1 xs:gap-1.5 overflow-x-auto scrollbar-hide -mx-3 px-3 pb-1">
             <Link
               to="/eventos"
-              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-2.5 text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 whitespace-nowrap sm:gap-2 sm:px-4 sm:py-3 sm:text-xs"
+              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 xs:px-2.5 py-2 text-[11px] xs:text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors active:scale-95 whitespace-nowrap flex-shrink-0 min-h-[40px] sm:px-3 sm:py-2.5"
             >
-              <Calendar className="h-4 w-4" />
-              Eventos
+              <Calendar className="h-4 w-4 flex-shrink-0" />
+              <span>Eventos</span>
               {pendingMyResponse > 0 && (
-                <span className="ml-1 rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+                <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
                   {pendingMyResponse}
                 </span>
               )}
             </Link>
             <Link
               to="/disponibilidades"
-              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-2.5 text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 whitespace-nowrap sm:gap-2 sm:px-4 sm:py-3 sm:text-xs"
+              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 xs:px-2.5 py-2 text-[11px] xs:text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors active:scale-95 whitespace-nowrap flex-shrink-0 min-h-[40px] sm:px-3 sm:py-2.5"
             >
-              <Clock className="h-4 w-4" />
-              Datas
+              <Clock className="h-4 w-4 flex-shrink-0" />
+              <span>Datas</span>
             </Link>
             <Link
-              to="/configuracoes/notificacoes"
-              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-2.5 text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 whitespace-nowrap sm:gap-2 sm:px-4 sm:py-3 sm:text-xs"
+              to="/musicos"
+              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 xs:px-2.5 py-2 text-[11px] xs:text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors active:scale-95 whitespace-nowrap flex-shrink-0 min-h-[40px] sm:px-3 sm:py-2.5"
             >
-              <Bell className="h-4 w-4" />
-              Notificações
+              <Users className="h-4 w-4 flex-shrink-0" />
+              <span>Músicos</span>
             </Link>
             <button
               onClick={() => setOpenMore(prev => !prev)}
-              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-2.5 text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 whitespace-nowrap sm:gap-2 sm:px-4 sm:py-3 sm:text-xs"
+              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 xs:px-2.5 py-2 text-[11px] xs:text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors active:scale-95 whitespace-nowrap flex-shrink-0 min-h-[40px] sm:px-3 sm:py-2.5"
               aria-expanded={openMore}
               aria-controls="mobile-more-menu"
             >
-              {openMore ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-              Mais
+              {openMore ? <X className="h-4 w-4 flex-shrink-0" /> : <Menu className="h-4 w-4 flex-shrink-0" />}
+              <span>Mais</span>
               {pendingApproval > 0 && (
-                <span className="ml-1 rounded-full bg-yellow-500 px-2 py-0.5 text-xs font-bold text-white">
+                <span className="rounded-full bg-yellow-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
                   {pendingApproval}
                 </span>
               )}

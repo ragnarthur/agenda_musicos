@@ -432,7 +432,7 @@ const Marketplace: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="lg:col-span-2 space-y-4">
               {gigs.length === 0 ? (
                 <div className="card-contrast">

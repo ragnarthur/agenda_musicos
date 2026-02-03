@@ -124,7 +124,7 @@ const Musicians: React.FC = () => {
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
             {Array.from({ length: 6 }).map((_, idx) => (
               <div key={`musician-skeleton-${idx}`} className="card-contrast space-y-4">
                 <div className="flex items-center gap-3">
@@ -161,7 +161,7 @@ const Musicians: React.FC = () => {
           </div>
         ) : (
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6"
             variants={cardGrid}
             initial="hidden"
             animate="show"

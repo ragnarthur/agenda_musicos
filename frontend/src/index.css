@@ -1055,18 +1055,18 @@
   }
 }
 .btn-primary {
-  @apply bg-primary-600 hover:bg-primary-700 text-white font-medium px-4 py-2.5 sm:py-2 rounded-lg transition-colors duration-200 min-h-[44px];
+  @apply bg-primary-600 hover:bg-primary-700 text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg transition-colors duration-200 min-h-[44px];
   touch-action: manipulation;
 }
 
 .btn-secondary {
-  @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium px-4 py-2.5 sm:py-2 rounded-lg transition-colors duration-200 min-h-[44px]
+  @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg transition-colors duration-200 min-h-[44px]
            dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-100;
   touch-action: manipulation;
 }
 
 .btn-danger {
-  @apply bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2.5 sm:py-2 rounded-lg transition-colors duration-200 min-h-[44px];
+  @apply bg-red-600 hover:bg-red-700 text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg transition-colors duration-200 min-h-[44px];
   touch-action: manipulation;
 }
 
@@ -1111,7 +1111,7 @@
 
 @layer components {
   .page-shell {
-    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+    @apply mx-auto w-full max-w-6xl 2xl:max-w-7xl px-4 sm:px-6 lg:px-8 2xl:px-12;
   }
   .page-stack {
     @apply flex flex-col gap-6 sm:gap-8;
@@ -1214,11 +1214,13 @@
   @apply bg-slate-100 text-slate-800 border border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700;
 }
 
-.no-scrollbar {
+.no-scrollbar,
+.scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-.no-scrollbar::-webkit-scrollbar {
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
 
