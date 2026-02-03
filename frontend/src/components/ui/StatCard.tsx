@@ -51,7 +51,7 @@ export const StatCard: React.FC<StatCardProps> = ({
         )}
       </div>
       <motion.p
-        className={`text-3xl font-bold ${accent ? 'text-amber-600' : 'text-primary-600'}`}
+        className={`text-2xl sm:text-3xl font-bold break-words min-w-0 ${accent ? 'text-amber-600' : 'text-primary-600'}`}
         initial={{ scale: 0.8 }}
         animate={{ scale: 1 }}
         transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
