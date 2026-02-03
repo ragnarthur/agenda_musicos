@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("agenda", "0034_ensure_event_payment_amount"),
     ]
@@ -28,9 +27,15 @@ class Migration(migrations.Migration):
                     models.CharField(
                         choices=[
                             ("event_delete", "Evento Deletado"),
-                            ("event_update_sensitive", "Evento Atualizado (Dados Sensíveis)"),
+                            (
+                                "event_update_sensitive",
+                                "Evento Atualizado (Dados Sensíveis)",
+                            ),
                             ("availability_delete", "Disponibilidade Deletada"),
-                            ("profile_update_sensitive", "Perfil Atualizado (Dados Sensíveis)"),
+                            (
+                                "profile_update_sensitive",
+                                "Perfil Atualizado (Dados Sensíveis)",
+                            ),
                             ("musician_delete", "Músico Deletado"),
                         ],
                         max_length=50,
@@ -74,7 +79,9 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="auditlog",
-            index=models.Index(fields=["user", "timestamp"], name="auditlog_user_ts_idx"),
+            index=models.Index(
+                fields=["user", "timestamp"], name="auditlog_user_ts_idx"
+            ),
         ),
         migrations.AddIndex(
             model_name="auditlog",

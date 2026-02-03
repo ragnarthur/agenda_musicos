@@ -366,21 +366,13 @@ class EventViewSet(viewsets.ModelViewSet):
         if request_user and instance.created_by and instance.created_by != request_user:
             raise PermissionDenied("Apenas o criador pode deletar este evento.")
 
-        # Log de auditoria
-        from ..audit import AuditLog
+        # Log de auditoria (usando logger em vez de AuditLog.objects.create)
+        from django.utils import timezone
 
-        x_forwarded_for = self.request.META.get("HTTP_X_FORWARDED_FOR", "")
-        ip_address = (
-            x_forwarded_for.split(",")[0].strip() if x_forwarded_for else None
-        ) or self.request.META.get("REMOTE_ADDR")
-
-        AuditLog.objects.create(
-            user=request_user,
-            action="event_delete",
-            resource_type="event",
-            resource_id=instance.id,
-            ip_address=ip_address,
-            user_agent=self.request.META.get("HTTP_USER_AGENT", "")[:500],
+        logger.info(
+            f"Event delete | User: {request_user.username} | "
+            f"Deleted: {instance.title} (ID: {instance.id}) | "
+            f"IP: {self.request.META.get('REMOTE_ADDR', '')}"
         )
 
         super().perform_destroy(instance)
