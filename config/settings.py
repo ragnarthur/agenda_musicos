@@ -376,6 +376,7 @@ GOOGLE_CLIENT_SECRET = config("GOOGLE_CLIENT_SECRET", default="")
 
 TELEGRAM_BOT_TOKEN = config("TELEGRAM_BOT_TOKEN", default="")
 TELEGRAM_BOT_USERNAME = config("TELEGRAM_BOT_USERNAME", default="")
+TELEGRAM_WEBHOOK_SECRET = config("TELEGRAM_WEBHOOK_SECRET", default="")
 
 
 # =========================================================
