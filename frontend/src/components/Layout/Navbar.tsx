@@ -194,7 +194,6 @@ const Navbar: React.FC = memo(() => {
               icon={<Clock className="h-5 w-5" />}
               label="Datas Disponíveis"
             />
-            <CompactNavLink to="/marketplace" icon={<Megaphone className="h-5 w-5" />} label="Vagas" />
             <div className="relative">
               <button
                 type="button"
@@ -212,6 +211,18 @@ const Navbar: React.FC = memo(() => {
                   ref={desktopMoreRef}
                   className="absolute right-0 mt-2 w-60 rounded-xl bg-slate-950/95 border border-white/10 shadow-2xl shadow-black/40 p-2 z-50"
                 >
+                  <RouterNavLink
+                    to="/marketplace"
+                    onClick={() => setOpenDesktopMore(false)}
+                    className={({ isActive }) =>
+                      `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                        isActive ? 'bg-white/10 text-white' : 'text-slate-200 hover:bg-white/5'
+                      }`
+                    }
+                  >
+                    <Megaphone className="h-4 w-4" />
+                    Vagas
+                  </RouterNavLink>
                   <RouterNavLink
                     to="/configuracoes/notificacoes"
                     onClick={() => setOpenDesktopMore(false)}
