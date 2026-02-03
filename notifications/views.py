@@ -32,14 +32,14 @@ from .serializers import (
 logger = logging.getLogger(__name__)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
+@method_decorator(csrf_exempt, name="dispatch")
 class TelegramWebhookView(APIView):
     """
     POST /api/notifications/telegram/webhook/
     Recebe atualizações do Telegram Bot API.
     Processa mensagens de verificação e comandos.
     """
-    
+
     permission_classes = [AllowAny]
 
     def post(self, request: HttpRequest):
