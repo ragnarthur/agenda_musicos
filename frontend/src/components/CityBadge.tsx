@@ -173,7 +173,7 @@ const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' 
           <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${dotClasses}`} />
         </span>
         <MapPin className="h-4 w-4" />
-        <span className="truncate max-w-[180px] sm:max-w-[200px]">
+        <span className="truncate max-w-full">
           {isLoading && !label ? 'Detectando...' : badgeText}
         </span>
       </motion.button>
