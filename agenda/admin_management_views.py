@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated, IsAdminUser])
+@permission_classes([IsAuthenticated, IsAdminUser, IsAppOwner])
 def list_admin_users(request):
     """Lista todos os usuários admin (apenas owners)"""
     admins = User.objects.filter(Q(is_staff=True) | Q(is_superuser=True)).order_by(
@@ -41,7 +41,7 @@ def list_admin_users(request):
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated, IsAdminUser])
+@permission_classes([IsAuthenticated, IsAdminUser, IsAppOwner])
 def list_all_users(request):
     """Lista todos os usuários da plataforma para admin"""
     try:
@@ -51,13 +51,93 @@ def list_all_users(request):
     except Exception as e:
         logger.error(f"Error listing all users: {str(e)}", exc_info=True)
         return Response(
-            {"error": "Erro ao listar usuários"},
+            {"error": "Erro ao listar organizações"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def delete_organization(request, pk):
+    """
+    Deleta uma organização/empresa.
+
+    Proteções:
+    - Admins (admin_1, admin_2) podem deletar
+    - Protege organizações patrocinadas (is_sponsor=True)
+    - Log da ação para auditoria
+    """
+    try:
+        organization = Organization.objects.get(pk=pk)
+        client_ip = request.META.get("REMOTE_ADDR", "")
+        user_agent = request.META.get("HTTP_USER_AGENT", "")
+
+        # Proteção: Não permite deletar organizações patrocinadas
+        if organization.is_sponsor:
+            logger.warning(
+                f"Attempt to delete sponsored organization {organization.name} "
+                f"by {request.user.username} from {client_ip}"
+            )
+            return Response(
+                {"error": "Organizações patrocinadas não podem ser deletadas"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Salvar informações antes de deletar
+        org_owner_info = None
+        if organization.owner:
+            org_owner_info = {
+                "username": organization.owner.username,
+                "email": organization.owner.email,
+                "first_name": organization.owner.first_name,
+                "last_name": organization.owner.last_name,
+                "is_staff": organization.owner.is_staff,
+                "is_superuser": organization.owner.is_superuser,
+            }
+
+        # Criar log de auditoria
+        logger.info(
+            f"Organization delete | Admin: {request.user.username} | "
+            f"Deleted: {organization.name} | "
+            f"Type: {organization.org_type} | "
+            f"Was Sponsor: {organization.is_sponsor} | "
+            f"Owner: {org_owner_info.get('username') if org_owner_info else 'None'} | "
+            f"IP: {client_ip}"
+        )
+
+        # Deletar organização (cascade deleta eventos, membros, etc.)
+        org_name = organization.name
+        organization.delete()
+
+        return Response(
+            {
+                "message": f"Organização {org_name} deletada com sucesso",
+                "deleted_organization": {
+                    "id": pk,
+                    "name": org_name,
+                    "org_type": organization.org_type,
+                    "is_sponsor": organization.is_sponsor,
+                },
+                "deleted_owner": org_owner_info,
+                "deleted_by": request.user.username,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    except Organization.DoesNotExist:
+        return Response(
+            {"error": "Organização não encontrada"}, status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        logger.error(f"Error deleting organization {pk}: {str(e)}", exc_info=True)
+        return Response(
+            {"error": "Erro ao deletar organização"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated, IsAppOwner])
+@permission_classes([IsAuthenticated, IsAdminUser, IsAppOwner])
 def get_admin_user(request, pk):
     """Detalhes de um admin específico (apenas owners)"""
     try:
@@ -76,10 +156,10 @@ def get_admin_user(request, pk):
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated, IsAppOwner])
+@permission_classes([IsAuthenticated, IsAdminUser, IsAppOwner])
 def create_admin_user(request):
     """Cria novo admin (apenas owners)"""
-    serializer = AdminCreateSerializer(data=request.data)
+    serializer = AdminCreateSerializer(data=request.data, context={"request": request})
 
     if serializer.is_valid():
         user = serializer.save()
@@ -89,7 +169,7 @@ def create_admin_user(request):
 
 
 @api_view(["PUT", "PATCH"])
-@permission_classes([IsAuthenticated, IsAppOwner])
+@permission_classes([IsAuthenticated, IsAdminUser, IsAppOwner])
 def update_admin_user(request, pk):
     """Atualiza admin (apenas owners)"""
     try:
@@ -125,7 +205,7 @@ def update_admin_user(request, pk):
 
 
 @api_view(["DELETE"])
-@permission_classes([IsAuthenticated, IsAppOwner])
+@permission_classes([IsAuthenticated, IsAdminUser, IsAppOwner])
 def delete_admin_user(request, pk):
     """Deleta admin (apenas owners)"""
     try:
@@ -158,7 +238,7 @@ def delete_admin_user(request, pk):
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated, IsAppOwner])
+@permission_classes([IsAuthenticated, IsAdminUser, IsAppOwner])
 def reset_admin_password(request, pk):
     """Reseta senha de admin (apenas owners)"""
     try:
@@ -197,7 +277,7 @@ def reset_admin_password(request, pk):
 
 
 @api_view(["DELETE"])
-@permission_classes([IsAuthenticated, IsAdminUser])
+@permission_classes([IsAuthenticated, IsAdminUser, IsAppOwner])
 def delete_user(request, pk):
     """
     Deleta um usuário e todos os dados relacionados.
@@ -275,21 +355,14 @@ def delete_user(request, pk):
         MusicianRequest.objects.filter(email__iexact=user.email).delete()
 
         # Criar log de auditoria antes de deletar
-        AuditLog.objects.create(
-            user=request.user,
-            action="user_delete",
-            resource_type="user",
-            resource_id=user.id,
-            ip_address=client_ip,
-            user_agent=user_agent,
-        )
-
+        # Usando logger simples em vez de AuditLog para evitar erro de tabela
         logger.info(
-            f"User deleted | Admin: {request.user.username} | "
+            f"User delete | Admin: {request.user.username} | "
             f"Deleted: {user.username} | "
             f"Email: {user.email} | "
             f"Was Superuser: {user.is_superuser} | "
-            f"IP: {client_ip}"
+            f"IP: {client_ip} | "
+            f"User-Agent: {user_agent}"
         )
 
         # Deletar usuário (cascade deleta Musician, Organization, etc.)

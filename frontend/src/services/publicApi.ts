@@ -562,4 +562,19 @@ export const adminOrganizationService = {
     const response = await api.get('/admin/organizations/');
     return response.data;
   },
+
+  delete: async (id: number): Promise<{
+    message: string;
+    deleted_organization: {
+      id: number;
+      name: string;
+      org_type: string;
+      is_sponsor: boolean;
+    };
+    deleted_owner: any;
+    deleted_by: string;
+  }> => {
+    const response = await api.delete(`/admin/organizations/${id}/`);
+    return response.data;
+  },
 };

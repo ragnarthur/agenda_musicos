@@ -50,29 +50,18 @@ const AdminOrganizations: React.FC = () => {
   };
 
   const confirmDelete = async () => {
-    if (!orgToDelete || !orgToDelete.owner_data) return;
-
+    if (!orgToDelete) return;
+    
     try {
-      setDeleting(orgToDelete.owner_data.id);
-      const response = await fetch(`/api/users/${orgToDelete.owner_data.id}/delete/`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        showToast.success('Organização e usuário deletados com sucesso');
-        setOrganizations(prev => prev.filter(o => o.id !== orgToDelete.id));
-        setShowConfirmModal(false);
-        setOrgToDelete(null);
-      } else {
-        const error = await response.json();
-        showToast.error(error.error || 'Erro ao deletar organização');
-      }
+      setDeleting(orgToDelete.id);
+      await adminOrganizationService.delete(orgToDelete.id);
+      showToast.success('Organização deletada com sucesso');
+      setOrganizations(prev => prev.filter(o => o.id !== orgToDelete.id));
+      setShowConfirmModal(false);
+      setOrgToDelete(null);
     } catch (error) {
       console.error('Error deleting organization:', error);
-      showToast.error('Erro ao deletar organização');
+      showToast.apiError(error);
     } finally {
       setDeleting(null);
     }
@@ -246,6 +235,28 @@ const AdminOrganizations: React.FC = () => {
                 <h2 className="text-xl font-bold text-gray-900">Deletar Organização</h2>
                 <p className="text-sm text-gray-600">{orgToDelete.name}</p>
               </div>
+            
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+              <p className="text-sm text-red-800">
+                <strong>Atenção:</strong> Esta ação não pode ser desfeita. A organização será permanentemente removida do sistema.
+              </p>
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleting !== null}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deleting === orgToDelete.id ? 'Deletando...' : 'Confirmar'}
+              </button>
+            </div>
             </div>
 
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
