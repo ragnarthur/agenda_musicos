@@ -12,6 +12,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 
 from agenda.validators import sanitize_string
@@ -32,15 +33,25 @@ from .serializers import (
 logger = logging.getLogger(__name__)
 
 
+class TelegramWebhookThrottle(AnonRateThrottle):
+    """
+    Throttle para proteger o webhook do Telegram contra flood/spam.
+    Limita a 60 requisicoes por minuto (1 por segundo).
+    """
+
+    rate = "60/minute"
+
+
 @method_decorator(csrf_exempt, name="dispatch")
 class TelegramWebhookView(APIView):
     """
     POST /api/notifications/telegram/webhook/
-    Recebe atualizações do Telegram Bot API.
-    Processa mensagens de verificação e comandos.
+    Recebe atualizacoes do Telegram Bot API.
+    Processa mensagens de verificacao e comandos.
     """
 
     permission_classes = [AllowAny]
+    throttle_classes = [TelegramWebhookThrottle]
 
     def post(self, request: HttpRequest):
         # Verificar secreto do Telegram (opcional, se configurado)
