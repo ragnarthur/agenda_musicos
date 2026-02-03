@@ -94,7 +94,7 @@ const CompanyNavbar: React.FC = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`group flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                  className={`group min-h-[44px] flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
                     isActivePath(item.path)
                       ? 'bg-indigo-50 text-indigo-600 border border-indigo-200'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -118,7 +118,7 @@ const CompanyNavbar: React.FC = () => {
             <div className="flex items-center gap-4">
               <CityBadge variant="light" className="hidden lg:inline-flex" />
               {/* Notifications */}
-              <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+              <button className="relative min-h-[44px] min-w-[44px] p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
                 <Bell className="w-5 h-5" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
@@ -136,7 +136,7 @@ const CompanyNavbar: React.FC = () => {
 
                 <button
                   onClick={handleLogout}
-                  className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                  className="min-h-[44px] min-w-[44px] p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                   title="Sair"
                 >
                   <LogOut className="w-4 h-4" />
@@ -146,7 +146,7 @@ const CompanyNavbar: React.FC = () => {
               {/* Mobile Menu Toggle */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                className="lg:hidden min-h-[44px] min-w-[44px] p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
@@ -171,7 +171,7 @@ const CompanyNavbar: React.FC = () => {
                       key={item.path}
                       to={item.path}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all ${
+                      className={`min-h-[44px] flex items-center gap-3 px-3 py-3 rounded-lg transition-all ${
                         isActivePath(item.path)
                           ? 'bg-indigo-50 text-indigo-600 border border-indigo-200'
                           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -203,7 +203,7 @@ const CompanyNavbar: React.FC = () => {
 
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
+                    className="min-h-[44px] w-full flex items-center justify-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
                   >
                     <LogOut className="w-4 h-4" />
                     Sair da Conta
@@ -222,7 +222,7 @@ const CompanyNavbar: React.FC = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex flex-col items-center gap-1 py-2 transition-colors ${
+              className={`min-h-[56px] flex flex-col items-center justify-center gap-1 py-2 transition-colors ${
                 isActivePath(item.path)
                   ? 'text-indigo-600 bg-indigo-50'
                   : 'text-gray-600 hover:text-gray-900'

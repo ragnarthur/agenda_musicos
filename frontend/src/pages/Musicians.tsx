@@ -89,7 +89,7 @@ const Musicians: React.FC = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="page-stack">
         {/* Header */}
         <div className="hero-panel">
           <div className="pointer-events-none absolute inset-0 -z-10 opacity-40 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.2),_transparent_40%)]" />

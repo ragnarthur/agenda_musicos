@@ -9,7 +9,7 @@ interface CompanyLayoutProps {
 
 const CompanyLayout: React.FC<CompanyLayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-[100svh] bg-gray-50">
       <CompanyNavbar />
       {children}
     </div>

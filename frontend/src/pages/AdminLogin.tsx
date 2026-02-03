@@ -40,7 +40,7 @@ const AdminLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center p-4">
+    <div className="min-h-[100svh] bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center p-4 py-6">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
@@ -52,7 +52,7 @@ const AdminLogin: React.FC = () => {
         </div>
 
         {/* Login Form */}
-        <div className="bg-slate-900/90 backdrop-blur rounded-2xl shadow-2xl p-8">
+        <div className="bg-slate-900/90 backdrop-blur rounded-2xl shadow-2xl p-5 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email ou Username */}
             <div>

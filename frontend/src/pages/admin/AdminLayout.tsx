@@ -35,7 +35,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-[100svh] relative">
       <AnimatedBackground enableBlueWaves={true} enableParticles={false} />
 
       {/* Mobile Header */}
@@ -46,7 +46,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         </div>
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 rounded-lg hover:bg-white/10 text-white"
+          className="p-2 rounded-lg hover:bg-white/10 text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
         >
           {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
@@ -94,7 +94,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 to={item.path}
                 onClick={() => setSidebarOpen(false)}
                 className={`
-                  flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                  min-h-[44px] flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                   ${
                     isActive
                       ? 'bg-white/10 text-white'
@@ -113,7 +113,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         <div className="p-3 border-t border-white/10">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/20 transition-colors"
+            className="min-h-[44px] flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/20 transition-colors"
           >
             <LogOut className="h-5 w-5" />
             Sair
@@ -122,8 +122,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       </aside>
 
       {/* Main Content */}
-      <main className="lg:ml-64 min-h-screen relative z-10">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
+      <main className="lg:ml-64 min-h-[100svh] relative z-10">
+        <div className="page-shell py-5 sm:py-6 space-y-4">
           <AdminBreadcrumbs />
           <AdminErrorBoundary>{children ?? <Outlet />}</AdminErrorBoundary>
         </div>

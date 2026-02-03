@@ -120,20 +120,20 @@ const Contacts: React.FC = () => {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-[100svh] bg-gray-50 flex items-center justify-center">
         <Loading text="Carregando contatos..." />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-[100svh] bg-gray-50">
       <CompanyNavbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="page-shell max-w-7xl py-6 sm:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Mensagens</h1>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Mensagens</h1>
           <p className="text-gray-600">Gerencie suas conversas com músicos</p>
         </div>
 
@@ -142,7 +142,7 @@ const Contacts: React.FC = () => {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-colors min-h-[44px] ${
                 filter === 'all'
                   ? 'bg-indigo-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -153,7 +153,7 @@ const Contacts: React.FC = () => {
             </button>
             <button
               onClick={() => setFilter('pending')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-colors min-h-[44px] ${
                 filter === 'pending'
                   ? 'bg-yellow-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -164,7 +164,7 @@ const Contacts: React.FC = () => {
             </button>
             <button
               onClick={() => setFilter('replied')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-colors min-h-[44px] ${
                 filter === 'replied'
                   ? 'bg-green-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -175,7 +175,7 @@ const Contacts: React.FC = () => {
             </button>
             <button
               onClick={() => setFilter('archived')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-colors min-h-[44px] ${
                 filter === 'archived'
                   ? 'bg-gray-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -215,7 +215,7 @@ const Contacts: React.FC = () => {
                       <button
                         key={contact.id}
                         onClick={() => handleSelectContact(contact)}
-                        className={`w-full p-4 text-left hover:bg-gray-50 transition-colors ${
+                        className={`w-full min-h-[72px] p-4 text-left hover:bg-gray-50 transition-colors ${
                           isSelected ? 'bg-indigo-50 border-l-4 border-indigo-600' : ''
                         } ${contact.status === 'pending' ? 'bg-yellow-50/30' : ''}`}
                       >
@@ -260,13 +260,13 @@ const Contacts: React.FC = () => {
                 <div className="p-6 border-b border-gray-200">
                   <button
                     onClick={handleBack}
-                    className="lg:hidden flex items-center gap-2 text-indigo-600 mb-4"
+                    className="lg:hidden min-h-[44px] inline-flex items-center gap-2 text-indigo-600 mb-4"
                   >
                     <ChevronLeft className="h-5 w-5" />
                     Voltar
                   </button>
 
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <h2 className="text-2xl font-bold text-gray-900 mb-2">
                         {selectedContact.to_musician_name}

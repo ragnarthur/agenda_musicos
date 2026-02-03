@@ -400,7 +400,7 @@ const Marketplace: React.FC = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="page-stack">
         <div id="vagas-hero" className="hero-panel scroll-mt-24">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">

@@ -184,8 +184,8 @@ export default function RegisterCompany() {
   if (success) {
     return (
       <FullscreenBackground>
-        <div className="min-h-screen flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
+        <div className="min-h-[100svh] flex items-center justify-center p-4 py-6">
+          <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-5 sm:p-8 text-center">
             <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
             </div>
@@ -209,8 +209,8 @@ export default function RegisterCompany() {
 
   return (
     <FullscreenBackground>
-      <div className="min-h-screen flex items-center justify-center p-4 py-12">
-        <div className="max-w-lg w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+      <div className="min-h-[100svh] flex items-center justify-center p-4 py-8">
+        <div className="max-w-lg w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-5 sm:p-8">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center mx-auto mb-4">
               <Building2 className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />

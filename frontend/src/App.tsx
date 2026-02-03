@@ -67,7 +67,7 @@ const MusicianPublicProfile = lazy(() => import('./pages/MusicianPublicProfile')
 
 // Componente de loading para Suspense
 const PageLoader: React.FC = () => (
-  <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center">
+  <div className="min-h-[100svh] bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center">
     <Loading text="Carregando..." />
   </div>
 );

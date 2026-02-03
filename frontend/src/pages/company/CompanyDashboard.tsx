@@ -21,7 +21,7 @@ interface CompanyLayoutProps {
 
 const CompanyLayout: React.FC<CompanyLayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-[100svh] bg-gray-50">
       <CompanyNavbar />
       {children}
     </div>
@@ -77,7 +77,7 @@ const CompanyDashboard: React.FC = () => {
 
   if (loading || dataLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-[100svh] bg-gray-50 flex items-center justify-center">
         <Loading text="Carregando dashboard..." />
       </div>
     );
@@ -85,7 +85,7 @@ const CompanyDashboard: React.FC = () => {
 
   if (!organization) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-[100svh] bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
             Não foi possível carregar sua organização
@@ -102,21 +102,21 @@ const CompanyDashboard: React.FC = () => {
     <CompanyLayout>
       {/* Header */}
       <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-b-3xl">
-        <div className="container mx-auto px-4 py-12">
+        <div className="page-shell py-10 sm:py-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
               Bem-vindo(a), {organization.name}!
             </h1>
-            <p className="text-indigo-100 text-lg">
+            <p className="text-indigo-100 text-base sm:text-lg">
               Encontre os melhores músicos para seus eventos
             </p>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-6 sm:mt-8">
               <StatCard
                 label="Contatos Enviados"
                 value={dashboardData?.stats.total_sent || 0}
@@ -138,15 +138,17 @@ const CompanyDashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 space-y-8">
+      <div className="page-shell py-6 sm:py-8 page-stack">
         {/* Quick Actions */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Ações Rápidas</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
+            Ações Rápidas
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <QuickActionCard
               title="Encontrar Músicos"
               description="Busque por instrumento, cidade ou avaliação"
@@ -171,8 +173,10 @@ const CompanyDashboard: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Músicos em Destaque</h2>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+              Músicos em Destaque
+            </h2>
             {organization.city && (
               <span className="text-sm text-gray-500 flex items-center gap-1">
                 <MapPin className="w-4 h-4" />
@@ -182,7 +186,7 @@ const CompanyDashboard: React.FC = () => {
           </div>
 
           {topMusicians.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {topMusicians.map((musician, index) => (
                 <MusicianCard key={musician.id} musician={musician} index={index} />
               ))}
@@ -382,7 +386,7 @@ const MusicianCard: React.FC<MusicianCardProps> = ({ musician, index }) => {
         </div>
       )}
 
-      <button className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors">
+      <button className="w-full min-h-[44px] py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors">
         Ver Perfil
       </button>
     </motion.div>
@@ -403,7 +407,7 @@ const ContactItem: React.FC<ContactItemProps> = ({ contact }) => {
 
   return (
     <div className="p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50 transition-colors">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h4 className="font-medium text-gray-900">{contact.to_musician_name}</h4>
@@ -456,7 +460,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, description, actio
       <p className="text-gray-600 mb-6">{description}</p>
       <Link
         to={to}
-        className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
+        className="inline-flex min-h-[44px] items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
       >
         {action}
       </Link>

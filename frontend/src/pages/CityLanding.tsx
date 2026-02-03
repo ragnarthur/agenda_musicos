@@ -81,7 +81,7 @@ const CityLanding: React.FC = () => {
   if (!city) {
     return (
       <FullscreenBackground enableBlueWaves>
-        <div className="flex justify-center items-center min-h-screen">
+        <div className="flex justify-center items-center min-h-[100svh]">
           <Loading text="Carregando..." />
         </div>
       </FullscreenBackground>
@@ -90,22 +90,24 @@ const CityLanding: React.FC = () => {
 
   return (
     <FullscreenBackground enableBlueWaves>
-      <div className="relative z-10 min-h-screen">
+      <div className="relative z-10 min-h-[100svh]">
         {/* Hero Section */}
-        <section className="container mx-auto px-4 py-12 md:py-20 text-center">
+        <section className="container mx-auto px-4 py-10 sm:py-12 md:py-20 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
             <div className="flex items-center justify-center gap-2 text-primary-400 mb-4">
-              <MapPin className="h-6 w-6" />
-              <span className="text-lg font-medium">{getCityDisplayName(city)}</span>
+              <MapPin className="h-5 w-5 sm:h-6 sm:w-6" />
+              <span className="text-base sm:text-lg font-medium">
+                {getCityDisplayName(city)}
+              </span>
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
               Músicos em {city.name}
             </h1>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-2xl mx-auto">
               {city.description || `Encontre os melhores músicos de ${city.name} para seu evento.`}
             </p>
           </motion.div>

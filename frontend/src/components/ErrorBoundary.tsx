@@ -40,8 +40,8 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       }
 
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-          <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg text-center">
+        <div className="min-h-[100svh] flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-8">
+          <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl p-6 sm:p-8 shadow-lg text-center">
             <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
               <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
             </div>
@@ -53,7 +53,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
             </p>
             <button
               onClick={this.handleReset}
-              className="inline-flex items-center gap-2 bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+              className="inline-flex min-h-[44px] items-center gap-2 bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
             >
               <RefreshCw className="w-4 h-4" />
               Recarregar página

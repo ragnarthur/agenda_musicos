@@ -163,7 +163,7 @@ const NotificationSettings: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto px-4 py-6">
+      <div className="page-shell max-w-3xl py-4 sm:py-6">
         {/* Header */}
         <div className="mb-6">
           <Link

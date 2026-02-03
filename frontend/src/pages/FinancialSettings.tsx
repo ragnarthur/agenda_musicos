@@ -243,9 +243,9 @@ const FinancialSettings: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="page-shell max-w-4xl py-4 sm:py-6">
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between gap-3">
+        <div className="mb-5 sm:mb-6 flex items-center justify-between gap-3">
           <div>
             <Link
               to="/dashboard"
@@ -259,7 +259,9 @@ const FinancialSettings: React.FC = () => {
                 <Wallet className="h-6 w-6 text-emerald-400" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">Valores & Serviços</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-white">
+                  Valores & Serviços
+                </h1>
                 <p className="text-slate-300">
                   Cadastre seu cachê, taxas por deslocamento e pacotes de equipamentos.
                 </p>

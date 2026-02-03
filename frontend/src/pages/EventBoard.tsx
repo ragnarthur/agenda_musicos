@@ -193,28 +193,28 @@ const EventBoard: React.FC = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="page-shell py-6 sm:py-8 page-stack">
         <div className="hero-panel">
           <div className="spotlight pointer-events-none absolute inset-0 -z-10" />
-          <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-semibold text-primary-700">Grade de eventos</p>
-              <h1 className="text-3xl font-bold text-gray-900">Meus eventos</h1>
-              <p className="text-gray-600">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Meus eventos</h1>
+              <p className="text-sm sm:text-base text-gray-600">
                 Eventos organizados por data sob sua gestão ou participação.
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Link
                 to="/eventos"
-                className="inline-flex items-center gap-2 rounded-full border border-primary-100 bg-white px-4 py-2 text-sm font-semibold text-primary-700 hover:bg-primary-50"
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-primary-100 bg-white px-4 py-2 text-sm font-semibold text-primary-700 hover:bg-primary-50"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Lista de eventos
               </Link>
               <Link
                 to="/eventos/novo"
-                className="btn-primary inline-flex items-center gap-2 rounded-full shadow"
+                className="btn-primary inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full shadow"
               >
                 Criar evento
               </Link>
@@ -227,7 +227,7 @@ const EventBoard: React.FC = () => {
             <button
               key={value}
               onClick={() => setTimeFilter(value)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`min-h-[44px] px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 timeFilter === value
                   ? 'bg-primary-600 text-white'
                   : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'

@@ -32,7 +32,7 @@ const AdminDashboard: React.FC = () => {
           title="Painel Administrativo"
           description="Gerencie solicitações, cidades e métricas da plataforma"
         />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => (
             <AdminStatCard
               key={i}
@@ -67,7 +67,7 @@ const AdminDashboard: React.FC = () => {
       />
 
       {/* Extended Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <AdminStatCard
           label="Total Solicitações"
           value={extendedStats?.requests.total || 0}

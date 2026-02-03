@@ -166,7 +166,7 @@ const MusicianPublicProfile: React.FC = () => {
   if (loading) {
     return (
       <FullscreenBackground enableBlueWaves>
-        <div className="flex justify-center items-center min-h-screen">
+        <div className="flex justify-center items-center min-h-[100svh]">
           <Loading text="Carregando perfil..." />
         </div>
       </FullscreenBackground>
@@ -193,9 +193,9 @@ const MusicianPublicProfile: React.FC = () => {
 
   return (
     <FullscreenBackground enableBlueWaves>
-      <div className="relative z-10 min-h-screen">
+      <div className="relative z-10 min-h-[100svh]">
         {/* Back Button */}
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-4 py-4 sm:py-6">
           <Link
             to={backLink}
             className="inline-flex items-center gap-2 text-primary-400 hover:text-primary-300 transition-colors"
@@ -206,25 +206,25 @@ const MusicianPublicProfile: React.FC = () => {
         </div>
 
         {/* Profile Card */}
-        <section className="container mx-auto px-4 pb-8">
+        <section className="container mx-auto px-4 pb-8 sm:pb-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="bg-white/5 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/10 max-w-4xl mx-auto"
+            className="bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 max-w-4xl mx-auto"
           >
             {/* Cover Image */}
-            <div className="h-48 md:h-64 bg-gradient-to-r from-primary-600/30 to-indigo-600/30 relative">
+            <div className="h-40 sm:h-48 md:h-64 bg-gradient-to-r from-primary-600/30 to-indigo-600/30 relative">
               {musician.cover_image_url && (
                 <img src={musician.cover_image_url} alt="" className="w-full h-full object-cover" />
               )}
             </div>
 
             {/* Profile Info */}
-            <div className="relative px-6 pb-6">
+            <div className="relative px-4 sm:px-6 pb-5 sm:pb-6">
               {/* Avatar */}
               <div className="relative -mt-16 mb-4">
-                <div className="w-32 h-32 rounded-full border-4 border-slate-900 overflow-hidden bg-gradient-to-br from-primary-500 to-indigo-500 mx-auto md:mx-0">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full border-4 border-slate-900 overflow-hidden bg-gradient-to-br from-primary-500 to-indigo-500 mx-auto md:mx-0">
                   {musician.avatar_url ? (
                     <img
                       src={musician.avatar_url}

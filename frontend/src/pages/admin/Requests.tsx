@@ -310,28 +310,28 @@ const Requests: React.FC = () => {
             <button
               type="button"
               onClick={() => setFilter('pending')}
-              className={`px-3 py-1.5 rounded-full text-sm font-semibold ${filter === 'pending' ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-800 text-slate-400'}`}
+              className={`min-h-[44px] px-3 py-1.5 rounded-full text-sm font-semibold ${filter === 'pending' ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-800 text-slate-400'}`}
             >
               Pendentes
             </button>
             <button
               type="button"
               onClick={() => setFilter('approved')}
-              className={`px-3 py-1.5 rounded-full text-sm font-semibold ${filter === 'approved' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}
+              className={`min-h-[44px] px-3 py-1.5 rounded-full text-sm font-semibold ${filter === 'approved' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}
             >
               Aprovados
             </button>
             <button
               type="button"
               onClick={() => setFilter('rejected')}
-              className={`px-3 py-1.5 rounded-full text-sm font-semibold ${filter === 'rejected' ? 'bg-red-500/20 text-red-400' : 'bg-slate-800 text-slate-400'}`}
+              className={`min-h-[44px] px-3 py-1.5 rounded-full text-sm font-semibold ${filter === 'rejected' ? 'bg-red-500/20 text-red-400' : 'bg-slate-800 text-slate-400'}`}
             >
               Rejeitados
             </button>
             <button
               type="button"
               onClick={() => setFilter('all')}
-              className={`px-3 py-1.5 rounded-full text-sm font-semibold ${filter === 'all' ? 'bg-slate-800 text-slate-300' : 'bg-slate-800 text-slate-400'}`}
+              className={`min-h-[44px] px-3 py-1.5 rounded-full text-sm font-semibold ${filter === 'all' ? 'bg-slate-800 text-slate-300' : 'bg-slate-800 text-slate-400'}`}
             >
               Todos
             </button>
@@ -345,7 +345,7 @@ const Requests: React.FC = () => {
             value={searchTerm}
             onChange={event => setSearchTerm(event.target.value)}
             placeholder="Buscar por nome, email, cidade ou instrumento"
-            className="w-full pl-9 pr-3 py-2 border border-slate-600 bg-slate-800 text-white placeholder:text-slate-400 rounded-lg text-sm focus:ring-2 focus:ring-amber-400/40"
+            className="min-h-[44px] w-full pl-9 pr-3 py-2.5 border border-slate-600 bg-slate-800 text-white placeholder:text-slate-400 rounded-lg text-sm focus:ring-2 focus:ring-amber-400/40"
           />
         </div>
       </div>
@@ -355,19 +355,19 @@ const Requests: React.FC = () => {
         <span className="text-sm font-medium text-slate-300">Ordenar por:</span>
         <button
           onClick={() => handleSort('name')}
-          className={`px-3 py-1.5 rounded text-sm ${sortField === 'name' ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-800 text-slate-300'}`}
+          className={`min-h-[44px] px-3 py-1.5 rounded text-sm ${sortField === 'name' ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-800 text-slate-300'}`}
         >
           Nome {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
         </button>
         <button
           onClick={() => handleSort('created_at')}
-          className={`px-3 py-1.5 rounded text-sm ${sortField === 'created_at' ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-800 text-slate-300'}`}
+          className={`min-h-[44px] px-3 py-1.5 rounded text-sm ${sortField === 'created_at' ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-800 text-slate-300'}`}
         >
           Data {sortField === 'created_at' && (sortOrder === 'asc' ? '↑' : '↓')}
         </button>
         <button
           onClick={() => handleSort('status')}
-          className={`px-3 py-1.5 rounded text-sm ${sortField === 'status' ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-800 text-slate-300'}`}
+          className={`min-h-[44px] px-3 py-1.5 rounded text-sm ${sortField === 'status' ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-800 text-slate-300'}`}
         >
           Status {sortField === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}
         </button>
@@ -428,7 +428,7 @@ const Requests: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleViewDetails(request)}
-                      className="w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-lg border border-white/10 text-slate-200 hover:bg-white/10"
+                      className="min-h-[44px] w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-lg border border-white/10 text-slate-200 hover:bg-white/10"
                     >
                       Detalhes
                     </button>
@@ -438,7 +438,7 @@ const Requests: React.FC = () => {
                           type="button"
                           onClick={() => handleApprove(request.id)}
                           disabled={actionLoading === request.id}
-                          className="w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="min-h-[44px] w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                           {actionLoading === request.id ? (
                             <span className="flex items-center justify-center gap-2">
@@ -456,7 +456,7 @@ const Requests: React.FC = () => {
                             setAdminNotes('');
                           }}
                           disabled={actionLoading === request.id}
-                          className="w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/20 disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="min-h-[44px] w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/20 disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                           Rejeitar
                         </button>
@@ -467,7 +467,7 @@ const Requests: React.FC = () => {
                         type="button"
                         onClick={() => handleResendInvite(request.id)}
                         disabled={actionLoading === request.id}
-                        className="w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-lg border border-amber-500/40 text-amber-300 hover:bg-amber-500/10 disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="min-h-[44px] w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-lg border border-amber-500/40 text-amber-300 hover:bg-amber-500/10 disabled:opacity-60 disabled:cursor-not-allowed"
                       >
                         {actionLoading === request.id ? (
                           <span className="flex items-center justify-center gap-2">
@@ -498,7 +498,7 @@ const Requests: React.FC = () => {
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 rounded border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 text-slate-300"
+                  className="min-h-[44px] px-3 py-1 rounded border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 text-slate-300"
                 >
                   Anterior
                 </button>
@@ -508,7 +508,7 @@ const Requests: React.FC = () => {
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 rounded border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 text-slate-300"
+                  className="min-h-[44px] px-3 py-1 rounded border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 text-slate-300"
                 >
                   Próxima
                 </button>
@@ -566,7 +566,7 @@ const Requests: React.FC = () => {
                   value={adminNotes}
                   onChange={event => setAdminNotes(event.target.value)}
                   rows={3}
-                  className="w-full rounded-lg border border-slate-600 bg-slate-800 text-white placeholder:text-slate-400 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40"
+                  className="min-h-[96px] w-full rounded-lg border border-slate-600 bg-slate-800 text-white placeholder:text-slate-400 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40"
                   placeholder="Observações internas ou motivo da recusa"
                 />
               </div>
@@ -576,7 +576,7 @@ const Requests: React.FC = () => {
               <button
                 type="button"
                 onClick={handleCloseDetails}
-                className="px-4 py-2 rounded-lg border border-white/10 text-slate-200 hover:bg-white/10"
+                className="min-h-[44px] px-4 py-2 rounded-lg border border-white/10 text-slate-200 hover:bg-white/10"
               >
                 Fechar
               </button>
@@ -586,7 +586,7 @@ const Requests: React.FC = () => {
                     type="button"
                     onClick={() => handleReject(selectedRequest.id, adminNotes)}
                     disabled={actionLoading === selectedRequest.id}
-                    className="px-4 py-2 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/20 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="min-h-[44px] px-4 py-2 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/20 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {actionLoading === selectedRequest.id ? (
                       <span className="flex items-center justify-center gap-2">
@@ -601,7 +601,7 @@ const Requests: React.FC = () => {
                     type="button"
                     onClick={() => handleApprove(selectedRequest.id)}
                     disabled={actionLoading === selectedRequest.id}
-                    className="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="min-h-[44px] px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {actionLoading === selectedRequest.id ? (
                       <span className="flex items-center justify-center gap-2">
@@ -619,7 +619,7 @@ const Requests: React.FC = () => {
                   type="button"
                   onClick={() => handleResendInvite(selectedRequest.id)}
                   disabled={actionLoading === selectedRequest.id}
-                  className="px-4 py-2 rounded-lg border border-amber-500/40 text-amber-300 hover:bg-amber-500/10 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="min-h-[44px] px-4 py-2 rounded-lg border border-amber-500/40 text-amber-300 hover:bg-amber-500/10 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {actionLoading === selectedRequest.id ? (
                     <span className="flex items-center justify-center gap-2">

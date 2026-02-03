@@ -337,7 +337,7 @@ const EventForm: React.FC = () => {
 
   return (
     <Layout>
-      <section className="mx-auto max-w-5xl space-y-8">
+      <section className="mx-auto max-w-5xl page-stack">
         {/* Header */}
         <div className="hero-panel">
           <div className="pointer-events-none absolute -right-10 top-0 h-40 w-40 rounded-full bg-primary-300/30 blur-3xl" />

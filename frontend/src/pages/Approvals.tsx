@@ -34,7 +34,7 @@ const Approvals: React.FC = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="page-stack">
         {/* Header */}
         <div className="hero-panel flex items-start gap-3">
           <div className="bg-emerald-100 p-2.5 sm:p-3 rounded-lg flex-shrink-0">

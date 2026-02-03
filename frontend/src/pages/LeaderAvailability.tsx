@@ -207,13 +207,15 @@ const LeaderAvailabilityPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="page-shell py-6 sm:py-8 page-stack">
         {/* Header */}
         <div className="hero-panel">
           <div className="pointer-events-none absolute inset-0 -z-10 opacity-40 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.2),_transparent_40%)]" />
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold text-gray-900">Disponibilidades compartilhadas</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                Disponibilidades compartilhadas
+              </h1>
               <p className="text-gray-600 max-w-2xl text-sm sm:text-base">
                 Cadastre horários disponíveis, defina visibilidade e receba convites com controle de
                 conflitos. O sistema respeita 40 minutos de buffer entre apresentações.
@@ -225,7 +227,7 @@ const LeaderAvailabilityPage: React.FC = () => {
             </div>
             <button
               onClick={() => setShowModal(true)}
-              className="btn-primary flex items-center space-x-2 shadow-lg"
+              className="btn-primary w-full sm:w-auto flex items-center justify-center space-x-2 shadow-lg"
             >
               <Plus className="h-5 w-5" />
               <span>Nova disponibilidade</span>
@@ -251,10 +253,10 @@ const LeaderAvailabilityPage: React.FC = () => {
         {/* Tabs: Minhas Datas vs Explorar Músicos */}
         <div className="flex flex-col gap-4">
           {/* Tabs principais */}
-          <div className="flex border-b border-gray-200">
+          <div className="flex border-b border-gray-200 overflow-x-auto">
             <button
               onClick={() => setShowShared(false)}
-              className={`flex items-center gap-2 px-6 py-3 font-medium border-b-2 transition-colors ${
+              className={`flex items-center gap-2 min-h-[44px] px-4 sm:px-6 py-3 font-medium border-b-2 transition-colors ${
                 !showShared
                   ? 'border-primary-600 text-primary-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -265,7 +267,7 @@ const LeaderAvailabilityPage: React.FC = () => {
             </button>
             <button
               onClick={() => setShowShared(true)}
-              className={`flex items-center gap-2 px-6 py-3 font-medium border-b-2 transition-colors ${
+              className={`flex items-center gap-2 min-h-[44px] px-4 sm:px-6 py-3 font-medium border-b-2 transition-colors ${
                 showShared
                   ? 'border-primary-600 text-primary-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -278,7 +280,7 @@ const LeaderAvailabilityPage: React.FC = () => {
 
           {/* Filtros */}
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="flex space-x-2 overflow-x-auto pb-2">
+            <div className="flex gap-2 overflow-x-auto pb-2">
               {[
                 { value: 'upcoming', label: 'Próximas' },
                 { value: 'all', label: 'Todas' },
@@ -287,7 +289,7 @@ const LeaderAvailabilityPage: React.FC = () => {
                 <button
                   key={item.value}
                   onClick={() => setTimeFilter(item.value as 'upcoming' | 'past' | 'all')}
-                  className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+                  className={`min-h-[44px] px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
                     timeFilter === item.value
                       ? 'bg-primary-600 text-white'
                       : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
@@ -300,12 +302,12 @@ const LeaderAvailabilityPage: React.FC = () => {
 
             {/* Filtros de busca - visíveis apenas em "Explorar Músicos" */}
             {showShared && (
-              <div className="flex flex-col gap-2 md:flex-row md:items-center md:space-x-3">
+              <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
                 <div className="relative">
-                  <Search className="h-4 w-4 text-gray-400 absolute left-3 top-2.5" />
+                  <Search className="h-4 w-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    className="pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary-500 w-full md:w-auto"
+                    className="min-h-[44px] w-full md:w-auto pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary-500"
                     placeholder="Buscar músico (ex: Bruno)"
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
@@ -314,7 +316,7 @@ const LeaderAvailabilityPage: React.FC = () => {
                 <div className="flex items-center space-x-2">
                   <Music className="h-4 w-4 text-gray-500" />
                   <select
-                    className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+                    className="min-h-[44px] border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 w-full md:w-auto"
                     value={instrumentFilter}
                     onChange={e => setInstrumentFilter(e.target.value)}
                     aria-label="Filtrar por instrumento"
@@ -356,7 +358,7 @@ const LeaderAvailabilityPage: React.FC = () => {
                   key={availability.id}
                   className={`card-contrast ${availability.has_conflicts ? 'border-red-300 bg-red-50/80' : ''}`}
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
                         <CalendarIcon className="h-5 w-5 text-gray-500" />
@@ -399,19 +401,19 @@ const LeaderAvailabilityPage: React.FC = () => {
                         </div>
                       )}
                     </div>
-                    <div className="flex items-center space-x-2 ml-4">
+                    <div className="flex items-center space-x-2 sm:ml-4">
                       {isOwner ? (
                         <>
                           <button
                             onClick={() => handleEdit(availability)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="min-h-[44px] min-w-[44px] p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                             title="Editar"
                           >
                             <Edit className="h-5 w-5" />
                           </button>
                           <button
                             onClick={() => handleDelete(availability.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            className="min-h-[44px] min-w-[44px] p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title="Deletar"
                             disabled={actionLoading}
                           >
@@ -429,7 +431,7 @@ const LeaderAvailabilityPage: React.FC = () => {
                               },
                             })
                           }
-                          className="btn-primary flex items-center space-x-2"
+                          className="btn-primary w-full sm:w-auto flex items-center justify-center space-x-2"
                         >
                           <Plus className="h-5 w-5" />
                           <span>Propor Evento</span>

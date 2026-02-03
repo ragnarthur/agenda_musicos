@@ -174,8 +174,8 @@ const RegisterInvite: React.FC = () => {
   if (loading) {
     return (
       <FullscreenBackground>
-        <div className="min-h-screen flex items-center justify-center p-6">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
+        <div className="min-h-[100svh] flex items-center justify-center p-6 py-8">
+          <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 text-center">
             <div className="mx-auto mb-4 h-12 w-12 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
             <p className="text-gray-600">Validando convite...</p>
           </div>
@@ -187,8 +187,8 @@ const RegisterInvite: React.FC = () => {
   if (error || !inviteData) {
     return (
       <FullscreenBackground>
-        <div className="min-h-screen flex items-center justify-center p-6">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 text-center max-w-md">
+        <div className="min-h-[100svh] flex items-center justify-center p-6 py-8">
+          <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 text-center max-w-md">
             <h1 className="text-xl font-bold text-gray-900 mb-2">Convite inválido</h1>
             <p className="text-gray-600 mb-6">{error || 'Não foi possível validar seu convite.'}</p>
             <Link to="/solicitar-acesso" className="btn-primary w-full inline-block text-center">
@@ -207,7 +207,7 @@ const RegisterInvite: React.FC = () => {
       enableBlueWaves
     >
       <div className="max-w-4xl w-full grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
+        <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-8">
           <div className="flex items-center gap-4 mb-6">
             <div className="h-14 w-14 rounded-full bg-amber-100 flex items-center justify-center">
               <CheckCircle className="h-7 w-7 text-amber-600" />
@@ -297,7 +297,7 @@ const RegisterInvite: React.FC = () => {
         </div>
 
         <motion.div
-          className="bg-white/10 border border-white/10 rounded-2xl p-8 text-white flex flex-col justify-between"
+          className="bg-white/10 border border-white/10 rounded-2xl p-5 sm:p-8 text-white flex flex-col justify-between"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}

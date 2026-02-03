@@ -80,8 +80,8 @@ const Dashboard: React.FC = memo(() => {
   if (loading) {
     return (
       <Layout>
-        <div className="space-y-8 py-8">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="page-stack py-6 sm:py-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             <Skeleton className="h-32 w-full" />
             <Skeleton className="h-32 w-full" />
             <Skeleton className="h-32 w-full hidden md:block" />
@@ -94,7 +94,7 @@ const Dashboard: React.FC = memo(() => {
 
   return (
     <Layout>
-      <div className="space-y-8">
+      <div className="page-stack">
         {/* Hero */}
         <motion.div
           className="hero-panel"
@@ -150,7 +150,7 @@ const Dashboard: React.FC = memo(() => {
               : { type: 'spring', stiffness: 120, damping: 18, delay: 0.05 }
           }
         >
-          <div className="grid grid-cols-2 xs:grid-cols-2 md:grid-cols-3 gap-3 xs:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -162,7 +162,7 @@ const Dashboard: React.FC = memo(() => {
             >
               <Link
                 to="/eventos"
-                className="bg-white dark:bg-gray-800 rounded-2xl border-2xl border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl hover:-translate-y-0.5] transition-all block"
+                className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 hover:shadow-xl hover:-translate-y-0.5 transition-all block"
               >
                 <Briefcase className="h-8 w-8 text-purple-600 dark:text-purple-400" />
                 <p className="text-sm font-semibold text-gray-900 dark:text-white">{agendaCount}</p>
@@ -181,7 +181,7 @@ const Dashboard: React.FC = memo(() => {
             >
               <Link
                 to="/eventos"
-                className="bg-white dark:bg-gray-800 rounded-2xl border-2xl border-green-200 dark:border-green-800 p-6 hover:shadow-xl hover:-translate-y-0.5] transition-all block"
+                className="bg-white dark:bg-gray-800 rounded-2xl border border-green-200 dark:border-green-800 p-4 sm:p-6 hover:shadow-xl hover:-translate-y-0.5 transition-all block"
               >
                 <ListChecks className="h-8 w-8 text-green-600 dark:text-green-400" />
                 <p className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -202,7 +202,7 @@ const Dashboard: React.FC = memo(() => {
             >
               <Link
                 to="/eventos"
-                className="bg-white dark:bg-gray-800 rounded-2xl border-2xl border-amber-200 dark:border-amber-800 p-6 hover:shadow-xl hover:-translate-y-0.5] transition-all block"
+                className="bg-white dark:bg-gray-800 rounded-2xl border border-amber-200 dark:border-amber-800 p-4 sm:p-6 hover:shadow-xl hover:-translate-y-0.5 transition-all block"
               >
                 <Zap className="h-8 w-8 text-amber-600 dark:text-amber-400" />
                 <p className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -223,7 +223,7 @@ const Dashboard: React.FC = memo(() => {
             >
               <Link
                 to="/disponibilidades"
-                className="bg-white dark:bg-gray-800 rounded-2xl border-2xl border-indigo-200 dark:border-indigo-800 p-6 hover:shadow-xl hover:-translate-y-0.5] transition-all block"
+                className="bg-white dark:bg-gray-800 rounded-2xl border border-indigo-200 dark:border-indigo-800 p-4 sm:p-6 hover:shadow-xl hover:-translate-y-0.5 transition-all block"
               >
                 <Clock className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
                 <p className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -248,7 +248,7 @@ const Dashboard: React.FC = memo(() => {
           >
             <Link
               to={`/eventos/${nextEvent.id}`}
-              className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 bg-white dark:from-gray-800 to-gray-900 rounded-2xl border-2xl border-indigo-200 dark:border-indigo-900 p-6 hover:shadow-xl hover:-translate-y-0.5] transition-all block"
+              className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 bg-white dark:from-gray-800 to-gray-900 rounded-2xl border border-indigo-200 dark:border-indigo-900 p-4 sm:p-6 hover:shadow-xl hover:-translate-y-0.5 transition-all block"
             >
               <div className="flex items-start gap-3">
                 <div className="flex-1">

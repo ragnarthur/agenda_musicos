@@ -141,20 +141,20 @@ const CompanySettings: React.FC = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-[100svh] bg-gray-50 flex items-center justify-center">
         <Loading text="Carregando..." />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-[100svh] bg-gray-50">
       <CompanyNavbar />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="page-shell max-w-4xl py-6 sm:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Configurações</h1>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Configurações</h1>
           <p className="text-gray-600">Gerencie as informações da sua empresa</p>
         </div>
 
@@ -165,14 +165,14 @@ const CompanySettings: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-lg shadow-sm overflow-hidden"
           >
-            <div className="p-6 border-b border-gray-200">
+            <div className="p-5 sm:p-6 border-b border-gray-200">
               <div className="flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-indigo-600" />
                 <h2 className="text-xl font-bold text-gray-900">Perfil da Empresa</h2>
               </div>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="p-5 sm:p-6 space-y-6">
               {/* Nome da Empresa */}
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
@@ -185,7 +185,7 @@ const CompanySettings: React.FC = () => {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent min-h-[44px]"
                   placeholder="Ex: Casa de Shows XYZ"
                 />
               </div>
@@ -204,7 +204,7 @@ const CompanySettings: React.FC = () => {
                   value={formData.description}
                   onChange={handleChange}
                   rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="min-h-[120px] w-full px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   placeholder="Conte um pouco sobre sua empresa, tipo de eventos que organiza, etc."
                 />
                 <p className="mt-1 text-sm text-gray-500">
@@ -224,7 +224,7 @@ const CompanySettings: React.FC = () => {
                   name="website"
                   value={formData.website}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent min-h-[44px]"
                   placeholder="https://www.suaempresa.com.br"
                 />
               </div>
@@ -243,7 +243,7 @@ const CompanySettings: React.FC = () => {
                     value={formData.city}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent min-h-[44px]"
                     placeholder="Ex: Monte Carmelo"
                   />
                 </div>
@@ -258,7 +258,7 @@ const CompanySettings: React.FC = () => {
                     value={formData.state}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent min-h-[44px]"
                   >
                     <option value="">Selecione...</option>
                     {BRAZILIAN_STATES.map(state => (
@@ -279,14 +279,14 @@ const CompanySettings: React.FC = () => {
             transition={{ delay: 0.1 }}
             className="bg-white rounded-lg shadow-sm overflow-hidden"
           >
-            <div className="p-6 border-b border-gray-200">
+            <div className="p-5 sm:p-6 border-b border-gray-200">
               <div className="flex items-center gap-2">
                 <User className="h-5 w-5 text-indigo-600" />
                 <h2 className="text-xl font-bold text-gray-900">Informações de Contato</h2>
               </div>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="p-5 sm:p-6 space-y-6">
               {/* Nome do Responsável */}
               <div>
                 <label
@@ -301,7 +301,7 @@ const CompanySettings: React.FC = () => {
                   name="contact_name"
                   value={formData.contact_name}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent min-h-[44px]"
                   placeholder="Ex: João Silva"
                 />
               </div>
@@ -321,7 +321,7 @@ const CompanySettings: React.FC = () => {
                   name="contact_email"
                   value={formData.contact_email}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent min-h-[44px]"
                   placeholder="contato@suaempresa.com.br"
                 />
               </div>
@@ -340,7 +340,7 @@ const CompanySettings: React.FC = () => {
                   value={formData.phone}
                   onChange={handleChange}
                   maxLength={15}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent min-h-[44px]"
                   placeholder="(34) 99999-9999"
                 />
               </div>
@@ -374,14 +374,14 @@ const CompanySettings: React.FC = () => {
               type="button"
               onClick={handleCancel}
               disabled={!hasChanges || saving}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2.5 sm:py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={!hasChanges || saving}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="px-6 py-2.5 sm:py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[44px]"
             >
               {saving ? (
                 <>

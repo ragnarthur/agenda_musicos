@@ -345,10 +345,10 @@ const Cities: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="bg-slate-900/90 backdrop-blur rounded-lg shadow p-1 inline-flex">
+      <div className="bg-slate-900/90 backdrop-blur rounded-lg shadow p-1 inline-flex max-w-full overflow-x-auto">
         <button
           onClick={() => setActiveTab('stats')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+          className={`min-h-[44px] px-4 py-2 rounded-md text-sm font-medium transition-colors ${
             activeTab === 'stats'
               ? 'bg-amber-500/20 text-amber-400'
               : 'text-slate-300 hover:text-white hover:bg-white/10'
@@ -358,7 +358,7 @@ const Cities: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('management')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+          className={`min-h-[44px] px-4 py-2 rounded-md text-sm font-medium transition-colors ${
             activeTab === 'management'
               ? 'bg-amber-500/20 text-amber-400'
               : 'text-slate-300 hover:text-white hover:bg-white/10'
@@ -414,7 +414,7 @@ const Cities: React.FC = () => {
                     value={searchTerm}
                     onChange={event => setSearchTerm(event.target.value)}
                     placeholder="Buscar por nome, email ou instrumento"
-                    className="w-full pl-9 pr-3 py-2 border border-slate-600 bg-slate-800 text-white placeholder:text-slate-400 rounded-lg text-sm focus:ring-2 focus:ring-amber-400/40"
+                    className="min-h-[44px] w-full pl-9 pr-3 py-2.5 border border-slate-600 bg-slate-800 text-white placeholder:text-slate-400 rounded-lg text-sm focus:ring-2 focus:ring-amber-400/40"
                   />
                 </div>
               </div>
@@ -446,7 +446,7 @@ const Cities: React.FC = () => {
                       className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-4"
                     >
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                           <span className="text-lg font-semibold text-white">
                             {request.full_name}
                           </span>
@@ -455,7 +455,7 @@ const Cities: React.FC = () => {
                             {request.status_display}
                           </span>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm text-slate-300">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-300">
                           <span className="flex items-center gap-2">
                             <Mail className="h-4 w-4" />
                             {request.email}
@@ -564,7 +564,7 @@ const Cities: React.FC = () => {
                 setEditingCity(null);
                 setCityFormOpen(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
+              className="min-h-[44px] flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
             >
               <Plus className="h-4 w-4" />
               Nova Cidade
@@ -596,7 +596,7 @@ const Cities: React.FC = () => {
                   setEditingCity(null);
                   setCityFormOpen(true);
                 }}
-                className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
+                className="min-h-[44px] px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
               >
                 Cadastrar Cidade
               </button>
@@ -612,7 +612,7 @@ const Cities: React.FC = () => {
                         key={city.id}
                         className={`rounded-xl border-2 p-4 ${statusColors[city.status]}`}
                       >
-                        <div className="flex items-start justify-between mb-3">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-3">
                           <div>
                             <h3 className="font-semibold text-white">
                               {city.name}, {city.state}
@@ -625,14 +625,14 @@ const Cities: React.FC = () => {
                                 setEditingCity(city);
                                 setCityFormOpen(true);
                               }}
-                              className="p-1.5 rounded hover:bg-white/10 transition-colors"
+                              className="min-h-[44px] min-w-[44px] p-1.5 rounded hover:bg-white/10 transition-colors"
                               title="Editar"
                             >
                               <Edit2 className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteCity(city.id)}
-                              className="p-1.5 rounded hover:bg-white/10 transition-colors text-red-400"
+                              className="min-h-[44px] min-w-[44px] p-1.5 rounded hover:bg-white/10 transition-colors text-red-400"
                               title="Excluir"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -659,7 +659,7 @@ const Cities: React.FC = () => {
                           </div>
                           <button
                             onClick={() => handleChangeStatus(city.id, nextStatus[city.status])}
-                            className="text-xs font-medium px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
+                            className="min-h-[36px] text-xs font-medium px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
                           >
                             → Planejamento
                           </button>
@@ -679,7 +679,7 @@ const Cities: React.FC = () => {
                         key={city.id}
                         className={`rounded-xl border-2 p-4 ${statusColors[city.status]}`}
                       >
-                        <div className="flex items-start justify-between mb-3">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-3">
                           <div>
                             <h3 className="font-semibold text-white">
                               {city.name}, {city.state}
@@ -692,14 +692,14 @@ const Cities: React.FC = () => {
                                 setEditingCity(city);
                                 setCityFormOpen(true);
                               }}
-                              className="p-1.5 rounded hover:bg-white/10 transition-colors"
+                              className="min-h-[44px] min-w-[44px] p-1.5 rounded hover:bg-white/10 transition-colors"
                               title="Editar"
                             >
                               <Edit2 className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteCity(city.id)}
-                              className="p-1.5 rounded hover:bg-white/10 transition-colors text-red-400"
+                              className="min-h-[44px] min-w-[44px] p-1.5 rounded hover:bg-white/10 transition-colors text-red-400"
                               title="Excluir"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -746,7 +746,7 @@ const Cities: React.FC = () => {
                         key={city.id}
                         className={`rounded-xl border-2 p-4 ${statusColors[city.status]}`}
                       >
-                        <div className="flex items-start justify-between mb-3">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-3">
                           <div>
                             <h3 className="font-semibold text-white">
                               {city.name}, {city.state}
@@ -759,14 +759,14 @@ const Cities: React.FC = () => {
                                 setEditingCity(city);
                                 setCityFormOpen(true);
                               }}
-                              className="p-1.5 rounded hover:bg-white/10 transition-colors"
+                              className="min-h-[44px] min-w-[44px] p-1.5 rounded hover:bg-white/10 transition-colors"
                               title="Editar"
                             >
                               <Edit2 className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteCity(city.id)}
-                              className="p-1.5 rounded hover:bg-white/10 transition-colors text-red-400"
+                              className="min-h-[44px] min-w-[44px] p-1.5 rounded hover:bg-white/10 transition-colors text-red-400"
                               title="Excluir"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -793,7 +793,7 @@ const Cities: React.FC = () => {
                           </div>
                           <button
                             onClick={() => handleChangeStatus(city.id, nextStatus[city.status])}
-                            className="text-xs font-medium px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
+                            className="min-h-[36px] text-xs font-medium px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
                           >
                             → Expansão
                           </button>
@@ -830,7 +830,7 @@ const Cities: React.FC = () => {
                       setFormErrors({ ...formErrors, name: '' });
                     }
                   }}
-                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40 bg-slate-800 text-white placeholder:text-slate-400 ${
+                  className={`min-h-[44px] w-full rounded-lg border px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400/40 bg-slate-800 text-white placeholder:text-slate-400 ${
                     formErrors.name ? 'border-red-500 focus:border-red-500' : 'border-slate-600'
                   }`}
                   placeholder="Ex: Monte Carmelo"
@@ -850,7 +850,7 @@ const Cities: React.FC = () => {
                       setFormErrors({ ...formErrors, state: '' });
                     }
                   }}
-                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40 bg-slate-800 text-white placeholder:text-slate-400 ${
+                  className={`min-h-[44px] w-full rounded-lg border px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400/40 bg-slate-800 text-white placeholder:text-slate-400 ${
                     formErrors.state ? 'border-red-500 focus:border-red-500' : 'border-slate-600'
                   }`}
                   placeholder="Ex: MG"
@@ -869,7 +869,7 @@ const Cities: React.FC = () => {
                   onChange={e =>
                     setFormData({ ...formData, status: e.target.value as CityCreate['status'] })
                   }
-                  className="w-full rounded-lg border border-slate-600 bg-slate-800 text-white px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40"
+                  className="min-h-[44px] w-full rounded-lg border border-slate-600 bg-slate-800 text-white px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400/40"
                 >
                   <option value="planning">Em Planejamento</option>
                   <option value="expansion">Em Expansão</option>
@@ -889,7 +889,7 @@ const Cities: React.FC = () => {
                       setFormErrors({ ...formErrors, description: '' });
                     }
                   }}
-                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40 bg-slate-800 text-white placeholder:text-slate-400 ${
+                  className={`min-h-[96px] w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40 bg-slate-800 text-white placeholder:text-slate-400 ${
                     formErrors.description
                       ? 'border-red-500 focus:border-red-500'
                       : 'border-slate-600'
@@ -916,7 +916,7 @@ const Cities: React.FC = () => {
                       setFormErrors({ ...formErrors, priority: '' });
                     }
                   }}
-                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40 bg-slate-800 text-white placeholder:text-slate-400 ${
+                  className={`min-h-[44px] w-full rounded-lg border px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400/40 bg-slate-800 text-white placeholder:text-slate-400 ${
                     formErrors.priority ? 'border-red-500 focus:border-red-500' : 'border-slate-600'
                   }`}
                   min={0}
@@ -943,14 +943,14 @@ const Cities: React.FC = () => {
                     });
                     setFormErrors({});
                   }}
-                  className="px-4 py-2 rounded-lg border border-white/10 text-slate-200 hover:bg-white/10"
+                  className="min-h-[44px] px-4 py-2 rounded-lg border border-white/10 text-slate-200 hover:bg-white/10"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={formSubmitting}
-                  className="px-4 py-2 rounded-lg bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="min-h-[44px] px-4 py-2 rounded-lg bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {formSubmitting ? 'Salvando...' : editingCity ? 'Salvar' : 'Criar'}
                 </button>

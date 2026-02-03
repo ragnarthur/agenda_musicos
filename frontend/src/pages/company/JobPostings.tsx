@@ -183,26 +183,28 @@ const JobPostings: React.FC = () => {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-[100svh] bg-gray-50 flex items-center justify-center">
         <Loading text="Carregando..." />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-[100svh] bg-gray-50">
       <CompanyNavbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="page-shell max-w-7xl py-6 sm:py-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Oportunidades</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+              Oportunidades
+            </h1>
             <p className="text-gray-600">Publique vagas e envie propostas para músicos</p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            className="flex items-center gap-2 px-6 py-2.5 sm:py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors min-h-[44px]"
           >
             <Plus className="h-5 w-5" />
             Nova Oportunidade
@@ -221,7 +223,7 @@ const JobPostings: React.FC = () => {
             </p>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              className="px-6 py-2.5 sm:py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors min-h-[44px]"
             >
               Publicar Primeira Oportunidade
             </button>
@@ -328,20 +330,20 @@ const JobPostings: React.FC = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={e => e.stopPropagation()}
-              className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90svh] overflow-y-auto"
             >
-              <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-900">Nova Oportunidade</h2>
                 <button
                   onClick={() => !sending && setShowCreateModal(false)}
                   disabled={sending}
-                  className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                  className="min-h-[44px] min-w-[44px] text-gray-400 hover:text-gray-600 disabled:opacity-50"
                 >
                   <X className="h-6 w-6" />
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
                 {/* Título */}
                 <div>
                   <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
@@ -354,7 +356,7 @@ const JobPostings: React.FC = () => {
                     value={formData.title}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="min-h-[44px] w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     placeholder="Ex: Guitarrista para show de rock"
                   />
                 </div>
@@ -374,7 +376,7 @@ const JobPostings: React.FC = () => {
                     onChange={handleChange}
                     required
                     rows={5}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="min-h-[120px] w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     placeholder="Descreva os detalhes da oportunidade, tipo de evento, requisitos, etc."
                   />
                 </div>
@@ -395,7 +397,7 @@ const JobPostings: React.FC = () => {
                       name="eventDate"
                       value={formData.eventDate}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="min-h-[44px] w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     />
                   </div>
 
@@ -413,7 +415,7 @@ const JobPostings: React.FC = () => {
                       name="eventLocation"
                       value={formData.eventLocation}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="min-h-[44px] w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       placeholder="Ex: Centro de Convenções"
                     />
                   </div>
@@ -434,7 +436,7 @@ const JobPostings: React.FC = () => {
                     name="budgetRange"
                     value={formData.budgetRange}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="min-h-[44px] w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     placeholder="Ex: R$ 500 - R$ 1000"
                   />
                 </div>
@@ -450,7 +452,7 @@ const JobPostings: React.FC = () => {
                         key={instrument}
                         type="button"
                         onClick={() => toggleInstrument(instrument)}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        className={`min-h-[44px] px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                           formData.instruments.includes(instrument)
                             ? 'bg-indigo-600 text-white'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -470,19 +472,19 @@ const JobPostings: React.FC = () => {
                 </div>
 
                 {/* Botões */}
-                <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
+                <div className="flex flex-col sm:flex-row gap-3 justify-end pt-4 border-t border-gray-200">
                   <button
                     type="button"
                     onClick={() => setShowCreateModal(false)}
                     disabled={sending}
-                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                    className="min-h-[44px] px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={sending}
-                    className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                    className="min-h-[44px] px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2"
                   >
                     {sending ? (
                       <>

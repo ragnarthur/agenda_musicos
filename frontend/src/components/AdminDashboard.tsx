@@ -224,16 +224,16 @@ const AdminDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-[100svh] bg-gray-50">
         <div className="bg-white shadow">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="page-shell max-w-7xl">
             <div className="py-6">
               <h1 className="text-3xl font-bold text-gray-900">Admin · Solicitações de acesso</h1>
               <p className="mt-2 text-gray-600">Aprove ou rejeite solicitações de músicos</p>
             </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="page-shell max-w-7xl py-6 sm:py-8">
           <div className="space-y-4">
             {[1, 2, 3].map(i => (
               <div key={i} className="bg-white rounded-xl shadow p-5 animate-pulse">
@@ -258,8 +258,8 @@ const AdminDashboard: React.FC = () => {
 
   if (isForbidden) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center">
+      <div className="min-h-[100svh] flex items-center justify-center bg-gray-50 p-6">
+        <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-8 max-w-md text-center">
           <h1 className="text-xl font-bold text-gray-900 mb-2">Acesso restrito</h1>
           <p className="text-gray-600 mb-6">Esta área é exclusiva para administradores.</p>
           <Link to="/" className="btn-primary inline-block">
@@ -271,10 +271,10 @@ const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-[100svh] bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="page-shell max-w-7xl">
           <div className="py-6">
             <h1 className="text-3xl font-bold text-gray-900">Admin · Solicitações de acesso</h1>
             <p className="mt-2 text-gray-600">Aprove ou rejeite solicitações de músicos</p>
@@ -282,7 +282,7 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="page-shell max-w-7xl py-6 sm:py-8">
         {inviteLink && (
           <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
@@ -303,7 +303,7 @@ const AdminDashboard: React.FC = () => {
                 await navigator.clipboard.writeText(inviteLink);
                 showToast.success('Link copiado!');
               }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg"
+              className="inline-flex items-center gap-2 px-4 py-2.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg min-h-[44px]"
             >
               <Copy className="h-4 w-4" />
               Copiar link

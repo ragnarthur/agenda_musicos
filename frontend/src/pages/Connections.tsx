@@ -210,7 +210,7 @@ const Connections: React.FC = () => {
   if (isLoading) {
     return (
       <Layout>
-        <div className="space-y-6">
+        <div className="page-stack">
           <div className="hero-panel">
             <div className="h-6 w-48 rounded-full bg-gray-200 animate-pulse" />
             <div className="mt-3 h-4 w-72 rounded-full bg-gray-200 animate-pulse" />
@@ -250,7 +250,7 @@ const Connections: React.FC = () => {
 
   return (
     <Layout>
-      <div className="space-y-8 overflow-x-hidden">
+      <div className="page-stack overflow-x-hidden">
         {/* Hero Panel com Gradiente Animado */}
         <div className="hero-panel hero-animated fade-in-up">
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">

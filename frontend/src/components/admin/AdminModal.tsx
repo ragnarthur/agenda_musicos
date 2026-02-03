@@ -69,24 +69,24 @@ export const AdminModal: React.FC<AdminModalProps> = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className={`relative ${getSizeClasses(size)} w-full bg-white rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto`}
+            className={`relative ${getSizeClasses(size)} w-full bg-white rounded-2xl shadow-2xl max-h-[90svh] overflow-y-auto`}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex items-start justify-between">
+            <div className="sticky top-0 bg-white border-b border-gray-100 p-4 sm:p-6 flex items-start justify-between">
               <h2 className="text-xl font-bold text-gray-900">{title}</h2>
               <button
                 onClick={onClose}
-                className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
+                className="min-h-[44px] min-w-[44px] p-1 rounded-lg hover:bg-gray-100 transition-colors"
                 aria-label="Fechar modal"
               >
                 <X className="h-5 w-5 text-gray-500" />
               </button>
             </div>
 
-            <div className="p-6">{children}</div>
+            <div className="p-4 sm:p-6">{children}</div>
 
             {footer && (
-              <div className="sticky bottom-0 bg-white border-t border-gray-100 p-6 flex items-center justify-end gap-3">
+              <div className="sticky bottom-0 bg-white border-t border-gray-100 p-4 sm:p-6 flex items-center justify-end gap-3">
                 {footer}
               </div>
             )}

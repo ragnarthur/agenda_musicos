@@ -138,7 +138,7 @@ const AdminUsers: React.FC = () => {
           description="Liste e gerencie todos os usuários da plataforma"
         />
         <AdminCard>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map(i => (
               <div key={i} className="animate-pulse">
                 <div className="h-20 bg-gray-200 rounded-lg"></div>
@@ -172,7 +172,7 @@ const AdminUsers: React.FC = () => {
             placeholder="Buscar por nome, email ou usuário..."
             value={searchTerm}
             onChange={handleSearch}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="min-h-[44px] w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           />
         </div>
       </AdminCard>
@@ -190,9 +190,9 @@ const AdminUsers: React.FC = () => {
                 key={user.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:border-indigo-300 transition-colors"
+                className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between p-4 bg-white rounded-lg border border-gray-200 hover:border-indigo-300 transition-colors"
               >
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center gap-4">
                   <div className="flex items-center justify-center w-12 h-12 bg-indigo-100 rounded-full">
                     <UserIcon className="text-indigo-600 w-6 h-6" />
                   </div>
@@ -206,10 +206,10 @@ const AdminUsers: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     onClick={() => handleViewDetails(user)}
-                    className="px-3 py-1.5 text-sm font-semibold text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                    className="min-h-[44px] px-3 py-1.5 text-sm font-semibold text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                   >
                     Detalhes
                   </button>
@@ -231,7 +231,7 @@ const AdminUsers: React.FC = () => {
                     <button
                       onClick={() => handleDeleteClick(user)}
                       disabled={deleting === user.id}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="min-h-[44px] min-w-[44px] p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Deletar usuário"
                     >
                       <Trash2 className="w-5 h-5" />
@@ -273,17 +273,17 @@ const AdminUsers: React.FC = () => {
               </p>
             </div>
 
-            <div className="flex justify-end space-x-3">
+            <div className="flex flex-col sm:flex-row justify-end gap-2">
               <button
                 onClick={() => setShowConfirmModal(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                className="min-h-[44px] px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmDelete}
                 disabled={deleting !== null}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="min-h-[44px] px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {deleting === userToDelete.id ? 'Deletando...' : 'Confirmar'}
               </button>
@@ -331,7 +331,7 @@ const AdminUsers: React.FC = () => {
             <div className="flex justify-end mt-6">
               <button
                 onClick={handleCloseDetails}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                className="min-h-[44px] px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
               >
                 Fechar
               </button>

@@ -195,7 +195,7 @@ const EventsList: React.FC = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="page-stack">
         <section className="hero-panel">
           <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
             <div>
@@ -234,7 +234,7 @@ const EventsList: React.FC = () => {
           </div>
         </section>
 
-        <div className="rounded-3xl border border-white/60 bg-white/90 p-5 shadow-xl backdrop-blur">
+        <div className="rounded-2xl border border-white/60 bg-white/90 p-4 sm:p-5 shadow-xl backdrop-blur">
           <div className="grid gap-4 md:grid-cols-[2fr,1fr]">
             <div className="relative">
               <Search className="pointer-events-none absolute left-4 top-3.5 h-5 w-5 text-gray-400" />

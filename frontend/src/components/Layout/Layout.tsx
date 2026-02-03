@@ -40,16 +40,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, [location.pathname, location.search]);
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
+    <div className="relative min-h-[100svh] bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
       {/* Aqui eu deixo o fundo estático pra economizar GPU no mobile, mas sem perder identidade */}
       {/* As partículas ficam só nas telas-chave (login/landing/cadastro). */}
       <AnimatedBackground enableBlueWaves enableParticles={false} />
       <Navbar />
 
-      <div className="relative z-10 flex min-h-screen flex-col pt-6 sm:pt-8">
+      <div className="relative z-10 flex min-h-[100svh] flex-col pt-4 sm:pt-6">
         <main
           ref={mainRef}
-          className="container mx-auto flex-1 max-w-6xl px-3 sm:px-4 pb-16 lg:px-8"
+          className="page-shell flex-1 pb-12 sm:pb-16"
         >
           {children}
         </main>

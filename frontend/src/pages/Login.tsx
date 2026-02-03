@@ -143,10 +143,10 @@ const Login: React.FC = () => {
   return (
     <FullscreenBackground
       className="px-4"
-      contentClassName="flex items-center justify-center"
+      contentClassName="flex items-center justify-center py-6 sm:py-10"
       enableBlueWaves
     >
-      <div className="w-full max-w-xl">
+      <div className="w-full max-w-xl sm:max-w-2xl">
         {/* Logo e Título */}
         <div className="text-center mb-6">
           <div className="flex justify-center mb-2">
@@ -155,7 +155,7 @@ const Login: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center justify-center gap-2 mb-3">
-            <h1 className="text-5xl font-bold text-white logo-animated drop-shadow-xl leading-tight">
+            <h1 className="text-4xl sm:text-5xl font-bold text-white logo-animated drop-shadow-xl leading-tight">
               GigFlow
             </h1>
             <span className="text-[12px] px-2 py-0.5 bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-500/10 text-amber-100/80 rounded-full border border-amber-400/20 font-light italic tracking-wider">
@@ -163,7 +163,7 @@ const Login: React.FC = () => {
             </span>
           </div>
           <motion.p
-            className="relative text-primary-50 font-medium text-base tracking-wide"
+            className="relative text-primary-50 font-medium text-sm sm:text-base tracking-wide"
             initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
             transition={{ duration: 0.7, delay: 0.2 }}
@@ -180,7 +180,7 @@ const Login: React.FC = () => {
         </div>
 
         {/* Card de Login */}
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
+        <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Entrar</h2>
 
           {/* Google Sign In */}

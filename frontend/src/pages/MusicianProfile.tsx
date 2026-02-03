@@ -264,7 +264,7 @@ const MusicianProfile: React.FC = () => {
   if (error || !musician) {
     return (
       <Layout>
-        <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="page-shell py-6 sm:py-8">
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-700 dark:text-red-400">
             {error || 'Músico não encontrado'}
           </div>
@@ -277,8 +277,8 @@ const MusicianProfile: React.FC = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-transparent transition-colors duration-200">
-        <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="min-h-[100svh] bg-transparent transition-colors duration-200">
+        <div className="page-shell py-6 sm:py-8">
           {/* Back Button + Edit Profile */}
           <div className="flex items-center justify-between mb-6">
             <Link

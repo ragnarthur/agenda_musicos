@@ -144,7 +144,7 @@ const AdminOrganizations: React.FC = () => {
           description="Liste e gerencie todas as empresas/organizações da plataforma"
         />
         <AdminCard>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map(i => (
               <div key={i} className="animate-pulse">
                 <div className="h-20 bg-gray-200 rounded-lg"></div>
@@ -181,7 +181,7 @@ const AdminOrganizations: React.FC = () => {
             placeholder="Buscar por nome, email, tipo..."
             value={searchTerm}
             onChange={handleSearch}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="min-h-[44px] w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           />
         </div>
       </AdminCard>
@@ -200,7 +200,7 @@ const AdminOrganizations: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="p-4 bg-white rounded-lg border border-gray-200 hover:border-indigo-300 transition-colors"
               >
-                <div className="flex items-start justify-between">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       {org.logo_url ? (
@@ -220,7 +220,7 @@ const AdminOrganizations: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 mt-3 text-sm text-gray-600">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 text-sm text-gray-600">
                       {org.owner_data && (
                         <div className="flex items-center space-x-2">
                           <User className="w-4 h-4 text-gray-400" />
@@ -253,10 +253,10 @@ const AdminOrganizations: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="flex items-center space-x-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       onClick={() => handleViewDetails(org)}
-                      className="px-3 py-1.5 text-sm font-semibold text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                      className="min-h-[44px] px-3 py-1.5 text-sm font-semibold text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                     >
                       Detalhes
                     </button>
@@ -269,7 +269,7 @@ const AdminOrganizations: React.FC = () => {
                       <button
                         onClick={() => handleDeleteClick(org)}
                         disabled={deleting === org.owner_data.id}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="min-h-[44px] min-w-[44px] p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Deletar organização (via usuário dono)"
                       >
                         <Trash2 className="w-5 h-5" />
@@ -306,17 +306,17 @@ const AdminOrganizations: React.FC = () => {
               </p>
             </div>
             
-            <div className="flex justify-end space-x-3">
+            <div className="flex flex-col sm:flex-row justify-end gap-2">
               <button
                 onClick={() => setShowConfirmModal(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                className="min-h-[44px] px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmDelete}
                 disabled={deleting !== null}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="min-h-[44px] px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {deleting === orgToDelete.id ? 'Deletando...' : 'Confirmar'}
               </button>
@@ -330,17 +330,17 @@ const AdminOrganizations: React.FC = () => {
               </p>
             </div>
 
-            <div className="flex justify-end space-x-3">
+            <div className="flex flex-col sm:flex-row justify-end gap-2">
               <button
                 onClick={() => setShowConfirmModal(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                className="min-h-[44px] px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmDelete}
                 disabled={deleting !== null}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="min-h-[44px] px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {deleting === orgToDelete.owner_data.id ? 'Deletando...' : 'Confirmar'}
               </button>
@@ -391,7 +391,7 @@ const AdminOrganizations: React.FC = () => {
             <div className="flex justify-end mt-6">
               <button
                 onClick={handleCloseDetails}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                className="min-h-[44px] px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
               >
                 Fechar
               </button>

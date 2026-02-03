@@ -288,7 +288,7 @@ const Landing: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <motion.h1
-              className="relative z-20 text-4xl xs:text-5xl sm:text-6xl md:text-7xl font-bold text-white pb-1 md:pb-2 leading-tight logo-animated"
+              className="relative z-20 text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-white pb-1 md:pb-2 leading-tight logo-animated"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
@@ -311,7 +311,7 @@ const Landing: React.FC = () => {
           <AnimatePresence mode="wait">
             <motion.div
               key={userType}
-              className="text-xl md:text-2xl text-gray-300 mb-4 max-w-3xl mx-auto"
+              className="text-base sm:text-xl md:text-2xl text-gray-300 mb-4 max-w-3xl mx-auto"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -322,7 +322,7 @@ const Landing: React.FC = () => {
           </AnimatePresence>
 
           <motion.div
-            className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto min-h-[2.8em] flex items-center justify-center"
+            className="text-base sm:text-xl md:text-2xl text-gray-300 mb-10 sm:mb-12 max-w-3xl mx-auto min-h-[2.8em] flex items-center justify-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
@@ -375,13 +375,13 @@ const Landing: React.FC = () => {
             >
               <Link
                 to={currentContent.primaryCTA.to}
-                className="px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-lg"
+                className="px-6 py-3 sm:px-8 sm:py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-base sm:text-lg"
               >
                 {currentContent.primaryCTA.text}
               </Link>
               <Link
                 to={currentContent.secondaryCTA.to}
-                className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border-2 border-white/30 hover:border-white/50 transition-all text-lg"
+                className="px-6 py-3 sm:px-8 sm:py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border-2 border-white/30 hover:border-white/50 transition-all text-base sm:text-lg"
               >
                 {currentContent.secondaryCTA.text}
               </Link>
@@ -390,11 +390,11 @@ const Landing: React.FC = () => {
         </section>
 
         {/* Features Section */}
-        <section className="container mx-auto px-4 py-16">
+        <section className="container mx-auto px-4 py-12 sm:py-16">
           <AnimatePresence mode="wait">
             <motion.h2
               key={userType}
-              className="text-3xl md:text-4xl font-bold text-white text-center mb-12"
+              className="text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center mb-8 sm:mb-12"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -405,7 +405,7 @@ const Landing: React.FC = () => {
           </AnimatePresence>
 
           <AnimatePresence mode="wait">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-6xl mx-auto">
               {currentContent.features.map((feature, index) => (
                 <FeatureCard
                   key={`${userType}-${index}`}
@@ -420,11 +420,11 @@ const Landing: React.FC = () => {
         </section>
 
         {/* Social Proof (simples) */}
-        <section className="container mx-auto px-4 py-16 text-center">
+        <section className="container mx-auto px-4 py-12 sm:py-16 text-center">
           <AnimatePresence mode="wait">
             <motion.p
               key={userType}
-              className="text-2xl text-gray-300 font-semibold"
+              className="text-xl sm:text-2xl text-gray-300 font-semibold"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -438,11 +438,11 @@ const Landing: React.FC = () => {
         </section>
 
         {/* Footer CTA */}
-        <section className="relative container mx-auto px-4 py-16 text-center border-t border-white/10">
+        <section className="relative container mx-auto px-4 py-12 sm:py-16 text-center border-t border-white/10">
           <AnimatePresence mode="wait">
             <motion.h3
               key={userType}
-              className="text-3xl font-bold text-white mb-6"
+              className="text-2xl sm:text-3xl font-bold text-white mb-6"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}

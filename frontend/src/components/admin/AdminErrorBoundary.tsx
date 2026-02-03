@@ -42,13 +42,13 @@ class AdminErrorBoundary extends React.Component<React.PropsWithChildren, AdminE
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={this.handleReload}
-            className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+            className="min-h-[44px] px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
           >
             Recarregar
           </button>
           <Link
             to={ADMIN_ROUTES.dashboard}
-            className="px-4 py-2 rounded-lg border border-white/10 text-slate-200 hover:bg-white/10"
+            className="min-h-[44px] px-4 py-2 rounded-lg border border-white/10 text-slate-200 hover:bg-white/10"
           >
             Ir para o dashboard
           </Link>
