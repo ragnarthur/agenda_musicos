@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   MapPin,
   Building2,
@@ -24,6 +25,7 @@ import {
   type MusicianRequest,
 } from '../../services/publicApi';
 import { showToast } from '../../utils/toast';
+import { ADMIN_ROUTES } from '../../routes/adminRoutes';
 
 const VALID_UFS = [
   'AC',
@@ -56,7 +58,12 @@ const VALID_UFS = [
 ];
 
 const Cities: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'stats' | 'management'>('stats');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { state: stateParam, city: cityParam } = useParams();
+  const [activeTab, setActiveTab] = useState<'stats' | 'management'>(
+    (searchParams.get('tab') as 'stats' | 'management') || 'stats'
+  );
   const [extendedStats, setExtendedStats] = useState<DashboardStatsExtended | null>(null);
   void extendedStats;
   const [cityStats, setCityStats] = useState<CityStats[]>([]);
@@ -65,7 +72,7 @@ const Cities: React.FC = () => {
   const [cityStatsLoading, setCityStatsLoading] = useState(false);
   const [citiesLoading, setCitiesLoading] = useState(false);
   const [selectedCity, setSelectedCity] = useState<{ city: string; state: string } | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [cityRequests, setCityRequests] = useState<MusicianRequest[]>([]);
   const [cityInfo, setCityInfo] = useState<City | null>(null);
   const [cityFormOpen, setCityFormOpen] = useState(false);
@@ -155,23 +162,27 @@ const Cities: React.FC = () => {
 
   useEffect(() => {
     const abortController = new AbortController();
-    fetchExtendedStats(abortController.signal);
+    const loadTabData = async () => {
+      await fetchExtendedStats(abortController.signal);
+      if (activeTab === 'stats') {
+        await fetchCityStats(abortController.signal);
+      } else {
+        await fetchCities(abortController.signal);
+      }
+    };
+
+    loadTabData();
     return () => {
       abortController.abort();
     };
-  }, [fetchExtendedStats]);
+  }, [activeTab, fetchCityStats, fetchCities, fetchExtendedStats]);
 
   useEffect(() => {
-    const abortController = new AbortController();
-    if (activeTab === 'stats') {
-      fetchCityStats(abortController.signal);
-    } else {
-      fetchCities(abortController.signal);
-    }
-    return () => {
-      abortController.abort();
-    };
-  }, [activeTab, fetchCityStats, fetchCities]);
+    const params: Record<string, string> = {};
+    if (activeTab !== 'stats') params.tab = activeTab;
+    if (searchTerm) params.q = searchTerm;
+    setSearchParams(params, { replace: true });
+  }, [activeTab, searchTerm, setSearchParams]);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -182,6 +193,20 @@ const Cities: React.FC = () => {
       abortController.abort();
     };
   }, [selectedCity, fetchCityDetail]);
+
+  useEffect(() => {
+    if (stateParam && cityParam) {
+      setSelectedCity({
+        state: decodeURIComponent(stateParam),
+        city: decodeURIComponent(cityParam),
+      });
+      if (activeTab !== 'stats') {
+        setActiveTab('stats');
+      }
+      return;
+    }
+    setSelectedCity(null);
+  }, [stateParam, cityParam, activeTab]);
 
   const handleSaveCity = async (data: CityCreate) => {
     try {
@@ -349,7 +374,13 @@ const Cities: React.FC = () => {
           {selectedCity ? (
             <>
               <button
-                onClick={() => setSelectedCity(null)}
+                onClick={() => {
+                  const query = searchParams.toString();
+                  navigate({
+                    pathname: ADMIN_ROUTES.cities,
+                    search: query ? `?${query}` : '',
+                  });
+                }}
                 className="flex items-center gap-2 text-slate-300 hover:text-white mb-4"
               >
                 <ChevronRight className="h-4 w-4 rotate-180" />
@@ -472,7 +503,13 @@ const Cities: React.FC = () => {
                   {cityStats.map(cs => (
                     <button
                       key={`${cs.city}-${cs.state}`}
-                      onClick={() => setSelectedCity({ city: cs.city, state: cs.state })}
+                      onClick={() => {
+                        const query = searchParams.toString();
+                        navigate({
+                          pathname: ADMIN_ROUTES.citiesDetail(cs.state, cs.city),
+                          search: query ? `?${query}` : '',
+                        });
+                      }}
                       className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-4 text-left hover:shadow-md transition-shadow w-full"
                     >
                       <div className="flex items-start justify-between mb-3">

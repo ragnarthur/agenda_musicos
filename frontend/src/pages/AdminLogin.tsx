@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ADMIN_ROUTES } from '../routes/adminRoutes';
 import { Shield, Mail, Lock, LogIn } from 'lucide-react';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { showToast } from '../utils/toast';
@@ -19,7 +20,7 @@ const AdminLogin: React.FC = () => {
 
     try {
       await login(email, password);
-      navigate('/admin/dashboard');
+      navigate(ADMIN_ROUTES.dashboard);
     } catch (error: unknown) {
       console.error('Admin login error:', error);
       const err = error as { response?: { data?: { detail?: string } } } | { message?: string };

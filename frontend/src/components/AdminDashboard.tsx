@@ -18,6 +18,7 @@ import { musicianRequestService, type MusicianRequest } from '../services/public
 import { showToast } from '../utils/toast';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ADMIN_ROUTES } from '../routes/adminRoutes';
 
 interface DashboardStats {
   total_requests: number;
@@ -62,10 +63,10 @@ const AdminDashboard: React.FC = () => {
       const admin = await adminService.getMe();
       if (!admin.is_staff && !admin.is_superuser) {
         showToast.error('Acesso negado. Esta área é restrita a administradores.');
-        navigate('/admin/login');
+        navigate(ADMIN_ROUTES.login);
       }
     } catch {
-      navigate('/admin/login');
+      navigate(ADMIN_ROUTES.login);
     }
   }, [navigate]);
 

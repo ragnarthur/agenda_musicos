@@ -1,17 +1,23 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Trash2, Shield, Search, Users, UserCheck, User as UserIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AdminHero, AdminCard } from '../../components/admin';
 import { showToast } from '../../utils/toast';
+import { ADMIN_ROUTES } from '../../routes/adminRoutes';
 import { adminService, type UsersListResponse } from '../../services/adminService';
 
 const AdminUsers: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { id: userIdParam } = useParams();
   const [users, setUsers] = useState<UsersListResponse>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [deleting, setDeleting] = useState<number | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UsersListResponse[0] | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UsersListResponse[0] | null>(null);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -29,6 +35,40 @@ const AdminUsers: React.FC = () => {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+  useEffect(() => {
+    if (!userIdParam) {
+      setSelectedUser(null);
+      return;
+    }
+
+    const parsedId = Number(userIdParam);
+    if (Number.isNaN(parsedId)) {
+      setSelectedUser(null);
+      return;
+    }
+
+    const found = users.find(user => user.id === parsedId);
+    if (found) {
+      setSelectedUser(found);
+    } else if (!loading && users.length > 0) {
+      setSelectedUser(null);
+      const query = searchParams.toString();
+      navigate(
+        {
+          pathname: ADMIN_ROUTES.users,
+          search: query ? `?${query}` : '',
+        },
+        { replace: true }
+      );
+    }
+  }, [userIdParam, users, loading, navigate, searchParams]);
+
+  useEffect(() => {
+    const params: Record<string, string> = {};
+    if (searchTerm) params.q = searchTerm;
+    setSearchParams(params, { replace: true });
+  }, [searchTerm, setSearchParams]);
 
   const filteredUsers = users.filter(user => {
     const searchLower = searchTerm.toLowerCase();
@@ -50,30 +90,37 @@ const AdminUsers: React.FC = () => {
     setShowConfirmModal(true);
   };
 
+  const handleViewDetails = (user: UsersListResponse[0]) => {
+    setSelectedUser(user);
+    const query = searchParams.toString();
+    navigate({
+      pathname: ADMIN_ROUTES.usersDetail(user.id),
+      search: query ? `?${query}` : '',
+    });
+  };
+
+  const handleCloseDetails = () => {
+    setSelectedUser(null);
+    const query = searchParams.toString();
+    navigate({
+      pathname: ADMIN_ROUTES.users,
+      search: query ? `?${query}` : '',
+    });
+  };
+
   const confirmDelete = async () => {
     if (!userToDelete) return;
 
     try {
       setDeleting(userToDelete.id);
-      const response = await fetch(`/api/users/${userToDelete.id}/delete/`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        showToast.success('Usuário deletado com sucesso');
-        setUsers(prev => prev.filter(u => u.id !== userToDelete.id));
-        setShowConfirmModal(false);
-        setUserToDelete(null);
-      } else {
-        const error = await response.json();
-        showToast.error(error.error || 'Erro ao deletar usuário');
-      }
+      await adminService.deleteUser(userToDelete.id);
+      showToast.success('Usuário deletado com sucesso');
+      setUsers(prev => prev.filter(u => u.id !== userToDelete.id));
+      setShowConfirmModal(false);
+      setUserToDelete(null);
     } catch (error) {
       console.error('Error deleting user:', error);
-      showToast.error('Erro ao deletar usuário');
+      showToast.apiError(error);
     } finally {
       setDeleting(null);
     }
@@ -160,6 +207,12 @@ const AdminUsers: React.FC = () => {
                 </div>
 
                 <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handleViewDetails(user)}
+                    className="px-3 py-1.5 text-sm font-semibold text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                  >
+                    Detalhes
+                  </button>
                   {/* Badges */}
                   {user.is_superuser && (
                     <span className="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">
@@ -233,6 +286,54 @@ const AdminUsers: React.FC = () => {
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {deleting === userToDelete.id ? 'Deletando...' : 'Confirmar'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Details Modal */}
+      {selectedUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
+          >
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="flex items-center justify-center w-12 h-12 bg-indigo-100 rounded-full">
+                <UserIcon className="text-indigo-600 w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Detalhes do Usuário</h2>
+                <p className="text-sm text-gray-600">
+                  {selectedUser.first_name} {selectedUser.last_name}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2 text-sm text-gray-700">
+              <p>
+                <strong>Username:</strong> @{selectedUser.username}
+              </p>
+              <p>
+                <strong>Email:</strong> {selectedUser.email}
+              </p>
+              <p>
+                <strong>Staff:</strong> {selectedUser.is_staff ? 'Sim' : 'Não'}
+              </p>
+              <p>
+                <strong>Superadmin:</strong> {selectedUser.is_superuser ? 'Sim' : 'Não'}
+              </p>
+            </div>
+
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={handleCloseDetails}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Fechar
               </button>
             </div>
           </motion.div>

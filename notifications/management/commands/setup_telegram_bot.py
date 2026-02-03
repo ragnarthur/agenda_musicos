@@ -12,8 +12,18 @@ class Command(BaseCommand):
             type=str,
             help="URL publica do webhook (ex: https://meusite.com/api/notifications/telegram/webhook/)",
         )
-        parser.add_argument("--delete", action="store_true", help="Remove webhook existente")
-        parser.add_argument("--info", action="store_true", help="Mostra informacoes do bot")
+        parser.add_argument(
+            "--delete", action="store_true", help="Remove webhook existente"
+        )
+        parser.add_argument(
+            "--info", action="store_true", help="Mostra informacoes do bot"
+        )
+        parser.add_argument(
+            "--secret",
+            type=str,
+            default="",
+            help="Segredo do webhook (X-Telegram-Bot-Api-Secret-Token header). Deixe vazio para desativar.",
+        )
 
     def handle(self, *args, **options):
         token = getattr(settings, "TELEGRAM_BOT_TOKEN", "")
@@ -42,6 +52,8 @@ class Command(BaseCommand):
 
         # Configura webhook
         webhook_url = options.get("webhook_url")
+        webhook_secret = options.get("secret", "")
+
         if not webhook_url:
             self.stderr.write(
                 self.style.ERROR(
@@ -52,7 +64,7 @@ class Command(BaseCommand):
             self._show_current_webhook(base_url)
             return
 
-        self._set_webhook(base_url, webhook_url)
+        self._set_webhook(base_url, webhook_url, webhook_secret)
 
     def _show_bot_info(self, base_url: str):
         """Mostra informacoes do bot"""
@@ -66,7 +78,9 @@ class Command(BaseCommand):
                 self.stdout.write(f"  ID: {bot.get('id')}")
                 self.stdout.write(f"  Nome: {bot.get('first_name')}")
                 self.stdout.write(f"  Username: @{bot.get('username')}")
-                self.stdout.write(f"  Pode entrar em grupos: {bot.get('can_join_groups', False)}")
+                self.stdout.write(
+                    f"  Pode entrar em grupos: {bot.get('can_join_groups', False)}"
+                )
                 self.stdout.write("")
 
                 # Mostra webhook atual
@@ -120,30 +134,41 @@ class Command(BaseCommand):
         except Exception as e:
             self.stderr.write(self.style.ERROR(f"Erro ao remover webhook: {e}"))
 
-    def _set_webhook(self, base_url: str, webhook_url: str):
+    def _set_webhook(self, base_url: str, webhook_url: str, secret: str = ""):
         """Configura novo webhook"""
         try:
+            payload = {
+                "url": webhook_url,
+                "allowed_updates": ["message"],
+                "drop_pending_updates": True,
+            }
+
+            if secret:
+                payload["secret_token"] = secret
+
             response = requests.post(
                 f"{base_url}/setWebhook",
-                json={
-                    "url": webhook_url,
-                    "allowed_updates": ["message"],
-                    "drop_pending_updates": True,
-                },
+                json=payload,
                 timeout=10,
             )
 
             data = response.json()
 
             if data.get("ok"):
-                self.stdout.write(self.style.SUCCESS(f"Webhook configurado com sucesso!"))
+                self.stdout.write(
+                    self.style.SUCCESS(f"Webhook configurado com sucesso!")
+                )
                 self.stdout.write(f"  URL: {webhook_url}")
+                if secret:
+                    self.stdout.write(f"  Secreto configurado: {secret[:10]}...")
                 self.stdout.write("")
 
                 # Mostra info do bot
                 self._show_bot_info(base_url)
             else:
-                self.stderr.write(self.style.ERROR(f"Erro: {data.get('description', data)}"))
+                self.stderr.write(
+                    self.style.ERROR(f"Erro: {data.get('description', data)}")
+                )
 
         except Exception as e:
             self.stderr.write(self.style.ERROR(f"Erro ao configurar webhook: {e}"))

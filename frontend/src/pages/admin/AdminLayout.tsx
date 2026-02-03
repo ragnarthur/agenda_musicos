@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, MapPin, LogOut, Shield, Menu, X, UserPlus, Building2 } from 'lucide-react';
+import { LogOut, Shield, Menu, X } from 'lucide-react';
 import { useAdminAuth } from '../../contexts/AdminAuthContext';
 import { showToast } from '../../utils/toast';
 import AnimatedBackground from '../../components/Layout/AnimatedBackground';
+import { ADMIN_ROUTES, adminNavItems } from '../../routes/adminRoutes';
+import AdminBreadcrumbs from '../../components/admin/AdminBreadcrumbs';
+import AdminErrorBoundary from '../../components/admin/AdminErrorBoundary';
 
 interface AdminLayoutProps {
   children?: React.ReactNode;
@@ -19,50 +22,15 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     try {
       await logout();
       showToast.success('Logout realizado com sucesso.');
-      navigate('/admin/login');
+      navigate(ADMIN_ROUTES.login);
     } catch (error) {
       showToast.apiError(error);
     }
   };
 
-  const navItems = [
-    {
-      icon: LayoutDashboard,
-      label: 'Dashboard',
-      path: '/admin/dashboard',
-    },
-    {
-      icon: Users,
-      label: 'Solicitações',
-      path: '/admin/solicitacoes',
-    },
-    {
-      icon: UserPlus,
-      label: 'Usuários',
-      path: '/admin/usuarios',
-    },
-    {
-      icon: Building2,
-      label: 'Empresas',
-      path: '/admin/empresas',
-    },
-    {
-      icon: MapPin,
-      label: 'Cidades',
-      path: '/admin/cidades',
-    },
-  ];
+  const navItems = adminNavItems;
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-700 border-t-indigo-600"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    navigate('/admin/login');
+  if (loading || !user) {
     return null;
   }
 
@@ -116,7 +84,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           {navItems.map(item => {
             const isActive =
               location.pathname === item.path ||
-              (item.path !== '/admin/dashboard' && location.pathname.startsWith(item.path));
+              (item.path !== ADMIN_ROUTES.dashboard &&
+                location.pathname.startsWith(item.path));
             const Icon = item.icon;
 
             return (
@@ -154,7 +123,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
       {/* Main Content */}
       <main className="lg:ml-64 min-h-screen relative z-10">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">{children ?? <Outlet />}</div>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
+          <AdminBreadcrumbs />
+          <AdminErrorBoundary>{children ?? <Outlet />}</AdminErrorBoundary>
+        </div>
       </main>
     </div>
   );

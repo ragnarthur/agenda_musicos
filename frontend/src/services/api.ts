@@ -9,6 +9,7 @@ import {
   setStoredAccessToken,
   setStoredRefreshToken,
 } from '../utils/tokenStorage';
+import { ADMIN_ROUTES } from '../routes/adminRoutes';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -135,7 +136,7 @@ api.interceptors.response.use(
       '/verificar-email',
       '/esqueci-senha',
       '/redefinir-senha',
-      '/admin/login',
+      ADMIN_ROUTES.login,
     ];
     const isOnPublicRoute = publicRoutes.some(route => window.location.pathname.startsWith(route));
 
@@ -161,9 +162,9 @@ api.interceptors.response.use(
           setTimeout(() => {
             if (
               window.location.pathname.startsWith('/admin') &&
-              !window.location.pathname.startsWith('/admin/login')
+              !window.location.pathname.startsWith(ADMIN_ROUTES.login)
             ) {
-              window.location.href = '/admin/login';
+              window.location.href = ADMIN_ROUTES.login;
             } else if (window.location.pathname.startsWith('/empresa')) {
               window.location.href = '/login-empresa';
             } else {
@@ -173,6 +174,19 @@ api.interceptors.response.use(
         }
         return Promise.reject(refreshError);
       }
+    }
+
+    if (error.response?.status === 403) {
+      if (!isPublicAuthPath) {
+        toast.error('Acesso negado.');
+      }
+
+      if (window.location.pathname.startsWith(ADMIN_ROUTES.base)) {
+        clearStoredAccessToken();
+        clearStoredRefreshToken();
+        window.location.href = ADMIN_ROUTES.login;
+      }
+      return Promise.reject(error);
     }
 
     return Promise.reject(error);

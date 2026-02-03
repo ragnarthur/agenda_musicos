@@ -20,6 +20,7 @@ import { useNotifications } from '../../hooks/useNotifications';
 import OwlMascot from '../ui/OwlMascot';
 import ThemeToggle from './ThemeToggle';
 import CityBadge from '../CityBadge';
+import { ADMIN_ROUTES } from '../../routes/adminRoutes';
 
 const Navbar: React.FC = memo(() => {
   const { user, logout } = useAuth();
@@ -157,7 +158,7 @@ const Navbar: React.FC = memo(() => {
                   </RouterNavLink>
                   {isStaff && (
                     <RouterNavLink
-                      to="/admin/dashboard"
+                      to={ADMIN_ROUTES.dashboard}
                       onClick={() => setOpenDesktopMore(false)}
                       className={({ isActive }) =>
                         `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
@@ -323,7 +324,7 @@ const Navbar: React.FC = memo(() => {
               </Link>
               {isStaff && (
                 <Link
-                  to="/admin/dashboard"
+                  to={ADMIN_ROUTES.dashboard}
                   onClick={() => setOpenMore(false)}
                   className="flex items-center gap-3 px-3 py-2 text-blue-200 hover:bg-blue-500/10 rounded-lg transition-colors"
                 >

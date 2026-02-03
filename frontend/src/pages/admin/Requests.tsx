@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Clock,
   CheckCircle,
@@ -14,23 +15,36 @@ import { musicianRequestService, type MusicianRequest } from '../../services/pub
 import { showToast } from '../../utils/toast';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ADMIN_ROUTES } from '../../routes/adminRoutes';
 
 type FilterType = 'all' | 'pending' | 'approved' | 'rejected';
 type SortField = 'name' | 'created_at' | 'status';
 type SortOrder = 'asc' | 'desc';
 
 const Requests: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { id: requestIdParam } = useParams();
   const [requests, setRequests] = useState<MusicianRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<FilterType>('pending');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState<FilterType>(
+    (searchParams.get('status') as FilterType) || 'pending'
+  );
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [selectedRequest, setSelectedRequest] = useState<MusicianRequest | null>(null);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(() => {
+    const page = Number(searchParams.get('page') || 1);
+    return Number.isNaN(page) || page < 1 ? 1 : page;
+  });
   const [itemsPerPage] = useState(10);
-  const [sortField, setSortField] = useState<SortField>('created_at');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [sortField, setSortField] = useState<SortField>(
+    (searchParams.get('sort') as SortField) || 'created_at'
+  );
+  const [sortOrder, setSortOrder] = useState<SortOrder>(
+    (searchParams.get('order') as SortOrder) || 'desc'
+  );
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -52,8 +66,56 @@ const Requests: React.FC = () => {
   }, [fetchDashboardData]);
 
   useEffect(() => {
+    const params: Record<string, string> = {};
+    if (filter && filter !== 'pending') params.status = filter;
+    if (searchTerm) params.q = searchTerm;
+    if (sortField && sortField !== 'created_at') params.sort = sortField;
+    if (sortOrder && sortOrder !== 'desc') params.order = sortOrder;
+    if (currentPage !== 1) params.page = String(currentPage);
+    setSearchParams(params, { replace: true });
+  }, [filter, searchTerm, sortField, sortOrder, currentPage, setSearchParams]);
+
+  useEffect(() => {
     setCurrentPage(1);
   }, [filter, searchTerm]);
+
+  useEffect(() => {
+    const loadDetail = async () => {
+      if (!requestIdParam) {
+        setSelectedRequest(null);
+        return;
+      }
+
+      const parsedId = Number(requestIdParam);
+      if (Number.isNaN(parsedId)) {
+        setSelectedRequest(null);
+        return;
+      }
+
+      const found = requests.find(request => request.id === parsedId);
+      if (found) {
+        setSelectedRequest(found);
+        return;
+      }
+
+      try {
+        const data = await musicianRequestService.get(parsedId);
+        setSelectedRequest(data);
+      } catch (error) {
+        showToast.apiError(error);
+        const query = searchParams.toString();
+        navigate(
+          {
+            pathname: ADMIN_ROUTES.requests,
+            search: query ? `?${query}` : '',
+          },
+          { replace: true }
+        );
+      }
+    };
+
+    loadDetail();
+  }, [requestIdParam, requests, navigate]);
 
   const handleApprove = async (requestId: number) => {
     setActionLoading(requestId);
@@ -101,6 +163,24 @@ const Requests: React.FC = () => {
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const handleViewDetails = (request: MusicianRequest) => {
+    setSelectedRequest(request);
+    const query = searchParams.toString();
+    navigate({
+      pathname: ADMIN_ROUTES.requestsDetail(request.id),
+      search: query ? `?${query}` : '',
+    });
+  };
+
+  const handleCloseDetails = () => {
+    setSelectedRequest(null);
+    const query = searchParams.toString();
+    navigate({
+      pathname: ADMIN_ROUTES.requests,
+      search: query ? `?${query}` : '',
+    });
   };
 
   const handleReject = async (requestId: number, reason: string) => {
@@ -347,7 +427,7 @@ const Requests: React.FC = () => {
                   <div className="flex flex-col sm:flex-row gap-2 pt-2">
                     <button
                       type="button"
-                      onClick={() => setSelectedRequest(request)}
+                      onClick={() => handleViewDetails(request)}
                       className="w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-lg border border-white/10 text-slate-200 hover:bg-white/10"
                     >
                       Detalhes
@@ -495,7 +575,7 @@ const Requests: React.FC = () => {
             <div className="flex flex-col sm:flex-row justify-end gap-2">
               <button
                 type="button"
-                onClick={() => setSelectedRequest(null)}
+                onClick={handleCloseDetails}
                 className="px-4 py-2 rounded-lg border border-white/10 text-slate-200 hover:bg-white/10"
               >
                 Fechar

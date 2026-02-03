@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { ADMIN_ROUTES } from '../routes/adminRoutes';
 import {
   Calendar,
   Users,
@@ -251,7 +252,7 @@ const Landing: React.FC = () => {
       // Ctrl+Shift+A (Windows/Linux) or Cmd+Shift+A (Mac)
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'A') {
         e.preventDefault();
-        navigate('/admin/login');
+        navigate(ADMIN_ROUTES.login);
       }
     };
 
@@ -478,7 +479,7 @@ const Landing: React.FC = () => {
 
           {/* Admin access link - subtle */}
           <Link
-            to="/admin/login"
+            to={ADMIN_ROUTES.login}
             className="absolute bottom-4 right-4 opacity-30 hover:opacity-100 transition-all duration-300 hover:scale-110 group"
             title="Acesso Administrativo"
           >

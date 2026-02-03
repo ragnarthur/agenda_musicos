@@ -25,4 +25,8 @@ export const adminService = {
     const response = await api.get('/admin/users/all/');
     return response.data;
   },
+
+  deleteUser: async (id: number): Promise<void> => {
+    await api.delete(`/users/${id}/delete/`);
+  },
 };

@@ -7,16 +7,29 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CompanyAuthProvider, useCompanyAuth } from './contexts/CompanyAuthContext';
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext';
 import Loading from './components/common/Loading';
+import { ADMIN_CHILD_ROUTES, ADMIN_ROUTES } from './routes/adminRoutes';
 
 // Lazy load de páginas para otimizar o bundle inicial
 const Landing = lazy(() => import('./pages/Landing'));
 const AdminLogin = lazy(() => import('./pages/AdminLogin'));
-const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
-const AdminDashboardPage = lazy(() => import('./pages/admin/Dashboard'));
-const AdminRequests = lazy(() => import('./pages/admin/Requests'));
-const AdminCities = lazy(() => import('./pages/admin/Cities'));
-const AdminUsers = lazy(() => import('./pages/admin/Users'));
-const AdminOrganizations = lazy(() => import('./pages/admin/Organizations'));
+const AdminLayout = lazy(() =>
+  import('./pages/admin/AdminBundle').then(module => ({ default: module.AdminLayout }))
+);
+const AdminDashboardPage = lazy(() =>
+  import('./pages/admin/AdminBundle').then(module => ({ default: module.AdminDashboardPage }))
+);
+const AdminRequests = lazy(() =>
+  import('./pages/admin/AdminBundle').then(module => ({ default: module.AdminRequests }))
+);
+const AdminCities = lazy(() =>
+  import('./pages/admin/AdminBundle').then(module => ({ default: module.AdminCities }))
+);
+const AdminUsers = lazy(() =>
+  import('./pages/admin/AdminBundle').then(module => ({ default: module.AdminUsers }))
+);
+const AdminOrganizations = lazy(() =>
+  import('./pages/admin/AdminBundle').then(module => ({ default: module.AdminOrganizations }))
+);
 const StatusPage = lazy(() => import('./components/StatusPage'));
 const Login = lazy(() => import('./pages/Login'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -142,13 +155,13 @@ const PublicRoute: React.FC<{ children: React.ReactElement }> = ({ children }) =
   }
 
   // Se já estiver autenticado, redireciona para o dashboard correto
-  if (isAuthenticated) {
-    if (userType === 'admin') {
-      return <Navigate to="/admin/dashboard" replace />;
-    }
-    if (userType === 'company') {
-      return <Navigate to="/empresa/dashboard" replace />;
-    }
+    if (isAuthenticated) {
+      if (userType === 'admin') {
+        return <Navigate to={ADMIN_ROUTES.dashboard} replace />;
+      }
+      if (userType === 'company') {
+        return <Navigate to="/empresa/dashboard" replace />;
+      }
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -157,14 +170,14 @@ const PublicRoute: React.FC<{ children: React.ReactElement }> = ({ children }) =
 
 // Componente para rotas administrativas (requer is_staff)
 const AdminProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
-  const { isAuthenticated, loading } = useAdminAuth();
+  const { isAuthenticated, loading, user } = useAdminAuth();
 
   if (loading) {
     return <PageLoader />;
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/admin/login" replace />;
+  if (!isAuthenticated || !user?.is_staff) {
+    return <Navigate to={ADMIN_ROUTES.login} replace />;
   }
 
   return children;
@@ -179,13 +192,13 @@ const LandingRoute: React.FC<{ children: React.ReactElement }> = ({ children }) 
   }
 
   // Se autenticado, redireciona para dashboard correto
-  if (isAuthenticated) {
-    if (userType === 'admin') {
-      return <Navigate to="/admin/dashboard" replace />;
-    }
-    if (userType === 'company') {
-      return <Navigate to="/empresa/dashboard" replace />;
-    }
+    if (isAuthenticated) {
+      if (userType === 'admin') {
+        return <Navigate to={ADMIN_ROUTES.dashboard} replace />;
+      }
+      if (userType === 'company') {
+        return <Navigate to="/empresa/dashboard" replace />;
+      }
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -447,7 +460,7 @@ function AppRoutes() {
 
         {/* Admin Routes */}
         <Route
-          path="/admin/login"
+          path={ADMIN_ROUTES.login}
           element={
             <PublicRoute>
               <AdminLogin />
@@ -455,65 +468,27 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/admin/dashboard"
+          path={ADMIN_ROUTES.base}
           element={
             <AdminProtectedRoute>
-              <AdminLayout>
-                <AdminDashboardPage />
-              </AdminLayout>
+              <AdminLayout />
             </AdminProtectedRoute>
           }
-        />
-        <Route
-          path="/admin/solicitacoes"
-          element={
-            <AdminProtectedRoute>
-              <AdminLayout>
-                <AdminRequests />
-              </AdminLayout>
-            </AdminProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/cidades"
-          element={
-            <AdminProtectedRoute>
-              <AdminLayout>
-                <AdminCities />
-              </AdminLayout>
-            </AdminProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/usuarios"
-          element={
-            <AdminProtectedRoute>
-              <AdminLayout>
-                <AdminUsers />
-              </AdminLayout>
-            </AdminProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/empresas"
-          element={
-            <AdminProtectedRoute>
-              <AdminLayout>
-                <AdminOrganizations />
-              </AdminLayout>
-            </AdminProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/cidades"
-          element={
-            <AdminProtectedRoute>
-              <AdminLayout>
-                <AdminCities />
-              </AdminLayout>
-            </AdminProtectedRoute>
-          }
-        />
+        >
+          <Route index element={<Navigate to={ADMIN_ROUTES.dashboard} replace />} />
+          <Route path={ADMIN_CHILD_ROUTES.dashboard} element={<AdminDashboardPage />} />
+          <Route path={ADMIN_CHILD_ROUTES.requests} element={<AdminRequests />} />
+          <Route path={ADMIN_CHILD_ROUTES.requestsDetail} element={<AdminRequests />} />
+          <Route path={ADMIN_CHILD_ROUTES.cities} element={<AdminCities />} />
+          <Route path={ADMIN_CHILD_ROUTES.citiesDetail} element={<AdminCities />} />
+          <Route path={ADMIN_CHILD_ROUTES.users} element={<AdminUsers />} />
+          <Route path={ADMIN_CHILD_ROUTES.usersDetail} element={<AdminUsers />} />
+          <Route path={ADMIN_CHILD_ROUTES.organizations} element={<AdminOrganizations />} />
+          <Route
+            path={ADMIN_CHILD_ROUTES.organizationsDetail}
+            element={<AdminOrganizations />}
+          />
+        </Route>
 
         {/* Public Status Page */}
         <Route
