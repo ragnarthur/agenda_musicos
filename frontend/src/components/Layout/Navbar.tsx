@@ -177,28 +177,19 @@ const Navbar: React.FC = memo(() => {
             </div>
           </div>
           <div className="hidden md:flex 2xl:hidden items-center gap-2 min-w-0 flex-1">
-            <CompactNavLink
+            <AppNavLinkCompact
               to="/eventos"
               icon={<Calendar className="h-5 w-5" />}
               label="Eventos"
               badge={pendingMyResponse}
             />
-            <CompactNavLink to="/musicos" icon={<Users className="h-5 w-5" />} label="Músicos" />
-            <CompactNavLink
-              to="/conexoes"
-              icon={<HeartHandshake className="h-5 w-5" />}
-              label="Rede & Badges"
-            />
-            <CompactNavLink
-              to="/disponibilidades"
-              icon={<Clock className="h-5 w-5" />}
-              label="Datas Disponíveis"
-            />
+            <AppNavLinkCompact to="/musicos" icon={<Users className="h-5 w-5" />} label="Músicos" />
+            <AppNavLinkCompact to="/marketplace" icon={<Megaphone className="h-5 w-5" />} label="Vagas" />
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setOpenDesktopMore(prev => !prev)}
-                className="inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-slate-200 hover:text-white hover:bg-white/10 transition-colors border border-white/5"
+                className="inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm text-slate-200 hover:text-white hover:bg-white/10 transition-colors border border-white/5"
                 aria-expanded={openDesktopMore}
                 aria-haspopup="true"
                 title="Mais"
@@ -212,7 +203,7 @@ const Navbar: React.FC = memo(() => {
                   className="absolute right-0 mt-2 w-60 rounded-xl bg-slate-950/95 border border-white/10 shadow-2xl shadow-black/40 p-2 z-50"
                 >
                   <RouterNavLink
-                    to="/marketplace"
+                    to="/conexoes"
                     onClick={() => setOpenDesktopMore(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
@@ -220,8 +211,20 @@ const Navbar: React.FC = memo(() => {
                       }`
                     }
                   >
-                    <Megaphone className="h-4 w-4" />
-                    Vagas
+                    <HeartHandshake className="h-4 w-4" />
+                    Rede & Badges
+                  </RouterNavLink>
+                  <RouterNavLink
+                    to="/disponibilidades"
+                    onClick={() => setOpenDesktopMore(false)}
+                    className={({ isActive }) =>
+                      `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                        isActive ? 'bg-white/10 text-white' : 'text-slate-200 hover:bg-white/5'
+                      }`
+                    }
+                  >
+                    <Clock className="h-4 w-4" />
+                    Datas Disponíveis
                   </RouterNavLink>
                   <RouterNavLink
                     to="/configuracoes/notificacoes"
@@ -503,7 +506,7 @@ const AppNavLink: React.FC<{
 ));
 AppNavLink.displayName = 'AppNavLink';
 
-const CompactNavLink: React.FC<{
+const AppNavLinkCompact: React.FC<{
   to: string;
   icon: React.ReactNode;
   label: string;
@@ -512,8 +515,6 @@ const CompactNavLink: React.FC<{
 }> = memo(({ to, icon, label, badge, accent }) => (
   <RouterNavLink
     to={to}
-    aria-label={label}
-    title={label}
     className={({ isActive }) => {
       const hoverTone = accent ? 'hover:bg-amber-500/10' : 'hover:bg-white/10';
       const activeTone = isActive
@@ -521,13 +522,13 @@ const CompactNavLink: React.FC<{
           ? 'bg-amber-500/10 text-amber-100'
           : 'bg-white/10 text-white'
         : '';
-      return `group relative inline-flex items-center justify-center rounded-full p-2 transition-all ${hoverTone} ${activeTone} hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
+      return `group relative inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm transition-all ${hoverTone} ${activeTone} hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
         accent ? 'text-amber-200 hover:text-amber-100' : 'text-slate-100 hover:text-white'
       }`;
     }}
   >
-    <span className="sr-only">{label}</span>
     {icon}
+    <span>{label}</span>
     {typeof badge === 'number' && badge > 0 && (
       <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 min-w-5 px-1 flex items-center justify-center">
         {badge}
@@ -535,6 +536,6 @@ const CompactNavLink: React.FC<{
     )}
   </RouterNavLink>
 ));
-CompactNavLink.displayName = 'CompactNavLink';
+AppNavLinkCompact.displayName = 'AppNavLinkCompact';
 
 export default Navbar;
