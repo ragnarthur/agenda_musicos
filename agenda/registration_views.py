@@ -19,7 +19,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -190,6 +190,22 @@ class RegisterWithInviteView(APIView):
 
         try:
             with transaction.atomic():
+                musician_request = (
+                    MusicianRequest.objects.select_for_update()
+                    .get(invite_token=invite_token)
+                )
+
+                if not musician_request.is_invite_valid():
+                    if musician_request.invite_used:
+                        return Response(
+                            {"error": "Este convite já foi utilizado."},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    return Response(
+                        {"error": "Convite expirado."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
                 # Cria usuário
                 user = User.objects.create(
                     username=username,
@@ -252,8 +268,20 @@ class RegisterWithInviteView(APIView):
 
                 logger.info(f"Musician registered via invite: {user.username}")
 
+        except IntegrityError:
+            logger.warning(
+                "Integrity error registering musician with invite",
+                exc_info=True,
+            )
+            return Response(
+                {
+                    "error": "Não foi possível concluir o cadastro. "
+                    "Esse email já pode estar registrado. Tente fazer login."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         except Exception as e:
-            logger.error(f"Error registering musician with invite: {e}")
+            logger.exception("Error registering musician with invite")
             return Response(
                 {"error": "Erro ao criar conta. Tente novamente."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
