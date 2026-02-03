@@ -60,7 +60,7 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         blank=True,
                         null=True,
-                        on_delete=models.deletion.SET_NULL,
+                        on_delete=models.SET_NULL,
                         related_name="audit_logs",
                         to=settings.AUTH_USER_MODEL,
                     ),
