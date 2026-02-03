@@ -20,7 +20,7 @@ import { musicianService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useInstruments } from '../hooks/useInstruments';
 import type { EquipmentItem, MusicianUpdatePayload, Musician } from '../types';
-import { formatCurrency } from '../utils/formatting';
+import { formatCurrency, formatInstrumentLabel } from '../utils/formatting';
 import { logError } from '../utils/logger';
 import { sanitizeOptionalText, sanitizeText } from '../utils/sanitize';
 import { getErrorMessage } from '../utils/toast';
@@ -80,6 +80,7 @@ const FinancialSettings: React.FC = () => {
   const [travelFee, setTravelFee] = useState('');
   const [equipmentRows, setEquipmentRows] = useState<EquipmentRow[]>(DEFAULT_EQUIPMENTS);
   const [selectedInstruments, setSelectedInstruments] = useState<string[]>([]);
+  const [primaryInstrument, setPrimaryInstrument] = useState('');
 
   const hydrateForm = useCallback((musician: Musician) => {
     setBio(musician.bio ?? '');
@@ -95,12 +96,18 @@ const FinancialSettings: React.FC = () => {
         : DEFAULT_EQUIPMENTS;
     setEquipmentRows(rows);
 
-    // Carregar instrumentos selecionados
-    if (musician.instruments && musician.instruments.length > 0) {
-      setSelectedInstruments(musician.instruments);
-    } else if (musician.instrument) {
-      setSelectedInstruments([musician.instrument]);
-    }
+    const instrumentsList =
+      musician.instruments && musician.instruments.length > 0
+        ? [...musician.instruments]
+        : musician.instrument
+          ? [musician.instrument]
+          : [];
+    const mainInstrument = musician.instrument || instrumentsList[0] || '';
+    const normalizedList = mainInstrument
+      ? [mainInstrument, ...instrumentsList.filter(inst => inst !== mainInstrument)]
+      : instrumentsList;
+    setSelectedInstruments(normalizedList);
+    setPrimaryInstrument(mainInstrument);
   }, []);
 
   const loadProfile = useCallback(async () => {
@@ -137,20 +144,46 @@ const FinancialSettings: React.FC = () => {
   const toggleInstrument = (instrumentName: string) => {
     setSelectedInstruments(prev => {
       if (prev.includes(instrumentName)) {
-        return prev.filter(i => i !== instrumentName);
+        const next = prev.filter(i => i !== instrumentName);
+        setPrimaryInstrument(currentPrimary =>
+          currentPrimary === instrumentName ? next[0] || '' : currentPrimary
+        );
+        return next;
       }
       if (prev.length >= 10) {
         toast.error('Máximo de 10 instrumentos permitidos');
         return prev;
       }
-      return [...prev, instrumentName];
+      const next = [...prev, instrumentName];
+      setPrimaryInstrument(currentPrimary => currentPrimary || instrumentName);
+      return next;
     });
+  };
+
+  const handlePrimaryChange = (instrumentName: string) => {
+    setPrimaryInstrument(instrumentName);
+    setSelectedInstruments(prev => {
+      if (!instrumentName) return prev;
+      if (!prev.includes(instrumentName)) {
+        return [instrumentName, ...prev];
+      }
+      return [instrumentName, ...prev.filter(inst => inst !== instrumentName)];
+    });
+  };
+
+  const getInstrumentDisplay = (instrumentName: string) => {
+    const match = availableInstruments.find(inst => inst.name === instrumentName);
+    return match?.display_name || formatInstrumentLabel(instrumentName);
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setSaving(true);
 
+    const mainInstrument = primaryInstrument || selectedInstruments[0] || '';
+    const orderedInstruments = mainInstrument
+      ? [mainInstrument, ...selectedInstruments.filter(inst => inst !== mainInstrument)]
+      : selectedInstruments;
     const payload: MusicianUpdatePayload = {
       bio: sanitizeOptionalText(bio, 350) ?? '',
       base_fee: parseDecimal(baseFee),
@@ -161,9 +194,8 @@ const FinancialSettings: React.FC = () => {
           price: parseDecimal(item.price),
         }))
         .filter(item => item.name.length > 0),
-      // Instrumentos: o primeiro é o principal
-      instrument: selectedInstruments[0] || '',
-      instruments: selectedInstruments,
+      instrument: mainInstrument,
+      instruments: orderedInstruments,
     };
 
     try {
@@ -257,7 +289,7 @@ const FinancialSettings: React.FC = () => {
               <div>
                 <h2 className="text-lg font-semibold text-white">Instrumentos</h2>
                 <p className="text-slate-300 text-sm">
-                  Selecione os instrumentos que você toca. O primeiro será o principal.
+                  Selecione os instrumentos que você toca e defina o principal.
                 </p>
               </div>
             </div>
@@ -271,7 +303,7 @@ const FinancialSettings: React.FC = () => {
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                   {availableInstruments.map(inst => {
                     const isSelected = selectedInstruments.includes(inst.name);
-                    const isPrimary = selectedInstruments[0] === inst.name;
+                    const isPrimary = primaryInstrument === inst.name;
                     return (
                       <button
                         key={inst.id}
@@ -314,9 +346,30 @@ const FinancialSettings: React.FC = () => {
                 </div>
 
                 {selectedInstruments.length > 0 && (
-                  <p className="mt-3 text-xs text-emerald-400">
-                    {selectedInstruments.length} instrumento{selectedInstruments.length > 1 ? 's' : ''} selecionado{selectedInstruments.length > 1 ? 's' : ''}
-                  </p>
+                  <>
+                    <p className="mt-3 text-xs text-emerald-400">
+                      {selectedInstruments.length} instrumento{selectedInstruments.length > 1 ? 's' : ''} selecionado{selectedInstruments.length > 1 ? 's' : ''}
+                    </p>
+                    <div className="mt-4 rounded-lg border border-slate-700/70 bg-slate-900/60 p-3">
+                      <label className="block text-xs font-medium text-slate-300 mb-2">
+                        Instrumento principal
+                      </label>
+                      <select
+                        value={primaryInstrument || ''}
+                        onChange={e => handlePrimaryChange(e.target.value)}
+                        className="w-full rounded-lg bg-slate-900 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-slate-100 px-3 py-2 text-sm"
+                      >
+                        {selectedInstruments.map(inst => (
+                          <option key={inst} value={inst}>
+                            {getInstrumentDisplay(inst)}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="mt-2 text-xs text-slate-400">
+                        Este instrumento aparece como principal no seu perfil.
+                      </p>
+                    </div>
+                  </>
                 )}
 
                 {selectedInstruments.length === 0 && (
