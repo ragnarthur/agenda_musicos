@@ -1,5 +1,5 @@
 // contexts/CompanyAuthContext.tsx
-// Contexto para gerenciar autenticação e estado de empresas
+// Contexto para gerenciar autenticação e estado de contratantes
 import React, {
   createContext,
   useCallback,
@@ -11,7 +11,7 @@ import React, {
   type ReactNode,
 } from 'react';
 import toast from 'react-hot-toast';
-import { companyService, type Organization } from '../services/publicApi';
+import { contractorService, type ContractorProfile } from '../services/publicApi';
 import {
   clearStoredAccessToken,
   clearStoredRefreshToken,
@@ -20,28 +20,28 @@ import {
 } from '../utils/tokenStorage';
 
 interface CompanyAuthContextType {
-  organization: Organization | null;
+  organization: ContractorProfile | null;
   loading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  setSession: (payload: { organization: Organization; access?: string; refresh?: string }) => void;
+  setSession: (payload: { organization: ContractorProfile; access?: string; refresh?: string }) => void;
   logout: () => void;
   refreshToken: () => Promise<void>;
-  updateOrganization: (data: Partial<Organization>) => Promise<void>;
+  updateOrganization: (data: Partial<ContractorProfile>) => Promise<void>;
 }
 
 const CompanyAuthContext = createContext<CompanyAuthContextType | null>(null);
 
 // Chave para marcar sessão ativa no sessionStorage
 // sessionStorage é limpo ao fechar o navegador, garantindo novo login
-const SESSION_KEY = 'gigflow_company_session';
+const SESSION_KEY = 'gigflow_contractor_session';
 
 interface CompanyAuthProviderProps {
   children: ReactNode;
 }
 
 export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ children }) => {
-  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [organization, setOrganization] = useState<ContractorProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const logoutRef = useRef<() => void>(() => {});
 
@@ -53,7 +53,7 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
       try {
         // Verifica se há uma sessão ativa nesta janela do navegador
         const hasActiveSession = sessionStorage.getItem(SESSION_KEY);
-        const organizationData = sessionStorage.getItem('companyOrganization');
+        const organizationData = sessionStorage.getItem('contractorProfile');
 
         if (!hasActiveSession) {
           // Navegador foi fechado e reaberto - força novo login
@@ -73,10 +73,10 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
 
           // Depois validar com backend
           try {
-            const dashboard = await companyService.getDashboard();
+            const dashboard = await contractorService.getDashboard();
             if (isMounted) {
-              setOrganization(dashboard.organization);
-              sessionStorage.setItem('companyOrganization', JSON.stringify(dashboard.organization));
+              setOrganization(dashboard.contractor);
+              sessionStorage.setItem('contractorProfile', JSON.stringify(dashboard.contractor));
             }
           } catch (error) {
             if (!isMounted) return;
@@ -108,7 +108,7 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
   const login = useCallback(async (email: string, password: string): Promise<void> => {
     try {
       setLoading(true);
-      const response = await companyService.login(email.toLowerCase().trim(), password);
+      const response = await contractorService.login(email.toLowerCase().trim(), password);
 
       // Marcar sessão como ativa
       sessionStorage.setItem(SESSION_KEY, 'true');
@@ -116,10 +116,10 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
       setStoredRefreshToken(response.refresh);
 
       // Armazenar dados da organização (tokens ficam em cookies httpOnly)
-      setOrganization(response.organization as Organization);
-      sessionStorage.setItem('companyOrganization', JSON.stringify(response.organization));
+      setOrganization(response.contractor as ContractorProfile);
+      sessionStorage.setItem('contractorProfile', JSON.stringify(response.contractor));
 
-      toast.success(`Bem-vindo(a) à ${response.organization.name}!`);
+      toast.success(`Bem-vindo(a), ${response.contractor.name}!`);
     } catch (error: unknown) {
       const message =
         (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
@@ -132,7 +132,7 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
   }, []);
 
   const setSession = useCallback(
-    (payload: { organization: Organization; access?: string; refresh?: string }) => {
+    (payload: { organization: ContractorProfile; access?: string; refresh?: string }) => {
       // Marcar sessão como ativa
       sessionStorage.setItem(SESSION_KEY, 'true');
       setStoredAccessToken(payload.access);
@@ -140,16 +140,16 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
 
       // Armazenar dados da organização
       setOrganization(payload.organization);
-      sessionStorage.setItem('companyOrganization', JSON.stringify(payload.organization));
+      sessionStorage.setItem('contractorProfile', JSON.stringify(payload.organization));
     },
     []
   );
 
   const logout = useCallback((): void => {
     // Revogar token do Google se existir
-    const organizationEmail = organization?.contact_email;
-    if (organizationEmail && window.google?.accounts?.id) {
-      window.google.accounts.id.revoke(organizationEmail, done => {
+    const contractorEmail = organization?.email;
+    if (contractorEmail && window.google?.accounts?.id) {
+      window.google.accounts.id.revoke(contractorEmail, done => {
         if (done.error) {
           console.warn('Erro ao revogar Google token:', done.error);
         } else {
@@ -160,7 +160,7 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
 
     // Limpar sessionStorage
     sessionStorage.removeItem(SESSION_KEY);
-    sessionStorage.removeItem('companyOrganization');
+    sessionStorage.removeItem('contractorProfile');
     clearStoredAccessToken();
     clearStoredRefreshToken();
 
@@ -177,9 +177,9 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
     try {
       // Tokens agora são gerenciados por cookies httpOnly no backend
       // Este método pode ser usado para validar a sessão se necessário
-      const dashboard = await companyService.getDashboard();
-      setOrganization(dashboard.organization);
-      sessionStorage.setItem('companyOrganization', JSON.stringify(dashboard.organization));
+      const dashboard = await contractorService.getDashboard();
+      setOrganization(dashboard.contractor);
+      sessionStorage.setItem('contractorProfile', JSON.stringify(dashboard.contractor));
     } catch (error) {
       console.error('Erro ao renovar sessão:', error);
       logout();
@@ -187,11 +187,11 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
     }
   }, [logout]);
 
-  const updateOrganization = useCallback(async (data: Partial<Organization>): Promise<void> => {
+  const updateOrganization = useCallback(async (data: Partial<ContractorProfile>): Promise<void> => {
     try {
-      const updatedOrg = await companyService.updateProfile(data);
+      const updatedOrg = await contractorService.updateProfile(data);
       setOrganization(updatedOrg);
-      sessionStorage.setItem('companyOrganization', JSON.stringify(updatedOrg));
+      sessionStorage.setItem('contractorProfile', JSON.stringify(updatedOrg));
       toast.success('Perfil atualizado com sucesso!');
     } catch (error: unknown) {
       const message =

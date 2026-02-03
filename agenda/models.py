@@ -90,12 +90,12 @@ class Organization(models.Model):
     """
     Organização/grupo que utiliza o sistema.
     Controla escopo de dados e assinatura.
-    Suporta bandas, empresas contratantes e casas de shows.
+    Suporta bandas, contratantes e casas de shows.
     """
 
     ORG_TYPE_CHOICES = [
         ("band", "Banda/Grupo"),
-        ("company", "Empresa"),
+        ("company", "Contratante"),
         ("venue", "Casa de Shows"),
     ]
 
@@ -121,14 +121,14 @@ class Organization(models.Model):
         help_text="Tipo de organização",
     )
 
-    # Dados da empresa
+    # Dados da organização
     description = models.TextField(
-        blank=True, null=True, help_text="Descrição da empresa/organização"
+        blank=True, null=True, help_text="Descrição da organização"
     )
     logo = models.ImageField(
         upload_to="org_logos/", blank=True, null=True, help_text="Logo da organização"
     )
-    website = models.URLField(blank=True, null=True, help_text="Site da empresa")
+    website = models.URLField(blank=True, null=True, help_text="Site da organização")
     phone = models.CharField(
         max_length=20, blank=True, null=True, help_text="Telefone de contato"
     )
@@ -167,7 +167,7 @@ class Organization(models.Model):
         return self.name
 
     def is_company(self):
-        """Verifica se é uma empresa contratante"""
+        """Verifica se é uma organização contratante"""
         return self.org_type == "company"
 
     def is_venue(self):
@@ -1040,85 +1040,171 @@ class MusicianRequest(models.Model):
         self.save(update_fields=["invite_used"])
 
 
-class ContactRequest(models.Model):
-    """
-    Solicitação de contato/orçamento de empresa para músico.
-    Empresas podem enviar mensagens para músicos.
-    """
+# =============================================================================
+# Contratantes e fluxo de orçamento/reserva
+# =============================================================================
 
-    STATUS_CHOICES = [
-        ("pending", "Pendente"),
-        ("read", "Lido"),
-        ("replied", "Respondido"),
-        ("archived", "Arquivado"),
-    ]
 
-    # Quem enviou
-    from_organization = models.ForeignKey(
-        "Organization", on_delete=models.CASCADE, related_name="sent_contact_requests"
-    )
-    from_user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="sent_contact_requests"
-    )
+class ContractorProfile(models.Model):
+    """Perfil simplificado de contratante (cadastro breve)."""
 
-    # Para quem
-    to_musician = models.ForeignKey(
-        "Musician", on_delete=models.CASCADE, related_name="received_contact_requests"
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="contractor_profile"
     )
-
-    # Conteúdo
-    subject = models.CharField(max_length=200, help_text="Assunto da mensagem")
-    message = models.TextField(help_text="Mensagem/descrição do evento")
-    event_date = models.DateField(
-        null=True, blank=True, help_text="Data do evento (opcional)"
-    )
-    event_location = models.CharField(
-        max_length=200, blank=True, null=True, help_text="Local do evento"
-    )
-    budget_range = models.CharField(
-        max_length=100, blank=True, null=True, help_text="Faixa de orçamento"
-    )
-
-    # Status
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
-
-    # Resposta do músico
-    reply_message = models.TextField(blank=True, null=True)
-    replied_at = models.DateTimeField(null=True, blank=True)
+    name = models.CharField(max_length=150)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    state = models.CharField(max_length=2, blank=True, null=True)
+    accepted_terms_at = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["-created_at"]
-        verbose_name = "Solicitação de Contato"
-        verbose_name_plural = "Solicitações de Contato"
+        verbose_name = "Contratante"
+        verbose_name_plural = "Contratantes"
+
+    def __str__(self):
+        return self.name
+
+
+class QuoteRequest(models.Model):
+    """Pedido de orçamento enviado por contratante para um músico."""
+
+    STATUS_CHOICES = [
+        ("pending", "Pendente"),
+        ("responded", "Respondido"),
+        ("reservation_requested", "Reserva solicitada"),
+        ("reserved", "Reservado"),
+        ("confirmed", "Confirmado"),
+        ("completed", "Concluído"),
+        ("cancelled", "Cancelado"),
+        ("declined", "Recusado"),
+    ]
+
+    contractor = models.ForeignKey(
+        ContractorProfile, on_delete=models.CASCADE, related_name="quote_requests"
+    )
+    musician = models.ForeignKey(
+        "Musician", on_delete=models.CASCADE, related_name="quote_requests"
+    )
+
+    event_date = models.DateField()
+    event_type = models.CharField(max_length=120)
+    location_city = models.CharField(max_length=100)
+    location_state = models.CharField(max_length=2)
+    venue_name = models.CharField(max_length=150, blank=True, null=True)
+    duration_hours = models.PositiveIntegerField(blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default="pending")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Pedido de Orçamento"
+        verbose_name_plural = "Pedidos de Orçamento"
         indexes = [
-            models.Index(fields=["to_musician", "status"]),
-            models.Index(fields=["from_organization", "created_at"]),
+            models.Index(fields=["status", "created_at"]),
+            models.Index(fields=["musician", "status"]),
+            models.Index(fields=["contractor", "status"]),
         ]
 
     def __str__(self):
-        return f"{self.from_organization.name} -> {self.to_musician}: {self.subject}"
+        return f"{self.contractor} -> {self.musician} ({self.get_status_display()})"
 
-    def mark_as_read(self):
-        """Marca como lido"""
-        if self.status == "pending":
-            self.status = "read"
-            self.save(update_fields=["status", "updated_at"])
 
-    def reply(self, message):
-        """Músico responde à solicitação"""
-        self.reply_message = message
-        self.replied_at = timezone.now()
-        self.status = "replied"
-        self.save()
+class QuoteProposal(models.Model):
+    """Proposta enviada pelo músico para um pedido de orçamento."""
 
-    def archive(self):
-        """Arquiva a solicitação"""
-        self.status = "archived"
-        self.save(update_fields=["status", "updated_at"])
+    STATUS_CHOICES = [
+        ("sent", "Enviada"),
+        ("accepted", "Aceita"),
+        ("declined", "Recusada"),
+        ("expired", "Expirada"),
+    ]
 
+    request = models.ForeignKey(
+        QuoteRequest, on_delete=models.CASCADE, related_name="proposals"
+    )
+    message = models.TextField()
+    proposed_value = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    valid_until = models.DateField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="sent")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Proposta de Orçamento"
+        verbose_name_plural = "Propostas de Orçamento"
+
+    def __str__(self):
+        return f"Proposta #{self.id} ({self.get_status_display()})"
+
+
+class Booking(models.Model):
+    """Reserva/contrato gerado a partir de um pedido de orçamento."""
+
+    STATUS_CHOICES = [
+        ("reserved", "Reservado"),
+        ("confirmed", "Confirmado"),
+        ("completed", "Concluído"),
+        ("cancelled", "Cancelado"),
+    ]
+
+    request = models.OneToOneField(
+        QuoteRequest, on_delete=models.CASCADE, related_name="booking"
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="reserved")
+    reserved_at = models.DateTimeField(auto_now_add=True)
+    confirmed_at = models.DateTimeField(blank=True, null=True)
+    completed_at = models.DateTimeField(blank=True, null=True)
+    cancel_reason = models.TextField(blank=True, null=True)
+
+    class Meta:
+        ordering = ["-reserved_at"]
+        verbose_name = "Reserva"
+        verbose_name_plural = "Reservas"
+
+    def __str__(self):
+        return f"Reserva #{self.id} ({self.get_status_display()})"
+
+
+class BookingEvent(models.Model):
+    """Auditoria do fluxo de orçamento/reserva."""
+
+    ACTOR_CHOICES = [
+        ("contractor", "Contratante"),
+        ("musician", "Músico"),
+        ("system", "Sistema"),
+        ("admin", "Admin"),
+    ]
+
+    request = models.ForeignKey(
+        QuoteRequest, on_delete=models.CASCADE, related_name="events"
+    )
+    actor_type = models.CharField(max_length=20, choices=ACTOR_CHOICES)
+    actor_user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    action = models.CharField(max_length=80)
+    metadata = models.JSONField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Evento de Reserva"
+        verbose_name_plural = "Eventos de Reserva"
+
+    def __str__(self):
+        return f"{self.action} ({self.get_actor_type_display()})"
 
 # PendingRegistration model removido - agora usamos MusicianRequest com aprovação admin
 

@@ -18,9 +18,10 @@ from .serializers import (
     AdminUserSerializer,
     AdminCreateSerializer,
     AdminUpdateSerializer,
+    ContractorProfileSerializer,
     OrganizationSerializer,
 )
-from .models import AuditLog, MusicianRequest, Organization
+from .models import AuditLog, ContractorProfile, MusicianRequest, Organization
 from notifications.services.email_service import send_user_deletion_email
 
 User = get_user_model()
@@ -56,11 +57,63 @@ def list_all_users(request):
         )
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsAdminUser, IsAppOwner])
+def list_contractors(request):
+    """Lista todos os contratantes"""
+    contractors = (
+        ContractorProfile.objects.select_related("user")
+        .order_by("-created_at")
+    )
+    serializer = ContractorProfileSerializer(contractors, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def delete_contractor(request, pk):
+    """Deleta perfil de contratante"""
+    try:
+        contractor = ContractorProfile.objects.select_related("user").get(pk=pk)
+        contractor_name = contractor.name
+        contractor_user = contractor.user
+
+        contractor.delete()
+
+        logger.info(
+            f"Contractor delete | Admin: {request.user.username} | "
+            f"Deleted: {contractor_name} | User: {contractor_user.username}"
+        )
+
+        return Response(
+            {
+                "message": f"Contratante {contractor_name} deletado com sucesso",
+                "deleted_contractor": {
+                    "id": pk,
+                    "name": contractor_name,
+                    "user_id": contractor_user.id,
+                },
+                "deleted_by": request.user.username,
+            },
+            status=status.HTTP_200_OK,
+        )
+    except ContractorProfile.DoesNotExist:
+        return Response(
+            {"error": "Contratante não encontrado"}, status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        logger.error(f"Error deleting contractor {pk}: {str(e)}", exc_info=True)
+        return Response(
+            {"error": "Erro ao deletar contratante"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated, IsAdminUser])
 def delete_organization(request, pk):
     """
-    Deleta uma organização/empresa.
+    Deleta uma organização.
 
     Proteções:
     - Admins (admin_1, admin_2) podem deletar
@@ -393,7 +446,7 @@ def delete_user(request, pk):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, IsAdminUser])
 def list_organizations(request):
-    """Lista todas as organizações/empresas para admin"""
+    """Lista todas as organizações para admin"""
     try:
         organizations = Organization.objects.select_related("owner").order_by(
             "-created_at"

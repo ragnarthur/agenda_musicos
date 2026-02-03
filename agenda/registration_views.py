@@ -1,14 +1,14 @@
 # agenda/registration_views.py
 """
-Views para fluxo de registro de novos músicos e empresas.
+Views para fluxo de registro de novos músicos e contratantes.
 
 Fluxo de registro de músicos (via aprovação admin):
 1. POST /musician-request/ - Músico solicita acesso
 2. Admin aprova no dashboard
 3. POST /register-with-invite/ - Músico completa registro com token de convite
 
-Fluxo de registro de empresas:
-1. POST /register-company/ - Empresa se registra diretamente (sem aprovação)
+Fluxo de registro de contratantes:
+1. POST /register-contractor/ - Contratante se registra diretamente (cadastro breve)
 """
 
 import logging
@@ -55,7 +55,7 @@ class RegisterView(APIView):
     def post(self, request):
         return Response(
             {
-                "detail": "Registro direto desativado. Use /register-with-invite/ ou /register-company/."
+                "detail": "Registro direto desativado. Use /register-with-invite/ ou /register-contractor/."
             },
             status=status.HTTP_410_GONE,
         )
@@ -315,31 +315,30 @@ class RegisterWithInviteView(APIView):
         )
 
 
-class RegisterCompanyView(APIView):
+class RegisterContractorView(APIView):
     """
-    POST /api/register-company/
-    Registro de empresa (gratuito, sem aprovação).
+    POST /api/register-contractor/
+    Registro de contratante (cadastro breve).
     """
 
     permission_classes = [AllowAny]
     throttle_classes = [BurstRateThrottle]
 
     def post(self, request):
-        from .serializers import CompanyRegisterSerializer
+        from .serializers import ContractorRegisterSerializer
+        from .models import ContractorProfile
 
-        serializer = CompanyRegisterSerializer(data=request.data)
+        serializer = ContractorRegisterSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         data = serializer.validated_data
+        name = data["name"]
         email = data["email"]
         password = data["password"]
-        company_name = data["company_name"]
-        contact_name = data["contact_name"]
         phone = data.get("phone", "")
         city = data["city"]
         state = data["state"]
-        org_type = data.get("org_type", "company")
 
         # Validação de força de senha
         try:
@@ -349,7 +348,7 @@ class RegisterCompanyView(APIView):
                 {"password": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Validação de username único
+        # Username único baseado no email
         username = email.split("@")[0]
         if User.objects.filter(username=username).exists():
             base_username = username
@@ -358,21 +357,13 @@ class RegisterCompanyView(APIView):
                 username = f"{base_username}{counter}"
                 counter += 1
 
-        # Validação de nome de empresa único
-        if Organization.objects.filter(name=company_name).exists():
-            return Response(
-                {"company_name": "Uma empresa com este nome já está cadastrada."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         try:
             with transaction.atomic():
-                # Extrai primeiro e último nome
-                name_parts = contact_name.split()
-                first_name = name_parts[0] if name_parts else contact_name
+                # Extrai nome e sobrenome
+                name_parts = name.split()
+                first_name = name_parts[0] if name_parts else name
                 last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
 
-                # Cria usuário
                 user = User.objects.create(
                     username=username,
                     email=email,
@@ -382,48 +373,34 @@ class RegisterCompanyView(APIView):
                 user.set_password(password)
                 user.save()
 
-                # Cria organização (empresa)
-                organization = Organization.objects.create(
-                    name=company_name,
-                    owner=user,
-                    org_type=org_type,
-                    contact_name=contact_name,
-                    contact_email=email,
+                contractor = ContractorProfile.objects.create(
+                    user=user,
+                    name=name,
                     phone=phone,
                     city=city,
                     state=state,
+                    accepted_terms_at=timezone.now(),
                 )
 
-                # Cria membership
-                Membership.objects.create(
-                    user=user,
-                    organization=organization,
-                    role="owner",
-                    status="active",
-                )
-
-                logger.info(f"Company registered: {company_name} by {user.username}")
+                logger.info(f"Contractor registered: {contractor.name} by {user.username}")
 
         except Exception as e:
-            logger.error(f"Error registering company: {e}")
+            logger.error(f"Error registering contractor: {e}")
             return Response(
                 {"error": "Erro ao criar conta. Tente novamente."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        # Retornar formato padronizado
         return Response(
             {
-                "detail": "Empresa cadastrada com sucesso!",
-                "user_type": "company",
-                "organization": {
-                    "id": organization.id,
-                    "name": organization.name,
-                    "org_type": organization.org_type,
+                "detail": "Contratante cadastrado com sucesso!",
+                "user_type": "contractor",
+                "contractor": {
+                    "id": contractor.id,
+                    "name": contractor.name,
                 },
                 "username": username,
                 "email": email,
-                # Nota: access/refresh tokens não são gerados aqui (usuário precisa fazer login)
                 "access": None,
                 "refresh": None,
             },

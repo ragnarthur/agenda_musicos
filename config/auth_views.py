@@ -290,7 +290,7 @@ class GoogleAuthView(CookieTokenMixin, APIView):
     """
     POST /api/auth/google/
     Autentica usuário via Google OAuth.
-    Funciona tanto para músicos quanto para empresas.
+    Funciona para músicos (e futuros contratantes).
     """
 
     authentication_classes = []
@@ -301,7 +301,7 @@ class GoogleAuthView(CookieTokenMixin, APIView):
         import os
 
         credential = request.data.get("credential")
-        user_type = request.data.get("user_type", "musician")  # 'musician' ou 'company'
+        user_type = request.data.get("user_type", "musician")  # 'musician' ou 'contractor'
 
         if not credential:
             return Response(
@@ -369,7 +369,7 @@ class GoogleAuthView(CookieTokenMixin, APIView):
 
         from django.contrib.auth.models import User
 
-        from agenda.models import Membership, Musician, Organization
+        from agenda.models import ContractorProfile, Musician
 
         # Verifica se usuário já existe
         try:
@@ -396,14 +396,8 @@ class GoogleAuthView(CookieTokenMixin, APIView):
         # Usuário existe - faz login
         # Verifica tipo de conta
         has_musician_profile = hasattr(user, "musician_profile")
-        company_membership = (
-            Membership.objects.filter(
-                user=user,
-                status="active",
-                organization__org_type__in=["company", "venue"],
-            )
-            .select_related("organization")
-            .first()
+        contractor_profile = (
+            ContractorProfile.objects.filter(user=user, is_active=True).first()
         )
 
         # Gera tokens
@@ -420,12 +414,11 @@ class GoogleAuthView(CookieTokenMixin, APIView):
             "new_user": False,
         }
 
-        if company_membership:
-            response_data["user_type"] = "company"
-            response_data["organization"] = {
-                "id": company_membership.organization.id,
-                "name": company_membership.organization.name,
-                "org_type": company_membership.organization.org_type,
+        if contractor_profile:
+            response_data["user_type"] = "contractor"
+            response_data["contractor"] = {
+                "id": contractor_profile.id,
+                "name": contractor_profile.name,
             }
         elif has_musician_profile:
             response_data["user_type"] = "musician"
@@ -638,186 +631,10 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
         return response
 
 
-class GoogleRegisterCompanyView(CookieTokenMixin, APIView):
+class ContractorTokenObtainPairView(CookieTokenMixin, APIView):
     """
-    POST /api/auth/google/register-company/
-    Completa o cadastro de empresa após autenticação Google.
-    """
-
-    authentication_classes = []
-    permission_classes = []
-    throttle_scope = "google_register"
-
-    def post(self, request, *args, **kwargs):
-        import os
-
-        from django.db import transaction
-
-        from agenda.models import Membership, Organization
-
-        credential = request.data.get("credential")
-        company_name = request.data.get("company_name", "").strip()
-        phone = request.data.get("phone", "").strip()
-        city = request.data.get("city", "").strip()
-        state = request.data.get("state", "").strip().upper()
-        org_type = request.data.get("org_type", "company")
-
-        if not credential:
-            return Response(
-                {"detail": "Credencial do Google não fornecida."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if not id_token or not google_requests:
-            return Response(
-                {"detail": "Autenticação com Google não configurada."},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE,
-            )
-
-        if not company_name or not city or not state:
-            return Response(
-                {"detail": "Nome da empresa, cidade e estado são obrigatórios."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Verifica token Google
-        try:
-            google_client_id = getattr(
-                settings, "GOOGLE_CLIENT_ID", os.environ.get("GOOGLE_CLIENT_ID")
-            )
-            idinfo = id_token.verify_oauth2_token(
-                credential, google_requests.Request(), google_client_id
-            )
-
-            # Verifica audience
-            if idinfo.get("aud") != google_client_id:
-                raise ValueError("Token não emitido para este aplicativo")
-
-            email = idinfo.get("email", "").lower()
-            email_verified = idinfo.get("email_verified", False)
-            given_name = idinfo.get("given_name", "")
-            family_name = idinfo.get("family_name", "")
-            picture = idinfo.get("picture", "")  # Avatar do Google
-
-            if not email or not email_verified:
-                return Response(
-                    {"detail": "Email não verificado no Google."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-        except Exception as e:
-            return log_error_and_return_response(
-                logger,
-                f"Erro ao verificar token do Google: {str(e)}",
-                status.HTTP_401_UNAUTHORIZED,
-                include_details=settings.DEBUG,
-            )
-
-        from django.contrib.auth.models import User
-
-        # Verifica se usuário já existe
-        if User.objects.filter(email=email).exists():
-            return Response(
-                {"detail": "Este email já está cadastrado."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Verifica se empresa já existe
-        if Organization.objects.filter(name=company_name).exists():
-            return Response(
-                {"detail": "Uma empresa com este nome já está cadastrada."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            with transaction.atomic():
-                # Gera username único
-                username = email.split("@")[0]
-                if User.objects.filter(username=username).exists():
-                    base_username = username
-                    counter = 1
-                    while User.objects.filter(username=username).exists():
-                        username = f"{base_username}{counter}"
-                        counter += 1
-
-                # Cria usuário
-                user = User.objects.create(
-                    username=username,
-                    email=email,
-                    first_name=given_name,
-                    last_name=family_name,
-                )
-                user.set_unusable_password()
-                user.save()
-
-                # Cria organização
-                organization = Organization.objects.create(
-                    name=company_name,
-                    owner=user,
-                    org_type=org_type,
-                    contact_name=f"{given_name} {family_name}".strip(),
-                    contact_email=email,
-                    phone=phone,
-                    city=city,
-                    state=state,
-                )
-
-                logo_file = _process_google_picture(
-                    picture,
-                    label="logo",
-                    prefix="logo",
-                )
-                if logo_file:
-                    if organization.logo:
-                        organization.logo.delete(save=False)
-                    organization.logo = logo_file
-                    organization.save(update_fields=["logo"])
-
-                # Cria membership
-                Membership.objects.create(
-                    user=user,
-                    organization=organization,
-                    role="owner",
-                    status="active",
-                )
-
-        except Exception as e:
-            return log_error_and_return_response(
-                logger,
-                f"Erro ao criar conta: {str(e)}",
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-                include_details=settings.DEBUG,
-            )
-
-        # Gera tokens e faz login
-        refresh = RefreshToken.for_user(user)
-        tokens = {
-            "access": str(refresh.access_token),
-            "refresh": str(refresh),
-        }
-
-        response = Response(
-            {
-                "detail": "Empresa cadastrada com sucesso!",
-                "access": tokens["access"],
-                "refresh": tokens["refresh"],
-                "user_type": "company",
-                "organization": {
-                    "id": organization.id,
-                    "name": organization.name,
-                    "org_type": organization.org_type,
-                },
-            },
-            status=status.HTTP_201_CREATED,
-        )
-        self.set_auth_cookies(response, tokens)
-        return response
-
-
-class CompanyTokenObtainPairView(CookieTokenMixin, APIView):
-    """
-    Login específico para empresas.
-    Valida que o usuário pertence a uma Organization com org_type='company' ou 'venue'.
+    Login específico para contratantes.
+    Valida que o usuário possui ContractorProfile ativo.
     """
 
     throttle_classes = [LoginRateThrottle]
@@ -834,7 +651,6 @@ class CompanyTokenObtainPairView(CookieTokenMixin, APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Tenta autenticar usando email como username
         from django.contrib.auth.models import User
 
         try:
@@ -845,31 +661,25 @@ class CompanyTokenObtainPairView(CookieTokenMixin, APIView):
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
-        # Verifica senha
         if not user.check_password(password):
             return Response(
                 {"detail": "Credenciais inválidas."},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
-        # Verifica se pertence a uma empresa
-        membership = (
-            Membership.objects.filter(
-                user=user,
-                status="active",
-                organization__org_type__in=["company", "venue"],
-            )
-            .select_related("organization")
-            .first()
-        )
-
-        if not membership:
+        if not hasattr(user, "contractor_profile"):
             return Response(
-                {"detail": "Esta conta não está associada a uma empresa."},
+                {"detail": "Esta conta não está associada a um contratante."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        # Gera tokens
+        contractor = user.contractor_profile
+        if not contractor.is_active:
+            return Response(
+                {"detail": "Conta de contratante inativa."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         refresh = RefreshToken.for_user(user)
         tokens = {
             "access": str(refresh.access_token),
@@ -881,11 +691,10 @@ class CompanyTokenObtainPairView(CookieTokenMixin, APIView):
                 "detail": "Autenticado com sucesso.",
                 "access": tokens["access"],
                 "refresh": tokens["refresh"],
-                "user_type": "company",
-                "organization": {
-                    "id": membership.organization.id,
-                    "name": membership.organization.name,
-                    "org_type": membership.organization.org_type,
+                "user_type": "contractor",
+                "contractor": {
+                    "id": contractor.id,
+                    "name": contractor.name,
                 },
             }
         )

@@ -1,10 +1,10 @@
 // components/navigation/UserTypeToggle.tsx
-// Componente para seleção entre experiência de músicos e empresas
+// Componente para seleção entre experiência de músicos e contratantes
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Music, Building } from 'lucide-react';
 
-type UserType = 'musician' | 'company';
+type UserType = 'musician' | 'contractor';
 
 interface UserTypeToggleProps {
   selected: UserType;
@@ -25,8 +25,8 @@ const UserTypeToggle: React.FC<UserTypeToggleProps> = ({
       description: 'Organize sua carreira musical',
     },
     {
-      type: 'company' as UserType,
-      label: 'Para Empresas',
+      type: 'contractor' as UserType,
+      label: 'Para Contratantes',
       icon: <Building className="w-4 h-4" />,
       description: 'Encontre e contrate músicos',
     },

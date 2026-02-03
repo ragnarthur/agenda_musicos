@@ -1,11 +1,11 @@
 // pages/LoginCompany.tsx
-// Login específico para empresas
+// Login específico para contratantes
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { Building2, Eye, EyeOff, LogIn } from 'lucide-react';
-import { googleAuthService, type Organization } from '../services/publicApi';
+import { googleAuthService, type ContractorProfile } from '../services/publicApi';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import { useCompanyAuth } from '../contexts/CompanyAuthContext';
 
@@ -32,7 +32,7 @@ export default function LoginCompany() {
     try {
       await login(data.email, data.password);
       toast.success('Login realizado com sucesso!');
-      navigate('/empresa/dashboard');
+      navigate('/contratante/pedidos');
     } catch (error: unknown) {
       const err = error as { response?: { data?: { detail?: string } } };
       toast.error(err.response?.data?.detail || 'Credenciais inválidas');
@@ -47,21 +47,21 @@ export default function LoginCompany() {
 
       setIsGoogleLoading(true);
       try {
-        const result = await googleAuthService.authenticate(response.credential, 'company');
+        const result = await googleAuthService.authenticate(response.credential, 'contractor');
         if (result.new_user) {
           // Novo usuário - redirecionar para cadastro
           toast.error('Conta não encontrada. Faça o cadastro primeiro.');
-          navigate('/cadastro-empresa');
-        } else if (result.user_type === 'company' && result.organization) {
+          navigate('/contratante/cadastro');
+        } else if (result.user_type === 'contractor' && result.contractor) {
           setSession({
-            organization: result.organization as Organization,
+            organization: result.contractor as ContractorProfile,
             access: result.access,
             refresh: result.refresh,
           });
           toast.success('Login realizado!');
-          navigate('/empresa/dashboard');
+          navigate('/contratante/pedidos');
         } else {
-          toast.error('Esta conta não é de uma empresa');
+          toast.error('Esta conta não é de contratante');
         }
       } catch (error: unknown) {
         console.error('Google OAuth error:', error);
@@ -133,8 +133,10 @@ export default function LoginCompany() {
             <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center mx-auto mb-4">
               <Building2 className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Login Empresa</h1>
-            <p className="text-gray-600 dark:text-gray-300">Acesse sua conta de empresa</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              Login Contratante
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300">Acesse sua conta de contratante</p>
           </div>
 
           {/* Google Sign In */}
@@ -174,7 +176,7 @@ export default function LoginCompany() {
                   pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Email inválido' },
                 })}
                 className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-                placeholder="empresa@email.com"
+                placeholder="seu@email.com"
               />
               {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
             </div>
@@ -227,10 +229,10 @@ export default function LoginCompany() {
           <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
             Não tem uma conta?{' '}
             <Link
-              to="/cadastro-empresa"
+              to="/contratante/cadastro"
               className="text-indigo-600 hover:text-indigo-700 font-medium"
             >
-              Cadastre sua empresa
+              Cadastre-se como contratante
             </Link>
           </p>
 

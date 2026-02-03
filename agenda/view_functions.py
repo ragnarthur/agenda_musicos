@@ -27,8 +27,10 @@ from .image_processing import (
     _process_profile_image,
 )
 from .models import (
+    Booking,
+    BookingEvent,
     Connection,
-    ContactRequest,
+    ContractorProfile,
     Event,
     Membership,
     Musician,
@@ -36,17 +38,23 @@ from .models import (
     MusicianRating,
     MusicianRequest,
     Organization,
+    QuoteProposal,
+    QuoteRequest,
 )
 from .serializers import (
-    ContactRequestCreateSerializer,
-    ContactRequestReplySerializer,
-    ContactRequestSerializer,
+    BookingEventSerializer,
+    BookingSerializer,
+    ContractorProfileSerializer,
     MusicianPublicSerializer,
     MusicianRatingSerializer,
     MusicianRequestAdminSerializer,
     MusicianRequestCreateSerializer,
     OrganizationPublicSerializer,
     OrganizationSerializer,
+    QuoteProposalCreateSerializer,
+    QuoteProposalSerializer,
+    QuoteRequestCreateSerializer,
+    QuoteRequestSerializer,
 )
 from .throttles import PublicRateThrottle
 
@@ -649,50 +657,64 @@ def validate_invite_token(request):
 
 
 # =============================================================================
-# Contact requests
+# Quote requests (Contratantes -> Músicos)
 # =============================================================================
+
+
+def _log_booking_event(request_obj, actor_type, actor_user, action, metadata=None):
+    BookingEvent.objects.create(
+        request=request_obj,
+        actor_type=actor_type,
+        actor_user=actor_user,
+        action=action,
+        metadata=metadata or {},
+    )
 
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def create_contact_request(request):
-    try:
-        membership = Membership.objects.filter(
-            user=request.user,
-            status="active",
-            organization__org_type__in=["company", "venue"],
-        ).first()
-
-        if not membership:
-            return Response(
-                {"detail": "Apenas empresas podem enviar mensagens para músicos"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        organization = membership.organization
-    except Exception:
+def create_quote_request(request):
+    if not hasattr(request.user, "contractor_profile"):
         return Response(
-            {"detail": "Erro ao verificar organização"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            {"detail": "Apenas contratantes podem enviar pedidos."},
+            status=status.HTTP_403_FORBIDDEN,
         )
 
-    serializer = ContactRequestCreateSerializer(data=request.data)
+    contractor = request.user.contractor_profile
+    serializer = QuoteRequestCreateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
-    contact_request = serializer.save(
-        from_organization=organization,
-        from_user=request.user,
-    )
+    quote_request = serializer.save(contractor=contractor)
+    _log_booking_event(quote_request, "contractor", request.user, "pedido_criado")
 
     return Response(
-        ContactRequestSerializer(contact_request, context={"request": request}).data,
+        QuoteRequestSerializer(quote_request, context={"request": request}).data,
         status=status.HTTP_201_CREATED,
     )
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def list_received_contact_requests(request):
+def list_contractor_quote_requests(request):
+    if not hasattr(request.user, "contractor_profile"):
+        return Response(
+            {"detail": "Apenas contratantes podem acessar esta rota."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    contractor = request.user.contractor_profile
+    status_filter = request.query_params.get("status")
+    queryset = QuoteRequest.objects.filter(contractor=contractor).order_by("-created_at")
+    if status_filter:
+        queryset = queryset.filter(status=status_filter)
+
+    serializer = QuoteRequestSerializer(queryset, many=True, context={"request": request})
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def list_musician_quote_requests(request):
     try:
         musician = request.user.musician_profile
     except Musician.DoesNotExist:
@@ -702,101 +724,140 @@ def list_received_contact_requests(request):
         )
 
     status_filter = request.query_params.get("status")
-    queryset = ContactRequest.objects.filter(to_musician=musician).order_by("-created_at")
-
+    queryset = QuoteRequest.objects.filter(musician=musician).order_by("-created_at")
     if status_filter:
         queryset = queryset.filter(status=status_filter)
 
-    serializer = ContactRequestSerializer(queryset, many=True, context={"request": request})
+    serializer = QuoteRequestSerializer(queryset, many=True, context={"request": request})
     return Response(serializer.data)
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def list_sent_contact_requests(request):
-    membership = Membership.objects.filter(
-        user=request.user,
-        status="active",
-        organization__org_type__in=["company", "venue"],
-    ).first()
+def get_quote_request(request, request_id):
+    quote_request = get_object_or_404(QuoteRequest, id=request_id)
 
-    if not membership:
-        return Response(
-            {"detail": "Apenas empresas podem ver mensagens enviadas"},
-            status=status.HTTP_403_FORBIDDEN,
-        )
-
-    queryset = ContactRequest.objects.filter(from_organization=membership.organization).order_by(
-        "-created_at"
+    is_contractor = (
+        hasattr(request.user, "contractor_profile")
+        and quote_request.contractor == request.user.contractor_profile
     )
-
-    serializer = ContactRequestSerializer(queryset, many=True, context={"request": request})
-    return Response(serializer.data)
-
-
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def get_contact_request(request, contact_id):
-    contact_request = get_object_or_404(ContactRequest, id=contact_id)
-
     is_musician = (
         hasattr(request.user, "musician_profile")
-        and contact_request.to_musician == request.user.musician_profile
+        and quote_request.musician == request.user.musician_profile
     )
-    is_sender = contact_request.from_user == request.user
 
-    if not is_musician and not is_sender:
+    if not is_contractor and not is_musician:
         return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
 
-    if is_musician and contact_request.status == "pending":
-        contact_request.mark_as_read()
-
-    serializer = ContactRequestSerializer(contact_request, context={"request": request})
+    serializer = QuoteRequestSerializer(quote_request, context={"request": request})
     return Response(serializer.data)
 
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def reply_contact_request(request, contact_id):
-    contact_request = get_object_or_404(ContactRequest, id=contact_id)
+def musician_send_proposal(request, request_id):
+    quote_request = get_object_or_404(QuoteRequest, id=request_id)
 
     try:
         musician = request.user.musician_profile
-        if contact_request.to_musician != musician:
-            return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
     except Musician.DoesNotExist:
         return Response(
             {"detail": "Perfil de músico não encontrado"},
             status=status.HTTP_403_FORBIDDEN,
         )
 
-    serializer = ContactRequestReplySerializer(data=request.data)
+    if quote_request.musician != musician:
+        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
+
+    serializer = QuoteProposalCreateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
-    contact_request.reply(serializer.validated_data["reply_message"])
+    proposal = QuoteProposal.objects.create(
+        request=quote_request, **serializer.validated_data
+    )
 
-    return Response(ContactRequestSerializer(contact_request, context={"request": request}).data)
+    quote_request.status = "responded"
+    quote_request.save(update_fields=["status", "updated_at"])
+
+    _log_booking_event(quote_request, "musician", request.user, "proposta_enviada")
+
+    return Response(
+        QuoteProposalSerializer(proposal, context={"request": request}).data,
+        status=status.HTTP_201_CREATED,
+    )
 
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def archive_contact_request(request, contact_id):
-    contact_request = get_object_or_404(ContactRequest, id=contact_id)
+def contractor_accept_proposal(request, request_id):
+    quote_request = get_object_or_404(QuoteRequest, id=request_id)
 
-    is_musician = (
-        hasattr(request.user, "musician_profile")
-        and contact_request.to_musician == request.user.musician_profile
-    )
-
-    if not is_musician:
+    if not hasattr(request.user, "contractor_profile"):
         return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
 
-    contact_request.archive()
-    return Response({"message": "Mensagem arquivada"})
+    if quote_request.contractor != request.user.contractor_profile:
+        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
+
+    proposal_id = request.data.get("proposal_id")
+    proposal = get_object_or_404(QuoteProposal, id=proposal_id, request=quote_request)
+
+    QuoteProposal.objects.filter(request=quote_request).exclude(id=proposal.id).update(
+        status="declined"
+    )
+    proposal.status = "accepted"
+    proposal.save(update_fields=["status"])
+
+    quote_request.status = "reserved"
+    quote_request.save(update_fields=["status", "updated_at"])
+
+    booking, _ = Booking.objects.get_or_create(request=quote_request)
+
+    _log_booking_event(quote_request, "contractor", request.user, "reserva_confirmada")
+
+    return Response(
+        {
+            "request": QuoteRequestSerializer(quote_request, context={"request": request}).data,
+            "booking": BookingSerializer(booking, context={"request": request}).data,
+        }
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def musician_confirm_booking(request, request_id):
+    quote_request = get_object_or_404(QuoteRequest, id=request_id)
+
+    try:
+        musician = request.user.musician_profile
+    except Musician.DoesNotExist:
+        return Response(
+            {"detail": "Perfil de músico não encontrado"},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    if quote_request.musician != musician:
+        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
+
+    booking = getattr(quote_request, "booking", None)
+    if not booking:
+        return Response(
+            {"detail": "Reserva não encontrada."}, status=status.HTTP_404_NOT_FOUND
+        )
+
+    booking.status = "confirmed"
+    booking.confirmed_at = timezone.now()
+    booking.save(update_fields=["status", "confirmed_at"])
+
+    quote_request.status = "confirmed"
+    quote_request.save(update_fields=["status", "updated_at"])
+
+    _log_booking_event(quote_request, "musician", request.user, "reserva_confirmada")
+
+    return Response(BookingSerializer(booking, context={"request": request}).data)
 
 
 # =============================================================================
-# Public/Company views
+# Public/Contractor views
 # =============================================================================
 
 
@@ -870,37 +931,29 @@ def get_musician_public_profile(request, musician_id):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def get_company_dashboard(request):
-    membership = (
-        Membership.objects.filter(
-            user=request.user,
-            status="active",
-            organization__org_type__in=["company", "venue"],
-        )
-        .select_related("organization")
-        .first()
-    )
-
-    if not membership:
+def get_contractor_dashboard(request):
+    if not hasattr(request.user, "contractor_profile"):
         return Response(
-            {"detail": "Usuário não pertence a uma empresa"},
+            {"detail": "Usuário não pertence a um contratante"},
             status=status.HTTP_403_FORBIDDEN,
         )
 
-    organization = membership.organization
-
-    sent_requests = ContactRequest.objects.filter(from_organization=organization)
-    pending_replies = sent_requests.filter(status__in=["pending", "read"]).count()
-    total_sent = sent_requests.count()
-    replied = sent_requests.filter(status="replied").count()
+    contractor = request.user.contractor_profile
+    sent_requests = QuoteRequest.objects.filter(contractor=contractor)
+    pending = sent_requests.filter(status="pending").count()
+    responded = sent_requests.filter(status="responded").count()
+    reserved = sent_requests.filter(status="reserved").count()
 
     return Response(
         {
-            "organization": OrganizationSerializer(organization, context={"request": request}).data,
+            "contractor": ContractorProfileSerializer(
+                contractor, context={"request": request}
+            ).data,
             "stats": {
-                "total_sent": total_sent,
-                "pending_replies": pending_replies,
-                "replied": replied,
+                "total_sent": sent_requests.count(),
+                "pending": pending,
+                "responded": responded,
+                "reserved": reserved,
             },
         }
     )
@@ -908,24 +961,13 @@ def get_company_dashboard(request):
 
 @api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
-def update_company_profile(request):
-    membership = (
-        Membership.objects.filter(
-            user=request.user,
-            status="active",
-            organization__org_type__in=["company", "venue"],
-            role__in=["owner", "admin"],
-        )
-        .select_related("organization")
-        .first()
-    )
-
-    if not membership:
+def update_contractor_profile(request):
+    if not hasattr(request.user, "contractor_profile"):
         return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
 
-    organization = membership.organization
-    serializer = OrganizationSerializer(
-        organization,
+    contractor = request.user.contractor_profile
+    serializer = ContractorProfileSerializer(
+        contractor,
         data=request.data,
         partial=True,
         context={"request": request},
@@ -938,35 +980,12 @@ def update_company_profile(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def get_musician_for_company(request, musician_id):
-    membership = Membership.objects.filter(
-        user=request.user,
-        status="active",
-        organization__org_type__in=["company", "venue"],
-    ).first()
-
-    if not membership:
-        return Response(
-            {"detail": "Apenas empresas podem acessar esta rota"},
-            status=status.HTTP_403_FORBIDDEN,
-        )
-
-    musician = get_object_or_404(Musician, id=musician_id, is_active=True)
-    serializer = MusicianPublicSerializer(musician, context={"request": request})
-    return Response(serializer.data)
-
-
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
 def get_unread_messages_count(request):
     try:
         musician = request.user.musician_profile
     except Musician.DoesNotExist:
         return Response({"count": 0})
 
-    count = ContactRequest.objects.filter(
-        to_musician=musician,
-        status="pending",
-    ).count()
+    count = QuoteRequest.objects.filter(musician=musician, status="pending").count()
 
     return Response({"count": count})

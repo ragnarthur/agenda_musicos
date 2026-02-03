@@ -6,11 +6,13 @@ from rest_framework.routers import DefaultRouter
 from .admin_management_views import (
     create_admin_user,
     delete_admin_user,
+    delete_contractor,
     delete_user,
     delete_organization,
     get_admin_user,
     list_admin_users,
     list_all_users,
+    list_contractors,
     list_organizations,
     reset_admin_password,
     update_admin_user,
@@ -37,36 +39,36 @@ from .password_views import (
 )
 from .registration_views import (
     CheckEmailView,
-    RegisterCompanyView,
+    RegisterContractorView,
     RegisterView,
     RegisterWithInviteView,
     update_avatar,
 )
-from .view_functions import (  # Musician Request views; Contact Request views; Public views; Company views
+from .view_functions import (  # Musician Request views; Quote Request views; Public views; Contractor views
     approve_musician_request,
-    archive_contact_request,
-    create_contact_request,
+    contractor_accept_proposal,
+    create_quote_request,
     create_musician_request,
-    get_company_dashboard,
-    get_contact_request,
+    get_contractor_dashboard,
     get_musician_badges,
     get_musician_connection_status,
     get_musician_connections,
-    get_musician_for_company,
     get_musician_public_profile,
     get_musician_request,
     get_musician_reviews,
     get_musician_stats,
+    get_quote_request,
     get_unread_messages_count,
     list_musician_requests,
     list_musicians_by_city,
-    list_received_contact_requests,
-    list_sent_contact_requests,
+    list_contractor_quote_requests,
+    list_musician_quote_requests,
     list_sponsors,
     reject_musician_request,
     resend_musician_request_invite,
-    reply_contact_request,
-    update_company_profile,
+    musician_confirm_booking,
+    musician_send_proposal,
+    update_contractor_profile,
     upload_avatar,
     upload_cover,
     validate_invite_token,
@@ -102,7 +104,11 @@ urlpatterns = [
         RegisterWithInviteView.as_view(),
         name="register-with-invite",
     ),
-    path("register-company/", RegisterCompanyView.as_view(), name="register-company"),
+    path(
+        "register-contractor/",
+        RegisterContractorView.as_view(),
+        name="register-contractor",
+    ),
     path("musicians/avatar/", update_avatar, name="update-avatar"),
     path("password-reset/", PasswordResetRequestView.as_view(), name="password-reset"),
     path(
@@ -169,33 +175,38 @@ urlpatterns = [
         name="admin-musician-request-reject",
     ),
     # =========================================================================
-    # Contact Requests (Mensagens de Empresas para Músicos)
+    # Quote Requests (Contratantes -> Músicos)
     # =========================================================================
-    path("contact-requests/", create_contact_request, name="contact-request-create"),
+    path("quotes/", create_quote_request, name="quote-request-create"),
     path(
-        "contact-requests/received/",
-        list_received_contact_requests,
-        name="contact-requests-received",
+        "quotes/contractor/",
+        list_contractor_quote_requests,
+        name="quote-requests-contractor",
     ),
     path(
-        "contact-requests/sent/",
-        list_sent_contact_requests,
-        name="contact-requests-sent",
+        "quotes/musician/",
+        list_musician_quote_requests,
+        name="quote-requests-musician",
     ),
     path(
-        "contact-requests/<int:contact_id>/",
-        get_contact_request,
-        name="contact-request-detail",
+        "quotes/<int:request_id>/",
+        get_quote_request,
+        name="quote-request-detail",
     ),
     path(
-        "contact-requests/<int:contact_id>/reply/",
-        reply_contact_request,
-        name="contact-request-reply",
+        "quotes/<int:request_id>/proposal/",
+        musician_send_proposal,
+        name="quote-request-proposal",
     ),
     path(
-        "contact-requests/<int:contact_id>/archive/",
-        archive_contact_request,
-        name="contact-request-archive",
+        "quotes/<int:request_id>/accept/",
+        contractor_accept_proposal,
+        name="quote-request-accept",
+    ),
+    path(
+        "quotes/<int:request_id>/confirm/",
+        musician_confirm_booking,
+        name="quote-request-confirm",
     ),
     # =========================================================================
     # Public (Músicos por cidade, Patrocinadores, Perfil público)
@@ -208,15 +219,10 @@ urlpatterns = [
     ),
     path("organizations/sponsors/", list_sponsors, name="sponsors"),
     # =========================================================================
-    # Company (Dashboard, Perfil, Músicos)
+    # Contractor (Dashboard, Perfil)
     # =========================================================================
-    path("company/dashboard/", get_company_dashboard, name="company-dashboard"),
-    path("company/profile/", update_company_profile, name="company-profile"),
-    path(
-        "company/musicians/<int:musician_id>/",
-        get_musician_for_company,
-        name="company-musician-detail",
-    ),
+    path("contractor/dashboard/", get_contractor_dashboard, name="contractor-dashboard"),
+    path("contractor/profile/", update_contractor_profile, name="contractor-profile"),
     # =========================================================================
     # Messages
     # =========================================================================
@@ -301,6 +307,12 @@ urlpatterns = [
     # =========================================================================
     path("admin/users/all/", list_all_users, name="admin-all-users-list"),
     path("admin/users/", list_admin_users, name="admin-users-list"),
+    path("admin/contractors/", list_contractors, name="admin-contractors-list"),
+    path(
+        "admin/contractors/<int:pk>/delete/",
+        delete_contractor,
+        name="admin-contractors-delete",
+    ),
     path(
         "admin/organizations/",
         list_organizations,

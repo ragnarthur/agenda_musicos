@@ -258,10 +258,10 @@ const CityLanding: React.FC = () => {
             </h2>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                to="/cadastro-empresa"
+                to="/contratante/cadastro"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-lg"
               >
-                <Building2 className="h-5 w-5" />É empresa? Cadastre-se
+                <Building2 className="h-5 w-5" />É contratante? Cadastre-se
               </Link>
               <Link
                 to="/solicitar-acesso"

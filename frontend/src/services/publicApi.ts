@@ -1,5 +1,5 @@
 // services/publicApi.ts
-// Serviços públicos e de empresas
+// Serviços públicos e de contratantes
 import { api } from './api';
 
 // =============================================================================
@@ -42,34 +42,66 @@ export interface MusicianRequestCreate {
   instagram?: string;
 }
 
-export interface ContactRequest {
+export interface ContractorProfile {
   id: number;
-  from_organization: number;
-  from_organization_name: string;
-  from_user: number;
-  from_user_name: string;
-  to_musician: number;
-  to_musician_name: string;
-  subject: string;
-  message: string;
-  event_date: string | null;
-  event_location: string | null;
-  budget_range: string | null;
-  status: 'pending' | 'read' | 'replied' | 'archived';
-  status_display: string;
-  reply_message: string | null;
-  replied_at: string | null;
+  name: string;
+  email: string;
+  phone: string | null;
+  city: string | null;
+  state: string | null;
+  accepted_terms_at: string | null;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
 
-export interface ContactRequestCreate {
-  to_musician: number;
-  subject: string;
+export interface QuoteRequest {
+  id: number;
+  contractor: number;
+  contractor_name: string;
+  musician: number;
+  musician_name: string;
+  event_date: string;
+  event_type: string;
+  location_city: string;
+  location_state: string;
+  venue_name: string | null;
+  duration_hours: number | null;
+  notes: string | null;
+  status:
+    | 'pending'
+    | 'responded'
+    | 'reservation_requested'
+    | 'reserved'
+    | 'confirmed'
+    | 'completed'
+    | 'cancelled'
+    | 'declined';
+  status_display: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface QuoteRequestCreate {
+  musician: number;
+  event_date: string;
+  event_type: string;
+  location_city: string;
+  location_state: string;
+  venue_name?: string;
+  duration_hours?: number;
+  notes?: string;
+}
+
+export interface QuoteProposal {
+  id: number;
+  request: number;
   message: string;
-  event_date?: string;
-  event_location?: string;
-  budget_range?: string;
+  proposed_value: string | null;
+  valid_until: string | null;
+  status: 'sent' | 'accepted' | 'declined' | 'expired';
+  status_display: string;
+  created_at: string;
 }
 
 export interface Organization {
@@ -108,15 +140,13 @@ export interface MusicianPublic {
   total_ratings: number;
 }
 
-export interface CompanyRegisterData {
+export interface ContractorRegisterData {
+  name: string;
   email: string;
   password: string;
-  company_name: string;
-  contact_name: string;
   phone?: string;
   city: string;
   state: string;
-  org_type?: 'company' | 'venue';
 }
 
 export interface InviteValidation {
@@ -132,12 +162,13 @@ export interface InviteValidation {
   instagram: string | null;
 }
 
-export interface CompanyDashboard {
-  organization: Organization;
+export interface ContractorDashboard {
+  contractor: ContractorProfile;
   stats: {
     total_sent: number;
-    pending_replies: number;
-    replied: number;
+    pending: number;
+    responded: number;
+    reserved: number;
   };
 }
 
@@ -283,45 +314,54 @@ export const musicianRequestService = {
 };
 
 // =============================================================================
-// Contact Request Service (Mensagens de Empresas)
+// Quote Request Service (Contratantes)
 // =============================================================================
 
-export const contactRequestService = {
-  // Empresa - criar mensagem
-  create: async (data: ContactRequestCreate): Promise<ContactRequest> => {
-    const response = await api.post('/contact-requests/', data);
+export const quoteRequestService = {
+  // Contratante - criar pedido
+  create: async (data: QuoteRequestCreate): Promise<QuoteRequest> => {
+    const response = await api.post('/quotes/', data);
     return response.data;
   },
 
   // Músico - listar recebidas
-  listReceived: async (status?: string): Promise<ContactRequest[]> => {
-    const response = await api.get('/contact-requests/received/', { params: { status } });
+  listReceived: async (status?: string): Promise<QuoteRequest[]> => {
+    const response = await api.get('/quotes/musician/', { params: { status } });
     return response.data;
   },
 
-  // Empresa - listar enviadas
-  listSent: async (): Promise<ContactRequest[]> => {
-    const response = await api.get('/contact-requests/sent/');
+  // Contratante - listar enviadas
+  listSent: async (status?: string): Promise<QuoteRequest[]> => {
+    const response = await api.get('/quotes/contractor/', { params: { status } });
     return response.data;
   },
 
   // Detalhe
-  get: async (id: number): Promise<ContactRequest> => {
-    const response = await api.get(`/contact-requests/${id}/`);
+  get: async (id: number): Promise<QuoteRequest> => {
+    const response = await api.get(`/quotes/${id}/`);
     return response.data;
   },
 
-  // Músico - responder
-  reply: async (id: number, replyMessage: string): Promise<ContactRequest> => {
-    const response = await api.post(`/contact-requests/${id}/reply/`, {
-      reply_message: replyMessage,
-    });
+  // Músico - enviar proposta
+  sendProposal: async (
+    id: number,
+    payload: { message: string; proposed_value?: string | number; valid_until?: string }
+  ): Promise<QuoteProposal> => {
+    const response = await api.post(`/quotes/${id}/proposal/`, payload);
     return response.data;
   },
 
-  // Músico - arquivar
-  archive: async (id: number): Promise<{ message: string }> => {
-    const response = await api.post(`/contact-requests/${id}/archive/`);
+  // Contratante - aceitar proposta (reserva)
+  acceptProposal: async (id: number, proposalId: number): Promise<{
+    request: QuoteRequest;
+  }> => {
+    const response = await api.post(`/quotes/${id}/accept/`, { proposal_id: proposalId });
+    return response.data;
+  },
+
+  // Músico - confirmar reserva
+  confirmBooking: async (id: number): Promise<{ status: string }> => {
+    const response = await api.post(`/quotes/${id}/confirm/`);
     return response.data;
   },
 
@@ -365,19 +405,19 @@ export const publicMusicianService = {
 };
 
 // =============================================================================
-// Company Service
+// Contractor Service
 // =============================================================================
 
-export const companyService = {
-  // Registro de empresa
+export const contractorService = {
+  // Registro de contratante
   register: async (
-    data: CompanyRegisterData
-  ): Promise<{ message: string; username: string; email: string; company_name: string }> => {
-    const response = await api.post('/register-company/', data);
+    data: ContractorRegisterData
+  ): Promise<{ detail: string; username: string; email: string }> => {
+    const response = await api.post('/register-contractor/', data);
     return response.data;
   },
 
-  // Login de empresa
+  // Login de contratante
   login: async (
     email: string,
     password: string
@@ -386,27 +426,21 @@ export const companyService = {
     access: string;
     refresh: string;
     user_type: string;
-    organization: { id: number; name: string; org_type: string };
+    contractor: { id: number; name: string };
   }> => {
-    const response = await api.post('/company/token/', { email, password });
+    const response = await api.post('/contractor/token/', { email, password });
     return response.data;
   },
 
   // Dashboard
-  getDashboard: async (): Promise<CompanyDashboard> => {
-    const response = await api.get('/company/dashboard/');
+  getDashboard: async (): Promise<ContractorDashboard> => {
+    const response = await api.get('/contractor/dashboard/');
     return response.data;
   },
 
   // Atualizar perfil
-  updateProfile: async (data: Partial<Organization>): Promise<Organization> => {
-    const response = await api.patch('/company/profile/', data);
-    return response.data;
-  },
-
-  // Ver músico (como empresa)
-  getMusician: async (id: number): Promise<MusicianPublic> => {
-    const response = await api.get(`/company/musicians/${id}/`);
+  updateProfile: async (data: Partial<ContractorProfile>): Promise<ContractorProfile> => {
+    const response = await api.patch('/contractor/profile/', data);
     return response.data;
   },
 
@@ -443,7 +477,7 @@ export const googleAuthService = {
   // Autenticar com Google
   authenticate: async (
     credential: string,
-    userType: 'musician' | 'company' = 'musician'
+    userType: 'musician' | 'contractor' = 'musician'
   ): Promise<{
     new_user: boolean;
     email?: string;
@@ -453,7 +487,7 @@ export const googleAuthService = {
     user_type?: string;
     access?: string;
     refresh?: string;
-    organization?: { id: number; name: string; org_type: string };
+    contractor?: { id: number; name: string };
   }> => {
     const response = await api.post('/auth/google/', { credential, user_type: userType });
     return response.data;
@@ -476,29 +510,7 @@ export const googleAuthService = {
     return response.data;
   },
 
-  // Registrar empresa via Google
-  registerCompany: async (
-    credential: string,
-    data: {
-      company_name: string;
-      phone?: string;
-      city: string;
-      state: string;
-      org_type?: 'company' | 'venue';
-    }
-  ): Promise<{
-    detail: string;
-    access: string;
-    refresh: string;
-    user_type: string;
-    organization: { id: number; name: string; org_type: string };
-  }> => {
-    const response = await api.post('/auth/google/register-company/', {
-      credential,
-      ...data,
-    });
-    return response.data;
-  },
+  // Registro de contratante via Google (a definir)
 };
 
 // =============================================================================
@@ -564,6 +576,26 @@ export interface OrganizationWithOwner extends Omit<Organization, 'owner'> {
     is_superuser: boolean;
   } | null;
 }
+
+export const adminContractorService = {
+  list: async (): Promise<ContractorProfile[]> => {
+    const response = await api.get('/admin/contractors/');
+    return response.data;
+  },
+
+  delete: async (id: number): Promise<{
+    message: string;
+    deleted_contractor: {
+      id: number;
+      name: string;
+      user_id: number;
+    };
+    deleted_by: string;
+  }> => {
+    const response = await api.delete(`/admin/contractors/${id}/delete/`);
+    return response.data;
+  },
+};
 
 export const adminOrganizationService = {
   list: async (): Promise<OrganizationWithOwner[]> => {

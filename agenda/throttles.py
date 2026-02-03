@@ -91,20 +91,6 @@ class PasswordResetRateThrottle(SimpleRateThrottle):
         return f"throttle_password_reset_{ident}_{email}"
 
 
-class ContactRequestRateThrottle(SimpleRateThrottle):
-    """
-    Rate limiting para solicitações de contato.
-    Previne spam entre músicos.
-    """
-
-    scope = "contact_request"
-
-    def get_cache_key(self, request, view):
-        if request.user.is_authenticated:
-            return f"throttle_contact_{request.user.pk}"
-        return self.get_ident(request)
-
-
 class MusicianRequestRateThrottle(SimpleRateThrottle):
     """
     Rate limiting para solicitações de entrada na plataforma.

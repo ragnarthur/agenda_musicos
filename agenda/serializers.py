@@ -8,9 +8,11 @@ from rest_framework import serializers
 
 from .models import (
     Availability,
+    Booking,
+    BookingEvent,
     City,
     Connection,
-    ContactRequest,
+    ContractorProfile,
     Event,
     EventInstrument,
     EventLog,
@@ -21,6 +23,8 @@ from .models import (
     MusicianRating,
     MusicianRequest,
     Organization,
+    QuoteProposal,
+    QuoteRequest,
 )
 from .validators import sanitize_string, validate_not_empty_string
 
@@ -1163,7 +1167,7 @@ class MusicianBadgeSerializer(serializers.ModelSerializer):
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
-    """Serializer para organizações/empresas"""
+    """Serializer para organizações/patrocinadores"""
 
     logo_url = serializers.SerializerMethodField()
     owner_name = serializers.SerializerMethodField()
@@ -1470,108 +1474,217 @@ class MusicianRequestAdminSerializer(serializers.ModelSerializer):
         return None
 
 
-class ContactRequestSerializer(serializers.ModelSerializer):
-    """Serializer para solicitações de contato"""
+class ContractorProfileSerializer(serializers.ModelSerializer):
+    """Serializer do perfil de contratante."""
 
-    from_organization_name = serializers.SerializerMethodField()
-    from_user_name = serializers.SerializerMethodField()
-    to_musician_name = serializers.SerializerMethodField()
-    status_display = serializers.CharField(source="get_status_display", read_only=True)
+    email = serializers.EmailField(source="user.email", read_only=True)
 
     class Meta:
-        model = ContactRequest
+        model = ContractorProfile
         fields = [
             "id",
-            "from_organization",
-            "from_organization_name",
-            "from_user",
-            "from_user_name",
-            "to_musician",
-            "to_musician_name",
-            "subject",
-            "message",
-            "event_date",
-            "event_location",
-            "budget_range",
-            "status",
-            "status_display",
-            "reply_message",
-            "replied_at",
+            "name",
+            "email",
+            "phone",
+            "city",
+            "state",
+            "accepted_terms_at",
+            "is_active",
             "created_at",
             "updated_at",
         ]
         read_only_fields = [
             "id",
-            "from_organization",
-            "from_user",
-            "replied_at",
+            "email",
+            "accepted_terms_at",
+            "is_active",
             "created_at",
             "updated_at",
         ]
 
-    def get_from_organization_name(self, obj):
-        return obj.from_organization.name if obj.from_organization else None
 
-    def get_from_user_name(self, obj):
-        return (
-            obj.from_user.get_full_name() or obj.from_user.username
-            if obj.from_user
-            else None
+class ContractorRegisterSerializer(serializers.Serializer):
+    """Serializer para registro de contratante."""
+
+    name = serializers.CharField(max_length=150)
+    email = serializers.EmailField()
+    password = serializers.CharField(min_length=8, write_only=True)
+    phone = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    city = serializers.CharField(max_length=100)
+    state = serializers.CharField(max_length=2)
+
+    def validate_email(self, value):
+        from django.contrib.auth.models import User
+
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("Este email já está cadastrado.")
+        return value.lower()
+
+    def validate(self, attrs):
+        attrs["name"] = sanitize_string(
+            attrs["name"], max_length=150, allow_empty=False
         )
-
-    def get_to_musician_name(self, obj):
-        return (
-            obj.to_musician.user.get_full_name() or obj.to_musician.user.username
-            if obj.to_musician
-            else None
+        if "phone" in attrs:
+            attrs["phone"] = sanitize_string(
+                attrs.get("phone"), max_length=20, allow_empty=True
+            )
+        attrs["city"] = sanitize_string(
+            attrs["city"], max_length=100, allow_empty=False
         )
+        attrs["state"] = sanitize_string(
+            attrs["state"], max_length=2, allow_empty=False, to_upper=True
+        )
+        return attrs
 
 
-class ContactRequestCreateSerializer(serializers.ModelSerializer):
-    """Serializer para criar solicitação de contato (empresa)"""
+class QuoteRequestSerializer(serializers.ModelSerializer):
+    """Serializer de pedido de orçamento."""
+
+    contractor_name = serializers.CharField(source="contractor.name", read_only=True)
+    musician_name = serializers.SerializerMethodField()
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
 
     class Meta:
-        model = ContactRequest
+        model = QuoteRequest
         fields = [
-            "to_musician",
-            "subject",
-            "message",
+            "id",
+            "contractor",
+            "contractor_name",
+            "musician",
+            "musician_name",
             "event_date",
-            "event_location",
-            "budget_range",
+            "event_type",
+            "location_city",
+            "location_state",
+            "venue_name",
+            "duration_hours",
+            "notes",
+            "status",
+            "status_display",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "contractor", "created_at", "updated_at"]
+
+    def get_musician_name(self, obj):
+        return obj.musician.user.get_full_name() or obj.musician.user.username
+
+
+class QuoteRequestCreateSerializer(serializers.ModelSerializer):
+    """Criação de pedido de orçamento (contratante)."""
+
+    class Meta:
+        model = QuoteRequest
+        fields = [
+            "musician",
+            "event_date",
+            "event_type",
+            "location_city",
+            "location_state",
+            "venue_name",
+            "duration_hours",
+            "notes",
         ]
 
     def validate(self, attrs):
-        if "subject" in attrs:
-            attrs["subject"] = sanitize_string(
-                attrs["subject"], max_length=200, allow_empty=False
+        attrs["event_type"] = sanitize_string(
+            attrs["event_type"], max_length=120, allow_empty=False
+        )
+        attrs["location_city"] = sanitize_string(
+            attrs["location_city"], max_length=100, allow_empty=False
+        )
+        attrs["location_state"] = sanitize_string(
+            attrs["location_state"], max_length=2, allow_empty=False, to_upper=True
+        )
+        if "venue_name" in attrs:
+            attrs["venue_name"] = sanitize_string(
+                attrs.get("venue_name"), max_length=150, allow_empty=True
             )
-        if "message" in attrs:
-            attrs["message"] = sanitize_string(
-                attrs["message"], max_length=2000, allow_empty=False
-            )
-        if "event_location" in attrs:
-            attrs["event_location"] = sanitize_string(
-                attrs.get("event_location"), max_length=200, allow_empty=True
-            )
-        if "budget_range" in attrs:
-            attrs["budget_range"] = sanitize_string(
-                attrs.get("budget_range"), max_length=100, allow_empty=True
+        if "notes" in attrs:
+            attrs["notes"] = sanitize_string(
+                attrs.get("notes"), max_length=2000, allow_empty=True
             )
         return attrs
 
 
-class ContactRequestReplySerializer(serializers.Serializer):
-    """Serializer para músico responder solicitação"""
+class QuoteProposalSerializer(serializers.ModelSerializer):
+    """Serializer de propostas de orçamento."""
 
-    reply_message = serializers.CharField(max_length=2000)
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
 
-    def validate_reply_message(self, value):
+    class Meta:
+        model = QuoteProposal
+        fields = [
+            "id",
+            "request",
+            "message",
+            "proposed_value",
+            "valid_until",
+            "status",
+            "status_display",
+            "created_at",
+        ]
+        read_only_fields = ["id", "created_at"]
+
+
+class QuoteProposalCreateSerializer(serializers.ModelSerializer):
+    """Criação de proposta pelo músico."""
+
+    class Meta:
+        model = QuoteProposal
+        fields = ["message", "proposed_value", "valid_until"]
+
+    def validate_message(self, value):
         return sanitize_string(value, max_length=2000, allow_empty=False)
 
 
+class BookingSerializer(serializers.ModelSerializer):
+    """Serializer de reserva."""
+
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
+
+    class Meta:
+        model = Booking
+        fields = [
+            "id",
+            "request",
+            "status",
+            "status_display",
+            "reserved_at",
+            "confirmed_at",
+            "completed_at",
+            "cancel_reason",
+        ]
+        read_only_fields = ["id", "reserved_at"]
+
+
+class BookingEventSerializer(serializers.ModelSerializer):
+    """Serializer de auditoria de reserva."""
+
+    actor_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BookingEvent
+        fields = [
+            "id",
+            "request",
+            "actor_type",
+            "actor_user",
+            "actor_name",
+            "action",
+            "metadata",
+            "created_at",
+        ]
+        read_only_fields = ["id", "created_at"]
+
+    def get_actor_name(self, obj):
+        if obj.actor_user:
+            return obj.actor_user.get_full_name() or obj.actor_user.username
+        return None
+
+
 class MusicianPublicSerializer(serializers.ModelSerializer):
-    """Serializer público de músico (para empresas e landing pages)"""
+    """Serializer público de músico (para contratantes e landing pages)"""
 
     full_name = serializers.SerializerMethodField()
     avatar_url = serializers.SerializerMethodField()
@@ -1612,47 +1725,6 @@ class MusicianPublicSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.cover_image.url)
             return obj.cover_image.url
         return None
-
-
-class CompanyRegisterSerializer(serializers.Serializer):
-    """Serializer para registro de empresa"""
-
-    email = serializers.EmailField()
-    password = serializers.CharField(min_length=8, write_only=True)
-    company_name = serializers.CharField(max_length=150)
-    contact_name = serializers.CharField(max_length=150)
-    phone = serializers.CharField(max_length=20, required=False, allow_blank=True)
-    city = serializers.CharField(max_length=100)
-    state = serializers.CharField(max_length=2)
-    org_type = serializers.ChoiceField(
-        choices=[("company", "Empresa"), ("venue", "Casa de Shows")], default="company"
-    )
-
-    def validate_email(self, value):
-        from django.contrib.auth.models import User
-
-        if User.objects.filter(email__iexact=value).exists():
-            raise serializers.ValidationError("Este email já está cadastrado.")
-        return value.lower()
-
-    def validate(self, attrs):
-        attrs["company_name"] = sanitize_string(
-            attrs["company_name"], max_length=150, allow_empty=False
-        )
-        attrs["contact_name"] = sanitize_string(
-            attrs["contact_name"], max_length=150, allow_empty=False
-        )
-        if "phone" in attrs:
-            attrs["phone"] = sanitize_string(
-                attrs.get("phone"), max_length=20, allow_empty=True
-            )
-        attrs["city"] = sanitize_string(
-            attrs["city"], max_length=100, allow_empty=False
-        )
-        attrs["state"] = sanitize_string(
-            attrs["state"], max_length=2, allow_empty=False, to_upper=True
-        )
-        return attrs
 
 
 class InstrumentSerializer(serializers.ModelSerializer):

@@ -19,7 +19,7 @@ import CityDisplay from '../components/CityDisplay';
 import CityBadge from '../components/CityBadge';
 
 type TypewriterPhase = 'typing' | 'pausing' | 'deleting' | 'waiting';
-type UserType = 'musician' | 'company';
+type UserType = 'musician' | 'contractor';
 
 interface FeatureContent {
   icon: React.ReactNode;
@@ -106,7 +106,7 @@ const Landing: React.FC = () => {
     []
   );
 
-  const companyContent = useMemo<UserContent>(
+  const contractorContent = useMemo<UserContent>(
     () => ({
       hero: 'Encontre os Melhores Músicos',
       subtitle: 'Contrate talentos musicais profissionais para seus eventos',
@@ -137,9 +137,9 @@ const Landing: React.FC = () => {
         },
         {
           icon: <MessageSquare className="h-12 w-12" />,
-          title: 'Contato Direto e Rápido',
+          title: 'Contato Direto pelo App',
           description:
-            'Fale diretamente com músicos sem intermediários. Negocie detalhes, tire dúvidas e feche contratações em uma plataforma só.',
+            'Fale com músicos dentro do GigFlow. Negocie detalhes, tire dúvidas e feche contratações em uma plataforma só.',
         },
         {
           icon: <Shield className="h-12 w-12" />,
@@ -155,19 +155,19 @@ const Landing: React.FC = () => {
         },
       ],
       primaryCTA: {
-        text: 'Cadastrar Empresa',
-        to: '/cadastro-empresa',
+        text: 'Cadastrar Contratante',
+        to: '/contratante/cadastro',
       },
       secondaryCTA: {
-        text: 'Entrar',
-        to: '/login-empresa',
+        text: 'Entrar como Contratante',
+        to: '/contratante/login',
       },
     }),
     []
   );
   const currentContent = useMemo(
-    () => (userType === 'musician' ? musicianContent : companyContent),
-    [companyContent, musicianContent, userType]
+    () => (userType === 'musician' ? musicianContent : contractorContent),
+    [contractorContent, musicianContent, userType]
   );
 
   const heroPhrases = useMemo(() => currentContent.phrases, [currentContent]);
@@ -400,7 +400,7 @@ const Landing: React.FC = () => {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4 }}
             >
-              Por que escolher o GigFlow{userType === 'company' ? ' Empresas' : ''}?
+              Por que escolher o GigFlow{userType === 'contractor' ? ' Contratantes' : ''}?
             </motion.h2>
           </AnimatePresence>
 
@@ -432,7 +432,7 @@ const Landing: React.FC = () => {
             >
               {userType === 'musician'
                 ? 'Junte-se a centenas de músicos profissionais'
-                : 'Centenas de empresas já confiam no GigFlow'}
+                : 'Centenas de contratantes já confiam no GigFlow'}
             </motion.p>
           </AnimatePresence>
         </section>

@@ -1,10 +1,4 @@
-import {
-  Building2,
-  LayoutDashboard,
-  MapPin,
-  UserPlus,
-  Users,
-} from 'lucide-react';
+import { Building2, LayoutDashboard, MapPin, UserPlus, Users } from 'lucide-react';
 
 export const ADMIN_ROUTES = {
   base: '/admin',
@@ -17,8 +11,8 @@ export const ADMIN_ROUTES = {
     `/admin/cidades/${encodeURIComponent(state)}/${encodeURIComponent(city)}`,
   users: '/admin/usuarios',
   usersDetail: (id: string | number) => `/admin/usuarios/${id}`,
-  organizations: '/admin/empresas',
-  organizationsDetail: (id: string | number) => `/admin/empresas/${id}`,
+  organizations: '/admin/contratantes',
+  organizationsDetail: (id: string | number) => `/admin/contratantes/${id}`,
 } as const;
 
 export const ADMIN_CHILD_ROUTES = {
@@ -29,8 +23,8 @@ export const ADMIN_CHILD_ROUTES = {
   citiesDetail: 'cidades/:state/:city',
   users: 'usuarios',
   usersDetail: 'usuarios/:id',
-  organizations: 'empresas',
-  organizationsDetail: 'empresas/:id',
+  organizations: 'contratantes',
+  organizationsDetail: 'contratantes/:id',
 } as const;
 
 export const adminNavItems = [
@@ -51,7 +45,7 @@ export const adminNavItems = [
   },
   {
     icon: Building2,
-    label: 'Empresas',
+    label: 'Contratantes',
     path: ADMIN_ROUTES.organizations,
   },
   {
@@ -65,6 +59,6 @@ export const adminRouteLabels: Record<string, string> = {
   [ADMIN_ROUTES.dashboard]: 'Dashboard',
   [ADMIN_ROUTES.requests]: 'Solicitações',
   [ADMIN_ROUTES.users]: 'Usuários',
-  [ADMIN_ROUTES.organizations]: 'Empresas',
+  [ADMIN_ROUTES.organizations]: 'Contratantes',
   [ADMIN_ROUTES.cities]: 'Cidades',
 };

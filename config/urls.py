@@ -16,12 +16,11 @@ from drf_spectacular.views import (
 from config.auth_views import (
     AdminMeView,
     AdminTokenObtainPairView,
-    CompanyTokenObtainPairView,
+    ContractorTokenObtainPairView,
     CookieTokenLogoutView,
     CookieTokenObtainPairView,
     CookieTokenRefreshView,
     GoogleAuthView,
-    GoogleRegisterCompanyView,
     GoogleRegisterMusicianView,
 )
 
@@ -46,9 +45,9 @@ urlpatterns = [
     path("api/token/refresh/", CookieTokenRefreshView.as_view(), name="token_refresh"),
     path("api/token/logout/", CookieTokenLogoutView.as_view(), name="token_logout"),
     path(
-        "api/company/token/",
-        CompanyTokenObtainPairView.as_view(),
-        name="company_token_obtain",
+        "api/contractor/token/",
+        ContractorTokenObtainPairView.as_view(),
+        name="contractor_token_obtain",
     ),
     # Google OAuth
     path("api/auth/google/", GoogleAuthView.as_view(), name="google_auth"),
@@ -56,11 +55,6 @@ urlpatterns = [
         "api/auth/google/register-musician/",
         GoogleRegisterMusicianView.as_view(),
         name="google_register_musician",
-    ),
-    path(
-        "api/auth/google/register-company/",
-        GoogleRegisterCompanyView.as_view(),
-        name="google_register_company",
     ),
     # API Documentation (OpenAPI/Swagger)
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),

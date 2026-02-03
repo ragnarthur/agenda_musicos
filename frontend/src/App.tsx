@@ -52,14 +52,10 @@ const MusicianRequest = lazy(() => import('./pages/MusicianRequest'));
 const FinancialSettings = lazy(() => import('./pages/FinancialSettings'));
 const NotificationSettings = lazy(() => import('./pages/NotificationSettings'));
 
-// Company pages lazy loading
-const LoginCompany = lazy(() => import('./pages/LoginCompany'));
-const RegisterCompany = lazy(() => import('./pages/RegisterCompany'));
-const CompanyDashboard = lazy(() => import('./pages/company/CompanyDashboard'));
-const MusicianSearch = lazy(() => import('./pages/company/MusicianSearch'));
-const Contacts = lazy(() => import('./pages/company/Contacts'));
-const CompanySettings = lazy(() => import('./pages/company/CompanySettings'));
-const JobPostings = lazy(() => import('./pages/company/JobPostings'));
+// Contractor pages lazy loading
+const LoginContractor = lazy(() => import('./pages/LoginCompany'));
+const RegisterContractor = lazy(() => import('./pages/RegisterCompany'));
+const ContractorRequests = lazy(() => import('./pages/ContractorRequests'));
 
 // Public pages (city landing and public profiles)
 const CityLanding = lazy(() => import('./pages/CityLanding'));
@@ -105,7 +101,7 @@ const useSmartAuth = () => {
       return {
         loading: false,
         isAuthenticated: true,
-        userType: 'company' as const,
+        userType: 'contractor' as const,
         user: organization,
       };
     }
@@ -132,16 +128,16 @@ const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }
   return children;
 };
 
-// Componente para rotas protegidas de empresas
-const CompanyProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
+// Componente para rotas protegidas de contratantes
+const ContractorProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { isAuthenticated, loading, userType } = useSmartAuth();
 
   if (loading) {
     return <PageLoader />;
   }
 
-  if (!isAuthenticated || userType !== 'company') {
-    return <Navigate to="/login-empresa" replace />;
+  if (!isAuthenticated || userType !== 'contractor') {
+    return <Navigate to="/contratante/login" replace />;
   }
 
   return children;
@@ -160,8 +156,8 @@ const PublicRoute: React.FC<{ children: React.ReactElement }> = ({ children }) =
       if (userType === 'admin') {
         return <Navigate to={ADMIN_ROUTES.dashboard} replace />;
       }
-      if (userType === 'company') {
-        return <Navigate to="/empresa/dashboard" replace />;
+      if (userType === 'contractor') {
+        return <Navigate to="/contratante/pedidos" replace />;
       }
     return <Navigate to="/dashboard" replace />;
   }
@@ -197,8 +193,8 @@ const LandingRoute: React.FC<{ children: React.ReactElement }> = ({ children }) 
       if (userType === 'admin') {
         return <Navigate to={ADMIN_ROUTES.dashboard} replace />;
       }
-      if (userType === 'company') {
-        return <Navigate to="/empresa/dashboard" replace />;
+      if (userType === 'contractor') {
+        return <Navigate to="/contratante/pedidos" replace />;
       }
     return <Navigate to="/dashboard" replace />;
   }
@@ -265,20 +261,20 @@ function AppRoutes() {
           }
         />
 
-        {/* Rotas Públicas de Empresa */}
+        {/* Rotas Públicas de Contratante */}
         <Route
-          path="/login-empresa"
+          path="/contratante/login"
           element={
             <PublicRoute>
-              <LoginCompany />
+              <LoginContractor />
             </PublicRoute>
           }
         />
         <Route
-          path="/cadastro-empresa"
+          path="/contratante/cadastro"
           element={
             <PublicRoute>
-              <RegisterCompany />
+              <RegisterContractor />
             </PublicRoute>
           }
         />
@@ -413,49 +409,13 @@ function AppRoutes() {
           }
         />
 
-        {/* Company Routes */}
+        {/* Contractor Routes */}
         <Route
-          path="/empresa/dashboard"
+          path="/contratante/pedidos"
           element={
-            <CompanyProtectedRoute>
-              <CompanyDashboard />
-            </CompanyProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/empresa/musicians"
-          element={
-            <CompanyProtectedRoute>
-              <MusicianSearch />
-            </CompanyProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/empresa/contatos"
-          element={
-            <CompanyProtectedRoute>
-              <Contacts />
-            </CompanyProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/empresa/vagas"
-          element={
-            <CompanyProtectedRoute>
-              <JobPostings />
-            </CompanyProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/empresa/configuracoes"
-          element={
-            <CompanyProtectedRoute>
-              <CompanySettings />
-            </CompanyProtectedRoute>
+            <ContractorProtectedRoute>
+              <ContractorRequests />
+            </ContractorProtectedRoute>
           }
         />
 

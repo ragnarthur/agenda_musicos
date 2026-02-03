@@ -1,15 +1,15 @@
 // pages/RegisterCompany.tsx
-// Cadastro de empresa (gratuito, sem aprovação)
+// Cadastro de contratante (gratuito, sem aprovação)
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { Building2, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import {
-  companyService,
+  contractorService,
   googleAuthService,
-  type CompanyRegisterData,
-  type Organization,
+  type ContractorRegisterData,
+  type ContractorProfile,
 } from '../services/publicApi';
 import { BRAZILIAN_STATES } from '../config/cities';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
@@ -37,7 +37,7 @@ export default function RegisterCompany() {
     formState: { errors },
     setValue,
     watch,
-  } = useForm<CompanyRegisterData & { confirm_password: string }>();
+  } = useForm<ContractorRegisterData & { confirm_password: string }>();
 
   const watchedPhone = watch('phone');
 
@@ -46,7 +46,7 @@ export default function RegisterCompany() {
     setValue('phone', formatted);
   };
 
-  const onSubmit = async (data: CompanyRegisterData & { confirm_password: string }) => {
+  const onSubmit = async (data: ContractorRegisterData & { confirm_password: string }) => {
     if (data.password !== data.confirm_password) {
       toast.error('As senhas não coincidem');
       return;
@@ -56,16 +56,16 @@ export default function RegisterCompany() {
     try {
       if (googleUserInfo) {
         // Registro via Google - usa email validado do Google
-        await companyService.register({
+        await contractorService.register({
           ...data,
           email: googleUserInfo.email, // Email já validado pelo Google
         });
       } else {
         // Registro normal
-        await companyService.register(data);
+        await contractorService.register(data);
       }
       setSuccess(true);
-      toast.success('Empresa cadastrada com sucesso!');
+      toast.success('Contratante cadastrado com sucesso!');
     } catch (error: unknown) {
       const err = error as { response?: { data?: Record<string, string | string[]> } };
       if (err.response?.data) {
@@ -85,7 +85,7 @@ export default function RegisterCompany() {
 
       setIsGoogleLoading(true);
       try {
-        const result = await googleAuthService.authenticate(response.credential, 'company');
+        const result = await googleAuthService.authenticate(response.credential, 'contractor');
         if (result.new_user) {
           // Novo usuário - salvar apenas os DADOS (não o credential que expira)
           setGoogleUserInfo({
@@ -100,18 +100,18 @@ export default function RegisterCompany() {
             sessionStorage.setItem('_googlePicture', result.picture);
           }
 
-          toast.success('Conta Google conectada! Complete os dados da empresa.');
-        } else if (result.user_type === 'company' && result.organization) {
+          toast.success('Conta Google conectada! Complete seus dados de contratante.');
+        } else if (result.user_type === 'contractor' && result.contractor) {
           // Usuário já existe - fazer login
           setSession({
-            organization: result.organization as Organization,
+            organization: result.contractor as ContractorProfile,
             access: result.access,
             refresh: result.refresh,
           });
           toast.success('Login realizado!');
-          navigate('/empresa/dashboard');
+          navigate('/contratante/pedidos');
         } else {
-          toast.error('Esta conta Google não é de empresa');
+          toast.error('Esta conta Google não é de contratante');
         }
       } catch (error: unknown) {
         console.error('Google OAuth error:', error);
@@ -193,10 +193,10 @@ export default function RegisterCompany() {
               Cadastro Realizado!
             </h1>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
-              Sua empresa foi cadastrada com sucesso. Faça login para começar a buscar músicos.
+              Seu cadastro foi concluído. Faça login para solicitar orçamentos.
             </p>
             <button
-              onClick={() => navigate('/login-empresa')}
+              onClick={() => navigate('/contratante/login')}
               className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
             >
               Fazer Login
@@ -216,10 +216,10 @@ export default function RegisterCompany() {
               <Building2 className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Cadastro de Empresa
+              Cadastro de Contratante
             </h1>
             <p className="text-gray-600 dark:text-gray-300">
-              Cadastre sua empresa para contratar músicos
+              Cadastre-se para contratar músicos
             </p>
           </div>
 
@@ -256,53 +256,21 @@ export default function RegisterCompany() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            {/* Nome da Empresa */}
+            {/* Nome */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Nome da Empresa *
+                Nome completo *
               </label>
               <input
                 type="text"
-                {...register('company_name', { required: 'Nome da empresa é obrigatório' })}
-                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-                placeholder="Nome da sua empresa"
-              />
-              {errors.company_name && (
-                <p className="mt-1 text-sm text-red-600">{errors.company_name.message}</p>
-              )}
-            </div>
-
-            {/* Tipo de Organização */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Tipo *
-              </label>
-              <select
-                {...register('org_type', { required: 'Tipo é obrigatório' })}
-                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-              >
-                <option value="company">Empresa</option>
-                <option value="venue">Casa de Shows</option>
-              </select>
-            </div>
-
-            {/* Nome do Contato */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Nome do Responsável *
-              </label>
-              <input
-                type="text"
-                {...register('contact_name', { required: 'Nome do responsável é obrigatório' })}
+                {...register('name', { required: 'Nome é obrigatório' })}
                 defaultValue={
                   googleUserInfo ? `${googleUserInfo.first_name} ${googleUserInfo.last_name}` : ''
                 }
                 className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
                 placeholder="Seu nome completo"
               />
-              {errors.contact_name && (
-                <p className="mt-1 text-sm text-red-600">{errors.contact_name.message}</p>
-              )}
+              {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
             </div>
 
             {/* Email */}
@@ -318,7 +286,7 @@ export default function RegisterCompany() {
                     pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Email inválido' },
                   })}
                   className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="empresa@email.com"
+                  placeholder="seu@email.com"
                 />
                 {errors.email && (
                   <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
@@ -434,14 +402,17 @@ export default function RegisterCompany() {
                   Cadastrando...
                 </>
               ) : (
-                'Cadastrar Empresa'
+                'Cadastrar Contratante'
               )}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
             Já tem uma conta?{' '}
-            <Link to="/login-empresa" className="text-indigo-600 hover:text-indigo-700 font-medium">
+            <Link
+              to="/contratante/login"
+              className="text-indigo-600 hover:text-indigo-700 font-medium"
+            >
               Faça login
             </Link>
           </p>

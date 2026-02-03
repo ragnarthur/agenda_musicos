@@ -1,26 +1,24 @@
 // pages/MusicianMessages.tsx
-// Página de mensagens recebidas de empresas
+// Página de pedidos de orçamento recebidos
 import { useState, useEffect, useCallback } from 'react';
 import {
   Mail,
   MailOpen,
   MessageSquare,
-  Archive,
   Send,
   Building2,
   Calendar,
   MapPin,
-  DollarSign,
   Clock,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { contactRequestService, type ContactRequest } from '../services/publicApi';
+import { quoteRequestService, type QuoteRequest } from '../services/publicApi';
 import Navbar from '../components/Layout/Navbar';
 
 export default function MusicianMessages() {
-  const [messages, setMessages] = useState<ContactRequest[]>([]);
+  const [messages, setMessages] = useState<QuoteRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMessage, setSelectedMessage] = useState<ContactRequest | null>(null);
+  const [selectedMessage, setSelectedMessage] = useState<QuoteRequest | null>(null);
   const [replyText, setReplyText] = useState('');
   const [sending, setSending] = useState(false);
   const [filter, setFilter] = useState<string>('all');
@@ -29,7 +27,7 @@ export default function MusicianMessages() {
     setLoading(true);
     try {
       const status = filter === 'all' ? undefined : filter;
-      const data = await contactRequestService.listReceived(status);
+      const data = await quoteRequestService.listReceived(status);
       setMessages(data);
     } catch {
       toast.error('Erro ao carregar mensagens');
@@ -42,20 +40,9 @@ export default function MusicianMessages() {
     loadMessages();
   }, [loadMessages]);
 
-  const handleSelectMessage = async (message: ContactRequest) => {
+  const handleSelectMessage = (message: QuoteRequest) => {
     setSelectedMessage(message);
     setReplyText('');
-
-    // Marca como lido ao abrir
-    if (message.status === 'pending') {
-      try {
-        const updated = await contactRequestService.get(message.id);
-        setMessages(prev => prev.map(m => (m.id === updated.id ? updated : m)));
-        setSelectedMessage(updated);
-      } catch {
-        // Ignora erro silenciosamente
-      }
-    }
   };
 
   const handleReply = async () => {
@@ -63,28 +50,16 @@ export default function MusicianMessages() {
 
     setSending(true);
     try {
-      const updated = await contactRequestService.reply(selectedMessage.id, replyText);
-      setMessages(prev => prev.map(m => (m.id === updated.id ? updated : m)));
-      setSelectedMessage(updated);
+      await quoteRequestService.sendProposal(selectedMessage.id, { message: replyText });
+      const refreshed = await quoteRequestService.get(selectedMessage.id);
+      setMessages(prev => prev.map(m => (m.id === refreshed.id ? refreshed : m)));
+      setSelectedMessage(refreshed);
       setReplyText('');
-      toast.success('Resposta enviada!');
+      toast.success('Proposta enviada!');
     } catch {
-      toast.error('Erro ao enviar resposta');
+      toast.error('Erro ao enviar proposta');
     } finally {
       setSending(false);
-    }
-  };
-
-  const handleArchive = async (message: ContactRequest) => {
-    try {
-      await contactRequestService.archive(message.id);
-      setMessages(prev => prev.filter(m => m.id !== message.id));
-      if (selectedMessage?.id === message.id) {
-        setSelectedMessage(null);
-      }
-      toast.success('Mensagem arquivada');
-    } catch {
-      toast.error('Erro ao arquivar');
     }
   };
 
@@ -94,10 +69,15 @@ export default function MusicianMessages() {
     switch (status) {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-      case 'read':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-      case 'replied':
+      case 'responded':
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+      case 'reserved':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+      case 'confirmed':
+        return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300';
+      case 'cancelled':
+      case 'declined':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
     }
@@ -122,7 +102,7 @@ export default function MusicianMessages() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <MessageSquare className="w-7 h-7 text-indigo-600" />
-              Mensagens de Empresas
+              Pedidos de Orçamento
               {unreadCount > 0 && (
                 <span className="ml-2 px-2.5 py-0.5 text-sm bg-red-500 text-white rounded-full">
                   {unreadCount} nova{unreadCount > 1 ? 's' : ''}
@@ -130,12 +110,21 @@ export default function MusicianMessages() {
               )}
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Solicitações de contato e orçamentos de empresas
+              Solicitações de orçamento feitas por contratantes
             </p>
           </div>
 
           <div className="flex gap-2">
-            {['all', 'pending', 'read', 'replied'].map(f => (
+            {[
+              'all',
+              'pending',
+              'responded',
+              'reserved',
+              'confirmed',
+              'completed',
+              'cancelled',
+              'declined',
+            ].map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
@@ -146,12 +135,20 @@ export default function MusicianMessages() {
                 }`}
               >
                 {f === 'all'
-                  ? 'Todas'
+                  ? 'Todos'
                   : f === 'pending'
                     ? 'Pendentes'
-                    : f === 'read'
-                      ? 'Lidas'
-                      : 'Respondidas'}
+                    : f === 'responded'
+                      ? 'Respondidos'
+                      : f === 'reserved'
+                        ? 'Reservados'
+                        : f === 'confirmed'
+                          ? 'Confirmados'
+                          : f === 'completed'
+                            ? 'Concluídos'
+                            : f === 'cancelled'
+                              ? 'Cancelados'
+                              : 'Recusados'}
               </button>
             ))}
           </div>
@@ -167,7 +164,7 @@ export default function MusicianMessages() {
             ) : messages.length === 0 ? (
               <div className="p-8 text-center text-gray-500 dark:text-gray-400">
                 <Mail className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>Nenhuma mensagem encontrada</p>
+                <p>Nenhum pedido encontrado</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-[600px] overflow-y-auto">
@@ -192,7 +189,7 @@ export default function MusicianMessages() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-medium text-gray-900 dark:text-white truncate">
-                            {message.from_organization_name}
+                            {message.contractor_name}
                           </span>
                           <span
                             className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(message.status)}`}
@@ -201,7 +198,7 @@ export default function MusicianMessages() {
                           </span>
                         </div>
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
-                          {message.subject}
+                          {message.event_type}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
                           <Clock className="w-3 h-3" />
@@ -228,24 +225,15 @@ export default function MusicianMessages() {
                       </div>
                       <div>
                         <h2 className="font-semibold text-gray-900 dark:text-white">
-                          {selectedMessage.from_organization_name}
+                          {selectedMessage.contractor_name}
                         </h2>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {selectedMessage.from_user_name}
-                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Contratante</p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleArchive(selectedMessage)}
-                      className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                      title="Arquivar"
-                    >
-                      <Archive className="w-5 h-5" />
-                    </button>
                   </div>
 
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                    {selectedMessage.subject}
+                    {selectedMessage.event_type}
                   </h3>
 
                   {/* Info do Evento */}
@@ -256,16 +244,14 @@ export default function MusicianMessages() {
                         {new Date(selectedMessage.event_date).toLocaleDateString('pt-BR')}
                       </span>
                     )}
-                    {selectedMessage.event_location && (
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-4 h-4" />
+                      {selectedMessage.location_city} - {selectedMessage.location_state}
+                    </span>
+                    {selectedMessage.venue_name && (
                       <span className="flex items-center gap-1">
                         <MapPin className="w-4 h-4" />
-                        {selectedMessage.event_location}
-                      </span>
-                    )}
-                    {selectedMessage.budget_range && (
-                      <span className="flex items-center gap-1">
-                        <DollarSign className="w-4 h-4" />
-                        {selectedMessage.budget_range}
+                        {selectedMessage.venue_name}
                       </span>
                     )}
                   </div>
@@ -275,34 +261,18 @@ export default function MusicianMessages() {
                 <div className="flex-1 p-6 overflow-y-auto">
                   <div className="prose dark:prose-invert max-w-none">
                     <p className="whitespace-pre-wrap text-gray-700 dark:text-gray-300">
-                      {selectedMessage.message}
+                      {selectedMessage.notes || 'Sem observações adicionais.'}
                     </p>
                   </div>
-
-                  {/* Resposta */}
-                  {selectedMessage.reply_message && (
-                    <div className="mt-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                      <div className="flex items-center gap-2 mb-2 text-sm text-green-700 dark:text-green-400">
-                        <Send className="w-4 h-4" />
-                        <span className="font-medium">Sua resposta</span>
-                        <span className="text-green-600 dark:text-green-500">
-                          - {selectedMessage.replied_at && formatDate(selectedMessage.replied_at)}
-                        </span>
-                      </div>
-                      <p className="whitespace-pre-wrap text-gray-700 dark:text-gray-300">
-                        {selectedMessage.reply_message}
-                      </p>
-                    </div>
-                  )}
                 </div>
 
                 {/* Área de Resposta */}
-                {selectedMessage.status !== 'replied' && selectedMessage.status !== 'archived' && (
+                {selectedMessage.status === 'pending' && (
                   <div className="p-6 border-t border-gray-200 dark:border-gray-700">
                     <textarea
                       value={replyText}
                       onChange={e => setReplyText(e.target.value)}
-                      placeholder="Escreva sua resposta..."
+                      placeholder="Escreva sua proposta..."
                       rows={3}
                       className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white resize-none"
                     />
@@ -317,7 +287,7 @@ export default function MusicianMessages() {
                         ) : (
                           <Send className="w-4 h-4" />
                         )}
-                        Enviar Resposta
+                        Enviar Proposta
                       </button>
                     </div>
                   </div>
@@ -327,7 +297,7 @@ export default function MusicianMessages() {
               <div className="h-full flex items-center justify-center p-8 text-gray-500 dark:text-gray-400">
                 <div className="text-center">
                   <MessageSquare className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p>Selecione uma mensagem para visualizar</p>
+                  <p>Selecione um pedido para visualizar</p>
                 </div>
               </div>
             )}

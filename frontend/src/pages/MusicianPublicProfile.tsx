@@ -15,8 +15,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import Loading from '../components/common/Loading';
 import {
-  contactRequestService,
   publicMusicianService,
+  quoteRequestService,
   type MusicianPublic,
   type Organization,
 } from '../services/publicApi';
@@ -40,11 +40,13 @@ const MusicianPublicProfile: React.FC = () => {
   const [showContactModal, setShowContactModal] = useState(false);
   const [sendingContact, setSendingContact] = useState(false);
   const [contactForm, setContactForm] = useState({
-    subject: '',
-    message: '',
+    event_type: '',
+    notes: '',
     event_date: '',
-    event_location: '',
-    budget_range: '',
+    location_city: '',
+    location_state: '',
+    venue_name: '',
+    duration_hours: '',
   });
 
   useBodyScrollLock(showContactModal);
@@ -104,12 +106,21 @@ const MusicianPublicProfile: React.FC = () => {
     fetchData();
   }, [id, city]);
 
+  useEffect(() => {
+    if (!city) return;
+    setContactForm(prev => ({
+      ...prev,
+      location_city: prev.location_city || city.name,
+      location_state: prev.location_state || city.state,
+    }));
+  }, [city]);
+
   const handleContactClick = () => {
     if (isCompanyAuth) {
       setShowContactModal(true);
     } else {
-      // Redirect to company registration
-      navigate('/cadastro-empresa');
+      // Redirect to contractor registration
+      navigate('/contratante/cadastro');
     }
   };
 
@@ -127,32 +138,40 @@ const MusicianPublicProfile: React.FC = () => {
     event.preventDefault();
     if (!musician || sendingContact) return;
 
-    const subject = contactForm.subject.trim();
-    const message = contactForm.message.trim();
+    const eventType = contactForm.event_type.trim();
+    const notes = contactForm.notes.trim();
+    const locationCity = contactForm.location_city.trim();
+    const locationState = contactForm.location_state.trim();
 
-    if (!subject || !message) {
-      showToast.error('Preencha o assunto e a mensagem.');
+    if (!eventType || !locationCity || !locationState || !contactForm.event_date) {
+      showToast.error('Preencha tipo de evento, data, cidade e estado.');
       return;
     }
 
     setSendingContact(true);
     try {
-      await contactRequestService.create({
-        to_musician: musician.id,
-        subject,
-        message,
-        event_date: contactForm.event_date || undefined,
-        event_location: contactForm.event_location.trim() || undefined,
-        budget_range: contactForm.budget_range.trim() || undefined,
+      await quoteRequestService.create({
+        musician: musician.id,
+        event_date: contactForm.event_date,
+        event_type: eventType,
+        location_city: locationCity,
+        location_state: locationState,
+        venue_name: contactForm.venue_name.trim() || undefined,
+        duration_hours: contactForm.duration_hours
+          ? Number(contactForm.duration_hours)
+          : undefined,
+        notes: notes || undefined,
       });
-      showToast.success('Contato enviado com sucesso!');
+      showToast.success('Pedido de orçamento enviado com sucesso!');
       setShowContactModal(false);
       setContactForm({
-        subject: '',
-        message: '',
+        event_type: '',
+        notes: '',
         event_date: '',
-        event_location: '',
-        budget_range: '',
+        location_city: city?.name || '',
+        location_state: city?.state || '',
+        venue_name: '',
+        duration_hours: '',
       });
     } catch (contactError) {
       showToast.apiError(contactError);
@@ -321,11 +340,11 @@ const MusicianPublicProfile: React.FC = () => {
                   className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-lg"
                 >
                   <MessageSquare className="h-5 w-5" />
-                  Solicitar Contato
+                  Solicitar Orçamento
                 </button>
                 {!isCompanyAuth && (
                   <p className="text-gray-400 text-sm mt-2 text-center md:text-left">
-                    Você precisa ter uma conta de empresa para entrar em contato.
+                    Você precisa ter uma conta de contratante para entrar em contato.
                   </p>
                 )}
               </div>
@@ -406,10 +425,10 @@ const MusicianPublicProfile: React.FC = () => {
             </h2>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                to="/cadastro-empresa"
+                to="/contratante/cadastro"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-lg"
               >
-                <Building2 className="h-5 w-5" />É empresa? Cadastre-se
+                <Building2 className="h-5 w-5" />É contratante? Cadastre-se
               </Link>
               <Link
                 to="/solicitar-acesso"
@@ -446,9 +465,9 @@ const MusicianPublicProfile: React.FC = () => {
             >
               <div className="p-6 border-b border-gray-200 flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Solicitar contato</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">Solicitar orçamento</h2>
                   <p className="text-sm text-gray-500">
-                    Envie uma mensagem para {musician.full_name}
+                    Envie os detalhes do seu evento para {musician.full_name}
                   </p>
                 </div>
                 <button
@@ -463,33 +482,20 @@ const MusicianPublicProfile: React.FC = () => {
 
               <form onSubmit={handleContactSubmit} className="p-6 space-y-5">
                 <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
-                    Assunto *
+                  <label
+                    htmlFor="event_type"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Tipo de evento *
                   </label>
                   <input
-                    id="subject"
-                    name="subject"
+                    id="event_type"
+                    name="event_type"
                     type="text"
-                    value={contactForm.subject}
+                    value={contactForm.event_type}
                     onChange={handleContactChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="Ex: Proposta para show em bar"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                    Mensagem *
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    rows={5}
-                    value={contactForm.message}
-                    onChange={handleContactChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="Conte detalhes sobre o evento e sua necessidade"
+                    placeholder="Ex: Show em bar, casamento, aniversário"
                     required
                   />
                 </div>
@@ -509,43 +515,101 @@ const MusicianPublicProfile: React.FC = () => {
                       value={contactForm.event_date}
                       onChange={handleContactChange}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      required
                     />
                   </div>
 
                   <div>
                     <label
-                      htmlFor="event_location"
+                      htmlFor="duration_hours"
                       className="block text-sm font-medium text-gray-700 mb-2"
                     >
-                      Local
+                      Duração (horas)
                     </label>
                     <input
-                      id="event_location"
-                      name="event_location"
-                      type="text"
-                      value={contactForm.event_location}
+                      id="duration_hours"
+                      name="duration_hours"
+                      type="number"
+                      min="1"
+                      value={contactForm.duration_hours}
                       onChange={handleContactChange}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      placeholder="Ex: Centro da cidade"
+                      placeholder="Ex: 3"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      htmlFor="location_city"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Cidade *
+                    </label>
+                    <input
+                      id="location_city"
+                      name="location_city"
+                      type="text"
+                      value={contactForm.location_city}
+                      onChange={handleContactChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      placeholder="Ex: Belo Horizonte"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="location_state"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Estado (UF) *
+                    </label>
+                    <input
+                      id="location_state"
+                      name="location_state"
+                      type="text"
+                      value={contactForm.location_state}
+                      onChange={handleContactChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      placeholder="Ex: MG"
+                      maxLength={2}
+                      required
                     />
                   </div>
                 </div>
 
                 <div>
                   <label
-                    htmlFor="budget_range"
+                    htmlFor="venue_name"
                     className="block text-sm font-medium text-gray-700 mb-2"
                   >
-                    Faixa de orçamento
+                    Local do evento (opcional)
                   </label>
                   <input
-                    id="budget_range"
-                    name="budget_range"
+                    id="venue_name"
+                    name="venue_name"
                     type="text"
-                    value={contactForm.budget_range}
+                    value={contactForm.venue_name}
                     onChange={handleContactChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="Ex: R$ 800 - R$ 1.200"
+                    placeholder="Ex: Centro da cidade, salão, bar"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+                    Observações
+                  </label>
+                  <textarea
+                    id="notes"
+                    name="notes"
+                    rows={4}
+                    value={contactForm.notes}
+                    onChange={handleContactChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    placeholder="Conte detalhes sobre o evento e sua necessidade"
                   />
                 </div>
 
@@ -563,7 +627,7 @@ const MusicianPublicProfile: React.FC = () => {
                     disabled={sendingContact}
                     className="px-6 py-2 rounded-lg bg-primary-600 text-white font-semibold hover:bg-primary-700 disabled:opacity-50"
                   >
-                    {sendingContact ? 'Enviando...' : 'Enviar contato'}
+                    {sendingContact ? 'Enviando...' : 'Enviar pedido'}
                   </button>
                 </div>
               </form>

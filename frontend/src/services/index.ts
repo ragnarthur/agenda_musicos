@@ -24,8 +24,8 @@ export { musicianService } from './musicianService';
 export { notificationService } from './notificationService';
 export {
   cityAdminService,
-  companyService,
-  contactRequestService,
+  contractorService,
+  quoteRequestService,
   googleAuthService,
   inviteRegisterService,
   musicianRequestService,

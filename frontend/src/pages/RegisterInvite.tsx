@@ -312,7 +312,7 @@ const RegisterInvite: React.FC = () => {
             </div>
             <p className="text-sm text-slate-200">
               Seu acesso foi liberado. Ao concluir, você já pode receber convites, organizar sua
-              agenda e aparecer para empresas da sua região.
+              agenda e aparecer para contratantes da sua região.
             </p>
           </div>
           <Link to="/" className="mt-6 text-sm text-amber-200 hover:text-amber-100">

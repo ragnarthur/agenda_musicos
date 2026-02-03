@@ -7,12 +7,7 @@ from unittest.mock import patch
 from django.contrib.auth.models import User
 from django.test import Client, TestCase, override_settings
 
-from agenda.models import Membership, Musician, Organization
-from config.auth_views import (
-    GoogleAuthView,
-    GoogleRegisterCompanyView,
-    GoogleRegisterMusicianView,
-)
+from agenda.models import Musician
 
 
 @override_settings(GOOGLE_CLIENT_ID="test-client-id")

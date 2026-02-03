@@ -11,8 +11,8 @@ vi.mock('../../components/Layout/FullscreenBackground', () => ({
     default: ({ children }) => _jsx("div", { children: children }),
 }));
 vi.mock('../../services/publicApi', () => ({
-    contactRequestService: {
-        create: vi.fn(),
+    quoteRequestService: {
+      create: vi.fn(),
     },
     publicMusicianService: {
         getPublicProfile: getPublicProfileMock,
@@ -60,21 +60,21 @@ describe('MusicianPublicProfile', () => {
         listSponsorsMock.mockReset();
         companyAuthState.value = false;
     });
-    it('abre modal de contato quando empresa está autenticada', async () => {
+    it('abre modal de contato quando contratante está autenticado', async () => {
         companyAuthState.value = true;
         getPublicProfileMock.mockResolvedValue(mockMusician);
         listSponsorsMock.mockResolvedValue([]);
         renderPage();
-        const button = await screen.findByRole('button', { name: 'Solicitar Contato' });
+      const button = await screen.findByRole('button', { name: 'Solicitar Orçamento' });
         fireEvent.click(button);
-        expect(await screen.findByRole('heading', { name: /Solicitar contato/i })).toBeInTheDocument();
+      expect(await screen.findByRole('heading', { name: /Solicitar orçamento/i })).toBeInTheDocument();
     });
-    it('redireciona para cadastro de empresa quando não autenticada', async () => {
+    it('redireciona para cadastro de contratante quando não autenticada', async () => {
         getPublicProfileMock.mockResolvedValue(mockMusician);
         listSponsorsMock.mockResolvedValue([]);
         renderPage();
-        const button = await screen.findByRole('button', { name: 'Solicitar Contato' });
+      const button = await screen.findByRole('button', { name: 'Solicitar Orçamento' });
         fireEvent.click(button);
-        expect(navigateMock).toHaveBeenCalledWith('/cadastro-empresa');
+        expect(navigateMock).toHaveBeenCalledWith('/contratante/cadastro');
     });
 });

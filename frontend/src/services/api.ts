@@ -128,8 +128,8 @@ api.interceptors.response.use(
       '/',
       '/login',
       '/cadastro',
-      '/login-empresa',
-      '/cadastro-empresa',
+      '/contratante/login',
+      '/contratante/cadastro',
       '/solicitar-acesso',
       '/cidades',
       '/musico',
@@ -165,8 +165,8 @@ api.interceptors.response.use(
               !window.location.pathname.startsWith(ADMIN_ROUTES.login)
             ) {
               window.location.href = ADMIN_ROUTES.login;
-            } else if (window.location.pathname.startsWith('/empresa')) {
-              window.location.href = '/login-empresa';
+            } else if (window.location.pathname.startsWith('/contratante')) {
+              window.location.href = '/contratante/login';
             } else {
               window.location.href = '/login';
             }

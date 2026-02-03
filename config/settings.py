@@ -296,7 +296,6 @@ REST_FRAMEWORK = {
         # Outros endpoints sensíveis
         "register": config("THROTTLE_REGISTER", default="5/min"),
         "password_reset": config("THROTTLE_PASSWORD_RESET", default="5/min"),
-        "contact_request": config("THROTTLE_CONTACT_REQUEST", default="20/min"),
         "musician_request": config("THROTTLE_MUSICIAN_REQUEST", default="3/min"),
         "profile_update": config("THROTTLE_PROFILE_UPDATE", default="30/min"),
         "check_email": config("THROTTLE_CHECK_EMAIL", default="10/min"),

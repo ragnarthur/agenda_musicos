@@ -155,26 +155,19 @@ class EmailService:
             return False
 
     @staticmethod
-    def send_welcome_email_to_new_user(user, organization=None):
+    def send_welcome_email_to_new_user(user):
         """
-        Envia email de boas-vindas para novo usuário (empresa)
+        Envia email de boas-vindas para novo usuário.
         """
         try:
-            if organization:
-                subject = f"🎉 Bem-vindo ao GigFlow, {organization.name}!"
-                template = "emails/welcome_company.html"
-                extra_context = {"organization": organization}
-            else:
-                subject = "🎉 Bem-vindo ao GigFlow!"
-                template = "emails/welcome_musician.html"
-                extra_context = {}
+            subject = "🎉 Bem-vindo ao GigFlow!"
+            template = "emails/welcome_musician.html"
 
             html_message = render_to_string(
                 template,
                 {
                     "user": user,
                     "frontend_url": getattr(settings, "FRONTEND_URL", "http://localhost:5173"),
-                    **extra_context,
                 },
             )
 
@@ -197,38 +190,3 @@ class EmailService:
             return False
 
     @staticmethod
-    def send_contact_notification(musician, company, contact_request):
-        """
-        Notifica músico sobre novo contato de empresa
-        """
-        try:
-            subject = f"📬 Nova mensagem de {company.name} - GigFlow"
-
-            html_message = render_to_string(
-                "emails/new_contact_musician.html",
-                {
-                    "musician": musician,
-                    "company": company,
-                    "contact_request": contact_request,
-                    "frontend_url": getattr(settings, "FRONTEND_URL", "http://localhost:5173"),
-                    "messages_url": f"{getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')}/musicos/mensagens",
-                },
-            )
-
-            text_message = strip_tags(html_message)
-
-            success = EmailService.send_email(
-                subject=subject,
-                message=text_message,
-                recipient_list=[musician.user.email],
-                html_message=html_message,
-            )
-
-            if success:
-                logger.info(f"Notificação de contato enviada para músico {musician.user.email}")
-
-            return success
-
-        except Exception as e:
-            logger.error(f"Erro ao enviar notificação de contato: {e}")
-            return False
