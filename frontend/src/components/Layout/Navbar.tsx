@@ -282,7 +282,7 @@ const Navbar: React.FC = memo(() => {
 
           {/* Usuário e Logout */}
           <div className="flex items-center space-x-3 min-w-fit md:min-w-0 flex-shrink-0">
-            <div className="hidden 2xl:block text-right min-w-0 flex-1 max-w-[140px]">
+            <div className="hidden lg:block text-right min-w-0 flex-1 max-w-[160px]">
               <p
                 className="text-sm font-medium text-slate-100 leading-snug truncate"
                 title={user?.full_name}
@@ -292,7 +292,7 @@ const Navbar: React.FC = memo(() => {
             </div>
 
             <div className="flex items-center gap-2">
-              <CityBadge className="hidden 2xl:inline-flex" />
+              <CityBadge className="hidden lg:inline-flex max-w-[200px]" />
               <ThemeToggle />
               <button
                 onClick={handleLogout}
