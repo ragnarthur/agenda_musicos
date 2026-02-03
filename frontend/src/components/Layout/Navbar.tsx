@@ -1,5 +1,5 @@
 // components/Layout/Navbar.tsx
-import React, { useCallback, useEffect, useRef, useState, memo } from 'react';
+import React, { useCallback, useEffect, useState, memo } from 'react';
 import { Link, NavLink as RouterNavLink, useNavigate } from 'react-router-dom';
 import {
   Calendar,
@@ -27,8 +27,6 @@ const Navbar: React.FC = memo(() => {
   const navigate = useNavigate();
   const [openMore, setOpenMore] = useState(false);
   const [openDesktopMore, setOpenDesktopMore] = useState(false);
-  const desktopMoreFullRef = useRef<HTMLDivElement | null>(null);
-  const desktopMoreCompactRef = useRef<HTMLDivElement | null>(null);
 
   // Use SWR hook for notifications - shared across Navbar and Dashboard
   const { pendingMyResponse, pendingApproval } = useNotifications();
@@ -42,19 +40,17 @@ const Navbar: React.FC = memo(() => {
   }, [logout, navigate]);
 
   useEffect(() => {
-    const onClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (
-        desktopMoreFullRef.current?.contains(target) ||
-        desktopMoreCompactRef.current?.contains(target)
-      ) {
+    if (!openDesktopMore) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('[data-more-menu="desktop"]')) {
         return;
       }
       setOpenDesktopMore(false);
     };
-    document.addEventListener('mousedown', onClickOutside);
-    return () => document.removeEventListener('mousedown', onClickOutside);
-  }, []);
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [openDesktopMore]);
 
   return (
     <nav className="bg-gradient-to-r from-slate-950/90 via-slate-900/85 to-slate-950/90 backdrop-blur-xl shadow-lg shadow-black/30 sticky top-0 z-50 border-b border-white/10 overflow-visible">
@@ -99,7 +95,7 @@ const Navbar: React.FC = memo(() => {
               label="Datas Disponíveis"
             />
             <AppNavLink to="/marketplace" icon={<Megaphone className="h-5 w-5" />} label="Vagas" />
-            <div className="relative" ref={desktopMoreFullRef}>
+            <div className="relative" data-more-menu="desktop">
               <button
                 type="button"
                 onClick={() => setOpenDesktopMore(prev => !prev)}
@@ -190,7 +186,7 @@ const Navbar: React.FC = memo(() => {
             />
             <AppNavLinkCompact to="/musicos" icon={<Users className="h-5 w-5" />} label="Músicos" />
             <AppNavLinkCompact to="/marketplace" icon={<Megaphone className="h-5 w-5" />} label="Vagas" />
-            <div className="relative" ref={desktopMoreCompactRef}>
+            <div className="relative" data-more-menu="desktop">
               <button
                 type="button"
                 onClick={() => setOpenDesktopMore(prev => !prev)}
