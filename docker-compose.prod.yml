@@ -4,9 +4,9 @@ services:
     env_file:
       - .env.docker
     environment:
-      POSTGRES_DB: agenda
-      POSTGRES_USER: agenda
-      POSTGRES_PASSWORD: Antonella-Dogfunk123
+      POSTGRES_DB: ${POSTGRES_DB:-agenda}
+      POSTGRES_USER: ${POSTGRES_USER:-agenda}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -26,10 +26,10 @@ services:
     env_file:
       - .env.docker
     environment:
-      POSTGRES_DB: agenda
-      POSTGRES_USER: agenda
-      POSTGRES_PASSWORD: Antonella-Dogfunk123
-      DATABASE_URL: postgresql://agenda:Antonella-Dogfunk123@db:5432/agenda?sslmode=disable
+      POSTGRES_DB: ${POSTGRES_DB:-agenda}
+      POSTGRES_USER: ${POSTGRES_USER:-agenda}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_URL: ${DATABASE_URL}
     depends_on:
       - db
     volumes:

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { CalendarClock, Clock, Plus, Users, ListChecks, Zap, Briefcase } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
-import Loading from '../components/common/Loading';
+import Skeleton, { SkeletonCard } from '../components/common/Skeleton';
 import { useAuth } from '../contexts/AuthContext';
 import { useUpcomingEvents } from '../hooks/useEvents';
 import { useDashboardNotifications } from '../hooks/useNotifications';
@@ -80,7 +80,14 @@ const Dashboard: React.FC = memo(() => {
   if (loading) {
     return (
       <Layout>
-        <Loading text="Carregando..." />
+        <div className="space-y-8 py-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full hidden md:block" />
+          </div>
+          <SkeletonCard count={3} />
+        </div>
       </Layout>
     );
   }

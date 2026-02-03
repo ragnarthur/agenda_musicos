@@ -13,6 +13,7 @@ import {
   Coins,
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
+import { SkeletonCard } from '../components/common/Skeleton';
 import { useEvents } from '../hooks/useEvents';
 import type { Availability, Event } from '../types';
 import { format, parseISO, startOfDay } from 'date-fns';
@@ -304,42 +305,7 @@ const EventsList: React.FC = () => {
         </div>
 
         {isLoading ? (
-          <div className="space-y-4">
-            {Array.from({ length: 3 }).map((_, groupIndex) => (
-              <div
-                key={`events-skeleton-${groupIndex}`}
-                className="rounded-xl p-[1px] bg-gradient-to-br from-gray-200 to-gray-300"
-              >
-                <div className="rounded-[14px] p-4 bg-white/80">
-                  <div className="h-5 w-56 rounded-full bg-gray-200 animate-pulse" />
-                  <div className="mt-4 space-y-3">
-                    {Array.from({ length: 2 }).map((__, cardIndex) => (
-                      <div
-                        key={`events-card-skeleton-${groupIndex}-${cardIndex}`}
-                        className="card-contrast space-y-3"
-                      >
-                        <div className="h-4 w-40 rounded-full bg-gray-200 animate-pulse" />
-                        <div className="h-3 w-64 rounded-full bg-gray-200 animate-pulse" />
-                        <div className="flex gap-3">
-                          <div className="h-3 w-20 rounded-full bg-gray-200 animate-pulse" />
-                          <div className="h-3 w-24 rounded-full bg-gray-200 animate-pulse" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : events.length === 0 ? (
-          <div className="card-contrast text-center py-12">
-            <CalendarIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 mb-4">Nenhum evento encontrado</p>
-            <Link to="/eventos/novo" className="btn-primary inline-flex items-center space-x-2">
-              <Plus className="h-5 w-5" />
-              <span>Criar Primeiro Evento</span>
-            </Link>
-          </div>
+          <SkeletonCard count={3} />
         ) : (
           <div className="space-y-4">
             {groups.map(group => {

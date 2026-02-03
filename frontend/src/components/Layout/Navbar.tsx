@@ -77,7 +77,7 @@ const Navbar: React.FC = memo(() => {
             className="flex items-center space-x-3 hover:scale-[1.01] transition-transform min-w-fit"
           >
             <div className="h-12 w-12 flex items-center justify-center">
-              <OwlMascot className="h-12 w-12" />
+              <OwlMascot className="h-12 w-12" autoplay={false} />
             </div>
             <div className="flex flex-col leading-tight">
               <div className="flex items-center gap-2">

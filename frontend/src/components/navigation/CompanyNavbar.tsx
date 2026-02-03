@@ -81,7 +81,7 @@ const CompanyNavbar: React.FC = () => {
               to="/empresa/dashboard"
               className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
-              <OwlMascot className="h-8 w-8" />
+              <OwlMascot className="h-8 w-8" autoplay={false} />
               <span className="font-bold text-xl hidden sm:block">
                 GigFlow <span className="text-indigo-600">Empresas</span>
               </span>

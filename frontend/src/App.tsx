@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CompanyAuthProvider, useCompanyAuth } from './contexts/CompanyAuthContext';
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext';
 import Loading from './components/common/Loading';
+import ErrorBoundary from './components/ErrorBoundary';
 import { ADMIN_CHILD_ROUTES, ADMIN_ROUTES } from './routes/adminRoutes';
 
 // Lazy load de páginas para otimizar o bundle inicial
@@ -514,7 +515,9 @@ function App() {
         <AuthProvider>
           <CompanyAuthProvider>
             <AdminAuthProvider>
-              <AppRoutes />
+              <ErrorBoundary>
+                <AppRoutes />
+              </ErrorBoundary>
               <Toaster
                 position="top-right"
                 toastOptions={{

@@ -304,7 +304,7 @@ const RegisterInvite: React.FC = () => {
         >
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <OwlMascot className="h-12 w-12" />
+              <OwlMascot className="h-12 w-12" autoplay={false} />
               <div>
                 <p className="font-semibold text-lg">GigFlow</p>
                 <p className="text-xs text-amber-200/80">Cadastro aprovado</p>
