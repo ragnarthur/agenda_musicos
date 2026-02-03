@@ -1328,6 +1328,24 @@ class MusicianRequestSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class MusicianRequestPublicStatusSerializer(serializers.ModelSerializer):
+    """Serializer público para status de solicitação (sem dados sensíveis)."""
+
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
+
+    class Meta:
+        model = MusicianRequest
+        fields = [
+            "id",
+            "status",
+            "status_display",
+            "reviewed_at",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = fields
+
+
 class MusicianRequestCreateSerializer(serializers.ModelSerializer):
     """Serializer para criação de solicitação (público)"""
 
@@ -1843,16 +1861,22 @@ class AdminCreateSerializer(serializers.ModelSerializer):
     """Serializer para criar novo admin (apenas owners)"""
 
     password = serializers.CharField(write_only=True, required=True, min_length=8)
+    is_superuser = serializers.BooleanField(write_only=True, required=False, default=False)
 
     class Meta:
         model = User
-        fields = ["username", "email", "password", "first_name", "last_name"]
+        fields = ["username", "email", "password", "first_name", "last_name", "is_superuser"]
 
     def create(self, validated_data):
+        request = self.context.get("request")
+        allow_superuser = bool(request and getattr(request.user, "is_superuser", False))
+        make_superuser = validated_data.pop("is_superuser", False) and allow_superuser
+        password = validated_data.pop("password")
+
         user = User(**validated_data)
-        user.set_password(validated_data.pop("password"))
+        user.set_password(password)
         user.is_staff = True
-        user.is_superuser = True
+        user.is_superuser = make_superuser
         user.save()
         return user
 

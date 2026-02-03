@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from django.db.models import Count, Q, Sum
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
@@ -14,8 +14,10 @@ from .serializers import (
     CitySerializer,
     EventListSerializer,
     MusicianRequestAdminSerializer,
+    MusicianRequestPublicStatusSerializer,
     MusicianRequestSerializer,
 )
+from .throttles import PublicRateThrottle
 
 
 @api_view(["GET"])
@@ -87,13 +89,21 @@ def approve_booking_request(request, pk):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        request_obj.status = "approved"
-        request_obj.reviewed_by = request.user
-        request_obj.reviewed_at = timezone.now()
-        request_obj.save()
+        notes = request.data.get("admin_notes", "")
+        invite_token = request_obj.approve(request.user, notes)
 
         # Email is sent via email_service.send_approval_notification in view_functions.py
-        return Response({"message": "Request approved successfully"})
+        return Response(
+            {
+                "message": "Request approved successfully",
+                "invite_token": invite_token,
+                "invite_expires_at": (
+                    request_obj.invite_expires_at.isoformat()
+                    if request_obj.invite_expires_at
+                    else None
+                ),
+            }
+        )
     except MusicianRequest.DoesNotExist:
         return Response(
             {"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND
@@ -116,11 +126,7 @@ def reject_booking_request(request, pk):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        request_obj.status = "rejected"
-        request_obj.admin_notes = rejection_reason  # Store reason in admin_notes
-        request_obj.reviewed_by = request.user
-        request_obj.reviewed_at = timezone.now()
-        request_obj.save()
+        request_obj.reject(request.user, rejection_reason)
 
         # Email is sent via email_service.send_rejection_notification in view_functions.py
         return Response({"message": "Request rejected successfully"})
@@ -137,7 +143,9 @@ def reject_booking_request(request, pk):
 def admin_events_list(request):
     """Get all events for admin management"""
     try:
-        events = Event.objects.all().order_by("-date")
+        events = Event.objects.select_related("created_by", "approved_by").order_by(
+            "-event_date"
+        )
         serializer = EventListSerializer(events, many=True)
         return Response(serializer.data)
     except Exception as e:
@@ -146,6 +154,7 @@ def admin_events_list(request):
 
 @api_view(["GET"])
 @permission_classes([])  # Public endpoint
+@throttle_classes([PublicRateThrottle])
 def public_request_status(request):
     """Public endpoint to check request status by email or request ID"""
     try:
@@ -167,14 +176,14 @@ def public_request_status(request):
                 return Response([], status=status.HTTP_200_OK)
 
             # Return only the most recent request
-            serializer = MusicianRequestSerializer(requests.first())
+            serializer = MusicianRequestPublicStatusSerializer(requests.first())
             return Response(serializer.data)
 
         elif request_id:
             # Search by request ID
             try:
                 request_obj = MusicianRequest.objects.get(id=request_id)
-                serializer = MusicianRequestSerializer(request_obj)
+                serializer = MusicianRequestPublicStatusSerializer(request_obj)
                 return Response(serializer.data)
             except MusicianRequest.DoesNotExist:
                 return Response(
