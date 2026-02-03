@@ -27,7 +27,8 @@ const Navbar: React.FC = memo(() => {
   const navigate = useNavigate();
   const [openMore, setOpenMore] = useState(false);
   const [openDesktopMore, setOpenDesktopMore] = useState(false);
-  const desktopMoreRef = useRef<HTMLDivElement | null>(null);
+  const desktopMoreFullRef = useRef<HTMLDivElement | null>(null);
+  const desktopMoreCompactRef = useRef<HTMLDivElement | null>(null);
 
   // Use SWR hook for notifications - shared across Navbar and Dashboard
   const { pendingMyResponse, pendingApproval } = useNotifications();
@@ -42,9 +43,14 @@ const Navbar: React.FC = memo(() => {
 
   useEffect(() => {
     const onClickOutside = (event: MouseEvent) => {
-      if (desktopMoreRef.current && !desktopMoreRef.current.contains(event.target as Node)) {
-        setOpenDesktopMore(false);
+      const target = event.target as Node;
+      if (
+        desktopMoreFullRef.current?.contains(target) ||
+        desktopMoreCompactRef.current?.contains(target)
+      ) {
+        return;
       }
+      setOpenDesktopMore(false);
     };
     document.addEventListener('mousedown', onClickOutside);
     return () => document.removeEventListener('mousedown', onClickOutside);
@@ -93,7 +99,7 @@ const Navbar: React.FC = memo(() => {
               label="Datas Disponíveis"
             />
             <AppNavLink to="/marketplace" icon={<Megaphone className="h-5 w-5" />} label="Vagas" />
-            <div className="relative">
+            <div className="relative" ref={desktopMoreFullRef}>
               <button
                 type="button"
                 onClick={() => setOpenDesktopMore(prev => !prev)}
@@ -106,7 +112,6 @@ const Navbar: React.FC = memo(() => {
               </button>
               {openDesktopMore && (
                 <div
-                  ref={desktopMoreRef}
                   className="absolute right-0 mt-2 w-60 rounded-xl bg-slate-950/95 border border-white/10 shadow-2xl shadow-black/40 p-2 z-50"
                 >
                   <RouterNavLink
@@ -185,7 +190,7 @@ const Navbar: React.FC = memo(() => {
             />
             <AppNavLinkCompact to="/musicos" icon={<Users className="h-5 w-5" />} label="Músicos" />
             <AppNavLinkCompact to="/marketplace" icon={<Megaphone className="h-5 w-5" />} label="Vagas" />
-            <div className="relative">
+            <div className="relative" ref={desktopMoreCompactRef}>
               <button
                 type="button"
                 onClick={() => setOpenDesktopMore(prev => !prev)}
@@ -199,7 +204,6 @@ const Navbar: React.FC = memo(() => {
               </button>
               {openDesktopMore && (
                 <div
-                  ref={desktopMoreRef}
                   className="absolute right-0 mt-2 w-60 rounded-xl bg-slate-950/95 border border-white/10 shadow-2xl shadow-black/40 p-2 z-50"
                 >
                   <RouterNavLink
