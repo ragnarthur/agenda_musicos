@@ -11,11 +11,14 @@ import {
   Sparkles,
   Loader2,
   FileText,
+  Music,
+  Check,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Layout from '../components/Layout/Layout';
 import { musicianService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useInstruments } from '../hooks/useInstruments';
 import type { EquipmentItem, MusicianUpdatePayload, Musician } from '../types';
 import { formatCurrency } from '../utils/formatting';
 import { logError } from '../utils/logger';
@@ -69,12 +72,14 @@ const handleCurrencyBlur =
 const FinancialSettings: React.FC = () => {
   const { refreshUser, user } = useAuth();
   const navigate = useNavigate();
+  const { instruments: availableInstruments, loading: loadingInstruments } = useInstruments();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [bio, setBio] = useState('');
   const [baseFee, setBaseFee] = useState('');
   const [travelFee, setTravelFee] = useState('');
   const [equipmentRows, setEquipmentRows] = useState<EquipmentRow[]>(DEFAULT_EQUIPMENTS);
+  const [selectedInstruments, setSelectedInstruments] = useState<string[]>([]);
 
   const hydrateForm = useCallback((musician: Musician) => {
     setBio(musician.bio ?? '');
@@ -89,6 +94,13 @@ const FinancialSettings: React.FC = () => {
           }))
         : DEFAULT_EQUIPMENTS;
     setEquipmentRows(rows);
+
+    // Carregar instrumentos selecionados
+    if (musician.instruments && musician.instruments.length > 0) {
+      setSelectedInstruments(musician.instruments);
+    } else if (musician.instrument) {
+      setSelectedInstruments([musician.instrument]);
+    }
   }, []);
 
   const loadProfile = useCallback(async () => {
@@ -122,6 +134,19 @@ const FinancialSettings: React.FC = () => {
     );
   };
 
+  const toggleInstrument = (instrumentName: string) => {
+    setSelectedInstruments(prev => {
+      if (prev.includes(instrumentName)) {
+        return prev.filter(i => i !== instrumentName);
+      }
+      if (prev.length >= 10) {
+        toast.error('Máximo de 10 instrumentos permitidos');
+        return prev;
+      }
+      return [...prev, instrumentName];
+    });
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setSaving(true);
@@ -136,6 +161,9 @@ const FinancialSettings: React.FC = () => {
           price: parseDecimal(item.price),
         }))
         .filter(item => item.name.length > 0),
+      // Instrumentos: o primeiro é o principal
+      instrument: selectedInstruments[0] || '',
+      instruments: selectedInstruments,
     };
 
     try {
@@ -220,6 +248,84 @@ const FinancialSettings: React.FC = () => {
               />
               <p className="text-xs text-slate-400 mt-1">{bio.length}/350 caracteres</p>
             </div>
+          </div>
+
+          {/* Instrumentos */}
+          <div className="bg-slate-800/50 rounded-xl border border-slate-700/60 p-5 shadow-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <Music className="h-5 w-5 text-emerald-300" />
+              <div>
+                <h2 className="text-lg font-semibold text-white">Instrumentos</h2>
+                <p className="text-slate-300 text-sm">
+                  Selecione os instrumentos que você toca. O primeiro será o principal.
+                </p>
+              </div>
+            </div>
+
+            {loadingInstruments ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-emerald-400" />
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                  {availableInstruments.map(inst => {
+                    const isSelected = selectedInstruments.includes(inst.name);
+                    const isPrimary = selectedInstruments[0] === inst.name;
+                    return (
+                      <button
+                        key={inst.id}
+                        type="button"
+                        onClick={() => toggleInstrument(inst.name)}
+                        className={`
+                          flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all
+                          ${
+                            isSelected
+                              ? isPrimary
+                                ? 'border-emerald-400 bg-emerald-500/20 text-emerald-200'
+                                : 'border-sky-400 bg-sky-500/20 text-sky-200'
+                              : 'border-slate-600 bg-slate-900/50 text-slate-300 hover:border-slate-500 hover:bg-slate-800'
+                          }
+                        `}
+                      >
+                        <span
+                          className={`
+                            h-4 w-4 rounded border flex items-center justify-center text-xs
+                            ${
+                              isSelected
+                                ? isPrimary
+                                  ? 'bg-emerald-500 border-emerald-500 text-white'
+                                  : 'bg-sky-500 border-sky-500 text-white'
+                                : 'border-slate-500 text-transparent'
+                            }
+                          `}
+                        >
+                          {isSelected && <Check className="h-3 w-3" />}
+                        </span>
+                        <span className="truncate">{inst.display_name}</span>
+                        {isPrimary && (
+                          <span className="ml-auto text-xs bg-emerald-500/30 px-1.5 py-0.5 rounded">
+                            Principal
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {selectedInstruments.length > 0 && (
+                  <p className="mt-3 text-xs text-emerald-400">
+                    {selectedInstruments.length} instrumento{selectedInstruments.length > 1 ? 's' : ''} selecionado{selectedInstruments.length > 1 ? 's' : ''}
+                  </p>
+                )}
+
+                {selectedInstruments.length === 0 && (
+                  <p className="mt-3 text-xs text-amber-400">
+                    Selecione pelo menos um instrumento
+                  </p>
+                )}
+              </>
+            )}
           </div>
 
           {/* Cachê base */}

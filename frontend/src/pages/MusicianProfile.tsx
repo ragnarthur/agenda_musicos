@@ -28,7 +28,7 @@ import { connectionService } from '../services/connectionService';
 import { useAuth } from '../contexts/AuthContext';
 import { getErrorMessage, showToast } from '../utils/toast';
 import { logError } from '../utils/logger';
-import { formatInstrumentLabel, formatCurrency } from '../utils/formatting';
+import { formatInstrumentLabel, formatCurrency, getMusicianInstruments } from '../utils/formatting';
 import type { Musician, MusicianBadge } from '../types';
 
 interface Connection {
@@ -490,7 +490,7 @@ const MusicianProfile: React.FC = () => {
             {/* Right Column (1/3 width) */}
             <div className="space-y-6">
               {/* Genres Section */}
-              {musician.instruments && musician.instruments.length > 0 && (
+              {getMusicianInstruments(musician).length > 0 && (
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
                   <div className="flex items-center gap-2 mb-4">
                     <Music className="h-5 w-5 text-indigo-500" />
@@ -499,7 +499,7 @@ const MusicianProfile: React.FC = () => {
                     </h2>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {musician.instruments.map((inst, idx) => (
+                    {getMusicianInstruments(musician).map((inst, idx) => (
                       <span
                         key={idx}
                         className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full text-sm border border-indigo-200 dark:border-indigo-700/50"

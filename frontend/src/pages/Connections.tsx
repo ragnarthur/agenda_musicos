@@ -20,8 +20,8 @@ import { StatCard } from '../components/ui/StatCard';
 import TiltCard from '../components/common/TiltCard';
 import { connectionService } from '../services/connectionService';
 import { useConnectionsPage, useConnectionsPaginated } from '../hooks/useConnections';
-import type { Connection, ConnectionType, Musician } from '../types';
-import { INSTRUMENT_LABELS } from '../utils/formatting';
+import type { Connection, ConnectionType } from '../types';
+import { INSTRUMENT_LABELS, getMusicianInstruments } from '../utils/formatting';
 import InstrumentIcon from '../components/common/InstrumentIcon';
 import { showToast } from '../utils/toast';
 import { logError } from '../utils/logger';
@@ -47,13 +47,6 @@ const connectionIcons: Record<string, React.FC<{ className?: string }>> = {
 
 // Tipos de conexão ativos (sem call_later)
 const activeConnectionTypes = ['follow', 'recommend', 'played_with'] as const;
-
-const getMusicianInstruments = (musician: Musician): string[] => {
-  if (musician.instruments && musician.instruments.length > 0) {
-    return musician.instruments;
-  }
-  return musician.instrument ? [musician.instrument] : [];
-};
 
 const getInstrumentLabel = (instrument: string): string => {
   if (INSTRUMENT_LABELS[instrument]) return INSTRUMENT_LABELS[instrument];
@@ -349,10 +342,10 @@ const Connections: React.FC = () => {
                     <input
                       value={search}
                       onChange={e => setSearch(e.target.value)}
-                      className="input-field h-12 pl-11 pr-10"
+                      className="input-field h-12 pl-10 pr-10"
                       placeholder="Nome ou @username"
                     />
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <AnimatePresence>
                       {search && (
                         <motion.button
@@ -376,7 +369,7 @@ const Connections: React.FC = () => {
                     <select
                       value={instrumentFilter}
                       onChange={e => setInstrumentFilter(e.target.value)}
-                      className="input-field h-12 pl-11 appearance-none cursor-pointer"
+                      className="input-field h-12 pl-10 appearance-none cursor-pointer"
                     >
                       <option value="all">Todos instrumentos</option>
                       {Object.entries(INSTRUMENT_LABELS).map(([key, label]) => (
@@ -385,7 +378,7 @@ const Connections: React.FC = () => {
                         </option>
                       ))}
                     </select>
-                    <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+                    <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
                   </div>
                 </div>
               </div>

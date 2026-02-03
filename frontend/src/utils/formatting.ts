@@ -23,6 +23,21 @@ export function getMusicianDisplayName(musician: Musician | null | undefined): s
 }
 
 /**
+ * Retorna a lista de instrumentos para um músico.
+ * Usa `instruments` como fonte única de verdade.
+ * Fallback para `instrument` apenas se `instruments` estiver vazio.
+ */
+export function getMusicianInstruments(musician: Musician | null | undefined): string[] {
+  if (!musician) return [];
+
+  if (musician.instruments && musician.instruments.length > 0) {
+    return musician.instruments;
+  }
+
+  return musician.instrument ? [musician.instrument] : [];
+}
+
+/**
  * Formata o label do músico com nome e instrumento.
  */
 export function formatMusicianLabel(musician: Musician): string {

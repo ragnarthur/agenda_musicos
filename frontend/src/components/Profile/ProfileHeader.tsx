@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Musician } from '../../types';
-import { formatInstrumentLabel } from '../../utils/formatting';
+import { formatInstrumentLabel, getMusicianInstruments } from '../../utils/formatting';
 
 interface ConnectionStatus {
   is_connected: boolean;
@@ -236,23 +236,17 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               )}
 
               <div className="flex flex-wrap gap-2">
-                {musician.instruments && musician.instruments.length > 0
-                  ? musician.instruments.slice(0, 3).map((inst, idx) => (
-                      <motion.span
-                        key={idx}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: idx * 0.1 }}
-                        className="px-2 sm:px-3 py-1 backdrop-blur-sm bg-blue-500/20 dark:bg-blue-400/10 text-blue-800 dark:text-blue-300 rounded-full text-xs sm:text-sm border border-blue-200/30 dark:border-blue-400/20 hover:bg-blue-500/30 dark:hover:bg-blue-400/20 transition-colors"
-                      >
-                        {formatInstrumentLabel(inst)}
-                      </motion.span>
-                    ))
-                  : musician.instrument && (
-                      <span className="px-2 sm:px-3 py-1 backdrop-blur-sm bg-blue-500/20 dark:bg-blue-400/10 text-blue-800 dark:text-blue-300 rounded-full text-xs sm:text-sm border border-blue-200/30 dark:border-blue-400/20">
-                        {formatInstrumentLabel(musician.instrument)}
-                      </span>
-                    )}
+                {getMusicianInstruments(musician).slice(0, 3).map((inst, idx) => (
+                  <motion.span
+                    key={idx}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="px-2 sm:px-3 py-1 backdrop-blur-sm bg-blue-500/20 dark:bg-blue-400/10 text-blue-800 dark:text-blue-300 rounded-full text-xs sm:text-sm border border-blue-200/30 dark:border-blue-400/20 hover:bg-blue-500/30 dark:hover:bg-blue-400/20 transition-colors"
+                  >
+                    {formatInstrumentLabel(inst)}
+                  </motion.span>
+                ))}
               </div>
             </div>
 

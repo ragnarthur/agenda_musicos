@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
 import { useMusiciansPaginated } from '../hooks/useMusicians';
 import type { Musician } from '../types';
-import { formatInstrumentLabel } from '../utils/formatting';
+import { formatInstrumentLabel, getMusicianInstruments } from '../utils/formatting';
 
 const Musicians: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -170,7 +170,6 @@ const Musicians: React.FC = () => {
               const emoji = getInstrumentEmoji(musician.instrument, musician.bio);
               const username = musician.instagram || musician.user?.username || '';
               const contactEmail = musician.public_email || musician.user?.email || '';
-              const instrumentLabel = getInstrumentLabel(musician.instrument);
               const avatarUrl = musician.avatar_url;
               return (
                 <motion.div
@@ -246,20 +245,14 @@ const Musicians: React.FC = () => {
 
                     {/* Badges de Instrumentos */}
                     <div className="mt-4 flex flex-wrap gap-2">
-                      {musician.instruments && musician.instruments.length > 0 ? (
-                        musician.instruments.map(inst => (
-                          <span
-                            key={inst}
-                            className="status-chip default transition-transform duration-400 group-hover:-translate-y-0.5"
-                          >
-                            {getInstrumentLabel(inst)}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="status-chip default transition-transform duration-400 group-hover:-translate-y-0.5">
-                          {instrumentLabel}
+                      {getMusicianInstruments(musician).map(inst => (
+                        <span
+                          key={inst}
+                          className="status-chip default transition-transform duration-400 group-hover:-translate-y-0.5"
+                        >
+                          {getInstrumentLabel(inst)}
                         </span>
-                      )}
+                      ))}
                     </div>
                   </Link>
                 </motion.div>
