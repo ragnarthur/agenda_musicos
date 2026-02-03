@@ -18,6 +18,7 @@ from .admin_management_views import (
     update_admin_user,
 )
 from .admin_views import (
+    admin_cancel_booking,
     admin_events_list,
     admin_reports,
     approve_booking_request,
@@ -28,6 +29,9 @@ from .admin_views import (
     city_list_create,
     dashboard_stats,
     dashboard_stats_extended,
+    get_booking_statistics,
+    get_quote_request_audit,
+    list_all_quote_requests,
     public_request_status,
     reject_booking_request,
     requests_by_city,
@@ -46,9 +50,14 @@ from .registration_views import (
 )
 from .view_functions import (  # Musician Request views; Quote Request views; Public views; Contractor views
     approve_musician_request,
+    cancel_booking,
+    cancel_quote_request,
     contractor_accept_proposal,
     create_quote_request,
     create_musician_request,
+    decline_quote_proposal,
+    list_all_musicians_public,
+    list_quote_proposals,
     get_contractor_dashboard,
     get_musician_badges,
     get_musician_connection_status,
@@ -208,6 +217,26 @@ urlpatterns = [
         musician_confirm_booking,
         name="quote-request-confirm",
     ),
+    path(
+        "quotes/<int:request_id>/proposals/",
+        list_quote_proposals,
+        name="quote-request-proposals",
+    ),
+    path(
+        "quotes/<int:request_id>/proposals/<int:proposal_id>/decline/",
+        decline_quote_proposal,
+        name="quote-proposal-decline",
+    ),
+    path(
+        "quotes/<int:request_id>/cancel/",
+        cancel_quote_request,
+        name="quote-request-cancel",
+    ),
+    path(
+        "bookings/<int:request_id>/cancel/",
+        cancel_booking,
+        name="booking-cancel",
+    ),
     # =========================================================================
     # Public (Músicos por cidade, Patrocinadores, Perfil público)
     # =========================================================================
@@ -218,10 +247,13 @@ urlpatterns = [
         name="musician-public-profile",
     ),
     path("organizations/sponsors/", list_sponsors, name="sponsors"),
+    path("musicians/all/", list_all_musicians_public, name="musicians-all"),
     # =========================================================================
     # Contractor (Dashboard, Perfil)
     # =========================================================================
-    path("contractor/dashboard/", get_contractor_dashboard, name="contractor-dashboard"),
+    path(
+        "contractor/dashboard/", get_contractor_dashboard, name="contractor-dashboard"
+    ),
     path("contractor/profile/", update_contractor_profile, name="contractor-profile"),
     # =========================================================================
     # Messages
@@ -258,6 +290,26 @@ urlpatterns = [
         "admin/booking-requests/<int:pk>/reject/",
         reject_booking_request,
         name="admin-booking-request-reject",
+    ),
+    path(
+        "admin/quote-requests/",
+        list_all_quote_requests,
+        name="admin-quote-requests",
+    ),
+    path(
+        "admin/quote-requests/<int:request_id>/audit/",
+        get_quote_request_audit,
+        name="admin-quote-request-audit",
+    ),
+    path(
+        "admin/bookings/<int:request_id>/cancel/",
+        admin_cancel_booking,
+        name="admin-booking-cancel",
+    ),
+    path(
+        "admin/booking-stats/",
+        get_booking_statistics,
+        name="admin-booking-stats",
     ),
     path(
         "admin/events/",

@@ -110,7 +110,9 @@ def upload_avatar(request):
             "Upload de avatar sem perfil de músico | user_id=%s",
             getattr(request.user, "id", None),
         )
-        return Response({"detail": "Perfil não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"detail": "Perfil não encontrado"}, status=status.HTTP_404_NOT_FOUND
+        )
     except ValueError as exc:
         logger.warning(
             "Upload de avatar inválido | user_id=%s",
@@ -122,7 +124,9 @@ def upload_avatar(request):
             "Erro inesperado no upload de avatar | user_id=%s",
             getattr(request.user, "id", None),
         )
-        return Response({"detail": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(
+            {"detail": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 @api_view(["POST"])
@@ -169,7 +173,9 @@ def upload_cover(request):
             "Upload de capa sem perfil de músico | user_id=%s",
             getattr(request.user, "id", None),
         )
-        return Response({"detail": "Perfil não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"detail": "Perfil não encontrado"}, status=status.HTTP_404_NOT_FOUND
+        )
     except ValueError as exc:
         logger.warning(
             "Upload de capa inválido | user_id=%s",
@@ -181,7 +187,9 @@ def upload_cover(request):
             "Erro inesperado no upload de capa | user_id=%s",
             getattr(request.user, "id", None),
         )
-        return Response({"detail": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(
+            {"detail": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 # =============================================================================
@@ -241,7 +249,9 @@ def get_musician_connections(request, musician_id):
                     "full_name": target.user.get_full_name() or target.user.username,
                     "instrument": target.instrument,
                     "avatar": (
-                        request.build_absolute_uri(target.avatar.url) if target.avatar else None
+                        request.build_absolute_uri(target.avatar.url)
+                        if target.avatar
+                        else None
                     ),
                 }
             )
@@ -257,7 +267,9 @@ def get_musician_connections(request, musician_id):
         )
 
     except Musician.DoesNotExist:
-        return Response({"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
+        )
     except Exception:
         logger.exception("Erro ao buscar conexões")
         return Response(
@@ -278,14 +290,20 @@ def get_musician_reviews(request, musician_id):
             .select_related("rated_by", "event")
             .order_by("-created_at")[:10]
         )
-        serializer = MusicianRatingSerializer(reviews, many=True, context={"request": request})
+        serializer = MusicianRatingSerializer(
+            reviews, many=True, context={"request": request}
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     except Musician.DoesNotExist:
-        return Response({"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
+        )
     except Exception as exc:
         logger.exception("Erro ao buscar avaliações")
-        return Response({"detail": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(
+            {"detail": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 @api_view(["GET"])
@@ -306,16 +324,22 @@ def get_musician_badges(request, musician_id):
                     "name": badge.get_badge_type_display(),
                     "description": badge.description,
                     "icon": badge.icon,
-                    "awarded_at": badge.awarded_at.isoformat() if badge.awarded_at else None,
+                    "awarded_at": badge.awarded_at.isoformat()
+                    if badge.awarded_at
+                    else None,
                 }
             )
         return Response(badge_data, status=status.HTTP_200_OK)
 
     except Musician.DoesNotExist:
-        return Response({"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
+        )
     except Exception as exc:
         logger.exception("Erro ao buscar badges")
-        return Response({"detail": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(
+            {"detail": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 @api_view(["GET"])
@@ -362,10 +386,14 @@ def get_musician_stats(request, musician_id):
         )
 
     except Musician.DoesNotExist:
-        return Response({"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
+        )
     except Exception as exc:
         logger.exception("Erro ao buscar estatísticas")
-        return Response({"detail": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(
+            {"detail": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 @api_view(["GET"])
@@ -411,10 +439,14 @@ def get_musician_connection_status(request, musician_id):
         )
 
     except Musician.DoesNotExist:
-        return Response({"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
+        )
     except Exception as exc:
         logger.exception("Erro ao verificar conexão")
-        return Response({"detail": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(
+            {"detail": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 # =============================================================================
@@ -523,7 +555,9 @@ def approve_musician_request(request, request_id):
 
     if musician_request.status != "pending":
         return Response(
-            {"detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"},
+            {
+                "detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"
+            },
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -610,7 +644,9 @@ def reject_musician_request(request, request_id):
 
     if musician_request.status != "pending":
         return Response(
-            {"detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"},
+            {
+                "detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"
+            },
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -625,7 +661,9 @@ def reject_musician_request(request, request_id):
 def validate_invite_token(request):
     token = request.query_params.get("token")
     if not token:
-        return Response({"detail": "Token não fornecido"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"detail": "Token não fornecido"}, status=status.HTTP_400_BAD_REQUEST
+        )
 
     try:
         musician_request = MusicianRequest.objects.get(invite_token=token)
@@ -638,7 +676,9 @@ def validate_invite_token(request):
                 {"detail": "Este convite já foi utilizado"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        return Response({"detail": "Convite expirado"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"detail": "Convite expirado"}, status=status.HTTP_400_BAD_REQUEST
+        )
 
     return Response(
         {
@@ -704,11 +744,15 @@ def list_contractor_quote_requests(request):
 
     contractor = request.user.contractor_profile
     status_filter = request.query_params.get("status")
-    queryset = QuoteRequest.objects.filter(contractor=contractor).order_by("-created_at")
+    queryset = QuoteRequest.objects.filter(contractor=contractor).order_by(
+        "-created_at"
+    )
     if status_filter:
         queryset = queryset.filter(status=status_filter)
 
-    serializer = QuoteRequestSerializer(queryset, many=True, context={"request": request})
+    serializer = QuoteRequestSerializer(
+        queryset, many=True, context={"request": request}
+    )
     return Response(serializer.data)
 
 
@@ -728,7 +772,9 @@ def list_musician_quote_requests(request):
     if status_filter:
         queryset = queryset.filter(status=status_filter)
 
-    serializer = QuoteRequestSerializer(queryset, many=True, context={"request": request})
+    serializer = QuoteRequestSerializer(
+        queryset, many=True, context={"request": request}
+    )
     return Response(serializer.data)
 
 
@@ -816,7 +862,9 @@ def contractor_accept_proposal(request, request_id):
 
     return Response(
         {
-            "request": QuoteRequestSerializer(quote_request, context={"request": request}).data,
+            "request": QuoteRequestSerializer(
+                quote_request, context={"request": request}
+            ).data,
             "booking": BookingSerializer(booking, context={"request": request}).data,
         }
     )
@@ -856,6 +904,148 @@ def musician_confirm_booking(request, request_id):
     return Response(BookingSerializer(booking, context={"request": request}).data)
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def list_quote_proposals(request, request_id):
+    """Lista todas as propostas de um pedido específico"""
+    quote_request = get_object_or_404(QuoteRequest, id=request_id)
+
+    is_contractor = (
+        hasattr(request.user, "contractor_profile")
+        and quote_request.contractor == request.user.contractor_profile
+    )
+    is_musician = (
+        hasattr(request.user, "musician_profile")
+        and quote_request.musician == request.user.musician_profile
+    )
+
+    if not is_contractor and not is_musician:
+        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
+
+    proposals = QuoteProposal.objects.filter(request=quote_request).order_by(
+        "-created_at"
+    )
+    serializer = QuoteProposalSerializer(
+        proposals, many=True, context={"request": request}
+    )
+    return Response(serializer.data)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def decline_quote_proposal(request, request_id, proposal_id):
+    """Contratante recusa uma proposta específica"""
+    quote_request = get_object_or_404(QuoteRequest, id=request_id)
+
+    if not hasattr(request.user, "contractor_profile"):
+        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
+
+    if quote_request.contractor != request.user.contractor_profile:
+        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
+
+    if quote_request.status not in ["pending", "responded"]:
+        return Response(
+            {"detail": "Este pedido não aceita mais propostas"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    proposal = get_object_or_404(QuoteProposal, id=proposal_id, request=quote_request)
+    proposal.status = "declined"
+    proposal.save(update_fields=["status"])
+
+    _log_booking_event(
+        quote_request,
+        "contractor",
+        request.user,
+        "proposta_recusada",
+        {"proposal_id": proposal_id},
+    )
+
+    return Response({"message": "Proposta recusada"})
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def cancel_quote_request(request, request_id):
+    """Contratante cancela pedido de orçamento"""
+    quote_request = get_object_or_404(QuoteRequest, id=request_id)
+
+    if not hasattr(request.user, "contractor_profile"):
+        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
+
+    if quote_request.contractor != request.user.contractor_profile:
+        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
+
+    if quote_request.status in ["confirmed", "completed", "cancelled", "reserved"]:
+        return Response(
+            {"detail": "Não é possível cancelar este pedido"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    reason = request.data.get("reason", "")
+    quote_request.status = "cancelled"
+    quote_request.save(update_fields=["status", "updated_at"])
+
+    QuoteProposal.objects.filter(request=quote_request, status="sent").update(
+        status="expired"
+    )
+
+    _log_booking_event(
+        quote_request,
+        "contractor",
+        request.user,
+        "pedido_cancelado",
+        {"reason": reason},
+    )
+
+    return Response({"message": "Pedido cancelado"})
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def cancel_booking(request, request_id):
+    """Cancela uma reserva (contratante ou músico)"""
+    booking = get_object_or_404(Booking, id=request_id)
+    quote_request = booking.request
+
+    is_contractor = (
+        hasattr(request.user, "contractor_profile")
+        and quote_request.contractor == request.user.contractor_profile
+    )
+    is_musician = (
+        hasattr(request.user, "musician_profile")
+        and quote_request.musician == request.user.musician_profile
+    )
+
+    if not is_contractor and not is_musician:
+        return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
+
+    if booking.status in ["completed", "cancelled"]:
+        return Response(
+            {"detail": "Esta reserva não pode mais ser cancelada"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    reason = request.data.get("reason", "")
+    booking.status = "cancelled"
+    booking.cancel_reason = reason
+    booking.save(update_fields=["status", "cancel_reason"])
+
+    quote_request.status = "cancelled"
+    quote_request.save(update_fields=["status", "updated_at"])
+
+    QuoteProposal.objects.filter(request=quote_request, status="sent").update(
+        status="expired"
+    )
+
+    actor_type = "contractor" if is_contractor else "musician"
+    _log_booking_event(
+        quote_request, actor_type, request.user, "reserva_cancelada", {"reason": reason}
+    )
+
+    return Response({"message": "Reserva cancelada"})
+
+
 # =============================================================================
 # Public/Contractor views
 # =============================================================================
@@ -888,7 +1078,9 @@ def list_musicians_by_city(request):
             Q(instrument__iexact=instrument) | Q(instruments__icontains=instrument)
         )
 
-    serializer = MusicianPublicSerializer(queryset, many=True, context={"request": request})
+    serializer = MusicianPublicSerializer(
+        queryset, many=True, context={"request": request}
+    )
     return Response(serializer.data)
 
 
@@ -916,7 +1108,49 @@ def list_sponsors(request):
         day_offset = date.today().toordinal() % len(sponsors)
         sponsors = sponsors[day_offset:] + sponsors[:day_offset]
 
-    serializer = OrganizationPublicSerializer(sponsors, many=True, context={"request": request})
+    serializer = OrganizationPublicSerializer(
+        sponsors, many=True, context={"request": request}
+    )
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+@throttle_classes([PublicRateThrottle])
+def list_all_musicians_public(request):
+    """Lista músicos de todas as cidades (catálogo público)"""
+    city = request.query_params.get("city")
+    state = request.query_params.get("state")
+    instrument = request.query_params.get("instrument")
+    search = request.query_params.get("search")
+    min_rating = request.query_params.get("min_rating")
+    limit = int(request.query_params.get("limit", 100))
+
+    queryset = Musician.objects.filter(is_active=True).select_related("user")
+
+    if city:
+        queryset = queryset.filter(city__iexact=city)
+    if state:
+        queryset = queryset.filter(state__iexact=state)
+    if instrument:
+        queryset = queryset.filter(
+            Q(instrument__iexact=instrument) | Q(instruments__icontains=instrument)
+        )
+    if search:
+        queryset = queryset.filter(
+            Q(user__first_name__icontains=search)
+            | Q(user__last_name__icontains=search)
+            | Q(instrument__icontains=search)
+        )
+    if min_rating:
+        queryset = queryset.filter(average_rating__gte=min_rating)
+
+    queryset = queryset.order_by("-average_rating", "user__first_name")
+    queryset = queryset[:limit]
+
+    serializer = MusicianPublicSerializer(
+        queryset, many=True, context={"request": request}
+    )
     return Response(serializer.data)
 
 

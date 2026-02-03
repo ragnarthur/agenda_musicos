@@ -7,8 +7,18 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 
-from .models import City, Event, Musician, MusicianRequest
+from .models import (
+    City,
+    Event,
+    Musician,
+    MusicianRequest,
+    QuoteRequest,
+    QuoteProposal,
+    Booking,
+    BookingEvent,
+)
 from .serializers import (
     CityCreateSerializer,
     CitySerializer,
@@ -16,6 +26,10 @@ from .serializers import (
     MusicianRequestAdminSerializer,
     MusicianRequestPublicStatusSerializer,
     MusicianRequestSerializer,
+    QuoteProposalSerializer,
+    QuoteRequestSerializer,
+    BookingSerializer,
+    BookingEventSerializer,
 )
 from .throttles import PublicRateThrottle
 
@@ -189,9 +203,147 @@ def public_request_status(request):
                 return Response(
                     {"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND
                 )
-
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def list_all_quote_requests(request):
+    """Lista todos os pedidos de orçamento com filtros"""
+    from .models import QuoteRequest, QuoteProposal, Booking
+
+    status = request.query_params.get("status")
+    city = request.query_params.get("city")
+    state = request.query_params.get("state")
+
+    queryset = QuoteRequest.objects.select_related(
+        "contractor", "contractor__user", "musician", "musician__user"
+    ).order_by("-created_at")
+
+    if status:
+        queryset = queryset.filter(status=status)
+    if city:
+        queryset = queryset.filter(location_city__iexact=city)
+    if state:
+        queryset = queryset.filter(location_state__iexact=state)
+
+    serializer = QuoteRequestSerializer(queryset, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def get_quote_request_audit(request, request_id):
+    """Retorna detalhes completos e timeline de auditoria do pedido"""
+    from .models import BookingEvent, Booking, QuoteProposal, QuoteRequest
+
+    quote_request = get_object_or_404(QuoteRequest, id=request_id)
+
+    proposals = QuoteProposal.objects.filter(request=quote_request)
+    booking = getattr(quote_request, "booking", None)
+    events = BookingEvent.objects.filter(request=quote_request).select_related(
+        "actor_user"
+    )
+
+    return Response(
+        {
+            "request": QuoteRequestSerializer(quote_request).data,
+            "proposals": QuoteProposalSerializer(proposals, many=True).data,
+            "booking": BookingSerializer(booking).data if booking else None,
+            "events": BookingEventSerializer(events, many=True).data,
+        }
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def admin_cancel_booking(request, request_id):
+    """Admin cancela uma reserva"""
+    from .models import Booking
+
+    booking = get_object_or_404(Booking, id=request_id)
+    reason = request.data.get("admin_reason", "")
+
+    if booking.status in ["completed", "cancelled"]:
+        return Response(
+            {"detail": "Esta reserva não pode mais ser cancelada"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    booking.status = "cancelled"
+    booking.save(update_fields=["status"])
+
+    booking.request.status = "cancelled"
+    booking.request.save(update_fields=["status", "updated_at"])
+
+    return Response({"message": "Reserva cancelada pelo admin"})
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def get_booking_statistics(request):
+    """Estatísticas globais de reservas para admin"""
+    from .models import QuoteRequest, Booking
+    from django.db.models import Count, Q
+    from datetime import timedelta
+    from django.utils import timezone
+
+    now = timezone.now()
+    last_30_days = now - timedelta(days=30)
+
+    total_requests = QuoteRequest.objects.count()
+    pending_requests = QuoteRequest.objects.filter(status="pending").count()
+    total_bookings = Booking.objects.count()
+    confirmed_bookings = Booking.objects.filter(status="confirmed").count()
+    completed_bookings = Booking.objects.filter(status="completed").count()
+    cancelled_bookings = Booking.objects.filter(status="cancelled").count()
+
+    requests_last_30d = QuoteRequest.objects.filter(
+        created_at__gte=last_30_days
+    ).count()
+    bookings_last_30d = Booking.objects.filter(reserved_at__gte=last_30_days).count()
+
+    conversion_rate = (
+        (confirmed_bookings / total_requests * 100) if total_requests > 0 else 0
+    )
+
+    top_musicians = (
+        Booking.objects.select_related("request__musician__user")
+        .values(
+            "request__musician",
+            "request__musician__user__first_name",
+            "request__musician__user__last_name",
+        )
+        .annotate(booking_count=Count("id"))
+        .order_by("-booking_count")[:10]
+    )
+
+    top_cities = (
+        QuoteRequest.objects.values("location_city", "location_state")
+        .annotate(request_count=Count("id"))
+        .order_by("-request_count")[:10]
+    )
+
+    return Response(
+        {
+            "global": {
+                "total_requests": total_requests,
+                "pending_requests": pending_requests,
+                "total_bookings": total_bookings,
+                "confirmed_bookings": confirmed_bookings,
+                "completed_bookings": completed_bookings,
+                "cancelled_bookings": cancelled_bookings,
+                "conversion_rate": round(conversion_rate, 2),
+            },
+            "last_30_days": {
+                "requests": requests_last_30d,
+                "bookings": bookings_last_30d,
+            },
+            "top_musicians": list(top_musicians),
+            "top_cities": list(top_cities),
+        }
+    )
 
 
 @api_view(["GET"])
