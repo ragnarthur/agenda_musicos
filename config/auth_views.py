@@ -400,6 +400,12 @@ class GoogleAuthView(CookieTokenMixin, APIView):
             ContractorProfile.objects.filter(user=user, is_active=True).first()
         )
 
+        if not contractor_profile and not has_musician_profile:
+            return Response(
+                {"detail": "Conta sem perfil ativo."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         # Gera tokens
         refresh = RefreshToken.for_user(user)
         tokens = {
@@ -420,10 +426,8 @@ class GoogleAuthView(CookieTokenMixin, APIView):
                 "id": contractor_profile.id,
                 "name": contractor_profile.name,
             }
-        elif has_musician_profile:
-            response_data["user_type"] = "musician"
         else:
-            response_data["user_type"] = "unknown"
+            response_data["user_type"] = "musician"
 
         response = Response(response_data)
         self.set_auth_cookies(response, tokens)

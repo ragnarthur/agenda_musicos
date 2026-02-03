@@ -724,6 +724,13 @@ def create_quote_request(request):
     serializer = QuoteRequestCreateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
+    musician = serializer.validated_data.get("musician")
+    if musician and not musician.is_active:
+        return Response(
+            {"detail": "Este músico não está disponível para novos pedidos."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     quote_request = serializer.save(contractor=contractor)
     _log_booking_event(quote_request, "contractor", request.user, "pedido_criado")
 
@@ -815,6 +822,12 @@ def musician_send_proposal(request, request_id):
     if quote_request.musician != musician:
         return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
 
+    if quote_request.status not in ["pending", "responded"]:
+        return Response(
+            {"detail": "Este pedido não aceita novas propostas."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     serializer = QuoteProposalCreateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
@@ -844,8 +857,24 @@ def contractor_accept_proposal(request, request_id):
     if quote_request.contractor != request.user.contractor_profile:
         return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
 
+    if quote_request.status not in ["pending", "responded"]:
+        return Response(
+            {"detail": "Este pedido não pode ser reservado."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     proposal_id = request.data.get("proposal_id")
+    if not proposal_id:
+        return Response(
+            {"detail": "proposal_id é obrigatório."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     proposal = get_object_or_404(QuoteProposal, id=proposal_id, request=quote_request)
+    if proposal.status != "sent":
+        return Response(
+            {"detail": "Esta proposta não está disponível para aceite."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     QuoteProposal.objects.filter(request=quote_request).exclude(id=proposal.id).update(
         status="declined"
@@ -886,10 +915,21 @@ def musician_confirm_booking(request, request_id):
     if quote_request.musician != musician:
         return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
 
+    if quote_request.status != "reserved":
+        return Response(
+            {"detail": "Este pedido ainda não foi reservado."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     booking = getattr(quote_request, "booking", None)
     if not booking:
         return Response(
             {"detail": "Reserva não encontrada."}, status=status.HTTP_404_NOT_FOUND
+        )
+    if booking.status != "reserved":
+        return Response(
+            {"detail": "Esta reserva não pode ser confirmada."},
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
     booking.status = "confirmed"

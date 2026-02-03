@@ -1587,6 +1587,16 @@ class QuoteRequestCreateSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
+        event_date = attrs.get("event_date")
+        if event_date and event_date < timezone.localdate():
+            raise serializers.ValidationError(
+                {"event_date": "A data do evento não pode estar no passado."}
+            )
+        duration_hours = attrs.get("duration_hours")
+        if duration_hours is not None and duration_hours <= 0:
+            raise serializers.ValidationError(
+                {"duration_hours": "A duração deve ser maior que zero."}
+            )
         attrs["event_type"] = sanitize_string(
             attrs["event_type"], max_length=120, allow_empty=False
         )

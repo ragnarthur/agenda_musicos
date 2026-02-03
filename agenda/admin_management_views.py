@@ -70,7 +70,7 @@ def list_contractors(request):
 
 
 @api_view(["DELETE"])
-@permission_classes([IsAuthenticated, IsAdminUser])
+@permission_classes([IsAuthenticated, IsAdminUser, IsAppOwner])
 def delete_contractor(request, pk):
     """Deleta perfil de contratante"""
     try:

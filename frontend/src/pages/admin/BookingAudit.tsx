@@ -5,13 +5,9 @@ import {
   Search,
   Calendar,
   MapPin,
-  DollarSign,
   TrendingUp,
-  Users,
   CheckCircle,
-  XCircle,
   Clock,
-  ChevronDown,
   ArrowLeft,
   Trash2,
   Building2,
@@ -28,7 +24,6 @@ import {
   type BookingEvent,
 } from '../../services/publicApi';
 import { showToast } from '../../utils/toast';
-import AdminBreadcrumbs from '../../components/admin/AdminBreadcrumbs';
 
 export default function BookingAudit() {
   const [stats, setStats] = useState<BookingStatistics | null>(null);
@@ -186,7 +181,12 @@ export default function BookingAudit() {
     <div>
       {!showDetails ? (
         <>
-          <AdminBreadcrumbs items={[{ label: 'Auditoria de Reservas', href: '' }]} />
+          <div className="flex items-center gap-2 mb-6">
+            <ClipboardList className="w-6 h-6 text-indigo-600" />
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Auditoria de Reservas
+            </h1>
+          </div>
 
           {/* Estatísticas Globais */}
           {stats && (
