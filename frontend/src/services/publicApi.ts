@@ -104,6 +104,55 @@ export interface QuoteProposal {
   created_at: string;
 }
 
+export interface Booking {
+  id: number;
+  request: number;
+  status: 'reserved' | 'confirmed' | 'completed' | 'cancelled';
+  status_display: string;
+  reserved_at: string;
+  confirmed_at: string | null;
+  completed_at: string | null;
+  cancel_reason: string | null;
+}
+
+export interface BookingEvent {
+  id: number;
+  request: number;
+  actor_type: 'contractor' | 'musician' | 'system' | 'admin';
+  actor_user: number | null;
+  actor_name: string | null;
+  action: string;
+  metadata: Record<string, any> | null;
+  created_at: string;
+}
+
+export interface BookingStatistics {
+  global: {
+    total_requests: number;
+    pending_requests: number;
+    total_bookings: number;
+    confirmed_bookings: number;
+    completed_bookings: number;
+    cancelled_bookings: number;
+    conversion_rate: number;
+  };
+  last_30_days: {
+    requests: number;
+    bookings: number;
+  };
+  top_musicians: Array<{
+    request__musician: number;
+    request__musician__user__first_name: string;
+    request__musician__user__last_name: string;
+    booking_count: number;
+  }>;
+  top_cities: Array<{
+    location_city: string;
+    location_state: string;
+    request_count: number;
+  }>;
+}
+
 export interface Organization {
   id: number;
   name: string;
@@ -370,6 +419,30 @@ export const quoteRequestService = {
     const response = await api.get('/messages/unread-count/');
     return response.data;
   },
+
+  // Listar propostas de um pedido
+  listProposals: async (requestId: number): Promise<QuoteProposal[]> => {
+    const response = await api.get(`/quotes/${requestId}/proposals/`);
+    return response.data;
+  },
+
+  // Contratante - recusar proposta
+  declineProposal: async (requestId: number, proposalId: number): Promise<{ message: string }> => {
+    const response = await api.post(`/quotes/${requestId}/proposals/${proposalId}/decline/`);
+    return response.data;
+  },
+
+  // Contratante - cancelar pedido
+  cancelRequest: async (requestId: number): Promise<{ message: string }> => {
+    const response = await api.post(`/quotes/${requestId}/cancel/`);
+    return response.data;
+  },
+
+  // Cancelar reserva (contratante ou músico)
+  cancelBooking: async (requestId: number, reason: string): Promise<{ message: string }> => {
+    const response = await api.post(`/bookings/${requestId}/cancel/`, { reason });
+    return response.data;
+  },
 };
 
 // =============================================================================
@@ -400,6 +473,24 @@ export const publicMusicianService = {
     const response = await api.get('/organizations/sponsors/', {
       params: { city, state },
     });
+    return response.data;
+  },
+};
+
+// =============================================================================
+// All Musicians Service (Catálogo Global)
+// =============================================================================
+
+export const allMusiciansService = {
+  list: async (params?: {
+    city?: string;
+    state?: string;
+    instrument?: string;
+    search?: string;
+    min_rating?: string;
+    limit?: number;
+  }): Promise<MusicianPublic[]> => {
+    const response = await api.get('/musicians/all/', { params });
     return response.data;
   },
 };
@@ -593,6 +684,41 @@ export const adminContractorService = {
     deleted_by: string;
   }> => {
     const response = await api.delete(`/admin/contractors/${id}/delete/`);
+    return response.data;
+  },
+};
+
+// =============================================================================
+// Admin Booking Service
+// =============================================================================
+
+export const adminBookingService = {
+  listAllRequests: async (params?: {
+    status?: string;
+    city?: string;
+    state?: string;
+  }): Promise<QuoteRequest[]> => {
+    const response = await api.get('/admin/quote-requests/', { params });
+    return response.data;
+  },
+
+  getAuditDetails: async (requestId: number): Promise<{
+    request: QuoteRequest;
+    proposals: QuoteProposal[];
+    booking: Booking | null;
+    events: BookingEvent[];
+  }> => {
+    const response = await api.get(`/admin/quote-requests/${requestId}/audit/`);
+    return response.data;
+  },
+
+  cancelBooking: async (requestId: number, adminReason: string): Promise<{ message: string }> => {
+    const response = await api.post(`/admin/bookings/${requestId}/cancel/`, { admin_reason: adminReason });
+    return response.data;
+  },
+
+  getStatistics: async (): Promise<BookingStatistics> => {
+    const response = await api.get('/admin/booking-stats/');
     return response.data;
   },
 };
