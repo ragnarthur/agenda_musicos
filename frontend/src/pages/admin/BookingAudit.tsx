@@ -129,11 +129,11 @@ export default function BookingAudit() {
   const getEventIcon = (actorType: string) => {
     switch (actorType) {
       case 'contractor':
-        return <Building2 className="w-4 h-4 text-blue-600" />;
+        return <ClipboardList className="w-4 h-4 text-blue-600" />;
       case 'musician':
-        return <Music2 className="w-4 h-4 text-purple-600" />;
+        return <Users className="w-4 h-4 text-purple-600" />;
       case 'admin':
-        return <Shield className="w-4 h-4 text-red-600" />;
+        return <ArrowLeft className="w-4 h-4 text-red-600" />;
       default:
         return <Clock className="w-4 h-4 text-gray-400" />;
     }

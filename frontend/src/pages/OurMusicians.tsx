@@ -46,6 +46,13 @@ export default function OurMusicians() {
         min_rating: minRating || undefined,
         limit: 100,
       };
+      setMusicians(data);
+    } catch (error) {
+      console.error('Erro ao carregar músicos:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
       
       const data = await allMusiciansService.list(params);
       setMusicians(data);
@@ -54,10 +61,6 @@ export default function OurMusicians() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSearch = () => {
-    loadMusicians();
   };
 
   const handleRequestQuote = (musicianId: number) => {
