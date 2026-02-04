@@ -1123,11 +1123,16 @@ def list_musicians_by_city(request):
     paginator = PageNumberPagination()
     paginator.page_size = 50
     page = paginator.paginate_queryset(queryset, request)
+    if page is not None:
+        serializer = MusicianPublicSerializer(
+            page, many=True, context={"request": request}
+        )
+        return paginator.get_paginated_response(serializer.data)
 
     serializer = MusicianPublicSerializer(
-        page, many=True, context={"request": request}
+        queryset, many=True, context={"request": request}
     )
-    return paginator.get_paginated_response(serializer.data)
+    return Response(serializer.data)
 
 
 @api_view(["GET"])

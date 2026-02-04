@@ -459,7 +459,10 @@ export const publicMusicianService = {
     const response = await api.get('/musicians/public-by-city/', {
       params: { city, state, instrument },
     });
-    return response.data;
+    const payload = response.data as
+      | { results?: MusicianPublic[] }
+      | MusicianPublic[];
+    return Array.isArray(payload) ? payload : payload.results ?? [];
   },
 
   // Obter perfil público de um músico
