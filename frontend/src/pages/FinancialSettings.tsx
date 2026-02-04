@@ -478,7 +478,7 @@ const FinancialSettings: React.FC = () => {
             <div className="space-y-3">
               {equipmentRows.map((item, index) => (
                 <div
-                  key={`${item.name}-${index}`}
+                  key={index}
                   className="grid grid-cols-1 sm:grid-cols-12 gap-3 bg-slate-900/50 border border-slate-700/60 rounded-lg p-3"
                 >
                   <div className="sm:col-span-7">
