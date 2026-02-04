@@ -9,12 +9,10 @@ import {
   Megaphone,
   HeartHandshake,
   Menu,
-  X,
   Bell,
   UserCheck,
   Wallet,
   Shield,
-  User,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../hooks/useNotifications';
@@ -27,13 +25,11 @@ const Navbar: React.FC = memo(() => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [openMore, setOpenMore] = useState(false);
   const [openDesktopMore, setOpenDesktopMore] = useState(false);
 
   // Use SWR hook for notifications - shared across Navbar and Dashboard
   const { pendingMyResponse, pendingApproval } = useNotifications();
 
-  const displayName = user?.full_name || user?.user?.first_name || user?.user?.username || 'Conta';
   const isStaff = Boolean(user?.user?.is_staff);
 
   const handleLogout = useCallback(async () => {
@@ -65,7 +61,6 @@ const Navbar: React.FC = memo(() => {
 
   useEffect(() => {
     setOpenDesktopMore(false);
-    setOpenMore(false);
   }, [location.pathname]);
 
   return (
@@ -323,154 +318,23 @@ const Navbar: React.FC = memo(() => {
           </div>
         </div>
 
-        {/* Navbar Mobile */}
-        <div className="md:hidden relative pb-3">
-          <div className="mb-2 max-w-[calc(100vw-2rem)]">
-            <CityBadge />
-          </div>
-          <div className="flex items-center gap-1 xs:gap-1.5 overflow-x-auto scrollbar-hide -mx-3 px-3 pb-1">
+        {/* Navbar Mobile - Simplificada */}
+        <div className="md:hidden flex items-center justify-between py-2">
+          <CityBadge />
+          <div className="flex items-center gap-2">
             <Link
-              to={`/musicos/${user?.id}`}
-              className="inline-flex items-center gap-1 rounded-full border border-primary-400/30 bg-primary-500/20 px-2 xs:px-2.5 py-2 text-[11px] xs:text-xs font-semibold text-primary-100 hover:bg-primary-500/30 transition-colors active:scale-95 whitespace-nowrap flex-shrink-0 min-h-[40px] sm:px-3 sm:py-2.5"
+              to="/configuracoes/notificacoes"
+              className="relative p-2 text-slate-200 hover:text-white transition-colors"
             >
-              <User className="h-4 w-4 flex-shrink-0" />
-              <span>Perfil</span>
-            </Link>
-            <Link
-              to="/eventos"
-              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 xs:px-2.5 py-2 text-[11px] xs:text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors active:scale-95 whitespace-nowrap flex-shrink-0 min-h-[40px] sm:px-3 sm:py-2.5"
-            >
-              <Calendar className="h-4 w-4 flex-shrink-0" />
-              <span>Eventos</span>
+              <Bell className="h-5 w-5" />
               {pendingMyResponse > 0 && (
-                <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                <span className="absolute top-0.5 right-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 min-w-4 px-1 flex items-center justify-center">
                   {pendingMyResponse}
                 </span>
               )}
             </Link>
-            <Link
-              to="/disponibilidades"
-              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 xs:px-2.5 py-2 text-[11px] xs:text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors active:scale-95 whitespace-nowrap flex-shrink-0 min-h-[40px] sm:px-3 sm:py-2.5"
-            >
-              <Clock className="h-4 w-4 flex-shrink-0" />
-              <span>Datas</span>
-            </Link>
-            <button
-              onClick={() => setOpenMore(prev => !prev)}
-              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 xs:px-2.5 py-2 text-[11px] xs:text-xs font-semibold text-slate-100 hover:bg-white/10 transition-colors active:scale-95 whitespace-nowrap flex-shrink-0 min-h-[40px] sm:px-3 sm:py-2.5"
-              aria-expanded={openMore}
-              aria-controls="mobile-more-menu"
-            >
-              {openMore ? <X className="h-4 w-4 flex-shrink-0" /> : <Menu className="h-4 w-4 flex-shrink-0" />}
-              <span>Mais</span>
-              {pendingApproval > 0 && (
-                <span className="rounded-full bg-yellow-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
-                  {pendingApproval}
-                </span>
-              )}
-            </button>
+            <ThemeToggle />
           </div>
-
-          {/* Menu Expandido "Mais" */}
-          {openMore && (
-            <div
-              id="mobile-more-menu"
-              className="absolute left-0 right-0 top-full mt-2 bg-slate-950/95 border border-white/10 shadow-2xl shadow-black/40 p-3 space-y-2 max-h-[70vh] overflow-y-auto z-50"
-            >
-              <div className="rounded-xl border border-white/10 bg-slate-900/70 px-3 py-2">
-                <p className="text-sm font-semibold text-slate-100 truncate">{displayName}</p>
-              </div>
-              <Link
-                to="/musicos"
-                onClick={() => setOpenMore(false)}
-                className="flex items-center gap-3 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
-              >
-                <Users className="h-5 w-5" />
-                <span className="text-sm">Músicos</span>
-              </Link>
-              <Link
-                to="/conexoes"
-                onClick={() => setOpenMore(false)}
-                className="flex items-center gap-3 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
-              >
-                <HeartHandshake className="h-5 w-5" />
-                <span className="text-sm">Rede & Badges</span>
-              </Link>
-              <Link
-                to="/eventos/agenda"
-                onClick={() => setOpenMore(false)}
-                className="flex items-center gap-3 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
-              >
-                <Clock className="h-5 w-5 rotate-45" />
-                <span className="text-sm">Grade de Eventos</span>
-              </Link>
-              <Link
-                to="/marketplace"
-                onClick={() => setOpenMore(false)}
-                className="flex items-center gap-3 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
-              >
-                <Megaphone className="h-5 w-5" />
-                <span className="text-sm">Vagas</span>
-              </Link>
-              <Link
-                to="/configuracoes/notificacoes"
-                onClick={() => setOpenMore(false)}
-                className="flex items-center gap-3 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
-              >
-                <Bell className="h-5 w-5" />
-                <span className="text-sm">Notificacoes</span>
-              </Link>
-              <Link
-                to="/configuracoes/financeiro"
-                onClick={() => setOpenMore(false)}
-                className="flex items-center gap-3 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
-              >
-                <Wallet className="h-5 w-5" />
-                <span className="text-sm">Valores e equipamentos</span>
-              </Link>
-              <Link
-                to="/aprovacoes"
-                onClick={() => setOpenMore(false)}
-                className="flex items-center justify-between px-3 py-2 text-amber-300 hover:bg-amber-500/10 rounded-lg transition-colors"
-              >
-                <span className="flex items-center gap-3">
-                  <UserCheck className="h-5 w-5" />
-                  <span className="text-sm font-medium">Convites</span>
-                </span>
-                {pendingApproval > 0 && (
-                  <span className="bg-yellow-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                    {pendingApproval}
-                  </span>
-                )}
-              </Link>
-              {isStaff && (
-                <Link
-                  to={ADMIN_ROUTES.dashboard}
-                  onClick={() => setOpenMore(false)}
-                  className="flex items-center gap-3 px-3 py-2 text-blue-200 hover:bg-blue-500/10 rounded-lg transition-colors"
-                >
-                  <Shield className="h-5 w-5" />
-                  <span className="text-sm font-medium">Administração</span>
-                </Link>
-              )}
-              <div className="border-t border-white/10 pt-2 mt-2">
-                <div className="flex items-center justify-between px-3 py-2 mb-2">
-                  <span className="text-sm text-slate-300">Tema</span>
-                  <ThemeToggle />
-                </div>
-                <button
-                  onClick={() => {
-                    setOpenMore(false);
-                    handleLogout();
-                  }}
-                  className="flex items-center gap-3 w-full px-3 py-2 text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
-                >
-                  <LogOut className="h-5 w-5" />
-                  <span className="text-sm font-medium">Sair</span>
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </nav>
