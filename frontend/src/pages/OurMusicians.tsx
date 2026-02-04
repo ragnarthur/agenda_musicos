@@ -243,7 +243,7 @@ export default function OurMusicians() {
                     
                     {/* Instrumento */}
                     <div className="flex items-center gap-1 text-gray-300 text-sm mb-2">
-                      {getInstrumentIcon(musician.instrument)}
+                      {getInstrumentIcon()}
                       <span>{musician.instrument}</span>
                     </div>
 
