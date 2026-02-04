@@ -53,6 +53,18 @@ export default function OurMusicians() {
       setLoading(false);
     }
   };
+
+  const loadMusicians = async () => {
+    setLoading(true);
+    try {
+      const params: any = {
+        search: search || undefined,
+        city: city || undefined,
+        state: state || undefined,
+        instrument: instrument || undefined,
+        min_rating: minRating || undefined,
+        limit: 100,
+      };
       
       const data = await allMusiciansService.list(params);
       setMusicians(data);
