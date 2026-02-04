@@ -1,3 +1,7 @@
+# IMPORTANTE: Sempre usar --env-file para carregar variáveis do .env.prod
+# Exemplo: docker compose --env-file .env.prod -f docker-compose.prod.yml build
+# Ou use o script: ./deploy.sh
+
 services:
   db:
     image: postgres:15-alpine
