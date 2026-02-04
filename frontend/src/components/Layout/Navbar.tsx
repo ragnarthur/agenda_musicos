@@ -310,7 +310,9 @@ const Navbar: React.FC = memo(() => {
               <div className="hidden md:block min-w-0 max-w-[180px] lg:max-w-[220px] mr-4">
                 <CityBadge className="w-full" />
               </div>
-              <ThemeToggle />
+              <div className="hidden md:block">
+                <ThemeToggle />
+              </div>
               <button
                 onClick={handleLogout}
                 className="hidden md:flex items-center space-x-1 text-slate-100 hover:text-red-400 transition-colors"
@@ -360,7 +362,7 @@ const Navbar: React.FC = memo(() => {
               <span className="text-sm">Vagas</span>
             </Link>
             <Link
-              to={`/musicos/${user?.id}/editar`}
+              to="/configuracoes/financeiro"
               onClick={() => setOpenMore(false)}
               className="flex items-center gap-3 px-3 py-2.5 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
             >
