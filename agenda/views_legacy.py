@@ -1696,13 +1696,14 @@ def upload_avatar(request):
             getattr(request.user, "id", None),
         )
         return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-    except Exception as e:
+    except Exception:
         logger.exception(
             "Erro inesperado no upload de avatar | user_id=%s",
             getattr(request.user, "id", None),
         )
         return Response(
-            {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            {"detail": "Erro interno do servidor."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
 
@@ -1759,13 +1760,14 @@ def upload_cover(request):
             getattr(request.user, "id", None),
         )
         return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-    except Exception as e:
+    except Exception:
         logger.exception(
             "Erro inesperado no upload de capa | user_id=%s",
             getattr(request.user, "id", None),
         )
         return Response(
-            {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            {"detail": "Erro interno do servidor."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
 
@@ -1881,10 +1883,11 @@ def get_musician_reviews(request, musician_id):
         return Response(
             {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
         )
-    except Exception as e:
-        logging.exception("Erro ao buscar avaliações")
+    except Exception:
+        logger.exception("Erro ao buscar avaliações")
         return Response(
-            {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            {"detail": "Erro interno do servidor."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
 
@@ -1921,10 +1924,11 @@ def get_musician_badges(request, musician_id):
         return Response(
             {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
         )
-    except Exception as e:
-        logging.exception("Erro ao buscar badges")
+    except Exception:
+        logger.exception("Erro ao buscar badges")
         return Response(
-            {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            {"detail": "Erro interno do servidor."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
 
@@ -1979,10 +1983,11 @@ def get_musician_stats(request, musician_id):
         return Response(
             {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
         )
-    except Exception as e:
-        logging.exception("Erro ao buscar estatísticas")
+    except Exception:
+        logger.exception("Erro ao buscar estatísticas")
         return Response(
-            {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            {"detail": "Erro interno do servidor."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
 
@@ -2038,10 +2043,11 @@ def get_musician_connection_status(request, musician_id):
         return Response(
             {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
         )
-    except Exception as e:
-        logging.exception("Erro ao verificar conexão")
+    except Exception:
+        logger.exception("Erro ao verificar conexão")
         return Response(
-            {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            {"detail": "Erro interno do servidor."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
 

@@ -1,3 +1,4 @@
+import logging
 from calendar import month_name
 from datetime import datetime, timedelta
 
@@ -33,6 +34,8 @@ from .serializers import (
 )
 from .throttles import PublicRateThrottle
 
+logger = logging.getLogger(__name__)
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, IsAdminUser])
@@ -58,8 +61,12 @@ def dashboard_stats(request):
                 "rejected_requests": rejected_requests,
             }
         )
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception:
+        logger.exception("Erro ao carregar estatisticas do dashboard admin.")
+        return Response(
+            {"error": "Erro interno do servidor."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 @api_view(["GET"])
@@ -70,8 +77,12 @@ def booking_requests_list(request):
         requests = MusicianRequest.objects.all().order_by("-created_at")
         serializer = MusicianRequestSerializer(requests, many=True)
         return Response(serializer.data)
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception:
+        logger.exception("Erro ao listar booking requests no admin.")
+        return Response(
+            {"error": "Erro interno do servidor."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 @api_view(["GET"])
@@ -86,8 +97,12 @@ def booking_request_detail(request, pk):
         return Response(
             {"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND
         )
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception:
+        logger.exception("Erro ao obter detalhe de booking request no admin.")
+        return Response(
+            {"error": "Erro interno do servidor."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 @api_view(["POST"])
@@ -122,8 +137,12 @@ def approve_booking_request(request, pk):
         return Response(
             {"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND
         )
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception:
+        logger.exception("Erro ao aprovar booking request no admin.")
+        return Response(
+            {"error": "Erro interno do servidor."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 @api_view(["POST"])
@@ -148,8 +167,12 @@ def reject_booking_request(request, pk):
         return Response(
             {"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND
         )
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception:
+        logger.exception("Erro ao rejeitar booking request no admin.")
+        return Response(
+            {"error": "Erro interno do servidor."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 @api_view(["GET"])
@@ -162,8 +185,12 @@ def admin_events_list(request):
         )
         serializer = EventListSerializer(events, many=True)
         return Response(serializer.data)
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception:
+        logger.exception("Erro ao listar eventos no admin.")
+        return Response(
+            {"error": "Erro interno do servidor."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 @api_view(["GET"])
@@ -203,8 +230,12 @@ def public_request_status(request):
                 return Response(
                     {"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND
                 )
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception:
+        logger.exception("Erro ao consultar status publico de request.")
+        return Response(
+            {"error": "Erro interno do servidor."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 @api_view(["GET"])
@@ -397,8 +428,12 @@ def admin_reports(request):
                 "recent_activity": recent_data,
             }
         )
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception:
+        logger.exception("Erro ao gerar relatorio de requests por mes.")
+        return Response(
+            {"error": "Erro interno do servidor."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 # =============================================================================
@@ -456,8 +491,12 @@ def dashboard_stats_extended(request):
                 "top_cities": list(top_cities),
             }
         )
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception:
+        logger.exception("Erro ao carregar estatisticas estendidas do dashboard.")
+        return Response(
+            {"error": "Erro interno do servidor."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 @api_view(["GET"])
@@ -503,8 +542,12 @@ def requests_by_city(request):
             result.append(stat)
 
         return Response(result)
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception:
+        logger.exception("Erro ao listar requests por cidade.")
+        return Response(
+            {"error": "Erro interno do servidor."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 @api_view(["GET"])
@@ -539,8 +582,12 @@ def requests_by_city_detail(request, city, state):
                 "requests": serializer.data,
             }
         )
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception:
+        logger.exception("Erro ao carregar requests da cidade.")
+        return Response(
+            {"error": "Erro interno do servidor."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 @api_view(["GET", "POST"])
@@ -567,8 +614,12 @@ def city_list_create(request):
                 )
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception:
+        logger.exception("Erro ao listar/criar cidades no admin.")
+        return Response(
+            {"error": "Erro interno do servidor."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 @api_view(["GET", "PUT", "DELETE"])
@@ -600,8 +651,12 @@ def city_detail(request, pk):
             city.save()
             return Response({"message": "Cidade desativada com sucesso"})
 
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception:
+        logger.exception("Erro ao manipular detalhe de cidade no admin.")
+        return Response(
+            {"error": "Erro interno do servidor."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 @api_view(["POST"])
@@ -633,5 +688,9 @@ def city_change_status(request, pk):
                 "city": CitySerializer(city).data,
             }
         )
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception:
+        logger.exception("Erro ao alterar status de cidade no admin.")
+        return Response(
+            {"error": "Erro interno do servidor."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )

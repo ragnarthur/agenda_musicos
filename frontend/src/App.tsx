@@ -425,15 +425,8 @@ function AppRoutes() {
           }
         />
 
-        {/* Public Route - Our Musicians */}
-        <Route
-          path="/nossos-musicos"
-          element={
-            <PublicRoute>
-              <OurMusicians />
-            </PublicRoute>
-          }
-        />
+        {/* Public Route - Our Musicians (accessible to all) */}
+        <Route path="/nossos-musicos" element={<OurMusicians />} />
 
         {/* Contractor Routes */}
         <Route

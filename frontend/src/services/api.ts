@@ -43,10 +43,6 @@ const refreshAuthToken = async (): Promise<void> => {
     const doRefresh = async () => {
       const storedRefresh = getStoredRefreshToken();
 
-      if (!storedRefresh) {
-        throw new Error('No refresh token available');
-      }
-
       try {
         // Tenta refresh com cookie primeiro (pré-rotado)
         const response = await axios.post(
@@ -61,7 +57,7 @@ const refreshAuthToken = async (): Promise<void> => {
         const status = axios.isAxiosError(error) ? error.response?.status : undefined;
 
         // Se o refresh com cookie falhar com 401 ou mensagem específica, tenta com o token armazenado
-        if (status === 401 || shouldFallbackToStoredRefresh(error)) {
+        if ((status === 401 || shouldFallbackToStoredRefresh(error)) && storedRefresh) {
           const response = await axios.post(
             `${API_URL}/token/refresh/`,
             { refresh: storedRefresh },
@@ -109,6 +105,9 @@ api.interceptors.response.use(
 
     // Endpoints públicos (não autenticados) não devem redirecionar para login
     const publicAuthPaths = [
+      '/token/',
+      '/token/refresh/',
+      '/token/logout/',
       '/register/',
       '/check-email/',
       '/verify-email/',
@@ -117,7 +116,9 @@ api.interceptors.response.use(
       '/password-reset-confirm/',
       '/admin/token/',
       '/admin/me/',
-      '/api/token/refresh/',
+      '/contractor/token/',
+      '/auth/google/',
+      '/auth/google/register-musician/',
     ];
 
     const isPublicAuthPath = originalRequest?.url

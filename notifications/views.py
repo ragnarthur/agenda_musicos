@@ -3,12 +3,10 @@ import secrets
 from datetime import timedelta
 
 from django.conf import settings
+from django.http import HttpRequest
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpRequest
-import logging
-import secrets
-from django.utils import timezone
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -112,27 +110,6 @@ class TelegramWebhookView(APIView):
             self._try_verify_code(chat_id, code, first_name)
         else:
             # Mensagem não é um código - verifica se chat está conectado
-            self._handle_unknown_message(chat_id, text)
-
-        return Response({"ok": True})
-
-        logger.info(f"Webhook Telegram: chat_id={chat_id}, text={text}")
-
-        # Comandos especiais
-        if text.upper() == "/START":
-            self._send_welcome(chat_id)
-            return Response({"ok": True})
-
-        if text.upper() == "/STATUS":
-            self._send_status(chat_id)
-            return Response({"ok": True})
-
-        # Tenta verificar codigo (6 caracteres hex)
-        code = text.upper().strip()
-        if len(code) == 6:
-            self._try_verify_code(chat_id, code, first_name)
-        else:
-            # Mensagem nao e um codigo - verifica se chat esta conectado
             self._handle_unknown_message(chat_id, text)
 
         return Response({"ok": True})
