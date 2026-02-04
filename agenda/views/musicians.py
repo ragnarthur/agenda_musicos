@@ -14,6 +14,7 @@ from ..instrument_utils import INSTRUMENT_LABELS
 from ..models import Instrument, LeaderAvailability, Musician
 from ..pagination import StandardResultsSetPagination
 from ..serializers import MusicianSerializer, MusicianUpdateSerializer
+from ..view_functions import normalize_search_text
 
 
 class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
@@ -37,12 +38,19 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = self._scope_queryset(queryset)
         search = self.request.query_params.get("search")
         if search:
+            search_normalized = normalize_search_text(search)
             queryset = queryset.filter(
                 Q(user__first_name__icontains=search)
                 | Q(user__last_name__icontains=search)
+                | Q(user__first_name__icontains=search_normalized)
+                | Q(user__last_name__icontains=search_normalized)
                 | Q(user__username__icontains=search)
                 | Q(instagram__icontains=search)
                 | Q(bio__icontains=search)
+                | Q(instrument__icontains=search)
+                | Q(instrument__icontains=search_normalized)
+                | Q(instruments__icontains=search)
+                | Q(instruments__icontains=search_normalized)
             )
         instrument = self.request.query_params.get("instrument")
         if instrument and instrument != "all":

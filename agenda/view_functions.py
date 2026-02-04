@@ -6,6 +6,7 @@ Mantem compatibilidade com as rotas em agenda/urls.py.
 
 import logging
 import secrets
+import unicodedata
 from datetime import date, timedelta
 
 from django.conf import settings
@@ -69,6 +70,48 @@ from notifications.services.quote_notifications import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# Search helpers
+# =============================================================================
+
+
+def normalize_search_text(text: str) -> str:
+    """Remove acentos e converte para lowercase para busca."""
+    if not text:
+        return ""
+    text = text.strip().lower()
+    text = unicodedata.normalize("NFKD", text)
+    text = "".join([c for c in text if not unicodedata.combining(c)])
+    return text
+
+
+# Aliases de instrumentos para busca
+INSTRUMENT_SEARCH_ALIASES = {
+    "vocalista": ["vocal", "singer", "vocalist"],
+    "vocal": ["vocalista", "singer", "vocalist"],
+    "violao": ["acoustic_guitar", "violão"],
+    "violão": ["acoustic_guitar", "violao"],
+    "guitarra": ["guitar", "electric_guitar"],
+    "baixo": ["bass", "bass_guitar"],
+    "bateria": ["drums"],
+    "teclado": ["keyboard", "piano", "synth"],
+    "saxofone": ["saxophone", "sax"],
+    "sax": ["saxophone", "saxofone"],
+}
+
+
+def expand_instrument_search(term: str) -> list:
+    """Expande termo de busca de instrumento para incluir aliases."""
+    term_normalized = normalize_search_text(term)
+    terms = [term, term_normalized]
+
+    # Adiciona aliases se existirem
+    if term_normalized in INSTRUMENT_SEARCH_ALIASES:
+        terms.extend(INSTRUMENT_SEARCH_ALIASES[term_normalized])
+
+    return list(set(terms))  # Remove duplicados
 
 
 # =============================================================================
@@ -1227,16 +1270,31 @@ def list_all_musicians_public(request):
         queryset = queryset.filter(city__iexact=city)
     if state:
         queryset = queryset.filter(state__iexact=state)
+
+    # Busca por instrumento com normalização e aliases
     if instrument:
-        queryset = queryset.filter(
-            Q(instrument__iexact=instrument) | Q(instruments__icontains=instrument)
-        )
+        instrument_terms = expand_instrument_search(instrument)
+        instrument_q = Q()
+        for term in instrument_terms:
+            instrument_q |= Q(instrument__iexact=term)
+            instrument_q |= Q(instruments__icontains=term)
+        queryset = queryset.filter(instrument_q)
+
+    # Busca geral mais abrangente (nome, instrumento, bio)
     if search:
+        search_normalized = normalize_search_text(search)
         queryset = queryset.filter(
             Q(user__first_name__icontains=search)
             | Q(user__last_name__icontains=search)
+            | Q(user__first_name__icontains=search_normalized)
+            | Q(user__last_name__icontains=search_normalized)
             | Q(instrument__icontains=search)
+            | Q(instrument__icontains=search_normalized)
+            | Q(instruments__icontains=search)
+            | Q(instruments__icontains=search_normalized)
+            | Q(bio__icontains=search)
         )
+
     if min_rating:
         queryset = queryset.filter(average_rating__gte=min_rating)
 

@@ -14,6 +14,24 @@ import {
 } from 'lucide-react';
 import { allMusiciansService, type MusicianPublic } from '../services/publicApi';
 import { BRAZILIAN_STATES } from '../config/cities';
+import { formatInstrumentLabel } from '../utils/formatting';
+
+// Hook de debounce para evitar requisições excessivas
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 export default function OurMusicians() {
   const navigate = useNavigate();
@@ -26,23 +44,28 @@ export default function OurMusicians() {
   const [state, setState] = useState('');
   const [instrument, setInstrument] = useState('');
   const [minRating, setMinRating] = useState('');
-  
+
+  // Debounce nos filtros de texto (400ms)
+  const debouncedSearch = useDebounce(search, 400);
+  const debouncedCity = useDebounce(city, 400);
+  const debouncedInstrument = useDebounce(instrument, 400);
+
   // UI
   const [showFilters, setShowFilters] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     loadMusicians();
-  }, [search, city, state, instrument, minRating]);
+  }, [debouncedSearch, debouncedCity, state, debouncedInstrument, minRating]);
 
   const loadMusicians = async () => {
     setLoading(true);
     try {
       const params: any = {
-        search: search || undefined,
-        city: city || undefined,
+        search: debouncedSearch || undefined,
+        city: debouncedCity || undefined,
         state: state || undefined,
-        instrument: instrument || undefined,
+        instrument: debouncedInstrument || undefined,
         min_rating: minRating || undefined,
         limit: 100,
       };
@@ -53,10 +76,6 @@ export default function OurMusicians() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSearch = () => {
-    loadMusicians();
   };
 
   const handleRequestQuote = (musicianId: number) => {
@@ -115,8 +134,7 @@ export default function OurMusicians() {
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              onKeyPress={e => e.key === 'Enter' && handleSearch()}
-              placeholder="Buscar por nome ou instrumento..."
+              placeholder="Buscar por nome, instrumento ou vocalista..."
               className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
           </div>
@@ -185,12 +203,12 @@ export default function OurMusicians() {
             </div>
           )}
 
-          <button
-            onClick={handleSearch}
-            className="w-full mt-4 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-colors"
-          >
-            Buscar Músicos
-          </button>
+          {/* Indicador de busca automática */}
+          {(search || city || instrument) && (
+            <p className="mt-4 text-sm text-gray-400 text-center">
+              Buscando automaticamente...
+            </p>
+          )}
         </div>
       </div>
 
@@ -241,10 +259,27 @@ export default function OurMusicians() {
                       {musician.full_name}
                     </h3>
                     
-                    {/* Instrumento */}
-                    <div className="flex items-center gap-1 text-gray-300 text-sm mb-2">
+                    {/* Instrumentos */}
+                    <div className="flex items-center gap-1 text-gray-300 text-sm mb-2 flex-wrap">
                       {getInstrumentIcon()}
-                      <span>{musician.instrument}</span>
+                      <span>{formatInstrumentLabel(musician.instrument)}</span>
+                      {musician.instruments && musician.instruments.length > 0 && (
+                        <>
+                          {musician.instruments
+                            .filter(inst => inst !== musician.instrument)
+                            .slice(0, 2)
+                            .map((inst, idx) => (
+                              <span key={idx} className="text-gray-400">
+                                {idx === 0 ? ' • ' : ', '}{formatInstrumentLabel(inst)}
+                              </span>
+                            ))}
+                          {musician.instruments.filter(inst => inst !== musician.instrument).length > 2 && (
+                            <span className="text-gray-500">
+                              +{musician.instruments.filter(inst => inst !== musician.instrument).length - 2}
+                            </span>
+                          )}
+                        </>
+                      )}
                     </div>
 
                     {/* Localização */}
