@@ -435,6 +435,19 @@ const Landing: React.FC = () => {
                 : 'Centenas de contratantes já confiam no GigFlow'}
             </motion.p>
           </AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <Link
+              to="/nossos-musicos"
+              className="inline-flex items-center gap-2 mt-6 px-5 py-2.5 text-primary-300 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
+            >
+              <Users className="h-5 w-5" />
+              <span>Conheça nossos músicos</span>
+            </Link>
+          </motion.div>
         </section>
 
         {/* Footer CTA */}

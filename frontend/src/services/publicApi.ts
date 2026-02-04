@@ -506,7 +506,11 @@ export const allMusiciansService = {
     limit?: number;
   }): Promise<MusicianPublic[]> => {
     const response = await api.get('/musicians/all/', { params });
-    return response.data;
+    // Lidar com resposta paginada ou array direto
+    const payload = response.data as
+      | { results?: MusicianPublic[] }
+      | MusicianPublic[];
+    return Array.isArray(payload) ? payload : payload.results ?? [];
   },
 };
 
