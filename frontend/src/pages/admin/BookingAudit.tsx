@@ -7,13 +7,13 @@ import {
   TrendingUp,
   CheckCircle,
   Clock,
+  Users,
   ArrowLeft,
   Trash2,
   ClipboardList,
 } from 'lucide-react';
 import {
   adminBookingService,
-  quoteRequestService,
   type BookingStatistics,
   type QuoteRequest,
   type QuoteProposal,

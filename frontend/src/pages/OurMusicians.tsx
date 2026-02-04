@@ -63,7 +63,7 @@ export default function OurMusicians() {
     navigate(`/musicos/${musicianId}`);
   };
 
-  const getInstrumentIcon = (instrument: string) => {
+  const getInstrumentIcon = () => {
     return <Music className="w-5 h-5" />;
   };
 
