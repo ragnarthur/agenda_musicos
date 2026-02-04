@@ -9,10 +9,12 @@ import {
   Megaphone,
   HeartHandshake,
   Menu,
+  X,
   Bell,
   UserCheck,
   Wallet,
   Shield,
+  UserCog,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../hooks/useNotifications';
@@ -26,6 +28,7 @@ const Navbar: React.FC = memo(() => {
   const navigate = useNavigate();
   const location = useLocation();
   const [openDesktopMore, setOpenDesktopMore] = useState(false);
+  const [openMore, setOpenMore] = useState(false);
 
   // Use SWR hook for notifications - shared across Navbar and Dashboard
   const { pendingMyResponse, pendingApproval } = useNotifications();
@@ -61,6 +64,7 @@ const Navbar: React.FC = memo(() => {
 
   useEffect(() => {
     setOpenDesktopMore(false);
+    setOpenMore(false);
   }, [location.pathname]);
 
   return (
@@ -318,10 +322,10 @@ const Navbar: React.FC = memo(() => {
           </div>
         </div>
 
-        {/* Navbar Mobile - Simplificada */}
+        {/* Navbar Mobile */}
         <div className="md:hidden flex items-center justify-between py-2">
           <CityBadge />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Link
               to="/configuracoes/notificacoes"
               className="relative p-2 text-slate-200 hover:text-white transition-colors"
@@ -334,8 +338,46 @@ const Navbar: React.FC = memo(() => {
               )}
             </Link>
             <ThemeToggle />
+            <button
+              onClick={() => setOpenMore(prev => !prev)}
+              className="p-2 text-slate-200 hover:text-white transition-colors"
+              aria-expanded={openMore}
+            >
+              {openMore ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
+
+        {/* Menu Mobile "Mais" */}
+        {openMore && (
+          <div className="md:hidden absolute left-0 right-0 top-full bg-slate-950/95 border-t border-white/10 shadow-2xl p-3 space-y-1 z-50">
+            <Link
+              to="/marketplace"
+              onClick={() => setOpenMore(false)}
+              className="flex items-center gap-3 px-3 py-2.5 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
+            >
+              <Megaphone className="h-5 w-5" />
+              <span className="text-sm">Vagas</span>
+            </Link>
+            <Link
+              to={`/musicos/${user?.id}/editar`}
+              onClick={() => setOpenMore(false)}
+              className="flex items-center gap-3 px-3 py-2.5 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
+            >
+              <UserCog className="h-5 w-5" />
+              <span className="text-sm">Editar Perfil</span>
+            </Link>
+            <div className="border-t border-white/10 pt-2 mt-2">
+              <button
+                onClick={() => { setOpenMore(false); handleLogout(); }}
+                className="flex items-center gap-3 w-full px-3 py-2.5 text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+              >
+                <LogOut className="h-5 w-5" />
+                <span className="text-sm">Sair</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );
