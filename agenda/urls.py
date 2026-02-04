@@ -4,6 +4,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .admin_management_views import (
+    contact_views_stats,
     create_admin_user,
     delete_admin_user,
     delete_contractor,
@@ -12,6 +13,7 @@ from .admin_management_views import (
     get_admin_user,
     list_admin_users,
     list_all_users,
+    list_contact_views,
     list_contractors,
     list_organizations,
     reset_admin_password,
@@ -56,6 +58,7 @@ from .view_functions import (  # Musician Request views; Quote Request views; Pu
     create_quote_request,
     create_musician_request,
     decline_quote_proposal,
+    get_musician_contact,
     list_all_musicians_public,
     list_quote_proposals,
     get_contractor_dashboard,
@@ -151,6 +154,11 @@ urlpatterns = [
         "musicians/<int:musician_id>/connection-status/",
         get_musician_connection_status,
         name="musician-connection-status",
+    ),
+    path(
+        "musicians/<int:musician_id>/contact/",
+        get_musician_contact,
+        name="musician-contact",
     ),
     # =========================================================================
     # Musician Request (Solicitação de Acesso)
@@ -392,6 +400,19 @@ urlpatterns = [
         "users/<int:pk>/delete/",
         delete_user,
         name="user-delete",
+    ),
+    # =========================================================================
+    # Admin - Contact Views Audit
+    # =========================================================================
+    path(
+        "admin/contact-views/",
+        list_contact_views,
+        name="admin-contact-views",
+    ),
+    path(
+        "admin/contact-views/stats/",
+        contact_views_stats,
+        name="admin-contact-views-stats",
     ),
     # =========================================================================
     # Public Status Page

@@ -6,14 +6,15 @@ import {
   MapPin,
   Music,
   Instagram,
-  MessageSquare,
   Building2,
   UserPlus,
   X,
+  FileText,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import Loading from '../components/common/Loading';
+import ContactButton from '../components/common/ContactButton';
 import {
   publicMusicianService,
   quoteRequestService,
@@ -335,16 +336,23 @@ const MusicianPublicProfile: React.FC = () => {
 
               {/* Contact CTA */}
               <div className="mt-6">
-                <button
-                  onClick={handleContactClick}
-                  className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-lg"
-                >
-                  <MessageSquare className="h-5 w-5" />
-                  Solicitar Orçamento
-                </button>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <ContactButton
+                    musicianId={musician.id}
+                    musicianName={musician.full_name}
+                    className="w-full sm:w-auto text-lg py-4 px-8"
+                  />
+                  <button
+                    onClick={handleContactClick}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-lg"
+                  >
+                    <FileText className="h-5 w-5" />
+                    Solicitar Orçamento
+                  </button>
+                </div>
                 {!isCompanyAuth && (
                   <p className="text-gray-400 text-sm mt-2 text-center md:text-left">
-                    Você precisa ter uma conta de contratante para entrar em contato.
+                    Faça login como contratante para ver o contato ou solicitar orçamento.
                   </p>
                 )}
               </div>

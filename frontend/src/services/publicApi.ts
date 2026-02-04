@@ -189,6 +189,12 @@ export interface MusicianPublic {
   total_ratings: number;
 }
 
+export interface MusicianContact {
+  whatsapp: string | null;
+  phone: string | null;
+  instagram: string | null;
+}
+
 export interface ContractorRegisterData {
   name: string;
   email: string;
@@ -476,6 +482,12 @@ export const publicMusicianService = {
     const response = await api.get('/organizations/sponsors/', {
       params: { city, state },
     });
+    return response.data;
+  },
+
+  // Obter contato do músico (requer login de contratante)
+  getContact: async (musicianId: number): Promise<MusicianContact> => {
+    const response = await api.get(`/musicians/${musicianId}/contact/`);
     return response.data;
   },
 };

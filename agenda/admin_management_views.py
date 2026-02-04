@@ -21,7 +21,7 @@ from .serializers import (
     ContractorProfileSerializer,
     OrganizationSerializer,
 )
-from .models import AuditLog, ContractorProfile, MusicianRequest, Organization
+from .models import AuditLog, ContactView, ContractorProfile, MusicianRequest, Organization
 from notifications.services.email_service import send_user_deletion_email
 
 User = get_user_model()
@@ -478,3 +478,120 @@ def list_organizations(request):
             {"error": "Erro ao listar organizações"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+# =============================================================================
+# Contact Views Audit (Admin Only)
+# =============================================================================
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def list_contact_views(request):
+    """
+    Lista visualizações de contato para auditoria (admin only).
+    GET /api/admin/contact-views/
+    Filtros: musician_id, contractor_id, date_from, date_to
+    """
+    from rest_framework.pagination import PageNumberPagination
+
+    # Filtros opcionais
+    musician_id = request.query_params.get("musician_id")
+    contractor_id = request.query_params.get("contractor_id")
+    date_from = request.query_params.get("date_from")
+    date_to = request.query_params.get("date_to")
+
+    queryset = ContactView.objects.select_related(
+        "contractor", "contractor__user", "musician", "musician__user"
+    ).order_by("-viewed_at")
+
+    if musician_id:
+        queryset = queryset.filter(musician_id=musician_id)
+    if contractor_id:
+        queryset = queryset.filter(contractor_id=contractor_id)
+    if date_from:
+        queryset = queryset.filter(viewed_at__date__gte=date_from)
+    if date_to:
+        queryset = queryset.filter(viewed_at__date__lte=date_to)
+
+    # Paginação
+    paginator = PageNumberPagination()
+    paginator.page_size = 50
+    page = paginator.paginate_queryset(queryset, request)
+
+    data = [
+        {
+            "id": cv.id,
+            "contractor": {
+                "id": cv.contractor.id,
+                "name": cv.contractor.name,
+                "phone": cv.contractor.phone,
+                "email": cv.contractor.user.email if cv.contractor.user else None,
+            },
+            "musician": {
+                "id": cv.musician.id,
+                "name": cv.musician.user.get_full_name() or cv.musician.user.username,
+            },
+            "viewed_at": cv.viewed_at.isoformat(),
+            "ip_address": cv.ip_address,
+        }
+        for cv in page
+    ]
+
+    return paginator.get_paginated_response(data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def contact_views_stats(request):
+    """
+    Estatísticas de visualizações de contato (admin only).
+    GET /api/admin/contact-views/stats/
+    """
+    from django.db.models import Count
+    from django.db.models.functions import TruncDate
+
+    # Total de visualizações
+    total = ContactView.objects.count()
+
+    # Últimos 7 dias
+    last_week = timezone.now() - timedelta(days=7)
+    last_week_count = ContactView.objects.filter(viewed_at__gte=last_week).count()
+
+    # Top 10 músicos mais visualizados
+    top_musicians = (
+        ContactView.objects.values(
+            "musician__id",
+            "musician__user__first_name",
+            "musician__user__last_name",
+        )
+        .annotate(views=Count("id"))
+        .order_by("-views")[:10]
+    )
+
+    # Top 10 contractors mais ativos
+    top_contractors = (
+        ContactView.objects.values("contractor__id", "contractor__name")
+        .annotate(views=Count("id"))
+        .order_by("-views")[:10]
+    )
+
+    # Visualizações por dia (últimos 30 dias)
+    last_month = timezone.now() - timedelta(days=30)
+    daily_views = (
+        ContactView.objects.filter(viewed_at__gte=last_month)
+        .annotate(date=TruncDate("viewed_at"))
+        .values("date")
+        .annotate(count=Count("id"))
+        .order_by("date")
+    )
+
+    return Response(
+        {
+            "total_views": total,
+            "last_week_views": last_week_count,
+            "top_musicians": list(top_musicians),
+            "top_contractors": list(top_contractors),
+            "daily_views": list(daily_views),
+        }
+    )
