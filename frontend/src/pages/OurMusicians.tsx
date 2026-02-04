@@ -60,7 +60,7 @@ export default function OurMusicians() {
   };
 
   const handleRequestQuote = (musicianId: number) => {
-    navigate(`/musicos/${musicianId}`);
+    navigate(`/musico/${musicianId}`);
   };
 
   const getInstrumentIcon = () => {
