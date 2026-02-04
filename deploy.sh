@@ -15,7 +15,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-PROJECT_DIR="/var/www/agenda-musicos"
+PROJECT_DIR="/opt/agenda-musicos/agenda_musicos"
 DOMAIN="${DOMAIN:-gigflowagenda.com.br}"
 SERVER_IP="${SERVER_IP:-127.0.0.1}"
 
@@ -60,18 +60,18 @@ update_code() {
 build_and_deploy() {
     print_step "Parando containers existentes..."
     cd $PROJECT_DIR
-    docker compose --env-file .env.docker -f docker-compose.prod.yml down || true
+    docker compose --env-file .env.prod -f docker-compose.prod.yml down || true
 
     print_step "Construindo e iniciando containers..."
-    docker compose --env-file .env.docker -f docker-compose.prod.yml up -d --build --remove-orphans
+    docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build --remove-orphans
     print_step "Reiniciando nginx para atualizar upstream do backend..."
-    docker compose --env-file .env.docker -f docker-compose.prod.yml restart nginx
+    docker compose --env-file .env.prod -f docker-compose.prod.yml restart nginx
 
     print_step "Aguardando containers iniciarem..."
     sleep 15
 
     print_step "Status dos containers:"
-    docker compose --env-file .env.docker -f docker-compose.prod.yml ps
+    docker compose --env-file .env.prod -f docker-compose.prod.yml ps
 }
 
 check_health() {
@@ -94,7 +94,7 @@ check_health() {
 
 show_logs() {
     print_step "Ultimas linhas dos logs:"
-    docker compose --env-file .env.docker -f docker-compose.prod.yml logs --tail=20
+    docker compose --env-file .env.prod -f docker-compose.prod.yml logs --tail=20
 }
 
 generate_ssl() {
@@ -111,10 +111,10 @@ generate_ssl() {
     fi
 
     # Parar nginx para liberar porta 80
-    docker compose --env-file .env.docker -f docker-compose.prod.yml stop nginx
+    docker compose --env-file .env.prod -f docker-compose.prod.yml stop nginx
 
     # Gerar certificado
-    docker compose --env-file .env.docker -f docker-compose.prod.yml run --rm certbot certonly \
+    docker compose --env-file .env.prod -f docker-compose.prod.yml run --rm certbot certonly \
         --standalone \
         --email admin@$DOMAIN \
         --agree-tos \
@@ -124,15 +124,15 @@ generate_ssl() {
         -d api.$DOMAIN
 
     # Reiniciar nginx
-    docker compose --env-file .env.docker -f docker-compose.prod.yml up -d nginx
+    docker compose --env-file .env.prod -f docker-compose.prod.yml up -d nginx
 
     print_step "Certificado SSL gerado com sucesso!"
 }
 
 renew_ssl() {
     print_step "Renovando certificado SSL..."
-    docker compose --env-file .env.docker -f docker-compose.prod.yml run --rm certbot renew
-    docker compose --env-file .env.docker -f docker-compose.prod.yml exec nginx nginx -s reload
+    docker compose --env-file .env.prod -f docker-compose.prod.yml run --rm certbot renew
+    docker compose --env-file .env.prod -f docker-compose.prod.yml exec nginx nginx -s reload
     print_step "Certificado renovado!"
 }
 
@@ -177,10 +177,10 @@ main() {
             check_health
             ;;
         logs)
-            docker compose --env-file .env.docker -f docker-compose.prod.yml logs -f
+            docker compose --env-file .env.prod -f docker-compose.prod.yml logs -f
             ;;
         status)
-            docker compose --env-file .env.docker -f docker-compose.prod.yml ps
+            docker compose --env-file .env.prod -f docker-compose.prod.yml ps
             check_health
             ;;
         ssl)
@@ -190,11 +190,11 @@ main() {
             renew_ssl
             ;;
         restart)
-            docker compose --env-file .env.docker -f docker-compose.prod.yml restart
+            docker compose --env-file .env.prod -f docker-compose.prod.yml restart
             check_health
             ;;
         stop)
-            docker compose --env-file .env.docker -f docker-compose.prod.yml down --remove-orphans
+            docker compose --env-file .env.prod -f docker-compose.prod.yml down --remove-orphans
             print_step "Containers parados"
             ;;
         help|--help|-h)
