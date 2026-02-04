@@ -190,7 +190,8 @@ class EventViewSet(viewsets.ModelViewSet):
         if self.request.query_params.get("upcoming") == "true":
             queryset = queryset.filter(event_date__gte=timezone.now().date())
 
-        return queryset
+        # Ordenação consistente para paginação
+        return queryset.order_by('-event_date', '-id')
 
     @action(detail=False, methods=["post"])
     def preview_conflicts(self, request):

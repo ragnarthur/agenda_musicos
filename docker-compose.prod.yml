@@ -2,7 +2,7 @@ services:
   db:
     image: postgres:15-alpine
     env_file:
-      - .env.docker
+      - .env.prod
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-agenda}
       POSTGRES_USER: ${POSTGRES_USER:-agenda}
@@ -24,7 +24,7 @@ services:
       context: .
       dockerfile: Dockerfile
     env_file:
-      - .env.docker
+      - .env.prod
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-agenda}
       POSTGRES_USER: ${POSTGRES_USER:-agenda}

@@ -116,7 +116,7 @@ def delete_organization(request, pk):
     Deleta uma organização.
 
     Proteções:
-    - Admins (admin_1, admin_2) podem deletar
+    - Requer autenticação + IsAdminUser (admin_1, admin_2)
     - Protege organizações patrocinadas (is_sponsor=True)
     - Log da ação para auditoria
     """

@@ -501,10 +501,25 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
             if idinfo.get("aud") != google_client_id:
                 raise ValueError("Token não emitido para este aplicativo")
 
+            # Verifica issuer (segurança adicional)
+            if idinfo.get("iss") not in [
+                "accounts.google.com",
+                "https://accounts.google.com",
+            ]:
+                raise ValueError("Token não emitido pelo Google")
+
             email = idinfo.get("email", "").lower()
+            email_verified = idinfo.get("email_verified", False)
             given_name = idinfo.get("given_name", "")
             family_name = idinfo.get("family_name", "")
             picture = idinfo.get("picture", "")  # Avatar do Google
+
+            # Verifica email verificado
+            if not email_verified:
+                return Response(
+                    {"detail": "Email não verificado no Google."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             if email != musician_request.email:
                 return Response(

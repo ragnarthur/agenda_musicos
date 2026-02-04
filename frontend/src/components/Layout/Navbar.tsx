@@ -29,6 +29,8 @@ const Navbar: React.FC = memo(() => {
   const location = useLocation();
   const [openDesktopMore, setOpenDesktopMore] = useState(false);
   const [openMore, setOpenMore] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   // Use SWR hook for notifications - shared across Navbar and Dashboard
   const { pendingMyResponse, pendingApproval } = useNotifications();
@@ -67,8 +69,43 @@ const Navbar: React.FC = memo(() => {
     setOpenMore(false);
   }, [location.pathname]);
 
+  // Auto-hide navbar on scroll (mobile only)
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsVisible(false);
+      } else {
+        setIsVisible(true);
+      }
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
+
+  // Hide navbar when input is focused (better mobile UX)
+  useEffect(() => {
+    const handleFocus = () => setIsVisible(false);
+    const handleBlur = () => setIsVisible(true);
+
+    const inputs = document.querySelectorAll('input, textarea, select');
+    inputs.forEach(input => {
+      input.addEventListener('focus', handleFocus);
+      input.addEventListener('blur', handleBlur);
+    });
+
+    return () => {
+      inputs.forEach(input => {
+        input.removeEventListener('focus', handleFocus);
+        input.removeEventListener('blur', handleBlur);
+      });
+    };
+  }, [location.pathname]);
+
   return (
-    <nav className="bg-gradient-to-r from-slate-950/90 via-slate-900/85 to-slate-950/90 backdrop-blur-xl shadow-lg shadow-black/30 sticky top-0 z-50 border-b border-white/10 overflow-visible">
+    <nav className={`bg-gradient-to-r from-slate-950/90 via-slate-900/85 to-slate-950/90 backdrop-blur-xl shadow-lg shadow-black/30 sticky top-0 z-50 border-b border-white/10 overflow-visible transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'} md:translate-y-0`}>
       <div className="container mx-auto px-3 sm:px-4">
         <div className="flex flex-wrap md:flex-nowrap items-center justify-between min-h-[64px] py-2 gap-x-3 gap-y-2">
           {/* Logo e Nome */}

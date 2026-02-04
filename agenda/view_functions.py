@@ -16,6 +16,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
@@ -1118,10 +1119,15 @@ def list_musicians_by_city(request):
             Q(instrument__iexact=instrument) | Q(instruments__icontains=instrument)
         )
 
+    # Paginação para evitar payloads grandes em cidades populosas
+    paginator = PageNumberPagination()
+    paginator.page_size = 50
+    page = paginator.paginate_queryset(queryset, request)
+
     serializer = MusicianPublicSerializer(
-        queryset, many=True, context={"request": request}
+        page, many=True, context={"request": request}
     )
-    return Response(serializer.data)
+    return paginator.get_paginated_response(serializer.data)
 
 
 @api_view(["GET"])
