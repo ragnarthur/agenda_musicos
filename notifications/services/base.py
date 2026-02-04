@@ -203,6 +203,11 @@ class NotificationService:
             NotificationType.EVENT_CONFIRMED: prefs.notify_event_confirmations,
             NotificationType.EVENT_CANCELLED: prefs.notify_event_confirmations,
             NotificationType.AVAILABILITY_RESPONSE: prefs.notify_availability_responses,
+            # Quote Request types
+            NotificationType.QUOTE_REQUEST_NEW: prefs.notify_quote_requests,
+            NotificationType.QUOTE_PROPOSAL_RECEIVED: prefs.notify_quote_requests,
+            NotificationType.QUOTE_RESERVATION_CREATED: prefs.notify_quote_requests,
+            NotificationType.QUOTE_BOOKING_CONFIRMED: prefs.notify_quote_requests,
         }
 
         return mapping.get(notification_type, True)

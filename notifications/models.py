@@ -16,6 +16,11 @@ class NotificationType(models.TextChoices):
     EVENT_CONFIRMED = "event_confirmed", "Evento Confirmado"
     EVENT_CANCELLED = "event_cancelled", "Evento Cancelado"
     AVAILABILITY_RESPONSE = "availability_response", "Resposta de Disponibilidade"
+    # Quote Request types
+    QUOTE_REQUEST_NEW = "quote_request_new", "Novo Pedido de Orçamento"
+    QUOTE_PROPOSAL_RECEIVED = "quote_proposal_received", "Proposta Recebida"
+    QUOTE_RESERVATION_CREATED = "quote_reservation_created", "Reserva Criada"
+    QUOTE_BOOKING_CONFIRMED = "quote_booking_confirmed", "Reserva Confirmada"
 
 
 class NotificationPreference(models.Model):
@@ -53,6 +58,7 @@ class NotificationPreference(models.Model):
     notify_event_reminders = models.BooleanField(default=True)
     notify_event_confirmations = models.BooleanField(default=True)
     notify_availability_responses = models.BooleanField(default=True)
+    notify_quote_requests = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
