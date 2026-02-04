@@ -1,0 +1,18 @@
+GigFlow - Atualização sobre sua solicitação
+=============================================
+
+Olá, {{ first_name }}!
+
+Agradecemos seu interesse em fazer parte do GigFlow. Após análise cuidadosa, infelizmente não foi possível aprovar sua solicitação de acesso neste momento.
+
+{% if rejection_reason %}
+Motivo: {{ rejection_reason }}
+{% endif %}
+
+Você pode tentar novamente no futuro, corrigindo os pontos mencionados ou entrando em contato conosco para mais informações.
+
+Se você acredita que houve um erro ou deseja mais informações, entre em contato conosco respondendo a este email.
+
+---
+Este email foi enviado por GigFlow.
+Acesse: {{ frontend_url }}

@@ -1,0 +1,42 @@
+{% extends 'emails/base.html' %}
+
+{% block title %}Atualização sobre sua solicitação{% endblock %}
+
+{% block preview_text %}{{ first_name }}, temos uma atualização sobre sua solicitação de acesso{% endblock %}
+
+{% block content %}
+<h2 style="margin: 0 0 16px 0; color: #1f2937; font-size: 22px; font-weight: 600; line-height: 1.3;">
+    Atualização sobre sua solicitação
+</h2>
+
+<p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+    Olá, <strong style="color: #1f2937;">{{ first_name }}</strong>!
+</p>
+
+<p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+    Agradecemos seu interesse em fazer parte do GigFlow. Após análise cuidadosa, infelizmente não foi possível aprovar sua solicitação de acesso neste momento.
+</p>
+
+{% if rejection_reason %}
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin: 24px 0;">
+    <tr>
+        <td style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 20px;">
+            <p style="margin: 0 0 8px 0; color: #991b1b; font-size: 14px; font-weight: 600;">
+                Motivo:
+            </p>
+            <p style="margin: 0; color: #b91c1c; font-size: 15px; line-height: 1.6;">
+                {{ rejection_reason }}
+            </p>
+        </td>
+    </tr>
+</table>
+{% endif %}
+
+<p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+    Você pode tentar novamente no futuro, corrigindo os pontos mencionados ou entrando em contato conosco para mais informações.
+</p>
+
+<p style="margin: 24px 0 0 0; color: #9ca3af; font-size: 14px; line-height: 1.5;">
+    Se você acredita que houve um erro ou deseja mais informações, entre em contato conosco respondendo a este email.
+</p>
+{% endblock %}

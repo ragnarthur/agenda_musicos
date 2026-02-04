@@ -251,3 +251,121 @@ def send_user_deletion_email(to_email: str, first_name: str, admin_name: str) ->
         from_email="GigFlow Admin <noreply@gigflowagenda.com.br>",
         fail_silently=True,
     )
+
+
+def send_rejection_email(
+    to_email: str, first_name: str, rejection_reason: str | None = None
+) -> bool:
+    """Send musician request rejection email."""
+    return EmailService.send(
+        template_name="request_rejected",
+        to_email=to_email,
+        subject="Atualização sobre sua solicitação - GigFlow",
+        context={
+            "first_name": first_name,
+            "rejection_reason": rejection_reason,
+        },
+        fail_silently=True,
+    )
+
+
+def send_new_quote_request_email(
+    to_email: str,
+    musician_name: str,
+    contractor_name: str,
+    event_type: str,
+    event_date: str,
+    location: str,
+    quote_url: str,
+) -> bool:
+    """Notify musician about a new quote request."""
+    return EmailService.send(
+        template_name="quote_request_new",
+        to_email=to_email,
+        subject=f"Novo pedido de orçamento - {contractor_name}",
+        context={
+            "first_name": musician_name,
+            "contractor_name": contractor_name,
+            "event_type": event_type,
+            "event_date": event_date,
+            "location": location,
+            "quote_url": quote_url,
+        },
+        fail_silently=True,
+    )
+
+
+def send_proposal_received_email(
+    to_email: str,
+    contractor_name: str,
+    musician_name: str,
+    event_type: str,
+    proposed_value: str | None,
+    quote_url: str,
+) -> bool:
+    """Notify contractor about a proposal received."""
+    return EmailService.send(
+        template_name="proposal_received",
+        to_email=to_email,
+        subject=f"Nova proposta de {musician_name} - GigFlow",
+        context={
+            "first_name": contractor_name,
+            "musician_name": musician_name,
+            "event_type": event_type,
+            "proposed_value": proposed_value,
+            "quote_url": quote_url,
+        },
+        fail_silently=True,
+    )
+
+
+def send_reservation_email(
+    to_email: str,
+    musician_name: str,
+    contractor_name: str,
+    event_type: str,
+    event_date: str,
+    location: str,
+    quote_url: str,
+) -> bool:
+    """Notify musician about an accepted proposal (reservation)."""
+    return EmailService.send(
+        template_name="reservation_created",
+        to_email=to_email,
+        subject=f"Proposta aceita! Reserva de {contractor_name}",
+        context={
+            "first_name": musician_name,
+            "contractor_name": contractor_name,
+            "event_type": event_type,
+            "event_date": event_date,
+            "location": location,
+            "quote_url": quote_url,
+        },
+        fail_silently=True,
+    )
+
+
+def send_booking_confirmed_email(
+    to_email: str,
+    contractor_name: str,
+    musician_name: str,
+    event_type: str,
+    event_date: str,
+    location: str,
+    quote_url: str,
+) -> bool:
+    """Notify contractor about a confirmed booking."""
+    return EmailService.send(
+        template_name="booking_confirmed",
+        to_email=to_email,
+        subject=f"Reserva confirmada por {musician_name}!",
+        context={
+            "first_name": contractor_name,
+            "musician_name": musician_name,
+            "event_type": event_type,
+            "event_date": event_date,
+            "location": location,
+            "quote_url": quote_url,
+        },
+        fail_silently=True,
+    )

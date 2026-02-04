@@ -655,6 +655,12 @@ export default function MusicianRequest() {
                 Faça login
               </Link>
             </p>
+
+            <p className="mt-2 text-center text-sm text-gray-500 dark:text-gray-400">
+              <Link to="/" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                Voltar para a página inicial
+              </Link>
+            </p>
           </div>
         </div>
       </FullscreenBackground>

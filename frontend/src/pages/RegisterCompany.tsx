@@ -201,6 +201,12 @@ export default function RegisterCompany() {
             >
               Fazer Login
             </button>
+            <Link
+              to="/"
+              className="mt-4 inline-flex w-full items-center justify-center text-sm font-medium text-indigo-600 hover:text-indigo-700"
+            >
+              Voltar para a página inicial
+            </Link>
           </div>
         </div>
       </FullscreenBackground>
@@ -424,6 +430,12 @@ export default function RegisterCompany() {
               className="text-indigo-600 hover:text-indigo-700 font-medium"
             >
               Solicite acesso
+            </Link>
+          </p>
+
+          <p className="mt-2 text-center text-sm text-gray-500 dark:text-gray-400">
+            <Link to="/" className="text-indigo-600 hover:text-indigo-700 font-medium">
+              Voltar para a página inicial
             </Link>
           </p>
         </div>

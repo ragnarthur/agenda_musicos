@@ -1,0 +1,20 @@
+GigFlow - Novo pedido de orçamento
+=============================================
+
+Olá, {{ first_name }}!
+
+{{ contractor_name }} está interessado em contratar seus serviços para um evento.
+
+Detalhes do evento:
+- Tipo: {{ event_type }}
+- Data: {{ event_date }}
+- Local: {{ location }}
+
+Acesse sua conta para ver todos os detalhes e enviar sua proposta:
+{{ quote_url }}
+
+Responda o mais rápido possível para aumentar suas chances de fechar o negócio!
+
+---
+Este email foi enviado por GigFlow.
+Acesse: {{ frontend_url }}

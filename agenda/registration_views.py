@@ -391,6 +391,19 @@ class RegisterContractorView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+        # Envia email de boas-vindas
+        try:
+            frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
+            login_url = f"{frontend_url}/contratante/login"
+            send_welcome_email(
+                to_email=user.email,
+                first_name=first_name,
+                username=username,
+                login_url=login_url,
+            )
+        except Exception as e:
+            logger.error(f"Error sending welcome email to contractor: {e}")
+
         return Response(
             {
                 "detail": "Contratante cadastrado com sucesso!",

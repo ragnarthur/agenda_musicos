@@ -60,6 +60,14 @@ from .serializers import (
 )
 from .throttles import PublicRateThrottle
 
+from notifications.services.email_service import (
+    send_booking_confirmed_email,
+    send_new_quote_request_email,
+    send_proposal_received_email,
+    send_rejection_email,
+    send_reservation_email,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -661,6 +669,17 @@ def reject_musician_request(request, request_id):
     notes = request.data.get("admin_notes", "")
     musician_request.reject(request.user, notes)
 
+    # Envia email de rejeição
+    try:
+        send_rejection_email(
+            to_email=musician_request.email,
+            first_name=musician_request.full_name.split()[0],
+            rejection_reason=notes if notes else None,
+        )
+        logger.info("Email de rejeição enviado para %s", musician_request.email)
+    except Exception as exc:
+        logger.error("Erro ao enviar email de rejeição: %s", exc)
+
     return Response({"message": "Solicitação rejeitada"}, status=status.HTTP_200_OK)
 
 
@@ -741,6 +760,26 @@ def create_quote_request(request):
 
     quote_request = serializer.save(contractor=contractor)
     _log_booking_event(quote_request, "contractor", request.user, "pedido_criado")
+
+    # Notifica músico sobre o novo pedido
+    try:
+        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
+        quote_url = f"{frontend_url}/musicos/pedidos/{quote_request.id}"
+        location = f"{quote_request.location_city}, {quote_request.location_state}"
+        event_date = quote_request.event_date.strftime("%d/%m/%Y")
+
+        send_new_quote_request_email(
+            to_email=musician.user.email,
+            musician_name=musician.user.first_name,
+            contractor_name=contractor.name,
+            event_type=quote_request.event_type,
+            event_date=event_date,
+            location=location,
+            quote_url=quote_url,
+        )
+        logger.info("Email de novo pedido enviado para %s", musician.user.email)
+    except Exception as exc:
+        logger.error("Erro ao enviar email de novo pedido: %s", exc)
 
     return Response(
         QuoteRequestSerializer(quote_request, context={"request": request}).data,
@@ -848,6 +887,24 @@ def musician_send_proposal(request, request_id):
 
     _log_booking_event(quote_request, "musician", request.user, "proposta_enviada")
 
+    # Notifica contratante sobre a proposta
+    try:
+        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
+        quote_url = f"{frontend_url}/contratante/pedidos/{quote_request.id}"
+        contractor = quote_request.contractor
+
+        send_proposal_received_email(
+            to_email=contractor.user.email,
+            contractor_name=contractor.name,
+            musician_name=f"{musician.user.first_name} {musician.user.last_name}".strip(),
+            event_type=quote_request.event_type,
+            proposed_value=str(proposal.proposed_value) if proposal.proposed_value else None,
+            quote_url=quote_url,
+        )
+        logger.info("Email de proposta enviado para %s", contractor.user.email)
+    except Exception as exc:
+        logger.error("Erro ao enviar email de proposta: %s", exc)
+
     return Response(
         QuoteProposalSerializer(proposal, context={"request": request}).data,
         status=status.HTTP_201_CREATED,
@@ -896,6 +953,28 @@ def contractor_accept_proposal(request, request_id):
     booking, _ = Booking.objects.get_or_create(request=quote_request)
 
     _log_booking_event(quote_request, "contractor", request.user, "reserva_confirmada")
+
+    # Notifica músico sobre a reserva
+    try:
+        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
+        quote_url = f"{frontend_url}/musicos/pedidos/{quote_request.id}"
+        musician = quote_request.musician
+        contractor = quote_request.contractor
+        location = f"{quote_request.location_city}, {quote_request.location_state}"
+        event_date = quote_request.event_date.strftime("%d/%m/%Y")
+
+        send_reservation_email(
+            to_email=musician.user.email,
+            musician_name=musician.user.first_name,
+            contractor_name=contractor.name,
+            event_type=quote_request.event_type,
+            event_date=event_date,
+            location=location,
+            quote_url=quote_url,
+        )
+        logger.info("Email de reserva enviado para %s", musician.user.email)
+    except Exception as exc:
+        logger.error("Erro ao enviar email de reserva: %s", exc)
 
     return Response(
         {
@@ -948,6 +1027,27 @@ def musician_confirm_booking(request, request_id):
     quote_request.save(update_fields=["status", "updated_at"])
 
     _log_booking_event(quote_request, "musician", request.user, "reserva_confirmada")
+
+    # Notifica contratante sobre a confirmação
+    try:
+        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
+        quote_url = f"{frontend_url}/contratante/pedidos/{quote_request.id}"
+        contractor = quote_request.contractor
+        location = f"{quote_request.location_city}, {quote_request.location_state}"
+        event_date = quote_request.event_date.strftime("%d/%m/%Y")
+
+        send_booking_confirmed_email(
+            to_email=contractor.user.email,
+            contractor_name=contractor.name,
+            musician_name=f"{musician.user.first_name} {musician.user.last_name}".strip(),
+            event_type=quote_request.event_type,
+            event_date=event_date,
+            location=location,
+            quote_url=quote_url,
+        )
+        logger.info("Email de confirmação enviado para %s", contractor.user.email)
+    except Exception as exc:
+        logger.error("Erro ao enviar email de confirmação: %s", exc)
 
     return Response(BookingSerializer(booking, context={"request": request}).data)
 

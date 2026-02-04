@@ -1,0 +1,68 @@
+{% extends 'emails/base.html' %}
+
+{% block title %}Proposta aceita - Reserva criada{% endblock %}
+
+{% block preview_text %}{{ first_name }}, sua proposta foi aceita por {{ contractor_name }}!{% endblock %}
+
+{% block content %}
+<h2 style="margin: 0 0 16px 0; color: #1f2937; font-size: 22px; font-weight: 600; line-height: 1.3;">
+    Sua proposta foi aceita!
+</h2>
+
+<p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+    Olá, <strong style="color: #1f2937;">{{ first_name }}</strong>!
+</p>
+
+<p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+    Ótima notícia! <strong style="color: #6366f1;">{{ contractor_name }}</strong> aceitou sua proposta e criou uma reserva.
+</p>
+
+<!-- Event details box -->
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin: 24px 0;">
+    <tr>
+        <td style="background-color: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 20px;">
+            <p style="margin: 0 0 12px 0; color: #92400e; font-size: 14px; font-weight: 600;">
+                Detalhes da reserva:
+            </p>
+            <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                    <td style="padding: 4px 0; color: #78350f; font-size: 15px;">
+                        <strong>Evento:</strong> {{ event_type }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 4px 0; color: #78350f; font-size: 15px;">
+                        <strong>Data:</strong> {{ event_date }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 4px 0; color: #78350f; font-size: 15px;">
+                        <strong>Local:</strong> {{ location }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 4px 0; color: #78350f; font-size: 15px;">
+                        <strong>Contratante:</strong> {{ contractor_name }}
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin: 24px 0;">
+    <tr>
+        <td style="background-color: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 16px;">
+            <p style="margin: 0; color: #c2410c; font-size: 14px; line-height: 1.5;">
+                <strong>Ação necessária:</strong> Acesse sua conta e confirme a reserva para finalizar o acordo.
+            </p>
+        </td>
+    </tr>
+</table>
+
+{% include 'emails/components/button.html' with url=quote_url text='Confirmar reserva' show_fallback_link=False %}
+
+<p style="margin: 24px 0 0 0; color: #9ca3af; font-size: 14px; line-height: 1.5;">
+    Confirme o mais rápido possível para garantir que o contratante não cancele a reserva.
+</p>
+{% endblock %}

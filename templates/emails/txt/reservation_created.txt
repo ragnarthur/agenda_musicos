@@ -1,0 +1,21 @@
+GigFlow - Sua proposta foi aceita!
+=============================================
+
+Olá, {{ first_name }}!
+
+Ótima notícia! {{ contractor_name }} aceitou sua proposta e criou uma reserva.
+
+Detalhes da reserva:
+- Evento: {{ event_type }}
+- Data: {{ event_date }}
+- Local: {{ location }}
+- Contratante: {{ contractor_name }}
+
+AÇÃO NECESSÁRIA: Acesse sua conta e confirme a reserva para finalizar o acordo:
+{{ quote_url }}
+
+Confirme o mais rápido possível para garantir que o contratante não cancele a reserva.
+
+---
+Este email foi enviado por GigFlow.
+Acesse: {{ frontend_url }}

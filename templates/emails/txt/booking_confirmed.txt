@@ -1,0 +1,21 @@
+GigFlow - Reserva confirmada!
+=============================================
+
+Olá, {{ first_name }}!
+
+Excelente notícia! {{ musician_name }} confirmou a reserva para seu evento.
+
+Evento confirmado:
+- Evento: {{ event_type }}
+- Data: {{ event_date }}
+- Local: {{ location }}
+- Músico: {{ musician_name }}
+
+Agora é só aguardar o dia do evento! Você pode acessar sua conta para ver mais detalhes:
+{{ quote_url }}
+
+Obrigado por usar o GigFlow para organizar seu evento!
+
+---
+Este email foi enviado por GigFlow.
+Acesse: {{ frontend_url }}

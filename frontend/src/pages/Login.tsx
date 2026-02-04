@@ -292,6 +292,12 @@ const Login: React.FC = () => {
             </Link>
           </div>
 
+          <div className="mt-2 text-center text-sm text-gray-600">
+            <Link to="/" className="text-primary-600 hover:text-primary-700 font-medium">
+              Voltar para a página inicial
+            </Link>
+          </div>
+
           <div className="mt-6 text-center text-xs text-gray-500">
             Powered by <span className="font-semibold text-primary-600">DXM Tech</span>
           </div>

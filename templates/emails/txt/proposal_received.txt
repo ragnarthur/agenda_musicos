@@ -1,0 +1,19 @@
+GigFlow - Nova proposta recebida
+=============================================
+
+Olá, {{ first_name }}!
+
+{{ musician_name }} respondeu ao seu pedido de orçamento para {{ event_type }}.
+
+{% if proposed_value %}
+Valor proposto: R$ {{ proposed_value }}
+{% endif %}
+
+Acesse sua conta para ver a proposta completa e aceitar ou solicitar ajustes:
+{{ quote_url }}
+
+Dica: Músicos com boas avaliações tendem a fechar mais rápido. Não demore para responder!
+
+---
+Este email foi enviado por GigFlow.
+Acesse: {{ frontend_url }}
