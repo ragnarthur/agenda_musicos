@@ -4,15 +4,12 @@ import { useState, useEffect } from 'react';
 import {
   Search,
   Calendar,
-  MapPin,
   TrendingUp,
   CheckCircle,
   Clock,
   ArrowLeft,
   Trash2,
-  Building2,
-  Music2,
-  Shield,
+  ClipboardList,
 } from 'lucide-react';
 import {
   adminBookingService,

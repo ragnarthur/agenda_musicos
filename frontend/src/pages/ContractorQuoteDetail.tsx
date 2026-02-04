@@ -11,7 +11,6 @@ import {
   CheckCircle,
   XCircle,
   Trash2,
-  User,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {

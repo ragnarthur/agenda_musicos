@@ -11,7 +11,6 @@ import {
   Filter,
   ChevronDown,
   Calendar,
-  DollarSign,
 } from 'lucide-react';
 import { allMusiciansService, type MusicianPublic } from '../services/publicApi';
 import { BRAZILIAN_STATES } from '../config/cities';
@@ -134,10 +133,10 @@ export default function OurMusicians() {
                   value={state}
                   onChange={e => setState(e.target.value)}
                   className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                >
+                  >
                   <option value="">Todos</option>
-                  {BRAZILIAN_STATES.map(uf => (
-                    <option key={uf} value={uf}>{uf}</option>
+                  {BRAZILIAN_STATES.map(({ value, label }) => (
+                    <option key={value} value={value}>{label}</option>
                   ))}
                 </select>
               </div>
