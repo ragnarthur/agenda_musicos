@@ -215,6 +215,28 @@ else:
 
 
 # =========================================================
+# Cache / Redis
+# =========================================================
+REDIS_URL = config("REDIS_URL", default="").strip()
+
+if REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": REDIS_URL,
+            "KEY_PREFIX": "gigflow",
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "gigflow-cache",
+        }
+    }
+
+
+# =========================================================
 # Password validation
 # =========================================================
 AUTH_PASSWORD_VALIDATORS = [

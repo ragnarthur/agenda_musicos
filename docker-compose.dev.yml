@@ -16,6 +16,10 @@ services:
       retries: 10
     restart: unless-stopped
 
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
   backend:
     build:
       context: .
@@ -30,6 +34,7 @@ services:
       FRONTEND_URL: "http://localhost:5173"
       GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
       DATABASE_URL: "postgresql://agenda:agenda@db:5432/agenda"
+      REDIS_URL: "redis://redis:6379/1"
       CSP_HEADER: "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'"
       DEFAULT_FROM_EMAIL: "Agenda Musicos <noreply@localhost>"
     volumes:
@@ -39,6 +44,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     command: >
       sh -c "python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000"

@@ -316,6 +316,11 @@ class Musician(models.Model):
         ordering = ["user__first_name"]
         verbose_name = "Músico"
         verbose_name_plural = "Músicos"
+        indexes = [
+            models.Index(fields=["is_active", "city", "state"]),
+            models.Index(fields=["is_active", "state"]),
+            models.Index(fields=["is_active", "instrument"]),
+        ]
 
     def get_instrument_label(self):
         """Retorna label do instrumento, com fallback para valores customizados."""
@@ -1280,6 +1285,40 @@ class City(models.Model):
             name_clean = re.sub(r"\s+", "-", name_clean.strip())
             self.slug = f"{name_clean}-{self.state.lower()}"
         super().save(*args, **kwargs)
+
+
+class ContactView(models.Model):
+    """
+    Registra quando um contratante visualiza o contato de um músico.
+    Usado para auditoria e analytics de interesse.
+    """
+
+    contractor = models.ForeignKey(
+        "ContractorProfile",
+        on_delete=models.CASCADE,
+        related_name="contact_views",
+    )
+    musician = models.ForeignKey(
+        "Musician",
+        on_delete=models.CASCADE,
+        related_name="contact_views",
+    )
+    viewed_at = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True, null=True, max_length=500)
+
+    class Meta:
+        ordering = ["-viewed_at"]
+        verbose_name = "Visualização de Contato"
+        verbose_name_plural = "Visualizações de Contato"
+        indexes = [
+            models.Index(fields=["-viewed_at"]),
+            models.Index(fields=["contractor", "-viewed_at"]),
+            models.Index(fields=["musician", "-viewed_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.contractor.name} → {self.musician.user.get_full_name()} ({self.viewed_at})"
 
 
 class AuditLog(models.Model):

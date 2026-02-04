@@ -31,6 +31,7 @@ from .models import (
     Booking,
     BookingEvent,
     Connection,
+    ContactView,
     ContractorProfile,
     Event,
     Membership,
@@ -1175,7 +1176,13 @@ def list_all_musicians_public(request):
     instrument = request.query_params.get("instrument")
     search = request.query_params.get("search")
     min_rating = request.query_params.get("min_rating")
-    limit = int(request.query_params.get("limit", 100))
+    max_limit = 200
+    default_limit = 100
+    try:
+        limit = int(request.query_params.get("limit", default_limit))
+    except (TypeError, ValueError):
+        limit = default_limit
+    limit = max(1, min(limit, max_limit))
 
     queryset = Musician.objects.filter(is_active=True).select_related("user")
 
@@ -1197,10 +1204,18 @@ def list_all_musicians_public(request):
         queryset = queryset.filter(average_rating__gte=min_rating)
 
     queryset = queryset.order_by("-average_rating", "user__first_name")
-    queryset = queryset[:limit]
+
+    paginator = PageNumberPagination()
+    paginator.page_size = limit
+    page = paginator.paginate_queryset(queryset, request)
+    if page is not None:
+        serializer = MusicianPublicSerializer(
+            page, many=True, context={"request": request}
+        )
+        return paginator.get_paginated_response(serializer.data)
 
     serializer = MusicianPublicSerializer(
-        queryset, many=True, context={"request": request}
+        queryset[:limit], many=True, context={"request": request}
     )
     return Response(serializer.data)
 
@@ -1274,3 +1289,40 @@ def get_unread_messages_count(request):
     count = QuoteRequest.objects.filter(musician=musician, status="pending").count()
 
     return Response({"count": count})
+
+
+# =============================================================================
+# Musician Contact (Protected - Only Contractors)
+# =============================================================================
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_musician_contact(request, musician_id):
+    """
+    GET /api/musicians/<id>/contact/
+    Retorna contato do músico (WhatsApp/phone) apenas para contractors autenticados.
+    Registra visualização para auditoria.
+    """
+    # Verifica se é contractor
+    if not hasattr(request.user, "contractor_profile"):
+        return Response(
+            {"detail": "Apenas contratantes podem ver contatos"},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    musician = get_object_or_404(Musician, pk=musician_id, is_active=True)
+
+    # Registra visualização para auditoria
+    ContactView.objects.create(
+        contractor=request.user.contractor_profile,
+        musician=musician,
+        ip_address=request.META.get("REMOTE_ADDR"),
+        user_agent=request.META.get("HTTP_USER_AGENT", "")[:500],
+    )
+
+    return Response({
+        "whatsapp": musician.whatsapp,
+        "phone": musician.phone,
+        "instagram": musician.instagram,
+    })
