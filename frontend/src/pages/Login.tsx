@@ -121,7 +121,7 @@ const Login: React.FC = () => {
             theme: 'outline',
             size: 'large',
             text: 'signin_with',
-            width: '100%',
+            width: 360,
           });
         }
       }
