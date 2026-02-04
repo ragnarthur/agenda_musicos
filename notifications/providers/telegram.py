@@ -1,4 +1,5 @@
 import logging
+import time
 
 import requests
 from django.conf import settings
@@ -6,6 +7,10 @@ from django.conf import settings
 from notifications.services.base import BaseProvider, NotificationPayload, NotificationResult
 
 logger = logging.getLogger(__name__)
+
+# Configuração de retry
+MAX_RETRIES = 3
+RETRY_DELAY = 1  # segundos (exponencial: 1, 2, 4)
 
 
 class TelegramProvider(BaseProvider):
@@ -55,35 +60,50 @@ class TelegramProvider(BaseProvider):
         # Formata mensagem para Telegram (suporta Markdown)
         message = self._format_telegram_message(payload)
 
-        try:
-            response = requests.post(
-                self._get_api_url("sendMessage"),
-                json={
-                    "chat_id": chat_id,
-                    "text": message,
-                    "parse_mode": "Markdown",
-                    "disable_web_page_preview": False,
-                },
-                timeout=10,
-            )
+        last_error = None
+        for attempt in range(MAX_RETRIES):
+            try:
+                response = requests.post(
+                    self._get_api_url("sendMessage"),
+                    json={
+                        "chat_id": chat_id,
+                        "text": message,
+                        "parse_mode": "Markdown",
+                        "disable_web_page_preview": False,
+                    },
+                    timeout=10,
+                )
 
-            data = response.json()
+                data = response.json()
 
-            if data.get("ok"):
-                message_id = data.get("result", {}).get("message_id")
-                logger.info(f"Telegram enviado para chat_id {chat_id}")
-                return NotificationResult(success=True, external_id=str(message_id))
-            else:
-                error = data.get("description", "Erro desconhecido")
-                logger.error(f"Telegram API error: {error}")
-                return NotificationResult(success=False, error_message=error)
+                if data.get("ok"):
+                    message_id = data.get("result", {}).get("message_id")
+                    logger.info(f"Telegram enviado para chat_id {chat_id}")
+                    return NotificationResult(success=True, external_id=str(message_id))
+                else:
+                    # Erro de API (chat_id invalido, bot bloqueado, etc) - nao fazer retry
+                    error = data.get("description", "Erro desconhecido")
+                    logger.error(f"Telegram API error: {error}")
+                    return NotificationResult(success=False, error_message=error)
 
-        except requests.exceptions.Timeout:
-            logger.error("Timeout na API do Telegram")
-            return NotificationResult(success=False, error_message="Timeout na API do Telegram")
-        except Exception as e:
-            logger.exception("Erro ao enviar mensagem Telegram")
-            return NotificationResult(success=False, error_message=str(e))
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                last_error = str(e)
+                if attempt < MAX_RETRIES - 1:
+                    delay = RETRY_DELAY * (2**attempt)
+                    logger.warning(
+                        f"Telegram retry {attempt + 1}/{MAX_RETRIES} para chat_id {chat_id} em {delay}s: {e}"
+                    )
+                    time.sleep(delay)
+                continue
+            except Exception as e:
+                logger.exception("Erro ao enviar mensagem Telegram")
+                return NotificationResult(success=False, error_message=str(e))
+
+        logger.error(f"Telegram falhou apos {MAX_RETRIES} tentativas para chat_id {chat_id}")
+        return NotificationResult(
+            success=False,
+            error_message=f"Falha apos {MAX_RETRIES} tentativas: {last_error}",
+        )
 
     def _format_telegram_message(self, payload: NotificationPayload) -> str:
         """Formata mensagem com Markdown para Telegram"""
