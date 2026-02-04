@@ -38,25 +38,6 @@ export default function OurMusicians() {
   const loadMusicians = async () => {
     setLoading(true);
     try {
-      const data = await allMusiciansService.list(params);
-      setMusicians(data);
-    } catch (error) {
-      console.error('Erro ao carregar músicos:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-      setMusicians(data);
-    } catch (error) {
-      console.error('Erro ao carregar músicos:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMusicians = async () => {
-    setLoading(true);
-    try {
       const params: any = {
         search: search || undefined,
         city: city || undefined,
@@ -65,7 +46,6 @@ export default function OurMusicians() {
         min_rating: minRating || undefined,
         limit: 100,
       };
-      
       const data = await allMusiciansService.list(params);
       setMusicians(data);
     } catch (error) {
@@ -73,6 +53,10 @@ export default function OurMusicians() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = () => {
+    loadMusicians();
   };
 
   const handleRequestQuote = (musicianId: number) => {
