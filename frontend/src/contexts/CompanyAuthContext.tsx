@@ -23,8 +23,8 @@ interface CompanyAuthContextType {
   organization: ContractorProfile | null;
   loading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  setSession: (payload: { organization: ContractorProfile; access?: string; refresh?: string }) => void;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
+  setSession: (payload: { organization: ContractorProfile; access?: string; refresh?: string }, rememberMe?: boolean) => void;
   logout: () => void;
   refreshToken: () => Promise<void>;
   updateOrganization: (data: Partial<ContractorProfile>) => Promise<void>;
@@ -35,6 +35,8 @@ const CompanyAuthContext = createContext<CompanyAuthContextType | null>(null);
 // Chave para marcar sessão ativa no sessionStorage
 // sessionStorage é limpo ao fechar o navegador, garantindo novo login
 const SESSION_KEY = 'gigflow_contractor_session';
+// Chave para "Permanecer conectado" no localStorage (persiste ao fechar navegador)
+const REMEMBER_KEY = 'gigflow_contractor_remember';
 
 interface CompanyAuthProviderProps {
   children: ReactNode;
@@ -54,9 +56,11 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
         // Verifica se há uma sessão ativa nesta janela do navegador
         const hasActiveSession = sessionStorage.getItem(SESSION_KEY);
         const organizationData = sessionStorage.getItem('contractorProfile');
+        // Verifica se usuário optou por "Permanecer conectado"
+        const rememberMe = localStorage.getItem(REMEMBER_KEY) === 'true';
 
-        if (!hasActiveSession) {
-          // Navegador foi fechado e reaberto - força novo login
+        if (!hasActiveSession && !rememberMe) {
+          // Navegador foi fechado e reaberto sem "Permanecer conectado" - força novo login
           if (isMounted) {
             setOrganization(null);
             clearStoredAccessToken();
@@ -64,6 +68,11 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
             setLoading(false);
           }
           return;
+        }
+
+        // Restaura marcador de sessão se estava em "Permanecer conectado"
+        if (rememberMe && !hasActiveSession) {
+          sessionStorage.setItem(SESSION_KEY, 'true');
         }
 
         if (organizationData && isMounted) {
@@ -105,7 +114,7 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
     };
   }, []);
 
-  const login = useCallback(async (email: string, password: string): Promise<void> => {
+  const login = useCallback(async (email: string, password: string, rememberMe?: boolean): Promise<void> => {
     try {
       setLoading(true);
       const response = await contractorService.login(email.toLowerCase().trim(), password);
@@ -114,6 +123,13 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
       sessionStorage.setItem(SESSION_KEY, 'true');
       setStoredAccessToken(response.access);
       setStoredRefreshToken(response.refresh);
+
+      // Armazena preferência de "Permanecer conectado"
+      if (rememberMe) {
+        localStorage.setItem(REMEMBER_KEY, 'true');
+      } else {
+        localStorage.removeItem(REMEMBER_KEY);
+      }
 
       // Armazenar dados da organização (tokens ficam em cookies httpOnly)
       setOrganization(response.contractor as ContractorProfile);
@@ -132,11 +148,18 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
   }, []);
 
   const setSession = useCallback(
-    (payload: { organization: ContractorProfile; access?: string; refresh?: string }) => {
+    (payload: { organization: ContractorProfile; access?: string; refresh?: string }, rememberMe?: boolean) => {
       // Marcar sessão como ativa
       sessionStorage.setItem(SESSION_KEY, 'true');
       setStoredAccessToken(payload.access);
       setStoredRefreshToken(payload.refresh);
+
+      // Armazena preferência de "Permanecer conectado"
+      if (rememberMe) {
+        localStorage.setItem(REMEMBER_KEY, 'true');
+      } else {
+        localStorage.removeItem(REMEMBER_KEY);
+      }
 
       // Armazenar dados da organização
       setOrganization(payload.organization);
@@ -158,9 +181,10 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
       });
     }
 
-    // Limpar sessionStorage
+    // Limpar sessionStorage e preferência de "Permanecer conectado"
     sessionStorage.removeItem(SESSION_KEY);
     sessionStorage.removeItem('contractorProfile');
+    localStorage.removeItem(REMEMBER_KEY);
     clearStoredAccessToken();
     clearStoredRefreshToken();
 

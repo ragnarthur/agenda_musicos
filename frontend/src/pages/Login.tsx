@@ -14,6 +14,7 @@ const Login: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -27,7 +28,7 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      await login({ username, password });
+      await login({ username, password }, rememberMe);
       showToast.success('Login realizado com sucesso!');
       navigate('/dashboard');
     } catch (err: unknown) {
@@ -67,7 +68,7 @@ const Login: React.FC = () => {
         }
 
         if (result.user_type === 'musician') {
-          await setSession();
+          await setSession(rememberMe);
           showToast.success('Login realizado com sucesso!');
           navigate('/dashboard');
         } else {
@@ -90,7 +91,7 @@ const Login: React.FC = () => {
         setIsGoogleLoading(false);
       }
     },
-    [navigate, setSession, isGoogleLoading]
+    [navigate, setSession, isGoogleLoading, rememberMe]
   );
 
   useEffect(() => {
@@ -253,7 +254,16 @@ const Login: React.FC = () => {
                   {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                 </button>
               </div>
-              <div className="mt-2 text-right">
+              <div className="mt-2 flex items-center justify-between">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={e => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                  />
+                  <span className="text-xs text-gray-600">Permanecer conectado</span>
+                </label>
                 <Link
                   to="/esqueci-senha"
                   className="text-xs font-medium text-primary-600 hover:text-primary-700"

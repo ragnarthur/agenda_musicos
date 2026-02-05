@@ -16,6 +16,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Chave para marcar sessão ativa no sessionStorage
 // sessionStorage é limpo ao fechar o navegador, garantindo novo login
 const SESSION_KEY = 'gigflow_session_active';
+// Chave para "Permanecer conectado" no localStorage (persiste ao fechar navegador)
+const REMEMBER_KEY = 'gigflow_remember_me';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<Musician | null>(null);
@@ -27,9 +29,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const bootstrap = async () => {
       // Verifica se há uma sessão ativa nesta janela do navegador
       const hasActiveSession = sessionStorage.getItem(SESSION_KEY);
+      // Verifica se usuário optou por "Permanecer conectado"
+      const rememberMe = localStorage.getItem(REMEMBER_KEY) === 'true';
 
-      if (!hasActiveSession) {
-        // Navegador foi fechado e reaberto - limpa cookies e força novo login
+      if (!hasActiveSession && !rememberMe) {
+        // Navegador foi fechado e reaberto sem "Permanecer conectado" - força novo login
         try {
           await authService.logout();
         } catch {
@@ -41,6 +45,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         clearStoredRefreshToken();
         setLoading(false);
         return;
+      }
+
+      // Restaura marcador de sessão se estava em "Permanecer conectado"
+      if (rememberMe && !hasActiveSession) {
+        sessionStorage.setItem(SESSION_KEY, 'true');
       }
 
       try {
@@ -71,12 +80,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const login = useCallback(async (credentials: LoginCredentials) => {
+  const login = useCallback(async (credentials: LoginCredentials, rememberMe?: boolean) => {
     try {
       const data = await authService.login(credentials);
       setStoredAccessToken(data.access);
       setStoredRefreshToken(data.refresh);
       sessionStorage.setItem(SESSION_KEY, 'true');
+      // Armazena preferência de "Permanecer conectado"
+      if (rememberMe) {
+        localStorage.setItem(REMEMBER_KEY, 'true');
+      } else {
+        localStorage.removeItem(REMEMBER_KEY);
+      }
       const musician = await musicianService.getMe();
       setUser(musician);
     } catch (error) {
@@ -85,9 +100,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const setSession = useCallback(async () => {
+  const setSession = useCallback(async (rememberMe?: boolean) => {
     try {
       sessionStorage.setItem(SESSION_KEY, 'true');
+      // Armazena preferência de "Permanecer conectado"
+      if (rememberMe) {
+        localStorage.setItem(REMEMBER_KEY, 'true');
+      } else {
+        localStorage.removeItem(REMEMBER_KEY);
+      }
       const musician = await musicianService.getMe();
       setUser(musician);
 
@@ -142,8 +163,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       logError('Erro ao finalizar sessão:', error);
     } finally {
-      // Remove marcador de sessão
+      // Remove marcador de sessão e preferência de "Permanecer conectado"
       sessionStorage.removeItem(SESSION_KEY);
+      localStorage.removeItem(REMEMBER_KEY);
       clearStoredAccessToken();
       clearStoredRefreshToken();
       setUser(null);

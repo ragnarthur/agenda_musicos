@@ -167,8 +167,8 @@ export interface LoginCredentials {
 
 export interface AuthContextType {
   user: Musician | null;
-  login: (credentials: LoginCredentials) => Promise<void>;
-  setSession: () => Promise<void>;
+  login: (credentials: LoginCredentials, rememberMe?: boolean) => Promise<void>;
+  setSession: (rememberMe?: boolean) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   isAuthenticated: boolean;

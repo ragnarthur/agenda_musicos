@@ -21,6 +21,7 @@ export default function LoginCompany() {
   const { login, setSession } = useCompanyAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const {
@@ -32,7 +33,7 @@ export default function LoginCompany() {
   const onSubmit = async (data: LoginForm) => {
     setIsSubmitting(true);
     try {
-      await login(data.email, data.password);
+      await login(data.email, data.password, rememberMe);
       toast.success('Login realizado com sucesso!');
       navigate('/contratante/pedidos');
     } catch (error: unknown) {
@@ -59,7 +60,7 @@ export default function LoginCompany() {
             organization: result.contractor as ContractorProfile,
             access: result.access,
             refresh: result.refresh,
-          });
+          }, rememberMe);
           toast.success('Login realizado!');
           navigate('/contratante/pedidos');
         } else {
@@ -82,7 +83,7 @@ export default function LoginCompany() {
         setIsGoogleLoading(false);
       }
     },
-    [navigate, setSession, isGoogleLoading]
+    [navigate, setSession, isGoogleLoading, rememberMe]
   );
 
   // Renderiza botão do Google
@@ -235,6 +236,17 @@ export default function LoginCompany() {
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
               )}
+              <div className="mt-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={e => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Permanecer conectado</span>
+                </label>
+              </div>
             </div>
 
             {/* Submit */}
