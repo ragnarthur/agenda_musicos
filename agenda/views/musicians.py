@@ -232,19 +232,20 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
             "event_date__lte": end_date,
         }
 
-        if is_owner:
-            # Dono do perfil: vê todos os eventos
-            events_queryset = Event.objects.filter(
-                Q(availabilities__musician=musician) | Q(created_by=musician.user),
-                **event_filter,
-            ).distinct()
-        else:
-            # Visitante: vê apenas eventos confirmados/aprovados
-            events_queryset = Event.objects.filter(
-                Q(availabilities__musician=musician) | Q(created_by=musician.user),
-                **event_filter,
-                status__in=["confirmed", "approved"],
-            ).distinct()
+        # Filtra eventos onde o músico participa (via availability OU criador)
+        # Isso garante consistência com o dashboard e página de eventos
+        events_queryset = Event.objects.filter(
+            Q(availabilities__musician=musician) | Q(created_by=musician.user),
+            **event_filter,
+        )
+
+        # Se não for dono, filtra apenas eventos confirmados/aprovados
+        if not is_owner:
+            events_queryset = events_queryset.filter(
+                status__in=["confirmed", "approved"]
+            )
+
+        events_queryset = events_queryset.distinct()
 
         # Ordenar e anotar disponibilidade
         events_queryset = events_queryset.order_by("event_date", "start_time")
