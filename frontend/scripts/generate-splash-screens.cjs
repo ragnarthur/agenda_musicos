@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// scripts/generate-splash-screens.js
-// Gera splash screens simples para iOS PWA
-// Uso: node scripts/generate-splash-screens.js
+// scripts/generate-splash-screens.cjs
+// Gera splash screens com logo + nome para iOS PWA
+// Uso: node scripts/generate-splash-screens.cjs
 
 const fs = require('fs');
 const path = require('path');
@@ -23,72 +23,97 @@ const splashSizes = [
 ];
 
 const splashDir = path.join(__dirname, '..', 'public', 'splash');
+const logoPath = path.join(__dirname, '..', 'public', 'owl-512.png');
 
 // Garante que o diretório existe
 if (!fs.existsSync(splashDir)) {
   fs.mkdirSync(splashDir, { recursive: true });
 }
 
-// Gera um SVG simples como placeholder
-function generateSplashSVG(width, height) {
-  const logoSize = Math.min(width, height) * 0.3;
-  const centerX = width / 2;
-  const centerY = height / 2;
+console.log('Gerando splash screens para iOS com logo...\n');
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#0f172a"/>
-      <stop offset="50%" style="stop-color:#1e293b"/>
-      <stop offset="100%" style="stop-color:#334155"/>
-    </linearGradient>
-  </defs>
-  <rect width="100%" height="100%" fill="url(#bg)"/>
-  <text x="${centerX}" y="${centerY - 20}" font-family="system-ui, -apple-system, sans-serif" font-size="${logoSize * 0.4}" fill="white" text-anchor="middle" font-weight="bold">GigFlow</text>
-  <text x="${centerX}" y="${centerY + 40}" font-family="system-ui, -apple-system, sans-serif" font-size="${logoSize * 0.12}" fill="#94a3b8" text-anchor="middle">Agenda para Músicos</text>
-</svg>`;
-}
-
-console.log('Gerando splash screens para iOS...\n');
-
-// Verifica se sharp está disponível para converter SVG para PNG
+// Verifica se sharp está disponível
 let sharp;
 try {
   sharp = require('sharp');
 } catch (e) {
-  console.log('Sharp não encontrado. Gerando arquivos SVG como placeholder.');
-  console.log('Para gerar PNGs, instale sharp: npm install -D sharp\n');
-
-  splashSizes.forEach(({ width, height, name }) => {
-    const svgContent = generateSplashSVG(width, height);
-    const svgPath = path.join(splashDir, name.replace('.png', '.svg'));
-    fs.writeFileSync(svgPath, svgContent);
-    console.log(`✓ ${name.replace('.png', '.svg')} (${width}x${height})`);
-  });
-
-  console.log('\n⚠️  Arquivos SVG gerados. Para iOS, é necessário converter para PNG.');
-  console.log('Opção 1: Instale sharp e rode novamente');
-  console.log('Opção 2: Use pwa-asset-generator: npx pwa-asset-generator public/owl-512.png public/splash --splash-only');
-  process.exit(0);
+  console.log('Sharp não encontrado.');
+  console.log('Para gerar splash screens, instale sharp: npm install -D sharp\n');
+  console.log('Ou use pwa-asset-generator: npx pwa-asset-generator public/owl-512.png public/splash --splash-only');
+  process.exit(1);
 }
 
-// Se sharp está disponível, gera PNGs
-async function generatePNGs() {
-  for (const { width, height, name } of splashSizes) {
-    const svgContent = generateSplashSVG(width, height);
-    const pngPath = path.join(splashDir, name);
+// Verifica se o logo existe
+if (!fs.existsSync(logoPath)) {
+  console.error('Logo não encontrado:', logoPath);
+  process.exit(1);
+}
 
-    await sharp(Buffer.from(svgContent))
+// Gera splash screens com logo + texto
+async function generateSplashScreens() {
+  const logo = await sharp(logoPath).toBuffer();
+
+  for (const { width, height, name } of splashSizes) {
+    // Calcula tamanhos proporcionais
+    const logoSize = Math.min(width, height) * 0.25;
+    const fontSize = Math.min(width, height) * 0.06;
+    const subFontSize = fontSize * 0.4;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const logoY = centerY - logoSize * 0.6;
+    const textY = centerY + logoSize * 0.5;
+    const subTextY = textY + fontSize * 1.2;
+
+    // Cria o background com gradiente
+    const svgBackground = `
+      <svg width="${width}" height="${height}">
+        <defs>
+          <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#0f172a"/>
+            <stop offset="50%" style="stop-color:#1e293b"/>
+            <stop offset="100%" style="stop-color:#334155"/>
+          </linearGradient>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#bg)"/>
+        <text x="${centerX}" y="${textY}"
+              font-family="system-ui, -apple-system, BlinkMacSystemFont, sans-serif"
+              font-size="${fontSize}"
+              fill="white"
+              text-anchor="middle"
+              font-weight="bold">GigFlow</text>
+        <text x="${centerX}" y="${subTextY}"
+              font-family="system-ui, -apple-system, BlinkMacSystemFont, sans-serif"
+              font-size="${subFontSize}"
+              fill="#94a3b8"
+              text-anchor="middle">Agenda para Músicos</text>
+      </svg>
+    `;
+
+    // Redimensiona o logo
+    const resizedLogo = await sharp(logo)
+      .resize(Math.round(logoSize), Math.round(logoSize), { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .toBuffer();
+
+    // Compõe a imagem final
+    const pngPath = path.join(splashDir, name);
+    await sharp(Buffer.from(svgBackground))
+      .composite([
+        {
+          input: resizedLogo,
+          left: Math.round(centerX - logoSize / 2),
+          top: Math.round(logoY - logoSize / 2)
+        }
+      ])
       .png()
       .toFile(pngPath);
 
     console.log(`✓ ${name} (${width}x${height})`);
   }
+
   console.log('\n✓ Splash screens gerados com sucesso!');
 }
 
-generatePNGs().catch(err => {
+generateSplashScreens().catch(err => {
   console.error('Erro ao gerar splash screens:', err.message);
   process.exit(1);
 });
