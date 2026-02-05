@@ -203,9 +203,10 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # Determinar se usuário é dono do perfil
+        # 1. Determinar se usuário é dono do perfil e se é músico logado
         is_owner = False
-        if request.user and request.user.is_authenticated:
+        current_musician = None
+        if request.user and request.user.is_authenticated and not request.user.is_staff:
             try:
                 current_musician = request.user.musician_profile
                 is_owner = current_musician.id == musician.id
@@ -225,21 +226,29 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
         # Data limite
         end_date = timezone.now().date() + timezone.timedelta(days=days_ahead)
 
-        # 1. Buscar eventos do músico
-        # Filtro base para todos os eventos futuros do músico
+        # 2. Filtro base para todos os eventos futuros do músico
         event_filter = {
             "event_date__gte": timezone.now().date(),
             "event_date__lte": end_date,
         }
 
-        # Filtra eventos onde o músico participa (via availability OU criador)
-        # Isso garante consistência com o dashboard e página de eventos
-        events_queryset = Event.objects.filter(
-            Q(availabilities__musician=musician) | Q(created_by=musician.user),
-            **event_filter,
-        )
+        # 3. Filtra eventos usando a mesma lógica do EventViewSet (dashboard/página de eventos)
+        if current_musician:
+            # Usuário logado: mesma lógica do dashboard
+            # Mostra eventos onde o usuário logado participa ou criou
+            events_queryset = Event.objects.filter(
+                Q(created_by=request.user)
+                | Q(availabilities__musician=current_musician),
+                **event_filter,
+            )
+        else:
+            # Visitante ou não músico: eventos onde o perfil visitado participa
+            events_queryset = Event.objects.filter(
+                Q(availabilities__musician=musician) | Q(created_by=musician.user),
+                **event_filter,
+            )
 
-        # Se não for dono, filtra apenas eventos confirmados/aprovados
+        # 4. Se não for dono, filtra apenas eventos confirmados/aprovados
         if not is_owner:
             events_queryset = events_queryset.filter(
                 status__in=["confirmed", "approved"]
