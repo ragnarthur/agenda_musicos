@@ -12,6 +12,7 @@ import {
   Briefcase,
   Download,
   Share,
+  MoreVertical,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import OwlMascot from '../components/ui/OwlMascot';
@@ -49,13 +50,19 @@ const Landing: React.FC = () => {
   const navigate = useNavigate();
   const [userType, setUserType] = useState<UserType>('musician');
   const [showIOSModal, setShowIOSModal] = useState(false);
-  const { canInstall, isIOS, promptInstall } = useInstallPrompt();
+  const [showAndroidModal, setShowAndroidModal] = useState(false);
+  const { canInstall, isIOS, isMobile, promptInstall } = useInstallPrompt();
 
   const handleInstall = async () => {
     if (isIOS) {
       setShowIOSModal(true);
     } else {
-      await promptInstall();
+      // Tenta o prompt nativo primeiro
+      const success = await promptInstall();
+      // Se não funcionou e é mobile, mostra instruções manuais
+      if (!success && isMobile) {
+        setShowAndroidModal(true);
+      }
     }
   };
 
@@ -584,6 +591,71 @@ const Landing: React.FC = () => {
 
               <button
                 onClick={() => setShowIOSModal(false)}
+                className="w-full mt-6 px-4 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-medium transition-all min-h-[48px]"
+              >
+                Entendi
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de instruções para Android */}
+      <AnimatePresence>
+        {showAndroidModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+            onClick={() => setShowAndroidModal(false)}
+          >
+            <motion.div
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-6 pb-safe"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-6 sm:hidden" />
+
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+                Instalar GigFlow
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm text-center mb-6">
+                No Android, siga os passos abaixo:
+              </p>
+
+              <ol className="space-y-4">
+                <li className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-7 h-7 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full flex items-center justify-center text-sm font-bold">
+                    1
+                  </span>
+                  <p className="text-gray-700 dark:text-gray-300 text-sm pt-0.5">
+                    Toque no menu <MoreVertical className="inline w-4 h-4 text-gray-500 mx-1" /> no canto superior direito do Chrome
+                  </p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-7 h-7 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full flex items-center justify-center text-sm font-bold">
+                    2
+                  </span>
+                  <p className="text-gray-700 dark:text-gray-300 text-sm pt-0.5">
+                    Toque em <strong>"Adicionar à tela inicial"</strong> ou <strong>"Instalar aplicativo"</strong>
+                  </p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-7 h-7 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full flex items-center justify-center text-sm font-bold">
+                    3
+                  </span>
+                  <p className="text-gray-700 dark:text-gray-300 text-sm pt-0.5">
+                    Confirme tocando em <strong>"Adicionar"</strong> ou <strong>"Instalar"</strong>
+                  </p>
+                </li>
+              </ol>
+
+              <button
+                onClick={() => setShowAndroidModal(false)}
                 className="w-full mt-6 px-4 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-medium transition-all min-h-[48px]"
               >
                 Entendi

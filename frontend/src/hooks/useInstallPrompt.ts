@@ -11,6 +11,7 @@ interface InstallPromptState {
   canInstall: boolean;
   isInstalled: boolean;
   isIOS: boolean;
+  isMobile: boolean;
   promptInstall: () => Promise<boolean>;
   dismissPrompt: () => void;
   wasDismissed: boolean;
@@ -26,6 +27,9 @@ export function useInstallPrompt(): InstallPromptState {
 
   // Detecta iOS (não suporta beforeinstallprompt)
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window);
+
+  // Detecta se é dispositivo mobile (Android ou iOS)
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
   // Verifica se já está instalado (standalone mode)
   useEffect(() => {
@@ -105,9 +109,11 @@ export function useInstallPrompt(): InstallPromptState {
   }, []);
 
   return {
-    canInstall: !isInstalled && !wasDismissed && (!!deferredPrompt || isIOS),
+    // Mostra botão se: não instalado, não dismissado, e (tem prompt OU é mobile)
+    canInstall: !isInstalled && !wasDismissed && (!!deferredPrompt || isMobile),
     isInstalled,
     isIOS,
+    isMobile,
     promptInstall,
     dismissPrompt,
     wasDismissed,
