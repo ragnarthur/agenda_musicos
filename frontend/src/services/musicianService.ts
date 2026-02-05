@@ -1,13 +1,7 @@
 // services/musicianService.ts
 import { api, uploadApi } from './api';
-import type { Musician, MusicianUpdatePayload, MusicianRating, MusicianBadge } from '../types';
+import type { Musician, MusicianUpdatePayload, MusicianRating, MusicianBadge, LeaderAvailability } from '../types';
 import type { ConnectionsResponse, PaginatedResponse } from './types';
-
-export interface InstrumentOption {
-  value: string;
-  label: string;
-  count: number;
-}
 
 export interface ConnectionStatusResponse {
   is_connected: boolean;
@@ -126,6 +120,17 @@ export const musicianService = {
 
   updateAvatar: async (avatarUrl: string): Promise<{ detail: string; avatar_url: string }> => {
     const response = await api.patch('/musicians/avatar/', { avatar_url: avatarUrl });
+    return response.data;
+  },
+
+  getPublicCalendar: async (
+    musicianId: number,
+    params?: {
+      days_ahead?: number;
+      include_private?: boolean;
+    }
+  ): Promise<PublicCalendarResponse> => {
+    const response = await api.get(`/musicians/${musicianId}/public-calendar/`, { params });
     return response.data;
   },
 };

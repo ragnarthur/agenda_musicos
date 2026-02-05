@@ -20,6 +20,7 @@ import ProfileHeader from '../components/Profile/ProfileHeader';
 import ReviewCard from '../components/Profile/ReviewCard';
 import ImageCropModal from '../components/modals/ImageCropModal';
 import { CompactCalendar } from '../components/calendar';
+import { useMusicianEvents } from '../hooks/useMusicianEvents';
 import { musicianService } from '../services/api';
 import { connectionService } from '../services/connectionService';
 import { useAuth } from '../contexts/AuthContext';
@@ -67,9 +68,27 @@ const MusicianProfile: React.FC = () => {
   const [cropTarget, setCropTarget] = useState<'avatar' | 'cover'>('avatar');
   const [isCropOpen, setIsCropOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'reviews' | 'connections'>('reviews');
+  const [daysAhead, setDaysAhead] = useState(90);
   const { user, refreshUser } = useAuth();
 
   const isOwnProfile = Boolean(user && (user.id === Number(id) || user.user?.id === Number(id)));
+
+  const {
+    events: musicianEvents,
+    loading: calendarLoading,
+    isOwner: calendarIsOwner,
+    daysAhead: actualDaysAhead,
+  } = useMusicianEvents({
+    musicianId: Number(id),
+    isOwnProfile,
+    daysAhead,
+  });
+
+  useEffect(() => {
+    if (actualDaysAhead && actualDaysAhead !== daysAhead) {
+      setDaysAhead(actualDaysAhead);
+    }
+  }, [actualDaysAhead, daysAhead]);
 
   const fetchData = useCallback(async () => {
     if (!id) return;
@@ -309,7 +328,42 @@ const MusicianProfile: React.FC = () => {
 
           {/* Calendar Section */}
           <div className="mb-6">
-            <CompactCalendar events={[]} className="shadow-md" />
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                {isOwnProfile ? (
+                  <>
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                      Minha Agenda
+                    </h2>
+                    <Link
+                      to="/disponibilidades"
+                      className="text-sm text-primary-600 dark:text-primary-400 hover:underline mt-1 block"
+                    >
+                      Gerenciar disponibilidades →
+                    </Link>
+                  </>
+                ) : (
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                    Agenda de {musician?.user?.first_name}
+                  </h2>
+                )}
+              </div>
+            </div>
+
+            <CompactCalendar 
+              events={musicianEvents} 
+              daysAhead={daysAhead}
+              onDaysChange={setDaysAhead}
+              showDaysSelector={true}
+              className="shadow-md"
+              isOwner={calendarIsOwner}
+            />
+
+            {calendarLoading && (
+              <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
+                Carregando agenda...
+              </p>
+            )}
           </div>
 
           {/* Contact & Fee Section */}

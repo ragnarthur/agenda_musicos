@@ -11,6 +11,7 @@ interface DayEventsSheetProps {
   onClose: () => void;
   date: Date | null;
   events: Event[];
+  isOwner?: boolean;
 }
 
 const DayEventsSheet: React.FC<DayEventsSheetProps> = ({
@@ -18,6 +19,7 @@ const DayEventsSheet: React.FC<DayEventsSheetProps> = ({
   onClose,
   date,
   events,
+  isOwner = true,
 }) => {
   // Lock body scroll when open
   useEffect(() => {
@@ -132,56 +134,103 @@ const DayEventsSheet: React.FC<DayEventsSheetProps> = ({
                 ) : (
                   <div className="divide-y divide-gray-100 dark:divide-gray-700">
                     {events.map(event => (
-                      <Link
-                        key={event.id}
-                        to={`/eventos/${event.id}`}
-                        onClick={onClose}
-                        className="flex items-start gap-3 px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                      >
-                        {/* Status indicator */}
-                        <div
-                          className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${getStatusColor(event.status)}`}
-                        />
+                      (() => {
+                        const isAvailability = (event as any).isAvailability === true;
+                        const Wrapper: React.ElementType =
+                          isOwner && !isAvailability ? Link : 'div';
+                        const wrapperProps =
+                          isOwner && !isAvailability
+                            ? {
+                                to: `/eventos/${event.id}`,
+                                onClick: onClose,
+                              }
+                            : undefined;
 
-                        {/* Event details */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                              {event.title}
-                            </p>
-                            <span
-                              className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                                event.status === 'confirmed' || event.status === 'approved'
-                                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                  : event.status === 'proposed'
-                                    ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                                    : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
-                              }`}
-                            >
-                              {getStatusLabel(event.status)}
-                            </span>
-                          </div>
+                        return (
+                          <Wrapper
+                            key={event.id}
+                            {...wrapperProps}
+                            className="flex items-start gap-3 px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                          >
+                            {/* Status indicator */}
+                            <div
+                              className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${getStatusColor(event.status)}`}
+                            />
 
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
-                            {event.start_time && (
-                              <span className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {event.start_time.slice(0, 5)}
-                                {event.end_time && ` - ${event.end_time.slice(0, 5)}`}
-                              </span>
+                            {/* Event details */}
+                            <div className="flex-1 min-w-0">
+                              {isOwner ? (
+                                <>
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                                      {event.title}
+                                    </p>
+                                    <span
+                                      className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                                        event.status === 'confirmed' || event.status === 'approved'
+                                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                          : event.status === 'proposed'
+                                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                            : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                                      }`}
+                                    >
+                                      {getStatusLabel(event.status)}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+                                    {event.start_time && (
+                                      <span className="flex items-center gap-1">
+                                        <Clock className="w-3 h-3" />
+                                        {event.start_time.slice(0, 5)}
+                                        {event.end_time &&
+                                          ` - ${event.end_time.slice(0, 5)}`}
+                                      </span>
+                                    )}
+                                    {event.location && (
+                                      <span className="flex items-center gap-1 truncate">
+                                        <MapPin className="w-3 h-3 flex-shrink-0" />
+                                        <span className="truncate">{event.location}</span>
+                                      </span>
+                                    )}
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span
+                                      className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                                        event.status === 'confirmed' || event.status === 'approved'
+                                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                          : event.status === 'proposed'
+                                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                            : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                                      }`}
+                                    >
+                                      {getStatusLabel(event.status)}
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+                                    {event.start_time && (
+                                      <span className="flex items-center gap-1">
+                                        <Clock className="w-3 h-3" />
+                                        {event.start_time.slice(0, 5)}
+                                        {event.end_time &&
+                                          ` - ${event.end_time.slice(0, 5)}`}
+                                      </span>
+                                    )}
+                                  </div>
+                                </>
+                              )}
+                            </div>
+
+                            {/* Arrow */}
+                            {isOwner && !isAvailability && (
+                              <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0 mt-1" />
                             )}
-                            {event.location && (
-                              <span className="flex items-center gap-1 truncate">
-                                <MapPin className="w-3 h-3 flex-shrink-0" />
-                                <span className="truncate">{event.location}</span>
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Arrow */}
-                        <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0 mt-1" />
-                      </Link>
+                          </Wrapper>
+                        );
+                      })()
                     ))}
                   </div>
                 )}

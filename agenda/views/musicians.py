@@ -4,7 +4,8 @@ ViewSet para gerenciamento de músicos.
 """
 
 from django.db import connection
-from django.db.models import Count, Q
+from django.db.models import Case, Count, IntegerField, Q
+from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -13,7 +14,11 @@ from rest_framework.response import Response
 from ..instrument_utils import INSTRUMENT_LABELS
 from ..models import Instrument, LeaderAvailability, Musician
 from ..pagination import StandardResultsSetPagination
-from ..serializers import MusicianSerializer, MusicianUpdateSerializer
+from ..serializers import (
+    MusicianSerializer,
+    MusicianUpdateSerializer,
+    PublicCalendarSerializer,
+)
 from ..view_functions import normalize_search_text
 
 
@@ -166,4 +171,144 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(instrument=instrument)
 
         serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["get"], permission_classes=[AllowAny])
+    def public_calendar(self, request, pk=None):
+        """
+        GET /musicians/{id}/public-calendar/
+        Retorna agenda pública do músico (eventos + disponibilidades).
+
+        Query Parameters:
+        - days_ahead: número de dias à frente (padrão: 90, opções: 30, 60, 90)
+        - include_private: incluir dados privados (apenas dono do perfil, padrão: false)
+
+        Exemplo de uso:
+        GET /musicians/5/public-calendar/?days_ahead=60
+
+        Response:
+        {
+            "events": [...],
+            "availabilities": [...]
+        }
+        """
+        from rest_framework.permissions import IsAuthenticated
+        from ..models import Event
+
+        try:
+            musician = self.get_object()
+        except Exception:
+            return Response(
+                {"detail": "Músico não encontrado"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Determinar se usuário é dono do perfil
+        is_owner = False
+        if request.user and request.user.is_authenticated:
+            try:
+                current_musician = request.user.musician_profile
+                is_owner = current_musician.id == musician.id
+            except Exception:
+                pass  # Usuário não tem perfil de músico
+
+        # Parâmetros - VALIDAR para aceitar apenas 30, 60, 90
+        try:
+            days_ahead = int(request.query_params.get("days_ahead", 90))
+        except (TypeError, ValueError):
+            days_ahead = 90
+        valid_days = [30, 60, 90]
+        if days_ahead not in valid_days:
+            days_ahead = 90  # Padrão se valor inválido
+
+        include_private = request.query_params.get("include_private", "false") == "true"
+
+        # Data limite
+        end_date = timezone.now().date() + timezone.timedelta(days=days_ahead)
+
+        # 1. Buscar eventos do músico
+        # Filtro base para todos os eventos futuros do músico
+        event_filter = {
+            "event_date__gte": timezone.now().date(),
+            "event_date__lte": end_date,
+        }
+
+        if is_owner:
+            # Dono do perfil: vê todos os eventos
+            events_queryset = Event.objects.filter(
+                Q(availabilities__musician=musician) | Q(created_by=musician.user),
+                **event_filter,
+            ).distinct()
+        else:
+            # Visitante: vê apenas eventos confirmados/aprovados
+            events_queryset = Event.objects.filter(
+                Q(availabilities__musician=musician) | Q(created_by=musician.user),
+                **event_filter,
+                status__in=["confirmed", "approved"],
+            ).distinct()
+
+        # Ordenar e anotar disponibilidade
+        events_queryset = events_queryset.order_by("event_date", "start_time")
+
+        # Anotar contagem de disponibilidades para otimização (N+1 → N+2)
+        events_queryset = events_queryset.annotate(
+            avail_pending=Count(
+                Case(
+                    When(availabilities__response="pending", then=1),
+                    default=0,
+                ),
+                output_field=IntegerField(),
+            ),
+            avail_available=Count(
+                Case(
+                    When(availabilities__response="available", then=1),
+                    default=0,
+                ),
+                output_field=IntegerField(),
+            ),
+            avail_unavailable=Count(
+                Case(
+                    When(availabilities__response="unavailable", then=1),
+                    default=0,
+                ),
+                output_field=IntegerField(),
+            ),
+            avail_maybe=Count(
+                Case(
+                    When(availabilities__response="maybe", then=1),
+                    default=0,
+                ),
+                output_field=IntegerField(),
+            ),
+            avail_total=Count("availabilities"),
+        )
+
+        # Converter para lista
+        events = list(events_queryset)
+
+        # 2. Buscar disponibilidades públicas
+        availabilities_queryset = LeaderAvailability.objects.filter(
+            leader=musician,
+            is_active=True,
+            is_public=True,
+            date__gte=timezone.now().date(),
+            date__lte=end_date,
+        ).order_by("date", "start_time")
+
+        # Se não for dono, já está filtrando apenas públicas acima
+        availabilities = list(availabilities_queryset)
+
+        # 3. Serializar resposta
+        response_data = {
+            "events": events,
+            "availabilities": availabilities,
+            "is_owner": is_owner,
+            "days_ahead": days_ahead,
+        }
+
+        # Usar serializer apropriado
+        serializer = PublicCalendarSerializer(
+            response_data, context={"request": request, "is_owner": is_owner}
+        )
+
         return Response(serializer.data)

@@ -16,6 +16,7 @@ import {
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import CalendarDay from './CalendarDay';
+import CalendarDaysSelector from './CalendarDaysSelector';
 import DayEventsSheet from './DayEventsSheet';
 import { useCalendarEvents } from './useCalendarEvents';
 import type { Event } from '../../types';
@@ -24,12 +25,24 @@ interface CompactCalendarProps {
   events: Event[];
   onDaySelect?: (date: string) => void;
   className?: string;
+  daysAhead?: number;
+  onDaysChange?: (days: number) => void;
+  showDaysSelector?: boolean;
+  isOwner?: boolean;
 }
 
 const WEEKDAY_LABELS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
-  const CompactCalendar: React.FC<CompactCalendarProps> = memo(
-  ({ events, onDaySelect, className }) => {
+const CompactCalendar: React.FC<CompactCalendarProps> = memo(
+  ({
+    events,
+    onDaySelect,
+    className,
+    daysAhead = 90,
+    onDaysChange,
+    showDaysSelector = false,
+    isOwner = true,
+  }) => {
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [showEventsSheet, setShowEventsSheet] = useState(false);
@@ -147,6 +160,17 @@ const WEEKDAY_LABELS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
           </button>
         </div>
 
+        {/* Days Selector */}
+        {showDaysSelector && onDaysChange && (
+          <div className="mb-3">
+            <CalendarDaysSelector
+              selectedDays={daysAhead}
+              onDaysChange={onDaysChange}
+              eventCount={events.length}
+            />
+          </div>
+        )}
+
         {/* Weekday Headers */}
         <div className="grid grid-cols-7 gap-1 mb-1">
           {WEEKDAY_LABELS.map((day, index) => (
@@ -184,19 +208,32 @@ const WEEKDAY_LABELS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
         </motion.div>
 
         {/* Legend */}
-        <div className="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              Confirmado
-            </span>
+        <div className="flex items-center justify-between gap-4 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-blue-400" />
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                Disponível
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                Confirmado
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-amber-400" />
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                Proposto
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-amber-400" />
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              Proposto
-            </span>
-          </div>
+
+          {/* Event count */}
+          <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+            {events.length} evento{events.length !== 1 ? 's' : ''}
+          </span>
         </div>
 
         {/* Day Events Sheet */}
@@ -205,6 +242,7 @@ const WEEKDAY_LABELS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
           onClose={() => setShowEventsSheet(false)}
           date={selectedDate}
           events={selectedDateEvents}
+          isOwner={isOwner}
         />
       </div>
     );

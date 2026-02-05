@@ -8,14 +8,14 @@ export interface EventsByDate {
 export interface DayEventStatus {
   hasConfirmed: boolean;
   hasProposed: boolean;
+  hasAvailability: boolean;
   totalCount: number;
 }
 
 export function useCalendarEvents(events: Event[]) {
-  // Group events by date string (yyyy-MM-dd)
   const eventsByDate = useMemo<EventsByDate>(() => {
     return events.reduce((acc, event) => {
-      const dateKey = event.event_date; // Already in yyyy-MM-dd format
+      const dateKey = event.event_date;
       if (!acc[dateKey]) {
         acc[dateKey] = [];
       }
@@ -24,15 +24,23 @@ export function useCalendarEvents(events: Event[]) {
     }, {} as EventsByDate);
   }, [events]);
 
-  // Helper to get event status for a specific date
   const getDateStatus = useCallback(
     (dateString: string): DayEventStatus => {
       const dateEvents = eventsByDate[dateString] || [];
+      const hasConfirmed = dateEvents.some(
+        (e: any) => e.status === 'confirmed' || e.status === 'approved' && !e.isAvailability
+      );
+      const hasProposed = dateEvents.some(
+        (e: any) => e.status === 'proposed' && !e.isAvailability
+      );
+      const hasAvailability = dateEvents.some(
+        (e: any) => (e as any).isAvailability === true
+      );
+
       return {
-        hasConfirmed: dateEvents.some(
-          e => e.status === 'confirmed' || e.status === 'approved'
-        ),
-        hasProposed: dateEvents.some(e => e.status === 'proposed'),
+        hasConfirmed,
+        hasProposed,
+        hasAvailability,
         totalCount: dateEvents.length,
       };
     },

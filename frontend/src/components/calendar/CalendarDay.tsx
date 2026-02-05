@@ -63,6 +63,11 @@ const CalendarDay: React.FC<CalendarDayProps> = memo(
         {/* Event indicator dots */}
         {eventStatus.totalCount > 0 && (
           <div className="absolute bottom-1 flex gap-0.5">
+            {eventStatus.hasAvailability && !isSelected && (
+              <span
+                className="w-1.5 h-1.5 rounded-full bg-blue-400"
+              />
+            )}
             {eventStatus.hasConfirmed && (
               <span
                 className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-500'}`}

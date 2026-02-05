@@ -152,6 +152,13 @@ export interface LeaderAvailability {
   updated_at: string;
 }
 
+export interface PublicCalendarResponse {
+  events: Event[];
+  availabilities: LeaderAvailability[];
+  is_owner: boolean;
+  days_ahead: number;
+}
+
 export interface LeaderAvailabilityCreate {
   date: string;
   start_time: string;

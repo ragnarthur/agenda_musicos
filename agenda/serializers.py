@@ -2013,3 +2013,124 @@ class AdminUpdateSerializer(serializers.ModelSerializer):
         if password:
             instance.set_password(password)
         return super().update(instance, validated_data)
+
+
+class PublicCalendarEventSerializer(serializers.ModelSerializer):
+    """
+    Serializer simplificado para eventos no calendário público.
+    Visitantes veem apenas data/hora (sem título/local).
+    """
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
+
+    class Meta:
+        model = Event
+        fields = [
+            "id",
+            "event_date",
+            "start_time",
+            "end_time",
+            "start_datetime",
+            "end_datetime",
+            "status",
+            "status_display",
+            "is_solo",
+        ]
+
+
+class OwnerCalendarEventSerializer(serializers.ModelSerializer):
+    """
+    Serializer completo para eventos no calendário do dono.
+    Usado pelo próprio músico (mostra todos os detalhes).
+    """
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
+    availability_summary = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Event
+        fields = [
+            "id",
+            "title",
+            "description",
+            "location",
+            "payment_amount",
+            "event_date",
+            "start_time",
+            "end_time",
+            "start_datetime",
+            "end_datetime",
+            "status",
+            "status_display",
+            "is_solo",
+            "created_at",
+            "updated_at",
+        ]
+
+    def get_availability_summary(self, obj):
+        """
+        Retorna resumo das disponibilidades.
+        Calcula apenas uma vez (otimização N+1).
+        """
+        # Verifica se foi pré-anotado no queryset
+        if hasattr(obj, "avail_pending"):
+            return {
+                "pending": obj.avail_pending or 0,
+                "available": obj.avail_available or 0,
+                "unavailable": obj.avail_unavailable or 0,
+                "maybe": obj.avail_maybe or 0,
+                "total": obj.avail_total or 0,
+            }
+
+        # Fallback: calcula com uma única iteração
+        summary = {
+            "pending": 0,
+            "available": 0,
+            "unavailable": 0,
+            "maybe": 0,
+            "total": 0,
+        }
+        for availability in obj.availabilities.all():
+            response = availability.response
+            if response in summary:
+                summary[response] += 1
+            summary["total"] += 1
+        return summary
+
+
+class PublicCalendarSerializer(serializers.Serializer):
+    """
+    Serializer principal para resposta do calendário público.
+    Combina eventos e disponibilidades em um único array.
+    """
+    events = serializers.SerializerMethodField()
+    availabilities = serializers.SerializerMethodField()
+    is_owner = serializers.BooleanField(read_only=True)
+    days_ahead = serializers.IntegerField(read_only=True)
+
+    def get_events(self, obj):
+        """
+        Retorna eventos com base no tipo de usuário.
+        Visitantes: apenas data/hora (sem título/local)
+        Dono: todos os detalhes
+        """
+        events = obj.get("events", [])
+        request = self.context.get("request")
+        is_owner = obj.get("is_owner", False)
+
+        # Escolhe serializer baseado em se é dono
+        serializer_class = (
+            OwnerCalendarEventSerializer if is_owner 
+            else PublicCalendarEventSerializer
+        )
+
+        return serializer_class(events, many=True, context=self.context).data
+
+    def get_availabilities(self, obj):
+        """
+        Retorna disponibilidades públicas.
+        Visitantes e dono veem as públicas.
+        """
+        availabilities = obj.get("availabilities", [])
+
+        return LeaderAvailabilitySerializer(
+            availabilities, many=True, context=self.context
+        ).data
