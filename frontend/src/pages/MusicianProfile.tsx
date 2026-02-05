@@ -350,8 +350,8 @@ const MusicianProfile: React.FC = () => {
               </div>
             </div>
 
-            <CompactCalendar 
-              events={musicianEvents} 
+            <CompactCalendar
+              events={musicianEvents as any}
               daysAhead={daysAhead}
               onDaysChange={setDaysAhead}
               showDaysSelector={true}
