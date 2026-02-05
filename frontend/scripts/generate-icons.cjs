@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // scripts/generate-icons.cjs
-// Gera ícones do app com design de barras de equalização (símbolo musical)
+// Gera ícones do app com design de calendário + nota musical
 // Uso: node scripts/generate-icons.cjs
 
 const fs = require('fs');
@@ -11,33 +11,33 @@ const publicDir = path.join(__dirname, '..', 'public');
 // Tamanhos dos ícones
 const iconSizes = [192, 512];
 
-// Gera o SVG do ícone com barras de equalização
+// Gera o SVG do ícone com calendário + nota musical
 function generateIconSVG(size) {
-  const padding = size * 0.1; // 10% padding
-  const safeArea = size * 0.8; // 80% safe zone para maskable
   const centerX = size / 2;
   const centerY = size / 2;
 
-  // Configuração das barras de equalização
-  const barCount = 5;
-  const barWidth = safeArea * 0.1;
-  const barGap = safeArea * 0.05;
-  const totalBarsWidth = (barCount * barWidth) + ((barCount - 1) * barGap);
-  const startX = centerX - totalBarsWidth / 2 + barWidth / 2;
+  // Dimensões do calendário
+  const calWidth = size * 0.55;
+  const calHeight = size * 0.5;
+  const calX = centerX - calWidth / 2;
+  const calY = centerY - calHeight / 2 + size * 0.05;
+  const calRadius = size * 0.04;
+  const headerHeight = calHeight * 0.25;
 
-  // Alturas das barras (padrão de equalização)
-  const barHeights = [0.4, 0.7, 1.0, 0.6, 0.35]; // Proporções relativas
-  const maxBarHeight = safeArea * 0.5;
+  // Argolas do calendário
+  const ringWidth = size * 0.025;
+  const ringHeight = size * 0.08;
+  const ringY = calY - ringHeight * 0.4;
+  const ring1X = calX + calWidth * 0.25;
+  const ring2X = calX + calWidth * 0.75;
 
-  // Gera as barras
-  const bars = barHeights.map((heightRatio, i) => {
-    const x = startX + (i * (barWidth + barGap));
-    const barHeight = maxBarHeight * heightRatio;
-    const y = centerY - barHeight / 2;
-    const rx = barWidth / 2; // Cantos arredondados
-
-    return `<rect x="${x - barWidth/2}" y="${y}" width="${barWidth}" height="${barHeight}" rx="${rx}" fill="white" opacity="0.95"/>`;
-  }).join('\n    ');
+  // Nota musical dentro do calendário
+  const noteX = centerX;
+  const noteY = calY + headerHeight + (calHeight - headerHeight) * 0.55;
+  const noteHeadRx = size * 0.065;
+  const noteHeadRy = size * 0.05;
+  const stemHeight = size * 0.14;
+  const flagWidth = size * 0.06;
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
@@ -55,9 +55,9 @@ function generateIconSVG(size) {
       <stop offset="100%" style="stop-color:#4338ca;stop-opacity:0"/>
     </radialGradient>
 
-    <!-- Sombra sutil nas barras -->
-    <filter id="barShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="${size * 0.005}" stdDeviation="${size * 0.01}" flood-color="#1e1b4b" flood-opacity="0.3"/>
+    <!-- Sombra sutil -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="${size * 0.008}" stdDeviation="${size * 0.015}" flood-color="#1e1b4b" flood-opacity="0.4"/>
     </filter>
   </defs>
 
@@ -67,9 +67,36 @@ function generateIconSVG(size) {
   <!-- Brilho interno sutil -->
   <rect width="${size}" height="${size}" fill="url(#innerGlow)"/>
 
-  <!-- Barras de equalização com sombra -->
-  <g filter="url(#barShadow)">
-    ${bars}
+  <!-- Calendário -->
+  <g filter="url(#shadow)">
+    <!-- Argolas do calendário -->
+    <rect x="${ring1X - ringWidth/2}" y="${ringY}" width="${ringWidth}" height="${ringHeight}" rx="${ringWidth/2}" fill="white" opacity="0.9"/>
+    <rect x="${ring2X - ringWidth/2}" y="${ringY}" width="${ringWidth}" height="${ringHeight}" rx="${ringWidth/2}" fill="white" opacity="0.9"/>
+
+    <!-- Corpo do calendário -->
+    <rect x="${calX}" y="${calY}" width="${calWidth}" height="${calHeight}" rx="${calRadius}" fill="white" opacity="0.95"/>
+
+    <!-- Header do calendário (faixa superior) -->
+    <rect x="${calX}" y="${calY}" width="${calWidth}" height="${headerHeight}" rx="${calRadius}" fill="white" opacity="0.3"/>
+    <rect x="${calX}" y="${calY + calRadius}" width="${calWidth}" height="${headerHeight - calRadius}" fill="white" opacity="0.3"/>
+
+    <!-- Nota musical (colcheia) -->
+    <g transform="translate(${noteX}, ${noteY})">
+      <!-- Cabeça da nota (elipse inclinada) -->
+      <ellipse cx="${-noteHeadRx * 0.3}" cy="0" rx="${noteHeadRx}" ry="${noteHeadRy}" fill="#4338ca" transform="rotate(-20)"/>
+
+      <!-- Haste da nota -->
+      <rect x="${noteHeadRx * 0.5}" y="${-stemHeight}" width="${size * 0.02}" height="${stemHeight}" fill="#4338ca"/>
+
+      <!-- Bandeira da nota -->
+      <path d="M ${noteHeadRx * 0.5 + size * 0.02} ${-stemHeight}
+               Q ${noteHeadRx * 0.5 + size * 0.02 + flagWidth} ${-stemHeight + size * 0.04}
+                 ${noteHeadRx * 0.5 + size * 0.02 + flagWidth * 0.8} ${-stemHeight + size * 0.09}
+               Q ${noteHeadRx * 0.5 + size * 0.02 + flagWidth * 0.3} ${-stemHeight + size * 0.07}
+                 ${noteHeadRx * 0.5 + size * 0.02} ${-stemHeight + size * 0.05}
+               Z"
+            fill="#4338ca"/>
+    </g>
   </g>
 </svg>`;
 }

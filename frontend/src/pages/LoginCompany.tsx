@@ -4,10 +4,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
-import { Building2, Eye, EyeOff, LogIn } from 'lucide-react';
+import { Eye, EyeOff, LogIn } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { googleAuthService, type ContractorProfile } from '../services/publicApi';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import { useCompanyAuth } from '../contexts/CompanyAuthContext';
+import OwlMascot from '../components/ui/OwlMascot';
 
 interface LoginForm {
   email: string;
@@ -126,18 +128,47 @@ export default function LoginCompany() {
   }, [handleGoogleCallback]);
 
   return (
-    <FullscreenBackground>
-      <div className="min-h-[100svh] flex items-center justify-center p-4 py-6">
-        <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-5 sm:p-8">
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Building2 className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+    <FullscreenBackground
+      className="px-4"
+      contentClassName="flex items-center justify-center py-6 sm:py-10"
+      enableBlueWaves
+    >
+      <div className="w-full max-w-xl sm:max-w-2xl">
+        {/* Logo e Título */}
+        <div className="text-center mb-6">
+          <div className="flex justify-center mb-2">
+            <div className="h-24 w-24 sm:h-28 sm:w-28">
+              <OwlMascot className="h-24 w-24 sm:h-28 sm:w-28" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Login Contratante
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300">Acesse sua conta de contratante</p>
           </div>
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <h1 className="text-4xl sm:text-5xl font-bold text-white logo-animated drop-shadow-xl leading-tight">
+              GigFlow
+            </h1>
+            <span className="text-[12px] px-2 py-0.5 bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-500/10 text-amber-100/80 rounded-full border border-amber-400/20 font-light italic tracking-wider">
+              Beta
+            </span>
+          </div>
+          <motion.p
+            className="relative text-primary-50 font-medium text-sm sm:text-base tracking-wide"
+            initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+          >
+            Plataforma profissional para contratar músicos
+            <motion.span
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/35 to-transparent"
+              initial={{ x: 0, opacity: 0 }}
+              animate={{ x: '220%', opacity: 1 }}
+              transition={{ duration: 1.6, delay: 0.6, ease: 'easeOut' }}
+            />
+          </motion.p>
+        </div>
+
+        {/* Card de Login */}
+        <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Entrar como Contratante</h2>
 
           {/* Google Sign In */}
           <div className="relative mb-6">
