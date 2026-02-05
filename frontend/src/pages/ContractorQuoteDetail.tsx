@@ -1,6 +1,6 @@
 // pages/ContractorQuoteDetail.tsx
 // Detalhes do pedido de orçamento para contratante
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import {
   ArrowLeft,
@@ -256,7 +256,13 @@ export default function ContractorQuoteDetail() {
                     {quote.event_type}
                   </h1>
                   <p className="text-sm text-gray-300 mt-1">
-                    Para {quote.musician_name}
+                    Para{' '}
+                    <Link
+                      to={`/musico/${quote.musician}`}
+                      className="text-primary-400 hover:text-primary-300 underline"
+                    >
+                      {quote.musician_name}
+                    </Link>
                   </p>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(quote.status)}`}>

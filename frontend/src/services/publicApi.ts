@@ -488,6 +488,15 @@ export const publicMusicianService = {
     return response.data;
   },
 
+  // Obter calendário público do músico (AllowAny)
+  getPublicCalendar: async (
+    musicianId: number,
+    params?: { days_ahead?: number }
+  ): Promise<import('../types').PublicCalendarResponse> => {
+    const response = await api.get(`/musicians/${musicianId}/public-calendar/`, { params });
+    return response.data;
+  },
+
   // Obter contato do músico (requer login de contratante)
   getContact: async (musicianId: number): Promise<MusicianContact> => {
     const response = await api.get(`/musicians/${musicianId}/contact/`);

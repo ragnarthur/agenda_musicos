@@ -9,7 +9,8 @@ interface UseMusicianEventsParams {
   daysAhead?: number;
 }
 
-interface CalendarEvent extends Event {
+interface CalendarEvent extends Omit<Event, 'status'> {
+  status: Event['status'] | 'available';
   isAvailability?: boolean;
   availabilityNotes?: string;
 }
@@ -66,7 +67,7 @@ export function useMusicianEvents({
           start_datetime: avail.start_datetime,
           end_datetime: avail.end_datetime,
           is_solo: false,
-          status: 'confirmed' as any,
+          status: 'available',
           status_display: 'Disponível',
           created_by: avail.leader,
           created_by_name: avail.leader_name || '',

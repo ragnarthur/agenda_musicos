@@ -44,11 +44,13 @@ const DayEventsSheet: React.FC<DayEventsSheetProps> = ({
     return () => window.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
 
-  const getStatusColor = (status: Event['status']) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed':
       case 'approved':
         return 'bg-emerald-500';
+      case 'available':
+        return 'bg-blue-400';
       case 'proposed':
         return 'bg-amber-400';
       case 'rejected':
@@ -59,12 +61,14 @@ const DayEventsSheet: React.FC<DayEventsSheetProps> = ({
     }
   };
 
-  const getStatusLabel = (status: Event['status']) => {
+  const getStatusLabel = (status: string) => {
     switch (status) {
       case 'confirmed':
         return 'Confirmado';
       case 'approved':
         return 'Aprovado';
+      case 'available':
+        return 'Disponível';
       case 'proposed':
         return 'Proposto';
       case 'rejected':
@@ -167,11 +171,13 @@ const DayEventsSheet: React.FC<DayEventsSheetProps> = ({
                                     </p>
                                     <span
                                       className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                                        event.status === 'confirmed' || event.status === 'approved'
-                                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                          : event.status === 'proposed'
-                                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                                            : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                                        event.status === 'available'
+                                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                          : event.status === 'confirmed' || event.status === 'approved'
+                                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                            : event.status === 'proposed'
+                                              ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                              : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
                                       }`}
                                     >
                                       {getStatusLabel(event.status)}
@@ -200,11 +206,13 @@ const DayEventsSheet: React.FC<DayEventsSheetProps> = ({
                                   <div className="flex items-center gap-2 mb-1">
                                     <span
                                       className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                                        event.status === 'confirmed' || event.status === 'approved'
-                                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                          : event.status === 'proposed'
-                                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                                            : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                                        event.status === 'available'
+                                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                          : event.status === 'confirmed' || event.status === 'approved'
+                                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                            : event.status === 'proposed'
+                                              ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                              : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
                                       }`}
                                     >
                                       {getStatusLabel(event.status)}

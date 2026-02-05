@@ -28,7 +28,7 @@ export function useCalendarEvents(events: Event[]) {
     (dateString: string): DayEventStatus => {
       const dateEvents = eventsByDate[dateString] || [];
       const hasConfirmed = dateEvents.some(
-        (e: any) => e.status === 'confirmed' || e.status === 'approved' && !e.isAvailability
+        (e: any) => (e.status === 'confirmed' || e.status === 'approved') && !e.isAvailability
       );
       const hasProposed = dateEvents.some(
         (e: any) => e.status === 'proposed' && !e.isAvailability

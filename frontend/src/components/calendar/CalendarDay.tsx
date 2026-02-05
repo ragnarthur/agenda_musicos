@@ -14,6 +14,16 @@ const CalendarDay: React.FC<CalendarDayProps> = memo(
   ({ date, isCurrentMonth, isToday, isSelected, eventStatus, onSelect }) => {
     const dayNumber = date.getDate();
 
+    // Determine background color based on event status
+    const getEventBgClass = () => {
+      if (isSelected || !isCurrentMonth) return '';
+      if (eventStatus.hasConfirmed)
+        return 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-900 dark:text-emerald-100';
+      if (eventStatus.hasAvailability)
+        return 'bg-blue-100 dark:bg-blue-900/40 text-blue-900 dark:text-blue-100';
+      return '';
+    };
+
     // Build class names
     const baseClasses =
       'relative flex flex-col items-center justify-center aspect-square min-h-[44px] sm:min-h-[48px] rounded-lg transition-all duration-150 touch-manipulation active:scale-95';
@@ -31,17 +41,14 @@ const CalendarDay: React.FC<CalendarDayProps> = memo(
         ? 'hover:bg-gray-100 dark:hover:bg-gray-700'
         : '';
 
-    const hasEventsClasses =
-      eventStatus.totalCount > 0 && !isSelected
-        ? 'bg-gray-50 dark:bg-gray-800/50'
-        : '';
+    const eventBgClass = getEventBgClass();
 
     const cellClasses = [
       baseClasses,
       monthClasses,
       todayClasses,
       selectedClasses,
-      hasEventsClasses,
+      eventBgClass,
     ]
       .filter(Boolean)
       .join(' ');
@@ -59,27 +66,6 @@ const CalendarDay: React.FC<CalendarDayProps> = memo(
         >
           {dayNumber}
         </span>
-
-        {/* Event indicator dots */}
-        {eventStatus.totalCount > 0 && (
-          <div className="absolute bottom-1 flex gap-0.5">
-            {eventStatus.hasAvailability && !isSelected && (
-              <span
-                className="w-1.5 h-1.5 rounded-full bg-blue-400"
-              />
-            )}
-            {eventStatus.hasConfirmed && (
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-500'}`}
-              />
-            )}
-            {eventStatus.hasProposed && (
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white/70' : 'bg-amber-400'}`}
-              />
-            )}
-          </div>
-        )}
       </button>
     );
   }
