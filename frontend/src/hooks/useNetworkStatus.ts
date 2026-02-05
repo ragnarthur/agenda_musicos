@@ -46,12 +46,9 @@ export function useNetworkStatus(): NetworkStatus {
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
-      // Marca que estava offline para mostrar mensagem de reconexão
-      if (!navigator.onLine) {
-        setWasOffline(true);
-        // Reset após 3 segundos
-        setTimeout(() => setWasOffline(false), 3000);
-      }
+      // wasOffline já foi setado pelo handleOffline
+      // Reset após 3 segundos para esconder a mensagem de reconexão
+      setTimeout(() => setWasOffline(false), 3000);
     };
 
     const handleOffline = () => {
