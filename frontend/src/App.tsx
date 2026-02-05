@@ -61,6 +61,7 @@ const ContractorRequests = lazy(() => import('./pages/ContractorRequests'));
 const CityLanding = lazy(() => import('./pages/CityLanding'));
 const MusicianPublicProfile = lazy(() => import('./pages/MusicianPublicProfile'));
 const OurMusicians = lazy(() => import('./pages/OurMusicians'));
+const AppStart = lazy(() => import('./pages/AppStart'));
 
 // Quote detail pages
 const MusicianQuoteDetail = lazy(() => import('./pages/MusicianQuoteDetail'));
@@ -214,6 +215,9 @@ function AppRoutes() {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
+        {/* App Start - Tela de seleção inicial para PWA */}
+        <Route path="/app-start" element={<AppStart />} />
+
         {/* Landing Page - Nova rota raiz */}
         <Route
           path="/"
