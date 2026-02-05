@@ -4,26 +4,22 @@ import {
   ArrowLeft,
   Users,
   Star,
-  Calendar,
   DollarSign,
   Package,
   MessageCircle,
   Instagram,
   Phone,
-  Award,
   Music,
   Settings,
   UserPlus,
-  FileText,
   Disc3,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import ProfileHeader from '../components/Profile/ProfileHeader';
-import StatCard from '../components/Profile/StatCard';
 import ReviewCard from '../components/Profile/ReviewCard';
 import ImageCropModal from '../components/modals/ImageCropModal';
+import { CompactCalendar } from '../components/calendar';
 import { musicianService } from '../services/api';
 import { connectionService } from '../services/connectionService';
 import { useAuth } from '../contexts/AuthContext';
@@ -31,7 +27,7 @@ import { getErrorMessage, showToast } from '../utils/toast';
 import { logError } from '../utils/logger';
 import { formatInstrumentLabel, formatCurrency, getMusicianInstruments } from '../utils/formatting';
 import { getGenreLabel } from '../config/genres';
-import type { Musician, MusicianBadge } from '../types';
+import type { Musician } from '../types';
 
 interface Connection {
   id: number;
@@ -49,12 +45,6 @@ interface Review {
   time_ago: string;
 }
 
-interface MusicianStats {
-  total_events: number;
-  events_as_leader: number;
-  events_as_member: number;
-}
-
 interface ConnectionStatus {
   is_connected: boolean;
   connection_id: number | null;
@@ -67,8 +57,6 @@ const MusicianProfile: React.FC = () => {
   const [connections, setConnections] = useState<Connection[]>([]);
   const [connectionsTotal, setConnectionsTotal] = useState(0);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [badges, setBadges] = useState<MusicianBadge[]>([]);
-  const [stats, setStats] = useState<MusicianStats | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -78,6 +66,7 @@ const MusicianProfile: React.FC = () => {
   const [cropFile, setCropFile] = useState<File | null>(null);
   const [cropTarget, setCropTarget] = useState<'avatar' | 'cover'>('avatar');
   const [isCropOpen, setIsCropOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'reviews' | 'connections'>('reviews');
   const { user, refreshUser } = useAuth();
 
   const isOwnProfile = Boolean(user && (user.id === Number(id) || user.user?.id === Number(id)));
@@ -94,11 +83,9 @@ const MusicianProfile: React.FC = () => {
       setMusician(musicianData);
 
       // Fetch dados secundários em paralelo (com fallbacks)
-      const [connectionsRes, reviewsRes, badgesRes, statsRes] = await Promise.allSettled([
-        musicianService.getConnections(Number(id), { type: 'follow', limit: 6 }),
+      const [connectionsRes, reviewsRes] = await Promise.allSettled([
+        musicianService.getConnections(Number(id), { type: 'follow', limit: 12 }),
         musicianService.getReviews(Number(id)),
-        musicianService.getBadges(Number(id)),
-        musicianService.getStats(Number(id)),
       ]);
 
       if (connectionsRes.status === 'fulfilled') {
@@ -109,12 +96,6 @@ const MusicianProfile: React.FC = () => {
       }
       if (reviewsRes.status === 'fulfilled') {
         setReviews(reviewsRes.value || []);
-      }
-      if (badgesRes.status === 'fulfilled') {
-        setBadges(badgesRes.value || []);
-      }
-      if (statsRes.status === 'fulfilled') {
-        setStats(statsRes.value);
       }
 
       // Verificar status de conexão (apenas se não for o próprio perfil)
@@ -275,8 +256,6 @@ const MusicianProfile: React.FC = () => {
     );
   }
 
-  const totalEvents = stats?.total_events ?? 0;
-
   return (
     <Layout>
       <div className="min-h-[100svh] bg-transparent transition-colors duration-200">
@@ -308,6 +287,7 @@ const MusicianProfile: React.FC = () => {
               musician={musician}
               isOwnProfile={isOwnProfile}
               connectionStatus={connectionStatus}
+              connectionsCount={connectionsTotal}
               onConnect={handleConnect}
               connectingInProgress={connectingInProgress}
               onAvatarChange={isOwnProfile ? handleAvatarUpload : undefined}
@@ -327,217 +307,20 @@ const MusicianProfile: React.FC = () => {
             />
           )}
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <StatCard
-              icon={<Users className="h-6 w-6 text-white" />}
-              value={connections.length || 0}
-              label="Conexões"
-              color="blue"
-            />
-            <StatCard
-              icon={<Star className="h-6 w-6 text-white" />}
-              value={Number(musician.average_rating ?? 0).toFixed(1)}
-              label={`${musician.total_ratings || 0} Avaliações`}
-              color="orange"
-            />
-            <StatCard
-              icon={<Calendar className="h-6 w-6 text-white" />}
-              value={totalEvents}
-              label="Eventos"
-              color="green"
-            />
-            <StatCard
-              icon={<DollarSign className="h-6 w-6 text-white" />}
-              value={formatCurrency(musician.base_fee)}
-              label="Cachê Base"
-              color="purple"
-            />
+          {/* Calendar Section */}
+          <div className="mb-6">
+            <CompactCalendar events={[]} className="shadow-md" />
           </div>
 
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column (2/3 width) */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* About Section */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
-                <div className="flex items-center gap-2 mb-4">
-                  <FileText className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Sobre</h2>
-                </div>
-                {musician.bio ? (
-                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                    {musician.bio}
-                  </p>
-                ) : (
-                  <p className="text-gray-400 dark:text-gray-500 italic">
-                    {isOwnProfile
-                      ? 'Adicione uma bio para que outros músicos conheçam você melhor.'
-                      : 'Este músico ainda não adicionou uma bio.'}
-                  </p>
-                )}
-              </div>
-
-              {/* Badges Section */}
-              {(badges.length > 0 || isOwnProfile) && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Award className="h-5 w-5 text-amber-500" />
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Conquistas</h2>
-                  </div>
-                  {badges.length > 0 ? (
-                    <div className="flex flex-wrap gap-3">
-                      {badges.map(badge => (
-                        <motion.div
-                          key={badge.id}
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-700/50 rounded-full"
-                        >
-                          <span className="text-xl">{badge.icon || '🏆'}</span>
-                          <div>
-                            <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
-                              {badge.name}
-                            </p>
-                            {badge.description && (
-                              <p className="text-xs text-amber-600 dark:text-amber-400">
-                                {badge.description}
-                              </p>
-                            )}
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-400 dark:text-gray-500 italic">
-                      {isOwnProfile
-                        ? 'Continue usando a plataforma para desbloquear conquistas!'
-                        : 'Nenhuma conquista ainda.'}
-                    </p>
-                  )}
-                  {isOwnProfile && (
-                    <Link
-                      to="/conexoes"
-                      className="inline-flex items-center gap-1 mt-4 text-sm text-amber-600 dark:text-amber-400 hover:underline"
-                    >
-                      Ver todas as conquistas disponíveis →
-                    </Link>
-                  )}
-                </div>
-              )}
-
-              {/* Equipment Section */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
-                <div className="flex items-center gap-2 mb-4">
-                  <Package className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                    Equipamentos e Serviços
-                  </h2>
-                </div>
-                {musician.equipment_items && musician.equipment_items.length > 0 ? (
-                  <ul className="space-y-3">
-                    {musician.equipment_items.map((item, idx) => (
-                      <li
-                        key={idx}
-                        className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700 last:border-0"
-                      >
-                        <span className="text-gray-700 dark:text-gray-300">{item.name}</span>
-                        <span className="font-semibold text-gray-900 dark:text-white">
-                          {formatCurrency(item.price)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-gray-400 dark:text-gray-500 italic">
-                    {isOwnProfile
-                      ? 'Adicione equipamentos e serviços extras que você oferece.'
-                      : 'Nenhum equipamento ou serviço adicional.'}
-                  </p>
-                )}
-                {isOwnProfile && (
-                  <Link
-                    to="/configuracoes/financeiro"
-                    className="inline-flex items-center gap-1 mt-4 text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    Gerenciar equipamentos →
-                  </Link>
-                )}
-              </div>
-
-              {/* Reviews Section */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
-                <div className="flex items-center gap-2 mb-6">
-                  <MessageCircle className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                    Avaliações {reviews.length > 0 && `(${reviews.length})`}
-                  </h2>
-                </div>
-                {reviews.length > 0 ? (
-                  <div className="space-y-4">
-                    {reviews.map(review => (
-                      <ReviewCard key={review.id} review={review} />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-400 dark:text-gray-500 italic">
-                    {isOwnProfile
-                      ? 'Suas avaliações aparecerão aqui após participar de eventos.'
-                      : 'Este músico ainda não recebeu avaliações.'}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Right Column (1/3 width) */}
-            <div className="space-y-6">
-              {/* Instruments Section */}
-              {getMusicianInstruments(musician).length > 0 && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Music className="h-5 w-5 text-indigo-500" />
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                      Instrumentos
-                    </h2>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {getMusicianInstruments(musician).map((inst, idx) => (
-                      <span
-                        key={idx}
-                        className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full text-sm border border-indigo-200 dark:border-indigo-700/50"
-                      >
-                        {formatInstrumentLabel(inst)}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Musical Genres Section */}
-              {musician.musical_genres && musician.musical_genres.length > 0 && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Disc3 className="h-5 w-5 text-purple-500" />
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                      Gêneros Musicais
-                    </h2>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {musician.musical_genres.map((genre, idx) => (
-                      <span
-                        key={idx}
-                        className="px-3 py-1.5 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-sm border border-purple-200 dark:border-purple-700/50"
-                      >
-                        {getGenreLabel(genre)}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Contact Section */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Contato</h2>
+          {/* Contact & Fee Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Contact Info */}
+              <div>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Phone className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                  Contato
+                </h2>
                 <div className="space-y-3">
                   {musician.phone ? (
                     <a
@@ -589,65 +372,240 @@ const MusicianProfile: React.FC = () => {
                 </div>
               </div>
 
-              {/* Connections Section */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">Conexões</h2>
-                  {connectionsTotal > 6 && (
-                    <Link
-                      to="/conexoes"
-                      className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                      Ver todas
-                    </Link>
-                  )}
+              {/* Fee Info */}
+              <div>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-purple-500" />
+                  Cachê
+                </h2>
+                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-700/50">
+                  <p className="text-sm text-purple-600 dark:text-purple-400 mb-1">Cachê Base</p>
+                  <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                    {formatCurrency(musician.base_fee)}
+                  </p>
                 </div>
 
-                {connections.length > 0 ? (
-                  <div className="grid grid-cols-3 gap-3">
-                    {connections.slice(0, 6).map(conn => (
-                      <Link
-                        key={conn.id}
-                        to={`/musicos/${conn.id}`}
-                        className="text-center hover:scale-105 transition-transform"
+                {/* Equipment/Additional Services */}
+                {musician.equipment_items && musician.equipment_items.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                      <Package className="h-4 w-4" />
+                      Equipamentos e Serviços
+                    </p>
+                    <ul className="space-y-2">
+                      {musician.equipment_items.slice(0, 3).map((item, idx) => (
+                        <li
+                          key={idx}
+                          className="flex justify-between items-center text-sm py-1 border-b border-gray-100 dark:border-gray-700 last:border-0"
+                        >
+                          <span className="text-gray-600 dark:text-gray-400">{item.name}</span>
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {formatCurrency(item.price)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    {musician.equipment_items.length > 3 && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                        +{musician.equipment_items.length - 3} outros
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {isOwnProfile && (
+                  <Link
+                    to="/configuracoes/financeiro"
+                    className="inline-flex items-center gap-1 mt-4 text-sm text-purple-600 dark:text-purple-400 hover:underline"
+                  >
+                    Gerenciar valores →
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Instruments & Genres Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Instruments */}
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <Music className="h-5 w-5 text-indigo-500" />
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                    Instrumentos
+                  </h2>
+                </div>
+                {getMusicianInstruments(musician).length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {getMusicianInstruments(musician).map((inst, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full text-sm border border-indigo-200 dark:border-indigo-700/50"
                       >
-                        <div className="w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-2 overflow-hidden ring-2 ring-blue-500/10 dark:ring-blue-400/10">
-                          {conn.avatar ? (
-                            <img
-                              src={conn.avatar}
-                              alt={conn.full_name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-blue-600 text-white font-bold">
-                              {conn.full_name[0]}
-                            </div>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-700 dark:text-gray-300 truncate">
-                          {conn.full_name.split(' ')[0]}
-                        </p>
-                      </Link>
+                        {formatInstrumentLabel(inst)}
+                      </span>
                     ))}
                   </div>
                 ) : (
                   <p className="text-gray-400 dark:text-gray-500 italic text-sm">
                     {isOwnProfile
-                      ? 'Conecte-se com outros músicos da plataforma!'
-                      : 'Nenhuma conexão ainda.'}
+                      ? 'Adicione seus instrumentos no perfil.'
+                      : 'Nenhum instrumento informado.'}
                   </p>
                 )}
+              </div>
 
-                {isOwnProfile && (
-                  <Link
-                    to="/musicos"
-                    className="inline-flex items-center gap-1 mt-4 text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    <UserPlus className="h-4 w-4" />
-                    Encontrar músicos
-                  </Link>
+              {/* Musical Genres */}
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <Disc3 className="h-5 w-5 text-purple-500" />
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                    Gêneros Musicais
+                  </h2>
+                </div>
+                {musician.musical_genres && musician.musical_genres.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {musician.musical_genres.map((genre, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1.5 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-sm border border-purple-200 dark:border-purple-700/50"
+                      >
+                        {getGenreLabel(genre)}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-400 dark:text-gray-500 italic text-sm">
+                    {isOwnProfile
+                      ? 'Adicione seus gêneros musicais no perfil.'
+                      : 'Nenhum gênero informado.'}
+                  </p>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Tabs: Reviews & Connections */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md transition-colors duration-200 overflow-hidden">
+            {/* Tab Headers */}
+            <div className="flex border-b border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => setActiveTab('reviews')}
+                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                  activeTab === 'reviews'
+                    ? 'text-primary-600 dark:text-primary-400 border-b-2 border-primary-600 dark:border-primary-400 bg-primary-50/50 dark:bg-primary-900/10'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                }`}
+              >
+                <Star className="h-4 w-4" />
+                Avaliações
+                {reviews.length > 0 && (
+                  <span className="text-xs bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">
+                    {reviews.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab('connections')}
+                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                  activeTab === 'connections'
+                    ? 'text-primary-600 dark:text-primary-400 border-b-2 border-primary-600 dark:border-primary-400 bg-primary-50/50 dark:bg-primary-900/10'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                Conexões
+                {connectionsTotal > 0 && (
+                  <span className="text-xs bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">
+                    {connectionsTotal}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Tab Content */}
+            <div className="p-6">
+              {activeTab === 'reviews' && (
+                <div>
+                  {reviews.length > 0 ? (
+                    <div className="space-y-4">
+                      {reviews.map(review => (
+                        <ReviewCard key={review.id} review={review} />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-400 dark:text-gray-500 italic text-center py-8">
+                      {isOwnProfile
+                        ? 'Suas avaliações aparecerão aqui após participar de eventos.'
+                        : 'Este músico ainda não recebeu avaliações.'}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'connections' && (
+                <div>
+                  {connections.length > 0 ? (
+                    <>
+                      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-4">
+                        {connections.map(conn => (
+                          <Link
+                            key={conn.id}
+                            to={`/musicos/${conn.id}`}
+                            className="text-center hover:scale-105 transition-transform"
+                          >
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-2 overflow-hidden ring-2 ring-blue-500/10 dark:ring-blue-400/10">
+                              {conn.avatar ? (
+                                <img
+                                  src={conn.avatar}
+                                  alt={conn.full_name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-blue-600 text-white font-bold text-sm">
+                                  {conn.full_name[0]}
+                                </div>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-700 dark:text-gray-300 truncate">
+                              {conn.full_name.split(' ')[0]}
+                            </p>
+                          </Link>
+                        ))}
+                      </div>
+                      {connectionsTotal > connections.length && (
+                        <div className="text-center mt-4">
+                          <Link
+                            to="/conexoes"
+                            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                          >
+                            Ver todas as {connectionsTotal} conexões
+                          </Link>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-gray-400 dark:text-gray-500 italic text-center py-8">
+                      {isOwnProfile
+                        ? 'Conecte-se com outros músicos da plataforma!'
+                        : 'Nenhuma conexão ainda.'}
+                    </p>
+                  )}
+
+                  {isOwnProfile && (
+                    <div className="text-center mt-4">
+                      <Link
+                        to="/musicos"
+                        className="inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        <UserPlus className="h-4 w-4" />
+                        Encontrar músicos
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

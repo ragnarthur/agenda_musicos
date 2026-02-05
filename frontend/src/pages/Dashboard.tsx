@@ -141,7 +141,7 @@ const Dashboard: React.FC = memo(() => {
           </div>
         </motion.div>
 
-        {/* Stats Cards */}
+        {/* Compact Calendar - First content after hero */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -151,6 +151,19 @@ const Dashboard: React.FC = memo(() => {
               : { type: 'spring', stiffness: 120, damping: 18, delay: 0.05 }
           }
         >
+          <CompactCalendar events={upcomingEvents} />
+        </motion.div>
+
+        {/* Stats Cards */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={
+            prefersReducedMotion
+              ? { duration: 0.3 }
+              : { type: 'spring', stiffness: 120, damping: 18, delay: 0.1 }
+          }
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
@@ -158,7 +171,7 @@ const Dashboard: React.FC = memo(() => {
               transition={
                 prefersReducedMotion
                   ? { duration: 0.3 }
-                  : { type: 'spring', stiffness: 120, damping: 18, delay: 0.05 }
+                  : { type: 'spring', stiffness: 120, damping: 18, delay: 0.1 }
               }
             >
               <Link
@@ -177,7 +190,7 @@ const Dashboard: React.FC = memo(() => {
               transition={
                 prefersReducedMotion
                   ? { duration: 0.3 }
-                  : { type: 'spring', stiffness: 120, damping: 18, delay: 0.1 }
+                  : { type: 'spring', stiffness: 120, damping: 18, delay: 0.15 }
               }
             >
               <Link
@@ -198,7 +211,7 @@ const Dashboard: React.FC = memo(() => {
               transition={
                 prefersReducedMotion
                   ? { duration: 0.3 }
-                  : { type: 'spring', stiffness: 120, damping: 18, delay: 0.15 }
+                  : { type: 'spring', stiffness: 120, damping: 18, delay: 0.2 }
               }
             >
               <Link
@@ -219,7 +232,7 @@ const Dashboard: React.FC = memo(() => {
               transition={
                 prefersReducedMotion
                   ? { duration: 0.3 }
-                  : { type: 'spring', stiffness: 120, damping: 18, delay: 0.2 }
+                  : { type: 'spring', stiffness: 120, damping: 18, delay: 0.25 }
               }
             >
               <Link
@@ -234,19 +247,6 @@ const Dashboard: React.FC = memo(() => {
               </Link>
             </motion.div>
           </div>
-        </motion.div>
-
-        {/* Compact Calendar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={
-            prefersReducedMotion
-              ? { duration: 0.3 }
-              : { type: 'spring', stiffness: 120, damping: 18, delay: 0.15 }
-          }
-        >
-          <CompactCalendar events={upcomingEvents} />
         </motion.div>
 
         {/* Next Event */}

@@ -26,6 +26,7 @@ interface ProfileHeaderProps {
   musician: Musician;
   isOwnProfile: boolean;
   connectionStatus?: ConnectionStatus | null;
+  connectionsCount?: number;
   onConnect?: () => void;
   connectingInProgress?: boolean;
   onAvatarChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -38,6 +39,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   musician,
   isOwnProfile,
   connectionStatus,
+  connectionsCount = 0,
   onConnect,
   connectingInProgress = false,
   onAvatarChange,
@@ -220,9 +222,12 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
           {/* Name & Info */}
           <div className="flex-1 md:mb-4 md:pl-2">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1">
               {musician.full_name}
             </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+              {connectionsCount} {connectionsCount === 1 ? 'conexão' : 'conexões'}
+            </p>
 
             <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-gray-600 dark:text-gray-400 mb-3">
               {musician.city && (
