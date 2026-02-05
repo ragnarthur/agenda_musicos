@@ -25,14 +25,14 @@ export function useMusicianEvents({
     isValidating,
     mutate,
   } = useSWR<PublicCalendarResponse>(
-    musicianId ? ['musician-calendar', musicianId] : null,
+    musicianId ? ['musician-calendar', musicianId, isOwnProfile] : null,
     async () => {
       return await musicianService.getPublicCalendar(musicianId, {
         include_private: isOwnProfile,
       });
     },
     {
-      revalidateOnFocus: false,
+      revalidateOnFocus: true,
       revalidateOnReconnect: true,
       dedupingInterval: 60000,
       errorRetryCount: 2,

@@ -2061,6 +2061,7 @@ class OwnerCalendarEventSerializer(serializers.ModelSerializer):
             "status",
             "status_display",
             "is_solo",
+            "availability_summary",
             "created_at",
             "updated_at",
         ]

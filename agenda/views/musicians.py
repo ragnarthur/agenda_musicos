@@ -4,7 +4,7 @@ ViewSet para gerenciamento de músicos.
 """
 
 from django.db import connection
-from django.db.models import Case, Count, IntegerField, Q
+from django.db.models import Case, Count, IntegerField, Q, When
 from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, permission_classes
@@ -203,13 +203,11 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # 1. Determinar se usuário é dono do perfil e se é músico logado
+        # 1. Determinar se usuário é dono do perfil
         is_owner = False
-        current_musician = None
         if request.user and request.user.is_authenticated and not request.user.is_staff:
             try:
-                current_musician = request.user.musician_profile
-                is_owner = current_musician.id == musician.id
+                is_owner = request.user.musician_profile.id == musician.id
             except Exception:
                 pass  # Usuário não tem perfil de músico
 
@@ -232,21 +230,12 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
             "event_date__lte": end_date,
         }
 
-        # 3. Filtra eventos usando a mesma lógica do EventViewSet (dashboard/página de eventos)
-        if current_musician:
-            # Usuário logado: mesma lógica do dashboard
-            # Mostra eventos onde o usuário logado participa ou criou
-            events_queryset = Event.objects.filter(
-                Q(created_by=request.user)
-                | Q(availabilities__musician=current_musician),
-                **event_filter,
-            )
-        else:
-            # Visitante ou não músico: eventos onde o perfil visitado participa
-            events_queryset = Event.objects.filter(
-                Q(availabilities__musician=musician) | Q(created_by=musician.user),
-                **event_filter,
-            )
+        # 3. Filtra eventos SEMPRE pelo músico do perfil visitado
+        # A autenticação só altera o nível de detalhe (owner vs público)
+        events_queryset = Event.objects.filter(
+            Q(availabilities__musician=musician) | Q(created_by=musician.user),
+            **event_filter,
+        )
 
         # 4. Se não for dono, filtra apenas eventos confirmados/aprovados
         if not is_owner:
