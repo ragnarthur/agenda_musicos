@@ -15,6 +15,7 @@ import {
   Settings,
   UserPlus,
   FileText,
+  Disc3,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
@@ -29,6 +30,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { getErrorMessage, showToast } from '../utils/toast';
 import { logError } from '../utils/logger';
 import { formatInstrumentLabel, formatCurrency, getMusicianInstruments } from '../utils/formatting';
+import { getGenreLabel } from '../config/genres';
 import type { Musician, MusicianBadge } from '../types';
 
 interface Connection {
@@ -489,7 +491,7 @@ const MusicianProfile: React.FC = () => {
 
             {/* Right Column (1/3 width) */}
             <div className="space-y-6">
-              {/* Genres Section */}
+              {/* Instruments Section */}
               {getMusicianInstruments(musician).length > 0 && (
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
                   <div className="flex items-center gap-2 mb-4">
@@ -505,6 +507,28 @@ const MusicianProfile: React.FC = () => {
                         className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full text-sm border border-indigo-200 dark:border-indigo-700/50"
                       >
                         {formatInstrumentLabel(inst)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Musical Genres Section */}
+              {musician.musical_genres && musician.musical_genres.length > 0 && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Disc3 className="h-5 w-5 text-purple-500" />
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                      Gêneros Musicais
+                    </h2>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {musician.musical_genres.map((genre, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1.5 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-sm border border-purple-200 dark:border-purple-700/50"
+                      >
+                        {getGenreLabel(genre)}
                       </span>
                     ))}
                   </div>

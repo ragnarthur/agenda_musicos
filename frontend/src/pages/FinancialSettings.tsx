@@ -13,6 +13,7 @@ import {
   FileText,
   Music,
   Check,
+  Disc3,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Layout from '../components/Layout/Layout';
@@ -24,6 +25,7 @@ import { formatCurrency, formatInstrumentLabel } from '../utils/formatting';
 import { logError } from '../utils/logger';
 import { sanitizeOptionalText, sanitizeText } from '../utils/sanitize';
 import { getErrorMessage } from '../utils/toast';
+import { MUSICAL_GENRES } from '../config/genres';
 
 type EquipmentRow = {
   name: string;
@@ -96,6 +98,7 @@ const FinancialSettings: React.FC = () => {
   const [equipmentRows, setEquipmentRows] = useState<EquipmentRow[]>(DEFAULT_EQUIPMENTS);
   const [selectedInstruments, setSelectedInstruments] = useState<string[]>([]);
   const [primaryInstrument, setPrimaryInstrument] = useState('');
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
 
   const hydrateForm = useCallback((musician: Musician) => {
     setBio(musician.bio ?? '');
@@ -123,6 +126,7 @@ const FinancialSettings: React.FC = () => {
       : instrumentsList;
     setSelectedInstruments(normalizedList);
     setPrimaryInstrument(mainInstrument);
+    setSelectedGenres(musician.musical_genres || []);
   }, []);
 
   const loadProfile = useCallback(async () => {
@@ -186,6 +190,19 @@ const FinancialSettings: React.FC = () => {
     });
   };
 
+  const toggleGenre = (genre: string) => {
+    setSelectedGenres(prev => {
+      if (prev.includes(genre)) {
+        return prev.filter(g => g !== genre);
+      }
+      if (prev.length >= 5) {
+        toast.error('Máximo de 5 gêneros');
+        return prev;
+      }
+      return [...prev, genre];
+    });
+  };
+
   const getInstrumentDisplay = (instrumentName: string) => {
     const match = availableInstruments.find(inst => inst.name === instrumentName);
     return match?.display_name || formatInstrumentLabel(instrumentName);
@@ -211,6 +228,7 @@ const FinancialSettings: React.FC = () => {
         .filter(item => item.name.length > 0),
       instrument: mainInstrument,
       instruments: orderedInstruments,
+      musical_genres: selectedGenres,
     };
 
     try {
@@ -395,6 +413,40 @@ const FinancialSettings: React.FC = () => {
                   </p>
                 )}
               </>
+            )}
+          </div>
+
+          {/* Gêneros Musicais */}
+          <div className="bg-slate-800/50 rounded-xl border border-slate-700/60 p-5 shadow-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <Disc3 className="h-5 w-5 text-emerald-300" />
+              <div>
+                <h2 className="text-lg font-semibold text-white">Gêneros Musicais</h2>
+                <p className="text-slate-300 text-sm">
+                  Selecione até 5 gêneros musicais que você mais toca.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {MUSICAL_GENRES.map(genre => (
+                <button
+                  key={genre.value}
+                  type="button"
+                  onClick={() => toggleGenre(genre.value)}
+                  className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                    selectedGenres.includes(genre.value)
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  }`}
+                >
+                  {genre.label}
+                </button>
+              ))}
+            </div>
+            {selectedGenres.length > 0 && (
+              <p className="mt-3 text-xs text-emerald-400">
+                {selectedGenres.length} gênero{selectedGenres.length > 1 ? 's' : ''} selecionado{selectedGenres.length > 1 ? 's' : ''}
+              </p>
             )}
           </div>
 

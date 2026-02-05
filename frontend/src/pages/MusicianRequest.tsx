@@ -4,13 +4,14 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
-import { Music, Send, CheckCircle, Search, Check } from 'lucide-react';
+import { Music, Send, CheckCircle, Search, Check, Disc3 } from 'lucide-react';
 import {
   musicianRequestService,
   googleAuthService,
   type MusicianRequestCreate,
 } from '../services/publicApi';
 import { BRAZILIAN_STATES } from '../config/cities';
+import { MUSICAL_GENRES } from '../config/genres';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import { showToast } from '../utils/toast';
 import { useInstruments } from '../hooks/useInstruments';
@@ -83,6 +84,7 @@ export default function MusicianRequest() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customInstrumentName, setCustomInstrumentName] = useState('');
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const { instruments, loading: loadingInstruments, createCustomInstrument } = useInstruments();
   const googleCallbackRef = useRef<(response: { credential: string }) => void>(() => {});
 
@@ -149,10 +151,28 @@ export default function MusicianRequest() {
     }
   };
 
+  // Toggle de seleção de gênero
+  const toggleGenre = (genre: string) => {
+    setSelectedGenres(prev => {
+      if (prev.includes(genre)) {
+        return prev.filter(g => g !== genre);
+      }
+      if (prev.length >= 5) {
+        toast.error('Máximo de 5 gêneros');
+        return prev;
+      }
+      return [...prev, genre];
+    });
+  };
+
   // Sync com react-hook-form
   useEffect(() => {
     setValue('instruments', selectedInstruments, { shouldValidate: true });
   }, [selectedInstruments, setValue]);
+
+  useEffect(() => {
+    setValue('musical_genres', selectedGenres, { shouldValidate: true });
+  }, [selectedGenres, setValue]);
 
   // Carregar Google Sign-In
   useEffect(() => {
@@ -292,6 +312,7 @@ export default function MusicianRequest() {
       await musicianRequestService.create({
         ...data,
         instruments: selectedInstruments,
+        musical_genres: selectedGenres,
       });
       setSubmitted(true);
       toast.success('Solicitação enviada com sucesso!');
@@ -613,6 +634,38 @@ export default function MusicianRequest() {
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Opcional - ajuda na validação do seu perfil
                 </p>
+              </div>
+
+              {/* Gêneros Musicais */}
+              <div className="animate-fade-in">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <div className="flex items-center gap-2">
+                    <Disc3 className="h-4 w-4 text-purple-500" />
+                    <span>Gêneros Musicais (até 5)</span>
+                  </div>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {MUSICAL_GENRES.map(genre => (
+                    <button
+                      key={genre.value}
+                      type="button"
+                      onClick={() => toggleGenre(genre.value)}
+                      className={`px-3 py-1.5 rounded-full text-sm transition-colors touch-manipulation ${
+                        selectedGenres.includes(genre.value)
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      {genre.label}
+                    </button>
+                  ))}
+                </div>
+                {selectedGenres.length > 0 && (
+                  <p className="mt-2 text-xs text-purple-600 dark:text-purple-400 flex items-center gap-1">
+                    <Check className="h-3 w-3" />
+                    {selectedGenres.length} gênero{selectedGenres.length > 1 ? 's' : ''} selecionado{selectedGenres.length > 1 ? 's' : ''}
+                  </p>
+                )}
               </div>
 
               {/* Bio */}

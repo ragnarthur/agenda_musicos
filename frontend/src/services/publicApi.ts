@@ -13,6 +13,7 @@ export interface MusicianRequest {
   phone: string;
   instrument: string;
   instruments: string[];
+  musical_genres: string[];
   bio: string | null;
   city: string;
   state: string;
@@ -36,6 +37,7 @@ export interface MusicianRequestCreate {
   phone: string;
   instrument: string;
   instruments?: string[];
+  musical_genres?: string[];
   bio?: string;
   city: string;
   state: string;
@@ -179,6 +181,7 @@ export interface MusicianPublic {
   full_name: string;
   instrument: string;
   instruments: string[];
+  musical_genres: string[];
   bio: string | null;
   city: string | null;
   state: string | null;

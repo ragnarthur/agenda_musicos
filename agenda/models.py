@@ -291,6 +291,12 @@ class Musician(models.Model):
     equipment_items = models.JSONField(
         default=list, blank=True, help_text="Lista de equipamentos/serviços com valores"
     )
+    # Gêneros musicais
+    musical_genres = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Lista de gêneros musicais do músico",
+    )
     city = models.CharField(
         max_length=100, blank=True, null=True, help_text="Cidade onde o músico reside"
     )
@@ -961,6 +967,11 @@ class MusicianRequest(models.Model):
     instrument = models.CharField(max_length=100, help_text="Instrumento principal")
     instruments = models.JSONField(
         default=list, blank=True, help_text="Lista de instrumentos"
+    )
+    musical_genres = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Lista de gêneros musicais do músico",
     )
     bio = models.TextField(blank=True, null=True)
 

@@ -95,6 +95,7 @@ class MusicianSerializer(serializers.ModelSerializer):
             "average_rating",
             "total_ratings",
             "created_at",
+            "musical_genres",
         ]
         read_only_fields = ["id", "average_rating", "total_ratings", "created_at"]
 
@@ -145,6 +146,7 @@ class MusicianUpdateSerializer(serializers.ModelSerializer):
             "base_fee",
             "travel_fee_per_km",
             "equipment_items",
+            "musical_genres",
         ]
 
     def validate_base_fee(self, value):
@@ -293,6 +295,17 @@ class MusicianUpdateSerializer(serializers.ModelSerializer):
             attrs["state"] = sanitize_string(
                 attrs.get("state"), max_length=2, allow_empty=True, to_upper=True
             )
+
+        if "musical_genres" in attrs:
+            genres = attrs.get("musical_genres") or []
+            if not isinstance(genres, list):
+                genres = []
+            # Limitar a 5 gêneros e sanitizar
+            attrs["musical_genres"] = [
+                sanitize_string(g, max_length=50, allow_empty=False)
+                for g in genres[:5]
+                if g and isinstance(g, str)
+            ]
 
         return attrs
 
@@ -1257,6 +1270,7 @@ class MusicianRequestSerializer(serializers.ModelSerializer):
             "city",
             "state",
             "instagram",
+            "musical_genres",
             "status",
             "status_display",
             "admin_notes",
@@ -1329,6 +1343,15 @@ class MusicianRequestSerializer(serializers.ModelSerializer):
             if instagram and not instagram.startswith("@"):
                 instagram = f"@{instagram}"
             attrs["instagram"] = instagram
+        if "musical_genres" in attrs:
+            genres = attrs.get("musical_genres") or []
+            if not isinstance(genres, list):
+                genres = []
+            attrs["musical_genres"] = [
+                sanitize_string(g, max_length=50, allow_empty=False)
+                for g in genres[:5]
+                if g and isinstance(g, str)
+            ]
         return attrs
 
 
@@ -1365,6 +1388,7 @@ class MusicianRequestCreateSerializer(serializers.ModelSerializer):
             "city",
             "state",
             "instagram",
+            "musical_genres",
         ]
 
     def validate_email(self, value):
@@ -1414,6 +1438,15 @@ class MusicianRequestCreateSerializer(serializers.ModelSerializer):
             if instagram and not instagram.startswith("@"):
                 instagram = f"@{instagram}"
             attrs["instagram"] = instagram
+        if "musical_genres" in attrs:
+            genres = attrs.get("musical_genres") or []
+            if not isinstance(genres, list):
+                genres = []
+            attrs["musical_genres"] = [
+                sanitize_string(g, max_length=50, allow_empty=False)
+                for g in genres[:5]
+                if g and isinstance(g, str)
+            ]
         return attrs
 
 
@@ -1436,6 +1469,7 @@ class MusicianRequestAdminSerializer(serializers.ModelSerializer):
             "city",
             "state",
             "instagram",
+            "musical_genres",
             "status",
             "status_display",
             "admin_notes",
@@ -1715,6 +1749,7 @@ class MusicianPublicSerializer(serializers.ModelSerializer):
             "cover_image_url",
             "average_rating",
             "total_ratings",
+            "musical_genres",
         ]
 
     def get_full_name(self, obj):

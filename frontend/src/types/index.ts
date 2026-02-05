@@ -35,6 +35,7 @@ export interface Musician {
   base_fee?: number | string | null;
   travel_fee_per_km?: number | string | null;
   equipment_items?: EquipmentItem[];
+  musical_genres?: string[];
   is_active: boolean;
   average_rating?: number;
   total_ratings?: number;
@@ -53,6 +54,7 @@ export interface MusicianUpdatePayload {
   base_fee?: number | string | null;
   travel_fee_per_km?: number | string | null;
   equipment_items?: EquipmentItem[];
+  musical_genres?: string[];
 }
 
 export interface Availability {
