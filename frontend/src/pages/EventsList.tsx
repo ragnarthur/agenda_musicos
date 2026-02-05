@@ -13,6 +13,7 @@ import {
   Coins,
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
+import PullToRefresh from '../components/common/PullToRefresh';
 import { SkeletonCard } from '../components/common/Skeleton';
 import { useEvents } from '../hooks/useEvents';
 import type { Availability, Event } from '../types';
@@ -90,7 +91,11 @@ const EventsList: React.FC = () => {
     return p;
   }, [filter, debouncedSearch, timeFilter]);
 
-  const { events, count, isLoading, isLoadingMore, hasMore, loadMore } = useEvents(params);
+  const { events, count, isLoading, isLoadingMore, hasMore, loadMore, mutate } = useEvents(params);
+
+  const handleRefresh = useCallback(async () => {
+    await mutate();
+  }, [mutate]);
 
   const groups = useMemo(() => {
     const byDate = new Map<string, Event[]>();
@@ -195,6 +200,7 @@ const EventsList: React.FC = () => {
 
   return (
     <Layout>
+      <PullToRefresh onRefresh={handleRefresh} disabled={isLoading}>
       <div className="page-stack">
         <section className="hero-panel">
           <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
@@ -345,6 +351,7 @@ const EventsList: React.FC = () => {
           </div>
         )}
       </div>
+      </PullToRefresh>
     </Layout>
   );
 };

@@ -27,6 +27,29 @@
       "purpose": "any maskable"
     }
   ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Início",
+      "description": "Acessar o painel principal",
+      "url": "/dashboard",
+      "icons": [{ "src": "/owl-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Minha Agenda",
+      "short_name": "Agenda",
+      "description": "Ver eventos agendados",
+      "url": "/agenda",
+      "icons": [{ "src": "/owl-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Músicos",
+      "short_name": "Músicos",
+      "description": "Encontrar músicos",
+      "url": "/musicos",
+      "icons": [{ "src": "/owl-192.png", "sizes": "192x192" }]
+    }
+  ],
   "screenshots": [],
   "related_applications": [],
   "prefer_related_applications": false

@@ -1,0 +1,115 @@
+// hooks/useInstallPrompt.ts
+// Hook para gerenciar instalação do PWA (Add to Home Screen)
+import { useState, useEffect, useCallback } from 'react';
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
+interface InstallPromptState {
+  canInstall: boolean;
+  isInstalled: boolean;
+  isIOS: boolean;
+  promptInstall: () => Promise<boolean>;
+  dismissPrompt: () => void;
+  wasDismissed: boolean;
+}
+
+const DISMISS_KEY = 'gigflow_install_dismissed';
+const DISMISS_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 dias
+
+export function useInstallPrompt(): InstallPromptState {
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [wasDismissed, setWasDismissed] = useState(false);
+
+  // Detecta iOS (não suporta beforeinstallprompt)
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window);
+
+  // Verifica se já está instalado (standalone mode)
+  useEffect(() => {
+    const checkInstalled = () => {
+      const isStandalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+      setIsInstalled(isStandalone);
+    };
+
+    checkInstalled();
+
+    // Escuta mudanças no display mode
+    const mediaQuery = window.matchMedia('(display-mode: standalone)');
+    mediaQuery.addEventListener('change', checkInstalled);
+
+    return () => mediaQuery.removeEventListener('change', checkInstalled);
+  }, []);
+
+  // Verifica se foi dismissado recentemente
+  useEffect(() => {
+    const dismissedAt = localStorage.getItem(DISMISS_KEY);
+    if (dismissedAt) {
+      const elapsed = Date.now() - parseInt(dismissedAt, 10);
+      if (elapsed < DISMISS_DURATION) {
+        setWasDismissed(true);
+      } else {
+        localStorage.removeItem(DISMISS_KEY);
+      }
+    }
+  }, []);
+
+  // Captura o evento beforeinstallprompt
+  useEffect(() => {
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+
+    // Detecta quando o app é instalado
+    window.addEventListener('appinstalled', () => {
+      setIsInstalled(true);
+      setDeferredPrompt(null);
+    });
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+    };
+  }, []);
+
+  // Dispara o prompt de instalação
+  const promptInstall = useCallback(async (): Promise<boolean> => {
+    if (!deferredPrompt) return false;
+
+    try {
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+
+      if (outcome === 'accepted') {
+        setIsInstalled(true);
+        return true;
+      }
+    } catch (error) {
+      console.error('Erro ao mostrar prompt de instalação:', error);
+    }
+
+    setDeferredPrompt(null);
+    return false;
+  }, [deferredPrompt]);
+
+  // Marca como dismissado
+  const dismissPrompt = useCallback(() => {
+    localStorage.setItem(DISMISS_KEY, Date.now().toString());
+    setWasDismissed(true);
+  }, []);
+
+  return {
+    canInstall: !isInstalled && !wasDismissed && (!!deferredPrompt || isIOS),
+    isInstalled,
+    isIOS,
+    promptInstall,
+    dismissPrompt,
+    wasDismissed,
+  };
+}

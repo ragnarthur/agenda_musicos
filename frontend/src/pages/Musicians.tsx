@@ -1,9 +1,10 @@
 // pages/Musicians.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Music, Phone, Mail, Instagram, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
+import PullToRefresh from '../components/common/PullToRefresh';
 import { useMusiciansPaginated } from '../hooks/useMusicians';
 import type { Musician } from '../types';
 import { formatInstrumentLabel, getMusicianInstruments } from '../utils/formatting';
@@ -27,6 +28,10 @@ const Musicians: React.FC = () => {
       page,
       search: debouncedSearch || undefined,
     });
+
+  const handleRefresh = useCallback(async () => {
+    await mutate();
+  }, [mutate]);
 
   const getInstrumentEmoji = (instrument: string, bio?: string) => {
     // Se é vocalista e a bio menciona violão/violonista, mostra emoji combinado
@@ -89,6 +94,7 @@ const Musicians: React.FC = () => {
 
   return (
     <Layout>
+      <PullToRefresh onRefresh={handleRefresh} disabled={isLoading}>
       <div className="page-stack">
         {/* Header */}
         <div className="hero-panel">
@@ -301,6 +307,7 @@ const Musicians: React.FC = () => {
           </div>
         )}
       </div>
+      </PullToRefresh>
     </Layout>
   );
 };
