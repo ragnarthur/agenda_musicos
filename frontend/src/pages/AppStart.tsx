@@ -70,7 +70,7 @@ const AppStart: React.FC = () => {
           className="mb-8"
         >
           <img
-            src="/owl-512.png"
+            src="/icon-512.png"
             alt="GigFlow"
             className="w-24 h-24 rounded-2xl shadow-2xl shadow-primary-500/30"
           />

@@ -15,13 +15,13 @@
       "type": "image/x-icon"
     },
     {
-      "src": "/owl-192.png",
+      "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/owl-512.png",
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -33,21 +33,21 @@
       "short_name": "Início",
       "description": "Acessar o painel principal",
       "url": "/dashboard",
-      "icons": [{ "src": "/owl-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Minha Agenda",
       "short_name": "Agenda",
       "description": "Ver eventos agendados",
       "url": "/agenda",
-      "icons": [{ "src": "/owl-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Músicos",
       "short_name": "Músicos",
       "description": "Encontrar músicos",
       "url": "/musicos",
-      "icons": [{ "src": "/owl-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ],
   "screenshots": [],

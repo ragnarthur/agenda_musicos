@@ -88,13 +88,13 @@ async function generateIcons() {
 
   for (const size of iconSizes) {
     const svgContent = generateIconSVG(size);
-    const pngPath = path.join(publicDir, `owl-${size}.png`);
+    const pngPath = path.join(publicDir, `icon-${size}.png`);
 
     await sharp(Buffer.from(svgContent))
       .png()
       .toFile(pngPath);
 
-    console.log(`✓ owl-${size}.png (${size}x${size})`);
+    console.log(`✓ icon-${size}.png (${size}x${size})`);
   }
 
   // Gera favicon.ico a partir do ícone 192

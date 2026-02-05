@@ -23,7 +23,7 @@ const splashSizes = [
 ];
 
 const splashDir = path.join(__dirname, '..', 'public', 'splash');
-const logoPath = path.join(__dirname, '..', 'public', 'owl-512.png');
+const logoPath = path.join(__dirname, '..', 'public', 'icon-512.png');
 
 // Garante que o diretório existe
 if (!fs.existsSync(splashDir)) {
@@ -39,7 +39,7 @@ try {
 } catch (e) {
   console.log('Sharp não encontrado.');
   console.log('Para gerar splash screens, instale sharp: npm install -D sharp\n');
-  console.log('Ou use pwa-asset-generator: npx pwa-asset-generator public/owl-512.png public/splash --splash-only');
+  console.log('Ou use pwa-asset-generator: npx pwa-asset-generator public/icon-512.png public/splash --splash-only');
   process.exit(1);
 }
 
