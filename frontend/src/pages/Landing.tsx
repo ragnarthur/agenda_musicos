@@ -10,6 +10,8 @@ import {
   MessageSquare,
   Shield,
   Briefcase,
+  Download,
+  Share,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import OwlMascot from '../components/ui/OwlMascot';
@@ -17,6 +19,7 @@ import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import UserTypeToggle from '../components/navigation/UserTypeToggle';
 import CityDisplay from '../components/CityDisplay';
 import CityBadge from '../components/CityBadge';
+import { useInstallPrompt } from '../hooks/useInstallPrompt';
 
 type TypewriterPhase = 'typing' | 'pausing' | 'deleting' | 'waiting';
 type UserType = 'musician' | 'contractor';
@@ -45,6 +48,16 @@ interface UserContent {
 const Landing: React.FC = () => {
   const navigate = useNavigate();
   const [userType, setUserType] = useState<UserType>('musician');
+  const [showIOSModal, setShowIOSModal] = useState(false);
+  const { canInstall, isIOS, promptInstall } = useInstallPrompt();
+
+  const handleInstall = async () => {
+    if (isIOS) {
+      setShowIOSModal(true);
+    } else {
+      await promptInstall();
+    }
+  };
 
   const musicianContent = useMemo<UserContent>(
     () => ({
@@ -439,14 +452,28 @@ const Landing: React.FC = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6"
           >
             <Link
               to="/nossos-musicos"
-              className="inline-flex items-center gap-2 mt-6 px-5 py-2.5 text-primary-300 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-primary-300 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
             >
               <Users className="h-5 w-5" />
               <span>Conheça nossos músicos</span>
             </Link>
+            {canInstall && (
+              <motion.button
+                onClick={handleInstall}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-medium rounded-xl shadow-lg shadow-primary-500/25 transition-all duration-300"
+              >
+                <Download className="h-5 w-5" />
+                <span>Instalar App</span>
+              </motion.button>
+            )}
           </motion.div>
         </section>
 
@@ -500,6 +527,71 @@ const Landing: React.FC = () => {
           </Link>
         </section>
       </div>
+
+      {/* Modal de instruções para iOS */}
+      <AnimatePresence>
+        {showIOSModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+            onClick={() => setShowIOSModal(false)}
+          >
+            <motion.div
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-6 pb-safe"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-6 sm:hidden" />
+
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+                Instalar GigFlow
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm text-center mb-6">
+                No iPhone/iPad, siga os passos abaixo:
+              </p>
+
+              <ol className="space-y-4">
+                <li className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-7 h-7 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full flex items-center justify-center text-sm font-bold">
+                    1
+                  </span>
+                  <p className="text-gray-700 dark:text-gray-300 text-sm pt-0.5">
+                    Toque no botão <Share className="inline w-4 h-4 text-blue-500 mx-1" /> <strong>Compartilhar</strong> na barra do Safari
+                  </p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-7 h-7 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full flex items-center justify-center text-sm font-bold">
+                    2
+                  </span>
+                  <p className="text-gray-700 dark:text-gray-300 text-sm pt-0.5">
+                    Role para baixo e toque em <strong>"Adicionar à Tela de Início"</strong>
+                  </p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-7 h-7 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full flex items-center justify-center text-sm font-bold">
+                    3
+                  </span>
+                  <p className="text-gray-700 dark:text-gray-300 text-sm pt-0.5">
+                    Toque em <strong>"Adicionar"</strong> no canto superior direito
+                  </p>
+                </li>
+              </ol>
+
+              <button
+                onClick={() => setShowIOSModal(false)}
+                className="w-full mt-6 px-4 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-medium transition-all min-h-[48px]"
+              >
+                Entendi
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </FullscreenBackground>
   );
 };
