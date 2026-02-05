@@ -39,7 +39,7 @@
       "name": "Minha Agenda",
       "short_name": "Agenda",
       "description": "Ver eventos agendados",
-      "url": "/agenda",
+      "url": "/eventos/agenda",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {

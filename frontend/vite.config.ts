@@ -12,7 +12,7 @@ export default defineConfig({
       manifest: false, // Usar manifest.json existente
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        navigateFallback: '/index.html',
+        navigateFallback: '/offline.html',
         navigateFallbackDenylist: [/^\/api/, /^\/gf-secure-admin\//],
         runtimeCaching: [
           {
