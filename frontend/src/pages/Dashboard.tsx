@@ -5,6 +5,7 @@ import { CalendarClock, Clock, Plus, Users, ListChecks, Zap, Briefcase } from 'l
 import { motion, useReducedMotion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
 import Skeleton, { SkeletonCard } from '../components/common/Skeleton';
+import { CompactCalendar } from '../components/calendar';
 import { useAuth } from '../contexts/AuthContext';
 import { useUpcomingEvents } from '../hooks/useEvents';
 import { useDashboardNotifications } from '../hooks/useNotifications';
@@ -233,6 +234,19 @@ const Dashboard: React.FC = memo(() => {
               </Link>
             </motion.div>
           </div>
+        </motion.div>
+
+        {/* Compact Calendar */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={
+            prefersReducedMotion
+              ? { duration: 0.3 }
+              : { type: 'spring', stiffness: 120, damping: 18, delay: 0.15 }
+          }
+        >
+          <CompactCalendar events={upcomingEvents} />
         </motion.div>
 
         {/* Next Event */}

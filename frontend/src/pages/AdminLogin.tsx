@@ -8,6 +8,7 @@ import { showToast } from '../utils/toast';
 const AdminLogin: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ const AdminLogin: React.FC = () => {
     setError('');
 
     try {
-      await login(email, password);
+      await login(email, password, rememberMe);
       navigate(ADMIN_ROUTES.dashboard);
     } catch (error: unknown) {
       console.error('Admin login error:', error);
@@ -87,6 +88,19 @@ const AdminLogin: React.FC = () => {
                   placeholder="••••••••"
                 />
               </div>
+            </div>
+
+            {/* Remember Me */}
+            <div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={e => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-amber-400 focus:ring-amber-400 focus:ring-offset-slate-900"
+                />
+                <span className="text-sm text-slate-300">Permanecer conectado</span>
+              </label>
             </div>
 
             {/* Submit Button */}

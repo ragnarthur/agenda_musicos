@@ -9,6 +9,7 @@ import {
 } from '../utils/tokenStorage';
 
 const SESSION_KEY = 'gigflow_admin_session';
+const REMEMBER_KEY = 'gigflow_admin_remember';
 
 interface AdminUser {
   id: number;
@@ -24,7 +25,7 @@ interface AdminAuthContextType {
   user: AdminUser | null;
   isAuthenticated: boolean;
   loading: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
 }
@@ -62,7 +63,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, []);
 
   const login = useCallback(
-    async (username: string, password: string) => {
+    async (username: string, password: string, rememberMe?: boolean) => {
       const response = await api.post('/admin/token/', { username, password });
 
       const data = response.data;
@@ -74,6 +75,14 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setStoredAccessToken(data.access);
       setStoredRefreshToken(data.refresh);
       sessionStorage.setItem(SESSION_KEY, 'true');
+
+      // Armazena preferência de "Permanecer conectado"
+      if (rememberMe) {
+        localStorage.setItem(REMEMBER_KEY, 'true');
+      } else {
+        localStorage.removeItem(REMEMBER_KEY);
+      }
+
       await checkAuth();
     },
     [checkAuth]
@@ -86,6 +95,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       console.error('Logout error:', error);
     } finally {
       sessionStorage.removeItem(SESSION_KEY);
+      localStorage.removeItem(REMEMBER_KEY);
       clearStoredAccessToken();
       clearStoredRefreshToken();
       setUser(null);
@@ -95,13 +105,19 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     const bootstrap = async () => {
       const hasActiveSession = sessionStorage.getItem(SESSION_KEY);
+      const rememberMe = localStorage.getItem(REMEMBER_KEY) === 'true';
 
-      if (!hasActiveSession) {
+      if (!hasActiveSession && !rememberMe) {
         setUser(null);
         clearStoredAccessToken();
         clearStoredRefreshToken();
         setLoading(false);
         return;
+      }
+
+      // Restaura marcador de sessão se estava em "Permanecer conectado"
+      if (rememberMe && !hasActiveSession) {
+        sessionStorage.setItem(SESSION_KEY, 'true');
       }
 
       await checkAuth();
