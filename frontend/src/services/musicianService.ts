@@ -1,7 +1,19 @@
 // services/musicianService.ts
 import { api, uploadApi } from './api';
-import type { Musician, MusicianUpdatePayload, MusicianRating, MusicianBadge, LeaderAvailability } from '../types';
+import type {
+  Musician,
+  MusicianUpdatePayload,
+  MusicianRating,
+  MusicianBadge,
+  PublicCalendarResponse,
+} from '../types';
 import type { ConnectionsResponse, PaginatedResponse } from './types';
+
+export type InstrumentOption = {
+  value: string;
+  label: string;
+  count?: number;
+};
 
 export interface ConnectionStatusResponse {
   is_connected: boolean;
