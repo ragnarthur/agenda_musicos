@@ -68,7 +68,6 @@ const MusicianProfile: React.FC = () => {
   const [cropTarget, setCropTarget] = useState<'avatar' | 'cover'>('avatar');
   const [isCropOpen, setIsCropOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'reviews' | 'connections'>('reviews');
-  const [daysAhead, setDaysAhead] = useState(90);
   const { user, refreshUser } = useAuth();
 
   const isOwnProfile = Boolean(user && (user.id === Number(id) || user.user?.id === Number(id)));
@@ -77,18 +76,10 @@ const MusicianProfile: React.FC = () => {
     events: musicianEvents,
     loading: calendarLoading,
     isOwner: calendarIsOwner,
-    daysAhead: actualDaysAhead,
   } = useMusicianEvents({
     musicianId: Number(id),
     isOwnProfile,
-    daysAhead,
   });
-
-  useEffect(() => {
-    if (actualDaysAhead && actualDaysAhead !== daysAhead) {
-      setDaysAhead(actualDaysAhead);
-    }
-  }, [actualDaysAhead, daysAhead]);
 
   const fetchData = useCallback(async () => {
     if (!id) return;
@@ -352,9 +343,6 @@ const MusicianProfile: React.FC = () => {
 
             <CompactCalendar
               events={musicianEvents as any}
-              daysAhead={daysAhead}
-              onDaysChange={setDaysAhead}
-              showDaysSelector={true}
               className="shadow-md"
               isOwner={calendarIsOwner}
             />

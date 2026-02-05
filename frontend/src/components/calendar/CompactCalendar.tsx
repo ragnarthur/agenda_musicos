@@ -16,7 +16,6 @@ import {
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import CalendarDay from './CalendarDay';
-import CalendarDaysSelector from './CalendarDaysSelector';
 import DayEventsSheet from './DayEventsSheet';
 import { useCalendarEvents } from './useCalendarEvents';
 import type { Event } from '../../types';
@@ -25,9 +24,6 @@ interface CompactCalendarProps {
   events: Event[];
   onDaySelect?: (date: string) => void;
   className?: string;
-  daysAhead?: number;
-  onDaysChange?: (days: number) => void;
-  showDaysSelector?: boolean;
   isOwner?: boolean;
 }
 
@@ -38,9 +34,6 @@ const CompactCalendar: React.FC<CompactCalendarProps> = memo(
     events,
     onDaySelect,
     className,
-    daysAhead = 90,
-    onDaysChange,
-    showDaysSelector = false,
     isOwner = true,
   }) => {
     const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -159,17 +152,6 @@ const CompactCalendar: React.FC<CompactCalendarProps> = memo(
             <ChevronRight className="h-5 w-5 text-gray-600 dark:text-gray-300" />
           </button>
         </div>
-
-        {/* Days Selector */}
-        {showDaysSelector && onDaysChange && (
-          <div className="mb-3">
-            <CalendarDaysSelector
-              selectedDays={daysAhead}
-              onDaysChange={onDaysChange}
-              eventCount={events.length}
-            />
-          </div>
-        )}
 
         {/* Weekday Headers */}
         <div className="grid grid-cols-7 gap-1 mb-1">

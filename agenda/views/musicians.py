@@ -212,14 +212,13 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
             except Exception:
                 pass  # Usuário não tem perfil de músico
 
-        # Parâmetros - VALIDAR para aceitar apenas 30, 60, 90
+        # Parâmetros
         try:
-            days_ahead = int(request.query_params.get("days_ahead", 90))
+            days_ahead = int(request.query_params.get("days_ahead", 365))
         except (TypeError, ValueError):
-            days_ahead = 90
-        valid_days = [30, 60, 90]
-        if days_ahead not in valid_days:
-            days_ahead = 90  # Padrão se valor inválido
+            days_ahead = 365
+        # Limitar entre 30 e 365 dias
+        days_ahead = max(30, min(365, days_ahead))
 
         include_private = request.query_params.get("include_private", "false") == "true"
 

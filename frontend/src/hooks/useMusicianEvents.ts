@@ -6,7 +6,6 @@ import type { Event, PublicCalendarResponse } from '../types';
 interface UseMusicianEventsParams {
   musicianId: number;
   isOwnProfile?: boolean;
-  daysAhead?: number;
 }
 
 interface CalendarEvent extends Omit<Event, 'status'> {
@@ -18,7 +17,6 @@ interface CalendarEvent extends Omit<Event, 'status'> {
 export function useMusicianEvents({
   musicianId,
   isOwnProfile = false,
-  daysAhead = 90,
 }: UseMusicianEventsParams) {
   const {
     data: calendarData,
@@ -27,10 +25,9 @@ export function useMusicianEvents({
     isValidating,
     mutate,
   } = useSWR<PublicCalendarResponse>(
-    musicianId ? ['musician-calendar', musicianId, daysAhead] : null,
+    musicianId ? ['musician-calendar', musicianId] : null,
     async () => {
       return await musicianService.getPublicCalendar(musicianId, {
-        days_ahead: daysAhead,
         include_private: isOwnProfile,
       });
     },
@@ -96,7 +93,6 @@ export function useMusicianEvents({
     rawEvents: calendarData?.events || [],
     availabilities: calendarData?.availabilities || [],
     isOwner: calendarData?.is_owner || false,
-    daysAhead: calendarData?.days_ahead || daysAhead,
     loading: isLoading,
     error,
     isValidating,
