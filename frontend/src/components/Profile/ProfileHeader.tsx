@@ -355,7 +355,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               <img
                 src={expandedImage.src}
                 alt={expandedImage.alt}
-                className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg shadow-2xl"
+                className="max-h-[90svh] max-w-[90vw] object-contain rounded-lg shadow-2xl"
                 onClick={event => event.stopPropagation()}
               />
             </div>,

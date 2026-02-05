@@ -120,7 +120,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
       aria-labelledby="rating-modal-title"
     >
       <SwipeToDismissWrapper isOpen={isOpen} onClose={onClose}>
-        <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl max-w-lg w-full max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col pb-safe pt-safe">
+        <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl max-w-lg w-full max-h-[85svh] sm:max-h-[90svh] overflow-hidden flex flex-col pb-safe pt-safe">
           {/* Header */}
           <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-100">
             <div>

@@ -1,5 +1,5 @@
 // components/layout/BottomNav.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Home, Calendar, Users, User, Plus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -8,25 +8,25 @@ const BottomNav: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
   const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const lastScrollYRef = useRef(0);
 
   // Hide on scroll down, show on scroll up
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
 
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+      if (currentScrollY > lastScrollYRef.current && currentScrollY > 100) {
         setIsVisible(false);
       } else {
         setIsVisible(true);
       }
 
-      setLastScrollY(currentScrollY);
+      lastScrollYRef.current = currentScrollY;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+  }, []);
 
   // Don't show on login/register pages
   if (location.pathname.startsWith('/login') ||
@@ -40,8 +40,10 @@ const BottomNav: React.FC = () => {
     { to: '/eventos', icon: Calendar, label: 'Eventos' },
     { to: '/eventos/novo', icon: Plus, label: 'Criar', isAction: true },
     { to: '/musicos', icon: Users, label: 'Músicos' },
-    { to: `/musicos/${user?.id}`, icon: User, label: 'Perfil' },
   ];
+  if (user?.id) {
+    navItems.push({ to: `/musicos/${user.id}`, icon: User, label: 'Perfil' });
+  }
 
   return (
     <nav

@@ -699,7 +699,7 @@ const Marketplace: React.FC = () => {
           onClick={closeModal}
         >
           <div
-            className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto"
+            className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-h-[90svh] overflow-y-auto"
             onClick={event => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4 mb-6">

@@ -469,7 +469,7 @@ const MusicianPublicProfile: React.FC = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={event => event.stopPropagation()}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90svh] overflow-y-auto"
             >
               <div className="p-6 border-b border-gray-200 flex items-center justify-between">
                 <div>
