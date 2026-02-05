@@ -1,7 +1,7 @@
 // pages/Dashboard.tsx
-import React, { useMemo, memo, useCallback } from 'react';
+import React, { useMemo, memo } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarClock, Clock, Plus, Users, ListChecks, Zap, Briefcase } from 'lucide-react';
+import { Clock, Plus, Users, ListChecks, Zap, Briefcase } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
 import Skeleton, { SkeletonCard } from '../components/common/Skeleton';
@@ -10,8 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useUpcomingEvents } from '../hooks/useEvents';
 import { useDashboardNotifications } from '../hooks/useNotifications';
 import type { Event } from '../types';
-import { isToday, parseISO, format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { isToday, parseISO } from 'date-fns';
 import { getEventComputedStatus } from '../utils/events';
 
 const getStartDateTime = (event: Event): number => {
@@ -73,10 +72,6 @@ const Dashboard: React.FC = memo(() => {
   }, [upcomingEvents]);
 
   const agendaCount = events.length;
-  const formatTime = useCallback((time?: string) => (time ? time.slice(0, 5) : '--:--'), []);
-  const handleScrollToEvents = useCallback(() => {
-    document.getElementById('events-section')?.scrollIntoView({ behavior: 'smooth' });
-  }, []);
 
   if (loading) {
     return (
@@ -257,7 +252,7 @@ const Dashboard: React.FC = memo(() => {
             transition={
               prefersReducedMotion
                 ? { duration: 0.3 }
-                : { type: 'spring', stiffness: 140, damping: 20, delay: 0.1 }
+                : { type: 'spring', stiffness: 140, damping: 20, delay: 0.3 }
             }
           >
             <Link
@@ -277,46 +272,6 @@ const Dashboard: React.FC = memo(() => {
                 </div>
                 <Briefcase className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
               </div>
-            </Link>
-          </motion.div>
-        )}
-
-        {/* Events List - Próximos 5 Eventos */}
-        {events.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 60 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={
-              prefersReducedMotion
-                ? { duration: 0.3 }
-                : { type: 'spring', stiffness: 140, damping: 20, delay: 0.15 }
-            }
-          >
-            <Link to="/eventos" className="block">
-              <p className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <ListChecks className="h-5 w-5 text-gray-700 dark:text-gray-300" />
-                Próximos {Math.min(events.length, 5)} Eventos
-              </p>
-            </Link>
-          </motion.div>
-        )}
-
-        {/* Events List - Hoje */}
-        {todayEvents.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 80 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={
-              prefersReducedMotion
-                ? { duration: 0.3 }
-                : { type: 'spring', stiffness: 140, damping: 20, delay: 0.2 }
-            }
-          >
-            <Link to="/eventos" className="block">
-              <p className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <CalendarClock className="h-5 w-5 text-red-600 dark:text-red-400" />
-                Hoje ({todayEvents.length})
-              </p>
             </Link>
           </motion.div>
         )}
@@ -353,162 +308,7 @@ const Dashboard: React.FC = memo(() => {
             </div>
           </motion.div>
         )}
-
-        {/* Mobile Bottom Sheet para Eventos Recentes */}
-        {events.length > 5 && (
-          <motion.div
-            initial={{ opacity: 0, y: 120 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={
-              prefersReducedMotion
-                ? { duration: 0.3 }
-                : { type: 'spring', stiffness: 120, damping: 18 }
-            }
-            className="bg-white dark:bg-gray-800 rounded-t-3xl rounded-b-none sm:rounded-xl shadow-xl max-w-md mx-auto pb-safe pt-safe"
-          >
-            <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 pb-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                  Eventos Recentes
-                </p>
-                <Link
-                  to="/eventos"
-                  className="text-sm text-primary-600 dark:text-primary-400 font-semibold hover:underline"
-                >
-                  Ver todos
-                </Link>
-              </div>
-            </div>
-            <div className="pb-4 overflow-y-auto max-h-[50vh]">
-              {(events || []).slice(5).map(event => (
-                <Link
-                  key={event.id}
-                  to={`/eventos/${event.id}`}
-                  className="flex items-start gap-4 p-3 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <div className="flex-1">
-                    <div className="w-full text-xs text-gray-500 dark:text-gray-400 mb-1">
-                      {format(parseISO(event.event_date), "dd 'de' MMM", { locale: ptBR })}
-                    </div>
-                    <h4 className="text-base font-semibold text-gray-900 dark:text-white">
-                      {event.title}
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                      {event.location || 'Local não definido'}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <p className="text-xs font-semibold text-gray-900 dark:text-white mb-1">
-                      {formatTime(event.start_time)}
-                    </p>
-                    <Users className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        <div className="mt-8 flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleScrollToEvents}
-            className="inline-flex items-center gap-2 rounded-full border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          >
-            <span className="text-base">↓</span>
-            Ver Eventos Recentes
-          </button>
-        </div>
       </div>
-
-      <div id="events-section">
-        {/* Todos os Eventos */}
-        <div className="flex flex-col gap-6">
-          {events.map(event => (
-            <Link
-              key={event.id}
-              to={`/eventos/${event.id}`}
-              className="flex items-start gap-4 p-3 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex-1"
-            >
-              <div className="flex-1 min-w-0">
-                <div className="w-full text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  {format(parseISO(event.event_date), "dd 'de' MMM", { locale: ptBR })}
-                </div>
-                <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
-                  {event.title}
-                </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                  {event.location || 'Local não definido'}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0 min-w-[90px] sm:min-w-[100px]">
-                <p className="text-xs font-semibold text-gray-900 dark:text-white mb-1">
-                  {formatTime(event.start_time)}
-                </p>
-                <Users className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      <div id="today-section">
-        {/* Eventos de Hoje */}
-        {todayEvents.length > 0 && (
-          <div className="flex flex-col gap-6">
-            {todayEvents.map(event => (
-              <Link
-                key={event.id}
-                to={`/eventos/${event.id}`}
-                className="flex items-start gap-4 p-3 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex-1"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="w-full text-xs text-gray-500 dark:text-gray-400 mb-1">
-                    {format(parseISO(event.event_date), "dd 'de' MMM", { locale: ptBR })}
-                  </div>
-                  <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
-                    {event.title}
-                  </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                    {event.location || 'Local não definido'}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0 min-w-[90px] sm:min-w-[100px]">
-                  <p className="text-xs font-semibold text-gray-900 dark:text-white mb-1">
-                    {formatTime(event.start_time)}
-                  </p>
-                  <Users className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* No Events */}
-      {events.length === 0 && !loading && (
-        <div className="flex flex-col items-center justify-center py-20">
-          <Users className="h-16 w-16 text-gray-400 dark:text-gray-300" />
-          <div className="mt-4 text-center">
-            <p className="text-gray-500 dark:text-gray-400">
-              Você ainda não tem eventos agendados.
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {user?.user?.first_name || user?.user?.username || 'Músico'}! Vamos criar o primeiro
-              evento.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 mt-6">
-            <Link
-              to="/eventos/novo"
-              className="inline-flex items-center gap-2 rounded-full bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-primary-700 transition-transform hover:-translate-y-0.5"
-            >
-              <Plus className="h-5 w-5" />
-              Criar Evento
-            </Link>
-          </div>
-        </div>
-      )}
     </Layout>
   );
 });

@@ -16,7 +16,7 @@ const CalendarDay: React.FC<CalendarDayProps> = memo(
 
     // Build class names
     const baseClasses =
-      'relative flex flex-col items-center justify-center aspect-square min-h-[40px] rounded-lg transition-all duration-150 touch-manipulation';
+      'relative flex flex-col items-center justify-center aspect-square min-h-[44px] sm:min-h-[48px] rounded-lg transition-all duration-150 touch-manipulation active:scale-95';
 
     const monthClasses = isCurrentMonth
       ? 'text-gray-900 dark:text-white'

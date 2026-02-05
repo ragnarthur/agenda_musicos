@@ -28,13 +28,16 @@ interface CompactCalendarProps {
 
 const WEEKDAY_LABELS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
-const CompactCalendar: React.FC<CompactCalendarProps> = memo(
+  const CompactCalendar: React.FC<CompactCalendarProps> = memo(
   ({ events, onDaySelect, className }) => {
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [showEventsSheet, setShowEventsSheet] = useState(false);
 
     const { eventsByDate, getDateStatus } = useCalendarEvents(events);
+
+    // Check if viewing current month
+    const isCurrentMonthToday = isSameMonth(currentMonth, new Date());
 
     // Generate calendar days for the current month view
     const calendarDays = useMemo(() => {
@@ -47,14 +50,20 @@ const CompactCalendar: React.FC<CompactCalendarProps> = memo(
     }, [currentMonth]);
 
     // Navigation handlers
-    const goToPreviousMonth = useCallback(
-      () => setCurrentMonth(prev => subMonths(prev, 1)),
-      []
-    );
-    const goToNextMonth = useCallback(
-      () => setCurrentMonth(prev => addMonths(prev, 1)),
-      []
-    );
+    const goToPreviousMonth = useCallback(() => {
+      setCurrentMonth(prev => subMonths(prev, 1));
+    }, []);
+
+    const goToNextMonth = useCallback(() => {
+      setCurrentMonth(prev => addMonths(prev, 1));
+    }, []);
+
+    const goToToday = useCallback(() => {
+      const today = new Date();
+      if (!isSameMonth(currentMonth, today)) {
+        setCurrentMonth(today);
+      }
+    }, [currentMonth]);
 
     // Day selection handler
     const handleDaySelect = useCallback(
@@ -94,7 +103,7 @@ const CompactCalendar: React.FC<CompactCalendarProps> = memo(
 
     return (
       <div
-        className={`bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4 ${className || ''}`}
+        className={`bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4 max-w-md mx-auto lg:mx-0 ${className || ''}`}
       >
         {/* Header with title */}
         <div className="flex items-center gap-2 mb-3">
@@ -108,19 +117,30 @@ const CompactCalendar: React.FC<CompactCalendarProps> = memo(
         <div className="flex items-center justify-between mb-3">
           <button
             onClick={goToPreviousMonth}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors touch-manipulation"
+            className="p-2.5 sm:p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors touch-manipulation active:scale-95"
             aria-label="Mês anterior"
           >
             <ChevronLeft className="h-5 w-5 text-gray-600 dark:text-gray-300" />
           </button>
 
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white capitalize">
-            {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
-          </h3>
+          <button
+            onClick={goToToday}
+            className="group flex flex-col items-center transition-colors"
+            aria-label={isCurrentMonthToday ? 'Mês atual' : 'Voltar para hoje'}
+          >
+            <span className="text-sm font-semibold text-gray-900 dark:text-white capitalize hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+              {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
+            </span>
+            {!isCurrentMonthToday && (
+              <span className="text-[10px] text-primary-500 dark:text-primary-400 opacity-70 group-hover:opacity-100 transition-opacity">
+                voltar para hoje
+              </span>
+            )}
+          </button>
 
           <button
             onClick={goToNextMonth}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors touch-manipulation"
+            className="p-2.5 sm:p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors touch-manipulation active:scale-95"
             aria-label="Próximo mês"
           >
             <ChevronRight className="h-5 w-5 text-gray-600 dark:text-gray-300" />

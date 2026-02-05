@@ -136,11 +136,9 @@ const EventsList: React.FC = () => {
 
   const statistics = useMemo(() => {
     const confirmed = events.filter(ev => ev.status === 'confirmed' || ev.status === 'approved');
-    const solos = events.filter(ev => ev.is_solo);
     return {
       total: count || events.length,
       confirmed: confirmed.length,
-      solos: solos.length,
     };
   }, [events, count]);
 
@@ -211,7 +209,7 @@ const EventsList: React.FC = () => {
               </div>
               <h1 className="mt-3 text-3xl font-bold text-gray-900">Meus eventos</h1>
               <p className="mt-1 text-sm text-gray-700">
-                Acompanhe eventos sob sua gestão ou participação.
+                Total • {statistics.confirmed} confirmados
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <div className="rounded-2xl border border-primary-100/70 bg-gradient-to-br from-primary-50/80 via-white/90 to-white/70 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur dark:border-primary-800/60 dark:from-primary-900/40 dark:via-slate-900/70 dark:to-slate-900/60">
@@ -221,12 +219,6 @@ const EventsList: React.FC = () => {
                 <div className="rounded-2xl border border-emerald-100/70 bg-gradient-to-br from-emerald-50/80 via-white/90 to-white/70 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur dark:border-emerald-800/60 dark:from-emerald-900/40 dark:via-slate-900/70 dark:to-slate-900/60">
                   <p className="text-xs uppercase tracking-wide text-gray-500">Confirmados</p>
                   <p className="text-2xl text-emerald-600">{statistics.confirmed}</p>
-                </div>
-                <div className="rounded-2xl border border-indigo-100/70 bg-gradient-to-br from-indigo-50/80 via-white/90 to-white/70 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur dark:border-indigo-800/60 dark:from-indigo-900/40 dark:via-slate-900/70 dark:to-slate-900/60">
-                  <p className="text-xs uppercase tracking-wide text-gray-500">
-                    Apresentações solo
-                  </p>
-                  <p className="text-2xl text-indigo-600">{statistics.solos}</p>
                 </div>
               </div>
             </div>
@@ -260,24 +252,24 @@ const EventsList: React.FC = () => {
                 </button>
               )}
             </div>
-            <div className="flex items-center gap-2 rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-600">
+            <div className="hidden sm:flex items-center gap-2 rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-600">
               <Filter className="h-4 w-4 text-primary-500" />
               Ajuste filtros e visualize apenas o que importa
             </div>
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-3">
+          <div className="mt-5 flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 no-scrollbar sm:flex-wrap sm:overflow-visible sm:pb-0 sm:mx-0 sm:px-0">
             {(
               [
                 { value: 'upcoming', label: 'Próximos' },
                 { value: 'past', label: 'Histórico' },
-                { value: 'all', label: 'Todos os períodos' },
+                { value: 'all', label: 'Todos' },
               ] as { value: TimeFilter; label: string }[]
             ).map(item => (
               <button
                 key={item.value}
                 onClick={() => setTimeFilter(item.value)}
-                className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-semibold transition-all ${
+                className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-semibold transition-all touch-manipulation min-h-[44px] whitespace-nowrap ${
                   timeFilter === item.value
                     ? 'border-primary-500 bg-primary-600 text-white shadow-lg shadow-primary-200/60'
                     : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-white hover:border-primary-200'
@@ -288,16 +280,16 @@ const EventsList: React.FC = () => {
               </button>
             ))}
           </div>
-          <div className="mt-4 flex flex-wrap gap-3">
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 no-scrollbar sm:flex-wrap sm:overflow-visible sm:pb-0 sm:mx-0 sm:px-0">
             {[
-              { value: 'all', label: 'Todos os status' },
+              { value: 'all', label: 'Todos' },
               { value: 'proposed', label: 'Propostas' },
               { value: 'confirmed', label: 'Confirmados' },
             ].map(item => (
               <button
                 key={item.value}
                 onClick={() => setFilter(item.value)}
-                className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-semibold transition-all ${
+                className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-semibold transition-all touch-manipulation min-h-[44px] whitespace-nowrap ${
                   filter === item.value
                     ? 'border-emerald-500 bg-emerald-600 text-white shadow-lg shadow-emerald-200/60'
                     : 'border-gray-200 bg-white text-gray-700 hover:border-emerald-200'
