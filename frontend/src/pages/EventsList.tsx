@@ -46,6 +46,12 @@ const extractLineup = (event: Event): string[] => {
   return Array.from(names);
 };
 
+const summarizeLineup = (names: string[], max = 2): { visible: string[]; remaining: number } => {
+  const cleaned = names.filter(Boolean);
+  if (cleaned.length <= max) return { visible: cleaned, remaining: 0 };
+  return { visible: cleaned.slice(0, max), remaining: cleaned.length - max };
+};
+
 const getStartDateTime = (event: Event): number => {
   try {
     if (event.start_datetime) {
@@ -116,19 +122,24 @@ const EventsList: React.FC = () => {
         const today = startOfDay(new Date());
         const diffDays = Math.floor((dateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-        const tone =
+        const relative =
+          diffDays === 0 ? 'Hoje' : diffDays === 1 ? 'Amanhã' : diffDays === -1 ? 'Ontem' : null;
+
+        const ring =
           diffDays < 0
-            ? { bg: 'bg-gray-50', ring: 'from-gray-200 to-gray-300' }
+            ? 'from-slate-200/70 via-slate-100/60 to-white/70 dark:from-white/10 dark:via-white/5 dark:to-white/5'
             : diffDays <= 7
-              ? { bg: 'bg-emerald-50', ring: 'from-emerald-200 to-emerald-300' }
+              ? 'from-indigo-200/80 via-purple-200/70 to-white/70 dark:from-indigo-500/25 dark:via-purple-500/15 dark:to-white/5'
               : diffDays <= 30
-                ? { bg: 'bg-blue-50', ring: 'from-blue-200 to-blue-300' }
-                : { bg: 'bg-indigo-50', ring: 'from-indigo-200 to-indigo-300' };
+                ? 'from-purple-200/70 via-fuchsia-200/60 to-white/70 dark:from-purple-500/25 dark:via-fuchsia-500/15 dark:to-white/5'
+                : 'from-indigo-200/70 via-sky-200/50 to-white/70 dark:from-indigo-500/20 dark:via-sky-500/10 dark:to-white/5';
 
         return {
           dateKey,
           label: format(dateObj, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR }),
-          tone,
+          relative,
+          ring,
+          count: list.length,
           events: list.sort((a, b) => getStartDateTime(a) - getStartDateTime(b)),
         };
       });
@@ -165,50 +176,99 @@ const EventsList: React.FC = () => {
     }
   };
 
+  const getStatusSurfaceClass = (status?: string) => {
+    switch (status) {
+      case 'proposed':
+        return 'bg-gradient-to-br from-amber-50/85 via-white/90 to-white/85 dark:from-amber-950/20 dark:via-slate-900/70 dark:to-slate-900/65';
+      case 'confirmed':
+        return 'bg-gradient-to-br from-emerald-50/85 via-white/90 to-white/85 dark:from-emerald-950/15 dark:via-slate-900/70 dark:to-slate-900/65';
+      case 'approved':
+        return 'bg-gradient-to-br from-blue-50/85 via-white/90 to-white/85 dark:from-blue-950/15 dark:via-slate-900/70 dark:to-slate-900/65';
+      case 'completed':
+        return 'bg-gradient-to-br from-purple-50/85 via-white/90 to-white/85 dark:from-purple-950/20 dark:via-slate-900/70 dark:to-slate-900/65';
+      case 'rejected':
+        return 'bg-gradient-to-br from-rose-50/85 via-white/90 to-white/85 dark:from-rose-950/15 dark:via-slate-900/70 dark:to-slate-900/65';
+      case 'cancelled':
+        return 'bg-gradient-to-br from-slate-50/85 via-white/90 to-white/85 dark:from-slate-950/20 dark:via-slate-900/70 dark:to-slate-900/65';
+      default:
+        return 'bg-white/90 dark:bg-slate-900/70';
+    }
+  };
+
   const renderEventCard = useCallback((event: Event) => {
-    const lineup = event.availabilities ? extractLineup(event) : [event.created_by_name];
+    const lineup = extractLineup(event);
+    const lineupSummary = summarizeLineup(lineup, 2);
     const startLabel = event.start_time ? event.start_time.slice(0, 5) : '--:--';
     const endLabel = event.end_time ? event.end_time.slice(0, 5) : '--:--';
     const computedStatus = getEventComputedStatus(event);
     const statusClass = `status-chip ${computedStatus.status || 'default'}`;
     const statusLabel = computedStatus.label;
     const borderClass = getStatusBorderClass(computedStatus.status);
+    const surfaceClass = getStatusSurfaceClass(computedStatus.status);
     return (
       <Link
         key={event.id}
         to={`/eventos/${event.id}`}
-        className={`block rounded-xl border border-l-4 ${borderClass} bg-white/90 backdrop-blur p-4 shadow-lg hover:shadow-xl transition-all`}
+        className={`group block rounded-2xl border border-l-4 ${borderClass} ${surfaceClass} backdrop-blur p-4 shadow-lg hover:shadow-xl transition-all touch-manipulation active:scale-[0.99] hover:-translate-y-0.5`}
       >
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-wide">
+        <div className="flex items-start gap-4">
+          <div className="min-w-[70px] pr-3 border-r border-slate-200/70 dark:border-slate-700/60">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Início
+            </div>
+            <div className="mt-0.5 text-xl font-extrabold tabular-nums text-slate-900 dark:text-white">
+              {startLabel}
+            </div>
+            <div className="text-[11px] font-semibold tabular-nums text-slate-500 dark:text-slate-400">
+              até {endLabel}
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
               <span className={statusClass}>{statusLabel}</span>
               {event.is_solo && <span className="status-chip default">Solo</span>}
+              {event.payment_amount !== null && event.payment_amount !== undefined && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-white/40 bg-white/70 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm dark:border-white/10 dark:bg-slate-900/50 dark:text-slate-200">
+                  <Coins className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-300" />
+                  {formatCurrency(event.payment_amount)}
+                </span>
+              )}
             </div>
-            <h3 className="mt-1 text-lg font-semibold text-gray-900">{event.title}</h3>
-            <p className="text-sm text-gray-600">{event.location}</p>
-            <div className="mt-2 flex items-center gap-3 text-sm text-gray-700">
-              <Clock className="h-4 w-4 text-gray-500" />
-              <span>
-                {startLabel} - {endLabel}
-              </span>
-            </div>
-            {event.payment_amount !== null && event.payment_amount !== undefined && (
-              <div className="mt-2 flex items-center gap-2 text-sm text-gray-700">
-                <Coins className="h-4 w-4 text-emerald-500" />
-                <span>Cachê: {formatCurrency(event.payment_amount)}</span>
-              </div>
+
+            <h3 className="mt-1 text-lg font-semibold text-gray-900 dark:text-white truncate">
+              {event.title}
+            </h3>
+
+            {event.location && (
+              <p className="text-sm text-gray-600 dark:text-slate-300 truncate">
+                {event.location}
+              </p>
             )}
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-700">
-              <Users className="h-4 w-4 text-gray-500" />
-              {lineup.map(name => (
+
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-700 dark:text-slate-200">
+              <Users className="h-4 w-4 text-gray-500 dark:text-slate-400" />
+              {lineupSummary.visible.map(name => (
                 <span
                   key={name}
-                  className="inline-flex items-center gap-1 rounded-full bg-gray-50 border border-gray-200 px-3 py-1 font-medium text-gray-700"
+                  className="inline-flex max-w-[240px] items-center gap-1 rounded-full bg-white/70 border border-slate-200/70 px-3 py-1 font-semibold text-slate-700 shadow-sm truncate dark:bg-slate-900/50 dark:border-slate-700/60 dark:text-slate-200"
+                  title={name}
                 >
                   {name}
                 </span>
               ))}
+              {lineupSummary.remaining > 0 && (
+                <span className="inline-flex items-center rounded-full bg-slate-100 border border-slate-200 px-3 py-1 font-semibold text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200">
+                  +{lineupSummary.remaining}
+                </span>
+              )}
+            </div>
+
+            <div className="mt-2 hidden sm:flex items-center gap-2 text-sm text-gray-700 dark:text-slate-200">
+              <Clock className="h-4 w-4 text-gray-500 dark:text-slate-400" />
+              <span className="tabular-nums">
+                {startLabel} - {endLabel}
+              </span>
             </div>
           </div>
         </div>
@@ -219,11 +279,11 @@ const EventsList: React.FC = () => {
   return (
     <Layout>
       <PullToRefresh onRefresh={handleRefresh} disabled={isLoading}>
-      <div className="page-stack">
-        <section className="hero-panel">
+      <div className="page-stack py-6 sm:py-8">
+        <section className="hero-panel hero-animated">
           <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/60 px-3 py-1 text-xs font-semibold text-primary-700 shadow-sm">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-indigo-700 shadow-sm border border-white/50 dark:bg-slate-900/40 dark:text-indigo-200 dark:border-white/10">
                 <Sparkles className="h-4 w-4" />
                 Painel de Eventos
               </div>
@@ -232,9 +292,9 @@ const EventsList: React.FC = () => {
                 Total • {statistics.confirmed} confirmados
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <div className="rounded-2xl border border-primary-100/70 bg-gradient-to-br from-primary-50/80 via-white/90 to-white/70 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur dark:border-primary-800/60 dark:from-primary-900/40 dark:via-slate-900/70 dark:to-slate-900/60">
+                <div className="rounded-2xl border border-indigo-200/70 bg-gradient-to-br from-indigo-50/80 via-white/90 to-white/70 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur dark:border-indigo-800/60 dark:from-indigo-900/30 dark:via-slate-900/70 dark:to-slate-900/60">
                   <p className="text-xs uppercase tracking-wide text-gray-500">Total</p>
-                  <p className="text-2xl text-primary-700">{statistics.total}</p>
+                  <p className="text-2xl text-indigo-700 dark:text-indigo-200">{statistics.total}</p>
                 </div>
                 <div className="rounded-2xl border border-emerald-100/70 bg-gradient-to-br from-emerald-50/80 via-white/90 to-white/70 px-4 py-3 text-sm font-semibold text-gray-800 shadow-lg backdrop-blur dark:border-emerald-800/60 dark:from-emerald-900/40 dark:via-slate-900/70 dark:to-slate-900/60">
                   <p className="text-xs uppercase tracking-wide text-gray-500">Confirmados</p>
@@ -242,13 +302,22 @@ const EventsList: React.FC = () => {
                 </div>
               </div>
             </div>
-            <Link
-              to="/eventos/novo"
-              className="btn-primary flex items-center justify-center gap-2 self-start"
-            >
-              <Plus className="h-5 w-5" />
-              <span>Novo Evento</span>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3 self-start">
+              <Link
+                to="/eventos/agenda"
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-indigo-200 bg-white/80 px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50 transition-all touch-manipulation active:scale-[0.99] dark:border-white/10 dark:bg-slate-900/40 dark:text-indigo-200 dark:hover:bg-slate-900/60"
+              >
+                <CalendarIcon className="h-4 w-4" />
+                <span>Ver Agenda</span>
+              </Link>
+              <Link
+                to="/eventos/novo"
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-200/50 hover:shadow-xl hover:-translate-y-0.5 transition-all touch-manipulation active:scale-[0.99]"
+              >
+                <Plus className="h-5 w-5" />
+                <span>Novo Evento</span>
+              </Link>
+            </div>
           </div>
         </section>
 
@@ -266,7 +335,8 @@ const EventsList: React.FC = () => {
               {searchTerm && (
                 <button
                   onClick={clearSearch}
-                  className="absolute right-3.5 top-3 text-gray-400 hover:text-gray-600"
+                  className="absolute right-2.5 top-2.5 flex items-center justify-center text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px]"
+                  aria-label="Limpar busca"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -291,8 +361,8 @@ const EventsList: React.FC = () => {
                 onClick={() => setTimeFilter(item.value)}
                 className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-semibold transition-all touch-manipulation min-h-[44px] whitespace-nowrap ${
                   timeFilter === item.value
-                    ? 'border-primary-500 bg-primary-600 text-white shadow-lg shadow-primary-200/60'
-                    : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-white hover:border-primary-200'
+                    ? 'border-indigo-500 bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-200/60'
+                    : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-white hover:border-indigo-200'
                 }`}
               >
                 <span className="h-2 w-2 rounded-full bg-current opacity-80" />
@@ -311,11 +381,19 @@ const EventsList: React.FC = () => {
                 onClick={() => setFilter(item.value)}
                 className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-semibold transition-all touch-manipulation min-h-[44px] whitespace-nowrap ${
                   filter === item.value
-                    ? 'border-emerald-500 bg-emerald-600 text-white shadow-lg shadow-emerald-200/60'
-                    : 'border-gray-200 bg-white text-gray-700 hover:border-emerald-200'
+                    ? 'border-indigo-500 bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-200/60'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-indigo-200'
                 }`}
               >
-                <span className="h-2 w-2 rounded-full bg-current opacity-80" />
+                <span
+                  className={`h-2 w-2 rounded-full ${
+                    item.value === 'proposed'
+                      ? 'bg-amber-500'
+                      : item.value === 'confirmed'
+                        ? 'bg-emerald-500'
+                        : 'bg-slate-400'
+                  }`}
+                />
                 <span>{item.label}</span>
               </button>
             ))}
@@ -330,18 +408,26 @@ const EventsList: React.FC = () => {
               return (
                 <div
                   key={group.dateKey}
-                  className={`rounded-xl p-[1px] bg-gradient-to-br ${group.tone.ring} shadow-xl`}
+                  className={`rounded-2xl p-[1px] bg-gradient-to-br ${group.ring} shadow-xl`}
                 >
                   <div
-                    className={`rounded-[14px] border border-white/70 dark:border-white/10 p-4 shadow-lg backdrop-blur ${group.tone.bg}`}
+                    className="rounded-[18px] border border-white/70 dark:border-white/10 p-4 shadow-lg backdrop-blur bg-white/80 dark:bg-slate-900/40"
                   >
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
+                    <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-2">
                         <div className="pill-date">
-                          <CalendarIcon className="h-4 w-4 text-primary-600" />
+                          <CalendarIcon className="h-4 w-4 text-indigo-600 dark:text-indigo-300" />
                           {group.label}
                         </div>
+                        {group.relative && (
+                          <span className="inline-flex items-center rounded-full bg-indigo-100 border border-indigo-200 px-3 py-1 text-xs font-semibold text-indigo-800 dark:bg-indigo-900/30 dark:border-indigo-700/50 dark:text-indigo-100">
+                            {group.relative}
+                          </span>
+                        )}
                       </div>
+                      <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                        {group.count} {group.count === 1 ? 'evento' : 'eventos'}
+                      </span>
                     </div>
                     <div className="space-y-3">{group.events.map(renderEventCard)}</div>
                   </div>
