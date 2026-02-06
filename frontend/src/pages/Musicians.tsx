@@ -7,7 +7,11 @@ import Layout from '../components/Layout/Layout';
 import PullToRefresh from '../components/common/PullToRefresh';
 import { useMusiciansPaginated } from '../hooks/useMusicians';
 import type { Musician } from '../types';
-import { formatInstrumentLabel, getMusicianInstruments } from '../utils/formatting';
+import {
+  formatInstrumentLabel,
+  getMusicianInstruments,
+  normalizeInstrumentKey,
+} from '../utils/formatting';
 
 const Musicians: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -33,24 +37,27 @@ const Musicians: React.FC = () => {
     await mutate();
   }, [mutate]);
 
-  const getInstrumentEmoji = (instrument: string, bio?: string) => {
+  const getInstrumentEmoji = (instrument?: string, bio?: string) => {
+    const key = normalizeInstrumentKey(instrument);
     // Se é vocalista e a bio menciona violão/violonista, mostra emoji combinado
-    if (instrument === 'vocal' && bio?.toLowerCase().includes('violon')) {
+    if (key === 'vocal' && bio?.toLowerCase().includes('violon')) {
       return '🎤🎸';
     }
 
     const emojis: Record<string, string> = {
       vocal: '🎤',
       guitar: '🎸',
+      acoustic_guitar: '🎸',
       bass: '🎸',
       drums: '🥁',
       keyboard: '🎹',
       percussion: '🥁',
     };
-    return emojis[instrument] || '🎵';
+    return emojis[key] || '🎵';
   };
 
   const getInstrumentLabel = (instrument: string) => {
+    const key = normalizeInstrumentKey(instrument);
     const displayMap: Record<string, string> = {
       vocal: 'Vocalista',
       guitar: 'Guitarrista',
@@ -79,7 +86,7 @@ const Musicians: React.FC = () => {
       producer: 'Produtor(a)',
       other: 'Outro',
     };
-    return displayMap[instrument] || formatInstrumentLabel(instrument);
+    return displayMap[key] || formatInstrumentLabel(key);
   };
 
   const cardGrid = {
@@ -173,6 +180,13 @@ const Musicians: React.FC = () => {
             animate="show"
           >
             {musicians.map((musician: Musician) => {
+              const instrumentKeys = Array.from(
+                new Set(
+                  getMusicianInstruments(musician)
+                    .map(inst => normalizeInstrumentKey(inst))
+                    .filter(Boolean)
+                )
+              );
               const emoji = getInstrumentEmoji(musician.instrument, musician.bio);
               const username = musician.instagram || musician.user?.username || '';
               const contactEmail = musician.public_email || musician.user?.email || '';
@@ -251,7 +265,7 @@ const Musicians: React.FC = () => {
 
                     {/* Badges de Instrumentos */}
                     <div className="mt-4 flex flex-wrap gap-2">
-                      {getMusicianInstruments(musician).map(inst => (
+                      {instrumentKeys.map(inst => (
                         <span
                           key={inst}
                           className="status-chip default transition-transform duration-400 group-hover:-translate-y-0.5"

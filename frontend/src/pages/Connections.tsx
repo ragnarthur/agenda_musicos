@@ -21,7 +21,12 @@ import TiltCard from '../components/common/TiltCard';
 import { connectionService } from '../services/connectionService';
 import { useConnectionsPage, useConnectionsPaginated } from '../hooks/useConnections';
 import type { Connection, ConnectionType } from '../types';
-import { INSTRUMENT_LABELS, getMusicianInstruments } from '../utils/formatting';
+import {
+  INSTRUMENT_LABELS,
+  formatInstrumentLabel,
+  getMusicianInstruments,
+  normalizeInstrumentKey,
+} from '../utils/formatting';
 import InstrumentIcon from '../components/common/InstrumentIcon';
 import { showToast } from '../utils/toast';
 import { logError } from '../utils/logger';
@@ -49,11 +54,8 @@ const connectionIcons: Record<string, React.FC<{ className?: string }>> = {
 const activeConnectionTypes = ['follow', 'recommend', 'played_with'] as const;
 
 const getInstrumentLabel = (instrument: string): string => {
-  if (INSTRUMENT_LABELS[instrument]) return INSTRUMENT_LABELS[instrument];
-  return instrument
-    .split('_')
-    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
+  const normalized = normalizeInstrumentKey(instrument);
+  return formatInstrumentLabel(normalized) || instrument;
 };
 
 // Progress Ring SVG Component
@@ -118,6 +120,18 @@ const Connections: React.FC = () => {
     musicianSearch: debouncedSearch || undefined,
     musicianInstrument: instrumentFilter !== 'all' ? instrumentFilter : undefined,
   });
+
+  const instrumentOptions = useMemo(() => {
+    const normalized = new Map<string, string>();
+    Object.keys(INSTRUMENT_LABELS).forEach(key => {
+      const normalizedKey = normalizeInstrumentKey(key);
+      if (!normalizedKey) return;
+      if (normalized.has(normalizedKey)) return;
+      normalized.set(normalizedKey, formatInstrumentLabel(normalizedKey));
+    });
+
+    return Array.from(normalized.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+  }, []);
 
   const {
     connections: connectionsPage,
@@ -372,7 +386,7 @@ const Connections: React.FC = () => {
                       className="input-field h-12 pl-10 appearance-none cursor-pointer"
                     >
                       <option value="all">Todos instrumentos</option>
-                      {Object.entries(INSTRUMENT_LABELS).map(([key, label]) => (
+                      {instrumentOptions.map(([key, label]) => (
                         <option key={key} value={key}>
                           {label}
                         </option>
@@ -418,8 +432,14 @@ const Connections: React.FC = () => {
                   containerHeight={500}
                   className="pr-1 sm:pr-2 mt-4"
                   renderItem={(m, index) => {
-                    const instruments = getMusicianInstruments(m);
-                    const primaryInstrument = instruments[0] || m.instrument;
+                    const instruments = Array.from(
+                      new Set(
+                        getMusicianInstruments(m)
+                          .map(inst => normalizeInstrumentKey(inst))
+                          .filter(Boolean)
+                      )
+                    );
+                    const primaryInstrument = instruments[0] || normalizeInstrumentKey(m.instrument);
                     const active = connectionMap[m.id] || {};
                     const profilePhoto = m.avatar_url;
 
@@ -595,7 +615,7 @@ const Connections: React.FC = () => {
                                     {c.target.full_name}
                                   </p>
                                   <p className="text-xs text-gray-500 dark:text-slate-400">
-                                    {INSTRUMENT_LABELS[c.target.instrument] || c.target.instrument}
+                                    {formatInstrumentLabel(c.target.instrument)}
                                     {c.verified && c.connection_type === 'played_with' && (
                                       <span className="ml-2 inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
                                         <CheckCircle className="h-3 w-3" />

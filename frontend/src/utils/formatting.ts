@@ -228,14 +228,14 @@ export const INSTRUMENT_LABELS: Record<string, string> = {
 };
 
 const INSTRUMENT_SYNONYMS: Record<string, string> = {
-  vocal: 'vocalist',
-  vocalista: 'vocalist',
-  vocalist: 'vocalist',
-  violao: 'violonista',
-  'violão': 'violonista',
-  violonista: 'violonista',
-  acoustic_guitar: 'violonista',
-  'acoustic guitar': 'violonista',
+  vocal: 'vocal',
+  vocalist: 'vocal',
+  vocalista: 'vocal',
+  violao: 'acoustic_guitar',
+  'violão': 'acoustic_guitar',
+  violonista: 'acoustic_guitar',
+  acoustic_guitar: 'acoustic_guitar',
+  'acoustic guitar': 'acoustic_guitar',
 };
 
 export const normalizeInstrumentKey = (instrument?: string): string => {

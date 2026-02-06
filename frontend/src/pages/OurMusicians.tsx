@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { allMusiciansService, type MusicianPublic } from '../services/publicApi';
 import { BRAZILIAN_STATES } from '../config/cities';
-import { formatInstrumentLabel } from '../utils/formatting';
+import { formatInstrumentLabel, normalizeInstrumentKey } from '../utils/formatting';
 
 // Hook de debounce para evitar requisições excessivas
 function useDebounce<T>(value: T, delay: number): T {
@@ -235,7 +235,23 @@ export default function OurMusicians() {
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {musicians.map(musician => (
+              {musicians.map(musician => {
+                const normalizedInstruments = Array.from(
+                  new Set(
+                    (musician.instruments || [])
+                      .map(inst => normalizeInstrumentKey(inst))
+                      .filter(Boolean)
+                  )
+                );
+                const primaryInstrument =
+                  normalizeInstrumentKey(musician.instrument) || normalizedInstruments[0] || '';
+                const secondaryInstruments = normalizedInstruments.filter(
+                  inst => inst && inst !== primaryInstrument
+                );
+                const visibleSecondary = secondaryInstruments.slice(0, 2);
+                const extraCount = secondaryInstruments.length - visibleSecondary.length;
+
+                return (
                 <div
                   key={musician.id}
                   className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 overflow-hidden hover:border-white/20 transition-all hover:transform hover:scale-105"
@@ -262,20 +278,19 @@ export default function OurMusicians() {
                     {/* Instrumentos */}
                     <div className="flex items-center gap-1 text-gray-300 text-sm mb-2 flex-wrap">
                       {getInstrumentIcon()}
-                      <span>{formatInstrumentLabel(musician.instrument)}</span>
-                      {musician.instruments && musician.instruments.length > 0 && (
+                      {primaryInstrument && (
+                        <span>{formatInstrumentLabel(primaryInstrument)}</span>
+                      )}
+                      {secondaryInstruments.length > 0 && (
                         <>
-                          {musician.instruments
-                            .filter(inst => inst !== musician.instrument)
-                            .slice(0, 2)
-                            .map((inst, idx) => (
+                          {visibleSecondary.map((inst, idx) => (
                               <span key={idx} className="text-gray-400">
                                 {idx === 0 ? ' • ' : ', '}{formatInstrumentLabel(inst)}
                               </span>
                             ))}
-                          {musician.instruments.filter(inst => inst !== musician.instrument).length > 2 && (
+                          {extraCount > 0 && (
                             <span className="text-gray-500">
-                              +{musician.instruments.filter(inst => inst !== musician.instrument).length - 2}
+                              +{extraCount}
                             </span>
                           )}
                         </>
@@ -317,7 +332,7 @@ export default function OurMusicians() {
                     </button>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           </>
         )}
