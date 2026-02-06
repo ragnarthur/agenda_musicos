@@ -106,6 +106,8 @@ check_health() {
 
     if echo "$frontend_code" | grep -qE '^200$'; then
         echo -e "  Frontend: ${GREEN}OK${NC} (${frontend_code})"
+    elif echo "$frontend_code" | grep -qE '^(000|502|503)$'; then
+        echo -e "  Frontend: ${YELLOW}INICIANDO${NC} (${frontend_code})"
     else
         echo -e "  Frontend: ${RED}FALHOU${NC} (${frontend_code})"
     fi
@@ -113,6 +115,8 @@ check_health() {
     # /api/ normalmente retorna 200 ou 401 dependendo de auth
     if echo "$backend_code" | grep -qE '^(200|401)$'; then
         echo -e "  Backend: ${GREEN}OK${NC} (${backend_code})"
+    elif echo "$backend_code" | grep -qE '^(000|502|503)$'; then
+        echo -e "  Backend: ${YELLOW}INICIANDO${NC} (${backend_code})"
     else
         echo -e "  Backend: ${RED}FALHOU${NC} (${backend_code})"
     fi
