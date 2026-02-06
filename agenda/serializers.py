@@ -421,6 +421,7 @@ class EventListSerializer(serializers.ModelSerializer):
             "event_date",
             "start_time",
             "end_time",
+            "is_private",
             "status",
             "status_display",
             "created_by_name",
@@ -554,6 +555,7 @@ class EventDetailSerializer(serializers.ModelSerializer):
             "start_datetime",
             "end_datetime",
             "is_solo",
+            "is_private",
             "status",
             "status_display",
             "can_approve",
@@ -796,6 +798,7 @@ class EventCreateSerializer(serializers.ModelSerializer):
             "start_time",
             "end_time",
             "is_solo",
+            "is_private",
             "status",
             "status_display",
             "invited_musicians",
@@ -2036,6 +2039,14 @@ class PublicCalendarEventSerializer(serializers.ModelSerializer):
             "is_solo",
         ]
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.is_private:
+            # Exibe apenas bloqueio de agenda para visitantes
+            data["status"] = "confirmed"
+            data["status_display"] = "Ocupado"
+        return data
+
 
 class OwnerCalendarEventSerializer(serializers.ModelSerializer):
     """
@@ -2061,6 +2072,7 @@ class OwnerCalendarEventSerializer(serializers.ModelSerializer):
             "status",
             "status_display",
             "is_solo",
+            "is_private",
             "availability_summary",
             "created_at",
             "updated_at",

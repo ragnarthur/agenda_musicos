@@ -29,6 +29,7 @@ const EventEditForm: React.FC = () => {
     start_time: '',
     end_time: '',
     is_solo: false,
+    is_private: false,
   });
 
   const loadEvent = useCallback(async () => {
@@ -49,6 +50,7 @@ const EventEditForm: React.FC = () => {
         start_time: event.start_time,
         end_time: event.end_time,
         is_solo: event.is_solo ?? false,
+        is_private: event.is_private ?? false,
       });
     } catch (err) {
       logError('Erro ao carregar evento:', err);
@@ -359,6 +361,29 @@ const EventEditForm: React.FC = () => {
               </label>
               <p className="text-sm text-gray-600 mt-1">
                 Marque esta opção se for um show solo. Shows solo são automaticamente confirmados.
+              </p>
+            </div>
+          </div>
+
+          {/* Evento Privado */}
+          <div className="flex items-start space-x-3 p-4 bg-amber-50 rounded-lg border border-amber-200">
+            <input
+              type="checkbox"
+              id="is_private"
+              name="is_private"
+              checked={formData.is_private}
+              onChange={e => setFormData(prev => ({ ...prev, is_private: e.target.checked }))}
+              className="mt-1 h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
+            />
+            <div className="flex-1">
+              <label
+                htmlFor="is_private"
+                className="block text-sm font-medium text-gray-900 cursor-pointer"
+              >
+                Evento privado
+              </label>
+              <p className="text-sm text-gray-600 mt-1">
+                Visitantes verão apenas a data ocupada, sem detalhes.
               </p>
             </div>
           </div>

@@ -215,7 +215,7 @@ const DayEventsSheet: React.FC<DayEventsSheetProps> = ({
                                               : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
                                       }`}
                                     >
-                                      {getStatusLabel(event.status)}
+                                      {(event as any).status_display || getStatusLabel(event.status)}
                                     </span>
                                   </div>
                                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">

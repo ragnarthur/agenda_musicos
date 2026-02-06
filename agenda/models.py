@@ -390,6 +390,12 @@ class Event(models.Model):
         default=False, help_text="Indica se é um show solo (confirmação automática)"
     )
 
+    # Privacidade do evento (oculta detalhes no calendário público)
+    is_private = models.BooleanField(
+        default=False,
+        help_text="Evento privado (oculta detalhes no calendário público)",
+    )
+
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="proposed")
 
     # Escopo da organização

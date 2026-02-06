@@ -46,7 +46,9 @@ class PublicCalendarTests(APITestCase):
             is_active=True,
         )
 
-    def _create_event(self, created_by, status, musician=None, title="Show Teste"):
+    def _create_event(
+        self, created_by, status, musician=None, title="Show Teste", is_private=False
+    ):
         event = Event.objects.create(
             title=title,
             location="Local Teste",
@@ -55,6 +57,7 @@ class PublicCalendarTests(APITestCase):
             end_time=time(22, 0),
             status=status,
             created_by=created_by,
+            is_private=is_private,
         )
 
         if musician:
@@ -128,3 +131,47 @@ class PublicCalendarTests(APITestCase):
         event_ids = [item["id"] for item in response.data["events"]]
         self.assertIn(event_other.id, event_ids)
         self.assertNotIn(event_owner.id, event_ids)
+
+    def test_visitor_sees_private_event_as_occupied_even_if_proposed(self):
+        """Visitante deve ver evento privado como ocupado, mesmo em proposed."""
+        event_private = self._create_event(
+            created_by=self.user_owner,
+            status="proposed",
+            title="Evento Privado",
+            is_private=True,
+        )
+
+        self.client.force_authenticate(user=self.user_other)
+        url = reverse("musician-public-calendar", args=[self.musician_owner.id])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        event_ids = [item["id"] for item in response.data["events"]]
+        self.assertIn(event_private.id, event_ids)
+
+        event_data = next(
+            item for item in response.data["events"] if item["id"] == event_private.id
+        )
+        self.assertEqual(event_data["status"], "confirmed")
+        self.assertEqual(event_data["status_display"], "Ocupado")
+        self.assertNotIn("title", event_data)
+
+    def test_owner_sees_private_event_details(self):
+        """Dono do perfil deve ver detalhes e status real do evento privado."""
+        event_private = self._create_event(
+            created_by=self.user_owner,
+            status="proposed",
+            title="Evento Privado",
+            is_private=True,
+        )
+
+        self.client.force_authenticate(user=self.user_owner)
+        url = reverse("musician-public-calendar", args=[self.musician_owner.id])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        event_data = next(
+            item for item in response.data["events"] if item["id"] == event_private.id
+        )
+        self.assertEqual(event_data["status"], "proposed")
+        self.assertEqual(event_data["title"], "Evento Privado")

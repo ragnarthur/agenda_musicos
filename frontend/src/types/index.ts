@@ -82,6 +82,7 @@ export interface Event {
   start_datetime: string;
   end_datetime: string;
   is_solo: boolean;
+  is_private?: boolean;
   status: 'proposed' | 'approved' | 'rejected' | 'confirmed' | 'cancelled';
   status_display: string;
   can_approve?: boolean;
@@ -116,6 +117,7 @@ export interface EventCreate {
   start_time: string;
   end_time: string;
   is_solo?: boolean;
+  is_private?: boolean;
   invited_musicians?: number[];
 }
 

@@ -69,6 +69,7 @@ const EventForm: React.FC = () => {
     start_time: prefilledData?.start_time || '',
     end_time: prefilledData?.end_time || '',
     is_solo: false,
+    is_private: false,
   });
 
   const formattedEventDate = useMemo(() => {
@@ -608,6 +609,61 @@ const EventForm: React.FC = () => {
                 <p className="text-sm text-gray-600 mt-1">
                   Marque se você for tocar sozinho. O evento é confirmado automaticamente sem
                   precisar de confirmação de outros músicos.
+                </p>
+              </div>
+            </div>
+
+            {/* Evento Privado */}
+            <div className="flex items-start space-x-3 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 via-white to-orange-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 p-4">
+              <div className="relative flex items-start">
+                <input
+                  type="checkbox"
+                  id="is_private"
+                  name="is_private"
+                  checked={formData.is_private}
+                  onChange={e => setFormData(prev => ({ ...prev, is_private: e.target.checked }))}
+                  className="sr-only"
+                />
+                <div
+                  role="checkbox"
+                  tabIndex={0}
+                  aria-checked={formData.is_private}
+                  onClick={() => setFormData(prev => ({ ...prev, is_private: !prev.is_private }))}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setFormData(prev => ({ ...prev, is_private: !prev.is_private }));
+                    }
+                  }}
+                  className="mt-1 h-11 w-11 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all touch-manipulation bg-amber-500 border-amber-500 text-white"
+                  style={{ touchAction: 'manipulation' }}
+                >
+                  {formData.is_private && (
+                    <svg
+                      className="h-6 w-6 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  )}
+                </div>
+              </div>
+              <div className="flex-1">
+                <label
+                  htmlFor="is_private"
+                  className="block text-sm font-medium text-gray-900 cursor-pointer"
+                >
+                  Evento privado
+                </label>
+                <p className="text-sm text-gray-600 mt-1">
+                  Visitantes verão apenas a data ocupada, sem detalhes.
                 </p>
               </div>
             </div>

@@ -240,7 +240,8 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
         # 4. Se não for dono, filtra apenas eventos confirmados/aprovados
         if not is_owner:
             events_queryset = events_queryset.filter(
-                status__in=["confirmed", "approved"]
+                Q(status__in=["confirmed", "approved"])
+                | Q(is_private=True, status__in=["proposed", "confirmed", "approved"])
             )
 
         events_queryset = events_queryset.distinct()
