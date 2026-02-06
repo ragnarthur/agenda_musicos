@@ -193,7 +193,7 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
         }
         """
         from rest_framework.permissions import IsAuthenticated
-        from ..models import Event
+        from ..models import Availability, Event
 
         try:
             musician = self.get_object()
@@ -205,7 +205,7 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
 
         # 1. Determinar se usuário é dono do perfil
         is_owner = False
-        if request.user and request.user.is_authenticated and not request.user.is_staff:
+        if request.user and request.user.is_authenticated:
             try:
                 is_owner = request.user.musician_profile.id == musician.id
             except Exception:
@@ -231,10 +231,15 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
         }
 
         # 3. Filtra eventos SEMPRE pelo músico do perfil visitado
-        # A autenticação só altera o nível de detalhe (owner vs público)
-        events_queryset = Event.objects.filter(
-            Q(availabilities__musician=musician) | Q(created_by=musician.user),
-            **event_filter,
+        # Usa subquery para evitar perda de eventos por JOIN em availabilities
+        availability_event_ids = Availability.objects.filter(
+            musician=musician,
+            event__event_date__gte=timezone.now().date(),
+            event__event_date__lte=end_date,
+        ).values("event_id")
+
+        events_queryset = Event.objects.filter(**event_filter).filter(
+            Q(created_by=musician.user) | Q(id__in=availability_event_ids)
         )
 
         # 4. Se não for dono, filtra apenas eventos confirmados/aprovados

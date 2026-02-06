@@ -132,6 +132,42 @@ class PublicCalendarTests(APITestCase):
         self.assertIn(event_other.id, event_ids)
         self.assertNotIn(event_owner.id, event_ids)
 
+    def test_staff_owner_is_recognized_as_owner(self):
+        """Dono staff deve ser reconhecido como owner no calendário."""
+        self.user_owner.is_staff = True
+        self.user_owner.save()
+
+        event = self._create_event(
+            created_by=self.user_owner,
+            status="proposed",
+            title="Evento Staff",
+        )
+
+        self.client.force_authenticate(user=self.user_owner)
+        url = reverse("musician-public-calendar", args=[self.musician_owner.id])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["is_owner"])
+        event_data = next(item for item in response.data["events"] if item["id"] == event.id)
+        self.assertEqual(event_data["status"], "proposed")
+
+    def test_event_created_by_musician_appears_even_without_availability(self):
+        """Evento criado pelo músico deve aparecer mesmo sem availability."""
+        event = self._create_event(
+            created_by=self.user_owner,
+            status="confirmed",
+            title="Evento sem Availability",
+        )
+
+        self.client.force_authenticate(user=self.user_other)
+        url = reverse("musician-public-calendar", args=[self.musician_owner.id])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        event_ids = [item["id"] for item in response.data["events"]]
+        self.assertIn(event.id, event_ids)
+
     def test_visitor_sees_private_event_as_occupied_even_if_proposed(self):
         """Visitante deve ver evento privado como ocupado, mesmo em proposed."""
         event_private = self._create_event(

@@ -70,12 +70,13 @@ const MusicianProfile: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'reviews' | 'connections'>('reviews');
   const { user, refreshUser } = useAuth();
 
-  const isOwnProfile = Boolean(user && (user.id === Number(id) || user.user?.id === Number(id)));
+  const isOwnProfile = Boolean(user && musician && user.user?.id === musician.user?.id);
 
   const {
     events: musicianEvents,
     loading: calendarLoading,
     isOwner: calendarIsOwner,
+    error: calendarError,
   } = useMusicianEvents({
     musicianId: Number(id),
     isOwnProfile,
@@ -91,6 +92,9 @@ const MusicianProfile: React.FC = () => {
       // Fetch principal data
       const musicianData = await musicianService.getById(Number(id));
       setMusician(musicianData);
+      const isOwnerProfile = Boolean(
+        user && musicianData && user.user?.id === musicianData.user?.id
+      );
 
       // Fetch dados secundários em paralelo (com fallbacks)
       const [connectionsRes, reviewsRes] = await Promise.allSettled([
@@ -109,7 +113,7 @@ const MusicianProfile: React.FC = () => {
       }
 
       // Verificar status de conexão (apenas se não for o próprio perfil)
-      if (!isOwnProfile && user) {
+      if (!isOwnerProfile && user) {
         try {
           const status = await musicianService.checkConnection(Number(id));
           setConnectionStatus(status);
@@ -124,7 +128,7 @@ const MusicianProfile: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [id, isOwnProfile, user]);
+  }, [id, user]);
 
   useEffect(() => {
     fetchData();
@@ -344,12 +348,17 @@ const MusicianProfile: React.FC = () => {
             <CompactCalendar
               events={musicianEvents as any}
               className="shadow-md"
-              isOwner={calendarIsOwner}
+              isOwner={calendarIsOwner || isOwnProfile}
             />
 
             {calendarLoading && (
               <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
                 Carregando agenda...
+              </p>
+            )}
+            {calendarError && (
+              <p className="text-center text-sm text-red-500 dark:text-red-400 mt-2">
+                Não foi possível carregar a agenda.
               </p>
             )}
           </div>
