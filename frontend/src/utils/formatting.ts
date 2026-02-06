@@ -191,9 +191,9 @@ export const STATUS_LABELS: Record<string, string> = {
  * Labels de instrumentos.
  */
 export const INSTRUMENT_LABELS: Record<string, string> = {
-  vocal: 'Vocal',
+  vocal: 'Vocalista',
   guitar: 'Guitarra',
-  acoustic_guitar: 'Violão',
+  acoustic_guitar: 'Violonista',
   bass: 'Baixo',
   drums: 'Bateria',
   keyboard: 'Teclado',
@@ -223,11 +223,30 @@ export const INSTRUMENT_LABELS: Record<string, string> = {
   'bass guitar': 'Baixo',
   singer: 'Cantor(a)',
   vocalist: 'Vocalista',
+  vocalista: 'Vocalista',
+  violonista: 'Violonista',
+};
+
+const INSTRUMENT_SYNONYMS: Record<string, string> = {
+  vocal: 'vocalist',
+  vocalista: 'vocalist',
+  vocalist: 'vocalist',
+  violao: 'violonista',
+  'violão': 'violonista',
+  violonista: 'violonista',
+  acoustic_guitar: 'violonista',
+  'acoustic guitar': 'violonista',
+};
+
+export const normalizeInstrumentKey = (instrument?: string): string => {
+  if (!instrument) return '';
+  const key = instrument.trim().toLowerCase();
+  return INSTRUMENT_SYNONYMS[key] || key;
 };
 
 export const formatInstrumentLabel = (instrument?: string): string => {
   if (!instrument) return '';
-  const key = instrument.trim().toLowerCase();
+  const key = normalizeInstrumentKey(instrument);
   const label = INSTRUMENT_LABELS[key];
   if (label) return label;
 

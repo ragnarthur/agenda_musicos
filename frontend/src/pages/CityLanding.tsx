@@ -10,7 +10,7 @@ import {
   type MusicianPublic,
   type Organization,
 } from '../services/publicApi';
-import { formatInstrumentLabel } from '../utils/formatting';
+import { formatInstrumentLabel, normalizeInstrumentKey } from '../utils/formatting';
 
 const CityLanding: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -62,10 +62,10 @@ const CityLanding: React.FC = () => {
   const instruments = useMemo(() => {
     const instrumentSet = new Set<string>();
     musicians.forEach(m => {
-      if (m.instrument) instrumentSet.add(m.instrument);
-      if (m.instruments) m.instruments.forEach(i => instrumentSet.add(i));
+      if (m.instrument) instrumentSet.add(normalizeInstrumentKey(m.instrument));
+      if (m.instruments) m.instruments.forEach(i => instrumentSet.add(normalizeInstrumentKey(i)));
     });
-    return Array.from(instrumentSet).sort();
+    return Array.from(instrumentSet).filter(Boolean).sort();
   }, [musicians]);
 
   // Filter musicians by selected instrument
@@ -73,8 +73,9 @@ const CityLanding: React.FC = () => {
     if (selectedInstrument === 'all') return musicians;
     return musicians.filter(
       m =>
-        m.instrument === selectedInstrument ||
-        (m.instruments && m.instruments.includes(selectedInstrument))
+        normalizeInstrumentKey(m.instrument) === selectedInstrument ||
+        (m.instruments &&
+          m.instruments.some(inst => normalizeInstrumentKey(inst) === selectedInstrument))
     );
   }, [musicians, selectedInstrument]);
 
@@ -290,6 +291,17 @@ interface MusicianCardProps {
 }
 
 const MusicianCard: React.FC<MusicianCardProps> = ({ musician, delay, city }) => {
+  const primaryInstrumentKey = normalizeInstrumentKey(musician.instrument);
+  const secondaryInstruments = Array.from(
+    new Set(
+      (musician.instruments || [])
+        .map(inst => normalizeInstrumentKey(inst))
+        .filter(inst => inst && inst !== primaryInstrumentKey)
+    )
+  );
+  const visibleSecondary = secondaryInstruments.slice(0, 2);
+  const extraCount = secondaryInstruments.length - visibleSecondary.length;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -347,25 +359,22 @@ const MusicianCard: React.FC<MusicianCardProps> = ({ musician, delay, city }) =>
 
           {/* Instruments */}
           <div className="flex flex-wrap gap-1 mt-3">
-            {musician.instrument && (
+            {primaryInstrumentKey && (
               <span className="px-2 py-1 bg-primary-600/20 text-primary-300 rounded-full text-xs font-medium">
-                {formatInstrumentLabel(musician.instrument)}
+                {formatInstrumentLabel(primaryInstrumentKey)}
               </span>
             )}
-            {musician.instruments?.slice(0, 2).map(
-              inst =>
-                inst !== musician.instrument && (
-                  <span
-                    key={inst}
-                    className="px-2 py-1 bg-white/10 text-gray-300 rounded-full text-xs"
-                  >
-                    {formatInstrumentLabel(inst)}
-                  </span>
-                )
-            )}
-            {musician.instruments && musician.instruments.length > 3 && (
+            {visibleSecondary.map(inst => (
+              <span
+                key={inst}
+                className="px-2 py-1 bg-white/10 text-gray-300 rounded-full text-xs"
+              >
+                {formatInstrumentLabel(inst)}
+              </span>
+            ))}
+            {extraCount > 0 && (
               <span className="px-2 py-1 bg-white/5 text-gray-400 rounded-full text-xs">
-                +{musician.instruments.length - 3}
+                +{extraCount}
               </span>
             )}
           </div>
