@@ -421,6 +421,7 @@
   select,
   button {
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
   input,
@@ -1231,6 +1232,14 @@
 
 .pt-safe {
   padding-top: max(1rem, env(safe-area-inset-top));
+}
+
+.pb-safe-only {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.pt-safe-only {
+  padding-top: env(safe-area-inset-top);
 }
 
 .pl-safe {

@@ -57,7 +57,7 @@ export default function InstallBanner() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed bottom-20 md:bottom-4 left-4 right-4 z-50 max-w-md mx-auto"
+            className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-4 left-4 right-4 z-50 max-w-md mx-auto"
           >
             <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-2xl p-4 border border-white/10">
               <div className="flex items-start gap-3">
@@ -76,13 +76,13 @@ export default function InstallBanner() {
                   <div className="flex gap-2 mt-3">
                     <button
                       onClick={handleInstall}
-                      className="flex-1 px-3 py-2 bg-white text-indigo-600 rounded-lg text-sm font-medium hover:bg-white/90 active:scale-95 transition-all min-h-[36px]"
+                      className="flex-1 px-3 py-2 bg-white text-indigo-600 rounded-lg text-sm font-medium hover:bg-white/90 active:scale-95 transition-all min-h-[44px]"
                     >
                       {isIOS ? 'Como instalar' : 'Instalar'}
                     </button>
                     <button
                       onClick={handleDismiss}
-                      className="px-3 py-2 bg-white/10 text-white rounded-lg text-sm hover:bg-white/20 active:scale-95 transition-all min-h-[36px]"
+                      className="px-3 py-2 bg-white/10 text-white rounded-lg text-sm hover:bg-white/20 active:scale-95 transition-all min-h-[44px]"
                     >
                       Depois
                     </button>
@@ -91,7 +91,7 @@ export default function InstallBanner() {
 
                 <button
                   onClick={handleDismiss}
-                  className="flex-shrink-0 p-1 text-white/60 hover:text-white transition-colors"
+                  className="flex-shrink-0 p-3 -m-2 text-white/60 hover:text-white transition-colors min-h-[44px] min-w-[44px]"
                   aria-label="Fechar"
                 >
                   <X className="w-5 h-5" />

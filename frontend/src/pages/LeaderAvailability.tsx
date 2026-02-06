@@ -110,6 +110,14 @@ const LeaderAvailabilityPage: React.FC = () => {
         const [h, m] = time.split(':').map(Number);
         return h * 60 + m;
       };
+      const parseLocalDate = (value: string) => {
+        if (!value) return null;
+        const [year, month, day] = value.split('-').map(Number);
+        if (!year || !month || !day) return null;
+        const date = new Date(year, month - 1, day);
+        date.setHours(0, 0, 0, 0);
+        return date;
+      };
       const startMinutes = toMinutes(formData.start_time);
       const endMinutes = toMinutes(formData.end_time);
       let duration = endMinutes - startMinutes;
@@ -124,7 +132,13 @@ const LeaderAvailabilityPage: React.FC = () => {
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const availDate = new Date(formData.date);
+      const availDate = parseLocalDate(formData.date);
+
+      if (!availDate) {
+        setError('Data inválida');
+        setActionLoading(false);
+        return;
+      }
 
       if (availDate < today) {
         setError('A data não pode ser no passado');

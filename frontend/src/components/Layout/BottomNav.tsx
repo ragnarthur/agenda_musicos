@@ -47,7 +47,7 @@ const BottomNav: React.FC = () => {
 
   return (
     <nav
-      className={`md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-950/95 backdrop-blur-xl border-t border-white/10 pb-safe transition-transform duration-300 ${
+      className={`md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-950/95 backdrop-blur-xl border-t border-white/10 pb-safe-only transition-transform duration-300 ${
         isVisible ? 'translate-y-0' : 'translate-y-full'
       }`}
     >
@@ -62,7 +62,7 @@ const BottomNav: React.FC = () => {
               <NavLink
                 key={item.to}
                 to={item.to}
-                className="flex flex-col items-center justify-center -mt-4"
+                className="flex flex-col items-center justify-center -mt-4 min-h-[44px]"
               >
                 <div className="w-12 h-12 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/30 active:scale-95 transition-transform">
                   <Icon className="w-6 h-6 text-white" />
@@ -75,7 +75,7 @@ const BottomNav: React.FC = () => {
             <NavLink
               key={item.to}
               to={item.to}
-              className={`flex flex-col items-center justify-center min-w-[60px] py-1 ${
+              className={`flex flex-col items-center justify-center min-w-[60px] min-h-[44px] py-2 ${
                 isActive
                   ? 'text-primary-400'
                   : 'text-slate-400 hover:text-slate-200'

@@ -2,11 +2,13 @@
   "name": "GigFlow - Agenda para Músicos",
   "short_name": "GigFlow",
   "description": "Organize eventos e conecte-se com músicos profissionais",
+  "id": "/",
+  "scope": "/",
   "start_url": "/app-start",
   "display": "standalone",
   "orientation": "portrait-primary",
   "theme_color": "#4338ca",
-  "background_color": "#0f172a",
+  "background_color": "#4338ca",
   "categories": ["productivity", "entertainment", "music"],
   "icons": [
     {

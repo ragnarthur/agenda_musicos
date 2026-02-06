@@ -49,7 +49,11 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = memo(
       return typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
     }, []);
 
-    const enableEffects = !isLowPower;
+    const isTinyMobile = useMemo(() => {
+      return typeof window !== 'undefined' && window.matchMedia('(max-width: 360px)').matches;
+    }, []);
+
+    const enableEffects = !isLowPower && !isTinyMobile;
 
     return (
       <div
@@ -65,7 +69,14 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = memo(
               <MeshGradient />
             )
           ) : (
-            <MeshGradient isStatic />
+            // Tiny/low-power: fundo estático simples para evitar filtros pesados (especialmente no iPhone SE)
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  'linear-gradient(180deg, #0a0e27 0%, #0f1629 40%, #121a2e 70%, #151d32 100%)',
+              }}
+            />
           ))}
         {!enableBlueWaves && <div className="fabric-static" aria-hidden="true" />}
         {enableEffects && enableParticles && <DustParticles3D />}
