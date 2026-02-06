@@ -19,6 +19,8 @@ const CalendarDay: React.FC<CalendarDayProps> = memo(
       if (isSelected || !isCurrentMonth) return '';
       if (eventStatus.hasConfirmed)
         return 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-900 dark:text-emerald-100';
+      if (eventStatus.hasCompleted)
+        return 'bg-purple-100 dark:bg-purple-900/40 text-purple-900 dark:text-purple-100';
       if (eventStatus.hasAvailability)
         return 'bg-blue-100 dark:bg-blue-900/40 text-blue-900 dark:text-blue-100';
       return '';

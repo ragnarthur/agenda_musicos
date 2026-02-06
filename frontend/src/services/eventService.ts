@@ -10,6 +10,7 @@ export interface EventListParams {
   search?: string;
   past?: boolean;
   upcoming?: boolean;
+  days_back?: number;
   page?: number;
   page_size?: number;
 }

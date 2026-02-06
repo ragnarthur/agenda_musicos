@@ -250,7 +250,23 @@ class EventViewSet(viewsets.ModelViewSet):
 
         # Eventos passados
         if self.request.query_params.get("past") == "true":
-            queryset = queryset.filter(event_date__lt=timezone.now().date())
+            today = timezone.now().date()
+            queryset = queryset.filter(event_date__lt=today)
+
+            days_back_raw = self.request.query_params.get("days_back")
+            if days_back_raw:
+                try:
+                    days_back = int(days_back_raw)
+                except (TypeError, ValueError):
+                    raise ValidationError(
+                        {"days_back": "days_back deve ser um número inteiro positivo."}
+                    )
+                if days_back <= 0:
+                    raise ValidationError(
+                        {"days_back": "days_back deve ser maior que zero."}
+                    )
+                start_date = today - timedelta(days=days_back)
+                queryset = queryset.filter(event_date__gte=start_date)
 
         # Eventos futuros (padrão)
         if self.request.query_params.get("upcoming") == "true":

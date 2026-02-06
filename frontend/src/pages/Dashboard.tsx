@@ -7,7 +7,7 @@ import Layout from '../components/Layout/Layout';
 import Skeleton, { SkeletonCard } from '../components/common/Skeleton';
 import { CompactCalendar } from '../components/calendar';
 import { useAuth } from '../contexts/AuthContext';
-import { useUpcomingEvents } from '../hooks/useEvents';
+import { usePastEvents, useUpcomingEvents } from '../hooks/useEvents';
 import { useDashboardNotifications } from '../hooks/useNotifications';
 import type { Event } from '../types';
 import { isToday, parseISO } from 'date-fns';
@@ -50,13 +50,16 @@ const Dashboard: React.FC = memo(() => {
   const prefersReducedMotion = useReducedMotion();
 
   const { events: upcomingEvents, isLoading: loadingEvents } = useUpcomingEvents();
+  const { events: pastEvents, isLoading: loadingPastEvents } = usePastEvents({
+    daysBack: 30,
+  });
   const {
     pendingApprovalsCount,
     pendingResponsesCount,
     isLoading: loadingNotifications,
   } = useDashboardNotifications();
 
-  const loading = loadingEvents || loadingNotifications;
+  const loading = loadingEvents || loadingNotifications || loadingPastEvents;
 
   const { events, todayEvents, nextEvent, nextComputedStatus } = useMemo(() => {
     const sorted = [...upcomingEvents].sort((a, b) => getStartDateTime(a) - getStartDateTime(b));
@@ -72,6 +75,21 @@ const Dashboard: React.FC = memo(() => {
   }, [upcomingEvents]);
 
   const agendaCount = events.length;
+
+  const calendarEvents = useMemo(() => {
+    const merged = new Map<number, Event>();
+    [...upcomingEvents, ...pastEvents].forEach(event => {
+      merged.set(event.id, event);
+    });
+    return Array.from(merged.values());
+  }, [upcomingEvents, pastEvents]);
+
+  const recentCompletedEvents = useMemo(() => {
+    return [...pastEvents]
+      .filter(event => getEventComputedStatus(event).status === 'completed')
+      .sort((a, b) => getStartDateTime(b) - getStartDateTime(a))
+      .slice(0, 5);
+  }, [pastEvents]);
 
   if (loading) {
     return (
@@ -146,7 +164,68 @@ const Dashboard: React.FC = memo(() => {
               : { type: 'spring', stiffness: 120, damping: 18, delay: 0.05 }
           }
         >
-          <CompactCalendar events={upcomingEvents} />
+          <CompactCalendar events={calendarEvents} />
+        </motion.div>
+
+        {/* Past Events */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={
+            prefersReducedMotion
+              ? { duration: 0.3 }
+              : { type: 'spring', stiffness: 120, damping: 18, delay: 0.08 }
+          }
+        >
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Eventos Concluídos (últimos 30 dias)
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Relembre os shows recentes já realizados.
+                </p>
+              </div>
+              <Link
+                to="/eventos?past=true"
+                className="text-sm font-semibold text-purple-600 hover:text-purple-700"
+              >
+                Ver histórico completo
+              </Link>
+            </div>
+
+            {recentCompletedEvents.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-purple-200 bg-purple-50/40 p-6 text-center text-sm text-gray-600">
+                Nenhum evento concluído nos últimos 30 dias.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {recentCompletedEvents.map(event => (
+                  <Link
+                    key={event.id}
+                    to={`/eventos/${event.id}`}
+                    className="rounded-2xl border border-purple-200 bg-white dark:bg-gray-800 p-4 hover:shadow-md transition"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold uppercase text-purple-600">
+                        Concluído
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {event.event_date}
+                      </span>
+                    </div>
+                    <p className="text-base font-semibold text-gray-900 dark:text-white">
+                      {event.title}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {event.location || 'Local não definido'}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </motion.div>
 
         {/* Stats Cards */}

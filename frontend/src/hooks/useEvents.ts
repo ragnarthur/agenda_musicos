@@ -11,6 +11,7 @@ interface EventsParams {
   search?: string;
   past?: boolean;
   upcoming?: boolean;
+  days_back?: number;
 }
 
 const PAGE_SIZE = 20;
@@ -23,6 +24,7 @@ const buildKey = (params?: EventsParams, page?: number) => {
   if (params?.search) queryParts.push(`search=${encodeURIComponent(params.search)}`);
   if (params?.past) queryParts.push('past=true');
   if (params?.upcoming) queryParts.push('upcoming=true');
+  if (params?.days_back) queryParts.push(`days_back=${params.days_back}`);
   if (page) queryParts.push(`page=${page}`);
   queryParts.push(`page_size=${PAGE_SIZE}`);
   return queryParts.length ? `/events?${queryParts.join('&')}` : '/events';
@@ -121,6 +123,34 @@ export function useUpcomingEvents() {
       const page = await eventService.getAllPaginated({
         status: 'proposed,confirmed,approved',
         upcoming: true,
+        page_size: 50,
+      });
+      return page.results;
+    },
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 30000,
+    }
+  );
+
+  return {
+    events: data ?? [],
+    isLoading,
+    isValidating,
+    error,
+    mutate,
+  };
+}
+
+export function usePastEvents({ daysBack = 30 }: { daysBack?: number } = {}) {
+  const key = `/events?past=true&status=confirmed,approved&days_back=${daysBack}`;
+  const { data, error, isLoading, isValidating, mutate } = useSWR<Event[]>(
+    key,
+    async () => {
+      const page = await eventService.getAllPaginated({
+        status: 'confirmed,approved',
+        past: true,
+        days_back: daysBack,
         page_size: 50,
       });
       return page.results;

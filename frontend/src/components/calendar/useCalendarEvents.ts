@@ -1,5 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import type { Event } from '../../types';
+import { getEventComputedStatus } from '../../utils/events';
 
 export interface EventsByDate {
   [dateString: string]: Event[];
@@ -7,6 +8,7 @@ export interface EventsByDate {
 
 export interface DayEventStatus {
   hasConfirmed: boolean;
+  hasCompleted: boolean;
   hasProposed: boolean;
   hasAvailability: boolean;
   totalCount: number;
@@ -27,6 +29,11 @@ export function useCalendarEvents(events: Event[]) {
   const getDateStatus = useCallback(
     (dateString: string): DayEventStatus => {
       const dateEvents = eventsByDate[dateString] || [];
+      const hasCompleted = dateEvents.some(
+        (e: any) =>
+          getEventComputedStatus(e as Event).status === 'completed' &&
+          !(e as any).isAvailability
+      );
       const hasConfirmed = dateEvents.some(
         (e: any) => (e.status === 'confirmed' || e.status === 'approved') && !e.isAvailability
       );
@@ -39,6 +46,7 @@ export function useCalendarEvents(events: Event[]) {
 
       return {
         hasConfirmed,
+        hasCompleted,
         hasProposed,
         hasAvailability,
         totalCount: dateEvents.length,

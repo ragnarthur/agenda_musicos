@@ -193,6 +193,12 @@ const CompactCalendar: React.FC<CompactCalendarProps> = memo(
         <div className="flex items-center justify-between gap-4 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded bg-purple-100 dark:bg-purple-900/40 border border-purple-300 dark:border-purple-700" />
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                Concluído
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-300 dark:border-emerald-700" />
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 Confirmado
