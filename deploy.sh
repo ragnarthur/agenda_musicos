@@ -67,9 +67,6 @@ build_and_deploy() {
     print_step "Reiniciando nginx para atualizar upstream do backend..."
     docker compose --env-file .env.prod -f docker-compose.prod.yml restart nginx
 
-    print_step "Aguardando containers iniciarem..."
-    sleep 15
-
     print_step "Status dos containers:"
     docker compose --env-file .env.prod -f docker-compose.prod.yml ps
 }
@@ -77,18 +74,35 @@ build_and_deploy() {
 check_health() {
     print_step "Verificando saude dos servicos..."
 
-    # Backend
-    if curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/api/ | grep -q "200\|401"; then
-        echo -e "  Backend: ${GREEN}OK${NC}"
-    else
-        echo -e "  Backend: ${RED}FALHOU${NC}"
+    # Importante:
+    # - O backend nao expõe 8000 no host (apenas na rede interna do Docker).
+    # - O nginx pode responder 444 em :80 quando o Host nao bate (default_server).
+    # Para evitar falso-negativos, validamos via HTTPS do nginx com SNI/Host corretos.
+
+    local curl_opts
+    curl_opts=(-sS -o /dev/null --connect-timeout 2 --max-time 5)
+
+    # Use --resolve para testar o origin local (bypass Cloudflare/DNS) e garantir SNI.
+    local resolve_opt=()
+    if command -v curl >/dev/null 2>&1; then
+        resolve_opt=(--resolve "${DOMAIN}:443:127.0.0.1")
     fi
 
-    # Frontend
-    if curl -s -o /dev/null -w "%{http_code}" http://localhost:80/ | grep -q "200"; then
-        echo -e "  Frontend: ${GREEN}OK${NC}"
+    local frontend_code backend_code
+    frontend_code=$(curl "${curl_opts[@]}" "${resolve_opt[@]}" -w "%{http_code}" "https://${DOMAIN}/" || echo "000")
+    backend_code=$(curl "${curl_opts[@]}" "${resolve_opt[@]}" -w "%{http_code}" "https://${DOMAIN}/api/" || echo "000")
+
+    if echo "$frontend_code" | grep -qE '^200$'; then
+        echo -e "  Frontend: ${GREEN}OK${NC} (${frontend_code})"
     else
-        echo -e "  Frontend: ${RED}FALHOU${NC}"
+        echo -e "  Frontend: ${RED}FALHOU${NC} (${frontend_code})"
+    fi
+
+    # /api/ normalmente retorna 200 ou 401 dependendo de auth
+    if echo "$backend_code" | grep -qE '^(200|401)$'; then
+        echo -e "  Backend: ${GREEN}OK${NC} (${backend_code})"
+    else
+        echo -e "  Backend: ${RED}FALHOU${NC} (${backend_code})"
     fi
 }
 
