@@ -75,7 +75,7 @@ const BottomNav: React.FC = () => {
             <NavLink
               key={item.to}
               to={item.to}
-              className={`flex flex-col items-center justify-center min-w-[60px] min-h-[44px] py-2 ${
+              className={`relative flex flex-col items-center justify-center min-w-[60px] min-h-[44px] py-2 ${
                 isActive
                   ? 'text-primary-400'
                   : 'text-slate-400 hover:text-slate-200'
