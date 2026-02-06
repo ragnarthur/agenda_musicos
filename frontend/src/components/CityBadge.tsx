@@ -180,7 +180,7 @@ const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' 
 
       {menuOpen && (
         <div
-          className={`absolute right-0 mt-2 w-[min(calc(100vw-2rem),320px)] sm:w-80 max-h-[min(60vh,400px)] rounded-2xl border p-3 sm:p-4 shadow-2xl ring-1 ring-black/20 z-50 overflow-y-auto ${
+          className={`absolute left-0 md:left-auto md:right-0 mt-2 w-[min(calc(100vw-2rem),320px)] sm:w-80 max-h-[min(60vh,400px)] rounded-2xl border p-3 sm:p-4 shadow-2xl ring-1 ring-black/20 z-50 overflow-y-auto ${
             variant === 'light' ? 'bg-white border-gray-200' : 'bg-slate-950 border-amber-400/30'
           }`}
         >

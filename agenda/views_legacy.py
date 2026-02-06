@@ -963,6 +963,11 @@ class EventViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        try:
+            rater_musician = request.user.musician_profile
+        except Exception:
+            rater_musician = None
+
         seen_ids = set()
         normalized_ratings = []
 
@@ -989,6 +994,12 @@ class EventViewSet(viewsets.ModelViewSet):
             if rating_value < 1 or rating_value > 5:
                 return Response(
                     {"detail": f"Nota do músico {musician_id} deve estar entre 1 e 5."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if rater_musician and musician_id == rater_musician.id:
+                return Response(
+                    {"detail": "Você não pode se autoavaliar."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
