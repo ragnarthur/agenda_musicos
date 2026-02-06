@@ -52,9 +52,21 @@ check_docker() {
 update_code() {
     print_step "Atualizando codigo do repositorio..."
     cd $PROJECT_DIR
+    local before_rev after_rev
+    before_rev=$(git rev-parse HEAD 2>/dev/null || true)
     git fetch origin
     git reset --hard origin/main
+    after_rev=$(git rev-parse HEAD 2>/dev/null || true)
     print_step "Codigo atualizado"
+
+    # Este script atualiza o proprio arquivo via git reset --hard. Quando isso acontece,
+    # as funcoes ja carregadas na memoria continuam sendo as antigas. Reexecutamos o
+    # script para aplicar a nova versao imediatamente.
+    if [ -z "${DEPLOY_REEXEC:-}" ] && [ -n "$before_rev" ] && [ -n "$after_rev" ] && [ "$before_rev" != "$after_rev" ]; then
+        print_step "Reiniciando deploy com a versao atualizada do script..."
+        export DEPLOY_REEXEC=1
+        exec "$PROJECT_DIR/deploy.sh" "$@"
+    fi
 }
 
 build_and_deploy() {
@@ -182,7 +194,7 @@ main() {
 
     case $COMMAND in
         deploy)
-            update_code
+            update_code "$COMMAND"
             build_and_deploy
             check_health
             ;;
