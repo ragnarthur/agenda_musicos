@@ -29,17 +29,31 @@ export function useCalendarEvents(events: Event[]) {
   const getDateStatus = useCallback(
     (dateString: string): DayEventStatus => {
       const dateEvents = eventsByDate[dateString] || [];
-      const hasCompleted = dateEvents.some(
-        (e: any) =>
-          getEventComputedStatus(e as Event).status === 'completed' &&
-          !(e as any).isAvailability
-      );
-      const hasConfirmed = dateEvents.some(
-        (e: any) => (e.status === 'confirmed' || e.status === 'approved') && !e.isAvailability
-      );
-      const hasProposed = dateEvents.some(
-        (e: any) => e.status === 'proposed' && !e.isAvailability
-      );
+
+      // "Concluido" deve ter cor diferente do verde.
+      // Regra: verde somente para eventos confirmados/aprovados que ainda NAO terminaram.
+      // Se o dia so tem eventos concluidos, ele vira roxo.
+      let hasCompleted = false;
+      let hasConfirmed = false;
+      let hasProposed = false;
+
+      for (const raw of dateEvents as any[]) {
+        if (raw?.isAvailability) continue;
+        const event = raw as Event;
+        const computed = getEventComputedStatus(event);
+
+        if (computed.status === 'completed') {
+          hasCompleted = true;
+          continue;
+        }
+
+        if (event.status === 'confirmed' || event.status === 'approved') {
+          hasConfirmed = true;
+        } else if (event.status === 'proposed') {
+          hasProposed = true;
+        }
+      }
+
       const hasAvailability = dateEvents.some(
         (e: any) => (e as any).isAvailability === true
       );
