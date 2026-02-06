@@ -673,14 +673,18 @@ class EventDetailSerializer(serializers.ModelSerializer):
     def get_can_rate(self, obj):
         """
         Verifica se o usuário pode avaliar os músicos do evento.
-        Condições: é criador + data do evento já passou + ainda não avaliou
+        Condições: participante + data do evento já passou + ainda não avaliou
         """
         request = self.context.get("request")
         if not request or not request.user.is_authenticated:
             return False
 
-        # Apenas criador pode avaliar
-        if obj.created_by != request.user:
+        # Participante: criador ou músico que aceitou o convite
+        is_creator = obj.created_by == request.user
+        is_invited = obj.availabilities.filter(
+            musician__user=request.user, response="available"
+        ).exists()
+        if not (is_creator or is_invited):
             return False
 
         # Evento deve estar no passado (considera término real)

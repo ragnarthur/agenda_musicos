@@ -791,7 +791,7 @@ class EventInstrument(models.Model):
 class MusicianRating(models.Model):
     """
     Avaliação de músico após um evento.
-    Apenas o criador do evento pode avaliar.
+    Participantes do evento podem avaliar.
     Escala de 1-5 estrelas.
     """
 

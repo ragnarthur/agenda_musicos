@@ -88,6 +88,14 @@ class MusicianRatingAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data["can_rate"])
 
+    def test_can_rate_returns_true_for_invited_past_event(self):
+        """Convidado que aceitou pode avaliar evento que já passou"""
+        self.client.force_authenticate(user=self.musician1_user)
+
+        response = self.client.get(f"/api/events/{self.past_event.id}/can_rate/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["can_rate"])
+
     def test_can_rate_returns_false_for_future_event(self):
         """Não pode avaliar evento que ainda não aconteceu"""
         self.client.force_authenticate(user=self.creator)
@@ -98,14 +106,14 @@ class MusicianRatingAPITest(APITestCase):
         self.assertIn("término do evento", response.data["reason"])
 
     def test_can_rate_returns_false_for_non_creator(self):
-        """Não criador não pode avaliar"""
-        # Músico 1 está convidado para o evento, então pode vê-lo
-        self.client.force_authenticate(user=self.musician1_user)
+        """Não participante não pode avaliar"""
+        outsider_user = User.objects.create_user(
+            username="outsider", email="outsider@test.com", password="senha123"
+        )
+        self.client.force_authenticate(user=outsider_user)
 
         response = self.client.get(f"/api/events/{self.past_event.id}/can_rate/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertFalse(response.data["can_rate"])
-        self.assertIn("criador", response.data["reason"])
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_submit_ratings_success(self):
         """Criador consegue enviar avaliações válidas"""
@@ -136,16 +144,21 @@ class MusicianRatingAPITest(APITestCase):
         self.assertEqual(self.musician2.total_ratings, 1)
         self.assertEqual(float(self.musician2.average_rating), 4.0)
 
-    def test_submit_ratings_forbidden_for_non_creator(self):
-        """Não criador não pode enviar avaliações"""
+    def test_submit_ratings_success_for_invited(self):
+        """Convidado pode enviar avaliações para outros participantes"""
         self.client.force_authenticate(user=self.musician1_user)
 
-        payload = {"ratings": [{"musician_id": self.musician2.id, "rating": 5}]}
+        payload = {
+            "ratings": [
+                {"musician_id": self.musician2.id, "rating": 5},
+                {"musician_id": self.creator_musician.id, "rating": 4},
+            ]
+        }
 
         response = self.client.post(
             f"/api/events/{self.past_event.id}/submit_ratings/", payload, format="json"
         )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_submit_ratings_fails_for_future_event(self):
         """Não pode avaliar evento futuro"""
@@ -163,6 +176,17 @@ class MusicianRatingAPITest(APITestCase):
         self.client.force_authenticate(user=self.creator)
 
         payload = {"ratings": [{"musician_id": self.musician1.id, "rating": 6}]}
+
+        response = self.client.post(
+            f"/api/events/{self.past_event.id}/submit_ratings/", payload, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_submit_ratings_fails_for_self_rating(self):
+        """Participante não pode avaliar a si mesmo"""
+        self.client.force_authenticate(user=self.musician1_user)
+
+        payload = {"ratings": [{"musician_id": self.musician1.id, "rating": 5}]}
 
         response = self.client.post(
             f"/api/events/{self.past_event.id}/submit_ratings/", payload, format="json"

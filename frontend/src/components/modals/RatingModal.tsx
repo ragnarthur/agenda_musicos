@@ -13,6 +13,7 @@ interface RatingModalProps {
   availabilities: Availability[];
   eventTitle: string;
   loading?: boolean;
+  currentUserId?: number;
 }
 
 interface MusicianRatingState {
@@ -30,6 +31,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
   availabilities,
   eventTitle,
   loading = false,
+  currentUserId,
 }) => {
   // Inicializa ratings para cada músico (apenas os que aceitaram)
   const [ratings, setRatings] = useState<MusicianRatingState[]>([]);
@@ -41,7 +43,11 @@ const RatingModal: React.FC<RatingModalProps> = ({
     if (!isOpen) return;
 
     const initialRatings: MusicianRatingState[] = availabilities
-      .filter(a => a.response === 'available')
+      .filter(
+        a =>
+          a.response === 'available' &&
+          (!currentUserId || a.musician.user?.id !== currentUserId)
+      )
       .map(a => ({
         musician_id: a.musician.id,
         musician_name:

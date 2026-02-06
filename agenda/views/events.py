@@ -414,12 +414,16 @@ class EventViewSet(viewsets.ModelViewSet):
     def _can_user_rate_event(self, event, user):
         """
         Verifica se o usuário pode avaliar os músicos do evento.
-        Apenas o criador do evento pode avaliar e somente após a data do evento.
+        Participantes podem avaliar após o término do evento.
         """
-        if not event.created_by or event.created_by != user:
+        is_creator = event.created_by and event.created_by == user
+        is_invited = Availability.objects.filter(
+            event=event, musician__user=user, response="available"
+        ).exists()
+        if not (is_creator or is_invited):
             return (
                 False,
-                "Apenas o criador do evento pode avaliar os músicos.",
+                "Apenas participantes do evento podem avaliar os músicos.",
                 status.HTTP_403_FORBIDDEN,
             )
 
@@ -756,7 +760,7 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         POST /events/{id}/submit_ratings/
         Body: { "ratings": [{ "musician_id": 1, "rating": 5, "comment": "..." }] }
-        Permite ao criador do evento avaliar os músicos após a data do evento.
+        Permite aos participantes avaliarem músicos após a data do evento.
         """
         event = self.get_object()
         can_rate, reason, status_code = self._can_user_rate_event(event, request.user)
@@ -769,11 +773,28 @@ class EventViewSet(viewsets.ModelViewSet):
         ratings_data = serializer.validated_data["ratings"]
 
         allowed_musician_ids = set(
-            event.availabilities.values_list("musician_id", flat=True)
+            event.availabilities.filter(response="available").values_list(
+                "musician_id", flat=True
+            )
         )
+        try:
+            creator_musician = event.created_by.musician_profile
+        except Exception:
+            creator_musician = None
+
+        if creator_musician:
+            allowed_musician_ids.add(creator_musician.id)
+
+        try:
+            rater_musician = request.user.musician_profile
+        except Exception:
+            rater_musician = None
+
+        if rater_musician and rater_musician.id in allowed_musician_ids:
+            allowed_musician_ids.discard(rater_musician.id)
         if not allowed_musician_ids:
             return Response(
-                {"detail": "Evento não possui músicos associados para avaliação."},
+                {"detail": "Não há músicos disponíveis para avaliação neste evento."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

@@ -312,8 +312,8 @@ const EventDetail: React.FC = () => {
             ) : (
               <div className="space-y-4">
                 <p className="text-gray-600">
-                  O evento já ocorreu. Avalie os músicos que participaram para ajudar outros
-                  contratantes a escolher os melhores profissionais.
+                  O evento já ocorreu. Avalie os músicos que participaram para fortalecer a
+                  comunidade e melhorar futuras escolhas.
                 </p>
                 <button
                   onClick={() => setShowRatingModal(true)}
@@ -372,6 +372,7 @@ const EventDetail: React.FC = () => {
           availabilities={event.availabilities || []}
           eventTitle={event.title}
           loading={actionLoading}
+          currentUserId={user?.user?.id}
         />
       </div>
     </Layout>

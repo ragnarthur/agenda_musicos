@@ -219,14 +219,23 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
         # Limitar entre 30 e 365 dias
         days_ahead = max(30, min(365, days_ahead))
 
+        try:
+            days_back = int(request.query_params.get("days_back", 30))
+        except (TypeError, ValueError):
+            days_back = 30
+        # Limitar entre 0 e 365 dias
+        days_back = max(0, min(365, days_back))
+
         include_private = request.query_params.get("include_private", "false") == "true"
 
-        # Data limite
-        end_date = timezone.now().date() + timezone.timedelta(days=days_ahead)
+        # Datas limite
+        today = timezone.now().date()
+        start_date = today - timezone.timedelta(days=days_back)
+        end_date = today + timezone.timedelta(days=days_ahead)
 
         # 2. Filtro base para todos os eventos futuros do músico
         event_filter = {
-            "event_date__gte": timezone.now().date(),
+            "event_date__gte": start_date,
             "event_date__lte": end_date,
         }
 
@@ -234,7 +243,7 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
         # Usa subquery para evitar perda de eventos por JOIN em availabilities
         availability_event_ids = Availability.objects.filter(
             musician=musician,
-            event__event_date__gte=timezone.now().date(),
+            event__event_date__gte=start_date,
             event__event_date__lte=end_date,
         ).values("event_id")
 
@@ -295,7 +304,7 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
             leader=musician,
             is_active=True,
             is_public=True,
-            date__gte=timezone.now().date(),
+            date__gte=today,
             date__lte=end_date,
         ).order_by("date", "start_time")
 
