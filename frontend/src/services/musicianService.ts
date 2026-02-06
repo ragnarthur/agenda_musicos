@@ -142,7 +142,7 @@ export const musicianService = {
       include_private?: boolean;
     }
   ): Promise<PublicCalendarResponse> => {
-    const response = await api.get(`/musicians/${musicianId}/public-calendar/`, { params });
+    const response = await api.get(`/musicians/${musicianId}/public_calendar/`, { params });
     return response.data;
   },
 };

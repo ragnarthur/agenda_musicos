@@ -493,7 +493,7 @@ export const publicMusicianService = {
     musicianId: number,
     params?: { days_ahead?: number }
   ): Promise<import('../types').PublicCalendarResponse> => {
-    const response = await api.get(`/musicians/${musicianId}/public-calendar/`, { params });
+    const response = await api.get(`/musicians/${musicianId}/public_calendar/`, { params });
     return response.data;
   },
 
