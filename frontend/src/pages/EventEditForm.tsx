@@ -230,11 +230,33 @@ const EventEditForm: React.FC = () => {
     });
   }, [inviteCandidates, instrumentFilter, instrumentQuery]);
 
-  const getInstrumentDisplay = (musician: AvailableMusician): string => {
+  const getDisplayInstrument = (musician: AvailableMusician): string => {
     const list =
       musician.instruments && musician.instruments.length > 0
         ? musician.instruments
         : [musician.instrument];
+    if (instrumentFilter !== 'all' && list.includes(instrumentFilter)) {
+      return instrumentFilter;
+    }
+    return musician.instrument || list[0] || '';
+  };
+
+  const getInstrumentDisplay = (
+    musician: AvailableMusician,
+    highlightInstrument?: string
+  ): string => {
+    const list =
+      musician.instruments && musician.instruments.length > 0
+        ? musician.instruments
+        : [musician.instrument];
+    if (highlightInstrument && list.includes(highlightInstrument)) {
+      const remaining = list.filter(inst => inst !== highlightInstrument);
+      const labels = [resolveInstrumentLabel(highlightInstrument)];
+      if (remaining.length) {
+        labels.push(...remaining.map(resolveInstrumentLabel));
+      }
+      return labels.join(' · ');
+    }
     return list.map(resolveInstrumentLabel).join(' · ');
   };
 
@@ -628,7 +650,9 @@ const EventEditForm: React.FC = () => {
                     Selecione músicos adicionais para convidar neste evento.
                   </p>
                   <div className="space-y-2">
-                    {filteredMusicians.map(musician => (
+                    {filteredMusicians.map(musician => {
+                      const displayInstrument = getDisplayInstrument(musician);
+                      return (
                       <div
                         key={musician.musician_id}
                         onClick={() => toggleMusicianSelection(musician.musician_id)}
@@ -646,11 +670,13 @@ const EventEditForm: React.FC = () => {
                                 : 'bg-gray-100 text-gray-600'
                             }`}
                           >
-                            <InstrumentIcon instrument={musician.instrument} size={18} />
+                            <InstrumentIcon instrument={displayInstrument} size={18} />
                           </div>
                           <div>
                             <p className="font-medium text-gray-900">{musician.musician_name}</p>
-                            <p className="text-xs text-gray-500">{getInstrumentDisplay(musician)}</p>
+                            <p className="text-xs text-gray-500">
+                              {getInstrumentDisplay(musician, displayInstrument)}
+                            </p>
                           </div>
                         </div>
                         <div
@@ -665,7 +691,8 @@ const EventEditForm: React.FC = () => {
                           )}
                         </div>
                       </div>
-                    ))}
+                    );
+                    })}
                   </div>
                   {selectedMusicians.length > 0 && (
                     <div className="mt-2 pt-2 border-t border-purple-200">
