@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import EventForm from '@/pages/EventForm';
 
 describe('EventForm Page', () => {
@@ -10,12 +11,20 @@ describe('EventForm Page', () => {
 
   it('renders without crashing', () => {
     expect(() => {
-      render(React.createElement(EventForm));
+      render(
+        <MemoryRouter>
+          <EventForm />
+        </MemoryRouter>
+      );
     }).not.toThrow();
   });
 
   it('has container element', () => {
-    const { container } = render(React.createElement(EventForm));
+    const { container } = render(
+      <MemoryRouter>
+        <EventForm />
+      </MemoryRouter>
+    );
 
     expect(container).toBeInTheDocument();
   });

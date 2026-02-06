@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import Connections from '@/pages/Connections';
 
 describe('Connections Page', () => {
@@ -10,14 +11,20 @@ describe('Connections Page', () => {
 
   it('renders without crashing', () => {
     expect(() => {
-      render(React.createElement(Connections));
+      render(
+        <MemoryRouter>
+          <Connections />
+        </MemoryRouter>
+      );
     }).not.toThrow();
   });
 
   it('has container element', () => {
-    const { container } = render(React.createElement(Connections), {
-      wrapper: ({ children }) => React.createElement('div', null, children),
-    });
+    const { container } = render(
+      <MemoryRouter>
+        <Connections />
+      </MemoryRouter>
+    );
 
     expect(container).toBeInTheDocument();
   });

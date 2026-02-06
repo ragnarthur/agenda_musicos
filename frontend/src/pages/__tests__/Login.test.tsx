@@ -60,7 +60,7 @@ describe('Login page', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
 
     await waitFor(() =>
-      expect(loginMock).toHaveBeenCalledWith({ username: 'joao', password: 'senha123' })
+      expect(loginMock).toHaveBeenCalledWith({ username: 'joao', password: 'senha123' }, false)
     );
     expect(navigateMock).toHaveBeenCalledWith('/dashboard');
   });

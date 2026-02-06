@@ -6,7 +6,7 @@ describe('Skeleton', () => {
     it('renders with default classes', () => {
         const { container } = render(React.createElement(Skeleton));
         const skeleton = container.firstChild;
-        expect(skeleton).toHaveClass('animate-pulse', 'bg-gray-200', 'rounded');
+        expect(skeleton).toHaveClass('animate-pulse', 'bg-gray-200', 'dark:bg-gray-700', 'rounded-md');
     });
     it('applies custom className', () => {
         const { container } = render(React.createElement(Skeleton, { className: 'h-10 w-full' }));

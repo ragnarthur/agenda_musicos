@@ -3,6 +3,37 @@ import { cleanup } from '@testing-library/react';
 import { afterEach, vi, beforeAll, afterAll } from 'vitest';
 import { server } from './mocks/server';
 
+// Many smoke tests just assert "renders without crashing" and don't care about
+// Auth/Theme state. We keep real Providers available (used by renderWithProviders),
+// but mock the hooks to avoid requiring Provider wiring in every test file.
+vi.mock('../contexts/AuthContext', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../contexts/AuthContext')>();
+  return {
+    ...actual,
+    useAuth: () => ({
+      user: null,
+      loading: false,
+      isAuthenticated: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+      setSession: vi.fn(),
+      refreshUser: vi.fn(),
+    }),
+  };
+});
+
+vi.mock('../contexts/useTheme', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../contexts/useTheme')>();
+  return {
+    ...actual,
+    useTheme: () => ({
+      theme: 'dark',
+      toggleTheme: vi.fn(),
+      setTheme: vi.fn(),
+    }),
+  };
+});
+
 afterEach(() => {
   cleanup();
 });

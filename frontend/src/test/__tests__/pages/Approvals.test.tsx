@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import Approvals from '@/pages/Approvals';
 
 describe('Approvals Page', () => {
@@ -10,14 +11,20 @@ describe('Approvals Page', () => {
 
   it('renders without crashing', () => {
     expect(() => {
-      render(React.createElement(Approvals));
+      render(
+        <MemoryRouter>
+          <Approvals />
+        </MemoryRouter>
+      );
     }).not.toThrow();
   });
 
   it('has container element', () => {
-    const { container } = render(React.createElement(Approvals), {
-      wrapper: ({ children }) => React.createElement('div', null, children),
-    });
+    const { container } = render(
+      <MemoryRouter>
+        <Approvals />
+      </MemoryRouter>
+    );
 
     expect(container).toBeInTheDocument();
   });

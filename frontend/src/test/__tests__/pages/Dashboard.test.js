@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import Dashboard from '@/pages/Dashboard';
 describe('Dashboard Page', () => {
     beforeEach(() => {
@@ -8,13 +9,11 @@ describe('Dashboard Page', () => {
     });
     it('renders without crashing', () => {
         expect(() => {
-            render(React.createElement(Dashboard));
+            render(React.createElement(MemoryRouter, null, React.createElement(Dashboard)));
         }).not.toThrow();
     });
     it('has container element', () => {
-        const { container } = render(React.createElement(Dashboard), {
-            wrapper: ({ children }) => React.createElement('div', null, children),
-        });
+        const { container } = render(React.createElement(MemoryRouter, null, React.createElement(Dashboard)));
         expect(container).toBeInTheDocument();
     });
 });

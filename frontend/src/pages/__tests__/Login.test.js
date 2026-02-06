@@ -45,7 +45,7 @@ describe('Login page', () => {
         fireEvent.change(screen.getByLabelText('Usuário'), { target: { value: 'joao' } });
         fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'senha123' } });
         fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
-        await waitFor(() => expect(loginMock).toHaveBeenCalledWith({ username: 'joao', password: 'senha123' }));
+        await waitFor(() => expect(loginMock).toHaveBeenCalledWith({ username: 'joao', password: 'senha123' }, false));
         expect(navigateMock).toHaveBeenCalledWith('/dashboard');
     });
     it('exibe mensagem de erro ao receber 401', async () => {
