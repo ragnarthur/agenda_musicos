@@ -14,6 +14,7 @@ import {
   Music,
   Check,
   Disc3,
+  User,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Layout from '../components/Layout/Layout';
@@ -92,6 +93,8 @@ const FinancialSettings: React.FC = () => {
   const { instruments: availableInstruments, loading: loadingInstruments } = useInstruments();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [bio, setBio] = useState('');
   const [baseFee, setBaseFee] = useState('');
   const [travelFee, setTravelFee] = useState('');
@@ -101,6 +104,8 @@ const FinancialSettings: React.FC = () => {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
 
   const hydrateForm = useCallback((musician: Musician) => {
+    setFirstName(musician.user?.first_name ?? '');
+    setLastName(musician.user?.last_name ?? '');
     setBio(musician.bio ?? '');
     setBaseFee(formatCurrencyMask(musician.base_fee ?? ''));
     setTravelFee(formatCurrencyMask(musician.travel_fee_per_km ?? ''));
@@ -212,11 +217,22 @@ const FinancialSettings: React.FC = () => {
     event.preventDefault();
     setSaving(true);
 
+    const normalizedFirstName = sanitizeText(firstName, 150);
+    const normalizedLastName = sanitizeText(lastName, 150);
+
+    if (!normalizedFirstName || !normalizedLastName) {
+      toast.error('Nome e sobrenome sao obrigatorios.');
+      setSaving(false);
+      return;
+    }
+
     const mainInstrument = primaryInstrument || selectedInstruments[0] || '';
     const orderedInstruments = mainInstrument
       ? [mainInstrument, ...selectedInstruments.filter(inst => inst !== mainInstrument)]
       : selectedInstruments;
     const payload: MusicianUpdatePayload = {
+      first_name: normalizedFirstName,
+      last_name: normalizedLastName,
       bio: sanitizeOptionalText(bio, 350) ?? '',
       base_fee: parseDecimal(baseFee),
       travel_fee_per_km: parseDecimal(travelFee),
@@ -293,6 +309,49 @@ const FinancialSettings: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Dados do perfil */}
+          <div className="bg-slate-800/50 rounded-xl border border-slate-700/60 p-5 shadow-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <User className="h-5 w-5 text-emerald-300" />
+              <div>
+                <h2 className="text-lg font-semibold text-white">Dados do perfil</h2>
+                <p className="text-slate-300 text-sm">
+                  Atualize seu nome. Voce pode alterar ate 2 vezes por mes.
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-semibold text-slate-300 mb-2 block">
+                  Nome
+                </label>
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={e => setFirstName(e.target.value)}
+                  className="w-full rounded-lg bg-slate-900 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-slate-100 placeholder:text-slate-500 px-4 py-3"
+                  placeholder="Seu nome"
+                  maxLength={150}
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-300 mb-2 block">
+                  Sobrenome
+                </label>
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={e => setLastName(e.target.value)}
+                  className="w-full rounded-lg bg-slate-900 border border-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-slate-100 placeholder:text-slate-500 px-4 py-3"
+                  placeholder="Seu sobrenome"
+                  maxLength={150}
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Mini-bio */}
           <div className="bg-slate-800/50 rounded-xl border border-slate-700/60 p-5 shadow-lg">
             <div className="flex items-center gap-3 mb-4">

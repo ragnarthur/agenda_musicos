@@ -11,6 +11,12 @@ from django.db import models
 from django.utils import timezone
 
 
+def _current_month_start():
+    """Retorna o primeiro dia do mes atual (timezone-aware)."""
+    today = timezone.now().date()
+    return today.replace(day=1)
+
+
 class Instrument(models.Model):
     """Instrumento musical disponível no sistema."""
 
@@ -233,6 +239,13 @@ class Musician(models.Model):
 
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, related_name="musician_profile"
+    )
+    name_changes_month = models.DateField(
+        default=_current_month_start,
+        help_text="Mes de referencia para limite de troca de nome",
+    )
+    name_changes_count = models.PositiveSmallIntegerField(
+        default=0, help_text="Quantidade de alteracoes de nome no mes"
     )
     organization = models.ForeignKey(
         Organization,

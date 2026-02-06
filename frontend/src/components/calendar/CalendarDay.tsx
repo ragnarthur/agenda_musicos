@@ -18,11 +18,11 @@ const CalendarDay: React.FC<CalendarDayProps> = memo(
     const getEventBgClass = () => {
       if (isSelected || !isCurrentMonth) return '';
       if (eventStatus.hasConfirmed)
-        return 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-900 dark:text-emerald-100';
+        return 'bg-emerald-100 dark:bg-emerald-300/25 text-emerald-900 dark:text-emerald-50';
       if (eventStatus.hasCompleted)
-        return 'bg-purple-100 dark:bg-purple-900/40 text-purple-900 dark:text-purple-100';
+        return 'bg-purple-100 dark:bg-purple-300/25 text-purple-900 dark:text-purple-50';
       if (eventStatus.hasAvailability)
-        return 'bg-blue-100 dark:bg-blue-900/40 text-blue-900 dark:text-blue-100';
+        return 'bg-blue-100 dark:bg-sky-300/25 text-blue-900 dark:text-sky-50';
       return '';
     };
 

@@ -132,9 +132,14 @@ class MusicianSerializer(serializers.ModelSerializer):
 class MusicianUpdateSerializer(serializers.ModelSerializer):
     """Serializer para atualização do próprio perfil de músico"""
 
+    first_name = serializers.CharField(required=False, allow_blank=False, max_length=150)
+    last_name = serializers.CharField(required=False, allow_blank=False, max_length=150)
+
     class Meta:
         model = Musician
         fields = [
+            "first_name",
+            "last_name",
             "instrument",
             "instruments",
             "bio",
@@ -227,6 +232,16 @@ class MusicianUpdateSerializer(serializers.ModelSerializer):
         return cleaned_items
 
     def validate(self, attrs):
+        if "first_name" in attrs:
+            attrs["first_name"] = sanitize_string(
+                attrs.get("first_name"), max_length=150, allow_empty=False
+            )
+
+        if "last_name" in attrs:
+            attrs["last_name"] = sanitize_string(
+                attrs.get("last_name"), max_length=150, allow_empty=False
+            )
+
         if "instrument" in attrs:
             attrs["instrument"] = sanitize_string(
                 attrs.get("instrument"), max_length=50, allow_empty=False, to_lower=True
@@ -311,6 +326,38 @@ class MusicianUpdateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         """Atualiza perfil do músico e gerencia contadores de uso de instrumentos."""
+
+        # Campos de nome do usuario (User)
+        user = instance.user
+        first_name = validated_data.pop("first_name", None)
+        last_name = validated_data.pop("last_name", None)
+
+        name_changed = False
+        if first_name is not None or last_name is not None:
+            new_first = first_name if first_name is not None else user.first_name
+            new_last = last_name if last_name is not None else user.last_name
+            name_changed = new_first != user.first_name or new_last != user.last_name
+
+            if name_changed:
+                today = timezone.now().date()
+                month_start = today.replace(day=1)
+
+                if instance.name_changes_month != month_start:
+                    instance.name_changes_month = month_start
+                    instance.name_changes_count = 0
+
+                if instance.name_changes_count >= 2:
+                    raise serializers.ValidationError(
+                        {
+                            "detail": "Limite mensal de alteracoes de nome atingido (2 por mes). Tente novamente no proximo mes."
+                        }
+                    )
+
+                user.first_name = new_first
+                user.last_name = new_last
+                user.save(update_fields=["first_name", "last_name"])
+
+                instance.name_changes_count += 1
 
         # Guarda instrumentos antigos antes de atualizar
         old_instruments = set(instance.instruments) if instance.instruments else set()

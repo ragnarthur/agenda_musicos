@@ -43,6 +43,8 @@ export interface Musician {
 }
 
 export interface MusicianUpdatePayload {
+  first_name?: string;
+  last_name?: string;
   instrument?: string;
   instruments?: string[];
   bio?: string;

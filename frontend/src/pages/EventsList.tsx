@@ -146,6 +146,25 @@ const EventsList: React.FC = () => {
     setSearchTerm('');
   }, []);
 
+  const getStatusBorderClass = (status?: string) => {
+    switch (status) {
+      case 'proposed':
+        return 'border-amber-200 dark:border-amber-700/60';
+      case 'confirmed':
+        return 'border-emerald-200 dark:border-emerald-700/60';
+      case 'approved':
+        return 'border-blue-200 dark:border-blue-700/60';
+      case 'completed':
+        return 'border-purple-200 dark:border-purple-700/60';
+      case 'rejected':
+        return 'border-rose-200 dark:border-rose-700/60';
+      case 'cancelled':
+        return 'border-gray-200 dark:border-slate-700';
+      default:
+        return 'border-slate-200 dark:border-slate-700';
+    }
+  };
+
   const renderEventCard = useCallback((event: Event) => {
     const lineup = event.availabilities ? extractLineup(event) : [event.created_by_name];
     const startLabel = event.start_time ? event.start_time.slice(0, 5) : '--:--';
@@ -153,11 +172,12 @@ const EventsList: React.FC = () => {
     const computedStatus = getEventComputedStatus(event);
     const statusClass = `status-chip ${computedStatus.status || 'default'}`;
     const statusLabel = computedStatus.label;
+    const borderClass = getStatusBorderClass(computedStatus.status);
     return (
       <Link
         key={event.id}
         to={`/eventos/${event.id}`}
-        className="block rounded-xl border border-white/70 bg-white/90 backdrop-blur p-4 shadow-lg hover:shadow-xl transition-all"
+        className={`block rounded-xl border border-l-4 ${borderClass} bg-white/90 backdrop-blur p-4 shadow-lg hover:shadow-xl transition-all`}
       >
         <div className="flex items-start justify-between">
           <div className="flex-1">
