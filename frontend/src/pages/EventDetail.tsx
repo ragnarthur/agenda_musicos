@@ -373,6 +373,7 @@ const EventDetail: React.FC = () => {
           eventTitle={event.title}
           loading={actionLoading}
           currentUserId={user?.user?.id}
+          currentMusicianId={user?.id}
         />
       </div>
     </Layout>

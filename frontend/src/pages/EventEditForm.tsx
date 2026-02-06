@@ -1,15 +1,30 @@
 // pages/EventEditForm.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSWRConfig } from 'swr';
-import { Calendar, MapPin, Clock, Phone, FileText, Save, X, Coins } from 'lucide-react';
+import { Calendar, MapPin, Clock, Phone, FileText, Save, X, Coins, Info, Users, UserPlus } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { eventService } from '../services/eventService';
-import type { EventCreate } from '../types';
+import { musicianService } from '../services/api';
+import type { EventCreate, AvailableMusician, Musician } from '../types';
 import { logError } from '../utils/logger';
 import { sanitizeOptionalText, sanitizeText } from '../utils/sanitize';
 import { getErrorMessage } from '../utils/toast';
+import InstrumentIcon from '../components/common/InstrumentIcon';
+import { INSTRUMENT_LABELS as BASE_INSTRUMENT_LABELS } from '../utils/formatting';
+
+const instrumentLabels: Record<string, string> = {
+  ...BASE_INSTRUMENT_LABELS,
+};
+
+const resolveInstrumentLabel = (instrument: string): string => {
+  if (!instrument) return 'Instrumento';
+  const label = instrumentLabels[instrument];
+  if (label) return label;
+  const pretty = instrument.replace(/_/g, ' ');
+  return pretty.charAt(0).toUpperCase() + pretty.slice(1);
+};
 
 const EventEditForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,6 +33,12 @@ const EventEditForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [loadingEvent, setLoadingEvent] = useState(true);
   const [error, setError] = useState('');
+  const [availableMusicians, setAvailableMusicians] = useState<AvailableMusician[]>([]);
+  const [selectedMusicians, setSelectedMusicians] = useState<number[]>([]);
+  const [existingMusicianIds, setExistingMusicianIds] = useState<number[]>([]);
+  const [loadingMusicians, setLoadingMusicians] = useState(false);
+  const [instrumentFilter, setInstrumentFilter] = useState<string>('all');
+  const [instrumentQuery, setInstrumentQuery] = useState<string>('');
 
   const [formData, setFormData] = useState<EventCreate>({
     title: '',
@@ -52,6 +73,10 @@ const EventEditForm: React.FC = () => {
         is_solo: event.is_solo ?? false,
         is_private: event.is_private ?? false,
       });
+
+      const invitedIds = (event.availabilities || []).map(a => a.musician.id);
+      setExistingMusicianIds(invitedIds);
+      setSelectedMusicians([]);
     } catch (err) {
       logError('Erro ao carregar evento:', err);
       setError('Erro ao carregar evento. Redirecionando...');
@@ -64,6 +89,70 @@ const EventEditForm: React.FC = () => {
   useEffect(() => {
     loadEvent();
   }, [loadEvent]);
+
+  // Carrega músicos para convite adicional
+  useEffect(() => {
+    if (formData.is_solo) {
+      setAvailableMusicians([]);
+      setSelectedMusicians([]);
+      return;
+    }
+
+    let cancelled = false;
+    const loadMusicians = async () => {
+      setLoadingMusicians(true);
+      try {
+        const aggregated: Musician[] = [];
+        let page = 1;
+        let hasNext = true;
+        while (hasNext && !cancelled) {
+          const pageData = await musicianService.getAllPaginated({ page, page_size: 50 });
+          aggregated.push(...pageData.results);
+          hasNext = Boolean(pageData?.next);
+          page += 1;
+        }
+        const mapped = aggregated.map(musician => {
+          const instruments =
+            musician.instruments && musician.instruments.length > 0
+              ? musician.instruments
+              : musician.instrument
+                ? [musician.instrument]
+                : [];
+          const primary = instruments[0] || musician.instrument;
+          return {
+            musician_id: musician.id,
+            musician_name: musician.full_name,
+            instrument: primary,
+            instrument_display: resolveInstrumentLabel(primary),
+            instruments,
+            has_availability: false,
+            availability_id: null,
+            start_time: null,
+            end_time: null,
+            notes: null,
+          };
+        });
+
+        if (!cancelled) {
+          setAvailableMusicians(mapped);
+        }
+      } catch (err) {
+        logError('Erro ao carregar músicos:', err);
+        if (!cancelled) {
+          setAvailableMusicians([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingMusicians(false);
+        }
+      }
+    };
+
+    loadMusicians();
+    return () => {
+      cancelled = true;
+    };
+  }, [formData.is_solo]);
 
   // Função para formatar telefone brasileiro
   const formatPhone = (value: string): string => {
@@ -103,6 +192,56 @@ const EventEditForm: React.FC = () => {
     const normalized = raw.includes(',') ? raw.replace(/\./g, '').replace(',', '.') : raw;
     const num = Number(normalized);
     return Number.isFinite(num) ? Number(num.toFixed(2)) : null;
+  };
+
+  const inviteCandidates = useMemo(() => {
+    return availableMusicians.filter(
+      musician => !existingMusicianIds.includes(musician.musician_id)
+    );
+  }, [availableMusicians, existingMusicianIds]);
+
+  const instrumentOptions = useMemo(() => {
+    const counts: Record<string, number> = {};
+    inviteCandidates.forEach(m => {
+      const list = m.instruments && m.instruments.length > 0 ? m.instruments : [m.instrument];
+      list.forEach((inst: string) => {
+        counts[inst] = (counts[inst] || 0) + 1;
+      });
+    });
+    const options = Object.keys(counts).map(instrument => ({
+      value: instrument,
+      label: resolveInstrumentLabel(instrument),
+      count: counts[instrument],
+    }));
+    if (!instrumentQuery.trim()) return options;
+    const query = instrumentQuery.toLowerCase();
+    return options.filter(opt => opt.label.toLowerCase().includes(query));
+  }, [inviteCandidates, instrumentQuery]);
+
+  const filteredMusicians = useMemo(() => {
+    return inviteCandidates.filter(m => {
+      const list = m.instruments && m.instruments.length > 0 ? m.instruments : [m.instrument];
+      const byFilter = instrumentFilter === 'all' ? true : list.includes(instrumentFilter);
+      const labelsConcat = list.map(resolveInstrumentLabel).join(' ').toLowerCase();
+      const byQuery = instrumentQuery.trim()
+        ? `${labelsConcat} ${list.join(' ')}`.includes(instrumentQuery.toLowerCase())
+        : true;
+      return byFilter && byQuery;
+    });
+  }, [inviteCandidates, instrumentFilter, instrumentQuery]);
+
+  const getInstrumentDisplay = (musician: AvailableMusician): string => {
+    const list =
+      musician.instruments && musician.instruments.length > 0
+        ? musician.instruments
+        : [musician.instrument];
+    return list.map(resolveInstrumentLabel).join(' · ');
+  };
+
+  const toggleMusicianSelection = (musicianId: number) => {
+    setSelectedMusicians(prev =>
+      prev.includes(musicianId) ? prev.filter(id => id !== musicianId) : [...prev, musicianId]
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -148,6 +287,7 @@ const EventEditForm: React.FC = () => {
         description: sanitizeOptionalText(formData.description, 5000),
         venue_contact: sanitizeOptionalText(formData.venue_contact, 200),
         payment_amount: parsePaymentAmount(formData.payment_amount),
+        invited_musicians: formData.is_solo ? [] : selectedMusicians,
       };
       await eventService.update(parseInt(id), sanitizedPayload);
       // Invalidar cache de eventos para que a listagem recarregue
@@ -387,6 +527,162 @@ const EventEditForm: React.FC = () => {
               </p>
             </div>
           </div>
+
+          {/* Convidar mais músicos */}
+          {!formData.is_solo && (
+            <div className="rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-50 via-white to-indigo-50 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-purple-600" />
+                <h3 className="text-sm font-semibold text-gray-900">
+                  Convidar mais músicos
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-[1fr,240px] gap-2 md:items-end">
+                <div>
+                  <label className="text-xs font-semibold text-gray-700 mb-1 block">
+                    Buscar instrumento
+                  </label>
+                  <input
+                    type="text"
+                    value={instrumentQuery}
+                    onChange={e => setInstrumentQuery(e.target.value)}
+                    placeholder="Digite violão, teclado, bateria..."
+                    className="input-field"
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2 md:justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInstrumentFilter('all');
+                      setInstrumentQuery('');
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-sm border transition ${
+                      instrumentFilter === 'all' && !instrumentQuery
+                        ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                        : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300'
+                    }`}
+                  >
+                    Limpar filtros
+                  </button>
+                </div>
+              </div>
+
+              {instrumentOptions.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setInstrumentFilter('all')}
+                    className={`px-3 py-1.5 rounded-full text-sm border transition ${
+                      instrumentFilter === 'all'
+                        ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                        : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300'
+                    }`}
+                  >
+                    Todos
+                  </button>
+                  {instrumentOptions.map(opt => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setInstrumentFilter(opt.value)}
+                      className={`px-3 py-1.5 rounded-full text-sm border transition inline-flex items-center gap-2 ${
+                        instrumentFilter === opt.value
+                          ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300'
+                      }`}
+                    >
+                      <span className="flex items-center gap-1">
+                        <InstrumentIcon instrument={opt.value} size={16} />
+                        {opt.label}
+                      </span>
+                      <span className="text-xs text-gray-500 ml-1">({opt.count})</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {loadingMusicians ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600" />
+                  <span className="ml-2 text-sm text-gray-600">Carregando músicos...</span>
+                </div>
+              ) : inviteCandidates.length === 0 ? (
+                <div className="text-center py-4">
+                  <Info className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-600">
+                    Todos os músicos já foram convidados para este evento.
+                  </p>
+                </div>
+              ) : filteredMusicians.length === 0 ? (
+                <div className="text-center py-4">
+                  <Info className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-600">
+                    Nenhum músico com o instrumento selecionado.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-600">
+                    Selecione músicos adicionais para convidar neste evento.
+                  </p>
+                  <div className="space-y-2">
+                    {filteredMusicians.map(musician => (
+                      <div
+                        key={musician.musician_id}
+                        onClick={() => toggleMusicianSelection(musician.musician_id)}
+                        className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                          selectedMusicians.includes(musician.musician_id)
+                            ? 'border-purple-500 bg-purple-50 shadow-sm'
+                            : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`p-2 rounded-lg ${
+                              selectedMusicians.includes(musician.musician_id)
+                                ? 'bg-purple-500 text-white'
+                                : 'bg-gray-100 text-gray-600'
+                            }`}
+                          >
+                            <InstrumentIcon instrument={musician.instrument} size={18} />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{musician.musician_name}</p>
+                            <p className="text-xs text-gray-500">{getInstrumentDisplay(musician)}</p>
+                          </div>
+                        </div>
+                        <div
+                          className={`flex items-center justify-center w-6 h-6 rounded-full border-2 ${
+                            selectedMusicians.includes(musician.musician_id)
+                              ? 'border-purple-500 bg-purple-500'
+                              : 'border-gray-300'
+                          }`}
+                        >
+                          {selectedMusicians.includes(musician.musician_id) && (
+                            <UserPlus className="h-4 w-4 text-white" />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {selectedMusicians.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-purple-200">
+                      <div className="flex items-center gap-2 text-sm text-purple-700">
+                        <UserPlus className="h-4 w-4" />
+                        <span>
+                          {selectedMusicians.length} músico
+                          {selectedMusicians.length > 1 ? 's' : ''} selecionado
+                          {selectedMusicians.length > 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
 
           {/* Botões */}
           <div className="flex items-center justify-end space-x-4 pt-4 border-t">

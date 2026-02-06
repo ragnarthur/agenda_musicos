@@ -37,6 +37,7 @@ from ..serializers import (
     EventCreateSerializer,
     EventDetailSerializer,
     EventListSerializer,
+    EventUpdateSerializer,
     MusicianRatingSerializer,
     RatingSubmitSerializer,
 )
@@ -102,7 +103,72 @@ class EventViewSet(viewsets.ModelViewSet):
             return EventListSerializer
         elif self.action == "create":
             return EventCreateSerializer
+        elif self.action in ["update", "partial_update"]:
+            return EventUpdateSerializer
         return EventDetailSerializer
+
+    def _apply_invitations(self, event, invited_musicians_ids):
+        """Cria disponibilidades pendentes para músicos convidados (apenas novos)."""
+        if not invited_musicians_ids:
+            return
+
+        invited_musicians_ids = list(dict.fromkeys(invited_musicians_ids))
+        invited_musicians = Musician.objects.filter(
+            id__in=invited_musicians_ids, is_active=True
+        )
+
+        if event.created_by_id:
+            invited_musicians = invited_musicians.exclude(user=event.created_by)
+
+        existing_ids = set(
+            event.availabilities.filter(
+                musician_id__in=invited_musicians.values_list("id", flat=True)
+            ).values_list("musician_id", flat=True)
+        )
+
+        for musician in invited_musicians:
+            if musician.id in existing_ids:
+                continue
+            Availability.objects.create(
+                musician=musician,
+                event=event,
+                response="pending",
+                notes="",
+                responded_at=None,
+            )
+
+    def _replace_required_instruments(self, event, required_instruments):
+        """Substitui instrumentos necessários quando enviados na atualização."""
+        if required_instruments is None:
+            return
+
+        event.required_instruments.all().delete()
+        self._save_required_instruments(event, required_instruments)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+
+        invited_musicians_ids = serializer.validated_data.pop("invited_musicians", [])
+        required_instruments = serializer.validated_data.pop(
+            "required_instruments", None
+        )
+
+        updated_event = serializer.save()
+
+        self._apply_invitations(updated_event, invited_musicians_ids)
+        self._replace_required_instruments(updated_event, required_instruments)
+
+        output = EventDetailSerializer(
+            updated_event, context={"request": request}
+        ).data
+        return Response(output)
+
+    def partial_update(self, request, *args, **kwargs):
+        kwargs["partial"] = True
+        return self.update(request, *args, **kwargs)
 
     def get_queryset(self):
         """
@@ -824,6 +890,12 @@ class EventViewSet(viewsets.ModelViewSet):
             if rating_value < 1 or rating_value > 5:
                 return Response(
                     {"detail": f"Nota do músico {musician_id} deve estar entre 1 e 5."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if rater_musician and musician_id == rater_musician.id:
+                return Response(
+                    {"detail": "Você não pode se autoavaliar."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 

@@ -890,6 +890,54 @@ class EventCreateSerializer(serializers.ModelSerializer):
         return data
 
 
+class EventUpdateSerializer(EventCreateSerializer):
+    """Serializer para atualização de eventos (permite convidar músicos)"""
+
+    def validate(self, data):
+        """Validações"""
+        errors = {}
+
+        # Valida strings vazias em campos obrigatórios
+        string_fields = ["title", "location"]
+        for field in string_fields:
+            if field in data:
+                try:
+                    data[field] = validate_not_empty_string(data[field])
+                except serializers.ValidationError as e:
+                    errors[field] = str(e.detail[0])
+
+        # Validação de tamanho máximo para prevenir payload abuse
+        max_lengths = {
+            "title": (200, False),
+            "description": (5000, True),
+            "location": (300, False),
+            "venue_contact": (200, True),
+        }
+        for field, (max_len, allow_empty) in max_lengths.items():
+            value = data.get(field, "")
+            try:
+                data[field] = sanitize_string(
+                    value, max_length=max_len, allow_empty=allow_empty
+                )
+            except serializers.ValidationError as e:
+                errors[field] = str(e.detail[0])
+
+        # Permite end_time < start_time (eventos noturnos), mas não duração zero
+        if data.get("end_time") and data.get("start_time"):
+            if data["end_time"] == data["start_time"]:
+                errors["end_time"] = (
+                    "Evento deve ter duração mínima. Horário de término não pode ser igual ao início."
+                )
+
+        if data.get("event_date") and data["event_date"] < timezone.now().date():
+            errors["event_date"] = "Não é possível criar eventos com datas passadas."
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return data
+
+
 class LeaderAvailabilitySerializer(serializers.ModelSerializer):
     """Serializer para disponibilidades cadastradas pelo músico"""
 

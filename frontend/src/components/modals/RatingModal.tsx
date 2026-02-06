@@ -14,6 +14,7 @@ interface RatingModalProps {
   eventTitle: string;
   loading?: boolean;
   currentUserId?: number;
+  currentMusicianId?: number;
 }
 
 interface MusicianRatingState {
@@ -32,6 +33,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
   eventTitle,
   loading = false,
   currentUserId,
+  currentMusicianId,
 }) => {
   // Inicializa ratings para cada músico (apenas os que aceitaram)
   const [ratings, setRatings] = useState<MusicianRatingState[]>([]);
@@ -42,12 +44,14 @@ const RatingModal: React.FC<RatingModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
 
+    const isSelf = (availability: Availability) => {
+      if (currentMusicianId && availability.musician?.id === currentMusicianId) return true;
+      if (currentUserId && availability.musician?.user?.id === currentUserId) return true;
+      return false;
+    };
+
     const initialRatings: MusicianRatingState[] = availabilities
-      .filter(
-        a =>
-          a.response === 'available' &&
-          (!currentUserId || a.musician.user?.id !== currentUserId)
-      )
+      .filter(a => a.response === 'available' && !isSelf(a))
       .map(a => ({
         musician_id: a.musician.id,
         musician_name:
@@ -62,7 +66,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
       }));
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRatings(initialRatings);
-  }, [availabilities, isOpen]);
+  }, [availabilities, isOpen, currentUserId, currentMusicianId]);
 
   if (!isOpen) return null;
 
