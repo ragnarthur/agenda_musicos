@@ -256,7 +256,12 @@ const FinancialSettings: React.FC = () => {
       navigate(userId ? `/musicos/${userId}` : '/musicos');
     } catch (error) {
       logError('Erro ao salvar valores:', error);
-      toast.error(getErrorMessage(error));
+      const message = getErrorMessage(error);
+      if (message.toLowerCase().includes('limite mensal') && message.toLowerCase().includes('nome')) {
+        toast.error('Limite mensal atingido. Você pode alterar o nome apenas 2 vezes por mês.');
+      } else {
+        toast.error(message);
+      }
     } finally {
       setSaving(false);
     }
