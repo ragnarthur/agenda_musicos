@@ -11,16 +11,23 @@ import {
   Sparkles,
   Filter,
   Coins,
+  Edit,
+  Trash2,
+  Ban,
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import PullToRefresh from '../components/common/PullToRefresh';
 import { SkeletonCard } from '../components/common/Skeleton';
 import { useEvents } from '../hooks/useEvents';
+import { useAuth } from '../contexts/AuthContext';
+import ConfirmModal from '../components/modals/ConfirmModal';
 import type { Availability, Event } from '../types';
 import { format, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { getEventComputedStatus } from '../utils/events';
 import { formatCurrency, formatInstrumentLabel, getMusicianDisplayName } from '../utils/formatting';
+import { eventService } from '../services/eventService';
+import { showToast } from '../utils/toast';
 
 type TimeFilter = 'upcoming' | 'past' | 'all';
 
@@ -67,10 +74,13 @@ const getStartDateTime = (event: Event): number => {
 };
 
 const EventsList: React.FC = () => {
+  const { user } = useAuth();
   const [filter, setFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [debouncedSearch, setDebouncedSearch] = useState<string>('');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('upcoming');
+  const [pendingAction, setPendingAction] = useState<null | { type: 'cancel' | 'delete'; event: Event }>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   // Debounce search term - single effect, no duplicate calls
   useEffect(() => {
@@ -102,6 +112,33 @@ const EventsList: React.FC = () => {
   const handleRefresh = useCallback(async () => {
     await mutate();
   }, [mutate]);
+
+  const currentUserId = user?.user?.id;
+
+  const closeActionModal = useCallback(() => {
+    if (actionLoading) return;
+    setPendingAction(null);
+  }, [actionLoading]);
+
+  const handleConfirmAction = useCallback(async () => {
+    if (!pendingAction) return;
+    try {
+      setActionLoading(true);
+      if (pendingAction.type === 'cancel') {
+        await eventService.cancel(pendingAction.event.id);
+        showToast.eventCancelled();
+      } else {
+        await eventService.delete(pendingAction.event.id);
+        showToast.eventDeleted();
+      }
+      setPendingAction(null);
+      await mutate();
+    } catch (error) {
+      showToast.apiError(error);
+    } finally {
+      setActionLoading(false);
+    }
+  }, [pendingAction, mutate]);
 
   const groups = useMemo(() => {
     const byDate = new Map<string, Event[]>();
@@ -205,76 +242,109 @@ const EventsList: React.FC = () => {
     const statusLabel = computedStatus.label;
     const borderClass = getStatusBorderClass(computedStatus.status);
     const surfaceClass = getStatusSurfaceClass(computedStatus.status);
+
+    const canManage = Boolean(currentUserId && event.created_by === currentUserId && event.status !== 'cancelled');
+    const destructiveType = event.status === 'confirmed' || event.status === 'approved' ? 'cancel' : 'delete';
+    const destructiveLabel = destructiveType === 'cancel' ? 'Cancelar evento' : 'Excluir evento';
+
     return (
-      <Link
-        key={event.id}
-        to={`/eventos/${event.id}`}
-        className={`group block rounded-2xl border border-l-4 ${borderClass} ${surfaceClass} backdrop-blur p-4 shadow-lg hover:shadow-xl transition-all touch-manipulation active:scale-[0.99] hover:-translate-y-0.5`}
-      >
-        <div className="flex items-start gap-4">
-          <div className="min-w-[70px] pr-3 border-r border-slate-200/70 dark:border-slate-700/60">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Início
+      <div key={event.id} className="relative">
+        <Link
+          to={`/eventos/${event.id}`}
+          className={`group block rounded-2xl border border-l-4 ${borderClass} ${surfaceClass} backdrop-blur p-4 pr-24 shadow-lg hover:shadow-xl transition-all touch-manipulation active:scale-[0.99] hover:-translate-y-0.5`}
+        >
+          <div className="flex items-start gap-4">
+            <div className="min-w-[70px] pr-3 border-r border-slate-200/70 dark:border-slate-700/60">
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Início
+              </div>
+              <div className="mt-0.5 text-xl font-extrabold tabular-nums text-slate-900 dark:text-white">
+                {startLabel}
+              </div>
+              <div className="text-[11px] font-semibold tabular-nums text-slate-500 dark:text-slate-400">
+                até {endLabel}
+              </div>
             </div>
-            <div className="mt-0.5 text-xl font-extrabold tabular-nums text-slate-900 dark:text-white">
-              {startLabel}
-            </div>
-            <div className="text-[11px] font-semibold tabular-nums text-slate-500 dark:text-slate-400">
-              até {endLabel}
+
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={statusClass}>{statusLabel}</span>
+                {event.is_solo && <span className="status-chip default">Solo</span>}
+                {event.payment_amount !== null && event.payment_amount !== undefined && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-white/40 bg-white/70 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm dark:border-white/10 dark:bg-slate-900/50 dark:text-slate-200">
+                    <Coins className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-300" />
+                    {formatCurrency(event.payment_amount)}
+                  </span>
+                )}
+              </div>
+
+              <h3 className="mt-1 text-lg font-semibold text-gray-900 dark:text-white truncate">
+                {event.title}
+              </h3>
+
+              {event.location && (
+                <p className="text-sm text-gray-600 dark:text-slate-300 truncate">
+                  {event.location}
+                </p>
+              )}
+
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-700 dark:text-slate-200">
+                <Users className="h-4 w-4 text-gray-500 dark:text-slate-400" />
+                {lineupSummary.visible.map(name => (
+                  <span
+                    key={name}
+                    className="inline-flex max-w-[240px] items-center gap-1 rounded-full bg-white/70 border border-slate-200/70 px-3 py-1 font-semibold text-slate-700 shadow-sm truncate dark:bg-slate-900/50 dark:border-slate-700/60 dark:text-slate-200"
+                    title={name}
+                  >
+                    {name}
+                  </span>
+                ))}
+                {lineupSummary.remaining > 0 && (
+                  <span className="inline-flex items-center rounded-full bg-slate-100 border border-slate-200 px-3 py-1 font-semibold text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200">
+                    +{lineupSummary.remaining}
+                  </span>
+                )}
+              </div>
+
+              <div className="mt-2 hidden sm:flex items-center gap-2 text-sm text-gray-700 dark:text-slate-200">
+                <Clock className="h-4 w-4 text-gray-500 dark:text-slate-400" />
+                <span className="tabular-nums">
+                  {startLabel} - {endLabel}
+                </span>
+              </div>
             </div>
           </div>
+        </Link>
 
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className={statusClass}>{statusLabel}</span>
-              {event.is_solo && <span className="status-chip default">Solo</span>}
-              {event.payment_amount !== null && event.payment_amount !== undefined && (
-                <span className="inline-flex items-center gap-1 rounded-full border border-white/40 bg-white/70 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm dark:border-white/10 dark:bg-slate-900/50 dark:text-slate-200">
-                  <Coins className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-300" />
-                  {formatCurrency(event.payment_amount)}
-                </span>
-              )}
-            </div>
-
-            <h3 className="mt-1 text-lg font-semibold text-gray-900 dark:text-white truncate">
-              {event.title}
-            </h3>
-
-            {event.location && (
-              <p className="text-sm text-gray-600 dark:text-slate-300 truncate">
-                {event.location}
-              </p>
-            )}
-
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-700 dark:text-slate-200">
-              <Users className="h-4 w-4 text-gray-500 dark:text-slate-400" />
-              {lineupSummary.visible.map(name => (
-                <span
-                  key={name}
-                  className="inline-flex max-w-[240px] items-center gap-1 rounded-full bg-white/70 border border-slate-200/70 px-3 py-1 font-semibold text-slate-700 shadow-sm truncate dark:bg-slate-900/50 dark:border-slate-700/60 dark:text-slate-200"
-                  title={name}
-                >
-                  {name}
-                </span>
-              ))}
-              {lineupSummary.remaining > 0 && (
-                <span className="inline-flex items-center rounded-full bg-slate-100 border border-slate-200 px-3 py-1 font-semibold text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200">
-                  +{lineupSummary.remaining}
-                </span>
-              )}
-            </div>
-
-            <div className="mt-2 hidden sm:flex items-center gap-2 text-sm text-gray-700 dark:text-slate-200">
-              <Clock className="h-4 w-4 text-gray-500 dark:text-slate-400" />
-              <span className="tabular-nums">
-                {startLabel} - {endLabel}
-              </span>
-            </div>
+        {canManage && (
+          <div className="absolute right-3 top-3 z-10 flex items-center gap-2">
+            <Link
+              to={`/eventos/${event.id}/editar`}
+              aria-label="Editar evento"
+              title="Editar evento"
+              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-white/50 bg-white/70 text-indigo-700 shadow-sm backdrop-blur transition-all touch-manipulation active:scale-[0.99] hover:bg-white dark:border-white/10 dark:bg-slate-900/50 dark:text-indigo-200 dark:hover:bg-slate-900/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/60"
+            >
+              <Edit className="h-5 w-5" />
+            </Link>
+            <button
+              type="button"
+              aria-label={destructiveLabel}
+              title={destructiveLabel}
+              disabled={actionLoading}
+              onClick={() => setPendingAction({ type: destructiveType, event })}
+              className={`inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-white/50 bg-white/70 shadow-sm backdrop-blur transition-all touch-manipulation active:scale-[0.99] hover:bg-white disabled:opacity-60 dark:border-white/10 dark:bg-slate-900/50 dark:hover:bg-slate-900/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/60 ${
+                destructiveType === 'cancel'
+                  ? 'text-orange-700 hover:bg-orange-50/70 dark:text-orange-200 dark:hover:bg-orange-950/20'
+                  : 'text-rose-700 hover:bg-rose-50/70 dark:text-rose-200 dark:hover:bg-rose-950/20'
+              }`}
+            >
+              {destructiveType === 'cancel' ? <Ban className="h-5 w-5" /> : <Trash2 className="h-5 w-5" />}
+            </button>
           </div>
-        </div>
-      </Link>
+        )}
+      </div>
     );
-  }, []);
+  }, [actionLoading, currentUserId]);
 
   return (
     <Layout>
@@ -448,6 +518,22 @@ const EventsList: React.FC = () => {
             )}
           </div>
         )}
+
+        <ConfirmModal
+          isOpen={Boolean(pendingAction)}
+          onClose={closeActionModal}
+          onConfirm={handleConfirmAction}
+          title={pendingAction?.type === 'cancel' ? 'Cancelar evento' : 'Excluir evento'}
+          message={
+            pendingAction?.type === 'cancel'
+              ? 'Cancelar este evento? Ele deixará de aparecer como confirmado.'
+              : 'Excluir este evento? Esta ação é permanente.'
+          }
+          confirmText={pendingAction?.type === 'cancel' ? 'Cancelar evento' : 'Excluir evento'}
+          confirmVariant={pendingAction?.type === 'cancel' ? 'warning' : 'danger'}
+          loading={actionLoading}
+          icon={pendingAction?.type === 'cancel' ? <Ban className="h-5 w-5" /> : <Trash2 className="h-5 w-5" />}
+        />
       </div>
       </PullToRefresh>
     </Layout>

@@ -8,17 +8,19 @@ import { server } from './mocks/server';
 // but mock the hooks to avoid requiring Provider wiring in every test file.
 vi.mock('../contexts/AuthContext', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../contexts/AuthContext')>();
+  const defaultAuthState = {
+    user: null,
+    loading: false,
+    isAuthenticated: false,
+    login: vi.fn(),
+    logout: vi.fn(),
+    setSession: vi.fn(),
+    refreshUser: vi.fn(),
+  };
   return {
     ...actual,
-    useAuth: () => ({
-      user: null,
-      loading: false,
-      isAuthenticated: false,
-      login: vi.fn(),
-      logout: vi.fn(),
-      setSession: vi.fn(),
-      refreshUser: vi.fn(),
-    }),
+    // vi.fn so individual tests can override return values.
+    useAuth: vi.fn(() => defaultAuthState),
   };
 });
 
