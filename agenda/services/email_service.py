@@ -189,4 +189,4 @@ class EmailService:
             logger.error(f"Erro ao enviar email de boas-vindas: {e}")
             return False
 
-    @staticmethod
+    # End of EmailService
