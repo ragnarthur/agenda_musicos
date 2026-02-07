@@ -536,14 +536,14 @@ const EventEditForm: React.FC = () => {
           </div>
 
           {/* Show Solo */}
-          <div className="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="flex items-start space-x-3 rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 via-white to-indigo-50 dark:from-slate-900/90 dark:via-slate-900/80 dark:to-slate-800/80 dark:border-white/10 p-4">
             <input
               type="checkbox"
               id="is_solo"
               name="is_solo"
               checked={formData.is_solo}
               onChange={e => setFormData(prev => ({ ...prev, is_solo: e.target.checked }))}
-              className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+              className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded dark:border-white/20"
             />
             <div className="flex-1">
               <label
@@ -559,14 +559,14 @@ const EventEditForm: React.FC = () => {
           </div>
 
           {/* Evento Privado */}
-          <div className="flex items-start space-x-3 p-4 bg-amber-50 rounded-lg border border-amber-200">
+          <div className="flex items-start space-x-3 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 via-white to-orange-50 dark:from-slate-900/90 dark:via-slate-900/80 dark:to-slate-800/80 dark:border-white/10 p-4">
             <input
               type="checkbox"
               id="is_private"
               name="is_private"
               checked={formData.is_private}
               onChange={e => setFormData(prev => ({ ...prev, is_private: e.target.checked }))}
-              className="mt-1 h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
+              className="mt-1 h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded dark:border-white/20"
             />
             <div className="flex-1">
               <label
@@ -583,9 +583,9 @@ const EventEditForm: React.FC = () => {
 
           {/* Convidar mais músicos */}
           {!formData.is_solo && (
-            <div className="rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-50 via-white to-indigo-50 p-4 space-y-3">
+            <div className="rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-50 via-white to-indigo-50 dark:from-slate-900/90 dark:via-slate-900/80 dark:to-slate-800/80 dark:border-white/10 p-4 space-y-3 shadow-lg shadow-black/5 dark:shadow-black/40">
               <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-purple-600" />
+                <Users className="h-5 w-5 text-purple-600 dark:text-primary-300" />
                 <h3 className="text-sm font-semibold text-gray-900">
                   Convidar mais músicos
                 </h3>
@@ -614,7 +614,7 @@ const EventEditForm: React.FC = () => {
                     className={`px-3 py-1.5 rounded-full text-sm border transition ${
                       instrumentFilter === 'all' && !instrumentQuery
                         ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                        : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300'
+                        : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300 dark:bg-slate-900/50 dark:text-slate-200 dark:border-white/10 dark:hover:border-purple-400/40 dark:hover:bg-slate-800/60'
                     }`}
                   >
                     Limpar filtros
@@ -630,7 +630,7 @@ const EventEditForm: React.FC = () => {
                     className={`px-3 py-1.5 rounded-full text-sm border transition ${
                       instrumentFilter === 'all'
                         ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                        : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300'
+                        : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300 dark:bg-slate-900/50 dark:text-slate-200 dark:border-white/10 dark:hover:border-purple-400/40 dark:hover:bg-slate-800/60'
                     }`}
                   >
                     Todos
@@ -643,14 +643,20 @@ const EventEditForm: React.FC = () => {
                       className={`px-3 py-1.5 rounded-full text-sm border transition inline-flex items-center gap-2 ${
                         instrumentFilter === opt.value
                           ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300'
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300 dark:bg-slate-900/50 dark:text-slate-200 dark:border-white/10 dark:hover:border-purple-400/40 dark:hover:bg-slate-800/60'
                       }`}
                     >
                       <span className="flex items-center gap-1">
                         <InstrumentIcon instrument={opt.value} size={16} />
                         {opt.label}
                       </span>
-                      <span className="text-xs text-gray-500 ml-1">({opt.count})</span>
+                      <span
+                        className={`text-xs ml-1 ${
+                          instrumentFilter === opt.value ? 'text-white/80' : 'text-gray-500'
+                        }`}
+                      >
+                        ({opt.count})
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -691,16 +697,16 @@ const EventEditForm: React.FC = () => {
                         onClick={() => toggleMusicianSelection(musician)}
                         className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
                           isSelected
-                            ? 'border-purple-500 bg-purple-50 shadow-sm'
-                            : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/50'
+                            ? 'border-purple-500 bg-purple-50 shadow-sm dark:bg-purple-500/10 dark:border-purple-400/50'
+                            : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/50 dark:bg-slate-900/50 dark:border-white/10 dark:hover:border-purple-400/40 dark:hover:bg-slate-900/70'
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <div
                             className={`p-2 rounded-lg ${
                               isSelected
-                                ? 'bg-purple-500 text-white'
-                                : 'bg-gray-100 text-gray-600'
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-slate-200'
                             }`}
                           >
                             <InstrumentIcon instrument={displayInstrument} size={18} />
@@ -715,8 +721,8 @@ const EventEditForm: React.FC = () => {
                         <div
                           className={`flex items-center justify-center w-6 h-6 rounded-full border-2 ${
                             isSelected
-                              ? 'border-purple-500 bg-purple-500'
-                              : 'border-gray-300'
+                              ? 'border-purple-600 bg-purple-600'
+                              : 'border-gray-300 dark:border-white/20'
                           }`}
                         >
                           {isSelected && (
@@ -728,8 +734,8 @@ const EventEditForm: React.FC = () => {
                     })}
                   </div>
                   {Object.keys(selectedMusicians).length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-purple-200">
-                      <div className="flex items-center gap-2 text-sm text-purple-700">
+                    <div className="mt-2 pt-2 border-t border-purple-200 dark:border-white/10">
+                      <div className="flex items-center gap-2 text-sm text-purple-700 dark:text-primary-200">
                         <UserPlus className="h-4 w-4" />
                         <span>
                           {Object.keys(selectedMusicians).length} músico
