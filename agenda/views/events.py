@@ -194,20 +194,28 @@ class EventViewSet(viewsets.ModelViewSet):
             avail_unavailable=Count(
                 "availabilities", filter=Q(availabilities__response="unavailable")
             ),
-            avail_maybe=Count(
-                "availabilities", filter=Q(availabilities__response="maybe")
-            ),
             avail_total=Count("availabilities"),
         )
 
-        # Exibe eventos onde o usuário participa (criador ou availability)
+        # Exibe eventos onde o usuário participa (criador ou availability).
+        # Regra: para listagens (calendario/lista), nao retornamos eventos onde o musico marcou "unavailable",
+        # para nao continuar bloqueando data na agenda do proprio musico.
         if not self.request.user.is_staff:
             try:
                 musician = self.request.user.musician_profile
-                queryset = queryset.filter(
-                    models.Q(created_by=self.request.user)
-                    | models.Q(availabilities__musician=musician)
-                ).distinct()
+                if self.action == "list":
+                    queryset = queryset.filter(
+                        models.Q(created_by=self.request.user)
+                        | models.Q(
+                            availabilities__musician=musician,
+                            availabilities__response__in=["pending", "available"],
+                        )
+                    ).distinct()
+                else:
+                    queryset = queryset.filter(
+                        models.Q(created_by=self.request.user)
+                        | models.Q(availabilities__musician=musician)
+                    ).distinct()
             except Musician.DoesNotExist:
                 queryset = queryset.filter(created_by=self.request.user)
 
@@ -330,9 +338,6 @@ class EventViewSet(viewsets.ModelViewSet):
                 ),
                 avail_unavailable=Count(
                     "availabilities", filter=Q(availabilities__response="unavailable")
-                ),
-                avail_maybe=Count(
-                    "availabilities", filter=Q(availabilities__response="maybe")
                 ),
                 avail_total=Count("availabilities"),
             )
@@ -546,8 +551,15 @@ class EventViewSet(viewsets.ModelViewSet):
 
     def _check_and_confirm_event(self, event, confirmed_by=None):
         """
-        Confirma o evento quando algum convidado aceita.
-        Se não houver convidados, confirma quando o criador está disponível.
+        Recalcula o status do evento baseado nas disponibilidades.
+
+        Regras:
+        - is_solo=True: confirmado automaticamente
+        - Com convidados: confirma apenas quando TODOS os convidados aceitarem (available)
+        - Sem convidados: confirmado automaticamente
+
+        Se um evento ja confirmado perder alguma confirmacao (ex.: musico muda para unavailable),
+        ele volta para proposed e limpamos approved_by/approved_at para nao exibir "Confirmado por ...".
         Usa select_for_update para evitar race conditions.
         """
         # Usa transação com lock para evitar race condition
@@ -563,10 +575,6 @@ class EventViewSet(viewsets.ModelViewSet):
                     {"detail": "Conflito ao confirmar evento. Tente novamente."}
                 )
 
-            # Verifica se já foi confirmado (por outra requisição concorrente)
-            if locked_event.status == "confirmed":
-                logger.info(f"Evento {event.pk} já estava confirmado")
-                return
             if locked_event.status in ["cancelled", "rejected"]:
                 logger.warning(
                     f"Tentativa de confirmar evento {event.pk} com status {locked_event.status}"
@@ -582,41 +590,60 @@ class EventViewSet(viewsets.ModelViewSet):
                     musician__user=locked_event.created_by
                 )
 
-            if invitee_availabilities.exists():
-                has_confirmation = invitee_availabilities.filter(
+            prev_status = locked_event.status
+
+            # Determina se o evento deve estar confirmado
+            if locked_event.is_solo:
+                should_confirm = True
+            elif invitee_availabilities.exists():
+                # Apenas confirma se TODOS os convidados aceitaram.
+                should_confirm = not invitee_availabilities.exclude(
                     response="available"
                 ).exists()
-                if not has_confirmation:
-                    return
             else:
-                # Sem convidados: confirma apenas se o criador está disponível
-                creator_available = all_availabilities.filter(
-                    musician__user=locked_event.created_by, response="available"
-                ).exists()
-                if not creator_available:
-                    return
+                # Sem convidados: confirma automaticamente
+                should_confirm = True
 
-            locked_event.status = "confirmed"
-            if confirmed_by and not locked_event.approved_by:
-                locked_event.approved_by = confirmed_by
-                locked_event.approved_at = timezone.now()
-            elif not locked_event.approved_by and locked_event.created_by:
-                locked_event.approved_by = locked_event.created_by
-                locked_event.approved_at = timezone.now()
+            if should_confirm:
+                if locked_event.status != "confirmed":
+                    locked_event.status = "confirmed"
 
-            locked_event.save()
+                if confirmed_by and not locked_event.approved_by:
+                    locked_event.approved_by = confirmed_by
+                    locked_event.approved_at = timezone.now()
+                elif not locked_event.approved_by and locked_event.created_by:
+                    locked_event.approved_by = locked_event.created_by
+                    locked_event.approved_at = timezone.now()
 
-            approver = locked_event.approved_by
-            approver_name = None
-            if approver:
-                approver_name = approver.get_full_name() or approver.username
+                locked_event.save()
 
-            description = (
-                f"Evento confirmado por {approver_name}."
-                if approver_name
-                else "Evento confirmado."
-            )
-            self._log_event(locked_event, "approved", description)
+                # Loga apenas quando houve mudanca de status.
+                if prev_status != "confirmed":
+                    approver = locked_event.approved_by
+                    approver_name = None
+                    if approver:
+                        approver_name = approver.get_full_name() or approver.username
+
+                    description = (
+                        f"Evento confirmado por {approver_name}."
+                        if approver_name
+                        else "Evento confirmado."
+                    )
+                    self._log_event(locked_event, "approved", description)
+            else:
+                # Se o evento estava confirmado, volta para "proposed"
+                if locked_event.status in ["confirmed", "approved"]:
+                    locked_event.status = "proposed"
+                    locked_event.approved_by = None
+                    locked_event.approved_at = None
+                    locked_event.save()
+
+                    if prev_status != "proposed":
+                        self._log_event(
+                            locked_event,
+                            "availability",
+                            "Evento voltou para Proposta Enviada (aguardando respostas dos músicos).",
+                        )
 
     @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
     def approve(self, request, pk=None):
@@ -715,6 +742,9 @@ class EventViewSet(viewsets.ModelViewSet):
             "availability",
             f"Convite recusado por {musician.user.get_full_name() or musician.user.username}. Motivo: {reason or 'Não informado.'}",
         )
+
+        # Se o evento estava confirmado, pode precisar voltar para proposed.
+        self._check_and_confirm_event(event)
         serializer = EventDetailSerializer(event, context={"request": request})
         return Response(serializer.data)
 
@@ -757,10 +787,11 @@ class EventViewSet(viewsets.ModelViewSet):
     def set_availability(self, request, pk=None):
         """
         POST /events/{id}/set_availability/
-        Body: { "response": "available|unavailable|maybe|pending", "notes": "..." }
+        Body: { "response": "available|unavailable", "notes": "..." }
         Marca disponibilidade do músico logado para o evento.
 
-        Quando um convidado aceitar (available), o evento muda para 'confirmed'.
+        O evento confirma apenas quando TODOS os convidados aceitarem (available).
+        Se algum convidado marcar unavailable, o evento volta para proposed.
         """
         event = self.get_object()
 
@@ -781,12 +812,16 @@ class EventViewSet(viewsets.ModelViewSet):
             )
 
         # Valida response
-        response_value = request.data.get("response", "pending")
-        valid_responses = ["pending", "available", "unavailable", "maybe"]
+        response_value = request.data.get("response")
+        valid_responses = ["available", "unavailable"]
 
         if response_value not in valid_responses:
             return Response(
-                {"detail": f"Response inválido. Opções: {', '.join(valid_responses)}"},
+                {
+                    "detail": (
+                        "Resposta inválida. Selecione 'Disponível' ou 'Indisponível'."
+                    )
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -803,37 +838,35 @@ class EventViewSet(viewsets.ModelViewSet):
             defaults={
                 "response": response_value,
                 "notes": sanitized_notes,
-                "responded_at": timezone.now() if response_value != "pending" else None,
+                "responded_at": timezone.now(),
             },
         )
 
-        # Registra log apenas se houve mudança e resposta não é pendente
-        if response_value != "pending":
-            prev_response = previous.response if previous else None
-            prev_notes = previous.notes if previous else ""
-            response_labels = {
-                "available": "Disponível",
-                "unavailable": "Indisponível",
-                "maybe": "Talvez",
-                "pending": "Pendente",
-            }
-            response_label = response_labels.get(response_value, response_value)
-            if (
-                created
-                or prev_response != response_value
-                or prev_notes != (sanitized_notes or "")
-            ):
-                self._log_event(
-                    event,
-                    "availability",
-                    f"{musician.user.get_full_name() or musician.user.username} marcou disponibilidade: {response_label}",
-                )
+        # Registra log apenas se houve mudança
+        prev_response = previous.response if previous else None
+        prev_notes = previous.notes if previous else ""
+        response_labels = {
+            "available": "Disponível",
+            "unavailable": "Indisponível",
+        }
+        response_label = response_labels.get(response_value, response_value)
+        if (
+            created
+            or prev_response != response_value
+            or prev_notes != (sanitized_notes or "")
+        ):
+            self._log_event(
+                event,
+                "availability",
+                f"{musician.user.get_full_name() or musician.user.username} marcou disponibilidade: {response_label}",
+            )
 
-        # Verifica se algum convidado aceitou e confirma o evento
-        if response_value == "available":
-            self._check_and_confirm_event(event, confirmed_by=request.user)
+        # Recalcula confirmacao do evento (confirma ou "desconfirma")
+        self._check_and_confirm_event(
+            event, confirmed_by=request.user if response_value == "available" else None
+        )
 
-        serializer = AvailabilitySerializer(availability)
+        serializer = EventDetailSerializer(event, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["get"])
@@ -980,11 +1013,15 @@ class EventViewSet(viewsets.ModelViewSet):
     def my_events(self, request):
         """
         GET /events/my_events/
-        Retorna eventos onde o usuário logado tem availability (qualquer status)
+        Retorna eventos onde o usuário logado tem availability (pending/available).
+        Eventos marcados como unavailable pelo proprio musico nao devem aparecer (para nao bloquear agenda).
         """
         try:
             musician = request.user.musician_profile
-            events = Event.objects.filter(availabilities__musician=musician).distinct()
+            events = Event.objects.filter(
+                availabilities__musician=musician,
+                availabilities__response__in=["pending", "available"],
+            ).distinct()
 
             org = get_user_organization(request.user)
             if org:
@@ -1003,9 +1040,6 @@ class EventViewSet(viewsets.ModelViewSet):
                     avail_unavailable=Count(
                         "availabilities",
                         filter=Q(availabilities__response="unavailable"),
-                    ),
-                    avail_maybe=Count(
-                        "availabilities", filter=Q(availabilities__response="maybe")
                     ),
                     avail_total=Count("availabilities"),
                 )
@@ -1045,9 +1079,6 @@ class EventViewSet(viewsets.ModelViewSet):
                     avail_unavailable=Count(
                         "availabilities",
                         filter=Q(availabilities__response="unavailable"),
-                    ),
-                    avail_maybe=Count(
-                        "availabilities", filter=Q(availabilities__response="maybe")
                     ),
                     avail_total=Count("availabilities"),
                 )

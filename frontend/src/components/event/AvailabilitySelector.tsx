@@ -1,6 +1,6 @@
 // components/event/AvailabilitySelector.tsx
 import React from 'react';
-import { CheckCircle, XCircle, HelpCircle, Clock } from 'lucide-react';
+import { CheckCircle, XCircle } from 'lucide-react';
 import type { AvailabilityResponse } from '../../types';
 
 interface AvailabilitySelectorProps {
@@ -36,24 +36,6 @@ const RESPONSE_OPTIONS: {
       default: 'border-gray-200 hover:border-red-300',
     },
   },
-  {
-    value: 'maybe',
-    label: 'Talvez',
-    icon: <HelpCircle className="h-6 w-6 mx-auto mb-1" />,
-    colors: {
-      selected: 'border-blue-500 bg-blue-50 text-blue-700',
-      default: 'border-gray-200 hover:border-blue-300',
-    },
-  },
-  {
-    value: 'pending',
-    label: 'Pendente',
-    icon: <Clock className="h-6 w-6 mx-auto mb-1" />,
-    colors: {
-      selected: 'border-yellow-500 bg-yellow-50 text-yellow-700',
-      default: 'border-gray-200 hover:border-yellow-300',
-    },
-  },
 ];
 
 const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
@@ -87,6 +69,26 @@ const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
                 <p className="text-sm font-medium">{option.label}</p>
               </button>
             ))}
+          </div>
+
+          {/* "Pendente" e' um estado do sistema (convite enviado), nao uma opcao acionavel. */}
+          <div className="mt-3 text-xs text-gray-600">
+            Status atual:{' '}
+            <span
+              className={
+                selectedResponse === 'available'
+                  ? 'badge badge-available'
+                  : selectedResponse === 'unavailable'
+                    ? 'badge badge-unavailable'
+                    : 'badge badge-pending'
+              }
+            >
+              {selectedResponse === 'available'
+                ? 'Disponível'
+                : selectedResponse === 'unavailable'
+                  ? 'Indisponível'
+                  : 'Pendente'}
+            </span>
           </div>
         </div>
 

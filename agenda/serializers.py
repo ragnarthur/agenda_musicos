@@ -533,7 +533,6 @@ class EventListSerializer(serializers.ModelSerializer):
                 "pending": obj.avail_pending or 0,
                 "available": obj.avail_available or 0,
                 "unavailable": obj.avail_unavailable or 0,
-                "maybe": obj.avail_maybe or 0,
                 "total": obj.avail_total or 0,
             }
 
@@ -542,7 +541,6 @@ class EventListSerializer(serializers.ModelSerializer):
             "pending": 0,
             "available": 0,
             "unavailable": 0,
-            "maybe": 0,
             "total": 0,
         }
         for availability in obj.availabilities.all():
@@ -702,7 +700,6 @@ class EventDetailSerializer(serializers.ModelSerializer):
         response_labels = {
             "available": "Disponível",
             "unavailable": "Indisponível",
-            "maybe": "Talvez",
             "pending": "Pendente",
         }
 
@@ -2188,7 +2185,6 @@ class OwnerCalendarEventSerializer(serializers.ModelSerializer):
                 "pending": obj.avail_pending or 0,
                 "available": obj.avail_available or 0,
                 "unavailable": obj.avail_unavailable or 0,
-                "maybe": obj.avail_maybe or 0,
                 "total": obj.avail_total or 0,
             }
 
@@ -2197,7 +2193,6 @@ class OwnerCalendarEventSerializer(serializers.ModelSerializer):
             "pending": 0,
             "available": 0,
             "unavailable": 0,
-            "maybe": 0,
             "total": 0,
         }
         for availability in obj.availabilities.all():

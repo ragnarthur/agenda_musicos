@@ -578,7 +578,6 @@ class Availability(models.Model):
         ("pending", "Pendente"),  # Ainda não respondeu
         ("available", "Disponível"),  # Pode tocar
         ("unavailable", "Indisponível"),  # Não pode
-        ("maybe", "Talvez"),  # Depende
     ]
 
     musician = models.ForeignKey(

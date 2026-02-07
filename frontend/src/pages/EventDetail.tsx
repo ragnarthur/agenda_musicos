@@ -80,6 +80,10 @@ const EventDetail: React.FC = () => {
 
   const handleSetAvailability = useCallback(async () => {
     if (!id) return;
+    if (selectedResponse === 'pending') {
+      showToast.error('Selecione "Disponível" ou "Indisponível" para responder ao convite.');
+      return;
+    }
 
     try {
       setActionLoading(true);

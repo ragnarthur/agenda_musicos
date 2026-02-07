@@ -62,7 +62,7 @@ export const eventService = {
 
   setAvailability: async (
     id: number,
-    responseValue: 'pending' | 'available' | 'unavailable' | 'maybe',
+    responseValue: 'available' | 'unavailable',
     notes?: string
   ): Promise<Event> => {
     const response = await api.post(`/events/${id}/set_availability/`, {

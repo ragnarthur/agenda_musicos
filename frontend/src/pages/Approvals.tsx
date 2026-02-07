@@ -123,12 +123,6 @@ const Approvals: React.FC = () => {
                         <span className="text-gray-500"> indisponíveis</span>
                       </span>
                       <span className="text-xs sm:text-sm">
-                        <span className="text-blue-600 font-medium">
-                          ? {event.availability_summary.maybe}
-                        </span>
-                        <span className="text-gray-500"> talvez</span>
-                      </span>
-                      <span className="text-xs sm:text-sm">
                         <span className="text-yellow-600 font-medium">
                           ⏱ {event.availability_summary.pending}
                         </span>

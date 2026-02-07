@@ -262,7 +262,6 @@ export const AVAILABILITY_LABELS: Record<string, string> = {
   pending: 'Pendente',
   available: 'Disponível',
   unavailable: 'Indisponível',
-  maybe: 'Talvez',
 };
 
 /**
@@ -283,7 +282,6 @@ export const AVAILABILITY_COLORS: Record<string, string> = {
   pending: 'bg-gray-100 text-gray-600',
   available: 'bg-green-100 text-green-700',
   unavailable: 'bg-red-100 text-red-700',
-  maybe: 'bg-yellow-100 text-yellow-700',
 };
 
 /**
@@ -303,12 +301,11 @@ export function extractLineup(availabilities: Availability[] | undefined): strin
 export function countAvailabilities(availabilities: Availability[] | undefined): {
   available: number;
   unavailable: number;
-  maybe: number;
   pending: number;
   total: number;
 } {
   if (!availabilities) {
-    return { available: 0, unavailable: 0, maybe: 0, pending: 0, total: 0 };
+    return { available: 0, unavailable: 0, pending: 0, total: 0 };
   }
 
   return availabilities.reduce(
@@ -316,11 +313,10 @@ export function countAvailabilities(availabilities: Availability[] | undefined):
       acc.total++;
       if (a.response === 'available') acc.available++;
       else if (a.response === 'unavailable') acc.unavailable++;
-      else if (a.response === 'maybe') acc.maybe++;
       else acc.pending++;
       return acc;
     },
-    { available: 0, unavailable: 0, maybe: 0, pending: 0, total: 0 }
+    { available: 0, unavailable: 0, pending: 0, total: 0 }
   );
 }
 

@@ -10,21 +10,18 @@ interface AvailabilityListProps {
 interface AvailabilityCounts {
   available: number;
   unavailable: number;
-  maybe: number;
   pending: number;
 }
 
 const RESPONSE_ICONS: Record<string, string> = {
   available: '✓',
   unavailable: '✗',
-  maybe: '?',
   pending: '⏱',
 };
 
 const RESPONSE_BADGE_PREFIX: Record<string, string> = {
   available: '✓ ',
   unavailable: '✗ ',
-  maybe: '? ',
   pending: '⏱ ',
 };
 
@@ -36,7 +33,7 @@ function getAvailabilityCounts(availabilities: Availability[]): AvailabilityCoun
       }
       return acc;
     },
-    { available: 0, unavailable: 0, maybe: 0, pending: 0 }
+    { available: 0, unavailable: 0, pending: 0 }
   );
 }
 
@@ -60,9 +57,6 @@ const AvailabilityList: React.FC<AvailabilityListProps> = memo(({ availabilities
           </span>
           <span className="text-red-600 font-medium">
             {RESPONSE_ICONS.unavailable} {counts.unavailable}
-          </span>
-          <span className="text-blue-600 font-medium">
-            {RESPONSE_ICONS.maybe} {counts.maybe}
           </span>
           <span className="text-yellow-600 font-medium">
             {RESPONSE_ICONS.pending} {counts.pending}

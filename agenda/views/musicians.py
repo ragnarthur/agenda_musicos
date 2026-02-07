@@ -286,13 +286,6 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
                 ),
                 output_field=IntegerField(),
             ),
-            avail_maybe=Count(
-                Case(
-                    When(availabilities__response="maybe", then=1),
-                    default=0,
-                ),
-                output_field=IntegerField(),
-            ),
             avail_total=Count("availabilities"),
         )
 

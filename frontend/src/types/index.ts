@@ -64,7 +64,7 @@ export interface Availability {
   musician: Musician;
   musician_id?: number;
   event: number;
-  response: 'pending' | 'available' | 'unavailable' | 'maybe';
+  response: 'pending' | 'available' | 'unavailable';
   notes?: string;
   responded_at?: string;
   created_at: string;
@@ -102,7 +102,6 @@ export interface Event {
     pending: number;
     available: number;
     unavailable: number;
-    maybe: number;
     total: number;
   };
   created_at: string;
@@ -186,7 +185,7 @@ export interface AuthContextType {
   loading: boolean;
 }
 
-export type AvailabilityResponse = 'pending' | 'available' | 'unavailable' | 'maybe';
+export type AvailabilityResponse = 'pending' | 'available' | 'unavailable';
 export type EventStatus = 'proposed' | 'approved' | 'rejected' | 'confirmed' | 'cancelled';
 
 export interface EventLog {
