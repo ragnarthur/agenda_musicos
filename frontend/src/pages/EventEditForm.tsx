@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSWRConfig } from 'swr';
 import { Calendar, MapPin, Clock, Phone, FileText, Save, X, Coins, Info, Users, UserPlus } from 'lucide-react';
+import { parseISO, isBefore, isValid } from 'date-fns';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import { eventService } from '../services/eventService';
@@ -317,9 +318,16 @@ const EventEditForm: React.FC = () => {
       // Validar data (não pode ser no passado)
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const eventDate = new Date(formData.event_date);
+      // parseISO('YYYY-MM-DD') evita o bug de timezone do new Date('YYYY-MM-DD') (interpretado como UTC).
+      const eventDate = parseISO(formData.event_date || '');
 
-      if (eventDate < today) {
+      if (!isValid(eventDate)) {
+        setError('Data inválida');
+        setLoading(false);
+        return;
+      }
+
+      if (isBefore(eventDate, today)) {
         setError('A data do evento não pode ser no passado');
         setLoading(false);
         return;
