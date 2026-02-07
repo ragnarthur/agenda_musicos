@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
+import ConfirmModal from '../components/modals/ConfirmModal';
 import { leaderAvailabilityService, musicianService, type InstrumentOption } from '../services/api';
 import { getErrorMessage, showToast } from '../utils/toast';
 import type { LeaderAvailability, LeaderAvailabilityCreate } from '../types';
@@ -38,6 +39,7 @@ const LeaderAvailabilityPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showShared, setShowShared] = useState(false);
   const [instrumentFilter, setInstrumentFilter] = useState<string>('all');
+  const [pendingDelete, setPendingDelete] = useState<LeaderAvailability | null>(null);
 
   const [formData, setFormData] = useState<LeaderAvailabilityCreate>({
     date: '',
@@ -72,7 +74,13 @@ const LeaderAvailabilityPage: React.FC = () => {
       }
 
       const data = await leaderAvailabilityService.getAll(params);
-      setAvailabilities(data);
+      // Backend can occasionally return duplicated rows; keep UI stable by de-duping by id.
+      const unique = Array.from(new Map((data || []).map(a => [a.id, a])).values()).sort((a, b) => {
+        if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+        if (a.start_time !== b.start_time) return a.start_time < b.start_time ? -1 : 1;
+        return a.id - b.id;
+      });
+      setAvailabilities(unique);
     } catch (error) {
       showToast.apiError(error);
     } finally {
@@ -185,21 +193,8 @@ const LeaderAvailabilityPage: React.FC = () => {
     setShowModal(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Tem certeza que deseja remover esta disponibilidade?')) {
-      return;
-    }
-
-    try {
-      setActionLoading(true);
-      await leaderAvailabilityService.delete(id);
-      showToast.availabilityDeleted();
-      await loadAvailabilities();
-    } catch (error: unknown) {
-      showToast.apiError(error);
-    } finally {
-      setActionLoading(false);
-    }
+  const handleDelete = (availability: LeaderAvailability) => {
+    setPendingDelete(availability);
   };
 
   const resetForm = () => {
@@ -219,6 +214,21 @@ const LeaderAvailabilityPage: React.FC = () => {
     resetForm();
   };
 
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    try {
+      setActionLoading(true);
+      await leaderAvailabilityService.delete(pendingDelete.id);
+      showToast.availabilityDeleted();
+      setPendingDelete(null);
+      await loadAvailabilities();
+    } catch (error: unknown) {
+      showToast.apiError(error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="page-shell py-6 sm:py-8 page-stack">
@@ -227,14 +237,14 @@ const LeaderAvailabilityPage: React.FC = () => {
           <div className="pointer-events-none absolute inset-0 -z-10 opacity-40 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.2),_transparent_40%)]" />
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-2">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                 Disponibilidades compartilhadas
               </h1>
-              <p className="text-gray-600 max-w-2xl text-sm sm:text-base">
+              <p className="text-gray-600 dark:text-slate-300 max-w-2xl text-sm sm:text-base">
                 Cadastre horários disponíveis, defina visibilidade e receba convites com controle de
                 conflitos. O sistema respeita 40 minutos de buffer entre apresentações.
               </p>
-              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 dark:text-slate-400">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span>Ideal para formações variadas e agendas dinâmicas</span>
               </div>
@@ -250,12 +260,14 @@ const LeaderAvailabilityPage: React.FC = () => {
         </div>
 
         {/* Info sobre buffer de 40 minutos */}
-        <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-white/90 backdrop-blur p-4 shadow-lg">
+        <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-white/90 dark:bg-slate-900/40 dark:border-white/10 backdrop-blur p-4 shadow-lg">
           <div className="spotlight pointer-events-none absolute inset-0 -z-10" />
           <div className="flex items-start space-x-3">
             <Info className="h-5 w-5 text-primary-600 mt-0.5 flex-shrink-0" />
-            <div className="flex-1 text-sm text-primary-800">
-              <p className="font-medium mb-1">Buffer automático de 40 minutos</p>
+            <div className="flex-1 text-sm text-primary-800 dark:text-primary-200">
+              <p className="font-medium mb-1 text-primary-900 dark:text-primary-100">
+                Buffer automático de 40 minutos
+              </p>
               <p>
                 Bloqueamos 40 minutos antes/depois de cada apresentação para deslocamento e
                 preparação. Isso evita conflitos e mantém sua agenda realista.
@@ -267,13 +279,13 @@ const LeaderAvailabilityPage: React.FC = () => {
         {/* Tabs: Minhas Datas vs Explorar Músicos */}
         <div className="flex flex-col gap-4">
           {/* Tabs principais */}
-          <div className="flex border-b border-gray-200 overflow-x-auto">
+          <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
             <button
               onClick={() => setShowShared(false)}
-              className={`flex items-center gap-2 min-h-[44px] px-4 sm:px-6 py-3 font-medium border-b-2 transition-colors ${
+              className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-semibold transition-all touch-manipulation whitespace-nowrap min-h-[44px] ${
                 !showShared
-                  ? 'border-primary-600 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-indigo-500 bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-200/60'
+                  : 'border-white/60 bg-white/80 text-gray-700 hover:bg-white hover:border-indigo-200 dark:border-white/10 dark:bg-slate-900/40 dark:text-slate-200 dark:hover:bg-slate-900/60'
               }`}
             >
               <CalendarIcon className="h-4 w-4" />
@@ -281,10 +293,10 @@ const LeaderAvailabilityPage: React.FC = () => {
             </button>
             <button
               onClick={() => setShowShared(true)}
-              className={`flex items-center gap-2 min-h-[44px] px-4 sm:px-6 py-3 font-medium border-b-2 transition-colors ${
+              className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-semibold transition-all touch-manipulation whitespace-nowrap min-h-[44px] ${
                 showShared
-                  ? 'border-primary-600 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-indigo-500 bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-200/60'
+                  : 'border-white/60 bg-white/80 text-gray-700 hover:bg-white hover:border-indigo-200 dark:border-white/10 dark:bg-slate-900/40 dark:text-slate-200 dark:hover:bg-slate-900/60'
               }`}
             >
               <Users className="h-4 w-4" />
@@ -294,7 +306,7 @@ const LeaderAvailabilityPage: React.FC = () => {
 
           {/* Filtros */}
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="flex gap-2 overflow-x-auto pb-2">
+            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
               {[
                 { value: 'upcoming', label: 'Próximas' },
                 { value: 'all', label: 'Todas' },
@@ -303,10 +315,10 @@ const LeaderAvailabilityPage: React.FC = () => {
                 <button
                   key={item.value}
                   onClick={() => setTimeFilter(item.value as 'upcoming' | 'past' | 'all')}
-                  className={`min-h-[44px] px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+                  className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-semibold transition-all touch-manipulation whitespace-nowrap min-h-[44px] ${
                     timeFilter === item.value
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                      ? 'border-indigo-500 bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-200/60'
+                      : 'border-white/60 bg-white/80 text-gray-700 hover:bg-white hover:border-indigo-200 dark:border-white/10 dark:bg-slate-900/40 dark:text-slate-200 dark:hover:bg-slate-900/60'
                   }`}
                 >
                   {item.label}
@@ -321,16 +333,16 @@ const LeaderAvailabilityPage: React.FC = () => {
                   <Search className="h-4 w-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    className="min-h-[44px] w-full md:w-auto pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary-500"
+                    className="min-h-[44px] w-full md:w-auto pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary-500 bg-white/85 text-slate-900 placeholder:text-slate-400 border-white/60 shadow-sm dark:bg-slate-900/50 dark:text-slate-100 dark:border-white/10"
                     placeholder="Buscar músico (ex: Bruno)"
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                   />
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Music className="h-4 w-4 text-gray-500" />
+                  <Music className="h-4 w-4 text-gray-500 dark:text-slate-400" />
                   <select
-                    className="min-h-[44px] border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 w-full md:w-auto"
+                    className="min-h-[44px] border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 w-full md:w-auto bg-white/85 text-slate-900 border-white/60 shadow-sm dark:bg-slate-900/50 dark:text-slate-100 dark:border-white/10"
                     value={instrumentFilter}
                     onChange={e => setInstrumentFilter(e.target.value)}
                     aria-label="Filtrar por instrumento"
@@ -370,47 +382,59 @@ const LeaderAvailabilityPage: React.FC = () => {
               return (
                 <div
                   key={availability.id}
-                  className={`card-contrast ${availability.has_conflicts ? 'border-red-300 bg-red-50/80' : ''}`}
+                  className={`card-contrast relative ${
+                    availability.has_conflicts
+                      ? 'border-amber-200/70 bg-amber-50/60 dark:border-amber-700/40 dark:bg-amber-950/10'
+                      : ''
+                  }`}
                 >
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
-                        <CalendarIcon className="h-5 w-5 text-gray-500" />
-                        <span className="text-lg font-semibold text-gray-900">
+                        <CalendarIcon className="h-5 w-5 text-gray-500 dark:text-slate-400" />
+                        <span className="text-lg font-semibold text-gray-900 dark:text-white">
                           {format(parseISO(availability.date), 'dd/MM/yyyy')}
                         </span>
+                        {availability.has_conflicts && (
+                          <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800 dark:border-amber-800/40 dark:bg-amber-950/20 dark:text-amber-200">
+                            Conflito
+                          </span>
+                        )}
                       </div>
-                      <div className="flex items-center space-x-2 text-sm text-gray-600 mb-1">
+                      <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-slate-300 mb-1">
                         <Users className="h-4 w-4 text-primary-600" />
                         <span className="font-medium">{availability.leader_name}</span>
                         {availability.leader_instrument_display && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-700">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border border-primary-200 bg-primary-50/80 text-primary-800 dark:border-primary-800/40 dark:bg-primary-900/25 dark:text-primary-200">
                             <Music className="h-3 w-3 mr-1" />
                             {availability.leader_instrument_display}
                           </span>
                         )}
                       </div>
                       <div className="flex items-center space-x-3 mb-2">
-                        <Clock className="h-5 w-5 text-gray-500" />
-                        <span className="text-gray-700">
+                        <Clock className="h-5 w-5 text-gray-500 dark:text-slate-400" />
+                        <span className="text-gray-700 dark:text-slate-200">
                           {availability.start_time.slice(0, 5)} -{' '}
                           {availability.end_time.slice(0, 5)}
                         </span>
                       </div>
                       {availability.notes && (
-                        <p className="text-sm text-gray-600 mt-2">{availability.notes}</p>
+                        <p className="text-sm text-gray-600 dark:text-slate-300 mt-2">
+                          {availability.notes}
+                        </p>
                       )}
                       {availability.has_conflicts && (
-                        <div className="flex items-start space-x-2 mt-3 p-2 bg-red-100 rounded">
-                          <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
-                          <p className="text-sm text-red-700">
+                        <div className="flex items-start space-x-2 mt-3 rounded-xl border border-amber-200/70 bg-amber-50/80 p-3 text-amber-900 dark:border-amber-800/40 dark:bg-amber-950/20 dark:text-amber-100">
+                          <AlertCircle className="h-4 w-4 text-amber-700 dark:text-amber-200 mt-0.5 flex-shrink-0" />
+                          <p className="text-sm text-amber-900 dark:text-amber-100">
                             <strong>
                               {availability.conflicting_events_count === 1
                                 ? 'Existe 1 conflito'
                                 : `${availability.conflicting_events_count} conflitos encontrados`}
                             </strong>{' '}
-                            para este intervalo. Ajuste o horário ou libere o evento conflitante.
-                            (Cálculo inclui buffer de 40 min antes/depois)
+                            para este intervalo. Isso não é um erro: indica que já existe um evento
+                            no horário (considerando o buffer de 40 min). Ajuste o horário ou
+                            reorganize o evento conflitante.
                           </p>
                         </div>
                       )}
@@ -420,14 +444,16 @@ const LeaderAvailabilityPage: React.FC = () => {
                         <>
                           <button
                             onClick={() => handleEdit(availability)}
-                            className="min-h-[44px] min-w-[44px] p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            aria-label="Editar disponibilidade"
+                            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-white/50 bg-white/70 text-indigo-700 shadow-sm backdrop-blur transition-all touch-manipulation active:scale-[0.99] hover:bg-white dark:border-white/10 dark:bg-slate-900/50 dark:text-indigo-200 dark:hover:bg-slate-900/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/60"
                             title="Editar"
                           >
                             <Edit className="h-5 w-5" />
                           </button>
                           <button
-                            onClick={() => handleDelete(availability.id)}
-                            className="min-h-[44px] min-w-[44px] p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            onClick={() => handleDelete(availability)}
+                            aria-label="Remover disponibilidade"
+                            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-white/50 bg-white/70 text-rose-700 shadow-sm backdrop-blur transition-all touch-manipulation active:scale-[0.99] hover:bg-rose-50/70 disabled:opacity-60 dark:border-white/10 dark:bg-slate-900/50 dark:text-rose-200 dark:hover:bg-rose-950/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/60"
                             title="Deletar"
                             disabled={actionLoading}
                           >
@@ -459,11 +485,26 @@ const LeaderAvailabilityPage: React.FC = () => {
           </div>
         )}
 
+        <ConfirmModal
+          isOpen={Boolean(pendingDelete)}
+          onClose={() => {
+            if (actionLoading) return;
+            setPendingDelete(null);
+          }}
+          onConfirm={confirmDelete}
+          title="Remover disponibilidade"
+          message="Tem certeza que deseja remover esta disponibilidade?"
+          confirmText="Remover"
+          confirmVariant="danger"
+          loading={actionLoading}
+          icon={<Trash2 className="h-5 w-5" />}
+        />
+
         {/* Modal de criar/editar */}
         {showModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-md w-full p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
+            <div className="rounded-2xl max-w-md w-full p-6 border border-white/50 bg-white/95 text-gray-900 shadow-xl backdrop-blur dark:border-white/10 dark:bg-slate-900/80 dark:text-slate-100">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                 {editingId ? 'Editar Disponibilidade' : 'Nova Disponibilidade'}
               </h3>
 

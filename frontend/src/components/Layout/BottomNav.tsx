@@ -1,7 +1,7 @@
 // components/layout/BottomNav.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Calendar, Users, User, Plus } from 'lucide-react';
+import { Home, Calendar, User, Plus, HeartHandshake } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 const BottomNav: React.FC = () => {
@@ -39,7 +39,7 @@ const BottomNav: React.FC = () => {
     { to: '/dashboard', icon: Home, label: 'Início' },
     { to: '/eventos', icon: Calendar, label: 'Eventos' },
     { to: '/eventos/novo', icon: Plus, label: 'Criar', isAction: true },
-    { to: '/musicos', icon: Users, label: 'Músicos' },
+    { to: '/conexoes', icon: HeartHandshake, label: 'Rede' },
   ];
   if (user?.id) {
     navItems.push({ to: `/musicos/${user.id}`, icon: User, label: 'Perfil' });
@@ -54,8 +54,10 @@ const BottomNav: React.FC = () => {
       <div className="flex items-center justify-around px-2 py-2">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.to ||
-            (item.to !== '/dashboard' && location.pathname.startsWith(item.to.split('/')[1] ? `/${item.to.split('/')[1]}` : item.to));
+          const isActive =
+            item.to === '/dashboard'
+              ? location.pathname === '/dashboard'
+              : location.pathname === item.to || location.pathname.startsWith(`${item.to}/`);
 
           if (item.isAction) {
             return (
@@ -75,7 +77,7 @@ const BottomNav: React.FC = () => {
             <NavLink
               key={item.to}
               to={item.to}
-              className={`relative flex flex-col items-center justify-center min-w-[60px] min-h-[44px] py-2 ${
+              className={`relative flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-2 ${
                 isActive
                   ? 'text-primary-400'
                   : 'text-slate-400 hover:text-slate-200'

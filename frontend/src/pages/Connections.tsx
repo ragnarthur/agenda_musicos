@@ -1,5 +1,6 @@
 // pages/Connections.tsx
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Users,
   Star,
@@ -33,13 +34,13 @@ import { logError } from '../utils/logger';
 import VirtualList from '../components/common/VirtualList';
 
 const connectionLabels: Record<string, string> = {
-  follow: 'Seguir',
+  follow: 'Favoritar',
   recommend: 'Indicar',
   played_with: 'Já toquei',
 };
 
 const connectionLabelsActive: Record<string, string> = {
-  follow: 'Seguindo',
+  follow: 'Favoritado',
   recommend: 'Indicado',
   played_with: 'Tocamos juntos',
 };
@@ -264,9 +265,9 @@ const Connections: React.FC = () => {
 
   return (
     <Layout>
-      <div className="page-stack overflow-x-hidden">
-        {/* Hero Panel com Gradiente Animado */}
-        <div className="hero-panel hero-animated fade-in-up">
+        <div className="page-stack overflow-x-hidden">
+          {/* Hero Panel com Gradiente Animado */}
+          <div className="hero-panel hero-animated fade-in-up">
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             {/* Título e descrição */}
             <div className="flex items-center gap-4">
@@ -279,8 +280,12 @@ const Connections: React.FC = () => {
                 <Users className="h-8 w-8 text-white" />
               </motion.div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Conexões profissionais</h1>
-                <p className="text-gray-600">Construa sua rede e gerencie relacionamentos</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                  Rede & Badges
+                </h1>
+                <p className="text-gray-600 dark:text-slate-300">
+                  Construa sua rede e acompanhe suas conquistas no app
+                </p>
               </div>
             </div>
 
@@ -289,30 +294,30 @@ const Connections: React.FC = () => {
               <div className="flex items-center gap-4">
                 <div className="text-center">
                   <p className="text-2xl font-bold text-primary-600">{stats.follow}</p>
-                  <p className="text-xs text-gray-500">Seguindo</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400">Favoritos</p>
                 </div>
                 <div className="h-8 w-px bg-gray-200 dark:bg-slate-600" />
                 <div className="text-center">
                   <p className="text-2xl font-bold text-emerald-600">{stats.played_with}</p>
-                  <p className="text-xs text-gray-500">Já toquei</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400">Já toquei</p>
                 </div>
                 <div className="h-8 w-px bg-gray-200 dark:bg-slate-600" />
                 <div className="text-center">
                   <p className="text-2xl font-bold text-amber-600">{badgeData.earned.length}</p>
-                  <p className="text-xs text-gray-500">Badges</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400">Badges</p>
                 </div>
               </div>
             </TiltCard>
           </div>
 
-          {/* Stats Cards com ícones */}
-          <div className="relative z-10 grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-            <StatCard
-              label={connectionLabels.follow}
-              value={stats.follow || 0}
-              icon={Heart}
-              iconColor="text-rose-500"
-            />
+            {/* Stats Cards com ícones */}
+            <div className="relative z-10 grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+              <StatCard
+                label={connectionLabels.follow}
+                value={stats.follow || 0}
+                icon={Heart}
+                iconColor="text-rose-500"
+              />
             <StatCard
               label={connectionLabels.recommend}
               value={stats.recommend || 0}
@@ -325,24 +330,68 @@ const Connections: React.FC = () => {
               icon={Music}
               iconColor="text-indigo-500"
             />
-            <StatCard
-              label="Badges"
-              value={badgeData.earned.length}
-              icon={Trophy}
-              iconColor="text-amber-500"
-              accent
-            />
+              <StatCard
+                label="Badges"
+                value={badgeData.earned.length}
+                icon={Trophy}
+                iconColor="text-amber-500"
+                accent
+              />
+            </div>
+
+            {/* Regras rapidas para dar contexto */}
+            <div className="relative z-10 mt-6 rounded-2xl border border-white/60 bg-white/85 p-4 text-sm text-gray-700 shadow-lg backdrop-blur dark:border-white/10 dark:bg-slate-900/40 dark:text-slate-200">
+              <p className="font-semibold text-gray-900 dark:text-white">Como funciona</p>
+              <p className="mt-1 text-xs text-gray-600 dark:text-slate-300">
+                Use as conexões para organizar sua rede. Badges são conquistas automáticas conforme
+                você usa o app.
+              </p>
+              <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="rounded-xl border border-rose-100 bg-rose-50/70 px-3 py-2 dark:border-rose-900/40 dark:bg-rose-950/20">
+                  <span className="font-semibold text-rose-700 dark:text-rose-200">Favoritar</span>
+                  <span className="ml-2 text-xs text-rose-700/80 dark:text-rose-200/80">
+                    Salve para achar rápido
+                  </span>
+                </div>
+                <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 px-3 py-2 dark:border-emerald-900/40 dark:bg-emerald-950/15">
+                  <span className="font-semibold text-emerald-700 dark:text-emerald-200">
+                    Indicar
+                  </span>
+                  <span className="ml-2 text-xs text-emerald-700/80 dark:text-emerald-200/80">
+                    Recomendação rápida
+                  </span>
+                </div>
+                <div className="rounded-xl border border-indigo-100 bg-indigo-50/70 px-3 py-2 dark:border-indigo-900/40 dark:bg-indigo-950/15">
+                  <span className="font-semibold text-indigo-700 dark:text-indigo-200">
+                    Já toquei
+                  </span>
+                  <span className="ml-2 text-xs text-indigo-700/80 dark:text-indigo-200/80">
+                    Registre parcerias
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
 
         <div className="grid gap-6 lg:grid-cols-[1.6fr,1fr]">
           {/* Conexões */}
           <div className="card space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">Gerenciar conexões</h2>
-                <p className="text-sm text-gray-600">Acompanhe favoritos e registre colaborações</p>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Gerenciar conexões
+                </h2>
+                <p className="text-sm text-gray-600 dark:text-slate-300">
+                  Favorite músicos e registre colaborações
+                </p>
               </div>
+              <Link
+                to="/musicos"
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-indigo-200 bg-white/80 px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50 transition-all touch-manipulation active:scale-[0.99] dark:border-white/10 dark:bg-slate-900/40 dark:text-indigo-200 dark:hover:bg-slate-900/60"
+              >
+                <Users className="h-4 w-4" />
+                <span>Ver músicos</span>
+              </Link>
             </div>
 
             {/* Área de Busca/Filtro Melhorada */}
@@ -475,7 +524,9 @@ const Connections: React.FC = () => {
                           </motion.div>
 
                           <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-gray-900 truncate">{m.full_name}</p>
+                            <p className="font-semibold text-gray-900 dark:text-white truncate">
+                              {m.full_name}
+                            </p>
                             <p className="text-sm text-gray-500 dark:text-slate-400">
                               @{m.user.username}
                             </p>
@@ -662,7 +713,7 @@ const Connections: React.FC = () => {
             {/* Badges Conquistadas */}
             <div className="card hero-animated overflow-hidden">
               <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center gap-3 mb-4">
                   <motion.div
                     className="h-10 w-10 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md"
                     whileHover={{ scale: 1.1, rotate: 5 }}
@@ -670,8 +721,12 @@ const Connections: React.FC = () => {
                     <Star className="h-5 w-5 text-white" />
                   </motion.div>
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-900">Badges conquistadas</h2>
-                    <p className="text-sm text-gray-600">{badgeData.earned.length} conquistas</p>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      Badges conquistadas
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-slate-300">
+                      {badgeData.earned.length} conquistas
+                    </p>
                   </div>
                 </div>
 
@@ -734,8 +789,12 @@ const Connections: React.FC = () => {
                   <span className="text-xl">🔒</span>
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Próximas conquistas</h2>
-                  <p className="text-sm text-gray-600">Continue progredindo!</p>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Próximas conquistas
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-slate-300">
+                    Continue progredindo!
+                  </p>
                 </div>
               </div>
 
