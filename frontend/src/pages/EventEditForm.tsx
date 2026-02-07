@@ -12,7 +12,7 @@ import { logError } from '../utils/logger';
 import { sanitizeOptionalText, sanitizeText } from '../utils/sanitize';
 import { getErrorMessage } from '../utils/toast';
 import InstrumentIcon from '../components/common/InstrumentIcon';
-import { INSTRUMENT_LABELS as BASE_INSTRUMENT_LABELS } from '../utils/formatting';
+import { INSTRUMENT_LABELS as BASE_INSTRUMENT_LABELS, normalizeInstrumentKey } from '../utils/formatting';
 
 const instrumentLabels: Record<string, string> = {
   ...BASE_INSTRUMENT_LABELS,
@@ -34,7 +34,8 @@ const EventEditForm: React.FC = () => {
   const [loadingEvent, setLoadingEvent] = useState(true);
   const [error, setError] = useState('');
   const [availableMusicians, setAvailableMusicians] = useState<AvailableMusician[]>([]);
-  const [selectedMusicians, setSelectedMusicians] = useState<number[]>([]);
+  // Map musician_id -> instrument key chosen at selection time (keeps UI consistent per instrument).
+  const [selectedMusicians, setSelectedMusicians] = useState<Record<number, string>>({});
   const [existingMusicianIds, setExistingMusicianIds] = useState<number[]>([]);
   const [loadingMusicians, setLoadingMusicians] = useState(false);
   const [instrumentFilter, setInstrumentFilter] = useState<string>('all');
@@ -76,7 +77,7 @@ const EventEditForm: React.FC = () => {
 
       const invitedIds = (event.availabilities || []).map(a => a.musician.id);
       setExistingMusicianIds(invitedIds);
-      setSelectedMusicians([]);
+      setSelectedMusicians({});
     } catch (err) {
       logError('Erro ao carregar evento:', err);
       setError('Erro ao carregar evento. Redirecionando...');
@@ -94,7 +95,7 @@ const EventEditForm: React.FC = () => {
   useEffect(() => {
     if (formData.is_solo) {
       setAvailableMusicians([]);
-      setSelectedMusicians([]);
+      setSelectedMusicians({});
       return;
     }
 
@@ -112,13 +113,16 @@ const EventEditForm: React.FC = () => {
           page += 1;
         }
         const mapped = aggregated.map(musician => {
-          const instruments =
+          const instrumentsRaw =
             musician.instruments && musician.instruments.length > 0
               ? musician.instruments
               : musician.instrument
                 ? [musician.instrument]
                 : [];
-          const primary = instruments[0] || musician.instrument;
+          const instruments = instrumentsRaw
+            .map(inst => normalizeInstrumentKey(inst))
+            .filter(Boolean);
+          const primary = instruments[0] || normalizeInstrumentKey(musician.instrument) || '';
           return {
             musician_id: musician.id,
             musician_name: musician.full_name,
@@ -260,10 +264,29 @@ const EventEditForm: React.FC = () => {
     return list.map(resolveInstrumentLabel).join(' · ');
   };
 
-  const toggleMusicianSelection = (musicianId: number) => {
-    setSelectedMusicians(prev =>
-      prev.includes(musicianId) ? prev.filter(id => id !== musicianId) : [...prev, musicianId]
-    );
+  const toggleMusicianSelection = (musician: AvailableMusician) => {
+    setSelectedMusicians(prev => {
+      const next = { ...prev };
+      const id = musician.musician_id;
+      if (next[id]) {
+        delete next[id];
+        return next;
+      }
+
+      // Capture instrument at selection time. If user is filtering by an instrument,
+      // keep that as the "chosen" instrument for this musician.
+      const list =
+        musician.instruments && musician.instruments.length > 0
+          ? musician.instruments
+          : [musician.instrument];
+      const chosen =
+        instrumentFilter !== 'all' && list.includes(instrumentFilter)
+          ? instrumentFilter
+          : musician.instrument || list[0] || '';
+
+      next[id] = chosen;
+      return next;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -309,7 +332,7 @@ const EventEditForm: React.FC = () => {
         description: sanitizeOptionalText(formData.description, 5000),
         venue_contact: sanitizeOptionalText(formData.venue_contact, 200),
         payment_amount: parsePaymentAmount(formData.payment_amount),
-        invited_musicians: formData.is_solo ? [] : selectedMusicians,
+        invited_musicians: formData.is_solo ? [] : Object.keys(selectedMusicians).map(Number),
       };
       await eventService.update(parseInt(id), sanitizedPayload);
       // Invalidar cache de eventos para que a listagem recarregue
@@ -651,13 +674,15 @@ const EventEditForm: React.FC = () => {
                   </p>
                   <div className="space-y-2">
                     {filteredMusicians.map(musician => {
-                      const displayInstrument = getDisplayInstrument(musician);
+                      const selectedInstrument = selectedMusicians[musician.musician_id];
+                      const isSelected = Boolean(selectedInstrument);
+                      const displayInstrument = selectedInstrument || getDisplayInstrument(musician);
                       return (
                       <div
                         key={musician.musician_id}
-                        onClick={() => toggleMusicianSelection(musician.musician_id)}
+                        onClick={() => toggleMusicianSelection(musician)}
                         className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
-                          selectedMusicians.includes(musician.musician_id)
+                          isSelected
                             ? 'border-purple-500 bg-purple-50 shadow-sm'
                             : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/50'
                         }`}
@@ -665,7 +690,7 @@ const EventEditForm: React.FC = () => {
                         <div className="flex items-center gap-3">
                           <div
                             className={`p-2 rounded-lg ${
-                              selectedMusicians.includes(musician.musician_id)
+                              isSelected
                                 ? 'bg-purple-500 text-white'
                                 : 'bg-gray-100 text-gray-600'
                             }`}
@@ -681,12 +706,12 @@ const EventEditForm: React.FC = () => {
                         </div>
                         <div
                           className={`flex items-center justify-center w-6 h-6 rounded-full border-2 ${
-                            selectedMusicians.includes(musician.musician_id)
+                            isSelected
                               ? 'border-purple-500 bg-purple-500'
                               : 'border-gray-300'
                           }`}
                         >
-                          {selectedMusicians.includes(musician.musician_id) && (
+                          {isSelected && (
                             <UserPlus className="h-4 w-4 text-white" />
                           )}
                         </div>
@@ -694,14 +719,14 @@ const EventEditForm: React.FC = () => {
                     );
                     })}
                   </div>
-                  {selectedMusicians.length > 0 && (
+                  {Object.keys(selectedMusicians).length > 0 && (
                     <div className="mt-2 pt-2 border-t border-purple-200">
                       <div className="flex items-center gap-2 text-sm text-purple-700">
                         <UserPlus className="h-4 w-4" />
                         <span>
-                          {selectedMusicians.length} músico
-                          {selectedMusicians.length > 1 ? 's' : ''} selecionado
-                          {selectedMusicians.length > 1 ? 's' : ''}
+                          {Object.keys(selectedMusicians).length} músico
+                          {Object.keys(selectedMusicians).length > 1 ? 's' : ''} selecionado
+                          {Object.keys(selectedMusicians).length > 1 ? 's' : ''}
                         </span>
                       </div>
                     </div>

@@ -55,7 +55,8 @@ describe('useDashboardNotifications', () => {
     });
 
     expect(result.current.pendingApprovalsCount).toBeGreaterThanOrEqual(0);
-    expect(result.current.pendingResponsesCount).toBeGreaterThanOrEqual(0);
+    // mockEvents: only event id=1 has availability_summary.pending > 0 and created_by=1
+    expect(result.current.pendingResponsesCount).toBe(1);
   });
 
   it('has mutate function available', async () => {

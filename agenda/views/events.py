@@ -176,6 +176,7 @@ class EventViewSet(viewsets.ModelViewSet):
         - ?status=proposed,approved
         - ?my_proposals=true (eventos que eu criei)
         - ?pending_approval=true (eventos aguardando resposta do músico convidado)
+        - ?pending_responses=true (meus eventos com respostas de músicos pendentes)
         - ?search=termo (busca em título e local)
         - ?past=true (eventos passados)
         - ?upcoming=true (eventos futuros)
@@ -223,6 +224,15 @@ class EventViewSet(viewsets.ModelViewSet):
         # Minhas propostas
         if self.request.query_params.get("my_proposals") == "true":
             queryset = queryset.filter(created_by=self.request.user)
+
+        # Meus eventos com respostas pendentes de músicos
+        # (usado no Dashboard para "Respostas Pendentes")
+        if self.request.query_params.get("pending_responses") == "true":
+            queryset = queryset.filter(
+                created_by=self.request.user,
+                status__in=["proposed", "confirmed", "approved"],
+                avail_pending__gt=0,
+            )
 
         # Pendentes de convite (eventos propostos onde o músico tem availability pendente)
         if self.request.query_params.get("pending_approval") == "true":

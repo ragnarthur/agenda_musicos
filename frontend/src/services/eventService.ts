@@ -7,6 +7,7 @@ export interface EventListParams {
   status?: string;
   my_proposals?: boolean;
   pending_approval?: boolean;
+  pending_responses?: boolean;
   search?: string;
   past?: boolean;
   upcoming?: boolean;

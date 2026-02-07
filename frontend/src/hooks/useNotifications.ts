@@ -49,13 +49,16 @@ interface DashboardNotificationsData {
 async function fetchDashboardNotifications(): Promise<DashboardNotificationsData> {
   const [approvalsResult, responsesResult] = await Promise.allSettled([
     eventService.getAllPaginated({ pending_approval: true, page_size: 1 }),
-    eventService.getPendingMyResponse(),
+    eventService.getAllPaginated({
+      my_proposals: true,
+      pending_responses: true,
+      page_size: 1,
+    }),
   ]);
 
   return {
     pendingApprovalsCount: approvalsResult.status === 'fulfilled' ? approvalsResult.value.count : 0,
-    pendingResponsesCount:
-      responsesResult.status === 'fulfilled' ? responsesResult.value.length : 0,
+    pendingResponsesCount: responsesResult.status === 'fulfilled' ? responsesResult.value.count : 0,
   };
 }
 

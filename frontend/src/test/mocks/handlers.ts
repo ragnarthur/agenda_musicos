@@ -88,13 +88,15 @@ export const handlers = [
     const search = url.searchParams.get('search');
     const myProposals = url.searchParams.get('my_proposals');
     const pendingApproval = url.searchParams.get('pending_approval');
+    const pendingResponses = url.searchParams.get('pending_responses');
     const past = url.searchParams.get('past');
     const upcoming = url.searchParams.get('upcoming');
 
     let filteredEvents = [...mockEvents];
 
     if (status) {
-      filteredEvents = filteredEvents.filter(e => e.status === status);
+      const statuses = status.split(',').map(s => s.trim()).filter(Boolean);
+      filteredEvents = filteredEvents.filter(e => statuses.includes(e.status));
     }
 
     if (search) {
@@ -112,6 +114,12 @@ export const handlers = [
 
     if (pendingApproval === 'true') {
       filteredEvents = filteredEvents.filter(e => e.status === 'proposed');
+    }
+
+    if (pendingResponses === 'true' || pendingResponses === '1') {
+      filteredEvents = filteredEvents.filter(
+        e => e.created_by === 1 && (e.availability_summary?.pending || 0) > 0
+      );
     }
 
     if (past === 'true') {
