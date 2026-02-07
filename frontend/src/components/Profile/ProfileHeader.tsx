@@ -84,9 +84,9 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   }, [expandedImage]);
 
   return (
-    <div className="relative">
+    <section className="relative overflow-hidden rounded-2xl border border-white/60 bg-white/95 shadow-2xl backdrop-blur dark:border-white/10 dark:bg-slate-900/70">
       {/* Cover Image */}
-      <div className="relative min-h-[200px] sm:min-h-[280px] md:h-[320px] bg-gradient-to-r from-blue-500 to-purple-600 rounded-t-2xl overflow-hidden">
+      <div className="relative min-h-[200px] sm:min-h-[280px] md:h-[320px] bg-gradient-to-r from-primary-600 to-indigo-600 overflow-hidden">
         {musician.cover_image_url ? (
           <img
             src={musician.cover_image_url}
@@ -99,7 +99,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         )}
 
         {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/30 dark:to-black/50 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/40 dark:to-black/55 pointer-events-none" />
 
         {isOwnProfile && (
           <div className="absolute top-3 right-3 z-20 flex items-center gap-2 group">
@@ -144,16 +144,16 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       </div>
 
       {/* Avatar + Info */}
-      <div className="relative px-4 sm:px-8 pb-6">
+      <div className="relative px-4 sm:px-8 pb-6 pt-4 sm:pt-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex flex-col md:flex-row items-start md:items-end gap-4 sm:gap-6 -mt-12 sm:-mt-16 md:-mt-20"
+          className="grid gap-4 sm:gap-6 md:grid-cols-[auto_1fr] md:items-end"
         >
           {/* Avatar */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full border-4 border-white dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl overflow-hidden ring-4 ring-blue-500/20 dark:ring-blue-400/20 hover:ring-blue-500/40 dark:hover:ring-blue-400/40 transition-all">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 -mt-12 sm:-mt-16 md:-mt-20">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full border-4 border-white dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl overflow-hidden ring-4 ring-primary-500/15 dark:ring-primary-400/20 hover:ring-primary-500/35 dark:hover:ring-primary-400/35 transition-all">
               {musician.avatar_url ? (
                 <div className="w-full h-full flex items-center justify-center">
                   <img
@@ -221,118 +221,120 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           </div>
 
           {/* Name & Info */}
-          <div className="flex-1 md:mb-4 md:pl-2">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1">
-              {musician.full_name}
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-              {connectionsCount} {connectionsCount === 1 ? 'conexão' : 'conexões'}
-            </p>
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:pb-2">
+            <div className="flex-1 md:pl-2 min-w-0">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1 break-words">
+                {musician.full_name}
+              </h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                {connectionsCount} {connectionsCount === 1 ? 'conexão' : 'conexões'}
+              </p>
 
-            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-gray-600 dark:text-gray-400 mb-3">
-              {musician.city && (
-                <div className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  <span className="text-sm sm:text-base">
-                    {musician.city}
-                    {musician.state ? `, ${musician.state}` : ''}
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-gray-600 dark:text-gray-400 mb-3">
+                {musician.city && (
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    <span className="text-sm sm:text-base">
+                      {musician.city}
+                      {musician.state ? `, ${musician.state}` : ''}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-2">
+                  {getMusicianInstruments(musician).slice(0, 3).map((inst, idx) => (
+                    <motion.span
+                      key={idx}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className="px-2 sm:px-3 py-1 backdrop-blur-sm bg-primary-500/15 dark:bg-primary-400/10 text-primary-800 dark:text-primary-200 rounded-full text-xs sm:text-sm border border-primary-200/40 dark:border-primary-400/20 hover:bg-primary-500/25 dark:hover:bg-primary-400/20 transition-colors"
+                    >
+                      {formatInstrumentLabel(inst)}
+                    </motion.span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Rating */}
+              {(musician.total_ratings ?? 0) > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-4 w-4 sm:h-5 sm:w-5 transition-all ${
+                          i < Math.round(Number(musician.average_rating ?? 0))
+                            ? 'text-yellow-400 fill-yellow-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]'
+                            : 'text-gray-300 dark:text-gray-600'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
+                    {Number(musician.average_rating ?? 0).toFixed(1)}
+                  </span>
+                  <span className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
+                    ({musician.total_ratings}{' '}
+                    {musician.total_ratings === 1 ? 'avaliação' : 'avaliações'})
                   </span>
                 </div>
               )}
-
-              <div className="flex flex-wrap gap-2">
-                {getMusicianInstruments(musician).slice(0, 3).map((inst, idx) => (
-                  <motion.span
-                    key={idx}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: idx * 0.1 }}
-                    className="px-2 sm:px-3 py-1 backdrop-blur-sm bg-blue-500/20 dark:bg-blue-400/10 text-blue-800 dark:text-blue-300 rounded-full text-xs sm:text-sm border border-blue-200/30 dark:border-blue-400/20 hover:bg-blue-500/30 dark:hover:bg-blue-400/20 transition-colors"
-                  >
-                    {formatInstrumentLabel(inst)}
-                  </motion.span>
-                ))}
-              </div>
             </div>
 
-            {/* Rating */}
-            {(musician.total_ratings ?? 0) > 0 && (
-              <div className="flex items-center gap-2">
-                <div className="flex items-center">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-4 w-4 sm:h-5 sm:w-5 transition-all ${
-                        i < Math.round(Number(musician.average_rating ?? 0))
-                          ? 'text-yellow-400 fill-yellow-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]'
-                          : 'text-gray-300 dark:text-gray-600'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <span className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
-                  {Number(musician.average_rating ?? 0).toFixed(1)}
-                </span>
-                <span className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
-                  ({musician.total_ratings}{' '}
-                  {musician.total_ratings === 1 ? 'avaliação' : 'avaliações'})
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Action Buttons */}
-          {!isOwnProfile && (
-            <div className="flex flex-wrap gap-2 sm:gap-3 md:mb-4 w-full md:w-auto">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={onConnect}
-                disabled={connectingInProgress}
-                className={`flex items-center gap-2 px-4 sm:px-6 py-2 rounded-lg font-medium transition-all shadow-lg disabled:opacity-70 disabled:cursor-not-allowed ${
-                  isConnected
-                    ? 'bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white hover:shadow-green-500/50'
-                    : 'bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 text-white hover:shadow-sky-500/50'
-                }`}
-              >
-                {connectingInProgress ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : isConnected ? (
-                  <>
-                    <UserCheck className="h-4 w-4" />
-                    <span className="hidden sm:inline">Seguindo</span>
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="h-4 w-4" />
-                    <span className="hidden sm:inline">Seguir</span>
-                  </>
-                )}
-              </motion.button>
-
-              {musician.whatsapp && (
+            {/* Action Buttons */}
+            {!isOwnProfile && (
+              <div className="flex flex-wrap gap-2 sm:gap-3 w-full md:w-auto">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={handleWhatsAppClick}
-                  className="flex items-center gap-2 px-4 sm:px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-all shadow-lg hover:shadow-green-500/50"
+                  onClick={onConnect}
+                  disabled={connectingInProgress}
+                  className={`flex items-center gap-2 px-4 sm:px-6 py-2 rounded-lg font-medium transition-all shadow-lg disabled:opacity-70 disabled:cursor-not-allowed ${
+                    isConnected
+                      ? 'bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white hover:shadow-green-500/50'
+                      : 'bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white hover:shadow-primary-500/35'
+                  }`}
                 >
-                  <MessageCircle className="h-4 w-4" />
-                  <span className="hidden sm:inline">WhatsApp</span>
+                  {connectingInProgress ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : isConnected ? (
+                    <>
+                      <UserCheck className="h-4 w-4" />
+                      <span className="hidden sm:inline">Seguindo</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="h-4 w-4" />
+                      <span className="hidden sm:inline">Seguir</span>
+                    </>
+                  )}
                 </motion.button>
-              )}
 
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 px-4 sm:px-6 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg font-medium transition-all"
-                title="Em breve"
-              >
-                <Briefcase className="h-4 w-4" />
-                <span className="hidden sm:inline">Convidar</span>
-              </motion.button>
-            </div>
-          )}
+                {musician.whatsapp && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleWhatsAppClick}
+                    className="flex items-center gap-2 px-4 sm:px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-all shadow-lg hover:shadow-green-500/50"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    <span className="hidden sm:inline">WhatsApp</span>
+                  </motion.button>
+                )}
+
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center gap-2 px-4 sm:px-6 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg font-medium transition-all"
+                  title="Em breve"
+                >
+                  <Briefcase className="h-4 w-4" />
+                  <span className="hidden sm:inline">Convidar</span>
+                </motion.button>
+              </div>
+            )}
+          </div>
         </motion.div>
       </div>
 
@@ -362,7 +364,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             document.body
           )
         : null}
-    </div>
+    </section>
   );
 };
 
