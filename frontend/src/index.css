@@ -1645,6 +1645,7 @@
   animation: heroGradient 15s ease-in-out infinite;
   z-index: 0;
   border-radius: inherit;
+  pointer-events: none;
 }
 
 @keyframes heroGradient {

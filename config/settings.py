@@ -454,3 +454,12 @@ SPECTACULAR_SETTINGS = {
         {"name": "Notifications", "description": "Sistema de notificações"},
     ],
 }
+
+# drf-spectacular: evita ruído de "unable to guess serializer" em APIViews e views
+# funcionais onde o schema não é crítico para deploy.
+SILENCED_SYSTEM_CHECKS = [
+    "drf_spectacular.W002",
+]
+
+# Register local spectacular extensions (auth, etc.)
+import config.spectacular_extensions  # noqa: F401,E402
