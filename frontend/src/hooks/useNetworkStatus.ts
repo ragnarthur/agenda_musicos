@@ -22,23 +22,22 @@ interface NavigatorConnection {
 export function useNetworkStatus(): NetworkStatus {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [wasOffline, setWasOffline] = useState(false);
-  const readConnectionInfo = (): Pick<NetworkStatus, 'effectiveType' | 'downlink' | 'rtt'> => {
+
+  type ConnectionInfo = Pick<NetworkStatus, 'effectiveType' | 'downlink' | 'rtt'>;
+
+  const readConnectionInfo = useCallback((): ConnectionInfo => {
     const connection = (navigator as Navigator & { connection?: NavigatorConnection }).connection;
     return {
-      effectiveType: connection?.effectiveType ?? 'unknown',
+      effectiveType: (connection?.effectiveType ?? 'unknown') as ConnectionInfo['effectiveType'],
       downlink: connection?.downlink ?? null,
       rtt: connection?.rtt ?? null,
     };
-  };
-  const [connectionInfo, setConnectionInfo] = useState<{
-    effectiveType: 'slow-2g' | '2g' | '3g' | '4g' | 'unknown';
-    downlink: number | null;
-    rtt: number | null;
-  }>(() => readConnectionInfo());
+  }, []);
+  const [connectionInfo, setConnectionInfo] = useState<ConnectionInfo>(() => readConnectionInfo());
 
   const updateConnectionInfo = useCallback(() => {
     setConnectionInfo(readConnectionInfo());
-  }, []);
+  }, [readConnectionInfo]);
 
   useEffect(() => {
     const handleOnline = () => {
