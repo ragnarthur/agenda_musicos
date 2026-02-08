@@ -129,7 +129,7 @@ const Dashboard: React.FC = memo(() => {
               <h1 className="mt-1 text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
                 Olá, {user?.user?.first_name || user?.user?.username || 'Músico'}!
               </h1>
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              <p className="mt-2 text-sm text-muted">
                 Centralize todos os seus shows, compromissos e disponibilidades em um só lugar.
               </p>
             </div>
@@ -183,20 +183,20 @@ const Dashboard: React.FC = memo(() => {
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Eventos Concluídos (últimos 30 dias)
                 </h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-muted">
                   Relembre os shows recentes já realizados.
                 </p>
               </div>
               <Link
                 to="/eventos?past=true"
-                className="text-sm font-semibold text-purple-600 hover:text-purple-700"
+                className="text-sm font-semibold text-purple-700 hover:text-purple-800 dark:text-purple-300 dark:hover:text-purple-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/50 rounded"
               >
                 Ver histórico completo
               </Link>
             </div>
 
             {recentCompletedEvents.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-purple-200 bg-purple-50/40 p-6 text-center text-sm text-gray-600">
+              <div className="surface-card-soft border-dashed border-purple-200/70 dark:border-purple-300/25 p-6 text-center text-sm text-muted">
                 Nenhum evento concluído nos últimos 30 dias.
               </div>
             ) : (
@@ -205,20 +205,18 @@ const Dashboard: React.FC = memo(() => {
                   <Link
                     key={event.id}
                     to={`/eventos/${event.id}`}
-                    className="rounded-2xl border border-purple-200 bg-white dark:bg-gray-800 p-4 hover:shadow-md transition"
+                    className="surface-card border-purple-200/70 dark:border-purple-300/25 p-4 hover:shadow-xl hover:-translate-y-0.5 transition-all"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold uppercase text-purple-600">
+                      <span className="text-xs font-semibold uppercase text-purple-700 dark:text-purple-300">
                         Concluído
                       </span>
-                      <span className="text-xs text-gray-500">
-                        {event.event_date}
-                      </span>
+                      <span className="text-xs text-subtle">{event.event_date}</span>
                     </div>
                     <p className="text-base font-semibold text-gray-900 dark:text-white">
                       {event.title}
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-muted">
                       {event.location || 'Local não definido'}
                     </p>
                   </Link>
