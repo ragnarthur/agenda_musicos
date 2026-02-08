@@ -4,14 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronRight, MapPin, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import type { Event } from '../../types';
 import { getEventComputedStatus } from '../../utils/events';
+import { isRealEvent, type CalendarEvent } from './types';
 
 interface DayEventsSheetProps {
   isOpen: boolean;
   onClose: () => void;
   date: Date | null;
-  events: Event[];
+  events: CalendarEvent[];
   isOwner?: boolean;
 }
 
@@ -144,10 +144,13 @@ const DayEventsSheet: React.FC<DayEventsSheetProps> = ({
                   <div className="divide-y divide-gray-100 dark:divide-gray-700">
                     {events.map(event => (
                       (() => {
-                        const isAvailability = (event as any).isAvailability === true;
-                        const computed = getEventComputedStatus(event);
+                        const isAvailability = event.isAvailability === true || event.status === 'available';
+                        const computed =
+                          !isAvailability && isRealEvent(event)
+                            ? getEventComputedStatus(event)
+                            : null;
                         const statusKey =
-                          computed.status === 'completed' ? 'completed' : event.status;
+                          computed?.status === 'completed' ? 'completed' : event.status;
 
                         const Wrapper: React.ElementType =
                           isOwner && !isAvailability ? Link : 'div';
@@ -228,7 +231,7 @@ const DayEventsSheet: React.FC<DayEventsSheetProps> = ({
                                               : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
                                       }`}
                                     >
-                                      {computed.label || (event as any).status_display || getStatusLabel(statusKey)}
+                                      {computed?.label || event.status_display || getStatusLabel(statusKey)}
                                     </span>
                                   </div>
                                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">

@@ -124,7 +124,7 @@ export interface BookingEvent {
   actor_user: number | null;
   actor_name: string | null;
   action: string;
-  metadata: Record<string, any> | null;
+  metadata: Record<string, unknown> | null;
   created_at: string;
 }
 
@@ -768,7 +768,7 @@ export const adminOrganizationService = {
       org_type: string;
       is_sponsor: boolean;
     };
-    deleted_owner: any;
+    deleted_owner: unknown;
     deleted_by: string;
   }> => {
     const response = await api.delete(`/admin/organizations/${id}/`);

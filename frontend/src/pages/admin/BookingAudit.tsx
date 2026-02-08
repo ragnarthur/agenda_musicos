@@ -1,6 +1,6 @@
 // pages/admin/BookingAudit.tsx
 // Auditoria completa de reservas e pedidos de orçamento
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Search,
   Calendar,
@@ -42,24 +42,20 @@ export default function BookingAudit() {
   // UI
   const [showDetails, setShowDetails] = useState(false);
 
-  useEffect(() => {
-    loadStats();
-    loadRequests();
-  }, [search, statusFilter, cityFilter, stateFilter]);
-
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       const data = await adminBookingService.getStatistics();
       setStats(data);
     } catch (error) {
       showToast.apiError(error);
     }
-  };
+  }, []);
 
-  const loadRequests = async () => {
+  const loadRequests = useCallback(async () => {
     setLoading(true);
     try {
-      const params: any = {};
+      const params: Record<string, string> = {};
+      if (search) params.search = search;
       if (statusFilter) params.status = statusFilter;
       if (cityFilter) params.city = cityFilter;
       if (stateFilter) params.state = stateFilter;
@@ -71,7 +67,12 @@ export default function BookingAudit() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, statusFilter, cityFilter, stateFilter]);
+
+  useEffect(() => {
+    loadStats();
+    loadRequests();
+  }, [loadStats, loadRequests]);
 
   const handleSelectRequest = async (requestId: number) => {
     try {

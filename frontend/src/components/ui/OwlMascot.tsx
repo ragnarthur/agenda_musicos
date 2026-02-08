@@ -8,7 +8,7 @@ type OwlMascotProps = {
 };
 
 const OwlMascot: React.FC<OwlMascotProps> = memo(({ className, autoplay = true }) => {
-  const [animationData, setAnimationData] = useState<any>(null);
+  const [animationData, setAnimationData] = useState<Record<string, unknown> | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -20,7 +20,7 @@ const OwlMascot: React.FC<OwlMascotProps> = memo(({ className, autoplay = true }
         // Use dynamic import com Vite para code splitting
         const module = await import('../../assets/mascot/owl.json');
         if (isMounted) {
-          setAnimationData(module.default);
+          setAnimationData(module.default as Record<string, unknown>);
           setLoaded(true);
         }
       } catch (error) {

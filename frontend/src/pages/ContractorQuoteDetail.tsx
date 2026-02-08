@@ -1,7 +1,7 @@
 // pages/ContractorQuoteDetail.tsx
 // Detalhes do pedido de orçamento para contratante
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   ArrowLeft,
   Calendar,
@@ -28,11 +28,7 @@ export default function ContractorQuoteDetail() {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
 
-  useEffect(() => {
-    loadQuoteAndProposals();
-  }, [id]);
-
-  const loadQuoteAndProposals = async () => {
+  const loadQuoteAndProposals = useCallback(async () => {
     if (!id) return;
     
     setLoading(true);
@@ -49,7 +45,11 @@ export default function ContractorQuoteDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    loadQuoteAndProposals();
+  }, [loadQuoteAndProposals]);
 
   const handleAcceptProposal = async (proposalId: number) => {
     if (!quote) return;

@@ -115,7 +115,7 @@ const Requests: React.FC = () => {
     };
 
     loadDetail();
-  }, [requestIdParam, requests, navigate]);
+  }, [requestIdParam, requests, navigate, searchParams]);
 
   const handleApprove = async (requestId: number) => {
     setActionLoading(requestId);

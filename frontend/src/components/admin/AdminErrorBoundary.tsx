@@ -17,7 +17,6 @@ class AdminErrorBoundary extends React.Component<React.PropsWithChildren, AdminE
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
-    // eslint-disable-next-line no-console
     console.error('Admin UI error:', error, info);
   }
 

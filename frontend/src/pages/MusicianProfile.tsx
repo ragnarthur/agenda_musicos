@@ -346,7 +346,7 @@ const MusicianProfile: React.FC = () => {
             </div>
 
             <CompactCalendar
-              events={musicianEvents as any}
+              events={musicianEvents}
               className="shadow-md"
               isOwner={calendarIsOwner || isOwnProfile}
             />

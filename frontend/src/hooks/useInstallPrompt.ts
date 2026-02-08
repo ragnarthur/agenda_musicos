@@ -22,8 +22,24 @@ const DISMISS_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 dias
 
 export function useInstallPrompt(): InstallPromptState {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
-  const [wasDismissed, setWasDismissed] = useState(false);
+  const computeInstalled = () => {
+    return (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true
+    );
+  };
+
+  const [isInstalled, setIsInstalled] = useState(() => computeInstalled());
+  const [wasDismissed, setWasDismissed] = useState(() => {
+    const dismissedAt = localStorage.getItem(DISMISS_KEY);
+    if (!dismissedAt) return false;
+
+    const elapsed = Date.now() - parseInt(dismissedAt, 10);
+    if (elapsed < DISMISS_DURATION) return true;
+
+    localStorage.removeItem(DISMISS_KEY);
+    return false;
+  });
 
   // Detecta iOS (não suporta beforeinstallprompt)
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window);
@@ -33,33 +49,13 @@ export function useInstallPrompt(): InstallPromptState {
 
   // Verifica se já está instalado (standalone mode)
   useEffect(() => {
-    const checkInstalled = () => {
-      const isStandalone =
-        window.matchMedia('(display-mode: standalone)').matches ||
-        (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
-      setIsInstalled(isStandalone);
-    };
-
-    checkInstalled();
+    const checkInstalled = () => setIsInstalled(computeInstalled());
 
     // Escuta mudanças no display mode
     const mediaQuery = window.matchMedia('(display-mode: standalone)');
     mediaQuery.addEventListener('change', checkInstalled);
 
     return () => mediaQuery.removeEventListener('change', checkInstalled);
-  }, []);
-
-  // Verifica se foi dismissado recentemente
-  useEffect(() => {
-    const dismissedAt = localStorage.getItem(DISMISS_KEY);
-    if (dismissedAt) {
-      const elapsed = Date.now() - parseInt(dismissedAt, 10);
-      if (elapsed < DISMISS_DURATION) {
-        setWasDismissed(true);
-      } else {
-        localStorage.removeItem(DISMISS_KEY);
-      }
-    }
   }, []);
 
   // Captura o evento beforeinstallprompt

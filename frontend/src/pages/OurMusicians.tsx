@@ -1,6 +1,6 @@
 // pages/OurMusicians.tsx
 // Catálogo público global de músicos
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
@@ -54,14 +54,10 @@ export default function OurMusicians() {
   const [showFilters, setShowFilters] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
-  useEffect(() => {
-    loadMusicians();
-  }, [debouncedSearch, debouncedCity, state, debouncedInstrument, minRating]);
-
-  const loadMusicians = async () => {
+  const loadMusicians = useCallback(async () => {
     setLoading(true);
     try {
-      const params: any = {
+      const params: Record<string, string | number | undefined> = {
         search: debouncedSearch || undefined,
         city: debouncedCity || undefined,
         state: state || undefined,
@@ -76,7 +72,11 @@ export default function OurMusicians() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [debouncedSearch, debouncedCity, state, debouncedInstrument, minRating]);
+
+  useEffect(() => {
+    loadMusicians();
+  }, [loadMusicians]);
 
   const handleRequestQuote = (musicianId: number) => {
     navigate(`/musico/${musicianId}`);

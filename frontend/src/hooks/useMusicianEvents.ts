@@ -1,17 +1,12 @@
 import { useMemo } from 'react';
 import useSWR from 'swr';
 import { musicianService } from '../services/musicianService';
-import type { Event, PublicCalendarResponse } from '../types';
+import type { PublicCalendarResponse } from '../types';
+import type { CalendarEvent } from '../components/calendar';
 
 interface UseMusicianEventsParams {
   musicianId: number;
   isOwnProfile?: boolean;
-}
-
-interface CalendarEvent extends Omit<Event, 'status'> {
-  status: Event['status'] | 'available';
-  isAvailability?: boolean;
-  availabilityNotes?: string;
 }
 
 export function useMusicianEvents({
@@ -46,7 +41,7 @@ export function useMusicianEvents({
     const combined: CalendarEvent[] = [];
 
     if (events && events.length > 0) {
-      combined.push(...(events as any[]));
+      combined.push(...events);
     }
 
     if (availabilities && availabilities.length > 0) {

@@ -18,10 +18,10 @@ import { ptBR } from 'date-fns/locale';
 import CalendarDay from './CalendarDay';
 import DayEventsSheet from './DayEventsSheet';
 import { useCalendarEvents } from './useCalendarEvents';
-import type { Event } from '../../types';
+import type { CalendarEvent } from './types';
 
 interface CompactCalendarProps {
-  events: Event[];
+  events: CalendarEvent[];
   onDaySelect?: (date: string) => void;
   className?: string;
   isOwner?: boolean;

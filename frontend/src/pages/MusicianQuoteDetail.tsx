@@ -1,7 +1,7 @@
 // pages/MusicianQuoteDetail.tsx
 // Detalhes do pedido de orçamento para músico
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   ArrowLeft,
   Calendar,
@@ -34,11 +34,7 @@ export default function MusicianQuoteDetail() {
   const [proposalValue, setProposalValue] = useState('');
   const [proposalValidUntil, setProposalValidUntil] = useState('');
 
-  useEffect(() => {
-    loadQuoteAndProposals();
-  }, [id]);
-
-  const loadQuoteAndProposals = async () => {
+  const loadQuoteAndProposals = useCallback(async () => {
     if (!id) return;
     
     setLoading(true);
@@ -55,14 +51,22 @@ export default function MusicianQuoteDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    loadQuoteAndProposals();
+  }, [loadQuoteAndProposals]);
 
   const handleSendProposal = async () => {
     if (!quote || !proposalMessage.trim()) return;
 
     setSending(true);
     try {
-      const payload: any = { message: proposalMessage };
+      const payload: {
+        message: string;
+        proposed_value?: string;
+        valid_until?: string;
+      } = { message: proposalMessage };
       if (proposalValue) payload.proposed_value = proposalValue;
       if (proposalValidUntil) payload.valid_until = proposalValidUntil;
 

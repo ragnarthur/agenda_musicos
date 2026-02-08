@@ -15,14 +15,14 @@ import { AnimatePresence, motion } from 'framer-motion';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import Loading from '../components/common/Loading';
 import ContactButton from '../components/common/ContactButton';
-import { CompactCalendar } from '../components/calendar';
+import { CompactCalendar, type CalendarEvent } from '../components/calendar';
 import {
   publicMusicianService,
   quoteRequestService,
   type MusicianPublic,
   type Organization,
 } from '../services/publicApi';
-import type { Event, LeaderAvailability } from '../types';
+import type { LeaderAvailability } from '../types';
 import { useCompanyAuth } from '../contexts/CompanyAuthContext';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { showToast } from '../utils/toast';
@@ -40,7 +40,7 @@ const MusicianPublicProfile: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [city, setCity] = useState<City | null>(null);
-  const [calendarEvents, setCalendarEvents] = useState<Event[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [showContactModal, setShowContactModal] = useState(false);
   const [sendingContact, setSendingContact] = useState(false);
   const [contactForm, setContactForm] = useState({
@@ -117,7 +117,7 @@ const MusicianPublicProfile: React.FC = () => {
     const fetchCalendar = async () => {
       try {
         const data = await publicMusicianService.getPublicCalendar(musician.id);
-        const combined: Event[] = [];
+        const combined: CalendarEvent[] = [];
 
         if (data.events?.length) {
           combined.push(...data.events);
@@ -125,7 +125,7 @@ const MusicianPublicProfile: React.FC = () => {
 
         if (data.availabilities?.length) {
           data.availabilities.forEach((avail: LeaderAvailability) => {
-            combined.push({
+            const availabilityEvent: CalendarEvent = {
               id: avail.id * -1,
               title: avail.notes || 'Disponível',
               description: avail.notes,
@@ -138,7 +138,7 @@ const MusicianPublicProfile: React.FC = () => {
               start_datetime: avail.start_datetime,
               end_datetime: avail.end_datetime,
               is_solo: false,
-              status: 'available' as any,
+              status: 'available',
               status_display: 'Disponível',
               created_by: avail.leader,
               created_by_name: avail.leader_name || '',
@@ -146,7 +146,9 @@ const MusicianPublicProfile: React.FC = () => {
               created_at: avail.created_at,
               updated_at: avail.updated_at,
               isAvailability: true,
-            } as any);
+              availabilityNotes: avail.notes,
+            };
+            combined.push(availabilityEvent);
           });
         }
 
