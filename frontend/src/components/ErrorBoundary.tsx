@@ -48,7 +48,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
               Ops! Algo deu errado
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-muted mb-6">
               Desculpe, encontramos um erro inesperado. Nossa equipe foi notificada.
             </p>
             <button

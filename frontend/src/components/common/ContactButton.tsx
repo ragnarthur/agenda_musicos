@@ -49,7 +49,7 @@ const ContactButton: React.FC<ContactButtonProps> = ({
     // Se não tem nenhum contato disponível
     if (!hasWhatsApp && !hasPhone) {
       return (
-        <div className={`text-gray-400 text-sm ${className}`}>
+        <div className={`text-subtle text-sm ${className}`}>
           {musicianName} ainda não cadastrou informações de contato.
         </div>
       );

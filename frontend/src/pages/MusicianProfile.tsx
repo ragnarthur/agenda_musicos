@@ -352,7 +352,7 @@ const MusicianProfile: React.FC = () => {
             />
 
             {calendarLoading && (
-              <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
+              <p className="text-center text-sm text-muted mt-2">
                 Carregando agenda...
               </p>
             )}
@@ -414,7 +414,7 @@ const MusicianProfile: React.FC = () => {
                   ) : null}
 
                   {!musician.phone && !musician.whatsapp && !musician.instagram && (
-                    <p className="text-gray-400 dark:text-gray-500 italic text-sm">
+                    <p className="text-subtle italic text-sm">
                       {isOwnProfile
                         ? 'Adicione informações de contato no seu perfil.'
                         : 'Informações de contato não disponíveis.'}
@@ -457,7 +457,7 @@ const MusicianProfile: React.FC = () => {
                       ))}
                     </ul>
                     {musician.equipment_items.length > 3 && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      <p className="text-xs text-subtle mt-2">
                         +{musician.equipment_items.length - 3} outros
                       </p>
                     )}
@@ -499,7 +499,7 @@ const MusicianProfile: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-400 dark:text-gray-500 italic text-sm">
+                  <p className="text-subtle italic text-sm">
                     {isOwnProfile
                       ? 'Adicione seus instrumentos no perfil.'
                       : 'Nenhum instrumento informado.'}
@@ -527,7 +527,7 @@ const MusicianProfile: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-400 dark:text-gray-500 italic text-sm">
+                  <p className="text-subtle italic text-sm">
                     {isOwnProfile
                       ? 'Adicione seus gêneros musicais no perfil.'
                       : 'Nenhum gênero informado.'}
@@ -586,7 +586,7 @@ const MusicianProfile: React.FC = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-400 dark:text-gray-500 italic text-center py-8">
+                    <p className="text-subtle italic text-center py-8">
                       {isOwnProfile
                         ? 'Suas avaliações aparecerão aqui após participar de eventos.'
                         : 'Este músico ainda não recebeu avaliações.'}
@@ -637,7 +637,7 @@ const MusicianProfile: React.FC = () => {
                       )}
                     </>
                   ) : (
-                    <p className="text-gray-400 dark:text-gray-500 italic text-center py-8">
+                    <p className="text-subtle italic text-center py-8">
                       {isOwnProfile
                         ? 'Conecte-se com outros músicos da plataforma!'
                         : 'Nenhuma conexão ainda.'}

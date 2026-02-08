@@ -252,7 +252,7 @@ const Dashboard: React.FC = memo(() => {
               >
                 <Briefcase className="h-8 w-8 text-purple-600 dark:text-purple-400" />
                 <p className="text-sm font-semibold text-gray-900 dark:text-white">{agendaCount}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Eventos Agendados</p>
+                <p className="text-sm text-muted">Eventos Agendados</p>
               </Link>
             </motion.div>
 
@@ -273,7 +273,7 @@ const Dashboard: React.FC = memo(() => {
                 <p className="text-sm font-semibold text-gray-900 dark:text-white">
                   {pendingApprovalsCount}
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Solicitações Pendentes</p>
+                <p className="text-sm text-muted">Solicitações Pendentes</p>
               </Link>
             </motion.div>
 
@@ -294,7 +294,7 @@ const Dashboard: React.FC = memo(() => {
                 <p className="text-sm font-semibold text-gray-900 dark:text-white">
                   {pendingResponsesCount}
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Respostas Pendentes</p>
+                <p className="text-sm text-muted">Respostas Pendentes</p>
               </Link>
             </motion.div>
 
@@ -315,7 +315,7 @@ const Dashboard: React.FC = memo(() => {
                 <p className="text-sm font-semibold text-gray-900 dark:text-white">
                   {todayEvents.length}
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Compromissos de Hoje</p>
+                <p className="text-sm text-muted">Compromissos de Hoje</p>
               </Link>
             </motion.div>
           </div>
@@ -367,16 +367,16 @@ const Dashboard: React.FC = memo(() => {
             <div className="flex flex-col items-center justify-center py-20">
               <div className="text-center">
                 <Users className="h-12 w-12 text-gray-400" />
-                <p className="mt-4 text-gray-500 dark:text-gray-400">
+                <p className="mt-4 text-muted">
                   Você ainda não tem eventos agendados.
                 </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-muted">
                   {user?.user?.first_name || user?.user?.username || 'Músico'}! Vamos criar o
                   primeiro.
                 </p>
                 <Link
                   to="/eventos/novo"
-                  className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-primary-700 transition-transform hover:-translate-y-0.5]"
+                  className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-primary-700 transition-transform hover:-translate-y-0.5"
                 >
                   <Plus className="h-5 w-5" />
                   Criar Evento

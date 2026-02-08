@@ -815,7 +815,7 @@ const EventForm: React.FC = () => {
                                   )}
                               </p>
                               {musician.has_availability && musician.notes && (
-                                <p className="text-xs text-gray-400 mt-0.5">{musician.notes}</p>
+                                <p className="text-xs text-subtle mt-0.5">{musician.notes}</p>
                               )}
                             </div>
                           </div>

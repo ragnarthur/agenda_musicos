@@ -32,7 +32,7 @@ const CalendarDay: React.FC<CalendarDayProps> = memo(
 
     const monthClasses = isCurrentMonth
       ? 'text-gray-900 dark:text-white'
-      : 'text-gray-400 dark:text-gray-600';
+      : 'text-gray-400 dark:text-slate-500';
 
     const todayClasses =
       isToday && !isSelected ? 'ring-2 ring-primary-400 ring-inset' : '';

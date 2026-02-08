@@ -109,7 +109,7 @@ export default function MusicianMessages() {
                 </span>
               )}
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-muted mt-1">
               Solicitações de orçamento feitas por contratantes
             </p>
           </div>
@@ -162,7 +162,7 @@ export default function MusicianMessages() {
                 <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto" />
               </div>
             ) : messages.length === 0 ? (
-              <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+              <div className="p-8 text-center text-muted">
                 <Mail className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p>Nenhum pedido encontrado</p>
               </div>
@@ -200,7 +200,7 @@ export default function MusicianMessages() {
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
                           {message.event_type}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
+                        <p className="text-xs text-subtle mt-1 flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           {formatDate(message.created_at)}
                         </p>
@@ -227,7 +227,7 @@ export default function MusicianMessages() {
                         <h2 className="font-semibold text-gray-900 dark:text-white">
                           {selectedMessage.contractor_name}
                         </h2>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Contratante</p>
+                        <p className="text-sm text-subtle">Contratante</p>
                       </div>
                     </div>
                   </div>
@@ -237,7 +237,7 @@ export default function MusicianMessages() {
                   </h3>
 
                   {/* Info do Evento */}
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex flex-wrap gap-4 text-sm text-muted">
                     {selectedMessage.event_date && (
                       <span className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
@@ -294,7 +294,7 @@ export default function MusicianMessages() {
                 )}
               </div>
             ) : (
-              <div className="h-full flex items-center justify-center p-8 text-gray-500 dark:text-gray-400">
+              <div className="h-full flex items-center justify-center p-8 text-muted">
                 <div className="text-center">
                   <MessageSquare className="w-16 h-16 mx-auto mb-4 opacity-50" />
                   <p>Selecione um pedido para visualizar</p>

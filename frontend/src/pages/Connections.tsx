@@ -738,7 +738,7 @@ const Connections: React.FC = () => {
                   >
                     <p className="text-4xl mb-2">🎯</p>
                     <p className="text-sm text-gray-500 dark:text-slate-400">Nenhuma badge ainda</p>
-                    <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
+                    <p className="text-xs text-subtle mt-1">
                       Continue progredindo para conquistar!
                     </p>
                   </motion.div>
@@ -857,7 +857,7 @@ const Connections: React.FC = () => {
                             {badge.current}/{badge.required}
                           </span>
                           {badge.extra_condition && (
-                            <span className="text-xs text-gray-400 dark:text-slate-500 italic">
+                            <span className="text-xs text-subtle italic">
                               {badge.extra_condition}
                             </span>
                           )}
@@ -877,7 +877,7 @@ const Connections: React.FC = () => {
                     <p className="text-sm text-gray-500 dark:text-slate-400">
                       Todas as badges conquistadas!
                     </p>
-                    <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
+                    <p className="text-xs text-subtle mt-1">
                       Parabéns, você é incrível!
                     </p>
                   </motion.div>
