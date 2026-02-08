@@ -56,6 +56,12 @@ class TelegramWebhookView(APIView):
         # Verificar secreto do Telegram (opcional, se configurado)
         telegram_webhook_secret = getattr(settings, "TELEGRAM_WEBHOOK_SECRET", "")
 
+        # Em produção, não aceite webhook sem secret token.
+        # Isso reduz superfícies de spam e tentativas de brute force no endpoint público.
+        if not settings.DEBUG and TelegramProvider().is_configured() and not telegram_webhook_secret:
+            logger.error("TELEGRAM_WEBHOOK_SECRET ausente em produção; webhook recusado.")
+            return Response({"error": "Not configured"}, status=503)
+
         if telegram_webhook_secret:
             provided_secret = request.headers.get("X-Telegram-Bot-Api-Secret-Token", "")
             if provided_secret != telegram_webhook_secret:

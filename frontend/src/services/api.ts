@@ -20,6 +20,8 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
+    // Supports CSRF mitigation when backend falls back to cookie-based auth.
+    'X-Requested-With': 'XMLHttpRequest',
   },
 });
 
@@ -27,6 +29,9 @@ export const api = axios.create({
 export const uploadApi = axios.create({
   baseURL: API_URL,
   withCredentials: true,
+  headers: {
+    'X-Requested-With': 'XMLHttpRequest',
+  },
 });
 
 let refreshingPromise: Promise<void> | null = null;

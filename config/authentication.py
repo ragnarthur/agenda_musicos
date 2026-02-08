@@ -18,6 +18,11 @@ class CookieOrHeaderJWTAuthentication(JWTAuthentication):
             return super().authenticate(request)
 
         # 2) Senão, tenta pegar do cookie
+        # Mitigação de CSRF: só aceita cookie-auth quando a requisição vem de XHR/fetch do app.
+        # Um <form> cross-site não consegue setar esse header.
+        if request.headers.get("X-Requested-With") != "XMLHttpRequest":
+            return None
+
         raw_token = request.COOKIES.get(ACCESS_COOKIE)
         if not raw_token:
             return None

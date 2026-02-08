@@ -135,11 +135,10 @@ class CookieTokenObtainPairView(CookieTokenMixin, TokenObtainPairView):
         tokens = dict(response.data)  # << garante access/refresh
         self.set_auth_cookies(response, tokens)
 
-        # ✅ IMPORTANTE: não apaga os tokens
+        # Evita expor refresh token no body (reduz risco em caso de XSS).
         response.data = {
             "detail": "Autenticado com sucesso.",
             "access": tokens.get("access"),
-            "refresh": tokens.get("refresh"),
         }
         return response
 
@@ -186,10 +185,10 @@ class CookieTokenRefreshView(CookieTokenMixin, TokenRefreshView):
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
 
-        # ✅ devolve access/refresh também (muitos frontends esperam)
+        # Não expõe refresh token no body; ele fica apenas no cookie HttpOnly.
         payload = dict(serializer.validated_data)
         response = Response(
-            {"detail": "Tokens renovados com sucesso.", **payload},
+            {"detail": "Tokens renovados com sucesso.", "access": payload.get("access")},
             status=status.HTTP_200_OK,
         )
         self.set_auth_cookies(response, payload)
@@ -257,7 +256,6 @@ class AdminTokenObtainPairView(CookieTokenMixin, TokenObtainPairView):
         response.data = {
             "detail": "Autenticado com sucesso como administrador.",
             "access": tokens.get("access"),
-            "refresh": tokens.get("refresh"),
             "user_type": "admin",
         }
         return response
@@ -416,7 +414,6 @@ class GoogleAuthView(CookieTokenMixin, APIView):
         response_data = {
             "detail": "Autenticado com sucesso.",
             "access": tokens["access"],
-            "refresh": tokens["refresh"],
             "new_user": False,
         }
 
@@ -641,7 +638,6 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
             {
                 "detail": "Conta criada com sucesso!",
                 "access": tokens["access"],
-                "refresh": tokens["refresh"],
                 "user_type": "musician",
             },
             status=status.HTTP_201_CREATED,
@@ -709,7 +705,6 @@ class ContractorTokenObtainPairView(CookieTokenMixin, APIView):
             {
                 "detail": "Autenticado com sucesso.",
                 "access": tokens["access"],
-                "refresh": tokens["refresh"],
                 "user_type": "contractor",
                 "contractor": {
                     "id": contractor.id,
