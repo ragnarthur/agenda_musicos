@@ -9,7 +9,7 @@ const ThemeToggle: React.FC = () => {
   return (
     <motion.button
       onClick={toggleTheme}
-      className="relative w-12 h-12 rounded-full backdrop-blur-md bg-white/10 dark:bg-gray-800/30 border border-gray-200/20 dark:border-gray-700/30 flex items-center justify-center hover:scale-110 transition-all duration-300 hover:shadow-lg"
+      className="relative w-12 h-12 rounded-full backdrop-blur-md bg-slate-900/5 hover:bg-slate-900/10 dark:bg-white/10 dark:hover:bg-white/20 border border-slate-200/70 dark:border-white/10 flex items-center justify-center hover:scale-110 transition-all duration-300 hover:shadow-lg"
       whileTap={{ scale: 0.95 }}
       aria-label={`Alternar para modo ${theme === 'light' ? 'escuro' : 'claro'}`}
     >

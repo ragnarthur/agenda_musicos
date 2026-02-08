@@ -1,12 +1,12 @@
 // App.tsx
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CompanyAuthProvider, useCompanyAuth } from './contexts/CompanyAuthContext';
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext';
 import Loading from './components/common/Loading';
+import AppToaster from './components/common/AppToaster';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ADMIN_CHILD_ROUTES, ADMIN_ROUTES } from './routes/adminRoutes';
 
@@ -72,7 +72,7 @@ const BookingAudit = lazy(() => import('./pages/admin/BookingAudit'));
 
 // Componente de loading para Suspense
 const PageLoader: React.FC = () => (
-  <div className="min-h-[100svh] bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center">
+  <div className="min-h-[100svh] bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 flex items-center justify-center">
     <Loading text="Carregando..." />
   </div>
 );
@@ -510,28 +510,7 @@ function App() {
               <ErrorBoundary>
                 <AppRoutes />
               </ErrorBoundary>
-              <Toaster
-                position="top-right"
-                toastOptions={{
-                  style: {
-                    background: '#1e293b',
-                    color: '#fff',
-                  },
-                  success: {
-                    iconTheme: {
-                      primary: '#22c55e',
-                      secondary: '#f9fafb',
-                    },
-                  },
-                  error: {
-                    iconTheme: {
-                      primary: '#ef4444',
-                      secondary: '#f9fafb',
-                    },
-                    duration: 5000,
-                  },
-                }}
-              />
+              <AppToaster />
             </AdminAuthProvider>
           </CompanyAuthProvider>
         </AuthProvider>

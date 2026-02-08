@@ -29,13 +29,13 @@ const ForgotPassword: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100svh] bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center px-4 py-6">
+    <div className="min-h-[100svh] bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 flex items-center justify-center px-4 py-6">
       <div className="w-full max-w-lg">
-        <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-8">
+        <div className="bg-white/95 dark:bg-slate-900/90 rounded-2xl shadow-2xl p-5 sm:p-8 border border-slate-200/70 dark:border-white/10">
           <div className="mb-6">
             <Link
               to="/login"
-              className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+              className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 dark:text-slate-300 dark:hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" />
               Voltar ao login
@@ -47,8 +47,10 @@ const ForgotPassword: React.FC = () => {
               <Mail className="h-5 w-5 text-primary-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Recuperar senha</h1>
-              <p className="text-sm text-gray-600">Enviaremos um link para redefinir sua senha.</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Recuperar senha</h1>
+              <p className="text-sm text-gray-600 dark:text-slate-300">
+                Enviaremos um link para redefinir sua senha.
+              </p>
             </div>
           </div>
 
@@ -65,7 +67,7 @@ const ForgotPassword: React.FC = () => {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
                   Email
                 </label>
                 <input

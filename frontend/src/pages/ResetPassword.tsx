@@ -55,13 +55,13 @@ const ResetPassword: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100svh] bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center px-4 py-6">
+    <div className="min-h-[100svh] bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 flex items-center justify-center px-4 py-6">
       <div className="w-full max-w-lg">
-        <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-8">
+        <div className="bg-white/95 dark:bg-slate-900/90 rounded-2xl shadow-2xl p-5 sm:p-8 border border-slate-200/70 dark:border-white/10">
           <div className="mb-6">
             <Link
               to="/login"
-              className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+              className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 dark:text-slate-300 dark:hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" />
               Voltar ao login
@@ -73,8 +73,8 @@ const ResetPassword: React.FC = () => {
               <Lock className="h-5 w-5 text-primary-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Definir nova senha</h1>
-              <p className="text-sm text-gray-600">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Definir nova senha</h1>
+              <p className="text-sm text-gray-600 dark:text-slate-300">
                 Escolha uma senha segura para acessar sua conta.
               </p>
             </div>
@@ -93,7 +93,7 @@ const ResetPassword: React.FC = () => {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
                   Nova senha
                 </label>
                 <div className="relative">
@@ -109,7 +109,7 @@ const ResetPassword: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(prev => !prev)}
-                    className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+                    className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-white"
                     aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                   >
                     {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
@@ -120,7 +120,7 @@ const ResetPassword: React.FC = () => {
               <div>
                 <label
                   htmlFor="confirmPassword"
-                  className="block text-sm font-medium text-gray-700 mb-2"
+                  className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2"
                 >
                   Confirmar senha
                 </label>
@@ -137,7 +137,7 @@ const ResetPassword: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowConfirm(prev => !prev)}
-                    className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+                    className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-white"
                     aria-label={showConfirm ? 'Ocultar senha' : 'Mostrar senha'}
                   >
                     {showConfirm ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}

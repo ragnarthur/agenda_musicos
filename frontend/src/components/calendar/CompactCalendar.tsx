@@ -158,7 +158,7 @@ const CompactCalendar: React.FC<CompactCalendarProps> = memo(
           {WEEKDAY_LABELS.map((day, index) => (
             <div
               key={index}
-              className="text-center text-xs font-medium text-gray-500 dark:text-gray-400 py-1"
+              className="text-center text-xs font-medium text-gray-600 dark:text-gray-400 py-1"
             >
               {day}
             </div>
@@ -194,19 +194,19 @@ const CompactCalendar: React.FC<CompactCalendarProps> = memo(
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded bg-purple-100 dark:bg-purple-300/25 border border-purple-300 dark:border-purple-300/50" />
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-gray-600 dark:text-gray-400">
                 Concluído
               </span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded bg-emerald-100 dark:bg-emerald-300/25 border border-emerald-300 dark:border-emerald-300/50" />
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-gray-600 dark:text-gray-400">
                 Confirmado
               </span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded bg-blue-100 dark:bg-sky-300/25 border border-blue-300 dark:border-sky-300/50" />
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-gray-600 dark:text-gray-400">
                 Disponível
               </span>
             </div>

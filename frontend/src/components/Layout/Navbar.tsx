@@ -22,11 +22,13 @@ import OwlMascot from '../ui/OwlMascot';
 import ThemeToggle from './ThemeToggle';
 import CityBadge from '../CityBadge';
 import { ADMIN_ROUTES } from '../../routes/adminRoutes';
+import { useTheme } from '../../contexts/useTheme';
 
 const Navbar: React.FC = memo(() => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { theme } = useTheme();
   const [openDesktopMore, setOpenDesktopMore] = useState(false);
   const [openMore, setOpenMore] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -66,8 +68,12 @@ const Navbar: React.FC = memo(() => {
   }, [openDesktopMore]);
 
   useEffect(() => {
-    setOpenDesktopMore(false);
-    setOpenMore(false);
+    // Avoid synchronous setState in effect body (lint rule), and close menus after route change.
+    const rafId = window.requestAnimationFrame(() => {
+      setOpenDesktopMore(false);
+      setOpenMore(false);
+    });
+    return () => window.cancelAnimationFrame(rafId);
   }, [location.pathname]);
 
   // Auto-hide navbar on scroll (mobile only)
@@ -126,7 +132,11 @@ const Navbar: React.FC = memo(() => {
   }, []);
 
   return (
-    <nav className={`pt-safe-only bg-gradient-to-r from-slate-950/90 via-slate-900/85 to-slate-950/90 backdrop-blur-xl shadow-lg shadow-black/30 sticky top-0 z-50 border-b border-white/10 overflow-visible transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'} md:translate-y-0`}>
+    <nav
+      className={`pt-safe-only sticky top-0 z-50 overflow-visible transition-transform duration-300 backdrop-blur-xl border-b shadow-lg ${
+        isVisible ? 'translate-y-0' : '-translate-y-full'
+      } md:translate-y-0 bg-gradient-to-r from-white/80 via-white/70 to-white/80 border-slate-200/70 shadow-slate-200/60 dark:from-slate-950/90 dark:via-slate-900/85 dark:to-slate-950/90 dark:border-white/10 dark:shadow-black/30`}
+    >
       <div className="container mx-auto px-3 sm:px-4">
         <div className="flex flex-wrap md:flex-nowrap items-center justify-between min-h-[64px] py-2 gap-x-3 gap-y-2">
           {/* Logo e Nome */}
@@ -140,11 +150,13 @@ const Navbar: React.FC = memo(() => {
             <div className="flex flex-col leading-tight">
               <div className="flex items-center gap-2">
                 <span className="text-lg sm:text-xl font-bold logo-animated">GigFlow</span>
-                <span className="text-xs px-2 py-0.5 bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-500/10 text-amber-100/80 rounded-full border border-amber-400/20 font-light italic tracking-wider">
+                <span className="text-xs px-2 py-0.5 bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-500/10 text-amber-700 rounded-full border border-amber-500/25 font-light italic tracking-wider dark:text-amber-100/80 dark:border-amber-400/20">
                   Beta
                 </span>
               </div>
-              <span className="text-xs text-slate-300 hidden sm:block">Agenda para músicos</span>
+              <span className="text-xs text-slate-600 hidden sm:block dark:text-slate-300">
+                Agenda para músicos
+              </span>
             </div>
           </Link>
 
@@ -172,7 +184,7 @@ const Navbar: React.FC = memo(() => {
               <button
                 type="button"
                 onClick={() => setOpenDesktopMore(prev => !prev)}
-                className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-slate-200 hover:text-white hover:bg-white/10 transition-colors border border-white/5"
+                className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-slate-700 hover:text-slate-900 hover:bg-slate-900/5 transition-colors border border-slate-200/70 dark:text-slate-200 dark:hover:text-white dark:hover:bg-white/10 dark:border-white/5"
                 aria-expanded={openDesktopMore}
                 aria-haspopup="true"
               >
@@ -180,12 +192,14 @@ const Navbar: React.FC = memo(() => {
                 <span>Mais</span>
               </button>
               {openDesktopMore && (
-                <div className="absolute right-0 mt-2 w-60 rounded-xl bg-slate-950/95 border border-white/10 shadow-2xl shadow-black/40 p-2 z-[70]">
+                <div className="absolute right-0 mt-2 w-60 rounded-xl bg-white/90 border border-slate-200/70 shadow-2xl shadow-slate-300/60 p-2 z-[70] dark:bg-slate-950/95 dark:border-white/10 dark:shadow-black/40">
                   <RouterNavLink
                     to="/configuracoes/notificacoes"
                     className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                        isActive ? 'bg-white/10 text-white' : 'text-slate-200 hover:bg-white/5'
+                        isActive
+                          ? 'bg-slate-900/5 text-slate-900 dark:bg-white/10 dark:text-white'
+                          : 'text-slate-700 hover:bg-slate-900/5 dark:text-slate-200 dark:hover:bg-white/5'
                       }`
                     }
                   >
@@ -197,8 +211,8 @@ const Navbar: React.FC = memo(() => {
                     className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                         isActive
-                          ? 'bg-amber-500/10 text-amber-100'
-                          : 'text-slate-200 hover:bg-white/5'
+                          ? 'bg-amber-500/10 text-amber-900 dark:text-amber-100'
+                          : 'text-slate-700 hover:bg-slate-900/5 dark:text-slate-200 dark:hover:bg-white/5'
                       }`
                     }
                   >
@@ -217,8 +231,8 @@ const Navbar: React.FC = memo(() => {
                     className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                         isActive
-                          ? 'bg-emerald-500/10 text-emerald-100'
-                          : 'text-slate-200 hover:bg-white/5'
+                          ? 'bg-emerald-500/10 text-emerald-900 dark:text-emerald-100'
+                          : 'text-slate-700 hover:bg-slate-900/5 dark:text-slate-200 dark:hover:bg-white/5'
                       }`
                     }
                   >
@@ -231,8 +245,8 @@ const Navbar: React.FC = memo(() => {
                       className={({ isActive }) =>
                         `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                           isActive
-                            ? 'bg-blue-500/10 text-blue-100'
-                            : 'text-slate-200 hover:bg-white/5'
+                            ? 'bg-blue-500/10 text-blue-900 dark:text-blue-100'
+                            : 'text-slate-700 hover:bg-slate-900/5 dark:text-slate-200 dark:hover:bg-white/5'
                         }`
                       }
                     >
@@ -257,7 +271,7 @@ const Navbar: React.FC = memo(() => {
               <button
                 type="button"
                 onClick={() => setOpenDesktopMore(prev => !prev)}
-                className="inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm text-slate-200 hover:text-white hover:bg-white/10 transition-colors border border-white/5"
+                className="inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm text-slate-700 hover:text-slate-900 hover:bg-slate-900/5 transition-colors border border-slate-200/70 dark:text-slate-200 dark:hover:text-white dark:hover:bg-white/10 dark:border-white/5"
                 aria-expanded={openDesktopMore}
                 aria-haspopup="true"
                 title="Mais"
@@ -266,12 +280,14 @@ const Navbar: React.FC = memo(() => {
                 <span className="hidden lg:inline">Mais</span>
               </button>
               {openDesktopMore && (
-                <div className="absolute right-0 mt-2 w-60 rounded-xl bg-slate-950/95 border border-white/10 shadow-2xl shadow-black/40 p-2 z-[70]">
+                <div className="absolute right-0 mt-2 w-60 rounded-xl bg-white/90 border border-slate-200/70 shadow-2xl shadow-slate-300/60 p-2 z-[70] dark:bg-slate-950/95 dark:border-white/10 dark:shadow-black/40">
                   <RouterNavLink
                     to="/conexoes"
                     className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                        isActive ? 'bg-white/10 text-white' : 'text-slate-200 hover:bg-white/5'
+                        isActive
+                          ? 'bg-slate-900/5 text-slate-900 dark:bg-white/10 dark:text-white'
+                          : 'text-slate-700 hover:bg-slate-900/5 dark:text-slate-200 dark:hover:bg-white/5'
                       }`
                     }
                   >
@@ -282,7 +298,9 @@ const Navbar: React.FC = memo(() => {
                     to="/disponibilidades"
                     className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                        isActive ? 'bg-white/10 text-white' : 'text-slate-200 hover:bg-white/5'
+                        isActive
+                          ? 'bg-slate-900/5 text-slate-900 dark:bg-white/10 dark:text-white'
+                          : 'text-slate-700 hover:bg-slate-900/5 dark:text-slate-200 dark:hover:bg-white/5'
                       }`
                     }
                   >
@@ -293,7 +311,9 @@ const Navbar: React.FC = memo(() => {
                     to="/configuracoes/notificacoes"
                     className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                        isActive ? 'bg-white/10 text-white' : 'text-slate-200 hover:bg-white/5'
+                        isActive
+                          ? 'bg-slate-900/5 text-slate-900 dark:bg-white/10 dark:text-white'
+                          : 'text-slate-700 hover:bg-slate-900/5 dark:text-slate-200 dark:hover:bg-white/5'
                       }`
                     }
                   >
@@ -305,8 +325,8 @@ const Navbar: React.FC = memo(() => {
                     className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                         isActive
-                          ? 'bg-amber-500/10 text-amber-100'
-                          : 'text-slate-200 hover:bg-white/5'
+                          ? 'bg-amber-500/10 text-amber-900 dark:text-amber-100'
+                          : 'text-slate-700 hover:bg-slate-900/5 dark:text-slate-200 dark:hover:bg-white/5'
                       }`
                     }
                   >
@@ -325,8 +345,8 @@ const Navbar: React.FC = memo(() => {
                     className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                         isActive
-                          ? 'bg-emerald-500/10 text-emerald-100'
-                          : 'text-slate-200 hover:bg-white/5'
+                          ? 'bg-emerald-500/10 text-emerald-900 dark:text-emerald-100'
+                          : 'text-slate-700 hover:bg-slate-900/5 dark:text-slate-200 dark:hover:bg-white/5'
                       }`
                     }
                   >
@@ -339,8 +359,8 @@ const Navbar: React.FC = memo(() => {
                       className={({ isActive }) =>
                         `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                           isActive
-                            ? 'bg-blue-500/10 text-blue-100'
-                            : 'text-slate-200 hover:bg-white/5'
+                            ? 'bg-blue-500/10 text-blue-900 dark:text-blue-100'
+                            : 'text-slate-700 hover:bg-slate-900/5 dark:text-slate-200 dark:hover:bg-white/5'
                         }`
                       }
                     >
@@ -357,7 +377,7 @@ const Navbar: React.FC = memo(() => {
           <div className="flex items-center space-x-3 min-w-fit md:min-w-0 flex-shrink-0">
             <div className="hidden md:block text-right min-w-0 flex-1 max-w-[120px] lg:max-w-[140px]">
               <p
-                className="text-sm font-medium text-slate-100 leading-snug truncate"
+                className="text-sm font-medium text-slate-900 leading-snug truncate dark:text-slate-100"
                 title={user?.full_name}
               >
                 {user?.full_name}
@@ -366,14 +386,14 @@ const Navbar: React.FC = memo(() => {
 
             <div className="flex items-center gap-2">
               <div className="hidden md:block min-w-0 max-w-[180px] lg:max-w-[220px] mr-4">
-                <CityBadge className="w-full" />
+                <CityBadge className="w-full" variant={theme === 'dark' ? 'dark' : 'light'} />
               </div>
               <div className="hidden md:block">
                 <ThemeToggle />
               </div>
               <button
                 onClick={handleLogout}
-                className="hidden md:flex items-center space-x-1 text-slate-100 hover:text-red-400 transition-colors"
+                className="hidden md:flex items-center space-x-1 text-slate-700 hover:text-red-600 transition-colors dark:text-slate-100 dark:hover:text-red-400"
                 title="Sair"
               >
                 <LogOut className="h-5 w-5" />
@@ -384,11 +404,11 @@ const Navbar: React.FC = memo(() => {
 
         {/* Navbar Mobile */}
         <div className="md:hidden flex items-center justify-between py-2">
-          <CityBadge />
+          <CityBadge variant={theme === 'dark' ? 'dark' : 'light'} />
           <div className="flex items-center gap-1">
             <Link
               to="/configuracoes/notificacoes"
-              className="relative p-2 text-slate-200 hover:text-white transition-colors"
+              className="relative p-2 text-slate-600 hover:text-slate-900 transition-colors dark:text-slate-200 dark:hover:text-white"
             >
               <Bell className="h-5 w-5" />
               {pendingMyResponse > 0 && (
@@ -400,7 +420,7 @@ const Navbar: React.FC = memo(() => {
             <ThemeToggle />
             <button
               onClick={() => setOpenMore(prev => !prev)}
-              className="p-2 text-slate-200 hover:text-white transition-colors"
+              className="p-2 text-slate-600 hover:text-slate-900 transition-colors dark:text-slate-200 dark:hover:text-white"
               aria-expanded={openMore}
             >
               {openMore ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -410,11 +430,11 @@ const Navbar: React.FC = memo(() => {
 
         {/* Menu Mobile "Mais" */}
         {openMore && (
-          <div className="md:hidden absolute left-0 right-0 top-full bg-slate-950/95 border-t border-white/10 shadow-2xl p-3 space-y-1 z-50">
+          <div className="md:hidden absolute left-0 right-0 top-full bg-white/90 border-t border-slate-200/70 shadow-2xl shadow-slate-300/60 p-3 space-y-1 z-50 dark:bg-slate-950/95 dark:border-white/10 dark:shadow-black/40">
             <Link
               to="/marketplace"
               onClick={() => setOpenMore(false)}
-              className="flex items-center gap-3 px-3 py-2.5 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
+              className="flex items-center gap-3 px-3 py-2.5 text-slate-700 hover:bg-slate-900/5 rounded-lg transition-colors dark:text-slate-200 dark:hover:bg-white/5"
             >
               <Megaphone className="h-5 w-5" />
               <span className="text-sm">Vagas</span>
@@ -422,15 +442,15 @@ const Navbar: React.FC = memo(() => {
             <Link
               to="/configuracoes/financeiro"
               onClick={() => setOpenMore(false)}
-              className="flex items-center gap-3 px-3 py-2.5 text-slate-200 hover:bg-white/5 rounded-lg transition-colors"
+              className="flex items-center gap-3 px-3 py-2.5 text-slate-700 hover:bg-slate-900/5 rounded-lg transition-colors dark:text-slate-200 dark:hover:bg-white/5"
             >
               <UserCog className="h-5 w-5" />
               <span className="text-sm">Editar Perfil</span>
             </Link>
-            <div className="border-t border-white/10 pt-2 mt-2">
+            <div className="border-t border-slate-200/70 pt-2 mt-2 dark:border-white/10">
               <button
                 onClick={() => { setOpenMore(false); handleLogout(); }}
-                className="flex items-center gap-3 w-full px-3 py-2.5 text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                className="flex items-center gap-3 w-full px-3 py-2.5 text-red-600 hover:bg-red-500/10 rounded-lg transition-colors dark:text-red-300"
               >
                 <LogOut className="h-5 w-5" />
                 <span className="text-sm">Sair</span>
@@ -454,14 +474,16 @@ const AppNavLink: React.FC<{
   <RouterNavLink
     to={to}
     className={({ isActive }) => {
-      const hoverTone = accent ? 'hover:bg-amber-500/10' : 'hover:bg-white/10';
+      const hoverTone = accent ? 'hover:bg-amber-500/10' : 'hover:bg-slate-900/5 dark:hover:bg-white/10';
       const activeTone = isActive
         ? accent
-          ? 'bg-amber-500/10 text-amber-100'
-          : 'bg-white/10 text-white'
+          ? 'bg-amber-500/10 text-amber-900 dark:text-amber-100'
+          : 'bg-slate-900/5 text-slate-900 dark:bg-white/10 dark:text-white'
         : '';
       return `group flex items-center space-x-1 transition-all relative rounded-full px-2 py-1 ${hoverTone} ${activeTone} hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
-        accent ? 'text-amber-200 hover:text-amber-100' : 'text-slate-100 hover:text-white'
+        accent
+          ? 'text-amber-700 hover:text-amber-900 dark:text-amber-200 dark:hover:text-amber-100'
+          : 'text-slate-700 hover:text-slate-900 dark:text-slate-100 dark:hover:text-white'
       } after:absolute after:left-0 after:-bottom-0.5 after:h-0.5 after:w-full after:rounded-full after:bg-gradient-to-r after:from-primary-400 after:via-indigo-300 after:to-emerald-300 after:transition-transform after:duration-300 after:origin-left after:scale-x-0 group-hover:after:scale-x-100 group-focus-visible:after:scale-x-100 ${isActive ? 'after:scale-x-100' : ''}`;
     }}
   >
@@ -486,14 +508,16 @@ const AppNavLinkCompact: React.FC<{
   <RouterNavLink
     to={to}
     className={({ isActive }) => {
-      const hoverTone = accent ? 'hover:bg-amber-500/10' : 'hover:bg-white/10';
+      const hoverTone = accent ? 'hover:bg-amber-500/10' : 'hover:bg-slate-900/5 dark:hover:bg-white/10';
       const activeTone = isActive
         ? accent
-          ? 'bg-amber-500/10 text-amber-100'
-          : 'bg-white/10 text-white'
+          ? 'bg-amber-500/10 text-amber-900 dark:text-amber-100'
+          : 'bg-slate-900/5 text-slate-900 dark:bg-white/10 dark:text-white'
         : '';
       return `group relative inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm transition-all ${hoverTone} ${activeTone} hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
-        accent ? 'text-amber-200 hover:text-amber-100' : 'text-slate-100 hover:text-white'
+        accent
+          ? 'text-amber-700 hover:text-amber-900 dark:text-amber-200 dark:hover:text-amber-100'
+          : 'text-slate-700 hover:text-slate-900 dark:text-slate-100 dark:hover:text-white'
       }`;
     }}
   >

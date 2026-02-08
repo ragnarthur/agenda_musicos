@@ -43,7 +43,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, [location.pathname, location.search]);
 
   return (
-    <div className="relative min-h-[100svh] bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
+    <div className="relative min-h-[100svh] bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
       {/* Banners globais */}
       <OfflineBanner />
       <InstallBanner />
@@ -61,9 +61,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {children}
         </main>
 
-        <footer className="hidden md:block border-t border-white/10 bg-white/5 px-4 py-6 text-center text-sm font-semibold text-slate-200 backdrop-blur">
-          <p className="text-xs sm:text-sm text-slate-200">
-            <span className="mr-1 text-base text-primary-700">®</span>
+        <footer className="hidden md:block border-t border-slate-200/70 bg-white/70 px-4 py-6 text-center text-sm font-semibold text-slate-600 backdrop-blur dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-200">
+            <span className="mr-1 text-base text-primary-600 dark:text-primary-400">®</span>
             DXM Tech. Todos os direitos reservados.
           </p>
         </footer>

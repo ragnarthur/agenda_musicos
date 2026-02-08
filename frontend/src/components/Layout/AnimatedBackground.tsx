@@ -70,13 +70,7 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = memo(
             )
           ) : (
             // Tiny/low-power: fundo estático simples para evitar filtros pesados (especialmente no iPhone SE)
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  'linear-gradient(180deg, #0a0e27 0%, #0f1629 40%, #121a2e 70%, #151d32 100%)',
-              }}
-            />
+            <div className="absolute inset-0 mesh-gradient-fallback" />
           ))}
         {!enableBlueWaves && <div className="fabric-static" aria-hidden="true" />}
         {enableEffects && enableParticles && <DustParticles3D />}

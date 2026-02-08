@@ -17,7 +17,7 @@ const Loading: React.FC<LoadingProps> = memo(({ size = 'md', text }) => {
   return (
     <div className="flex flex-col items-center justify-center p-8">
       <Loader2 className={`${sizeClasses[size]} animate-spin text-primary-600`} />
-      {text && <p className="mt-2 text-sm text-slate-200">{text}</p>}
+      {text && <p className="mt-2 text-sm text-slate-600 dark:text-slate-200">{text}</p>}
     </div>
   );
 });

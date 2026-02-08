@@ -474,10 +474,24 @@
   .mesh-gradient-base {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, #0a0e27 0%, #0f1629 40%, #121a2e 70%, #151d32 100%);
+    /* Light theme default: high-contrast, soft, readable background */
+    background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 38%, #ecfeff 70%, #f1f5f9 100%);
     /* GPU acceleration */
     transform: translate3d(0, 0, 0);
     backface-visibility: hidden;
+  }
+
+  .dark .mesh-gradient-base {
+    background: linear-gradient(180deg, #0a0e27 0%, #0f1629 40%, #121a2e 70%, #151d32 100%);
+  }
+
+  /* Static fallback used when animations are disabled (low-power / tiny screens) */
+  .mesh-gradient-fallback {
+    background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 38%, #ecfeff 70%, #f1f5f9 100%);
+  }
+
+  .dark .mesh-gradient-fallback {
+    background: linear-gradient(180deg, #0a0e27 0%, #0f1629 40%, #121a2e 70%, #151d32 100%);
   }
 
   .mesh-blur-filter {
@@ -491,12 +505,18 @@
     position: absolute;
     border-radius: 50%;
     filter: blur(60px);
-    opacity: 0.85;
-    mix-blend-mode: screen;
+    /* Light theme: keep it subtle so content remains readable */
+    opacity: 0.28;
+    mix-blend-mode: multiply;
     will-change: transform;
     /* GPU acceleration */
     transform: translate3d(0, 0, 0);
     backface-visibility: hidden;
+  }
+
+  .dark .mesh-blob {
+    opacity: 0.85;
+    mix-blend-mode: screen;
   }
 
   /* Blob 1: Azul profundo - canto superior esquerdo */
@@ -505,8 +525,17 @@
     height: 50%;
     top: -10%;
     left: -8%;
-    background: radial-gradient(circle at center, #2a4f7a 0%, #1e3a5f 40%, transparent 70%);
+    background: radial-gradient(
+      circle at center,
+      rgba(59, 130, 246, 0.35) 0%,
+      rgba(37, 99, 235, 0.18) 45%,
+      transparent 72%
+    );
     animation: meshBlob1 28s ease-in-out infinite;
+  }
+
+  .dark .mesh-blob-1 {
+    background: radial-gradient(circle at center, #2a4f7a 0%, #1e3a5f 40%, transparent 70%);
   }
 
   /* Blob 2: Roxo escuro - canto superior direito */
@@ -515,8 +544,17 @@
     height: 45%;
     top: -5%;
     right: -10%;
-    background: radial-gradient(circle at center, #3d2a5e 0%, #2d1b4e 40%, transparent 70%);
+    background: radial-gradient(
+      circle at center,
+      rgba(168, 85, 247, 0.28) 0%,
+      rgba(126, 34, 206, 0.16) 45%,
+      transparent 72%
+    );
     animation: meshBlob2 32s ease-in-out infinite;
+  }
+
+  .dark .mesh-blob-2 {
+    background: radial-gradient(circle at center, #3d2a5e 0%, #2d1b4e 40%, transparent 70%);
   }
 
   /* Blob 3: Azul índigo - centro */
@@ -525,8 +563,17 @@
     height: 55%;
     top: 35%;
     left: 25%;
-    background: radial-gradient(circle at center, #2a4a7d 0%, #1a365d 40%, transparent 70%);
+    background: radial-gradient(
+      circle at center,
+      rgba(99, 102, 241, 0.24) 0%,
+      rgba(79, 70, 229, 0.14) 45%,
+      transparent 72%
+    );
     animation: meshBlob3 25s ease-in-out infinite;
+  }
+
+  .dark .mesh-blob-3 {
+    background: radial-gradient(circle at center, #2a4a7d 0%, #1a365d 40%, transparent 70%);
   }
 
   /* Blob 4: Violeta - canto inferior direito */
@@ -535,8 +582,17 @@
     height: 42%;
     bottom: -8%;
     right: -5%;
-    background: radial-gradient(circle at center, #4a2d6e 0%, #3b1d5e 40%, transparent 70%);
+    background: radial-gradient(
+      circle at center,
+      rgba(236, 72, 153, 0.18) 0%,
+      rgba(219, 39, 119, 0.12) 45%,
+      transparent 70%
+    );
     animation: meshBlob4 30s ease-in-out infinite;
+  }
+
+  .dark .mesh-blob-4 {
+    background: radial-gradient(circle at center, #4a2d6e 0%, #3b1d5e 40%, transparent 70%);
   }
 
   /* Blob 5: Azul marinho - canto inferior esquerdo */
@@ -545,8 +601,17 @@
     height: 48%;
     bottom: -12%;
     left: -8%;
-    background: radial-gradient(circle at center, #1a3654 0%, #0f2744 40%, transparent 70%);
+    background: radial-gradient(
+      circle at center,
+      rgba(16, 185, 129, 0.18) 0%,
+      rgba(5, 150, 105, 0.12) 45%,
+      transparent 70%
+    );
     animation: meshBlob5 35s ease-in-out infinite;
+  }
+
+  .dark .mesh-blob-5 {
+    background: radial-gradient(circle at center, #1a3654 0%, #0f2744 40%, transparent 70%);
   }
 
   /* Static version for mobile (no animation) */
@@ -650,6 +715,11 @@
     .mesh-blob {
       filter: blur(30px);
       mix-blend-mode: normal;
+      opacity: 0.22;
+    }
+
+    .dark .mesh-blob {
+      mix-blend-mode: normal;
       opacity: 0.5;
     }
   }
@@ -684,10 +754,16 @@
     inset: -10%;
     width: 120%;
     height: 120%;
+    opacity: 0.75;
+    background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 48%, #f1f5f9 100%);
+    filter: saturate(110%) contrast(1.02) brightness(1);
+    z-index: 1;
+  }
+
+  .dark .fabric-static {
     opacity: 0.7;
     background: linear-gradient(135deg, #0b1220 0%, #0f1b2d 45%, #111827 100%);
     filter: saturate(120%) contrast(1.1) brightness(1.05);
-    z-index: 1;
   }
 
   .dust-layer {
