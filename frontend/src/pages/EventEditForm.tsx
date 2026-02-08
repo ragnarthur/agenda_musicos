@@ -109,7 +109,8 @@ const EventEditForm: React.FC = () => {
         let hasNext = true;
         while (hasNext && !cancelled) {
           const pageData = await musicianService.getAllPaginated({ page, page_size: 50 });
-          aggregated.push(...pageData.results);
+          const results = Array.isArray(pageData?.results) ? pageData.results : [];
+          aggregated.push(...results);
           hasNext = Boolean(pageData?.next);
           page += 1;
         }
