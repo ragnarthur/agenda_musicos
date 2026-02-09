@@ -1,4 +1,4 @@
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import {
   ArrowLeft,
@@ -84,7 +84,6 @@ const formatCurrency = (value: string | null) => {
 
 export default function ContractorQuoteDetail() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
 
   const [quote, setQuote] = useState<QuoteRequest | null>(null);

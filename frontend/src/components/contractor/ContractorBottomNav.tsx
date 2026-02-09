@@ -39,13 +39,14 @@ const ContractorBottomNav: React.FC = () => {
       <div className="flex items-center justify-around px-2 py-2">
         {contractorNavItems.map((item) => {
           const Icon = item.icon;
+          const isAction = 'isAction' in item && item.isAction;
           const isActive =
             item.path === '/contratante/dashboard'
               ? location.pathname === '/contratante/dashboard'
               : location.pathname === item.path ||
                 location.pathname.startsWith(`${item.path}/`);
 
-          if (item.isAction) {
+          if (isAction) {
             return (
               <NavLink
                 key={item.path}
