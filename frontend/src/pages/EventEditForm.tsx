@@ -6,12 +6,14 @@ import { Calendar, MapPin, Clock, Phone, FileText, Save, X, Coins, Info, Users, 
 import { parseISO, isBefore, isValid } from 'date-fns';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
+import { TimePickerBottomSheet } from '../components/time-picker';
 import { eventService } from '../services/eventService';
 import { musicianService } from '../services/api';
 import type { EventCreate, AvailableMusician, Musician } from '../types';
 import { logError } from '../utils/logger';
 import { sanitizeOptionalText, sanitizeText } from '../utils/sanitize';
 import { getErrorMessage } from '../utils/toast';
+import { getTimeProps } from '../utils/mobileInputs';
 import InstrumentIcon from '../components/common/InstrumentIcon';
 import { INSTRUMENT_LABELS as BASE_INSTRUMENT_LABELS, normalizeInstrumentKey, maskCurrencyInput, unmaskCurrency } from '../utils/formatting';
 
@@ -41,6 +43,7 @@ const EventEditForm: React.FC = () => {
   const [loadingMusicians, setLoadingMusicians] = useState(false);
   const [instrumentFilter, setInstrumentFilter] = useState<string>('all');
   const [instrumentQuery, setInstrumentQuery] = useState<string>('');
+  const [showTimePicker, setShowTimePicker] = useState<'start' | 'end' | null>(null);
 
   const [formData, setFormData] = useState<EventCreate>({
     title: '',
@@ -203,6 +206,19 @@ const EventEditForm: React.FC = () => {
     const unmasked = unmaskCurrency(raw);
     const num = Number.parseFloat(unmasked);
     return Number.isFinite(num) ? Number(num.toFixed(2)) : null;
+  };
+
+  const handleTimePickerConfirm = (value: string) => {
+    if (showTimePicker === 'start') {
+      setFormData(prev => ({ ...prev, start_time: value }));
+    } else if (showTimePicker === 'end') {
+      setFormData(prev => ({ ...prev, end_time: value }));
+    }
+    setShowTimePicker(null);
+  };
+
+  const handleTimePickerClose = () => {
+    setShowTimePicker(null);
   };
 
   const inviteCandidates = useMemo(() => {
@@ -494,15 +510,18 @@ const EventEditForm: React.FC = () => {
               </label>
               <div className="relative">
                 <Clock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <input
-                  id="start_time"
-                  name="start_time"
-                  type="time"
-                  value={formData.start_time}
-                  onChange={handleChange}
-                  className="input-field pl-10"
-                  required
-                />
+                <div onClick={() => setShowTimePicker('start')}>
+                  <input
+                    id="start_time"
+                    name="start_time"
+                    type="time"
+                    value={formData.start_time}
+                    onChange={handleChange}
+                    className="input-field pl-10 cursor-pointer"
+                    required
+                    {...getTimeProps()}
+                  />
+                </div>
               </div>
             </div>
 
@@ -512,15 +531,18 @@ const EventEditForm: React.FC = () => {
               </label>
               <div className="relative">
                 <Clock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <input
-                  id="end_time"
-                  name="end_time"
-                  type="time"
-                  value={formData.end_time}
-                  onChange={handleChange}
-                  className="input-field pl-10"
-                  required
-                />
+                <div onClick={() => setShowTimePicker('end')}>
+                  <input
+                    id="end_time"
+                    name="end_time"
+                    type="time"
+                    value={formData.end_time}
+                    onChange={handleChange}
+                    className="input-field pl-10 cursor-pointer"
+                    required
+                    {...getTimeProps()}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -789,6 +811,24 @@ const EventEditForm: React.FC = () => {
           <p className="text-sm text-gray-500 text-center">* Campos obrigatórios</p>
         </form>
       </div>
+
+      <TimePickerBottomSheet
+        isOpen={showTimePicker === 'start'}
+        value={formData.start_time || '--:--'}
+        onChange={handleTimePickerConfirm}
+        onClose={handleTimePickerClose}
+        showDurationPresets={false}
+        enableQuickSelect={true}
+      />
+
+      <TimePickerBottomSheet
+        isOpen={showTimePicker === 'end'}
+        value={formData.end_time || '--:--'}
+        onChange={handleTimePickerConfirm}
+        onClose={handleTimePickerClose}
+        showDurationPresets={false}
+        enableQuickSelect={true}
+      />
     </Layout>
   );
 };
