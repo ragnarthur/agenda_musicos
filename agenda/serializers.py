@@ -1844,7 +1844,6 @@ class MusicianPublicSerializer(serializers.ModelSerializer):
             "bio",
             "city",
             "state",
-            "instagram",
             "avatar_url",
             "cover_image_url",
             "average_rating",

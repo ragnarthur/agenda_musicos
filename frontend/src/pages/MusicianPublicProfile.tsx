@@ -5,7 +5,6 @@ import {
   Star,
   MapPin,
   Music,
-  Instagram,
   Building2,
   UserPlus,
   X,
@@ -28,6 +27,8 @@ import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { showToast } from '../utils/toast';
 import { formatInstrumentLabel } from '../utils/formatting';
 import { getCityDisplayName, getActiveCities, type City } from '../config/cities';
+import { usePageMeta } from '../hooks/usePageMeta';
+import { trackEvent } from '../utils/analytics';
 
 const MusicianPublicProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -51,6 +52,16 @@ const MusicianPublicProfile: React.FC = () => {
     location_state: '',
     venue_name: '',
     duration_hours: '',
+  });
+
+  usePageMeta({
+    title: musician
+      ? `${musician.full_name} - Músico em ${musician.city || ''} | GigFlow`
+      : 'Perfil do Músico | GigFlow',
+    description: musician
+      ? `${musician.full_name}, músico profissional${musician.city ? ` em ${musician.city}` : ''}. ${musician.bio?.slice(0, 120) || 'Veja perfil, avaliações e solicite orçamento.'}`
+      : 'Veja o perfil do músico profissional no GigFlow.',
+    image: musician?.avatar_url || undefined,
   });
 
   useBodyScrollLock(showContactModal);
@@ -89,6 +100,7 @@ const MusicianPublicProfile: React.FC = () => {
       try {
         const musicianData = await publicMusicianService.getPublicProfile(Number(id));
         setMusician(musicianData);
+        trackEvent('musician_profile_view', { musicianId: Number(id), musicianName: musicianData.full_name });
 
         // Fetch sponsors for the city context
         if (city) {
@@ -271,8 +283,31 @@ const MusicianPublicProfile: React.FC = () => {
     );
   }
 
+  const jsonLd = musician ? {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: musician.full_name,
+    jobTitle: 'Músico',
+    ...(musician.city && musician.state ? {
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: musician.city,
+        addressRegion: musician.state,
+        addressCountry: 'BR',
+      },
+    } : {}),
+    ...(musician.avatar_url ? { image: musician.avatar_url } : {}),
+    ...(musician.bio ? { description: musician.bio } : {}),
+  } : null;
+
   return (
     <FullscreenBackground enableBlueWaves>
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
       <div className="relative z-10 min-h-[100svh]">
         {/* Back Button */}
         <div className="container mx-auto px-4 py-4 sm:py-6">
@@ -372,18 +407,6 @@ const MusicianPublicProfile: React.FC = () => {
                   </div>
                 )}
 
-                {/* Instagram */}
-                {musician.instagram && (
-                  <a
-                    href={`https://instagram.com/${musician.instagram.replace('@', '')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-pink-400 hover:text-pink-300 transition-colors mb-4"
-                  >
-                    <Instagram className="h-5 w-5" />
-                    <span>{musician.instagram}</span>
-                  </a>
-                )}
               </div>
 
               {/* Bio */}

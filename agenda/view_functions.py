@@ -10,6 +10,7 @@ import unicodedata
 from datetime import date, timedelta
 
 from django.conf import settings
+from django.core.cache import cache
 from django.core.mail import send_mail
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -1229,6 +1230,11 @@ def list_sponsors(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    cache_key = f"sponsors_{city.lower()}_{state.lower()}"
+    cached = cache.get(cache_key)
+    if cached:
+        return Response(cached)
+
     queryset = Organization.objects.filter(
         is_sponsor=True,
         city__iexact=city,
@@ -1243,6 +1249,7 @@ def list_sponsors(request):
     serializer = OrganizationPublicSerializer(
         sponsors, many=True, context={"request": request}
     )
+    cache.set(cache_key, serializer.data, 60 * 60)  # 1 hour
     return Response(serializer.data)
 
 
@@ -1319,8 +1326,16 @@ def list_all_musicians_public(request):
 @permission_classes([AllowAny])
 @throttle_classes([PublicRateThrottle])
 def get_musician_public_profile(request, musician_id):
-    musician = get_object_or_404(Musician, id=musician_id, is_active=True)
+    cache_key = f"musician_public_{musician_id}"
+    cached = cache.get(cache_key)
+    if cached:
+        return Response(cached)
+
+    musician = get_object_or_404(
+        Musician.objects.select_related("user"), id=musician_id, is_active=True
+    )
     serializer = MusicianPublicSerializer(musician, context={"request": request})
+    cache.set(cache_key, serializer.data, 60 * 30)  # 30 min
     return Response(serializer.data)
 
 

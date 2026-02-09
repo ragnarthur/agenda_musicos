@@ -2574,7 +2574,9 @@ def get_musician_public_profile(request, musician_id):
     GET /api/musicians/public/<id>/
     Perfil público do músico (sem autenticação)
     """
-    musician = get_object_or_404(Musician, id=musician_id, is_active=True)
+    musician = get_object_or_404(
+        Musician.objects.select_related("user"), id=musician_id, is_active=True
+    )
     serializer = MusicianPublicSerializer(musician, context={"request": request})
     return Response(serializer.data)
 

@@ -15,6 +15,8 @@ import {
 import { allMusiciansService, type MusicianPublic } from '../services/publicApi';
 import { BRAZILIAN_STATES } from '../config/cities';
 import { formatInstrumentLabel, normalizeInstrumentKey } from '../utils/formatting';
+import { usePageMeta } from '../hooks/usePageMeta';
+import { showToast } from '../utils/toast';
 
 // Hook de debounce para evitar requisições excessivas
 function useDebounce<T>(value: T, delay: number): T {
@@ -52,7 +54,11 @@ export default function OurMusicians() {
 
   // UI
   const [showFilters, setShowFilters] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  usePageMeta({
+    title: 'Catálogo de Músicos - GigFlow',
+    description: 'Encontre músicos profissionais para seu evento. Filtre por cidade, instrumento e avaliação no catálogo do GigFlow.',
+  });
 
   const loadMusicians = useCallback(async () => {
     setLoading(true);
@@ -69,6 +75,7 @@ export default function OurMusicians() {
       setMusicians(data);
     } catch (error) {
       console.error('Erro ao carregar músicos:', error);
+      showToast.error('Erro ao carregar músicos');
     } finally {
       setLoading(false);
     }
@@ -338,39 +345,6 @@ export default function OurMusicians() {
         )}
       </div>
 
-      {/* Modal de Login/Cadastro */}
-      {showLoginModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              Acesso Necessário
-            </h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
-              Para solicitar orçamento, faça login ou cadastre-se como contratante.
-            </p>
-            <div className="space-y-3">
-              <button
-                onClick={() => navigate('/contratante/login')}
-                className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
-              >
-                Fazer Login
-              </button>
-              <button
-                onClick={() => navigate('/contratante/cadastro')}
-                className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-medium rounded-lg transition-colors"
-              >
-                Cadastrar como Contratante
-              </button>
-            </div>
-            <button
-              onClick={() => setShowLoginModal(false)}
-              className="w-full mt-4 px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -337,6 +337,7 @@ class Musician(models.Model):
         verbose_name_plural = "Músicos"
         indexes = [
             models.Index(fields=["is_active", "city", "state"]),
+            models.Index(fields=["is_active", "city", "state", "-average_rating"]),
             models.Index(fields=["is_active", "state"]),
             models.Index(fields=["is_active", "instrument"]),
         ]

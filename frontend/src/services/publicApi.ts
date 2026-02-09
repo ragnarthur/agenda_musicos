@@ -185,7 +185,6 @@ export interface MusicianPublic {
   bio: string | null;
   city: string | null;
   state: string | null;
-  instagram: string | null;
   avatar_url: string | null;
   cover_image_url: string | null;
   average_rating: number;

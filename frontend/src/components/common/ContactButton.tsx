@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Phone, MessageCircle, Lock, Loader2 } from 'lucide-react';
+import { Phone, MessageCircle, Lock, Loader2, Instagram } from 'lucide-react';
 import { useCompanyAuth } from '../../contexts/CompanyAuthContext';
 import { publicMusicianService, type MusicianContact } from '../../services/publicApi';
 import { showToast } from '../../utils/toast';
+import { trackEvent } from '../../utils/analytics';
 
 interface ContactButtonProps {
   musicianId: number;
@@ -33,6 +34,7 @@ const ContactButton: React.FC<ContactButtonProps> = ({
     try {
       const data = await publicMusicianService.getContact(musicianId);
       setContact(data);
+      trackEvent('contact_view', { musicianId, musicianName });
     } catch (error) {
       console.error('Erro ao buscar contato:', error);
       showToast.error('Erro ao carregar informações de contato');
@@ -41,13 +43,14 @@ const ContactButton: React.FC<ContactButtonProps> = ({
     }
   };
 
-  // Se já tem o contato, mostra os botões de WhatsApp/Telefone
+  // Se já tem o contato, mostra os botões de WhatsApp/Telefone/Instagram
   if (contact) {
     const hasWhatsApp = contact.whatsapp && contact.whatsapp.trim();
     const hasPhone = contact.phone && contact.phone.trim();
+    const hasInstagram = contact.instagram && contact.instagram.trim();
 
     // Se não tem nenhum contato disponível
-    if (!hasWhatsApp && !hasPhone) {
+    if (!hasWhatsApp && !hasPhone && !hasInstagram) {
       return (
         <div className={`text-subtle text-sm ${className}`}>
           {musicianName} ainda não cadastrou informações de contato.
@@ -75,6 +78,17 @@ const ContactButton: React.FC<ContactButtonProps> = ({
           >
             <Phone className="h-5 w-5" />
             {contact.phone}
+          </a>
+        )}
+        {hasInstagram && (
+          <a
+            href={`https://instagram.com/${contact.instagram!.replace('@', '')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
+          >
+            <Instagram className="h-5 w-5" />
+            Instagram
           </a>
         )}
       </div>

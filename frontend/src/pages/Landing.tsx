@@ -21,6 +21,7 @@ import UserTypeToggle from '../components/navigation/UserTypeToggle';
 import CityDisplay from '../components/CityDisplay';
 import CityBadge from '../components/CityBadge';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 type TypewriterPhase = 'typing' | 'pausing' | 'deleting' | 'waiting';
 type UserType = 'musician' | 'contractor';
@@ -52,6 +53,11 @@ const Landing: React.FC = () => {
   const [showIOSModal, setShowIOSModal] = useState(false);
   const [showAndroidModal, setShowAndroidModal] = useState(false);
   const { canInstall, isIOS, isMobile, promptInstall } = useInstallPrompt();
+
+  usePageMeta({
+    title: 'GigFlow - Encontre Músicos Profissionais',
+    description: 'Plataforma para encontrar e contratar músicos profissionais para seu evento. Gerencie agenda, eventos e conexões musicais.',
+  });
 
   const handleInstall = async () => {
     if (isIOS) {

@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Allow: /nossos-musicos
+Allow: /cidades/
+Allow: /musico/
+Allow: /status
+Disallow: /dashboard
+Disallow: /eventos
+Disallow: /musicos
+Disallow: /aprovacoes
+Disallow: /marketplace
+Disallow: /conexoes
+Disallow: /configuracoes
+Disallow: /contratante/pedidos
+Disallow: /admin

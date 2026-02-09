@@ -11,6 +11,8 @@ import {
   type Organization,
 } from '../services/publicApi';
 import { formatInstrumentLabel, normalizeInstrumentKey } from '../utils/formatting';
+import { usePageMeta } from '../hooks/usePageMeta';
+import { showToast } from '../utils/toast';
 
 const CityLanding: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -20,6 +22,13 @@ const CityLanding: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedInstrument, setSelectedInstrument] = useState<string>('all');
   const [city, setCity] = useState<City | null>(null);
+
+  usePageMeta({
+    title: city ? `Músicos em ${getCityDisplayName(city)} - GigFlow` : 'Músicos por Cidade - GigFlow',
+    description: city
+      ? `Encontre músicos profissionais em ${getCityDisplayName(city)}. Veja perfis, avaliações e solicite orçamentos.`
+      : 'Encontre músicos profissionais na sua cidade.',
+  });
 
   useEffect(() => {
     if (!slug) {
@@ -50,6 +59,7 @@ const CityLanding: React.FC = () => {
         setSponsors(sponsorsData);
       } catch (error) {
         console.error('Error fetching city data:', error);
+        showToast.error('Erro ao carregar dados da cidade');
       } finally {
         setLoading(false);
       }
