@@ -44,6 +44,10 @@ export const getMobileInputProps = (type: string): InputHTMLAttributes<HTMLInput
     date: {
       inputMode: 'none',
     },
+    time: {
+      inputMode: 'none',
+      readOnly: true,
+    },
     datetime: {
       inputMode: 'none',
     },
@@ -80,4 +84,9 @@ export const getPasswordProps = (isNew = true): InputHTMLAttributes<HTMLInputEle
   inputMode: 'text',
   autoComplete: isNew ? 'new-password' : 'current-password',
   spellCheck: false,
+});
+
+export const getTimeProps = (): InputHTMLAttributes<HTMLInputElement> => ({
+  inputMode: 'none',
+  readOnly: true,
 });

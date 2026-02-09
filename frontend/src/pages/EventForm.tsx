@@ -5,6 +5,7 @@ import { Save, X, CheckCircle, Info, Sparkles, Users, UserPlus, Clock, AlertCirc
 import Layout from '../components/Layout/Layout';
 import ConflictPreview from '../components/event/ConflictPreview';
 import ProposalSummary from '../components/event/ProposalSummary';
+import { TimePickerBottomSheet } from '../components/time-picker';
 import { eventService } from '../services/eventService';
 import { musicianService } from '../services/api';
 import { getErrorMessage, showToast } from '../utils/toast';
@@ -14,7 +15,7 @@ import { format, parseISO, isBefore } from 'date-fns';
 import InstrumentIcon from '../components/common/InstrumentIcon';
 import { INSTRUMENT_LABELS as BASE_INSTRUMENT_LABELS } from '../utils/formatting';
 import { sanitizeOptionalText, sanitizeText } from '../utils/sanitize';
-import { getMobileInputProps } from '../utils/mobileInputs';
+import { getMobileInputProps, getTimeProps } from '../utils/mobileInputs';
 import { maskCurrencyInput, unmaskCurrency } from '../utils/formatting';
 
 interface ConflictInfo {
@@ -67,6 +68,7 @@ const EventForm: React.FC = () => {
     conflicts: [],
     bufferMinutes: 40,
   });
+  const [showTimePicker, setShowTimePicker] = useState<'start' | 'end' | null>(null);
 
   const [formData, setFormData] = useState<EventCreate>({
     title: '',
@@ -376,6 +378,19 @@ const EventForm: React.FC = () => {
 
   const showConflictPreview = formData.event_date && formData.start_time && formData.end_time;
 
+  const handleTimePickerConfirm = (value: string) => {
+    if (showTimePicker === 'start') {
+      setFormData(prev => ({ ...prev, start_time: value }));
+    } else if (showTimePicker === 'end') {
+      setFormData(prev => ({ ...prev, end_time: value }));
+    }
+    setShowTimePicker(null);
+  };
+
+  const handleTimePickerClose = () => {
+    setShowTimePicker(null);
+  };
+
   return (
     <Layout>
       <section className="mx-auto max-w-5xl page-stack">
@@ -550,15 +565,19 @@ const EventForm: React.FC = () => {
                 >
                   Início *
                 </label>
-                <div className="relative">
+                <div
+                  className="relative"
+                  onClick={() => setShowTimePicker('start')}
+                >
                   <input
                     id="start_time"
                     name="start_time"
                     type="time"
                     value={formData.start_time}
                     onChange={handleChange}
-                    className="input-field"
+                    className="input-field cursor-pointer"
                     required
+                    {...getTimeProps()}
                   />
                 </div>
 
@@ -572,7 +591,7 @@ const EventForm: React.FC = () => {
                           key={preset.minutes}
                           type="button"
                           onClick={() => handleDurationPreset(preset.minutes)}
-                          className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 transition hover:border-primary-400 hover:bg-primary-50 active:border-primary-500 active:bg-primary-100"
+                          className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 transition hover:border-primary-400 hover:bg-primary-50 active:border-primary-500 active:bg-primary-100 min-h-[44px] touch-manipulation"
                         >
                           {preset.label}
                         </button>
@@ -586,15 +605,19 @@ const EventForm: React.FC = () => {
                 <label htmlFor="end_time" className="block text-sm font-medium text-gray-700 mb-2">
                   Término *
                 </label>
-                <div className="relative">
+                <div
+                  className="relative"
+                  onClick={() => setShowTimePicker('end')}
+                >
                   <input
                     id="end_time"
                     name="end_time"
                     type="time"
                     value={formData.end_time}
                     onChange={handleChange}
-                    className="input-field"
+                    className="input-field cursor-pointer"
                     required
+                    {...getTimeProps()}
                   />
                 </div>
 
@@ -980,6 +1003,26 @@ const EventForm: React.FC = () => {
           />
         </div>
       </section>
+
+      <TimePickerBottomSheet
+        isOpen={showTimePicker === 'start'}
+        value={formData.start_time || '--:--'}
+        onChange={handleTimePickerConfirm}
+        onClose={handleTimePickerClose}
+        durationPresets={DURATION_PRESETS}
+        onDurationPreset={handleDurationPreset}
+        showDurationPresets={false}
+        enableQuickSelect={true}
+      />
+
+      <TimePickerBottomSheet
+        isOpen={showTimePicker === 'end'}
+        value={formData.end_time || '--:--'}
+        onChange={handleTimePickerConfirm}
+        onClose={handleTimePickerClose}
+        showDurationPresets={false}
+        enableQuickSelect={true}
+      />
     </Layout>
   );
 };
