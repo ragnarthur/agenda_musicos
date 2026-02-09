@@ -112,7 +112,7 @@ const Musicians: React.FC = () => {
                 <Users className="h-8 w-8 text-primary-700" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Músicos profissionais</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Músicos profissionais</h1>
                 <p className="text-gray-600 text-sm sm:text-base">
                   Perfis completos com contatos, redes e disponibilidade para formar a equipe ideal.
                 </p>

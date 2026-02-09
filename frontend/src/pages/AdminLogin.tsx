@@ -48,7 +48,7 @@ const AdminLogin: React.FC = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-500/10 rounded-full mb-4">
             <Shield className="h-8 w-8 text-amber-600 dark:text-amber-400" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-2">
             GigFlow Admin
           </h1>
           <p className="text-slate-600 dark:text-slate-400">Acesso Administrativo</p>

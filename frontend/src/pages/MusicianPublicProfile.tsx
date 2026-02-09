@@ -321,7 +321,7 @@ const MusicianPublicProfile: React.FC = () => {
 
               {/* Name and Info */}
               <div className="text-center md:text-left">
-                <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">
                   {musician.full_name}
                 </h1>
 
@@ -411,11 +411,11 @@ const MusicianPublicProfile: React.FC = () => {
                   <ContactButton
                     musicianId={musician.id}
                     musicianName={musician.full_name}
-                    className="w-full sm:w-auto text-lg py-4 px-8"
+                    className="w-full sm:w-auto text-base sm:text-lg py-3 px-5 sm:py-4 sm:px-8"
                   />
                   <button
                     onClick={handleContactClick}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-lg"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 sm:px-8 sm:py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-base sm:text-lg"
                   >
                     <FileText className="h-5 w-5" />
                     Solicitar Orçamento
@@ -505,13 +505,13 @@ const MusicianPublicProfile: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/contratante/cadastro"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-lg"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 sm:px-8 sm:py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-base sm:text-lg"
               >
                 <Building2 className="h-5 w-5" />É contratante? Cadastre-se
               </Link>
               <Link
                 to="/solicitar-acesso"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border-2 border-white/30 hover:border-white/50 transition-all text-lg"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 sm:px-8 sm:py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border-2 border-white/30 hover:border-white/50 transition-all text-base sm:text-lg"
               >
                 <UserPlus className="h-5 w-5" />É músico? Solicite acesso
               </Link>

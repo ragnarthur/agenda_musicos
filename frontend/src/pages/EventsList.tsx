@@ -357,7 +357,7 @@ const EventsList: React.FC = () => {
                 <Sparkles className="h-4 w-4" />
                 Painel de Eventos
               </div>
-              <h1 className="mt-3 text-3xl font-bold text-gray-900">Meus eventos</h1>
+              <h1 className="mt-3 text-2xl sm:text-3xl font-bold text-gray-900">Meus eventos</h1>
               <p className="mt-1 text-sm text-gray-700">
                 Total • {statistics.confirmed} confirmados
               </p>

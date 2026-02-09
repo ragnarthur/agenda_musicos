@@ -272,15 +272,15 @@ const Connections: React.FC = () => {
             {/* Título e descrição */}
             <div className="flex items-center gap-4">
               <motion.div
-                className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center shadow-lg"
+                className="h-12 w-12 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center shadow-lg"
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: 'spring', stiffness: 200, damping: 15 }}
               >
-                <Users className="h-8 w-8 text-white" />
+                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
               </motion.div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                   Rede & Badges
                 </h1>
                 <p className="text-gray-600 dark:text-slate-300">
@@ -290,7 +290,7 @@ const Connections: React.FC = () => {
             </div>
 
             {/* TiltCard com resumo */}
-            <TiltCard className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 border border-white/50 dark:border-slate-700/50 shadow-lg max-w-xs">
+            <TiltCard className="hidden sm:block bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 border border-white/50 dark:border-slate-700/50 shadow-lg max-w-xs">
               <div className="flex items-center gap-4">
                 <div className="text-center">
                   <p className="text-2xl font-bold text-primary-600">{stats.follow}</p>
@@ -311,7 +311,7 @@ const Connections: React.FC = () => {
           </div>
 
             {/* Stats Cards com ícones */}
-            <div className="relative z-10 grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+            <div className="relative z-10 grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mt-6">
               <StatCard
                 label={connectionLabels.follow}
                 value={stats.follow || 0}
@@ -347,13 +347,13 @@ const Connections: React.FC = () => {
                 você usa o app.
               </p>
               <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <div className="rounded-xl border border-rose-100 bg-rose-50/70 px-3 py-2 dark:border-rose-900/40 dark:bg-rose-950/20">
+                <div className="rounded-xl border border-rose-100 bg-rose-50/70 px-2 sm:px-3 py-2 dark:border-rose-900/40 dark:bg-rose-950/20">
                   <span className="font-semibold text-rose-700 dark:text-rose-200">Favoritar</span>
                   <span className="ml-2 text-xs text-rose-700/80 dark:text-rose-200/80">
                     Salve para achar rápido
                   </span>
                 </div>
-                <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 px-3 py-2 dark:border-emerald-900/40 dark:bg-emerald-950/15">
+                <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 px-2 sm:px-3 py-2 dark:border-emerald-900/40 dark:bg-emerald-950/15">
                   <span className="font-semibold text-emerald-700 dark:text-emerald-200">
                     Indicar
                   </span>
@@ -361,7 +361,7 @@ const Connections: React.FC = () => {
                     Recomendação rápida
                   </span>
                 </div>
-                <div className="rounded-xl border border-indigo-100 bg-indigo-50/70 px-3 py-2 dark:border-indigo-900/40 dark:bg-indigo-950/15">
+                <div className="rounded-xl border border-indigo-100 bg-indigo-50/70 px-2 sm:px-3 py-2 dark:border-indigo-900/40 dark:bg-indigo-950/15">
                   <span className="font-semibold text-indigo-700 dark:text-indigo-200">
                     Já toquei
                   </span>
@@ -503,7 +503,7 @@ const Connections: React.FC = () => {
                         {/* Shine effect element */}
                         <div className="shine-effect" />
 
-                        <div className="flex items-center gap-4 mb-4">
+                        <div className="flex items-center gap-3 sm:gap-4 mb-4">
                           {/* Avatar com foto ou ícone */}
                           <motion.div
                             className="relative h-14 w-14 rounded-full flex-shrink-0 overflow-hidden"
@@ -547,7 +547,7 @@ const Connections: React.FC = () => {
                         </div>
 
                         {/* Botões de Conexão Modernos */}
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                           {activeConnectionTypes.map(type => {
                             const isOn = Boolean(active[type]);
                             const Icon = connectionIcons[type];

@@ -402,7 +402,7 @@ const EventForm: React.FC = () => {
               <p className="flex items-center text-xs font-semibold uppercase tracking-wide text-primary-600">
                 <Sparkles className="mr-2 h-4 w-4" /> Gestão de Eventos
               </p>
-              <h1 className="mt-2 text-3xl font-bold text-gray-900">Novo Evento</h1>
+              <h1 className="mt-2 text-2xl sm:text-3xl font-bold text-gray-900">Novo Evento</h1>
               <p className="mt-1 text-sm text-gray-700">
                 Preencha os detalhes do evento e convide músicos disponíveis para participar.
               </p>

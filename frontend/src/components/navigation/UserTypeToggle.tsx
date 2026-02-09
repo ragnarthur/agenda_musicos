@@ -46,7 +46,7 @@ const UserTypeToggle: React.FC<UserTypeToggleProps> = ({
               key={type}
               onClick={() => !disabled && onChange(type)}
               disabled={disabled}
-              className={`relative px-6 py-3 rounded-xl font-medium transition-all flex flex-col items-center gap-2 min-w-[120px] sm:min-w-[140px] ${
+              className={`relative px-3 sm:px-6 py-3 rounded-xl font-medium transition-all flex flex-col items-center gap-2 min-w-0 sm:min-w-[120px] ${
                 selected === type
                   ? 'bg-primary-600 text-white shadow-lg'
                   : 'text-white/70 hover:text-white hover:bg-white/10'

@@ -506,14 +506,14 @@ const Landing: React.FC = () => {
               <Link
                 key={`primary-${userType}`}
                 to={currentContent.primaryCTA.to}
-                className="px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-lg"
+                className="px-5 py-3 sm:px-8 sm:py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-base sm:text-lg"
               >
                 {currentContent.primaryCTA.text}
               </Link>
               <Link
                 key={`secondary-${userType}`}
                 to={currentContent.secondaryCTA.to}
-                className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border-2 border-white/30 hover:border-white/50 transition-all text-lg"
+                className="px-5 py-3 sm:px-8 sm:py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border-2 border-white/30 hover:border-white/50 transition-all text-base sm:text-lg"
               >
                 {currentContent.secondaryCTA.text}
               </Link>
