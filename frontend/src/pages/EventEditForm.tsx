@@ -13,7 +13,7 @@ import { logError } from '../utils/logger';
 import { sanitizeOptionalText, sanitizeText } from '../utils/sanitize';
 import { getErrorMessage } from '../utils/toast';
 import InstrumentIcon from '../components/common/InstrumentIcon';
-import { INSTRUMENT_LABELS as BASE_INSTRUMENT_LABELS, normalizeInstrumentKey } from '../utils/formatting';
+import { INSTRUMENT_LABELS as BASE_INSTRUMENT_LABELS, normalizeInstrumentKey, maskCurrencyInput, unmaskCurrency } from '../utils/formatting';
 
 const instrumentLabels: Record<string, string> = {
   ...BASE_INSTRUMENT_LABELS,
@@ -180,6 +180,11 @@ const EventEditForm: React.FC = () => {
     }
   };
 
+  const handlePaymentAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const masked = maskCurrencyInput(e.target.value);
+    setFormData(prev => ({ ...prev, payment_amount: masked }));
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
 
@@ -195,8 +200,8 @@ const EventEditForm: React.FC = () => {
     if (value === null || value === undefined) return null;
     const raw = String(value).trim();
     if (!raw) return null;
-    const normalized = raw.includes(',') ? raw.replace(/\./g, '').replace(',', '.') : raw;
-    const num = Number(normalized);
+    const unmasked = unmaskCurrency(raw);
+    const num = Number.parseFloat(unmasked);
     return Number.isFinite(num) ? Number(num.toFixed(2)) : null;
   };
 
@@ -456,9 +461,9 @@ const EventEditForm: React.FC = () => {
                 type="text"
                 inputMode="decimal"
                 value={formData.payment_amount ?? ''}
-                onChange={handleChange}
+                onChange={handlePaymentAmountChange}
                 className="input-field pl-10"
-                placeholder="Ex: 500,00"
+                placeholder="R$ 0,00"
               />
             </div>
           </div>

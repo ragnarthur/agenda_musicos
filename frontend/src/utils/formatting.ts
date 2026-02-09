@@ -355,3 +355,55 @@ export function formatPhone(value: string): string {
 export function unmaskPhone(value: string): string {
   return value.replace(/\D/g, '');
 }
+
+/**
+ * Formata um valor para moeda brasileira (BRL) durante digitação em input.
+ * Adiciona R$, separadores de milhar e vírgula decimal.
+ * @param value - Valor digitado no input (pode ter formatação anterior)
+ * @returns Valor formatado como moeda brasileira (ex: "R$ 1.234,56")
+ * @example
+ * maskCurrencyInput("1234567") // "R$ 12.345,67"
+ * maskCurrencyInput("") // ""
+ */
+export function maskCurrencyInput(value: string): string {
+  const cleanValue = value.replace(/\D/g, '');
+  
+  if (!cleanValue) return '';
+  
+  const numberValue = Number.parseInt(cleanValue, 10) / 100;
+  
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(numberValue);
+}
+
+/**
+ * Remove formatação de moeda (R$, pontos de milhar, vírgula decimal).
+ * Retorna apenas o valor numérico com ponto como decimal (para enviar ao backend).
+ * @param value - Valor com formatação de moeda (ex: "R$ 1.234,56")
+ * @returns Valor numérico com ponto como separador decimal (ex: "1234.56")
+ * @example
+ * unmaskCurrency("R$ 1.234,56") // "1234.56"
+ * unmaskCurrency("1234,56") // "1234.56"
+ */
+export function unmaskCurrency(value: string): string {
+  const cleanValue = value.replace(/[^\d,.]/g, '');
+  
+  if (!cleanValue) return '';
+  
+  const hasComma = cleanValue.includes(',');
+  const hasDot = cleanValue.includes('.');
+  
+  if (hasComma && hasDot) {
+    return cleanValue.replace(/\./g, '').replace(',', '.');
+  }
+  
+  if (hasComma) {
+    return cleanValue.replace(',', '.');
+  }
+  
+  return cleanValue;
+}

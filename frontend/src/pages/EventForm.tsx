@@ -15,6 +15,7 @@ import InstrumentIcon from '../components/common/InstrumentIcon';
 import { INSTRUMENT_LABELS as BASE_INSTRUMENT_LABELS } from '../utils/formatting';
 import { sanitizeOptionalText, sanitizeText } from '../utils/sanitize';
 import { getMobileInputProps } from '../utils/mobileInputs';
+import { maskCurrencyInput, unmaskCurrency } from '../utils/formatting';
 
 interface ConflictInfo {
   loading: boolean;
@@ -259,6 +260,11 @@ const EventForm: React.FC = () => {
     return `(${limited.slice(0, 2)}) ${limited.slice(2, 7)}-${limited.slice(7)}`;
   };
 
+  const handlePaymentAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const masked = maskCurrencyInput(e.target.value);
+    setFormData(prev => ({ ...prev, payment_amount: masked }));
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (name === 'venue_contact') {
@@ -272,8 +278,8 @@ const EventForm: React.FC = () => {
     if (value === null || value === undefined) return null;
     const raw = String(value).trim();
     if (!raw) return null;
-    const normalized = raw.includes(',') ? raw.replace(/\./g, '').replace(',', '.') : raw;
-    const num = Number(normalized);
+    const unmasked = unmaskCurrency(raw);
+    const num = Number.parseFloat(unmasked);
     return Number.isFinite(num) ? Number(num.toFixed(2)) : null;
   };
 
@@ -468,9 +474,9 @@ const EventForm: React.FC = () => {
                   type="text"
                   inputMode="decimal"
                   value={formData.payment_amount ?? ''}
-                  onChange={handleChange}
+                  onChange={handlePaymentAmountChange}
                   className="input-field"
-                  placeholder="Ex: 500,00"
+                  placeholder="R$ 0,00"
                 />
               </div>
               <p className="mt-1 text-xs text-gray-500">
