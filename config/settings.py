@@ -457,8 +457,10 @@ SPECTACULAR_SETTINGS = {
 
 # drf-spectacular: evita ruído de "unable to guess serializer" em APIViews e views
 # funcionais onde o schema não é crítico para deploy.
+# security.W008: Nginx/Cloudflare já gerencia o redirect HTTPS
 SILENCED_SYSTEM_CHECKS = [
     "drf_spectacular.W002",
+    "security.W008",
 ]
 
 # Register local spectacular extensions (auth, etc.)

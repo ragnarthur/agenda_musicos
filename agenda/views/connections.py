@@ -7,12 +7,20 @@ from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 from ..models import Connection, Musician
 from ..pagination import StandardResultsSetPagination
 from ..serializers import ConnectionSerializer
 
 
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name="id", type=int, location="path", description="ID da conexão"
+        )
+    ]
+)
 class ConnectionViewSet(viewsets.ModelViewSet):
     """
     Conexões entre músicos (seguir, ligar depois, indicar, já toquei com).

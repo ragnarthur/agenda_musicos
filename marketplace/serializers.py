@@ -1,4 +1,5 @@
 from decimal import Decimal, InvalidOperation
+from typing import Any
 
 from rest_framework import serializers
 
@@ -26,7 +27,7 @@ class GigApplicationSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "gig", "musician", "status", "created_at"]
 
-    def get_musician_name(self, obj):
+    def get_musician_name(self, obj) -> str:
         return obj.musician.user.get_full_name() or obj.musician.user.username
 
     def validate_cover_letter(self, value):
@@ -113,7 +114,10 @@ class GigSerializer(serializers.ModelSerializer):
         if "contact_email" in data:
             try:
                 data["contact_email"] = sanitize_string(
-                    data.get("contact_email"), max_length=255, allow_empty=True, to_lower=True
+                    data.get("contact_email"),
+                    max_length=255,
+                    allow_empty=True,
+                    to_lower=True,
                 )
             except serializers.ValidationError as e:
                 errors["contact_email"] = str(e.detail[0])
@@ -122,7 +126,7 @@ class GigSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(errors)
         return data
 
-    def get_created_by_name(self, obj):
+    def get_created_by_name(self, obj) -> str:
         if not obj.created_by:
             return "Cliente"
         return obj.created_by.get_full_name() or obj.created_by.username
@@ -141,15 +145,18 @@ class GigSerializer(serializers.ModelSerializer):
         if cached_apps is None:
             cached_apps = list(obj.applications.all())
 
-        return any(app.musician_id == musician.id and app.status == "hired" for app in cached_apps)
+        return any(
+            app.musician_id == musician.id and app.status == "hired"
+            for app in cached_apps
+        )
 
-    def get_applications_count(self, obj):
+    def get_applications_count(self, obj) -> int:
         # Usa anotação se disponível (evita query adicional)
         if hasattr(obj, "applications_total"):
             return obj.applications_total
         return obj.applications.count()
 
-    def get_my_application(self, obj):
+    def get_my_application(self, obj) -> dict[str, Any] | None:
         """Retorna a candidatura do músico logado (se existir)."""
         request = self.context.get("request")
         if not request or not request.user.is_authenticated:
@@ -171,7 +178,9 @@ class GigSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         request = self.context.get("request")
         is_owner = (
-            request and request.user.is_authenticated and instance.created_by_id == request.user.id
+            request
+            and request.user.is_authenticated
+            and instance.created_by_id == request.user.id
         )
 
         if not is_owner:

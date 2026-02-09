@@ -19,8 +19,16 @@ from ..instrument_utils import get_instrument_label
 from ..models import Event, LeaderAvailability, Musician
 from ..serializers import EventListSerializer, LeaderAvailabilitySerializer
 from ..utils import get_user_organization, split_availability_with_events
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name="id", type=int, location="path", description="ID da disponibilidade"
+        )
+    ]
+)
 class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
     """
     ViewSet para disponibilidades cadastradas por músicos.

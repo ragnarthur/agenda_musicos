@@ -1,6 +1,7 @@
 # agenda/serializers.py
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
+from typing import Any
 
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -48,10 +49,10 @@ class UserSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id"]
 
-    def get_full_name(self, obj):
+    def get_full_name(self, obj) -> str:
         return obj.get_full_name() or obj.username
 
-    def get_email(self, obj):
+    def get_email(self, obj) -> str | None:
         """Retorna email apenas para o próprio usuário"""
         request = self.context.get("request")
         if request and request.user.is_authenticated:
@@ -99,10 +100,10 @@ class MusicianSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "average_rating", "total_ratings", "created_at"]
 
-    def get_full_name(self, obj):
+    def get_full_name(self, obj) -> str:
         return obj.user.get_full_name() or obj.user.username
 
-    def get_public_email(self, obj):
+    def get_public_email(self, obj) -> str | None:
         """Retorna email apenas para o próprio usuário (privacidade)"""
         request = self.context.get("request")
         if request and request.user.is_authenticated:
@@ -110,7 +111,7 @@ class MusicianSerializer(serializers.ModelSerializer):
                 return obj.user.email
         return None
 
-    def get_avatar_url(self, obj):
+    def get_avatar_url(self, obj) -> str | None:
         """Retorna URL completa do avatar"""
         if obj.avatar:
             request = self.context.get("request")
@@ -119,7 +120,7 @@ class MusicianSerializer(serializers.ModelSerializer):
             return obj.avatar.url
         return None
 
-    def get_cover_image_url(self, obj):
+    def get_cover_image_url(self, obj) -> str | None:
         """Retorna URL completa da imagem de capa"""
         if obj.cover_image:
             request = self.context.get("request")
@@ -480,13 +481,13 @@ class EventListSerializer(serializers.ModelSerializer):
             "created_by",
         ]
 
-    def get_created_by_name(self, obj):
+    def get_created_by_name(self, obj) -> str:
         return obj.created_by.get_full_name() if obj.created_by else "Sistema"
 
-    def get_approved_by_name(self, obj):
+    def get_approved_by_name(self, obj) -> str | None:
         return obj.approved_by.get_full_name() if obj.approved_by else None
 
-    def get_approval_label(self, obj):
+    def get_approval_label(self, obj) -> str:
         """Mostra quem confirmou o evento (texto unificado para approved e confirmed)"""
         if obj.status in ("approved", "confirmed"):
             # Para eventos approved, usa approved_by
@@ -521,7 +522,7 @@ class EventListSerializer(serializers.ModelSerializer):
                 return f"Confirmado por {name}"
         return obj.get_status_display()
 
-    def get_availability_summary(self, obj):
+    def get_availability_summary(self, obj) -> dict[str, int]:
         """
         Retorna resumo das disponibilidades.
         Usa valores pré-anotados se disponíveis (otimização N+1),
@@ -568,7 +569,7 @@ class EventLogSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_performed_by_name(self, obj):
+    def get_performed_by_name(self, obj) -> str:
         return obj.performed_by.get_full_name() if obj.performed_by else "Sistema"
 
 
@@ -631,13 +632,13 @@ class EventDetailSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-    def get_created_by_name(self, obj):
+    def get_created_by_name(self, obj) -> str:
         return obj.created_by.get_full_name() if obj.created_by else "Sistema"
 
-    def get_approved_by_name(self, obj):
+    def get_approved_by_name(self, obj) -> str | None:
         return obj.approved_by.get_full_name() if obj.approved_by else None
 
-    def get_can_approve(self, obj):
+    def get_can_approve(self, obj) -> bool:
         """
         Verifica se o usuário atual pode responder ao convite.
         Retorna True se o músico foi convidado e ainda não respondeu (pending).
@@ -656,7 +657,7 @@ class EventDetailSerializer(serializers.ModelSerializer):
         except Musician.DoesNotExist:
             return False
 
-    def get_approval_label(self, obj):
+    def get_approval_label(self, obj) -> str:
         """Mostra quem confirmou o evento (texto unificado para approved e confirmed)"""
         if obj.status in ("approved", "confirmed"):
             # Para eventos approved, usa approved_by
@@ -691,7 +692,7 @@ class EventDetailSerializer(serializers.ModelSerializer):
                 return f"Confirmado por {name}"
         return obj.get_status_display()
 
-    def get_logs(self, obj):
+    def get_logs(self, obj) -> list[dict[str, Any]]:
         """Retorna últimos registros de log (limitado para evitar payload grande)"""
         logs = obj.logs.select_related("performed_by").all()[:20]
         raw_logs = EventLogSerializer(logs, many=True).data
@@ -714,7 +715,7 @@ class EventDetailSerializer(serializers.ModelSerializer):
 
         return adjusted_logs
 
-    def get_can_rate(self, obj):
+    def get_can_rate(self, obj) -> bool:
         """
         Verifica se o usuário pode avaliar os músicos do evento.
         Condições: participante + data do evento já passou + ainda não avaliou
@@ -748,7 +749,7 @@ class EventDetailSerializer(serializers.ModelSerializer):
 
         return not already_rated
 
-    def get_required_instruments(self, obj):
+    def get_required_instruments(self, obj) -> list[dict[str, Any]]:
         """Retorna instrumentos necessários para o evento"""
         from .serializers import EventInstrumentSerializer
 
@@ -1021,13 +1022,13 @@ class LeaderAvailabilitySerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-    def get_leader_name(self, obj):
+    def get_leader_name(self, obj) -> str:
         return obj.leader.user.get_full_name() if obj.leader else "Sistema"
 
-    def get_leader_instrument(self, obj):
+    def get_leader_instrument(self, obj) -> str | None:
         return obj.leader.instrument if obj.leader else None
 
-    def get_leader_instrument_display(self, obj):
+    def get_leader_instrument_display(self, obj) -> str | None:
         if not obj.leader or not obj.leader.instrument:
             return None
         instrument_labels = {
@@ -1060,7 +1061,7 @@ class LeaderAvailabilitySerializer(serializers.ModelSerializer):
         }
         return instrument_labels.get(obj.leader.instrument, obj.leader.instrument)
 
-    def get_has_conflicts(self, obj):
+    def get_has_conflicts(self, obj) -> bool:
         """
         Verifica se há conflitos com eventos existentes.
         Usa cache para evitar query duplicada com conflicting_events_count.
@@ -1070,7 +1071,7 @@ class LeaderAvailabilitySerializer(serializers.ModelSerializer):
             obj._cached_conflicts_count = obj.get_conflicting_events().count()
         return obj._cached_conflicts_count > 0
 
-    def get_conflicting_events_count(self, obj):
+    def get_conflicting_events_count(self, obj) -> int:
         """
         Conta eventos conflitantes.
         Usa cache para evitar query duplicada com has_conflicts.

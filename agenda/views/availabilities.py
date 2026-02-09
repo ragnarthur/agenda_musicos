@@ -6,12 +6,20 @@ ViewSet para gerenciamento de disponibilidades de músicos.
 from rest_framework import viewsets
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 from ..models import Availability, Musician
 from ..serializers import AvailabilitySerializer
 from ..utils import get_user_organization
 
 
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name="id", type=int, location="path", description="ID da disponibilidade"
+        )
+    ]
+)
 class AvailabilityViewSet(viewsets.ModelViewSet):
     """
     ViewSet para disponibilidades.
