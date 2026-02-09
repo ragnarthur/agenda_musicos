@@ -35,7 +35,7 @@ export default function LoginCompany() {
     try {
       await login(data.email, data.password, rememberMe);
       toast.success('Login realizado com sucesso!');
-      navigate('/contratante/pedidos');
+      navigate('/contratante/dashboard');
     } catch (error: unknown) {
       const err = error as { response?: { data?: { detail?: string } } };
       toast.error(err.response?.data?.detail || 'Credenciais inválidas');
@@ -62,7 +62,7 @@ export default function LoginCompany() {
             refresh: result.refresh,
           }, rememberMe);
           toast.success('Login realizado!');
-          navigate('/contratante/pedidos');
+          navigate('/contratante/dashboard');
         } else {
           toast.error('Esta conta não é de contratante');
         }

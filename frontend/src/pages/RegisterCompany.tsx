@@ -109,7 +109,7 @@ export default function RegisterCompany() {
             refresh: result.refresh,
           });
           toast.success('Login realizado!');
-          navigate('/contratante/pedidos');
+          navigate('/contratante/dashboard');
         } else {
           toast.error('Esta conta Google não é de contratante');
         }

@@ -56,6 +56,10 @@ const NotificationSettings = lazy(() => import('./pages/NotificationSettings'));
 const LoginContractor = lazy(() => import('./pages/LoginCompany'));
 const RegisterContractor = lazy(() => import('./pages/RegisterCompany'));
 const ContractorRequests = lazy(() => import('./pages/ContractorRequests'));
+const ContractorDashboard = lazy(() => import('./pages/contractor/ContractorDashboard'));
+const ContractorBrowseMusicians = lazy(() => import('./pages/contractor/ContractorBrowseMusicians'));
+const ContractorNewRequest = lazy(() => import('./pages/contractor/ContractorNewRequest'));
+const ContractorProfile = lazy(() => import('./pages/contractor/ContractorProfile'));
 
 // Public pages (city landing and public profiles)
 const CityLanding = lazy(() => import('./pages/CityLanding'));
@@ -166,7 +170,7 @@ const PublicRoute: React.FC<{ children: React.ReactElement }> = ({ children }) =
         return <Navigate to={ADMIN_ROUTES.dashboard} replace />;
       }
       if (userType === 'contractor') {
-        return <Navigate to="/contratante/pedidos" replace />;
+        return <Navigate to="/contratante/dashboard" replace />;
       }
     return <Navigate to="/dashboard" replace />;
   }
@@ -203,7 +207,7 @@ const LandingRoute: React.FC<{ children: React.ReactElement }> = ({ children }) 
         return <Navigate to={ADMIN_ROUTES.dashboard} replace />;
       }
       if (userType === 'contractor') {
-        return <Navigate to="/contratante/pedidos" replace />;
+        return <Navigate to="/contratante/dashboard" replace />;
       }
     return <Navigate to="/dashboard" replace />;
   }
@@ -433,6 +437,38 @@ function AppRoutes() {
         <Route path="/nossos-musicos" element={<OurMusicians />} />
 
         {/* Contractor Routes */}
+        <Route
+          path="/contratante/dashboard"
+          element={
+            <ContractorProtectedRoute>
+              <ContractorDashboard />
+            </ContractorProtectedRoute>
+          }
+        />
+        <Route
+          path="/contratante/musicos"
+          element={
+            <ContractorProtectedRoute>
+              <ContractorBrowseMusicians />
+            </ContractorProtectedRoute>
+          }
+        />
+        <Route
+          path="/contratante/novo-pedido"
+          element={
+            <ContractorProtectedRoute>
+              <ContractorNewRequest />
+            </ContractorProtectedRoute>
+          }
+        />
+        <Route
+          path="/contratante/perfil"
+          element={
+            <ContractorProtectedRoute>
+              <ContractorProfile />
+            </ContractorProtectedRoute>
+          }
+        />
         <Route
           path="/contratante/pedidos/:id"
           element={

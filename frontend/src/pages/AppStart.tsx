@@ -32,7 +32,7 @@ const AppStart: React.FC = () => {
     }
 
     if (companyAuth) {
-      navigate('/contratante/pedidos', { replace: true });
+      navigate('/contratante/dashboard', { replace: true });
       return;
     }
   }, [loading, adminAuth, musicianAuth, companyAuth, navigate]);
