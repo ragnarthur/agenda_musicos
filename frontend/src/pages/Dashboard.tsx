@@ -1,9 +1,10 @@
 // pages/Dashboard.tsx
-import React, { useMemo, memo } from 'react';
+import React, { useMemo, memo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, Plus, Users, ListChecks, Zap, Briefcase } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
+import PullToRefresh from '../components/common/PullToRefresh';
 import Skeleton, { SkeletonCard } from '../components/common/Skeleton';
 import { CompactCalendar } from '../components/calendar';
 import { useAuth } from '../contexts/AuthContext';
@@ -49,8 +50,8 @@ const Dashboard: React.FC = memo(() => {
   const { user } = useAuth();
   const prefersReducedMotion = useReducedMotion();
 
-  const { events: upcomingEvents, isLoading: loadingEvents } = useUpcomingEvents();
-  const { events: pastEvents, isLoading: loadingPastEvents } = usePastEvents({
+  const { events: upcomingEvents, isLoading: loadingEvents, mutate: mutateUpcoming } = useUpcomingEvents();
+  const { events: pastEvents, isLoading: loadingPastEvents, mutate: mutatePast } = usePastEvents({
     daysBack: 30,
   });
   const {
@@ -60,6 +61,10 @@ const Dashboard: React.FC = memo(() => {
   } = useDashboardNotifications();
 
   const loading = loadingEvents || loadingNotifications || loadingPastEvents;
+
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([mutateUpcoming(), mutatePast()]);
+  }, [mutateUpcoming, mutatePast]);
 
   const { events, todayEvents, nextEvent, nextComputedStatus } = useMemo(() => {
     const sorted = [...upcomingEvents].sort((a, b) => getStartDateTime(a) - getStartDateTime(b));
@@ -108,6 +113,7 @@ const Dashboard: React.FC = memo(() => {
 
   return (
     <Layout>
+      <PullToRefresh onRefresh={handleRefresh} disabled={loading}>
       <div className="page-stack">
         {/* Hero */}
         <motion.div
@@ -386,6 +392,7 @@ const Dashboard: React.FC = memo(() => {
           </motion.div>
         )}
       </div>
+      </PullToRefresh>
     </Layout>
   );
 });

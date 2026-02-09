@@ -64,6 +64,7 @@ const BottomNav: React.FC = () => {
               <NavLink
                 key={item.to}
                 to={item.to}
+                aria-label="Criar evento"
                 className="flex flex-col items-center justify-center -mt-4 min-h-[44px]"
               >
                 <div className="w-12 h-12 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/30 active:scale-95 transition-transform">
@@ -77,6 +78,7 @@ const BottomNav: React.FC = () => {
             <NavLink
               key={item.to}
               to={item.to}
+              aria-label={item.label}
               className={`relative flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-2 ${
                 isActive
                   ? 'text-primary-600 dark:text-primary-400'

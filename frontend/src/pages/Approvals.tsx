@@ -1,9 +1,10 @@
 // pages/Approvals.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, MapPin, Clock, UserCheck } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
-import Loading from '../components/common/Loading';
+import { SkeletonCard } from '../components/common/Skeleton';
+import PullToRefresh from '../components/common/PullToRefresh';
 import { eventService } from '../services/eventService';
 import type { Event } from '../types';
 import { format, parseISO } from 'date-fns';
@@ -32,8 +33,13 @@ const Approvals: React.FC = () => {
     }
   };
 
+  const handleRefresh = useCallback(async () => {
+    await loadPendingEvents();
+  }, []);
+
   return (
     <Layout>
+      <PullToRefresh onRefresh={handleRefresh} disabled={loading}>
       <div className="page-stack">
         {/* Header */}
         <div className="hero-panel flex items-start gap-3">
@@ -47,7 +53,7 @@ const Approvals: React.FC = () => {
         </div>
 
         {loading ? (
-          <Loading text="Carregando eventos pendentes..." />
+          <SkeletonCard count={3} />
         ) : events.length === 0 ? (
           <div className="card text-center py-12">
             <UserCheck className="h-16 w-16 text-gray-400 mx-auto mb-4" />
@@ -159,6 +165,7 @@ const Approvals: React.FC = () => {
           </div>
         )}
       </div>
+      </PullToRefresh>
     </Layout>
   );
 };

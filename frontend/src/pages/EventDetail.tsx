@@ -14,7 +14,7 @@ import {
   Star,
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
-import Loading from '../components/common/Loading';
+import Skeleton, { SkeletonText } from '../components/common/Skeleton';
 import AvailabilitySelector from '../components/event/AvailabilitySelector';
 import AvailabilityList from '../components/event/AvailabilityList';
 import EventTimeline from '../components/event/EventTimeline';
@@ -152,7 +152,25 @@ const EventDetail: React.FC = () => {
   if (loading || !event) {
     return (
       <Layout>
-        <Loading text="Carregando evento..." />
+        <div className="max-w-5xl mx-auto page-stack">
+          <div className="hero-panel space-y-4">
+            <Skeleton className="h-5 w-20" />
+            <Skeleton className="h-8 w-3/4" />
+            <SkeletonText lines={2} />
+          </div>
+          <div className="card space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Skeleton className="h-5 w-2/3" />
+              <Skeleton className="h-5 w-1/2" />
+              <Skeleton className="h-5 w-3/4" />
+              <Skeleton className="h-5 w-1/3" />
+            </div>
+          </div>
+          <div className="card space-y-3">
+            <Skeleton className="h-6 w-1/3" />
+            <SkeletonText lines={3} />
+          </div>
+        </div>
       </Layout>
     );
   }

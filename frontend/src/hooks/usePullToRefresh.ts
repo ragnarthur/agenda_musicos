@@ -1,6 +1,7 @@
 // hooks/usePullToRefresh.ts
 // Hook para implementar gesto de pull-to-refresh
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { haptics } from './useHaptics';
 
 interface PullToRefreshOptions {
   onRefresh: () => Promise<void>;
@@ -31,6 +32,7 @@ export function usePullToRefresh(options: PullToRefreshOptions): PullToRefreshSt
   const startY = useRef<number>(0);
   const currentY = useRef<number>(0);
   const isDragging = useRef(false);
+  const hapticFired = useRef(false);
 
   // Verifica se está no topo da página
   const isAtTop = useCallback(() => {
@@ -43,6 +45,7 @@ export function usePullToRefresh(options: PullToRefreshOptions): PullToRefreshSt
 
       startY.current = e.touches[0].clientY;
       isDragging.current = true;
+      hapticFired.current = false;
     },
     [disabled, isRefreshing, isAtTop]
   );
@@ -61,6 +64,12 @@ export function usePullToRefresh(options: PullToRefreshOptions): PullToRefreshSt
         const resistance = 0.5;
         const pull = Math.min(diff * resistance, maxPull);
         setPullDistance(pull);
+
+        // Haptic feedback when threshold is reached
+        if (pull >= threshold && !hapticFired.current) {
+          hapticFired.current = true;
+          haptics.medium();
+        }
 
         // Previne scroll nativo durante o pull
         if (pull > 10) {
@@ -82,6 +91,9 @@ export function usePullToRefresh(options: PullToRefreshOptions): PullToRefreshSt
 
       try {
         await onRefresh();
+        haptics.success();
+      } catch {
+        haptics.error();
       } finally {
         setIsRefreshing(false);
       }

@@ -15,7 +15,8 @@ import {
   ArrowUp,
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
-import Loading from '../components/common/Loading';
+import { SkeletonCard } from '../components/common/Skeleton';
+import PullToRefresh from '../components/common/PullToRefresh';
 import ConfirmModal from '../components/modals/ConfirmModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
@@ -109,6 +110,10 @@ const Marketplace: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const handleRefresh = useCallback(async () => {
+    await loadData();
+  }, []);
 
   const handleSubmitGig = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -400,6 +405,7 @@ const Marketplace: React.FC = () => {
 
   return (
     <Layout>
+      <PullToRefresh onRefresh={handleRefresh} disabled={loading}>
       <div className="page-stack">
         <div id="vagas-hero" className="hero-panel scroll-mt-24">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -423,7 +429,7 @@ const Marketplace: React.FC = () => {
         </div>
 
         {loading ? (
-          <Loading text="Carregando vagas..." />
+          <SkeletonCard count={3} />
         ) : error ? (
           <div className="card-contrast bg-red-50/80 border-red-200">
             <p className="text-red-800 mb-3">{error}</p>
@@ -1021,6 +1027,7 @@ const Marketplace: React.FC = () => {
           Voltar ao topo
         </button>
       ) : null}
+      </PullToRefresh>
     </Layout>
   );
 };

@@ -15,7 +15,7 @@ import {
   Disc3,
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
-import Loading from '../components/common/Loading';
+import Skeleton, { SkeletonText } from '../components/common/Skeleton';
 import ProfileHeader from '../components/Profile/ProfileHeader';
 import ReviewCard from '../components/Profile/ReviewCard';
 import ImageCropModal from '../components/modals/ImageCropModal';
@@ -251,8 +251,29 @@ const MusicianProfile: React.FC = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="flex justify-center items-center min-h-[400px]">
-          <Loading />
+        <div className="max-w-4xl mx-auto page-stack">
+          {/* Profile header skeleton */}
+          <div className="card space-y-4">
+            <div className="flex items-center gap-4">
+              <Skeleton variant="circular" className="w-20 h-20 flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-7 w-1/2" />
+                <Skeleton className="h-4 w-1/3" />
+                <Skeleton className="h-4 w-2/3" />
+              </div>
+            </div>
+          </div>
+          {/* Stats skeleton */}
+          <div className="grid grid-cols-3 gap-3">
+            <Skeleton className="h-16 rounded-xl" />
+            <Skeleton className="h-16 rounded-xl" />
+            <Skeleton className="h-16 rounded-xl" />
+          </div>
+          {/* Content skeleton */}
+          <div className="card space-y-3">
+            <Skeleton className="h-6 w-1/4" />
+            <SkeletonText lines={4} />
+          </div>
         </div>
       </Layout>
     );

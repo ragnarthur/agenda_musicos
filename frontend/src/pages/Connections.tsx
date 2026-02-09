@@ -1,5 +1,5 @@
 // pages/Connections.tsx
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Users,
@@ -32,6 +32,7 @@ import InstrumentIcon from '../components/common/InstrumentIcon';
 import { showToast } from '../utils/toast';
 import { logError } from '../utils/logger';
 import VirtualList from '../components/common/VirtualList';
+import PullToRefresh from '../components/common/PullToRefresh';
 
 const connectionLabels: Record<string, string> = {
   follow: 'Favoritar',
@@ -159,6 +160,10 @@ const Connections: React.FC = () => {
     resetConnectionsPage();
   }, [activeTab, resetConnectionsPage]);
 
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([mutateConnections(), mutateConnectionsPage()]);
+  }, [mutateConnections, mutateConnectionsPage]);
+
   const stats = useMemo(() => {
     const totals: Record<string, number> = { follow: 0, recommend: 0, played_with: 0 };
     (connections || []).forEach(c => {
@@ -265,6 +270,7 @@ const Connections: React.FC = () => {
 
   return (
     <Layout>
+      <PullToRefresh onRefresh={handleRefresh} disabled={isLoading}>
         <div className="page-stack overflow-x-hidden">
           {/* Hero Panel com Gradiente Animado */}
           <div className="hero-panel hero-animated fade-in-up">
@@ -887,6 +893,7 @@ const Connections: React.FC = () => {
           </div>
         </div>
       </div>
+      </PullToRefresh>
     </Layout>
   );
 };

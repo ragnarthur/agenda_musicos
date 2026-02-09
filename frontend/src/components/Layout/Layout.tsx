@@ -51,10 +51,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Aqui eu deixo o fundo estático pra economizar GPU no mobile, mas sem perder identidade */}
       {/* As partículas ficam só nas telas-chave (login/landing/cadastro). */}
       <AnimatedBackground enableBlueWaves enableParticles={false} />
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary-600 focus:text-white focus:rounded-lg focus:shadow-lg"
+      >
+        Pular para o conteúdo
+      </a>
       <Navbar />
 
       <div className="relative z-10 flex min-h-[100svh] flex-col pt-4 sm:pt-6">
         <main
+          id="main-content"
           ref={mainRef}
           className="page-shell flex-1 pb-24 md:pb-16"
         >

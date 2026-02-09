@@ -19,10 +19,22 @@
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
   body {
     @apply text-gray-900 dark:text-slate-100;
     font-family: var(--font-sans);
     background: transparent;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .dark .text-gray-900 {
@@ -1156,11 +1168,15 @@
 .card {
   @apply bg-white/95 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-md;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 200px;
 }
 
 .card-contrast {
   @apply bg-white/95 rounded-xl sm:rounded-2xl p-5 sm:p-6 border border-gray-200 shadow-lg;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 220px;
 }
 
 .hero-panel {
