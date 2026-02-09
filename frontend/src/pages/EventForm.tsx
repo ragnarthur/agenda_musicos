@@ -1,7 +1,7 @@
 // pages/EventForm.tsx
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Save, X, CheckCircle, Info, Sparkles, Users, UserPlus } from 'lucide-react';
+import { Save, X, CheckCircle, Info, Sparkles, Users, UserPlus, Clock, AlertCircle } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import ConflictPreview from '../components/event/ConflictPreview';
 import ProposalSummary from '../components/event/ProposalSummary';
@@ -35,6 +35,14 @@ const resolveInstrumentLabel = (instrument: string): string => {
   const pretty = instrument.replace(/_/g, ' ');
   return pretty.charAt(0).toUpperCase() + pretty.slice(1);
 };
+
+// Presets de duração para atalhos comuns
+const DURATION_PRESETS = [
+  { label: '1h', minutes: 60 },
+  { label: '2h', minutes: 120 },
+  { label: '3h', minutes: 180 },
+  { label: '4h', minutes: 240 },
+];
 
 const EventForm: React.FC = () => {
   const navigate = useNavigate();
@@ -95,11 +103,36 @@ const EventForm: React.FC = () => {
     const endMinutes = parseTime(formData.end_time);
     if (startMinutes === null || endMinutes === null) return null;
     let minutes = endMinutes - startMinutes;
-    if (minutes <= 0) minutes += 24 * 60;
+    const crossesMidnight = minutes <= 0;
+    if (crossesMidnight) minutes += 24 * 60;
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return `${hours}h ${mins.toString().padStart(2, '0')}min`;
+    return {
+      label: `${hours}h ${mins.toString().padStart(2, '0')}min`,
+      crossesMidnight,
+      totalMinutes: minutes,
+    };
   }, [formData.start_time, formData.end_time]);
+
+  // Duração em formato string para o ProposalSummary
+  const durationLabel = durationPreview?.label ?? null;
+
+  const handleDurationPreset = (durationMinutes: number) => {
+    if (!formData.start_time) {
+      setError('Selecione o horário de início primeiro');
+      return;
+    }
+
+    const startParts = formData.start_time.split(':').map(Number);
+    const startMinutes = startParts[0] * 60 + startParts[1];
+    const endMinutes = (startMinutes + durationMinutes) % (24 * 60);
+    const endHours = Math.floor(endMinutes / 60);
+    const endMins = endMinutes % 60;
+    const end_time = `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
+
+    setFormData(prev => ({ ...prev, end_time }));
+    setError('');
+  };
 
   // Carrega todos os músicos cadastrados para seleção (exceto em show solo)
   useEffect(() => {
@@ -369,7 +402,7 @@ const EventForm: React.FC = () => {
                     : 'Selecione músicos'}
               </p>
               <p className="mt-2 text-xs uppercase tracking-wide text-gray-500">Duração estimada</p>
-              <p className="text-lg text-gray-900">{durationPreview ?? 'Defina os horários'}</p>
+              <p className="text-lg text-gray-900">{durationLabel ?? 'Defina os horários'}</p>
             </div>
           </div>
         </div>
@@ -485,8 +518,8 @@ const EventForm: React.FC = () => {
             </div>
 
             {/* Data e Horários */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
                 <label
                   htmlFor="event_date"
                   className="block text-sm font-medium text-gray-700 mb-2"
@@ -528,6 +561,25 @@ const EventForm: React.FC = () => {
                     required
                   />
                 </div>
+
+                {/* Presets de duração */}
+                {formData.start_time && (
+                  <div className="mt-3">
+                    <p className="text-xs text-gray-600 mb-2">Duração rápida:</p>
+                    <div className="flex gap-2">
+                      {DURATION_PRESETS.map(preset => (
+                        <button
+                          key={preset.minutes}
+                          type="button"
+                          onClick={() => handleDurationPreset(preset.minutes)}
+                          className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 transition hover:border-primary-400 hover:bg-primary-50 active:border-primary-500 active:bg-primary-100"
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -545,6 +597,33 @@ const EventForm: React.FC = () => {
                     required
                   />
                 </div>
+
+                {/* Duração em tempo real com indicador de cruzamento de meia-noite */}
+                {durationPreview && (
+                  <div className="mt-3">
+                    <div
+                      className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium ${
+                        durationPreview.crossesMidnight
+                          ? 'bg-purple-100 text-purple-800 border border-purple-200'
+                          : 'bg-gray-100 text-gray-700 border border-gray-200'
+                      }`}
+                    >
+                      <Clock className="h-4 w-4" />
+                      <span>{durationPreview.label}</span>
+                      {durationPreview.crossesMidnight && (
+                        <span className="text-xs ml-1">(cruza meia-noite)</span>
+                      )}
+                    </div>
+
+                    {/* Validação em tempo real */}
+                    {durationPreview.totalMinutes <= 0 && (
+                      <div className="mt-2 flex items-start gap-2 text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2 border border-red-200">
+                        <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                        <span>O horário de término deve ser posterior ao horário de início</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -894,7 +973,7 @@ const EventForm: React.FC = () => {
             formattedDate={formattedEventDate}
             startTime={formData.start_time}
             endTime={formData.end_time}
-            duration={durationPreview}
+            duration={durationLabel}
             isSolo={formData.is_solo ?? false}
             selectedMusicians={selectedMusicians}
             availableMusicians={availableMusicians}
