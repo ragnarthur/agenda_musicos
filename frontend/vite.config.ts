@@ -32,7 +32,8 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
+            // Exclui ícones PWA e splash screens (já gerenciados pelo precache com revision hashes)
+            urlPattern: /^(?!.*(?:icon-|favicon|apple-touch-icon|splash)).*\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'image-cache',

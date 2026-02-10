@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Calendar,
   TrendingUp,
@@ -7,6 +7,9 @@ import {
   Users,
   ArrowLeft,
   ClipboardList,
+  Download,
+  RefreshCw,
+  ShieldAlert,
 } from 'lucide-react';
 import {
   adminBookingService,
@@ -28,6 +31,7 @@ import {
   AdminEmptyState,
   AdminLoading,
 } from '../../components/admin';
+import { AdminChartCard, BookingsPipeline, TopListBars } from '../../components/admin/charts';
 
 export default function BookingAudit() {
   const [stats, setStats] = useState<BookingStatistics | null>(null);
@@ -51,11 +55,14 @@ export default function BookingAudit() {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [cancelling, setCancelling] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
 
   const loadStats = useCallback(async () => {
     try {
       const data = await adminBookingService.getStatistics();
       setStats(data);
+      setLastUpdatedAt(new Date());
     } catch (error) {
       showToast.apiError(error);
     }
@@ -72,6 +79,7 @@ export default function BookingAudit() {
 
       const data = await adminBookingService.listAllRequests(params);
       setRequests(data);
+      setLastUpdatedAt(new Date());
     } catch (error) {
       showToast.apiError(error);
     } finally {
@@ -81,8 +89,23 @@ export default function BookingAudit() {
 
   useEffect(() => {
     loadStats();
-    loadRequests();
-  }, [loadStats, loadRequests]);
+  }, [loadStats]);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      loadRequests();
+    }, 350);
+    return () => window.clearTimeout(id);
+  }, [loadRequests]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([loadStats(), loadRequests()]);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const handleSelectRequest = async (requestId: number) => {
     try {
@@ -156,6 +179,116 @@ export default function BookingAudit() {
     }).format(num);
   };
 
+  type FindingSeverity = 'high' | 'medium' | 'low';
+  type AuditFinding = {
+    id: string;
+    severity: FindingSeverity;
+    title: string;
+    details: string;
+  };
+
+  const findings = useMemo((): AuditFinding[] => {
+    if (!selectedRequest) return [];
+
+    const { request, booking, proposals } = selectedRequest;
+    const out: AuditFinding[] = [];
+
+    const reqStatus = request.status;
+    const hasBooking = !!booking;
+
+    if (['reserved', 'confirmed', 'completed'].includes(reqStatus) && !hasBooking) {
+      out.push({
+        id: 'missing_booking',
+        severity: 'high',
+        title: 'Pedido indica reserva, mas nao existe registro de reserva',
+        details: `Status do pedido: ${request.status_display}.`,
+      });
+    }
+
+    if (['pending', 'responded', 'reservation_requested'].includes(reqStatus) && hasBooking) {
+      out.push({
+        id: 'booking_unexpected',
+        severity: 'medium',
+        title: 'Existe reserva vinculada, mas o pedido ainda nao reflete isso',
+        details: `Status do pedido: ${request.status_display}. Status da reserva: ${booking?.status_display}.`,
+      });
+    }
+
+    if (booking?.status === 'cancelled' && !booking.cancel_reason) {
+      out.push({
+        id: 'cancel_reason_missing',
+        severity: 'high',
+        title: 'Reserva cancelada sem motivo registrado',
+        details: 'Preencha um motivo para auditoria e rastreabilidade.',
+      });
+    }
+
+    const acceptedProposal = proposals.find((p) => p.status === 'accepted');
+    if (acceptedProposal && !hasBooking) {
+      out.push({
+        id: 'accepted_without_booking',
+        severity: 'high',
+        title: 'Proposta aceita sem reserva criada',
+        details: 'Ha uma proposta marcada como aceita, mas nao existe reserva vinculada.',
+      });
+    }
+
+    if (request.event_date) {
+      const eventDate = new Date(request.event_date);
+      const now = new Date();
+      if (eventDate.getTime() < now.getTime() && !['completed', 'cancelled'].includes(reqStatus)) {
+        out.push({
+          id: 'past_event_open',
+          severity: 'medium',
+          title: 'Evento no passado com status em aberto',
+          details: `Data do evento: ${new Date(request.event_date).toLocaleDateString('pt-BR')}. Status atual: ${request.status_display}.`,
+        });
+      }
+    }
+
+    if (reqStatus === 'declined' && proposals.some((p) => p.status === 'accepted')) {
+      out.push({
+        id: 'status_mismatch_declined',
+        severity: 'high',
+        title: 'Inconsistencia: pedido recusado com proposta aceita',
+        details: 'Verifique o fluxo de atualizacao de status.',
+      });
+    }
+
+    return out;
+  }, [selectedRequest]);
+
+  const auditScore = useMemo(() => {
+    let score = 100;
+    for (const f of findings) {
+      if (f.severity === 'high') score -= 30;
+      else if (f.severity === 'medium') score -= 15;
+      else score -= 5;
+    }
+    return Math.max(0, score);
+  }, [findings]);
+
+  const exportAuditJson = () => {
+    if (!selectedRequest) return;
+    const report = {
+      generated_at: new Date().toISOString(),
+      score: auditScore,
+      findings,
+      request: selectedRequest.request,
+      booking: selectedRequest.booking,
+      proposals: selectedRequest.proposals,
+      events: selectedRequest.events,
+    };
+
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `audit-request-${selectedRequest.request.id}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (loading && !stats) {
     return (
       <div className="space-y-6">
@@ -205,6 +338,91 @@ export default function BookingAudit() {
         </div>
       )}
 
+      {/* Analytics */}
+      {stats && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <AdminChartCard
+            title="Pipeline de Auditoria"
+            subtitle="Pedidos -> reservas -> confirmacoes -> conclusoes"
+            className="lg:col-span-2"
+            right={
+              <div className="flex items-center gap-3">
+                <div className="hidden md:block text-xs text-slate-400">
+                  Atualizado:{' '}
+                  <span className="text-slate-200 font-semibold tabular-nums">
+                    {lastUpdatedAt ? lastUpdatedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}
+                  </span>
+                </div>
+                <AdminButton
+                  variant="secondary"
+                  size="sm"
+                  icon={RefreshCw}
+                  loading={refreshing}
+                  onClick={handleRefresh}
+                >
+                  Atualizar
+                </AdminButton>
+              </div>
+            }
+          >
+            <BookingsPipeline
+              totalRequests={stats.global.total_requests}
+              totalBookings={stats.global.total_bookings}
+              confirmedBookings={stats.global.confirmed_bookings}
+              completedBookings={stats.global.completed_bookings}
+              cancelledBookings={stats.global.cancelled_bookings}
+            />
+          </AdminChartCard>
+
+          <AdminChartCard
+            title="Top Musicos"
+            subtitle="Mais reservas no periodo"
+          >
+            <TopListBars
+              valueLabel="Reservas"
+              data={stats.top_musicians.map((m) => ({
+                label: `${m.request__musician__user__first_name} ${m.request__musician__user__last_name}`.trim(),
+                value: m.booking_count,
+              }))}
+            />
+          </AdminChartCard>
+
+          <AdminChartCard
+            title="Top Cidades"
+            subtitle="Mais pedidos de orcamento"
+            className="lg:col-span-2"
+          >
+            <TopListBars
+              valueLabel="Pedidos"
+              data={stats.top_cities.map((c) => ({
+                label: `${c.location_city}-${c.location_state}`,
+                value: c.request_count,
+              }))}
+            />
+          </AdminChartCard>
+
+          <AdminChartCard
+            title="Ultimos 30 dias"
+            subtitle="Volume recente"
+          >
+            <div className="grid grid-cols-1 gap-3">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wide">Pedidos</p>
+                <p className="mt-1 text-3xl font-bold text-white tabular-nums">{stats.last_30_days.requests}</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wide">Reservas</p>
+                <p className="mt-1 text-3xl font-bold text-white tabular-nums">{stats.last_30_days.bookings}</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wide">Conversao</p>
+                <p className="mt-1 text-3xl font-bold text-emerald-300 tabular-nums">{stats.global.conversion_rate}%</p>
+              </div>
+            </div>
+          </AdminChartCard>
+        </div>
+      )}
+
       {/* Filters */}
       <AdminCard>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -226,10 +444,12 @@ export default function BookingAudit() {
               <option value="">Todos</option>
               <option value="pending">Pendentes</option>
               <option value="responded">Respondidos</option>
+              <option value="reservation_requested">Solic. de reserva</option>
               <option value="reserved">Reservados</option>
               <option value="confirmed">Confirmados</option>
               <option value="completed">Concluídos</option>
               <option value="cancelled">Cancelados</option>
+              <option value="declined">Recusados</option>
             </select>
           </div>
           <div>
@@ -339,16 +559,80 @@ export default function BookingAudit() {
         title={`Pedido #${selectedRequest?.request.id || ''}`}
         size="xl"
         footer={
-          <AdminButton variant="secondary" onClick={() => {
-            setDetailsOpen(false);
-            setSelectedRequest(null);
-          }}>
-            Fechar
-          </AdminButton>
+          <>
+            <AdminButton
+              variant="secondary"
+              icon={Download}
+              onClick={exportAuditJson}
+              disabled={!selectedRequest}
+            >
+              Exportar JSON
+            </AdminButton>
+            <AdminButton variant="secondary" onClick={() => {
+              setDetailsOpen(false);
+              setSelectedRequest(null);
+            }}>
+              Fechar
+            </AdminButton>
+          </>
         }
       >
         {selectedRequest && (
           <div className="space-y-6">
+            {/* Audit Summary */}
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert className="h-4 w-4 text-amber-300" />
+                    <p className="text-sm font-semibold text-white">Resumo de Auditoria</p>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-400">
+                    Score: <span className="text-white font-bold tabular-nums">{auditScore}</span>
+                    {findings.length > 0 ? (
+                      <span className="ml-2 text-slate-400">({findings.length} achado{findings.length !== 1 ? 's' : ''})</span>
+                    ) : null}
+                  </p>
+                </div>
+                {findings.length === 0 ? (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 text-xs font-semibold">
+                    Sem achados criticos
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 text-xs font-semibold">
+                    Revisao recomendada
+                  </span>
+                )}
+              </div>
+
+              {findings.length > 0 && (
+                <div className="mt-3 grid grid-cols-1 gap-2">
+                  {findings.map((f) => (
+                    <div
+                      key={f.id}
+                      className="rounded-lg border border-white/10 bg-slate-950/30 p-3"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-semibold text-white">{f.title}</p>
+                        <span
+                          className={
+                            f.severity === 'high'
+                              ? 'px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 text-xs font-semibold'
+                              : f.severity === 'medium'
+                                ? 'px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-semibold'
+                                : 'px-2 py-0.5 rounded-full bg-slate-500/20 text-slate-200 text-xs font-semibold'
+                          }
+                        >
+                          {f.severity === 'high' ? 'Alta' : f.severity === 'medium' ? 'Media' : 'Baixa'}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm text-slate-400">{f.details}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Request Info */}
             <div>
               <h3 className="text-base font-semibold text-white mb-3">Informações do Pedido</h3>
