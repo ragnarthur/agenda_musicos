@@ -823,37 +823,44 @@ const EventForm: React.FC = () => {
                   </h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-[1fr,260px,220px] gap-2 md:items-end mb-3">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-700 mb-1 block">
-                      Buscar (nome, estilo ou instrumento)
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:items-end mb-3">
+                  <div className="min-w-0 md:col-span-6">
+                    <label className="text-xs font-semibold text-gray-700 block leading-tight">
+                      Buscar
                     </label>
-                    <div className="relative">
+                    <p className="mt-0.5 text-[11px] leading-tight text-gray-500">
+                      Nome, estilo ou instrumento
+                    </p>
+                    <div className="relative mt-1.5">
                       <input
                         type="text"
                         value={musicianQuery}
                         onChange={e => setMusicianQuery(e.target.value)}
-                        placeholder="Ex: João, sertanejo, violão..."
+                        placeholder="Ex: Joao, sertanejo, violao..."
                         className="input-field"
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="text-xs font-semibold text-gray-700 mb-1 block">Estilo</label>
-                    <select
-                      value={genreFilter}
-                      onChange={e => setGenreFilter(e.target.value)}
-                      className="input-field"
-                    >
-                      <option value="all">Todos</option>
-                      {genreOptions.map(opt => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label} ({opt.count})
-                        </option>
-                      ))}
-                    </select>
+                  <div className="min-w-0 md:col-span-4">
+                    <label className="text-xs font-semibold text-gray-700 block leading-tight">
+                      Estilo
+                    </label>
+                    <div className="mt-1.5">
+                      <select
+                        value={genreFilter}
+                        onChange={e => setGenreFilter(e.target.value)}
+                        className="input-field"
+                      >
+                        <option value="all">Todos</option>
+                        {genreOptions.map(opt => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label} ({opt.count})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2 md:justify-end">
+                  <div className="md:col-span-2 flex md:justify-end">
                     <button
                       type="button"
                       onClick={() => {
@@ -861,7 +868,7 @@ const EventForm: React.FC = () => {
                         setGenreFilter('all');
                         setMusicianQuery('');
                       }}
-                      className={`px-3 py-1.5 rounded-full text-sm border transition ${
+                      className={`w-full md:w-auto min-h-[44px] px-4 py-2 rounded-lg text-sm font-semibold border transition-colors whitespace-nowrap ${
                         instrumentFilter === 'all' && genreFilter === 'all' && !musicianQuery
                           ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
                           : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300'
