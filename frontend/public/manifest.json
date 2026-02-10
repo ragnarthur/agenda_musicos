@@ -12,18 +12,18 @@
   "categories": ["productivity", "entertainment", "music"],
   "icons": [
     {
-      "src": "/favicon-32.png",
+      "src": "/favicon-32-20260210.png",
       "sizes": "32x32",
       "type": "image/png"
     },
     {
-      "src": "/icon-192.png",
+      "src": "/icon-192-20260210.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/icon-512-20260210.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -35,21 +35,21 @@
       "short_name": "Início",
       "description": "Acessar o painel principal",
       "url": "/dashboard",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192-20260210.png", "sizes": "192x192" }]
     },
     {
       "name": "Minha Agenda",
       "short_name": "Agenda",
       "description": "Ver eventos agendados",
       "url": "/eventos/agenda",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192-20260210.png", "sizes": "192x192" }]
     },
     {
       "name": "Músicos",
       "short_name": "Músicos",
       "description": "Encontrar músicos",
       "url": "/musicos",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192-20260210.png", "sizes": "192x192" }]
     }
   ],
   "screenshots": [],
