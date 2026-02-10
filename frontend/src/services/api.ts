@@ -144,7 +144,10 @@ api.interceptors.response.use(
       '/redefinir-senha',
       ADMIN_ROUTES.login,
     ];
-    const isOnPublicRoute = publicRoutes.some(route => window.location.pathname.startsWith(route));
+    // Careful: every pathname starts with '/', so '/' must be an exact match.
+    const isOnPublicRoute = publicRoutes.some(route =>
+      route === '/' ? window.location.pathname === '/' : window.location.pathname.startsWith(route)
+    );
 
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       if (isPublicAuthPath) {

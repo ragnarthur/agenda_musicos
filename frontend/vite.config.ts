@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'icon-192.png', 'icon-512.png'],
+      includeAssets: ['favicon.ico', 'favicon-32.png', 'icon-192.png', 'icon-512.png'],
       manifest: false, // Usar manifest.json existente
       workbox: {
         // Garantir que a atualização do SW entra em vigor sem precisar fechar todas as abas.
