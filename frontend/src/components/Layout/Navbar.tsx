@@ -170,9 +170,9 @@ const Navbar: React.FC = memo(() => {
             />
             <AppNavLink to="/musicos" icon={<Users className="h-5 w-5" />} label="Músicos" />
             <AppNavLink
-              to="/conexoes"
-              icon={<HeartHandshake className="h-5 w-5" />}
-              label="Rede & Badges"
+              to="/configuracoes/financeiro"
+              icon={<UserCog className="h-5 w-5" />}
+              label="Editar Perfil"
             />
             <AppNavLink
               to="/disponibilidades"
@@ -193,6 +193,19 @@ const Navbar: React.FC = memo(() => {
               </button>
               {openDesktopMore && (
                 <div className="absolute right-0 mt-2 w-60 rounded-xl bg-white/90 border border-slate-200/70 shadow-2xl shadow-slate-300/60 p-2 z-[70] dark:bg-slate-950/95 dark:border-white/10 dark:shadow-black/40">
+                  <RouterNavLink
+                    to="/conexoes"
+                    className={({ isActive }) =>
+                      `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                        isActive
+                          ? 'bg-slate-900/5 text-slate-900 dark:bg-white/10 dark:text-white'
+                          : 'text-slate-700 hover:bg-slate-900/5 dark:text-slate-200 dark:hover:bg-white/5'
+                      }`
+                    }
+                  >
+                    <HeartHandshake className="h-4 w-4" />
+                    Rede & Badges
+                  </RouterNavLink>
                   <RouterNavLink
                     to="/configuracoes/notificacoes"
                     className={({ isActive }) =>
@@ -266,7 +279,11 @@ const Navbar: React.FC = memo(() => {
               badge={pendingMyResponse}
             />
             <AppNavLinkCompact to="/musicos" icon={<Users className="h-5 w-5" />} label="Músicos" />
-            <AppNavLinkCompact to="/marketplace" icon={<Megaphone className="h-5 w-5" />} label="Vagas" />
+            <AppNavLinkCompact
+              to="/configuracoes/financeiro"
+              icon={<UserCog className="h-5 w-5" />}
+              label="Editar Perfil"
+            />
             <div className="relative z-[60]" data-more-menu="desktop">
               <button
                 type="button"
@@ -306,6 +323,19 @@ const Navbar: React.FC = memo(() => {
                   >
                     <Clock className="h-4 w-4" />
                     Datas Disponíveis
+                  </RouterNavLink>
+                  <RouterNavLink
+                    to="/marketplace"
+                    className={({ isActive }) =>
+                      `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                        isActive
+                          ? 'bg-slate-900/5 text-slate-900 dark:bg-white/10 dark:text-white'
+                          : 'text-slate-700 hover:bg-slate-900/5 dark:text-slate-200 dark:hover:bg-white/5'
+                      }`
+                    }
+                  >
+                    <Megaphone className="h-4 w-4" />
+                    Vagas
                   </RouterNavLink>
                   <RouterNavLink
                     to="/configuracoes/notificacoes"

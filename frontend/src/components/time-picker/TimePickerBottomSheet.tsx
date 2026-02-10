@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { Clock, X, Check } from 'lucide-react';
@@ -17,8 +17,9 @@ interface TimePickerBottomSheetProps {
   enableQuickSelect?: boolean;
 }
 
-const TimePickerBottomSheet: React.FC<TimePickerBottomSheetProps> = ({
-  isOpen,
+type InnerProps = Omit<TimePickerBottomSheetProps, 'isOpen'>;
+
+const TimePickerBottomSheetInner: React.FC<InnerProps> = ({
   value,
   onChange,
   onClose,
@@ -28,12 +29,6 @@ const TimePickerBottomSheet: React.FC<TimePickerBottomSheetProps> = ({
   enableQuickSelect = false,
 }) => {
   const [tempValue, setTempValue] = useState(value);
-
-  useEffect(() => {
-    if (isOpen) {
-      setTempValue(value);
-    }
-  }, [isOpen, value]);
 
   const [hour, minute] = tempValue.split(':').map(Number);
 
@@ -60,8 +55,6 @@ const TimePickerBottomSheet: React.FC<TimePickerBottomSheetProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   const content = (
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
       <div
@@ -70,7 +63,7 @@ const TimePickerBottomSheet: React.FC<TimePickerBottomSheetProps> = ({
         aria-hidden="true"
       />
 
-      <SwipeToDismissWrapper isOpen={isOpen} onClose={onClose}>
+      <SwipeToDismissWrapper isOpen={true} onClose={onClose}>
         <motion.div
           initial={{ y: '100%', opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -188,6 +181,11 @@ const TimePickerBottomSheet: React.FC<TimePickerBottomSheetProps> = ({
   );
 
   return createPortal(content, document.body);
+};
+
+const TimePickerBottomSheet: React.FC<TimePickerBottomSheetProps> = ({ isOpen, ...props }) => {
+  if (!isOpen) return null;
+  return <TimePickerBottomSheetInner {...props} />;
 };
 
 export default TimePickerBottomSheet;

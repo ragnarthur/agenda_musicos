@@ -56,9 +56,13 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const handleWhatsAppClick = () => {
     if (musician.whatsapp) {
       const phone = musician.whatsapp.replace(/\D/g, '');
+      const text = encodeURIComponent(
+        `Olá ${musician.full_name}, vi seu perfil na Rede Musical!`
+      );
       window.open(
-        `https://wa.me/55${phone}?text=Olá ${musician.full_name}, vi seu perfil na Rede Musical!`,
-        '_blank'
+        `https://wa.me/55${phone}?text=${text}`,
+        '_blank',
+        'noopener,noreferrer'
       );
     }
   };

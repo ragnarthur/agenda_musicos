@@ -300,12 +300,21 @@ const MusicianPublicProfile: React.FC = () => {
     ...(musician.bio ? { description: musician.bio } : {}),
   } : null;
 
+  // Avoid XSS via `</script>` when embedding JSON-LD using dangerouslySetInnerHTML.
+  // JSON.stringify does not escape `<`, so a malicious string could break out of the script tag.
+  const jsonLdString = jsonLd
+    ? JSON.stringify(jsonLd)
+        .replace(/</g, '\\u003c')
+        .replace(/\u2028/g, '\\u2028')
+        .replace(/\u2029/g, '\\u2029')
+    : null;
+
   return (
     <FullscreenBackground enableBlueWaves>
-      {jsonLd && (
+      {jsonLdString && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdString }}
         />
       )}
       <div className="relative z-10 min-h-[100svh]">

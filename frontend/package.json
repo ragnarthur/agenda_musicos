@@ -27,7 +27,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@iconify/react": "^6.0.2",
-    "axios": "^1.13.2",
+    "axios": "^1.13.5",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.26",
     "lottie-react": "^2.4.1",
