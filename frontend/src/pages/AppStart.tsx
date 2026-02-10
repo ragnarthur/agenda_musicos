@@ -8,6 +8,7 @@ import { useAdminAuth } from '../contexts/AdminAuthContext';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import Loading from '../components/common/Loading';
 import { ADMIN_ROUTES } from '../routes/adminRoutes';
+import OwlMascot from '../components/ui/OwlMascot';
 
 const AppStart: React.FC = () => {
   const navigate = useNavigate();
@@ -62,29 +63,44 @@ const AppStart: React.FC = () => {
   return (
     <FullscreenBackground>
       <div className="min-h-[100svh] flex flex-col items-center justify-center px-6 py-12">
-        {/* Logo */}
+        {/* Brand Hero (align with Landing look) */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
+          initial={{ opacity: 0, scale: 0.92 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="mb-8"
+          transition={{ duration: 0.6 }}
+          className="mb-10 text-center"
         >
-          <img
-            src="/icon-512.png"
-            alt="GigFlow"
-            className="w-24 h-24 rounded-2xl shadow-2xl shadow-primary-500/30"
-          />
-        </motion.div>
+          <motion.div
+            className="mx-auto h-36 w-36 sm:h-40 sm:w-40"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.05 }}
+          >
+            <OwlMascot className="h-36 w-36 sm:h-40 sm:w-40" />
+          </motion.div>
 
-        {/* Título */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-center mb-12"
-        >
-          <h1 className="text-3xl font-bold text-white mb-2">GigFlow</h1>
-          <p className="text-gray-400">Agenda para Músicos</p>
+          <motion.div
+            className="mt-3 flex items-center justify-center gap-2"
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+          >
+            <h1 className="text-4xl sm:text-5xl font-bold logo-animated drop-shadow-xl leading-tight">
+              GigFlow
+            </h1>
+            <span className="text-[13px] sm:text-[14px] px-2 py-0.5 bg-gradient-to-r from-amber-500/8 via-amber-400/12 to-amber-500/8 text-amber-100/70 rounded-full border border-amber-400/15 font-light italic tracking-wider">
+              Beta
+            </span>
+          </motion.div>
+
+          <motion.p
+            className="mt-2 text-base sm:text-lg text-slate-300/80"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.22 }}
+          >
+            Agenda para Músicos
+          </motion.p>
         </motion.div>
 
         {/* Pergunta */}
@@ -92,7 +108,7 @@ const AppStart: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-lg text-gray-300 mb-8 text-center"
+          className="text-lg text-gray-200/80 mb-8 text-center"
         >
           Como deseja entrar?
         </motion.p>
@@ -144,7 +160,7 @@ const AppStart: React.FC = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.5 }}
           onClick={() => navigate('/')}
-          className="mt-12 text-sm text-gray-500 hover:text-gray-300 transition-colors"
+          className="mt-12 text-sm text-slate-400/70 hover:text-slate-200 transition-colors"
         >
           Saiba mais sobre o GigFlow
         </motion.button>
