@@ -511,9 +511,18 @@ export const publicMusicGenresService = {
   // Lista gêneros disponíveis (derivados dos músicos ativos)
   listAvailable: async (params?: { city?: string; state?: string }): Promise<string[]> => {
     const response = await api.get('/musicians/genres/', { params });
-    const payload = response.data as string[] | { results?: string[] } | { genres?: string[] };
-    if (Array.isArray(payload)) return payload;
-    return payload.genres ?? payload.results ?? [];
+    const payload = response.data as unknown;
+    if (Array.isArray(payload)) return payload as string[];
+
+    if (payload && typeof payload === 'object') {
+      const obj = payload as Record<string, unknown>;
+      const genres = obj.genres;
+      const results = obj.results;
+      if (Array.isArray(genres)) return genres as string[];
+      if (Array.isArray(results)) return results as string[];
+    }
+
+    return [];
   },
 };
 
