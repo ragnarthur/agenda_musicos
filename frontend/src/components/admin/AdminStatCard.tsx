@@ -15,19 +15,19 @@ interface AdminStatCardProps {
 const getColorClasses = (color: StatCardColor): { bg: string; icon: string; text: string } => {
   switch (color) {
     case 'indigo':
-      return { bg: 'bg-indigo-100', icon: 'text-indigo-600', text: 'text-indigo-600' };
+      return { bg: 'bg-indigo-500/20', icon: 'text-indigo-400', text: 'text-indigo-400' };
     case 'amber':
-      return { bg: 'bg-amber-100', icon: 'text-amber-600', text: 'text-amber-600' };
+      return { bg: 'bg-amber-500/20', icon: 'text-amber-400', text: 'text-amber-400' };
     case 'green':
-      return { bg: 'bg-green-100', icon: 'text-green-600', text: 'text-green-600' };
+      return { bg: 'bg-emerald-500/20', icon: 'text-emerald-400', text: 'text-emerald-400' };
     case 'blue':
-      return { bg: 'bg-blue-100', icon: 'text-blue-600', text: 'text-blue-600' };
+      return { bg: 'bg-blue-500/20', icon: 'text-blue-400', text: 'text-blue-400' };
     case 'red':
-      return { bg: 'bg-red-100', icon: 'text-red-600', text: 'text-red-600' };
+      return { bg: 'bg-red-500/20', icon: 'text-red-400', text: 'text-red-400' };
     case 'purple':
-      return { bg: 'bg-purple-100', icon: 'text-purple-600', text: 'text-purple-600' };
+      return { bg: 'bg-purple-500/20', icon: 'text-purple-400', text: 'text-purple-400' };
     default:
-      return { bg: 'bg-indigo-100', icon: 'text-indigo-600', text: 'text-indigo-600' };
+      return { bg: 'bg-indigo-500/20', icon: 'text-indigo-400', text: 'text-indigo-400' };
   }
 };
 
@@ -47,11 +47,10 @@ export const AdminStatCard: React.FC<AdminStatCardProps> = ({
       transition={{ duration: 0.3 }}
       whileHover={{
         y: -2,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
         transition: { duration: 0.2 },
       }}
       whileTap={{ scale: 0.98 }}
-      className={`admin-card ${className}`}
+      className={`admin-card p-4 sm:p-5 ${className}`}
     >
       <div className="flex items-center gap-3">
         <motion.div
@@ -72,7 +71,7 @@ export const AdminStatCard: React.FC<AdminStatCardProps> = ({
             {label}
           </motion.p>
           <motion.p
-            className="text-3xl font-bold text-gray-900"
+            className="text-3xl font-bold text-white"
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}

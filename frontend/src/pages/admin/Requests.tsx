@@ -1,25 +1,34 @@
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import {
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  Search,
-  Mail,
-  MapPin,
-  Music2,
-  Phone,
-} from 'lucide-react';
+import { Mail, MapPin, Music2, Phone } from 'lucide-react';
 import { musicianRequestService, type MusicianRequest } from '../../services/publicApi';
 import { showToast } from '../../utils/toast';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ADMIN_ROUTES } from '../../routes/adminRoutes';
+import {
+  AdminHero,
+  AdminCard,
+  AdminSearchBar,
+  AdminStatusBadge,
+  AdminModal,
+  AdminPagination,
+  AdminButton,
+  AdminEmptyState,
+  AdminLoading,
+  AdminTabs,
+} from '../../components/admin';
 
-type FilterType = 'all' | 'pending' | 'approved' | 'rejected';
+type FilterType = 'pending' | 'approved' | 'rejected' | 'all';
 type SortField = 'name' | 'created_at' | 'status';
 type SortOrder = 'asc' | 'desc';
+
+const filterTabs = [
+  { key: 'pending', label: 'Pendentes' },
+  { key: 'approved', label: 'Aprovados' },
+  { key: 'rejected', label: 'Rejeitados' },
+  { key: 'all', label: 'Todos' },
+];
 
 const Requests: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -176,6 +185,7 @@ const Requests: React.FC = () => {
 
   const handleCloseDetails = () => {
     setSelectedRequest(null);
+    setAdminNotes('');
     const query = searchParams.toString();
     navigate({
       pathname: ADMIN_ROUTES.requests,
@@ -245,157 +255,81 @@ const Requests: React.FC = () => {
 
   const totalPages = Math.ceil(sortedAndFilteredRequests.length / itemsPerPage);
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Clock className="w-4 h-4 text-yellow-500" />;
-      case 'approved':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'rejected':
-        return <XCircle className="w-4 h-4 text-red-500" />;
-      default:
-        return <AlertCircle className="w-4 h-4 text-gray-500" />;
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const variants = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      approved: 'bg-green-100 text-green-800',
-      rejected: 'bg-red-100 text-red-800',
-      cancelled: 'bg-gray-100 text-gray-800',
-    };
-
-    return (
-      <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variants[status as keyof typeof variants] || 'bg-gray-100 text-gray-800'}`}
-      >
-        {getStatusIcon(status)}
-        <span className="ml-1">{status.charAt(0).toUpperCase() + status.slice(1)}</span>
-      </span>
-    );
-  };
-
   if (loading) {
     return (
-      <div className="space-y-4">
-        {[1, 2, 3].map(i => (
-          <div
-            key={i}
-            className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-5 animate-pulse"
-          >
-            <div className="space-y-2 flex-1">
-              <div className="h-5 bg-slate-700 rounded w-1/3"></div>
-              <div className="h-4 bg-slate-700 rounded w-2/3"></div>
-              <div className="h-3 bg-slate-700 rounded w-1/2"></div>
-            </div>
-          </div>
-        ))}
+      <div className="space-y-6">
+        <AdminHero
+          title="Solicitações de Acesso"
+          description="Gerencie as solicitações de novos músicos"
+        />
+        <AdminLoading count={3} />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="bg-slate-900/90 backdrop-blur shadow rounded-lg p-6">
-        <h1 className="text-2xl font-bold text-white mb-2">Solicitações de Acesso</h1>
-        <p className="text-slate-300">Gerencie as solicitações de novos músicos</p>
-      </div>
+      <AdminHero
+        title="Solicitações de Acesso"
+        description="Gerencie as solicitações de novos músicos"
+      />
 
-      {/* Filters */}
-      <div className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-4">
-        <div className="overflow-x-auto pb-2 mb-4">
-          <div className="flex items-center gap-2 min-w-max">
-            <button
-              type="button"
-              onClick={() => setFilter('pending')}
-              className={`min-h-[44px] px-3 py-1.5 rounded-full text-sm font-semibold ${filter === 'pending' ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-800 text-slate-400'}`}
-            >
-              Pendentes
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter('approved')}
-              className={`min-h-[44px] px-3 py-1.5 rounded-full text-sm font-semibold ${filter === 'approved' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}
-            >
-              Aprovados
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter('rejected')}
-              className={`min-h-[44px] px-3 py-1.5 rounded-full text-sm font-semibold ${filter === 'rejected' ? 'bg-red-500/20 text-red-400' : 'bg-slate-800 text-slate-400'}`}
-            >
-              Rejeitados
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter('all')}
-              className={`min-h-[44px] px-3 py-1.5 rounded-full text-sm font-semibold ${filter === 'all' ? 'bg-slate-800 text-slate-300' : 'bg-slate-800 text-slate-400'}`}
-            >
-              Todos
-            </button>
+      {/* Filters & Search */}
+      <AdminCard>
+        <div className="space-y-4">
+          <AdminTabs
+            tabs={filterTabs}
+            active={filter}
+            onChange={key => setFilter(key as FilterType)}
+          />
+          <AdminSearchBar
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Buscar por nome, email, cidade ou instrumento"
+          />
+          {/* Sort Controls */}
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-sm font-medium text-slate-400">Ordenar:</span>
+            {([
+              { field: 'name' as SortField, label: 'Nome' },
+              { field: 'created_at' as SortField, label: 'Data' },
+              { field: 'status' as SortField, label: 'Status' },
+            ]).map(({ field, label }) => (
+              <button
+                key={field}
+                onClick={() => handleSort(field)}
+                className={`min-h-[36px] px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                  sortField === field
+                    ? 'bg-blue-500/20 text-blue-400'
+                    : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                }`}
+              >
+                {label} {sortField === field && (sortOrder === 'asc' ? '↑' : '↓')}
+              </button>
+            ))}
           </div>
         </div>
-
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={event => setSearchTerm(event.target.value)}
-            placeholder="Buscar por nome, email, cidade ou instrumento"
-            className="min-h-[44px] w-full pl-9 pr-3 py-2.5 border border-slate-600 bg-slate-800 text-white placeholder:text-slate-400 rounded-lg text-sm focus:ring-2 focus:ring-amber-400/40"
-          />
-        </div>
-      </div>
-
-      {/* Sort Controls */}
-      <div className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-4 flex flex-wrap gap-3 items-center">
-        <span className="text-sm font-medium text-slate-300">Ordenar por:</span>
-        <button
-          onClick={() => handleSort('name')}
-          className={`min-h-[44px] px-3 py-1.5 rounded text-sm ${sortField === 'name' ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-800 text-slate-300'}`}
-        >
-          Nome {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
-        </button>
-        <button
-          onClick={() => handleSort('created_at')}
-          className={`min-h-[44px] px-3 py-1.5 rounded text-sm ${sortField === 'created_at' ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-800 text-slate-300'}`}
-        >
-          Data {sortField === 'created_at' && (sortOrder === 'asc' ? '↑' : '↓')}
-        </button>
-        <button
-          onClick={() => handleSort('status')}
-          className={`min-h-[44px] px-3 py-1.5 rounded text-sm ${sortField === 'status' ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-800 text-slate-300'}`}
-        >
-          Status {sortField === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}
-        </button>
-      </div>
+      </AdminCard>
 
       {/* Requests List */}
       {sortedAndFilteredRequests.length === 0 ? (
-        <div className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-10 text-center">
-          <AlertCircle className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-white mb-2">Nenhuma solicitação encontrada</h3>
-          <p className="text-slate-300">
-            {searchTerm
+        <AdminEmptyState
+          title="Nenhuma solicitação encontrada"
+          description={
+            searchTerm
               ? 'Tente ajustar os filtros ou buscar por outro termo.'
-              : 'Nenhuma solicitação neste status.'}
-          </p>
-        </div>
+              : 'Nenhuma solicitação neste status.'
+          }
+        />
       ) : (
         <>
           <div className="grid gap-4">
             {paginatedRequests.map(request => (
-              <div
-                key={request.id}
-                className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-4 sm:p-5"
-              >
+              <AdminCard key={request.id}>
                 <div className="space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <span className="text-lg font-semibold text-white">{request.full_name}</span>
-                    {getStatusBadge(request.status)}
+                    <AdminStatusBadge status={request.status} />
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-300">
@@ -417,7 +351,7 @@ const Requests: React.FC = () => {
                     </span>
                   </div>
 
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-500">
                     Enviado em{' '}
                     {format(parseISO(request.created_at), "dd/MM/yyyy 'às' HH:mm", {
                       locale: ptBR,
@@ -425,105 +359,98 @@ const Requests: React.FC = () => {
                   </p>
 
                   <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => handleViewDetails(request)}
-                      className="min-h-[44px] w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-lg border border-white/10 text-slate-200 hover:bg-white/10"
-                    >
+                    <AdminButton variant="secondary" size="sm" onClick={() => handleViewDetails(request)}>
                       Detalhes
-                    </button>
+                    </AdminButton>
                     {request.status === 'pending' && (
                       <>
-                        <button
-                          type="button"
+                        <AdminButton
+                          variant="success"
+                          size="sm"
                           onClick={() => handleApprove(request.id)}
-                          disabled={actionLoading === request.id}
-                          className="min-h-[44px] w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                          loading={actionLoading === request.id}
                         >
-                          {actionLoading === request.id ? (
-                            <span className="flex items-center justify-center gap-2">
-                              <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                              Aprovando...
-                            </span>
-                          ) : (
-                            'Aprovar'
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedRequest(request);
-                            setAdminNotes('');
-                          }}
-                          disabled={actionLoading === request.id}
-                          className="min-h-[44px] w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/20 disabled:opacity-60 disabled:cursor-not-allowed"
+                          Aprovar
+                        </AdminButton>
+                        <AdminButton
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleViewDetails(request)}
                         >
                           Rejeitar
-                        </button>
+                        </AdminButton>
                       </>
                     )}
                     {request.status === 'approved' && !request.invite_used && (
-                      <button
-                        type="button"
+                      <AdminButton
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleResendInvite(request.id)}
-                        disabled={actionLoading === request.id}
-                        className="min-h-[44px] w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-lg border border-amber-500/40 text-amber-300 hover:bg-amber-500/10 disabled:opacity-60 disabled:cursor-not-allowed"
+                        loading={actionLoading === request.id}
                       >
-                        {actionLoading === request.id ? (
-                          <span className="flex items-center justify-center gap-2">
-                            <div className="animate-spin h-4 w-4 border-2 border-amber-300 border-t-transparent rounded-full"></div>
-                            Reenviando...
-                          </span>
-                        ) : (
-                          'Reenviar convite'
-                        )}
-                      </button>
+                        Reenviar convite
+                      </AdminButton>
                     )}
                   </div>
                 </div>
-              </div>
+              </AdminCard>
             ))}
           </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
-              <p className="text-sm text-slate-300">
-                Mostrando{' '}
-                {Math.min((currentPage - 1) * itemsPerPage + 1, sortedAndFilteredRequests.length)} -{' '}
-                {Math.min(currentPage * itemsPerPage, sortedAndFilteredRequests.length)} de{' '}
-                {sortedAndFilteredRequests.length} resultados
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
-                  className="min-h-[44px] px-3 py-1 rounded border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 text-slate-300"
-                >
-                  Anterior
-                </button>
-                <span className="px-3 py-1 text-slate-300">
-                  Página {currentPage} de {totalPages}
-                </span>
-                <button
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                  className="min-h-[44px] px-3 py-1 rounded border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 text-slate-300"
-                >
-                  Próxima
-                </button>
-              </div>
-            </div>
-          )}
+          <AdminPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={sortedAndFilteredRequests.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+          />
         </>
       )}
 
       {/* Details Modal */}
-      {selectedRequest && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-          <div className="bg-slate-900/90 backdrop-blur rounded-2xl shadow-2xl w-full max-w-lg p-6">
-            <h2 className="text-xl font-bold text-white mb-4">Detalhes da Solicitação</h2>
-
+      <AdminModal
+        isOpen={!!selectedRequest}
+        onClose={handleCloseDetails}
+        title="Detalhes da Solicitação"
+        footer={
+          selectedRequest && (
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <AdminButton variant="secondary" onClick={handleCloseDetails}>
+                Fechar
+              </AdminButton>
+              {selectedRequest.status === 'pending' && (
+                <>
+                  <AdminButton
+                    variant="danger"
+                    onClick={() => handleReject(selectedRequest.id, adminNotes)}
+                    loading={actionLoading === selectedRequest.id}
+                  >
+                    Rejeitar
+                  </AdminButton>
+                  <AdminButton
+                    variant="success"
+                    onClick={() => handleApprove(selectedRequest.id)}
+                    loading={actionLoading === selectedRequest.id}
+                  >
+                    Aprovar
+                  </AdminButton>
+                </>
+              )}
+              {selectedRequest.status === 'approved' && !selectedRequest.invite_used && (
+                <AdminButton
+                  variant="primary"
+                  onClick={() => handleResendInvite(selectedRequest.id)}
+                  loading={actionLoading === selectedRequest.id}
+                >
+                  Reenviar convite
+                </AdminButton>
+              )}
+            </div>
+          )
+        }
+      >
+        {selectedRequest && (
+          <div className="space-y-4">
             <div className="space-y-3 text-sm text-slate-300">
               <div>
                 <strong className="text-white">Nome:</strong> {selectedRequest.full_name}
@@ -542,7 +469,8 @@ const Requests: React.FC = () => {
                 {selectedRequest.state}
               </div>
               <div>
-                <strong className="text-white">Status:</strong> {selectedRequest.status_display}
+                <strong className="text-white">Status:</strong>{' '}
+                <AdminStatusBadge status={selectedRequest.status} label={selectedRequest.status_display} />
               </div>
               {selectedRequest.instagram && (
                 <div>
@@ -559,82 +487,19 @@ const Requests: React.FC = () => {
 
             {selectedRequest.status === 'pending' && (
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">
-                  Notas do admin (opcional)
-                </label>
+                <label className="admin-label">Notas do admin (opcional)</label>
                 <textarea
                   value={adminNotes}
                   onChange={event => setAdminNotes(event.target.value)}
                   rows={3}
-                  className="min-h-[96px] w-full rounded-lg border border-slate-600 bg-slate-800 text-white placeholder:text-slate-400 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40"
+                  className="admin-textarea min-h-[96px]"
                   placeholder="Observações internas ou motivo da recusa"
                 />
               </div>
             )}
-
-            <div className="flex flex-col sm:flex-row justify-end gap-2">
-              <button
-                type="button"
-                onClick={handleCloseDetails}
-                className="min-h-[44px] px-4 py-2 rounded-lg border border-white/10 text-slate-200 hover:bg-white/10"
-              >
-                Fechar
-              </button>
-              {selectedRequest.status === 'pending' && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => handleReject(selectedRequest.id, adminNotes)}
-                    disabled={actionLoading === selectedRequest.id}
-                    className="min-h-[44px] px-4 py-2 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/20 disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    {actionLoading === selectedRequest.id ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <div className="animate-spin h-4 w-4 border-2 border-red-600 border-t-transparent rounded-full"></div>
-                        Rejeitando...
-                      </span>
-                    ) : (
-                      'Rejeitar'
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleApprove(selectedRequest.id)}
-                    disabled={actionLoading === selectedRequest.id}
-                    className="min-h-[44px] px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    {actionLoading === selectedRequest.id ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                        Aprovando...
-                      </span>
-                    ) : (
-                      'Aprovar'
-                    )}
-                  </button>
-                </>
-              )}
-              {selectedRequest.status === 'approved' && !selectedRequest.invite_used && (
-                <button
-                  type="button"
-                  onClick={() => handleResendInvite(selectedRequest.id)}
-                  disabled={actionLoading === selectedRequest.id}
-                  className="min-h-[44px] px-4 py-2 rounded-lg border border-amber-500/40 text-amber-300 hover:bg-amber-500/10 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {actionLoading === selectedRequest.id ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <div className="animate-spin h-4 w-4 border-2 border-amber-300 border-t-transparent rounded-full"></div>
-                      Reenviando...
-                    </span>
-                  ) : (
-                    'Reenviar convite'
-                  )}
-                </button>
-              )}
-            </div>
           </div>
-        </div>
-      )}
+        )}
+      </AdminModal>
     </div>
   );
 };

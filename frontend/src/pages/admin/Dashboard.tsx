@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { TrendingUp, Users, Building2 } from 'lucide-react';
+import { TrendingUp, Users, Building2, Clock, ArrowRight } from 'lucide-react';
 import { cityAdminService, type DashboardStatsExtended } from '../../services/publicApi';
-import { AdminStatCard, AdminHero, AdminCard } from '../../components/admin';
+import { AdminStatCard, AdminHero, AdminCard, AdminLoading } from '../../components/admin';
 import { showToast } from '../../utils/toast';
+import { ADMIN_ROUTES } from '../../routes/adminRoutes';
 
 const AdminDashboard: React.FC = () => {
   const [extendedStats, setExtendedStats] = useState<DashboardStatsExtended | null>(null);
@@ -32,41 +34,19 @@ const AdminDashboard: React.FC = () => {
           title="Painel Administrativo"
           description="Gerencie solicitações, cidades e métricas da plataforma"
         />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map(i => (
-            <AdminStatCard
-              key={i}
-              label="Carregando..."
-              value="..."
-              icon={TrendingUp}
-              color="indigo"
-              className="animate-pulse"
-            />
-          ))}
-        </div>
+        <AdminLoading count={2} />
       </div>
     );
   }
 
-  const heroStats = extendedStats
-    ? [
-        { label: 'Total Solicitações', value: extendedStats.requests.total, icon: TrendingUp },
-        { label: 'Pendentes', value: extendedStats.requests.pending, icon: TrendingUp },
-        { label: 'Músicos Ativos', value: extendedStats.musicians.total, icon: Users },
-        { label: 'Cidades Parceiras', value: extendedStats.cities.partner, icon: Building2 },
-      ]
-    : [];
-
   return (
     <div className="space-y-6">
-      {/* Hero Section */}
       <AdminHero
         title="Painel Administrativo"
         description="Gerencie solicitações, cidades e métricas da plataforma"
-        stats={heroStats}
       />
 
-      {/* Extended Stats Grid */}
+      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <AdminStatCard
           label="Total Solicitações"
@@ -77,7 +57,7 @@ const AdminDashboard: React.FC = () => {
         <AdminStatCard
           label="Pendentes"
           value={extendedStats?.requests.pending || 0}
-          icon={TrendingUp}
+          icon={Clock}
           color="amber"
         />
         <AdminStatCard
@@ -94,16 +74,29 @@ const AdminDashboard: React.FC = () => {
         />
       </div>
 
+      {/* Quick Actions */}
+      {extendedStats && (extendedStats.requests.pending > 0) && (
+        <AdminCard>
+          <h2 className="text-lg font-semibold text-white mb-3">Ações Rápidas</h2>
+          <div className="flex flex-wrap gap-3">
+            {extendedStats.requests.pending > 0 && (
+              <Link
+                to={ADMIN_ROUTES.requests}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-colors text-sm font-medium"
+              >
+                <Clock className="h-4 w-4" />
+                {extendedStats.requests.pending} solicitações pendentes
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            )}
+          </div>
+        </AdminCard>
+      )}
+
       {/* Top Cities */}
       {extendedStats?.top_cities && extendedStats.top_cities.length > 0 && (
         <AdminCard>
-          <motion.h2
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-2xl font-bold text-white mb-4"
-          >
-            Top Cidades
-          </motion.h2>
+          <h2 className="text-lg font-semibold text-white mb-4">Top Cidades</h2>
           <div className="space-y-3">
             {extendedStats.top_cities.map((city, index) => (
               <motion.div
@@ -117,7 +110,7 @@ const AdminDashboard: React.FC = () => {
                   <span className="font-medium text-white">
                     {city.city}, {city.state}
                   </span>
-                  <span className="ml-3 text-sm text-slate-300">{city.total} solicitações</span>
+                  <span className="ml-3 text-sm text-slate-400">{city.total} solicitações</span>
                 </div>
                 <span className="text-sm font-medium text-amber-400">{city.pending} pendentes</span>
               </motion.div>

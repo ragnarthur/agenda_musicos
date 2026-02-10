@@ -1741,128 +1741,145 @@
 
 /* Admin Card Styles */
 .admin-card {
-  @apply bg-white/95 backdrop-blur-sm rounded-xl border border-gray-100 shadow-lg;
+  @apply bg-slate-900/90 backdrop-blur rounded-xl border border-white/10 shadow-lg text-white;
 }
 
 .admin-card-hover {
-  @apply hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300;
+  @apply hover:shadow-xl hover:border-white/20 transition-all duration-300;
 }
 
 /* Admin Badge Styles */
 .admin-badge {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+}
+
+.admin-badge-sm {
+  @apply px-2 py-0.5 text-xs;
+}
+
+.admin-badge-md {
+  @apply px-3 py-1 text-sm;
+}
+
+.admin-badge-pending {
+  @apply bg-amber-500/20 text-amber-400;
+}
+
+.admin-badge-approved,
+.admin-badge-active {
+  @apply bg-emerald-500/20 text-emerald-400;
+}
+
+.admin-badge-rejected,
+.admin-badge-inactive {
+  @apply bg-red-500/20 text-red-400;
+}
+
+.admin-badge-planned {
+  @apply bg-indigo-500/20 text-indigo-400;
+}
+
+/* Admin Button Styles */
+.btn-admin-primary {
+  @apply bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-all duration-200;
+}
+
+.btn-admin-secondary {
+  @apply bg-white/10 hover:bg-white/20 text-slate-200 font-medium rounded-lg border border-white/10 transition-all duration-200;
+}
+
+.btn-admin-danger {
+  @apply bg-red-500/20 hover:bg-red-500/30 text-red-400 font-medium rounded-lg border border-red-500/30 transition-all duration-200;
+}
+
+.btn-admin-success {
+  @apply bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-all duration-200;
+}
+
+.btn-admin-ghost {
+  @apply bg-transparent hover:bg-white/10 text-slate-300 font-medium rounded-lg transition-all duration-200;
+}
+
+/* Admin Hero Styles */
+.admin-hero {
+  @apply bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-lg relative overflow-hidden;
+}
+
+.admin-hero-text {
+  @apply text-white;
+}
+
+/* Admin Tab Styles */
+.admin-tabs {
+  @apply bg-slate-900/90 backdrop-blur rounded-xl p-1 inline-flex gap-1 border border-white/10;
+}
+
+.admin-tab {
+  @apply px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 min-h-[44px];
+}
+
+.admin-tab-active {
+  @apply bg-amber-500/20 text-amber-400;
+}
+
+.admin-tab-inactive {
+  @apply text-slate-400 hover:bg-white/10 hover:text-white;
+}
+
+/* Admin Input Styles */
+.admin-input {
+  @apply min-h-[44px] w-full rounded-lg border border-slate-600 bg-slate-800 text-white placeholder:text-slate-400 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400/40 transition-colors;
+}
+
+.admin-select {
+  @apply min-h-[44px] w-full rounded-lg border border-slate-600 bg-slate-800 text-white px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400/40 transition-colors;
+}
+
+.admin-textarea {
+  @apply w-full rounded-lg border border-slate-600 bg-slate-800 text-white placeholder:text-slate-400 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400/40 transition-colors;
+}
+
+.admin-label {
+  @apply block text-sm font-medium text-slate-300 mb-1;
+}
+
+/* Animations */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile-specific */
+@media (max-width: 1024px) {
+  .admin-card {
+    @apply p-4;
   }
 
-  .admin-badge-sm {
-    @apply px-2 py-0.5 text-xs;
+  .admin-stats-grid {
+    @apply grid-cols-2;
   }
 
-  .admin-badge-md {
-    @apply px-3 py-1 text-sm;
-  }
-
-  .admin-badge-pending {
-    @apply bg-amber-100 text-amber-800;
-  }
-
-  .admin-badge-approved,
-  .admin-badge-active {
-    @apply bg-green-100 text-green-800;
-  }
-
-  .admin-badge-rejected,
-  .admin-badge-inactive {
-    @apply bg-red-100 text-red-800;
-  }
-
-  .admin-badge-planned {
-    @apply bg-indigo-100 text-indigo-800;
-  }
-
-  /* Admin Button Styles */
-  .btn-admin-primary {
-    @apply bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-all duration-200;
-  }
-
-  .btn-admin-secondary {
-    @apply bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium rounded-lg transition-all duration-200;
-  }
-
-  .btn-admin-danger {
-    @apply bg-red-50 hover:bg-red-100 text-red-600 font-medium rounded-lg transition-all duration-200;
-  }
-
-  .btn-admin-success {
-    @apply bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all duration-200;
-  }
-
-  .btn-admin-ghost {
-    @apply bg-transparent hover:bg-gray-100 text-gray-700 font-medium rounded-lg transition-all duration-200;
-  }
-
-  /* Admin Hero Styles */
-  .admin-hero {
-    @apply bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-lg relative overflow-hidden;
-  }
-
-  .admin-hero-text {
-    @apply text-white;
-  }
-
-  /* Admin Tab Styles */
   .admin-tabs {
-    @apply bg-gray-100 rounded-xl p-1 inline-flex gap-1;
+    @apply w-full overflow-x-auto;
   }
+}
 
-  .admin-tab {
-    @apply px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 min-h-[44px];
+/* Touch-friendly (mobile) */
+@media (hover: none) {
+  .admin-card-hover {
+    @apply hover:scale-100 hover:translate-y-0;
   }
-
-  .admin-tab-active {
-    @apply bg-indigo-600 text-white shadow-md;
-  }
-
-  .admin-tab-inactive {
-    @apply text-gray-600 hover:bg-white hover:text-gray-900;
-  }
-
-  /* Animations */
-  .animate-fade-in {
-    animation: fadeIn 0.3s ease-out;
-  }
-
-  .animate-slide-up {
-    animation: slideUp 0.4s ease-out;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Mobile-specific */
-  @media (max-width: 1024px) {
-    .admin-card {
-      @apply p-4;
-    }
-
-    .admin-stats-grid {
-      @apply grid-cols-2;
-    }
-
-    .admin-tabs {
-      @apply w-full overflow-x-auto;
-    }
-  }
-
-  /* Touch-friendly (mobile) */
-  @media (hover: none) {
-    .admin-card-hover {
-      @apply hover:scale-100 hover:translate-y-0;
-    }
-  }
+}
