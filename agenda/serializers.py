@@ -30,6 +30,16 @@ from .models import (
 from .validators import sanitize_string, validate_not_empty_string
 
 
+def normalize_genre_value(value: str) -> str:
+    """
+    Normaliza gêneros musicais para armazenar e filtrar de forma consistente.
+    Mantém acentos, mas padroniza caixa e espaços.
+    """
+    if not value:
+        return ""
+    return " ".join(value.strip().lower().split())
+
+
 class UserSerializer(serializers.ModelSerializer):
     """Serializer básico de usuário para uso nested"""
 
@@ -318,7 +328,7 @@ class MusicianUpdateSerializer(serializers.ModelSerializer):
                 genres = []
             # Limitar a 5 gêneros e sanitizar
             attrs["musical_genres"] = [
-                sanitize_string(g, max_length=50, allow_empty=False)
+                normalize_genre_value(sanitize_string(g, max_length=50, allow_empty=False))
                 for g in genres[:5]
                 if g and isinstance(g, str)
             ]
@@ -1448,7 +1458,7 @@ class MusicianRequestSerializer(serializers.ModelSerializer):
             if not isinstance(genres, list):
                 genres = []
             attrs["musical_genres"] = [
-                sanitize_string(g, max_length=50, allow_empty=False)
+                normalize_genre_value(sanitize_string(g, max_length=50, allow_empty=False))
                 for g in genres[:5]
                 if g and isinstance(g, str)
             ]
@@ -1543,7 +1553,7 @@ class MusicianRequestCreateSerializer(serializers.ModelSerializer):
             if not isinstance(genres, list):
                 genres = []
             attrs["musical_genres"] = [
-                sanitize_string(g, max_length=50, allow_empty=False)
+                normalize_genre_value(sanitize_string(g, max_length=50, allow_empty=False))
                 for g in genres[:5]
                 if g and isinstance(g, str)
             ]

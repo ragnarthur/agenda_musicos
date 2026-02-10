@@ -414,6 +414,7 @@ class GoogleAuthView(CookieTokenMixin, APIView):
         response_data = {
             "detail": "Autenticado com sucesso.",
             "access": tokens["access"],
+            "refresh": tokens["refresh"],
             "new_user": False,
         }
 

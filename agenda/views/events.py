@@ -555,7 +555,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
         Regras:
         - is_solo=True: confirmado automaticamente
-        - Com convidados: confirma apenas quando TODOS os convidados aceitarem (available)
+        - Com convidados: confirma quando pelo menos 1 convidado aceitar (available)
         - Sem convidados: confirmado automaticamente
 
         Se um evento ja confirmado perder alguma confirmacao (ex.: musico muda para unavailable),
@@ -596,10 +596,8 @@ class EventViewSet(viewsets.ModelViewSet):
             if locked_event.is_solo:
                 should_confirm = True
             elif invitee_availabilities.exists():
-                # Apenas confirma se TODOS os convidados aceitaram.
-                should_confirm = not invitee_availabilities.exclude(
-                    response="available"
-                ).exists()
+                # Confirma quando algum convidado aceitar.
+                should_confirm = invitee_availabilities.filter(response="available").exists()
             else:
                 # Sem convidados: confirma automaticamente
                 should_confirm = True
@@ -790,8 +788,8 @@ class EventViewSet(viewsets.ModelViewSet):
         Body: { "response": "available|unavailable", "notes": "..." }
         Marca disponibilidade do músico logado para o evento.
 
-        O evento confirma apenas quando TODOS os convidados aceitarem (available).
-        Se algum convidado marcar unavailable, o evento volta para proposed.
+        O evento confirma quando pelo menos 1 convidado aceitar (available).
+        Se ninguém estiver available (todos pending/unavailable), o evento permanece proposed.
         """
         event = self.get_object()
 

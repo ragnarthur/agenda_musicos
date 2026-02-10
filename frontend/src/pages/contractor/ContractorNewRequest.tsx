@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Calendar,
@@ -7,7 +7,6 @@ import {
   FileText,
   Music,
   X,
-  Search,
   Send,
 } from 'lucide-react';
 import ContractorLayout from '../../components/contractor/ContractorLayout';
@@ -16,9 +15,11 @@ import {
   quoteRequestService,
   allMusiciansService,
   publicMusicianService,
+  publicMusicGenresService,
   type MusicianPublic,
 } from '../../services/publicApi';
 import { BRAZILIAN_STATES } from '../../config/cities';
+import { MUSICAL_GENRES, getGenreLabel } from '../../config/genres';
 import { CONTRACTOR_ROUTES } from '../../routes/contractorRoutes';
 import { showToast } from '../../utils/toast';
 
@@ -38,6 +39,10 @@ export default function ContractorNewRequest() {
 
   // Form state
   const [selectedMusician, setSelectedMusician] = useState<MusicianPublic | null>(null);
+  const [genre, setGenre] = useState('');
+  const [availableGenres, setAvailableGenres] = useState<string[]>([]);
+  const [genreMusicians, setGenreMusicians] = useState<MusicianPublic[]>([]);
+  const [loadingGenreMusicians, setLoadingGenreMusicians] = useState(false);
   const [eventDate, setEventDate] = useState('');
   const [eventType, setEventType] = useState('');
   const [locationState, setLocationState] = useState('');
@@ -47,13 +52,7 @@ export default function ContractorNewRequest() {
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Musician search
-  const [musicianSearch, setMusicianSearch] = useState('');
-  const [searchResults, setSearchResults] = useState<MusicianPublic[]>([]);
-  const [searchingMusicians, setSearchingMusicians] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const debouncedMusicianSearch = useDebounce(musicianSearch, 400);
+  const debouncedLocationCity = useDebounce(locationCity, 400);
 
   // Pre-fill musician from URL param
   useEffect(() => {
@@ -64,53 +63,72 @@ export default function ContractorNewRequest() {
     }
   }, [musicianIdParam]);
 
-  // Search musicians as user types
   useEffect(() => {
-    if (!debouncedMusicianSearch || selectedMusician) {
-      setSearchResults([]);
+    let active = true;
+    publicMusicGenresService.listAvailable()
+      .then(genres => {
+        if (!active) return;
+        setAvailableGenres(genres);
+      })
+      .catch(() => {
+        if (!active) return;
+        setAvailableGenres([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const genreOptions = useMemo(() => {
+    const base = (availableGenres.length > 0
+      ? availableGenres
+      : MUSICAL_GENRES.map(g => g.value)
+    )
+      .filter(Boolean);
+
+    const unique = Array.from(new Set(base));
+    unique.sort((a, b) => getGenreLabel(a).localeCompare(getGenreLabel(b), 'pt-BR'));
+    return unique;
+  }, [availableGenres]);
+
+  useEffect(() => {
+    if (!genre || selectedMusician) {
+      setGenreMusicians([]);
       return;
     }
 
-    const fetchMusicians = async () => {
-      setSearchingMusicians(true);
-      try {
-        const data = await allMusiciansService.list({
-          search: debouncedMusicianSearch,
-          limit: 8,
-        });
-        setSearchResults(data);
-        setShowDropdown(true);
-      } catch {
-        setSearchResults([]);
-      } finally {
-        setSearchingMusicians(false);
-      }
-    };
+    let active = true;
+    setLoadingGenreMusicians(true);
+    allMusiciansService.list({
+      genre,
+      state: locationState || undefined,
+      city: debouncedLocationCity || undefined,
+      limit: 50,
+    })
+      .then(data => {
+        if (!active) return;
+        setGenreMusicians(data);
+      })
+      .catch(() => {
+        if (!active) return;
+        setGenreMusicians([]);
+      })
+      .finally(() => {
+        if (!active) return;
+        setLoadingGenreMusicians(false);
+      });
 
-    fetchMusicians();
-  }, [debouncedMusicianSearch, selectedMusician]);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setShowDropdown(false);
-      }
+    return () => {
+      active = false;
     };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
+  }, [genre, locationState, debouncedLocationCity, selectedMusician]);
 
   const handleSelectMusician = (musician: MusicianPublic) => {
     setSelectedMusician(musician);
-    setMusicianSearch('');
-    setSearchResults([]);
-    setShowDropdown(false);
   };
 
   const handleClearMusician = () => {
     setSelectedMusician(null);
-    setMusicianSearch('');
   };
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
@@ -164,8 +182,8 @@ export default function ContractorNewRequest() {
         <div className="card-contrast max-w-2xl">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Musician Selection */}
-            <FormField id="musician" label="Músico" required>
-              {selectedMusician ? (
+            {selectedMusician ? (
+              <FormField id="musician" label="Músico" required>
                 <div className="flex items-center gap-3 p-3 rounded-xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
                     {selectedMusician.avatar_url ? (
@@ -196,66 +214,60 @@ export default function ContractorNewRequest() {
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-              ) : (
-                <div ref={dropdownRef} className="relative">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <input
-                      type="text"
-                      value={musicianSearch}
-                      onChange={e => {
-                        setMusicianSearch(e.target.value);
-                        if (e.target.value) setShowDropdown(true);
-                      }}
-                      onFocus={() => {
-                        if (searchResults.length > 0) setShowDropdown(true);
-                      }}
-                      placeholder="Buscar músico por nome..."
-                      className="input-field pl-10"
-                      autoComplete="off"
-                    />
-                    {searchingMusicians && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <div className="w-4 h-4 border-2 border-gray-300 border-t-primary-600 rounded-full animate-spin" />
-                      </div>
-                    )}
-                  </div>
-                  {showDropdown && searchResults.length > 0 && (
-                    <div className="absolute z-20 w-full mt-1 bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-60 overflow-y-auto">
-                      {searchResults.map(musician => (
-                        <button
-                          key={musician.id}
-                          type="button"
-                          onClick={() => handleSelectMusician(musician)}
-                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-left min-h-[44px]"
-                        >
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                            {musician.avatar_url ? (
-                              <img
-                                src={musician.avatar_url}
-                                alt=""
-                                className="w-8 h-8 rounded-full object-cover"
-                              />
-                            ) : (
-                              <Music className="w-4 h-4 text-white" />
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                              {musician.full_name}
-                            </p>
-                            <p className="text-xs text-muted">
-                              {musician.instrument}
-                              {musician.city && ` · ${musician.city}-${musician.state}`}
-                            </p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </FormField>
+              </FormField>
+            ) : (
+              <>
+                <FormField id="genre" label="Estilo musical" required icon={<Music className="w-4 h-4" />}>
+                  <select
+                    id="genre"
+                    value={genre}
+                    onChange={e => {
+                      setGenre(e.target.value);
+                      setSelectedMusician(null);
+                    }}
+                    className="input-field pl-10"
+                    required
+                  >
+                    <option value="">Selecione...</option>
+                    {genreOptions.map(value => (
+                      <option key={value} value={value}>{getGenreLabel(value)}</option>
+                    ))}
+                  </select>
+                </FormField>
+
+                <FormField id="musician_select" label="Músico" required icon={<Music className="w-4 h-4" />}>
+                  <select
+                    id="musician_select"
+                    value=""
+                    onChange={e => {
+                      const id = Number(e.target.value);
+                      const musician = genreMusicians.find(m => m.id === id);
+                      if (musician) handleSelectMusician(musician);
+                    }}
+                    className="input-field pl-10"
+                    disabled={!genre || loadingGenreMusicians || genreMusicians.length === 0}
+                    required
+                  >
+                    <option value="">
+                      {!genre
+                        ? 'Selecione um estilo primeiro...'
+                        : loadingGenreMusicians
+                          ? 'Carregando músicos...'
+                          : genreMusicians.length === 0
+                            ? 'Nenhum músico encontrado para esse estilo'
+                            : 'Selecione um músico...'}
+                    </option>
+                    {genreMusicians.map(musician => (
+                      <option key={musician.id} value={musician.id}>
+                        {musician.full_name}
+                        {musician.instrument ? ` · ${musician.instrument}` : ''}
+                        {musician.city && musician.state ? ` · ${musician.city}-${musician.state}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </FormField>
+              </>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField id="event_date" label="Data do Evento" required icon={<Calendar className="w-4 h-4" />}>
