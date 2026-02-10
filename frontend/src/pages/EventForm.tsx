@@ -17,6 +17,7 @@ import { INSTRUMENT_LABELS as BASE_INSTRUMENT_LABELS } from '../utils/formatting
 import { sanitizeOptionalText, sanitizeText } from '../utils/sanitize';
 import { getMobileInputProps, getTimeProps } from '../utils/mobileInputs';
 import { maskCurrencyInput, unmaskCurrency } from '../utils/formatting';
+import { getGenreLabel } from '../config/genres';
 
 interface ConflictInfo {
   loading: boolean;
@@ -236,8 +237,8 @@ const EventForm: React.FC = () => {
       });
     });
     return Object.keys(counts)
-      .sort((a, b) => a.localeCompare(b, 'pt-BR'))
-      .map(genre => ({ value: genre, label: genre, count: counts[genre] }));
+      .sort((a, b) => getGenreLabel(a).localeCompare(getGenreLabel(b), 'pt-BR'))
+      .map(genre => ({ value: genre, label: getGenreLabel(genre), count: counts[genre] }));
   }, [availableMusicians]);
 
   const normalizeSearch = (value: string) =>
@@ -256,12 +257,14 @@ const EventForm: React.FC = () => {
       const byGenre = genreFilter === 'all' ? true : genres.includes(genreFilter);
 
       const labelsConcat = list.map(resolveInstrumentLabel).join(' ');
+      const genresLabel = genres.map(getGenreLabel).join(' ');
       const searchable = normalizeSearch(
         [
           m.musician_name,
           labelsConcat,
           list.join(' '),
           genres.join(' '),
+          genresLabel,
         ].join(' ')
       );
       const byQuery = q ? searchable.includes(q) : true;
