@@ -6,6 +6,7 @@ import BottomNav from './BottomNav';
 import AnimatedBackground from './AnimatedBackground';
 import InstallBanner from '../common/InstallBanner';
 import OfflineBanner from '../common/OfflineBanner';
+import PwaUpdatePrompt from '../common/PwaUpdatePrompt';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -14,6 +15,11 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const mainRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    // SPA navigation preserves scroll by default; force top for a consistent UX.
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [location.pathname, location.search]);
 
   useEffect(() => {
     const root = mainRef.current;
@@ -46,6 +52,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className="relative min-h-[100svh] bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
       {/* Banners globais */}
       <OfflineBanner />
+      <PwaUpdatePrompt />
       <InstallBanner />
 
       {/* Aqui eu deixo o fundo estático pra economizar GPU no mobile, mas sem perder identidade */}

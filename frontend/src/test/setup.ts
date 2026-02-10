@@ -3,6 +3,11 @@ import { cleanup } from '@testing-library/react';
 import { afterEach, vi, beforeAll, afterAll } from 'vitest';
 import { server } from './mocks/server';
 
+// Vitest nao carrega o plugin do PWA (virtual modules). Mock para nao quebrar suites.
+vi.mock('virtual:pwa-register', () => ({
+  registerSW: () => async () => undefined,
+}));
+
 // Many smoke tests just assert "renders without crashing" and don't care about
 // Auth/Theme state. We keep real Providers available (used by renderWithProviders),
 // but mock the hooks to avoid requiring Provider wiring in every test file.

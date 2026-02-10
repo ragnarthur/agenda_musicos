@@ -7,15 +7,36 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'favicon-32.png', 'icon-192.png', 'icon-512.png'],
+      // A gente registra via `virtual:pwa-register` para mostrar "Atualizacao disponivel" no app.
+      injectRegister: false,
+      registerType: 'prompt',
+      includeAssets: [
+        'offline.html',
+        'favicon.ico',
+        'favicon-32-20260210.png',
+        'apple-touch-icon-20260210.png',
+        'icon-192-20260210.png',
+        'icon-512-20260210.png',
+      ],
       manifest: false, // Usar manifest.json existente
       workbox: {
-        // Garantir que a atualização do SW entra em vigor sem precisar fechar todas as abas.
+        // Com `registerType: prompt`, o SW fica em "waiting" ate o usuario aceitar atualizar.
         clientsClaim: true,
-        skipWaiting: true,
+        skipWaiting: false,
         cleanupOutdatedCaches: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Mantemos os arquivos antigos no servidor por compatibilidade,
+        // mas evitamos precache para nao inflar o SW.
+        globIgnores: [
+          // Splash screens sao pesadas e o iOS costuma cachear fora do SW; deixar via cache HTTP.
+          '**/splash/**',
+          // Manifest deve sempre revalidar (Nginx controla Cache-Control).
+          '**/manifest.json',
+          '**/apple-touch-icon.png',
+          '**/favicon-32.png',
+          '**/icon-192.png',
+          '**/icon-512.png',
+        ],
         navigateFallback: '/offline.html',
         navigateFallbackDenylist: [/^\/api/, /^\/gf-secure-admin\//],
         runtimeCaching: [
