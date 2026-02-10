@@ -1,7 +1,7 @@
 // components/layout/BottomNav.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Calendar, User, Plus, HeartHandshake } from 'lucide-react';
+import { Home, Calendar, User, Plus, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 const BottomNav: React.FC = () => {
@@ -40,7 +40,7 @@ const BottomNav: React.FC = () => {
     { to: '/dashboard', icon: Home, label: 'Início' },
     { to: '/eventos', icon: Calendar, label: 'Eventos' },
     { to: '/eventos/novo', icon: Plus, label: 'Criar', isAction: true },
-    { to: '/conexoes', icon: HeartHandshake, label: 'Rede' },
+    { to: '/musicos', icon: Users, label: 'Músicos' },
   ];
   if (user?.id) {
     navItems.push({ to: `/musicos/${user.id}`, icon: User, label: 'Perfil' });

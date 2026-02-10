@@ -128,6 +128,7 @@ export interface AvailableMusician {
   instrument: string;
   instrument_display: string;
   instruments?: string[];
+  musical_genres?: string[];
   has_availability: boolean;
   availability_id: number | null;
   start_time: string | null;

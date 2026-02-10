@@ -60,7 +60,8 @@ const EventForm: React.FC = () => {
   const [selectedMusicians, setSelectedMusicians] = useState<number[]>([]);
   const [loadingMusicians, setLoadingMusicians] = useState(false);
   const [instrumentFilter, setInstrumentFilter] = useState<string>('all');
-  const [instrumentQuery, setInstrumentQuery] = useState<string>('');
+  const [genreFilter, setGenreFilter] = useState<string>('all');
+  const [musicianQuery, setMusicianQuery] = useState<string>('');
   const dateInputRef = useRef<HTMLInputElement | null>(null);
   const [conflictInfo, setConflictInfo] = useState<ConflictInfo>({
     loading: false,
@@ -141,6 +142,9 @@ const EventForm: React.FC = () => {
     if (formData.is_solo) {
       setAvailableMusicians([]);
       setSelectedMusicians([]);
+      setInstrumentFilter('all');
+      setGenreFilter('all');
+      setMusicianQuery('');
       return;
     }
 
@@ -173,6 +177,7 @@ const EventForm: React.FC = () => {
             instrument: primary,
             instrument_display: resolveInstrumentLabel(primary),
             instruments,
+            musical_genres: musician.musical_genres ?? [],
             has_availability: false,
             availability_id: null,
             start_time: null,
@@ -217,22 +222,53 @@ const EventForm: React.FC = () => {
       label: resolveInstrumentLabel(instrument),
       count: counts[instrument],
     }));
-    if (!instrumentQuery.trim()) return options;
-    const query = instrumentQuery.toLowerCase();
-    return options.filter(opt => opt.label.toLowerCase().includes(query));
-  }, [availableMusicians, instrumentQuery]);
+    return options.sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
+  }, [availableMusicians]);
+
+  const genreOptions = useMemo(() => {
+    const counts: Record<string, number> = {};
+    availableMusicians.forEach(m => {
+      const genres = Array.isArray(m.musical_genres) ? m.musical_genres : [];
+      genres.forEach(g => {
+        const key = String(g || '').trim();
+        if (!key) return;
+        counts[key] = (counts[key] || 0) + 1;
+      });
+    });
+    return Object.keys(counts)
+      .sort((a, b) => a.localeCompare(b, 'pt-BR'))
+      .map(genre => ({ value: genre, label: genre, count: counts[genre] }));
+  }, [availableMusicians]);
+
+  const normalizeSearch = (value: string) =>
+    value
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
 
   const filteredMusicians = useMemo(() => {
+    const q = normalizeSearch(musicianQuery);
     return availableMusicians.filter(m => {
       const list = m.instruments && m.instruments.length > 0 ? m.instruments : [m.instrument];
       const byFilter = instrumentFilter === 'all' ? true : list.includes(instrumentFilter);
-      const labelsConcat = list.map(resolveInstrumentLabel).join(' ').toLowerCase();
-      const byQuery = instrumentQuery.trim()
-        ? `${labelsConcat} ${list.join(' ')}`.includes(instrumentQuery.toLowerCase())
-        : true;
-      return byFilter && byQuery;
+      const genres = Array.isArray(m.musical_genres) ? m.musical_genres : [];
+      const byGenre = genreFilter === 'all' ? true : genres.includes(genreFilter);
+
+      const labelsConcat = list.map(resolveInstrumentLabel).join(' ');
+      const searchable = normalizeSearch(
+        [
+          m.musician_name,
+          labelsConcat,
+          list.join(' '),
+          genres.join(' '),
+        ].join(' ')
+      );
+      const byQuery = q ? searchable.includes(q) : true;
+
+      return byFilter && byGenre && byQuery;
     });
-  }, [availableMusicians, instrumentFilter, instrumentQuery]);
+  }, [availableMusicians, instrumentFilter, genreFilter, musicianQuery]);
 
   const getInstrumentDisplay = (musician: AvailableMusician): string => {
     const list =
@@ -783,34 +819,50 @@ const EventForm: React.FC = () => {
                 <div className="flex items-center gap-2 mb-3">
                   <Users className="h-5 w-5 text-purple-600" />
                   <h3 className="text-sm font-semibold text-gray-900">
-                    Selecionar músicos por instrumento
+                    Selecionar músicos
                   </h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-[1fr,240px] gap-2 md:items-end mb-3">
+                <div className="grid grid-cols-1 md:grid-cols-[1fr,260px,220px] gap-2 md:items-end mb-3">
                   <div>
                     <label className="text-xs font-semibold text-gray-700 mb-1 block">
-                      Buscar instrumento
+                      Buscar (nome, estilo ou instrumento)
                     </label>
                     <div className="relative">
                       <input
                         type="text"
-                        value={instrumentQuery}
-                        onChange={e => setInstrumentQuery(e.target.value)}
-                        placeholder="Digite violão, teclado, bateria..."
+                        value={musicianQuery}
+                        onChange={e => setMusicianQuery(e.target.value)}
+                        placeholder="Ex: João, sertanejo, violão..."
                         className="input-field"
                       />
                     </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700 mb-1 block">Estilo</label>
+                    <select
+                      value={genreFilter}
+                      onChange={e => setGenreFilter(e.target.value)}
+                      className="input-field"
+                    >
+                      <option value="all">Todos</option>
+                      {genreOptions.map(opt => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label} ({opt.count})
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="flex flex-wrap gap-2 md:justify-end">
                     <button
                       type="button"
                       onClick={() => {
                         setInstrumentFilter('all');
-                        setInstrumentQuery('');
+                        setGenreFilter('all');
+                        setMusicianQuery('');
                       }}
                       className={`px-3 py-1.5 rounded-full text-sm border transition ${
-                        instrumentFilter === 'all' && !instrumentQuery
+                        instrumentFilter === 'all' && genreFilter === 'all' && !musicianQuery
                           ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
                           : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300'
                       }`}
@@ -868,14 +920,14 @@ const EventForm: React.FC = () => {
                   <div className="text-center py-4">
                     <Info className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                     <p className="text-sm text-gray-600">
-                      Nenhum músico com o instrumento selecionado.
+                      Nenhum músico encontrado com esses filtros.
                     </p>
                   </div>
                 ) : (
                   <>
                     <p className="text-sm text-gray-600 mb-3">
-                      Escolha primeiro o instrumento e, em seguida, os músicos que tocarão no
-                      evento. Eles receberão uma notificação e precisarão confirmar a participação.
+                      Filtre por instrumento, estilo ou nome e selecione quem vai tocar no evento.
+                      Eles receberão uma notificação e precisarão confirmar a participação.
                     </p>
                     <div className="space-y-2">
                       {filteredMusicians.map(musician => (
