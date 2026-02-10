@@ -11,6 +11,10 @@ export default defineConfig({
       includeAssets: ['favicon.ico', 'icon-192.png', 'icon-512.png'],
       manifest: false, // Usar manifest.json existente
       workbox: {
+        // Garantir que a atualização do SW entra em vigor sem precisar fechar todas as abas.
+        clientsClaim: true,
+        skipWaiting: true,
+        cleanupOutdatedCaches: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         navigateFallback: '/offline.html',
         navigateFallbackDenylist: [/^\/api/, /^\/gf-secure-admin\//],
