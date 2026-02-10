@@ -504,6 +504,20 @@ export const publicMusicianService = {
 };
 
 // =============================================================================
+// Public Music Genres Service
+// =============================================================================
+
+export const publicMusicGenresService = {
+  // Lista gêneros disponíveis (derivados dos músicos ativos)
+  listAvailable: async (params?: { city?: string; state?: string }): Promise<string[]> => {
+    const response = await api.get('/musicians/genres/', { params });
+    const payload = response.data as string[] | { results?: string[] } | { genres?: string[] };
+    if (Array.isArray(payload)) return payload;
+    return payload.genres ?? payload.results ?? [];
+  },
+};
+
+// =============================================================================
 // All Musicians Service (Catálogo Global)
 // =============================================================================
 
@@ -513,6 +527,7 @@ export const allMusiciansService = {
     state?: string;
     instrument?: string;
     search?: string;
+    genre?: string;
     min_rating?: string;
     limit?: number;
   }): Promise<MusicianPublic[]> => {

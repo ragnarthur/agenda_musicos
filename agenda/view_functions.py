@@ -7,11 +7,13 @@ Mantem compatibilidade com as rotas em agenda/urls.py.
 import logging
 import secrets
 import unicodedata
+from collections import Counter
 from datetime import date, timedelta
 
 from django.conf import settings
 from django.core.cache import cache
 from django.core.mail import send_mail
+from django.db import connection
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
@@ -86,6 +88,13 @@ def normalize_search_text(text: str) -> str:
     text = unicodedata.normalize("NFKD", text)
     text = "".join([c for c in text if not unicodedata.combining(c)])
     return text
+
+
+def normalize_genre_value(value: str) -> str:
+    """Normaliza gênero musical (para consulta/armazenamento consistente)."""
+    if not value:
+        return ""
+    return " ".join(value.strip().lower().split())
 
 
 # Aliases de instrumentos para busca
@@ -1201,6 +1210,14 @@ def list_musicians_by_city(request):
             Q(instrument__iexact=instrument) | Q(instruments__icontains=instrument)
         )
 
+    genre = normalize_genre_value(request.query_params.get("genre") or "")
+    if genre:
+        # SQLite não suporta lookup JSONField `contains`; cai para busca textual.
+        if connection.vendor == "sqlite":
+            queryset = queryset.filter(musical_genres__icontains=f'"{genre}"')
+        else:
+            queryset = queryset.filter(musical_genres__contains=[genre])
+
     # Paginação para evitar payloads grandes em cidades populosas
     paginator = PageNumberPagination()
     paginator.page_size = 50
@@ -1262,6 +1279,7 @@ def list_all_musicians_public(request):
     state = request.query_params.get("state")
     instrument = request.query_params.get("instrument")
     search = request.query_params.get("search")
+    genre = normalize_genre_value(request.query_params.get("genre") or "")
     min_rating = request.query_params.get("min_rating")
     max_limit = 200
     default_limit = 100
@@ -1302,6 +1320,13 @@ def list_all_musicians_public(request):
             | Q(bio__icontains=search)
         )
 
+    if genre:
+        # SQLite não suporta lookup JSONField `contains`; cai para busca textual.
+        if connection.vendor == "sqlite":
+            queryset = queryset.filter(musical_genres__icontains=f'"{genre}"')
+        else:
+            queryset = queryset.filter(musical_genres__contains=[genre])
+
     if min_rating:
         queryset = queryset.filter(average_rating__gte=min_rating)
 
@@ -1320,6 +1345,52 @@ def list_all_musicians_public(request):
         queryset[:limit], many=True, context={"request": request}
     )
     return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+@throttle_classes([PublicRateThrottle])
+def list_available_musical_genres(request):
+    """
+    Lista os gêneros musicais atualmente usados por músicos ativos.
+
+    GET /api/musicians/genres/?city=...&state=...
+    Retorna: ["mpb", "sertanejo", ...]
+    """
+    city = request.query_params.get("city")
+    state = request.query_params.get("state")
+
+    cache_key = "musician_genres_all"
+    if city:
+        cache_key += f"_city_{city.strip().lower()}"
+    if state:
+        cache_key += f"_state_{state.strip().lower()}"
+
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return Response(cached)
+
+    qs = Musician.objects.filter(is_active=True)
+    if city:
+        qs = qs.filter(city__iexact=city)
+    if state:
+        qs = qs.filter(state__iexact=state)
+
+    counter: Counter[str] = Counter()
+    for genres in qs.values_list("musical_genres", flat=True):
+        if not isinstance(genres, list):
+            continue
+        for g in genres:
+            if not isinstance(g, str):
+                continue
+            norm = normalize_genre_value(g)
+            if norm:
+                counter[norm] += 1
+
+    # Ordena por relevância (mais usados primeiro), depois por nome
+    payload = [g for g, _ in sorted(counter.items(), key=lambda kv: (-kv[1], kv[0]))]
+    cache.set(cache_key, payload, 60 * 60)  # 1 hour
+    return Response(payload)
 
 
 @api_view(["GET"])

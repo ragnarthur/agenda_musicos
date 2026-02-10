@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Search,
@@ -14,8 +14,13 @@ import {
 import { motion, useReducedMotion } from 'framer-motion';
 import ContractorLayout from '../../components/contractor/ContractorLayout';
 import Skeleton from '../../components/common/Skeleton';
-import { allMusiciansService, type MusicianPublic } from '../../services/publicApi';
+import {
+  allMusiciansService,
+  publicMusicGenresService,
+  type MusicianPublic,
+} from '../../services/publicApi';
 import { BRAZILIAN_STATES } from '../../config/cities';
+import { MUSICAL_GENRES, getGenreLabel } from '../../config/genres';
 import { formatInstrumentLabel, normalizeInstrumentKey } from '../../utils/formatting';
 import { CONTRACTOR_ROUTES } from '../../routes/contractorRoutes';
 import { showToast } from '../../utils/toast';
@@ -38,12 +43,43 @@ export default function ContractorBrowseMusicians() {
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
   const [instrument, setInstrument] = useState('');
+  const [genre, setGenre] = useState('');
+  const [availableGenres, setAvailableGenres] = useState<string[]>([]);
   const [minRating, setMinRating] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
   const debouncedSearch = useDebounce(search, 400);
   const debouncedCity = useDebounce(city, 400);
   const debouncedInstrument = useDebounce(instrument, 400);
+
+  useEffect(() => {
+    let active = true;
+    publicMusicGenresService.listAvailable()
+      .then(genres => {
+        if (!active) return;
+        setAvailableGenres(genres);
+      })
+      .catch(() => {
+        // Fallback: mostra a lista fixa caso a API ainda não esteja disponível
+        if (!active) return;
+        setAvailableGenres([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const genreOptions = useMemo(() => {
+    const base = (availableGenres.length > 0
+      ? availableGenres
+      : MUSICAL_GENRES.map(g => g.value)
+    )
+      .filter(Boolean);
+
+    const unique = Array.from(new Set(base));
+    unique.sort((a, b) => getGenreLabel(a).localeCompare(getGenreLabel(b), 'pt-BR'));
+    return unique;
+  }, [availableGenres]);
 
   const loadMusicians = useCallback(async () => {
     setLoading(true);
@@ -53,6 +89,7 @@ export default function ContractorBrowseMusicians() {
         city: debouncedCity || undefined,
         state: state || undefined,
         instrument: debouncedInstrument || undefined,
+        genre: genre || undefined,
         min_rating: minRating || undefined,
         limit: 100,
       });
@@ -62,7 +99,7 @@ export default function ContractorBrowseMusicians() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, debouncedCity, state, debouncedInstrument, minRating]);
+  }, [debouncedSearch, debouncedCity, state, debouncedInstrument, genre, minRating]);
 
   useEffect(() => {
     loadMusicians();
@@ -96,15 +133,31 @@ export default function ContractorBrowseMusicians() {
 
         {/* Filters */}
         <div className="card-contrast">
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Buscar por nome, instrumento..."
-              className="input-field pl-10"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Buscar por nome, instrumento..."
+                className="input-field pl-10"
+              />
+            </div>
+
+            <div className="relative">
+              <Music className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <select
+                value={genre}
+                onChange={e => setGenre(e.target.value)}
+                className="input-field pl-10"
+              >
+                <option value="">Todos os estilos</option>
+                {genreOptions.map(value => (
+                  <option key={value} value={value}>{getGenreLabel(value)}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <button
