@@ -23,12 +23,40 @@ log() {
 }
 
 load_app_env() {
-  if [ -f "$ENV_FILE" ]; then
-    set -a
-    # shellcheck disable=SC1090
-    source "$ENV_FILE"
-    set +a
-  fi
+  local key line value
+  local keys=(
+    POSTGRES_DB
+    POSTGRES_USER
+    POSTGRES_PASSWORD
+    EMAIL_HOST
+    EMAIL_PORT
+    EMAIL_USE_TLS
+    EMAIL_HOST_USER
+    EMAIL_HOST_PASSWORD
+    DEFAULT_FROM_EMAIL
+    TELEGRAM_BOT_TOKEN
+    ADMIN_EMAILS
+    FRONTEND_URL
+  )
+
+  [ -f "$ENV_FILE" ] || return 0
+
+  for key in "${keys[@]}"; do
+    line="$(grep -m1 -E "^${key}=" "$ENV_FILE" || true)"
+    [ -n "$line" ] || continue
+    value="${line#*=}"
+    value="${value%$'\r'}"
+
+    # Remove outer quotes when present to normalize .env values.
+    if [[ "$value" == \"*\" && "$value" == *\" ]]; then
+      value="${value:1:${#value}-2}"
+    elif [[ "$value" == \'*\' && "$value" == *\' ]]; then
+      value="${value:1:${#value}-2}"
+    fi
+
+    printf -v "$key" '%s' "$value"
+    export "$key"
+  done
 }
 
 get_alert_email() {
