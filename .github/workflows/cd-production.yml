@@ -28,50 +28,26 @@ jobs:
     if: |
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, prod-server]
     environment: production
-    env:
-      PROD_HOST: ${{ secrets.PROD_HOST }}
-      PROD_USER: ${{ secrets.PROD_USER }}
-      PROD_PORT: ${{ secrets.PROD_PORT }}
-      PROD_APP_DIR: ${{ secrets.PROD_APP_DIR }}
     steps:
-      - name: Validar secrets obrigatorios
+      - name: Definir diretorio da aplicacao
         shell: bash
         run: |
           set -euo pipefail
-          [ -n "${PROD_HOST:-}" ] || { echo "PROD_HOST ausente"; exit 1; }
-          [ -n "${PROD_USER:-}" ] || { echo "PROD_USER ausente"; exit 1; }
-          [ -n "${PROD_APP_DIR:-}" ] || { echo "PROD_APP_DIR ausente"; exit 1; }
-
-      - name: Configurar SSH
-        shell: bash
-        run: |
-          set -euo pipefail
-          PORT="${PROD_PORT:-22}"
-          mkdir -p ~/.ssh
-          printf '%s' "${{ secrets.PROD_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          touch ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
-
-          # Servidor pode oscilar. Tentamos keyscan sem tornar esta etapa frágil.
-          ok=0
-          for i in $(seq 1 8); do
-            if ssh-keyscan -T 8 -p "$PORT" -H "$PROD_HOST" >> ~/.ssh/known_hosts 2>/dev/null; then
-              ok=1
-              break
-            fi
-            sleep 4
-          done
-          if [ "$ok" -ne 1 ]; then
-            echo "Aviso: ssh-keyscan nao respondeu; seguiremos com StrictHostKeyChecking=no"
+          APP_DIR="${{ secrets.PROD_APP_DIR }}"
+          if [ -z "${APP_DIR:-}" ]; then
+            APP_DIR="/opt/agenda-musicos/agenda_musicos"
           fi
+          [ -d "$APP_DIR" ] || { echo "Diretorio da app nao existe: $APP_DIR"; exit 1; }
+          echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
 
       - name: Mostrar contexto do disparo
         shell: bash
         run: |
           echo "event_name=$GITHUB_EVENT_NAME"
+          echo "runner_name=$RUNNER_NAME"
+          echo "runner_os=$RUNNER_OS"
           if [ "$GITHUB_EVENT_NAME" = "workflow_run" ]; then
             echo "ci_conclusion=${{ github.event.workflow_run.conclusion }}"
             echo "ci_head_sha=${{ github.event.workflow_run.head_sha }}"
@@ -85,62 +61,20 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          PORT="${PROD_PORT:-22}"
-          run_remote() {
-            local cmd="$1"
-            for i in $(seq 1 10); do
-              if ssh -i ~/.ssh/id_ed25519 -p "$PORT" \
-                -o ConnectTimeout=12 \
-                -o StrictHostKeyChecking=no \
-                -o UserKnownHostsFile=/dev/null \
-                "${PROD_USER}@${PROD_HOST}" "$cmd"; then
-                return 0
-              fi
-              sleep 8
-            done
-            return 1
-          }
-          run_remote "cd '${PROD_APP_DIR}' && ./deploy.sh deploy"
+          cd "$APP_DIR"
+          ./deploy.sh deploy
 
       - name: Consultar status remoto
         if: github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'status')
         shell: bash
         run: |
           set -euo pipefail
-          PORT="${PROD_PORT:-22}"
-          run_remote() {
-            local cmd="$1"
-            for i in $(seq 1 10); do
-              if ssh -i ~/.ssh/id_ed25519 -p "$PORT" \
-                -o ConnectTimeout=12 \
-                -o StrictHostKeyChecking=no \
-                -o UserKnownHostsFile=/dev/null \
-                "${PROD_USER}@${PROD_HOST}" "$cmd"; then
-                return 0
-              fi
-              sleep 8
-            done
-            return 1
-          }
-          run_remote "cd '${PROD_APP_DIR}' && ./deploy.sh status"
+          cd "$APP_DIR"
+          ./deploy.sh status
 
       - name: Verificacao final da stack
         shell: bash
         run: |
           set -euo pipefail
-          PORT="${PROD_PORT:-22}"
-          run_remote() {
-            local cmd="$1"
-            for i in $(seq 1 10); do
-              if ssh -i ~/.ssh/id_ed25519 -p "$PORT" \
-                -o ConnectTimeout=12 \
-                -o StrictHostKeyChecking=no \
-                -o UserKnownHostsFile=/dev/null \
-                "${PROD_USER}@${PROD_HOST}" "$cmd"; then
-                return 0
-              fi
-              sleep 8
-            done
-            return 1
-          }
-          run_remote "cd '${PROD_APP_DIR}' && docker compose --env-file .env.prod -f docker-compose.prod.yml ps"
+          cd "$APP_DIR"
+          docker compose --env-file .env.prod -f docker-compose.prod.yml ps

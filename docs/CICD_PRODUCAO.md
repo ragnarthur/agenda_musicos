@@ -3,11 +3,15 @@
 Este projeto usa GitHub Actions com dois workflows:
 
 - `CI` (`.github/workflows/ci.yml`): testes/lint/build backend e frontend.
-- `CD Production` (`.github/workflows/cd-production.yml`): deploy no servidor de producao.
+- `CD Production` (`.github/workflows/cd-production.yml`): deploy no servidor de producao via runner self-hosted.
 
 ## O que ja foi configurado
 
-- Secrets do repositorio:
+- Runner self-hosted instalado e ativo no servidor:
+  - Nome: `srv1252721-prod`
+  - Labels: `self-hosted`, `prod-server`
+  - Service: `actions.runner.ragnarthur-agenda_musicos.srv1252721-prod.service`
+- Secrets do repositorio (mantidos para parametrizacao):
   - `PROD_HOST=181.215.134.53`
   - `PROD_USER=arthur`
   - `PROD_PORT=22`
@@ -35,10 +39,10 @@ Este projeto usa GitHub Actions com dois workflows:
 4. O workflow `CI` roda automaticamente.
 5. Com `CI` verde, faça merge da PR.
 6. Ao merge na `main`, o `CI` roda novamente.
-7. Quando esse `CI` da `main` concluir com sucesso, o `CD Production` dispara automaticamente e executa:
-   - `./deploy.sh deploy` no servidor.
-   - `./deploy.sh status` para validacao.
-   - `docker compose ... ps` para confirmar stack.
+7. Quando esse `CI` da `main` concluir com sucesso, o `CD Production` dispara automaticamente no runner do proprio servidor e executa:
+   - `./deploy.sh deploy`
+   - `./deploy.sh status`
+   - `docker compose ... ps`
 
 ## Disparo manual de deploy
 
@@ -57,9 +61,9 @@ ssh arthur@181.215.134.53 "cd /opt/agenda-musicos/agenda_musicos && docker compo
 
 ## Troubleshooting rapido
 
-- Falha de SSH no deploy:
-  - Verifique se o host aceita conexao na porta 22.
-  - Revalide a chave no secret `PROD_SSH_KEY`.
+- Runner offline:
+  - No servidor: `sudo systemctl status actions.runner.ragnarthur-agenda_musicos.srv1252721-prod.service`
+  - Reiniciar runner: `sudo systemctl restart actions.runner.ragnarthur-agenda_musicos.srv1252721-prod.service`
 - CI passou, mas CD nao disparou:
   - Confira se o workflow com nome `CI` concluiu com `success` na branch `main`.
 - Deploy executou, mas app indisponivel:
