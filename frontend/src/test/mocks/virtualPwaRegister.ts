@@ -8,6 +8,9 @@ export type RegisterSWOptions = {
 
 // Vitest: stub do virtual module `virtual:pwa-register` (o plugin nao roda no ambiente de testes).
 export function registerSW(_opts?: RegisterSWOptions) {
-  return async (_reloadPage?: boolean) => undefined;
+  void _opts;
+  return async (_reloadPage?: boolean) => {
+    void _reloadPage;
+    return undefined;
+  };
 }
-

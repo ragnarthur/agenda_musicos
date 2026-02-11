@@ -12,8 +12,8 @@ const SW_UPDATE_INTERVAL_MS = 60 * 60 * 1000; // 1h
 
 export default function PwaUpdatePrompt() {
   const [needRefresh, setNeedRefresh] = useState(false);
-  const [updateSW, setUpdateSW] = useState<UpdateSW | null>(null);
   const registeredRef = useRef(false);
+  const updateSWRef = useRef<UpdateSW | null>(null);
 
   useEffect(() => {
     if (registeredRef.current) return;
@@ -39,16 +39,16 @@ export default function PwaUpdatePrompt() {
       },
     });
 
-    setUpdateSW(() => update);
+    updateSWRef.current = update;
   }, []);
 
   const handleUpdate = async () => {
-    if (!updateSW) return;
+    if (!updateSWRef.current) return;
     haptics.medium();
     showToast.loading('Atualizando...');
     try {
       // true => recarrega a pagina apos ativar o novo SW
-      await updateSW(true);
+      await updateSWRef.current(true);
     } catch (err) {
       console.error('[pwa] update failed', err);
       showToast.error('Nao foi possivel atualizar agora.');

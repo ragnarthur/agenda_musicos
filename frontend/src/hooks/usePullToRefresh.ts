@@ -77,7 +77,7 @@ export function usePullToRefresh(options: PullToRefreshOptions): PullToRefreshSt
         }
       }
     },
-    [disabled, isRefreshing, isAtTop, maxPull]
+    [disabled, isRefreshing, isAtTop, maxPull, threshold]
   );
 
   const onTouchEnd = useCallback(async () => {
