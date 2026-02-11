@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Gig, GigApplication
+from .models import Gig, GigApplication, GigChatMessage
 
 
 @admin.register(Gig)
@@ -15,3 +15,10 @@ class GigApplicationAdmin(admin.ModelAdmin):
     list_display = ("gig", "musician", "status", "created_at")
     list_filter = ("status",)
     search_fields = ("gig__title", "musician__user__first_name", "musician__user__last_name")
+
+
+@admin.register(GigChatMessage)
+class GigChatMessageAdmin(admin.ModelAdmin):
+    list_display = ("gig", "sender", "created_at")
+    list_filter = ("created_at",)
+    search_fields = ("gig__title", "sender__username", "message")

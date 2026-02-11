@@ -28,14 +28,23 @@ def _can_notify(user) -> tuple[bool, NotificationPreference]:
     return prefs.notify_quote_requests, prefs
 
 
-def _notify_user(user, *, title: str, body: str, gig_id: int, object_id: int | None = None) -> None:
+def _notify_user(
+    user,
+    *,
+    title: str,
+    body: str,
+    gig_id: int,
+    object_id: int | None = None,
+    include_email: bool = True,
+    include_telegram: bool = True,
+) -> None:
     can_notify, prefs = _can_notify(user)
     if not can_notify:
         return
 
     url = _frontend_marketplace_url(gig_id)
 
-    if user.email:
+    if include_email and user.email:
         try:
             send_event_notification_email(
                 to_email=user.email,
@@ -53,7 +62,7 @@ def _notify_user(user, *, title: str, body: str, gig_id: int, object_id: int | N
         except Exception as exc:
             logger.error("Erro ao enviar email de marketplace para %s: %s", user.username, exc)
 
-    if prefs.telegram_verified and prefs.telegram_chat_id:
+    if include_telegram and prefs.telegram_verified and prefs.telegram_chat_id:
         try:
             notification_service.send_notification(
                 user=user,
@@ -158,6 +167,32 @@ def notify_gig_hire_result(gig, hired_application, rejected_applications) -> Non
             body=owner_body,
             gig_id=gig.id,
             object_id=hired_application.id,
+        )
+
+
+def notify_gig_chat_message(gig, chat_message, recipients) -> None:
+    """Notifica os envolvidos quando há nova mensagem no chat da contratação."""
+    sender_name = chat_message.sender.get_full_name() or chat_message.sender.username
+    preview = chat_message.message
+    if len(preview) > 140:
+        preview = f"{preview[:137]}..."
+
+    title = f"Nova mensagem no chat da vaga: {gig.title}"
+    body = (
+        f"{sender_name} enviou uma nova mensagem.\n\n"
+        f'"{preview}"\n\n'
+        "Abra o app para responder no chat da contratação."
+    )
+
+    for user in recipients:
+        _notify_user(
+            user,
+            title=title,
+            body=body,
+            gig_id=gig.id,
+            object_id=chat_message.id,
+            include_email=False,
+            include_telegram=True,
         )
 
 
