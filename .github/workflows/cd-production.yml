@@ -1,0 +1,93 @@
+name: CD Production
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Acao remota no servidor"
+        required: true
+        default: "deploy"
+        type: choice
+        options:
+          - deploy
+          - status
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      PROD_HOST: ${{ secrets.PROD_HOST }}
+      PROD_USER: ${{ secrets.PROD_USER }}
+      PROD_PORT: ${{ secrets.PROD_PORT }}
+      PROD_APP_DIR: ${{ secrets.PROD_APP_DIR }}
+    steps:
+      - name: Validar secrets obrigatorios
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ -n "${PROD_HOST:-}" ] || { echo "PROD_HOST ausente"; exit 1; }
+          [ -n "${PROD_USER:-}" ] || { echo "PROD_USER ausente"; exit 1; }
+          [ -n "${PROD_APP_DIR:-}" ] || { echo "PROD_APP_DIR ausente"; exit 1; }
+
+      - name: Configurar SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          PORT="${PROD_PORT:-22}"
+          mkdir -p ~/.ssh
+          printf '%s' "${{ secrets.PROD_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "$PORT" -H "$PROD_HOST" >> ~/.ssh/known_hosts
+
+      - name: Mostrar contexto do disparo
+        shell: bash
+        run: |
+          echo "event_name=$GITHUB_EVENT_NAME"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_run" ]; then
+            echo "ci_conclusion=${{ github.event.workflow_run.conclusion }}"
+            echo "ci_head_sha=${{ github.event.workflow_run.head_sha }}"
+            echo "ci_head_branch=${{ github.event.workflow_run.head_branch }}"
+          else
+            echo "manual_mode=${{ github.event.inputs.mode }}"
+          fi
+
+      - name: Executar deploy remoto
+        if: github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'deploy')
+        shell: bash
+        run: |
+          set -euo pipefail
+          PORT="${PROD_PORT:-22}"
+          ssh -i ~/.ssh/id_ed25519 -p "$PORT" "${PROD_USER}@${PROD_HOST}" \
+            "cd '${PROD_APP_DIR}' && ./deploy.sh deploy"
+
+      - name: Consultar status remoto
+        if: github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'status')
+        shell: bash
+        run: |
+          set -euo pipefail
+          PORT="${PROD_PORT:-22}"
+          ssh -i ~/.ssh/id_ed25519 -p "$PORT" "${PROD_USER}@${PROD_HOST}" \
+            "cd '${PROD_APP_DIR}' && ./deploy.sh status"
+
+      - name: Verificacao final da stack
+        shell: bash
+        run: |
+          set -euo pipefail
+          PORT="${PROD_PORT:-22}"
+          ssh -i ~/.ssh/id_ed25519 -p "$PORT" "${PROD_USER}@${PROD_HOST}" \
+            "cd '${PROD_APP_DIR}' && docker compose --env-file .env.prod -f docker-compose.prod.yml ps"
