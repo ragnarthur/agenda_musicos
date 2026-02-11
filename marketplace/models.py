@@ -88,4 +88,25 @@ class GigApplication(models.Model):
         return f"{self.musician} em {self.gig}"
 
 
+class GigChatMessage(models.Model):
+    """
+    Chat curto entre criador da vaga e músico contratado.
+    """
+
+    gig = models.ForeignKey(Gig, on_delete=models.CASCADE, related_name="chat_messages")
+    sender = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="gig_chat_messages_sent"
+    )
+    message = models.CharField(max_length=600)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+        verbose_name = "Mensagem do chat da vaga"
+        verbose_name_plural = "Mensagens do chat da vaga"
+
+    def __str__(self):
+        return f"Chat #{self.gig_id} - {self.sender.username}"
+
+
 # Create your models here.

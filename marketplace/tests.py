@@ -9,7 +9,7 @@ from rest_framework.test import APITestCase
 
 from agenda.models import Musician, Organization
 
-from .models import Gig, GigApplication
+from .models import Gig, GigApplication, GigChatMessage
 
 
 class GigModelTest(TestCase):
@@ -226,3 +226,110 @@ class GigWorkflowTest(APITestCase):
         # 5. Verifica que candidatura está como contratada
         application.refresh_from_db()
         self.assertEqual(application.status, "hired")
+
+
+class GigChatAPITest(APITestCase):
+    """Testes do chat curto entre criador da vaga e músico contratado."""
+
+    def setUp(self):
+        self.owner = User.objects.create_user(
+            username="owner_chat", email="owner_chat@example.com", password="testpass123"
+        )
+        self.owner_org = Organization.objects.create(name="Owner Org", owner=self.owner)
+        self.owner_musician = Musician.objects.create(
+            user=self.owner,
+            organization=self.owner_org,
+            instrument="other",
+            role="member",
+        )
+
+        self.hired_user = User.objects.create_user(
+            username="hired_chat", email="hired_chat@example.com", password="testpass123"
+        )
+        self.hired_musician = Musician.objects.create(
+            user=self.hired_user,
+            organization=self.owner_org,
+            instrument="guitar",
+            role="member",
+        )
+
+        self.other_user = User.objects.create_user(
+            username="other_chat", email="other_chat@example.com", password="testpass123"
+        )
+        self.other_musician = Musician.objects.create(
+            user=self.other_user,
+            organization=self.owner_org,
+            instrument="drums",
+            role="member",
+        )
+
+        self.gig = Gig.objects.create(
+            title="Gig Chat",
+            organization=self.owner_org,
+            created_by=self.owner,
+            status="open",
+        )
+
+        self.application = GigApplication.objects.create(
+            gig=self.gig,
+            musician=self.hired_musician,
+            status="pending",
+            expected_fee=Decimal("500.00"),
+        )
+
+    def _hire(self):
+        self.client.force_authenticate(user=self.owner)
+        response = self.client.post(
+            f"/api/marketplace/gigs/{self.gig.id}/hire/",
+            {"application_id": self.application.id},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_only_owner_and_hired_musician_can_access_chat(self):
+        self._hire()
+
+        self.client.force_authenticate(user=self.owner)
+        owner_response = self.client.get(f"/api/marketplace/gigs/{self.gig.id}/chat/")
+        self.assertEqual(owner_response.status_code, status.HTTP_200_OK)
+
+        self.client.force_authenticate(user=self.hired_user)
+        hired_response = self.client.get(f"/api/marketplace/gigs/{self.gig.id}/chat/")
+        self.assertEqual(hired_response.status_code, status.HTTP_200_OK)
+
+        self.client.force_authenticate(user=self.other_user)
+        denied_response = self.client.get(f"/api/marketplace/gigs/{self.gig.id}/chat/")
+        self.assertEqual(denied_response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_send_message_only_after_hire(self):
+        self.client.force_authenticate(user=self.owner)
+        before_hire = self.client.post(
+            f"/api/marketplace/gigs/{self.gig.id}/chat/",
+            {"message": "Teste antes da contratação"},
+        )
+        self.assertEqual(before_hire.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self._hire()
+        self.client.force_authenticate(user=self.owner)
+        after_hire = self.client.post(
+            f"/api/marketplace/gigs/{self.gig.id}/chat/",
+            {"message": "Tudo certo para o evento?"},
+        )
+        self.assertEqual(after_hire.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(after_hire.data["message"], "Tudo certo para o evento?")
+
+    def test_close_gig_clears_chat_messages(self):
+        self._hire()
+
+        self.client.force_authenticate(user=self.owner)
+        self.client.post(
+            f"/api/marketplace/gigs/{self.gig.id}/chat/",
+            {"message": "Mensagem para limpar"},
+        )
+        self.assertEqual(GigChatMessage.objects.filter(gig=self.gig).count(), 1)
+
+        close_response = self.client.post(
+            f"/api/marketplace/gigs/{self.gig.id}/close/",
+            {"status": "closed"},
+        )
+        self.assertEqual(close_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(GigChatMessage.objects.filter(gig=self.gig).count(), 0)

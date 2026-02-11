@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from agenda.validators import sanitize_string
 
-from .models import Gig, GigApplication
+from .models import Gig, GigApplication, GigChatMessage
 
 
 class GigApplicationSerializer(serializers.ModelSerializer):
@@ -192,3 +192,15 @@ class GigSerializer(serializers.ModelSerializer):
             data["contact_phone"] = None
 
         return data
+
+
+class GigChatMessageSerializer(serializers.ModelSerializer):
+    sender_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = GigChatMessage
+        fields = ["id", "gig", "sender", "sender_name", "message", "created_at"]
+        read_only_fields = ["id", "gig", "sender", "sender_name", "created_at"]
+
+    def get_sender_name(self, obj) -> str:
+        return obj.sender.get_full_name() or obj.sender.username

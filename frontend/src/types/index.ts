@@ -264,6 +264,15 @@ export interface MarketplaceGig {
   updated_at: string;
 }
 
+export interface MarketplaceGigChatMessage {
+  id: number;
+  gig: number;
+  sender: number;
+  sender_name: string;
+  message: string;
+  created_at: string;
+}
+
 // Avaliações de músicos
 export interface MusicianRating {
   id: number;

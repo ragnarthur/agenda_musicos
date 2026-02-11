@@ -16,6 +16,8 @@ import {
   CheckCircle2,
   Users,
   Ban,
+  MessageCircle,
+  Eraser,
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import { SkeletonCard } from '../components/common/Skeleton';
@@ -24,7 +26,11 @@ import ConfirmModal from '../components/modals/ConfirmModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { marketplaceService } from '../services/api';
-import type { MarketplaceGig, MarketplaceApplication } from '../types';
+import type {
+  MarketplaceGig,
+  MarketplaceApplication,
+  MarketplaceGigChatMessage,
+} from '../types';
 import { logError } from '../utils/logger';
 import { sanitizeOptionalText, sanitizeText } from '../utils/sanitize';
 import { getErrorMessage } from '../utils/toast';
@@ -92,6 +98,12 @@ const Marketplace: React.FC = () => {
   );
   const [applicationsOpen, setApplicationsOpen] = useState<Record<number, boolean>>({});
   const [applicationsLoading, setApplicationsLoading] = useState<Record<number, boolean>>({});
+  const [chatByGig, setChatByGig] = useState<Record<number, MarketplaceGigChatMessage[]>>({});
+  const [chatOpen, setChatOpen] = useState<Record<number, boolean>>({});
+  const [chatLoading, setChatLoading] = useState<Record<number, boolean>>({});
+  const [chatSending, setChatSending] = useState<Record<number, boolean>>({});
+  const [chatClearing, setChatClearing] = useState<Record<number, boolean>>({});
+  const [chatDraftByGig, setChatDraftByGig] = useState<Record<number, string>>({});
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [cityQuery, setCityQuery] = useState('');
   const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
@@ -227,6 +239,70 @@ const Marketplace: React.FC = () => {
       setError(getErrorMessage(err));
     } finally {
       setApplicationsLoading(prev => ({ ...prev, [gig.id]: false }));
+    }
+  };
+
+  const toggleGigChat = async (gig: MarketplaceGig) => {
+    const shouldOpen = !chatOpen[gig.id];
+    setChatOpen(prev => ({ ...prev, [gig.id]: shouldOpen }));
+
+    if (!shouldOpen) {
+      return;
+    }
+
+    try {
+      setChatLoading(prev => ({ ...prev, [gig.id]: true }));
+      const messages = await marketplaceService.getGigChat(gig.id);
+      setChatByGig(prev => ({ ...prev, [gig.id]: messages }));
+    } catch (err) {
+      logError('Marketplace', err);
+      setError(getErrorMessage(err));
+    } finally {
+      setChatLoading(prev => ({ ...prev, [gig.id]: false }));
+    }
+  };
+
+  const handleChatDraftChange = (gigId: number, value: string) => {
+    setChatDraftByGig(prev => ({ ...prev, [gigId]: value }));
+  };
+
+  const handleSendChatMessage = async (gigId: number) => {
+    const draft = sanitizeOptionalText(chatDraftByGig[gigId], 600) || '';
+    if (!draft) {
+      return;
+    }
+
+    try {
+      setChatSending(prev => ({ ...prev, [gigId]: true }));
+      const message = await marketplaceService.sendGigChatMessage(gigId, draft);
+      setChatByGig(prev => ({
+        ...prev,
+        [gigId]: [...(prev[gigId] || []), message],
+      }));
+      setChatDraftByGig(prev => ({ ...prev, [gigId]: '' }));
+    } catch (err) {
+      logError('Marketplace', err);
+      setError(getErrorMessage(err));
+    } finally {
+      setChatSending(prev => ({ ...prev, [gigId]: false }));
+    }
+  };
+
+  const handleClearGigChat = async (gigId: number) => {
+    const confirmed = window.confirm(
+      'Deseja apagar todo o histórico do chat desta contratação? Esta ação não pode ser desfeita.'
+    );
+    if (!confirmed) return;
+
+    try {
+      setChatClearing(prev => ({ ...prev, [gigId]: true }));
+      await marketplaceService.clearGigChat(gigId);
+      setChatByGig(prev => ({ ...prev, [gigId]: [] }));
+    } catch (err) {
+      logError('Marketplace', err);
+      setError(getErrorMessage(err));
+    } finally {
+      setChatClearing(prev => ({ ...prev, [gigId]: false }));
     }
   };
 
@@ -549,6 +625,11 @@ const Marketplace: React.FC = () => {
                   );
                   const canCloseGig = !['closed', 'cancelled'].includes(gig.status);
                   const canHire = ['open', 'in_review'].includes(gig.status);
+                  const isHiredMusician = gig.my_application?.status === 'hired';
+                  const canAccessChat = gig.status === 'hired' && (isOwner || isHiredMusician);
+                  const chatVisible = !!chatOpen[gig.id];
+                  const chatMessages = chatByGig[gig.id] || [];
+                  const chatDraft = chatDraftByGig[gig.id] || '';
 
                   return (
                     <div
@@ -588,6 +669,16 @@ const Marketplace: React.FC = () => {
                                 <Users className="h-3.5 w-3.5" />
                                 {applicationsVisible ? 'Ocultar' : 'Candidaturas'}
                               </button>
+                              {canAccessChat ? (
+                                <button
+                                  type="button"
+                                  onClick={() => toggleGigChat(gig)}
+                                  className="inline-flex items-center gap-1 rounded-full border border-blue-200 px-3 py-1 text-xs font-semibold text-blue-700 hover:border-blue-300 hover:text-blue-800 transition-colors"
+                                >
+                                  <MessageCircle className="h-3.5 w-3.5" />
+                                  {chatVisible ? 'Fechar chat' : 'Abrir chat'}
+                                </button>
+                              ) : null}
                               {canCloseGig ? (
                                 <button
                                   type="button"
@@ -730,11 +821,26 @@ const Marketplace: React.FC = () => {
                                 {statusLabel[gig.my_application.status] ||
                                   gig.my_application.status}
                               </p>
+                              {canAccessChat ? (
+                                <p className="text-xs text-primary-700 mt-1">
+                                  Você foi contratado. Use o chat para alinhar os detalhes.
+                                </p>
+                              ) : null}
                             </div>
-                            <div className="text-right text-xs text-gray-600">
+                            <div className="text-right text-xs text-gray-600 space-y-2">
                               {gig.my_application.expected_fee && (
                                 <p>Cache: {formatCurrency(gig.my_application.expected_fee)}</p>
                               )}
+                              {canAccessChat ? (
+                                <button
+                                  type="button"
+                                  onClick={() => toggleGigChat(gig)}
+                                  className="inline-flex items-center gap-1 rounded-full border border-blue-200 px-3 py-1 text-xs font-semibold text-blue-700 hover:border-blue-300 hover:text-blue-800 transition-colors"
+                                >
+                                  <MessageCircle className="h-3.5 w-3.5" />
+                                  {chatVisible ? 'Fechar chat' : 'Abrir chat'}
+                                </button>
+                              ) : null}
                             </div>
                           </div>
                         ) : (
@@ -771,6 +877,107 @@ const Marketplace: React.FC = () => {
                             </div>
                           </div>
                         )}
+
+                        {canAccessChat ? (
+                          <div className="rounded-lg border border-blue-100 bg-blue-50/30 p-3 space-y-3">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div>
+                                <p className="text-sm font-semibold text-blue-900">
+                                  Chat da contratação
+                                </p>
+                                <p className="text-xs text-blue-700">
+                                  Canal curto para alinhar detalhes entre contratante e contratado.
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => toggleGigChat(gig)}
+                                  className="inline-flex items-center gap-1 rounded-full border border-blue-200 px-3 py-1 text-xs font-semibold text-blue-700 hover:border-blue-300 hover:text-blue-800 transition-colors"
+                                >
+                                  <MessageCircle className="h-3.5 w-3.5" />
+                                  {chatVisible ? 'Ocultar' : 'Exibir'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleClearGigChat(gig.id)}
+                                  disabled={chatClearing[gig.id]}
+                                  className="inline-flex items-center gap-1 rounded-full border border-rose-200 px-3 py-1 text-xs font-semibold text-rose-700 hover:border-rose-300 hover:text-rose-800 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                                >
+                                  {chatClearing[gig.id] ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    <Eraser className="h-3.5 w-3.5" />
+                                  )}
+                                  Apagar chat
+                                </button>
+                              </div>
+                            </div>
+
+                            {chatVisible ? (
+                              <div className="space-y-3">
+                                <div className="max-h-56 overflow-y-auto rounded-lg border border-blue-100 bg-white p-2 space-y-2">
+                                  {chatLoading[gig.id] ? (
+                                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                      Carregando mensagens...
+                                    </div>
+                                  ) : chatMessages.length === 0 ? (
+                                    <p className="text-xs text-gray-500 px-1 py-2">
+                                      Nenhuma mensagem ainda.
+                                    </p>
+                                  ) : (
+                                    chatMessages.map(message => {
+                                      const isMine = message.sender === user?.user.id;
+                                      return (
+                                        <div
+                                          key={message.id}
+                                          className={`rounded-lg px-3 py-2 text-xs ${isMine ? 'bg-blue-600 text-white ml-8' : 'bg-slate-100 text-slate-800 mr-8'}`}
+                                        >
+                                          <p className="font-semibold">
+                                            {message.sender_name}
+                                          </p>
+                                          <p className="mt-1 whitespace-pre-wrap break-words">
+                                            {message.message}
+                                          </p>
+                                          <p
+                                            className={`mt-1 ${isMine ? 'text-blue-100' : 'text-slate-500'}`}
+                                          >
+                                            {formatDateTime(message.created_at)}
+                                          </p>
+                                        </div>
+                                      );
+                                    })
+                                  )}
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                  <input
+                                    type="text"
+                                    className="input-field w-full sm:flex-1"
+                                    placeholder="Escreva uma mensagem curta..."
+                                    value={chatDraft}
+                                    onChange={e => handleChatDraftChange(gig.id, e.target.value)}
+                                    maxLength={600}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSendChatMessage(gig.id)}
+                                    disabled={chatSending[gig.id] || !chatDraft.trim()}
+                                    className="btn-primary inline-flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                                  >
+                                    {chatSending[gig.id] ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <Send className="h-4 w-4" />
+                                    )}
+                                    Enviar
+                                  </button>
+                                </div>
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                   );
