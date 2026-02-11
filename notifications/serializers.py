@@ -27,6 +27,7 @@ class NotificationPreferenceSerializer(serializers.ModelSerializer):
             "notify_event_reminders",
             "notify_event_confirmations",
             "notify_availability_responses",
+            "notify_quote_requests",
             "available_channels",
             "updated_at",
         ]

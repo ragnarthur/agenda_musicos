@@ -21,6 +21,7 @@ class NotificationType(models.TextChoices):
     QUOTE_PROPOSAL_RECEIVED = "quote_proposal_received", "Proposta Recebida"
     QUOTE_RESERVATION_CREATED = "quote_reservation_created", "Reserva Criada"
     QUOTE_BOOKING_CONFIRMED = "quote_booking_confirmed", "Reserva Confirmada"
+    MARKETPLACE_ACTIVITY = "marketplace_activity", "Atualizacao de Vagas"
 
 
 class NotificationPreference(models.Model):

@@ -34,4 +34,24 @@ export const marketplaceService = {
     const response = await api.post(`/marketplace/gigs/${gigId}/apply/`, payload);
     return response.data;
   },
+
+  getGigApplications: async (gigId: number): Promise<MarketplaceApplication[]> => {
+    const response = await api.get(`/marketplace/gigs/${gigId}/applications/`);
+    return response.data;
+  },
+
+  hireApplication: async (gigId: number, applicationId: number): Promise<MarketplaceGig> => {
+    const response = await api.post(`/marketplace/gigs/${gigId}/hire/`, {
+      application_id: applicationId,
+    });
+    return response.data;
+  },
+
+  closeGig: async (
+    gigId: number,
+    status: 'closed' | 'cancelled' = 'closed'
+  ): Promise<MarketplaceGig> => {
+    const response = await api.post(`/marketplace/gigs/${gigId}/close/`, { status });
+    return response.data;
+  },
 };

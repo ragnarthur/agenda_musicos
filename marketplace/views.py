@@ -10,6 +10,11 @@ from rest_framework.response import Response
 
 from agenda.models import Musician
 from agenda.validators import sanitize_string
+from notifications.services.marketplace_notifications import (
+    notify_gig_application_created,
+    notify_gig_closed,
+    notify_gig_hire_result,
+)
 
 from .models import Gig, GigApplication
 from .serializers import GigApplicationSerializer, GigSerializer
@@ -87,6 +92,11 @@ class GigViewSet(viewsets.ModelViewSet):
                 {"detail": "Esta vaga não aceita mais candidaturas."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        if gig.created_by_id == request.user.id:
+            return Response(
+                {"detail": "Você não pode se candidatar na própria vaga."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         cover_letter = (
             sanitize_string(request.data.get("cover_letter", ""), max_length=2000, allow_empty=True)
@@ -126,6 +136,8 @@ class GigViewSet(viewsets.ModelViewSet):
             gig.status = "in_review"
             gig.save(update_fields=["status", "updated_at"])
 
+        notify_gig_application_created(gig, application)
+
         serializer = GigApplicationSerializer(application)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -151,22 +163,45 @@ class GigViewSet(viewsets.ModelViewSet):
                 {"detail": "Apenas quem publicou a vaga pode contratar."},
                 status=status.HTTP_403_FORBIDDEN,
             )
+        if gig.status in ["closed", "cancelled"]:
+            return Response(
+                {"detail": "Esta vaga já foi encerrada e não pode contratar."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if gig.status == "hired":
+            return Response(
+                {"detail": "Esta vaga já possui músico contratado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         application_id = request.data.get("application_id")
         try:
-            application = gig.applications.get(id=application_id)
+            application = gig.applications.select_related("musician__user").get(id=application_id)
         except GigApplication.DoesNotExist:
             return Response(
                 {"detail": "Candidatura não encontrada para esta vaga."},
                 status=status.HTTP_404_NOT_FOUND,
             )
+        if application.status != "pending":
+            return Response(
+                {"detail": "Apenas candidaturas pendentes podem ser contratadas."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        rejected_applications = list(
+            gig.applications.select_related("musician__user")
+            .filter(status="pending")
+            .exclude(id=application.id)
+        )
 
         with transaction.atomic():
-            gig.applications.exclude(id=application_id).update(status="rejected")
+            gig.applications.filter(status="pending").exclude(id=application_id).update(status="rejected")
             application.status = "hired"
             application.save(update_fields=["status"])
             gig.status = "hired"
             gig.save(update_fields=["status", "updated_at"])
+
+        notify_gig_hire_result(gig, application, rejected_applications)
 
         serializer = GigSerializer(gig, context={"request": request})
         return Response(serializer.data)
@@ -185,8 +220,19 @@ class GigViewSet(viewsets.ModelViewSet):
         if new_status not in ["closed", "cancelled"]:
             return Response({"detail": "Status inválido."}, status=status.HTTP_400_BAD_REQUEST)
 
+        affected_applications = list(
+            gig.applications.select_related("musician__user").filter(status="pending")
+        )
+
         gig.status = new_status
         gig.save(update_fields=["status", "updated_at"])
+        if affected_applications:
+            gig.applications.filter(id__in=[app.id for app in affected_applications]).update(
+                status="rejected"
+            )
+
+        notify_gig_closed(gig, new_status, affected_applications)
+
         serializer = GigSerializer(gig, context={"request": request})
         return Response(serializer.data)
 

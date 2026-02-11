@@ -13,6 +13,9 @@ import {
   PencilLine,
   Trash2,
   ArrowUp,
+  CheckCircle2,
+  Users,
+  Ban,
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import { SkeletonCard } from '../components/common/Skeleton';
@@ -49,6 +52,9 @@ const statusLabel: Record<string, string> = {
 
 type ApplyForm = { cover_letter: string; expected_fee: string };
 type CityOption = { id: number; name: string; state: string };
+type CloseStatus = 'closed' | 'cancelled';
+type CloseTarget = { gig: MarketplaceGig; status: CloseStatus } | null;
+type HireTarget = { gig: MarketplaceGig; application: MarketplaceApplication } | null;
 const DURATION_PRESETS = ['1', '2', '3', '4'];
 
 const Marketplace: React.FC = () => {
@@ -77,6 +83,15 @@ const Marketplace: React.FC = () => {
   const [editingGig, setEditingGig] = useState<MarketplaceGig | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<MarketplaceGig | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [hireTarget, setHireTarget] = useState<HireTarget>(null);
+  const [hireLoading, setHireLoading] = useState(false);
+  const [closeTarget, setCloseTarget] = useState<CloseTarget>(null);
+  const [closeLoading, setCloseLoading] = useState(false);
+  const [applicationsByGig, setApplicationsByGig] = useState<Record<number, MarketplaceApplication[]>>(
+    {}
+  );
+  const [applicationsOpen, setApplicationsOpen] = useState<Record<number, boolean>>({});
+  const [applicationsLoading, setApplicationsLoading] = useState<Record<number, boolean>>({});
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [cityQuery, setCityQuery] = useState('');
   const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
@@ -103,6 +118,15 @@ const Marketplace: React.FC = () => {
       ]);
       setGigs(gigsData);
       setMyApplications(myApplicationsData);
+      setApplicationsByGig(prev => {
+        const next = { ...prev };
+        gigsData.forEach(gig => {
+          if (gig.applications) {
+            next[gig.id] = gig.applications;
+          }
+        });
+        return next;
+      });
     } catch (err) {
       logError('Marketplace', err);
       setError(getErrorMessage(err));
@@ -178,12 +202,81 @@ const Marketplace: React.FC = () => {
     }
   };
 
+  const getOwnerApplications = useCallback(
+    (gig: MarketplaceGig): MarketplaceApplication[] => {
+      if (applicationsByGig[gig.id]) return applicationsByGig[gig.id];
+      return gig.applications || [];
+    },
+    [applicationsByGig]
+  );
+
+  const toggleApplications = async (gig: MarketplaceGig) => {
+    const shouldOpen = !applicationsOpen[gig.id];
+    setApplicationsOpen(prev => ({ ...prev, [gig.id]: shouldOpen }));
+
+    if (!shouldOpen || applicationsByGig[gig.id] || gig.applications) {
+      return;
+    }
+
+    try {
+      setApplicationsLoading(prev => ({ ...prev, [gig.id]: true }));
+      const data = await marketplaceService.getGigApplications(gig.id);
+      setApplicationsByGig(prev => ({ ...prev, [gig.id]: data }));
+    } catch (err) {
+      logError('Marketplace', err);
+      setError(getErrorMessage(err));
+    } finally {
+      setApplicationsLoading(prev => ({ ...prev, [gig.id]: false }));
+    }
+  };
+
+  const handleHire = async () => {
+    if (!hireTarget) return;
+    try {
+      setHireLoading(true);
+      await marketplaceService.hireApplication(hireTarget.gig.id, hireTarget.application.id);
+      setHireTarget(null);
+      setApplicationsOpen(prev => ({ ...prev, [hireTarget.gig.id]: true }));
+      await loadData();
+    } catch (err) {
+      logError('Marketplace', err);
+      setError(getErrorMessage(err));
+    } finally {
+      setHireLoading(false);
+    }
+  };
+
+  const handleCloseGig = async () => {
+    if (!closeTarget) return;
+    try {
+      setCloseLoading(true);
+      await marketplaceService.closeGig(closeTarget.gig.id, closeTarget.status);
+      setCloseTarget(null);
+      await loadData();
+    } catch (err) {
+      logError('Marketplace', err);
+      setError(getErrorMessage(err));
+    } finally {
+      setCloseLoading(false);
+    }
+  };
+
   const formatDate = (value?: string | null) => {
     if (!value) return 'Data a combinar';
     const [year, month, day] = value.split('T')[0].split('-').map(Number);
     if (!year || !month || !day) return 'Data a combinar';
     const localDate = new Date(year, month - 1, day);
     return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium' }).format(localDate);
+  };
+
+  const formatDateTime = (value?: string | null) => {
+    if (!value) return 'Agora';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'Agora';
+    return new Intl.DateTimeFormat('pt-BR', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    }).format(date);
   };
 
   const formatCurrency = (value?: string | number | null) => {
@@ -449,6 +542,13 @@ const Marketplace: React.FC = () => {
                   const applyForm = applyForms[gig.id] || { cover_letter: '', expected_fee: '' };
                   const canApply = gig.status === 'open' || gig.status === 'in_review';
                   const isOwner = gig.created_by ? gig.created_by === user?.user.id : false;
+                  const ownerApplications = getOwnerApplications(gig);
+                  const applicationsVisible = !!applicationsOpen[gig.id];
+                  const ownerPendingApplications = ownerApplications.filter(
+                    app => app.status === 'pending'
+                  );
+                  const canCloseGig = !['closed', 'cancelled'].includes(gig.status);
+                  const canHire = ['open', 'in_review'].includes(gig.status);
 
                   return (
                     <div
@@ -480,6 +580,24 @@ const Marketplace: React.FC = () => {
                           <p>Candidaturas: {gig.applications_count}</p>
                           {isOwner ? (
                             <div className="flex flex-wrap gap-2 sm:justify-end">
+                              <button
+                                type="button"
+                                onClick={() => toggleApplications(gig)}
+                                className="inline-flex items-center gap-1 rounded-full border border-primary-200 px-3 py-1 text-xs font-semibold text-primary-700 hover:border-primary-300 hover:text-primary-800 transition-colors"
+                              >
+                                <Users className="h-3.5 w-3.5" />
+                                {applicationsVisible ? 'Ocultar' : 'Candidaturas'}
+                              </button>
+                              {canCloseGig ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setCloseTarget({ gig, status: 'closed' })}
+                                  className="inline-flex items-center gap-1 rounded-full border border-amber-200 px-3 py-1 text-xs font-semibold text-amber-700 hover:border-amber-300 hover:text-amber-800 transition-colors"
+                                >
+                                  <Ban className="h-3.5 w-3.5" />
+                                  Encerrar
+                                </button>
+                              ) : null}
                               <button
                                 type="button"
                                 onClick={() => openEditModal(gig)}
@@ -534,10 +652,72 @@ const Marketplace: React.FC = () => {
 
                       <div className="mt-4 border-t border-gray-100 pt-3 space-y-3">
                         {isOwner ? (
-                          <div className="rounded-lg border border-primary-200 bg-gradient-to-r from-primary-100 via-white to-primary-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 px-3 py-2 text-sm text-primary-900 shadow-sm">
-                            <span className="animate-pulse font-semibold tracking-wide">
-                              Você publicou esta vaga.
-                            </span>
+                          <div className="space-y-3">
+                            <div className="rounded-lg border border-primary-200 bg-gradient-to-r from-primary-100 via-white to-primary-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 px-3 py-2 text-sm text-primary-900 shadow-sm">
+                              <p className="font-semibold tracking-wide">Você publicou esta vaga.</p>
+                              <p className="text-xs text-primary-800 mt-1">
+                                Pendentes: {ownerPendingApplications.length} de{' '}
+                                {ownerApplications.length} candidatura(s)
+                              </p>
+                            </div>
+
+                            {applicationsVisible ? (
+                              <div className="rounded-lg border border-gray-100 p-3">
+                                {applicationsLoading[gig.id] ? (
+                                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Carregando candidaturas...
+                                  </div>
+                                ) : ownerApplications.length === 0 ? (
+                                  <p className="text-sm text-gray-600">
+                                    Ainda não há candidaturas para esta vaga.
+                                  </p>
+                                ) : (
+                                  <div className="space-y-3">
+                                    {ownerApplications.map(application => (
+                                      <div
+                                        key={application.id}
+                                        className="rounded-lg border border-gray-100 p-3"
+                                      >
+                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                          <p className="font-semibold text-gray-900">
+                                            {application.musician_name}
+                                          </p>
+                                          <span
+                                            className={`px-2 py-1 rounded-full text-xs font-semibold ${statusStyles[application.status] || 'bg-gray-100 text-gray-700'}`}
+                                          >
+                                            {statusLabel[application.status] || application.status}
+                                          </span>
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                          Enviado em {formatDateTime(application.created_at)}
+                                        </p>
+                                        <p className="text-sm text-gray-700 mt-2">
+                                          Cache: {formatCurrency(application.expected_fee)}
+                                        </p>
+                                        {application.cover_letter ? (
+                                          <p className="text-xs text-gray-600 mt-1">
+                                            {application.cover_letter}
+                                          </p>
+                                        ) : null}
+                                        {application.status === 'pending' && canHire ? (
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              setHireTarget({ gig, application })
+                                            }
+                                            className="mt-3 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-700 transition-colors"
+                                          >
+                                            <CheckCircle2 className="h-3.5 w-3.5" />
+                                            Contratar músico
+                                          </button>
+                                        ) : null}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ) : null}
                           </div>
                         ) : gig.my_application ? (
                           <div className="flex items-center justify-between bg-primary-50 border border-primary-100 rounded-lg p-3 text-sm">
@@ -1014,6 +1194,40 @@ const Marketplace: React.FC = () => {
         confirmVariant="danger"
         loading={deleteLoading}
         icon={<Trash2 className="h-5 w-5" />}
+      />
+
+      <ConfirmModal
+        isOpen={!!hireTarget}
+        onClose={() => setHireTarget(null)}
+        onConfirm={handleHire}
+        title="Contratar candidato"
+        message={
+          hireTarget
+            ? `Deseja contratar ${hireTarget.application.musician_name} para a vaga "${hireTarget.gig.title}"? As demais candidaturas pendentes serão recusadas e todos serão notificados por e-mail e Telegram quando ativado.`
+            : ''
+        }
+        confirmText="Contratar"
+        cancelText="Cancelar"
+        confirmVariant="primary"
+        loading={hireLoading}
+        icon={<CheckCircle2 className="h-5 w-5" />}
+      />
+
+      <ConfirmModal
+        isOpen={!!closeTarget}
+        onClose={() => setCloseTarget(null)}
+        onConfirm={handleCloseGig}
+        title="Encerrar vaga"
+        message={
+          closeTarget
+            ? `Deseja encerrar a vaga "${closeTarget.gig.title}"? Candidaturas pendentes serão marcadas como recusadas e os músicos afetados serão notificados.`
+            : ''
+        }
+        confirmText="Encerrar vaga"
+        cancelText="Cancelar"
+        confirmVariant="warning"
+        loading={closeLoading}
+        icon={<Ban className="h-5 w-5" />}
       />
 
       {showBackToTop && !showCreateModal ? (

@@ -22,6 +22,7 @@ export interface NotificationPreference {
   notify_event_reminders: boolean;
   notify_event_confirmations: boolean;
   notify_availability_responses: boolean;
+  notify_quote_requests: boolean;
   available_channels: NotificationChannelInfo[];
   updated_at: string;
 }

@@ -208,6 +208,7 @@ class NotificationService:
             NotificationType.QUOTE_PROPOSAL_RECEIVED: prefs.notify_quote_requests,
             NotificationType.QUOTE_RESERVATION_CREATED: prefs.notify_quote_requests,
             NotificationType.QUOTE_BOOKING_CONFIRMED: prefs.notify_quote_requests,
+            NotificationType.MARKETPLACE_ACTIVITY: prefs.notify_quote_requests,
         }
 
         return mapping.get(notification_type, True)

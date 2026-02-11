@@ -418,6 +418,11 @@ const NotificationSettings: React.FC = () => {
                 description: 'Quando um evento é confirmado ou cancelado',
               },
               {
+                key: 'notify_quote_requests',
+                label: 'Vagas e candidaturas',
+                description: 'Atualizações de propostas, contratações e status das vagas',
+              },
+              {
                 key: 'notify_event_reminders',
                 label: 'Lembretes de eventos',
                 description: 'Lembretes antes dos shows (em breve)',
