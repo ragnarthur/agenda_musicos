@@ -22,7 +22,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   return (
     <motion.div
       className={`
-        rounded-xl p-4 border shadow-sm
+        rounded-xl p-3 xs:p-4 border shadow-sm
         ${accent ? 'bg-amber-50 border-amber-100' : 'bg-white/95 border-gray-100'}
         ${className || ''}
       `}

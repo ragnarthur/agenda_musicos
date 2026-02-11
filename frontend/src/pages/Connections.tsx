@@ -276,20 +276,20 @@ const Connections: React.FC = () => {
           <div className="hero-panel hero-animated fade-in-up">
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             {/* Título e descrição */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
               <motion.div
-                className="h-12 w-12 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center shadow-lg"
+                className="h-10 w-10 xs:h-12 xs:w-12 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center shadow-lg"
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: 'spring', stiffness: 200, damping: 15 }}
               >
-                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                <Users className="h-5 w-5 xs:h-6 xs:w-6 sm:h-8 sm:w-8 text-white" />
               </motion.div>
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                   Rede & Badges
                 </h1>
-                <p className="text-gray-600 dark:text-slate-300">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-slate-300">
                   Construa sua rede e acompanhe suas conquistas no app
                 </p>
               </div>
@@ -382,7 +382,7 @@ const Connections: React.FC = () => {
         <div className="grid gap-6 lg:grid-cols-[1.6fr,1fr]">
           {/* Conexões */}
           <div className="card space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Gerenciar conexões
@@ -393,7 +393,7 @@ const Connections: React.FC = () => {
               </div>
               <Link
                 to="/musicos"
-                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-indigo-200 bg-white/80 px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50 transition-all touch-manipulation active:scale-[0.99] dark:border-white/10 dark:bg-slate-900/40 dark:text-indigo-200 dark:hover:bg-slate-900/60"
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-indigo-200 bg-white/80 px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50 transition-all touch-manipulation active:scale-[0.99] dark:border-white/10 dark:bg-slate-900/40 dark:text-indigo-200 dark:hover:bg-slate-900/60 w-full xs:w-auto"
               >
                 <Users className="h-4 w-4" />
                 <span>Ver músicos</span>
@@ -607,9 +607,9 @@ const Connections: React.FC = () => {
                       onClick={() => setActiveTab(type)}
                       className={`tab-button ${activeTab === type ? 'active' : ''}`}
                     >
-                      <span className="flex items-center justify-center gap-2">
-                        <Icon className="h-4 w-4" />
-                        <span>{connectionLabels[type]}</span>
+                      <span className="flex items-center justify-center gap-1 sm:gap-2">
+                        <Icon className="h-4 w-4 flex-shrink-0" />
+                        <span className="hidden xs:inline">{connectionLabels[type]}</span>
                         <span className="text-xs opacity-60">({grouped[type].length})</span>
                       </span>
                     </button>
@@ -657,18 +657,18 @@ const Connections: React.FC = () => {
                               initial={{ opacity: 0, x: -10 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: index * 0.03 }}
-                              className="flex h-full items-center justify-between rounded-xl border border-gray-100 dark:border-slate-700 bg-gray-50/80 dark:bg-slate-800/50 px-4 py-3 hover:bg-gray-100/80 dark:hover:bg-slate-800/80 transition-colors"
+                              className="flex h-full items-center justify-between rounded-xl border border-gray-100 dark:border-slate-700 bg-gray-50/80 dark:bg-slate-800/50 px-3 xs:px-4 py-3 hover:bg-gray-100/80 dark:hover:bg-slate-800/80 transition-colors"
                             >
-                              <div className="flex items-center gap-3">
-                                <div className="mini-avatar">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="mini-avatar flex-shrink-0">
                                   {targetPhoto ? (
                                     <img src={targetPhoto} alt={c.target.full_name} />
                                   ) : (
                                     <InstrumentIcon instrument={c.target.instrument} size={16} />
                                   )}
                                 </div>
-                                <div>
-                                  <p className="font-semibold text-gray-900 text-sm">
+                                <div className="min-w-0">
+                                  <p className="font-semibold text-gray-900 text-sm truncate">
                                     {c.target.full_name}
                                   </p>
                                   <p className="text-xs text-gray-500 dark:text-slate-400">
@@ -753,7 +753,7 @@ const Connections: React.FC = () => {
                     {badgeData.earned.map((badge, index) => (
                       <motion.div
                         key={badge.id}
-                        className="relative rounded-xl border border-amber-200 dark:border-amber-800/50 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/20 p-4 overflow-hidden group"
+                        className="relative rounded-xl border border-amber-200 dark:border-amber-800/50 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/20 p-3 xs:p-4 overflow-hidden group"
                         initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
                         animate={{ opacity: 1, scale: 1, rotate: 0 }}
                         transition={{ duration: 0.4, delay: index * 0.1, type: 'spring' }}
@@ -808,18 +808,18 @@ const Connections: React.FC = () => {
                 {badgeData.available.map((badge, index) => (
                   <motion.div
                     key={badge.slug}
-                    className="rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50/80 dark:bg-slate-800/50 p-4 group"
+                    className="rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50/80 dark:bg-slate-800/50 p-3 xs:p-4 group"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                     whileHover={{ borderColor: 'rgba(99, 102, 241, 0.3)' }}
                   >
-                    <div className="flex items-start gap-4">
+                    <div className="flex items-start gap-3 xs:gap-4">
                       {/* Progress Ring com Emoji */}
                       <div className="relative flex-shrink-0">
-                        <ProgressRing percentage={badge.percentage} size={56} strokeWidth={4} />
+                        <ProgressRing percentage={badge.percentage} size={48} strokeWidth={4} />
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-xl grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300">
+                          <span className="text-lg xs:text-xl grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300">
                             {badge.icon}
                           </span>
                         </div>

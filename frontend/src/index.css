@@ -1595,7 +1595,7 @@
    Musician Card Enhanced
    ======================================== */
 .musician-card-enhanced {
-  @apply relative bg-white border border-gray-200 rounded-2xl p-5
+  @apply relative bg-white border border-gray-200 rounded-2xl p-4 xs:p-5
          dark:bg-slate-900/80 dark:border-slate-700;
   transition: all 0.25s ease;
 }

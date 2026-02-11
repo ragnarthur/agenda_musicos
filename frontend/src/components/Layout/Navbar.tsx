@@ -462,6 +462,14 @@ const Navbar: React.FC = memo(() => {
         {openMore && (
           <div className="md:hidden absolute left-0 right-0 top-full bg-white/90 border-t border-slate-200/70 shadow-2xl shadow-slate-300/60 p-3 space-y-1 z-50 dark:bg-slate-950/95 dark:border-white/10 dark:shadow-black/40">
             <Link
+              to="/conexoes"
+              onClick={() => setOpenMore(false)}
+              className="flex items-center gap-3 px-3 py-2.5 text-slate-700 hover:bg-slate-900/5 rounded-lg transition-colors dark:text-slate-200 dark:hover:bg-white/5"
+            >
+              <HeartHandshake className="h-5 w-5" />
+              <span className="text-sm">Rede & Badges</span>
+            </Link>
+            <Link
               to="/marketplace"
               onClick={() => setOpenMore(false)}
               className="flex items-center gap-3 px-3 py-2.5 text-slate-700 hover:bg-slate-900/5 rounded-lg transition-colors dark:text-slate-200 dark:hover:bg-white/5"
