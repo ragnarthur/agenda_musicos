@@ -52,7 +52,21 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s' "${{ secrets.PROD_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p "$PORT" -H "$PROD_HOST" >> ~/.ssh/known_hosts
+          touch ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+          # Servidor pode oscilar. Tentamos keyscan sem tornar esta etapa frágil.
+          ok=0
+          for i in $(seq 1 8); do
+            if ssh-keyscan -T 8 -p "$PORT" -H "$PROD_HOST" >> ~/.ssh/known_hosts 2>/dev/null; then
+              ok=1
+              break
+            fi
+            sleep 4
+          done
+          if [ "$ok" -ne 1 ]; then
+            echo "Aviso: ssh-keyscan nao respondeu; seguiremos com StrictHostKeyChecking=no"
+          fi
 
       - name: Mostrar contexto do disparo
         shell: bash
@@ -72,8 +86,21 @@ jobs:
         run: |
           set -euo pipefail
           PORT="${PROD_PORT:-22}"
-          ssh -i ~/.ssh/id_ed25519 -p "$PORT" "${PROD_USER}@${PROD_HOST}" \
-            "cd '${PROD_APP_DIR}' && ./deploy.sh deploy"
+          run_remote() {
+            local cmd="$1"
+            for i in $(seq 1 10); do
+              if ssh -i ~/.ssh/id_ed25519 -p "$PORT" \
+                -o ConnectTimeout=12 \
+                -o StrictHostKeyChecking=no \
+                -o UserKnownHostsFile=/dev/null \
+                "${PROD_USER}@${PROD_HOST}" "$cmd"; then
+                return 0
+              fi
+              sleep 8
+            done
+            return 1
+          }
+          run_remote "cd '${PROD_APP_DIR}' && ./deploy.sh deploy"
 
       - name: Consultar status remoto
         if: github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'status')
@@ -81,13 +108,39 @@ jobs:
         run: |
           set -euo pipefail
           PORT="${PROD_PORT:-22}"
-          ssh -i ~/.ssh/id_ed25519 -p "$PORT" "${PROD_USER}@${PROD_HOST}" \
-            "cd '${PROD_APP_DIR}' && ./deploy.sh status"
+          run_remote() {
+            local cmd="$1"
+            for i in $(seq 1 10); do
+              if ssh -i ~/.ssh/id_ed25519 -p "$PORT" \
+                -o ConnectTimeout=12 \
+                -o StrictHostKeyChecking=no \
+                -o UserKnownHostsFile=/dev/null \
+                "${PROD_USER}@${PROD_HOST}" "$cmd"; then
+                return 0
+              fi
+              sleep 8
+            done
+            return 1
+          }
+          run_remote "cd '${PROD_APP_DIR}' && ./deploy.sh status"
 
       - name: Verificacao final da stack
         shell: bash
         run: |
           set -euo pipefail
           PORT="${PROD_PORT:-22}"
-          ssh -i ~/.ssh/id_ed25519 -p "$PORT" "${PROD_USER}@${PROD_HOST}" \
-            "cd '${PROD_APP_DIR}' && docker compose --env-file .env.prod -f docker-compose.prod.yml ps"
+          run_remote() {
+            local cmd="$1"
+            for i in $(seq 1 10); do
+              if ssh -i ~/.ssh/id_ed25519 -p "$PORT" \
+                -o ConnectTimeout=12 \
+                -o StrictHostKeyChecking=no \
+                -o UserKnownHostsFile=/dev/null \
+                "${PROD_USER}@${PROD_HOST}" "$cmd"; then
+                return 0
+              fi
+              sleep 8
+            done
+            return 1
+          }
+          run_remote "cd '${PROD_APP_DIR}' && docker compose --env-file .env.prod -f docker-compose.prod.yml ps"
