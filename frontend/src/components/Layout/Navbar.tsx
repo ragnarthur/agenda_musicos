@@ -8,6 +8,7 @@ import {
   Clock,
   Megaphone,
   HeartHandshake,
+  MessageSquare,
   Menu,
   X,
   Bell,
@@ -468,6 +469,14 @@ const Navbar: React.FC = memo(() => {
             >
               <HeartHandshake className="h-5 w-5" />
               <span className="text-sm">Rede & Badges</span>
+            </Link>
+            <Link
+              to="/musicos/pedidos"
+              onClick={() => setOpenMore(false)}
+              className="flex items-center gap-3 px-3 py-2.5 text-slate-700 hover:bg-slate-900/5 rounded-lg transition-colors dark:text-slate-200 dark:hover:bg-white/5"
+            >
+              <MessageSquare className="h-5 w-5" />
+              <span className="text-sm">Pedidos de Orçamento</span>
             </Link>
             <Link
               to="/marketplace"

@@ -1,0 +1,14 @@
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Agenda Músicos: backup diário do Postgres
+20 2 * * * root /usr/local/sbin/agenda-backup.sh >> /var/log/agenda-backup.log 2>&1
+
+# Agenda Músicos: validação de restore semanal (segunda 04:10)
+10 4 * * 1 root /usr/local/sbin/agenda-restore-check.sh >> /var/log/agenda-restore-check.log 2>&1
+
+# Agenda Músicos: monitoramento contínuo
+*/5 * * * * root /usr/local/sbin/agenda-health-monitor.sh >> /var/log/agenda-health-monitor.log 2>&1
+
+# Agenda Músicos: relatório auditável diário por e-mail
+0 8 * * * root /usr/local/sbin/agenda-send-audit-email.sh gigflowagenda@gmail.com >> /var/log/agenda-audit-email.log 2>&1

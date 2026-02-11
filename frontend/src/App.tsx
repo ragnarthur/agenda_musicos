@@ -68,7 +68,8 @@ const MusicianPublicProfile = lazy(() => import('./pages/MusicianPublicProfile')
 const OurMusicians = lazy(() => import('./pages/OurMusicians'));
 const AppStart = lazy(() => import('./pages/AppStart'));
 
-// Quote detail pages
+// Quote pages
+const MusicianMessages = lazy(() => import('./pages/MusicianMessages'));
 const MusicianQuoteDetail = lazy(() => import('./pages/MusicianQuoteDetail'));
 const ContractorQuoteDetail = lazy(() => import('./pages/ContractorQuoteDetail'));
 
@@ -325,6 +326,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <MusicianProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/musicos/pedidos"
+          element={
+            <ProtectedRoute>
+              <MusicianMessages />
             </ProtectedRoute>
           }
         />

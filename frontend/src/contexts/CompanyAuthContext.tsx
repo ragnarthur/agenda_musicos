@@ -175,8 +175,6 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
       window.google.accounts.id.revoke(contractorEmail, done => {
         if (done.error) {
           console.warn('Erro ao revogar Google token:', done.error);
-        } else {
-          console.log('Google session revoked');
         }
       });
     }

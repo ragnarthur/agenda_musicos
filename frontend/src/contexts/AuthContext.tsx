@@ -118,7 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           await musicianService.updateAvatar(googleAvatar);
           sessionStorage.removeItem('_googleAvatarUrl');
-          console.log('Avatar do Google atualizado com sucesso');
+          // Avatar atualizado com sucesso
         } catch (avatarError) {
           console.warn('Erro ao atualizar avatar do Google:', avatarError);
         }
@@ -153,8 +153,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         window.google.accounts.id.revoke(userEmail, done => {
           if (done.error) {
             console.warn('Erro ao revogar Google token:', done.error);
-          } else {
-            console.log('Google session revoked');
           }
         });
       }

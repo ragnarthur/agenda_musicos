@@ -1,0 +1,14 @@
+/var/log/agenda-backup.log
+/var/log/agenda-restore-check.log
+/var/log/agenda-health-monitor.log
+/var/log/agenda-audit-email.log
+/var/log/agenda-health-last-issues.log
+/var/log/agenda-audit/agenda-audit-*.txt {
+    weekly
+    rotate 8
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 root adm
+}

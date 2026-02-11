@@ -19,7 +19,7 @@ import {
   type QuoteRequest,
   type QuoteProposal,
 } from '../services/publicApi';
-import Navbar from '../components/Layout/Navbar';
+import Layout from '../components/Layout/Layout';
 
 export default function MusicianQuoteDetail() {
   const { id } = useParams<{ id: string }>();
@@ -175,55 +175,49 @@ export default function MusicianQuoteDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-[100svh] bg-gray-50 dark:bg-gray-900">
-        <Navbar />
-        <div className="page-shell max-w-7xl py-8">
-          <div className="flex items-center justify-center py-12">
-            <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-          </div>
+      <Layout>
+        <div className="flex items-center justify-center py-12">
+          <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
         </div>
-      </div>
+      </Layout>
     );
   }
 
   if (!quote) {
     return (
-      <div className="min-h-[100svh] bg-gray-50 dark:bg-gray-900">
-        <Navbar />
-        <div className="page-shell max-w-7xl py-8">
+      <Layout>
+        <div className="page-stack">
           <button
-            onClick={() => navigate('/musicos/mensagens')}
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white mb-6"
+            onClick={() => navigate('/musicos/pedidos')}
+            className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white min-h-[44px]"
           >
             <ArrowLeft className="w-4 h-4" />
-            Voltar para mensagens
+            Voltar para pedidos
           </button>
           <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">Pedido não encontrado</p>
+            <p className="text-muted">Pedido não encontrado</p>
           </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="min-h-[100svh] bg-gray-50 dark:bg-gray-900">
-      <Navbar />
-
-      <div className="page-shell max-w-7xl py-6 sm:py-8">
+    <Layout>
+      <div className="page-stack">
         <button
-          onClick={() => navigate('/musicos/mensagens')}
-          className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white mb-6"
+          onClick={() => navigate('/musicos/pedidos')}
+          className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white min-h-[44px]"
         >
           <ArrowLeft className="w-4 h-4" />
-          Voltar para mensagens
+          Voltar para pedidos
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Coluna da esquerda - Detalhes do pedido */}
           <div className="lg:col-span-2 space-y-6">
             {/* Header do pedido */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+            <div className="card">
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -266,7 +260,7 @@ export default function MusicianQuoteDetail() {
 
             {/* Detalhes do evento */}
             {quote.notes && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+              <div className="card">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
                   Sobre o evento
                 </h2>
@@ -278,10 +272,10 @@ export default function MusicianQuoteDetail() {
 
             {/* Botão para confirmar reserva */}
             {quote.status === 'reserved' && (
-              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-6">
-                <div className="flex items-center justify-between">
+              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-green-900 dark:text-green-100">
+                    <h3 className="text-base sm:text-lg font-semibold text-green-900 dark:text-green-100">
                       Proposta aceita! Confirme sua reserva
                     </h3>
                     <p className="text-sm text-green-700 dark:text-green-300 mt-1">
@@ -290,7 +284,7 @@ export default function MusicianQuoteDetail() {
                   </div>
                   <button
                     onClick={handleConfirmBooking}
-                    className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
+                    className="btn-primary !bg-green-600 hover:!bg-green-700 flex items-center justify-center gap-2 w-full sm:w-auto"
                   >
                     <CheckCircle className="w-5 h-5" />
                     Confirmar Reserva
@@ -304,7 +298,7 @@ export default function MusicianQuoteDetail() {
           <div className="space-y-6">
             {/* Formulário para enviar proposta */}
             {(quote.status === 'pending' || quote.status === 'responded') && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+              <div className="card">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                   Enviar proposta
                 </h2>
@@ -318,7 +312,7 @@ export default function MusicianQuoteDetail() {
                       onChange={e => setProposalMessage(e.target.value)}
                       placeholder="Descreva sua proposta para este evento..."
                       rows={3}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white resize-none"
+                      className="input-field resize-none"
                     />
                   </div>
                   <div>
@@ -332,7 +326,7 @@ export default function MusicianQuoteDetail() {
                         value={proposalValue}
                         onChange={e => setProposalValue(e.target.value)}
                         placeholder="0,00"
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+                        className="input-field pl-10"
                       />
                     </div>
                   </div>
@@ -345,13 +339,13 @@ export default function MusicianQuoteDetail() {
                       value={proposalValidUntil}
                       onChange={e => setProposalValidUntil(e.target.value)}
                       min={new Date().toISOString().split('T')[0]}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+                      className="input-field"
                     />
                   </div>
                   <button
                     onClick={handleSendProposal}
                     disabled={!proposalMessage.trim() || sending}
-                    className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="btn-primary w-full flex items-center justify-center gap-2"
                   >
                     {sending ? (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -367,7 +361,7 @@ export default function MusicianQuoteDetail() {
             )}
 
             {/* Histórico de propostas */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+            <div className="card">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Histórico de propostas
               </h2>
@@ -414,6 +408,6 @@ export default function MusicianQuoteDetail() {
           </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }
