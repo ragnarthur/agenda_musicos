@@ -238,6 +238,7 @@ export interface MarketplaceApplication {
   expected_fee?: string;
   status: 'pending' | 'hired' | 'rejected';
   created_at: string;
+  chat_message_count: number;
 }
 
 export interface MarketplaceGig {
@@ -267,6 +268,7 @@ export interface MarketplaceGig {
 export interface MarketplaceGigChatMessage {
   id: number;
   gig: number;
+  application: number;
   sender: number;
   sender_name: string;
   message: string;

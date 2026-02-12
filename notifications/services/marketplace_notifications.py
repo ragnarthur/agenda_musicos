@@ -1,4 +1,5 @@
 import logging
+import unicodedata
 from decimal import Decimal
 
 from django.conf import settings
@@ -78,6 +79,140 @@ def _notify_user(
             )
         except Exception as exc:
             logger.error("Erro ao enviar Telegram de marketplace para %s: %s", user.username, exc)
+
+
+def _extract_city_name(raw_city: str | None) -> str:
+    """
+    Extrai o nome base da cidade para matching.
+    Exemplos:
+    - "Uberlandia/MG" -> "Uberlandia"
+    - "Uberlandia, MG" -> "Uberlandia"
+    - "Uberlandia - MG" -> "Uberlandia"
+    """
+    if not raw_city:
+        return ""
+    city = str(raw_city).strip()
+    if not city:
+        return ""
+    # Common UI formats: "Cidade/UF", "Cidade, UF", "Cidade - UF"
+    for sep in ("/", ","):
+        if sep in city:
+            city = city.split(sep, 1)[0].strip()
+    if " - " in city:
+        city = city.split(" - ", 1)[0].strip()
+    return city
+
+
+def _normalize_city_key(value: str) -> str:
+    """
+    Normaliza string para comparação tolerante (acentos/espacos/caixa).
+    """
+    value = (value or "").strip().lower()
+    if not value:
+        return ""
+    value = unicodedata.normalize("NFKD", value)
+    value = "".join(ch for ch in value if not unicodedata.combining(ch))
+    value = " ".join(value.split())
+    return value
+
+
+def notify_new_gig_in_city(gig_id: int) -> None:
+    """
+    Notifica músicos quando surge uma nova vaga na cidade deles.
+
+    Regras:
+    - Email sempre (se houver email), Telegram apenas se o usuário estiver conectado/verificado.
+    - Respeita preferências do usuário (notify_quote_requests).
+    - Não notifica o criador da vaga.
+    """
+    try:
+        from marketplace.models import Gig  # Import local para evitar ciclo
+        from agenda.models import Musician
+    except Exception:
+        logger.exception("Falha ao importar modelos para notificar nova vaga.")
+        return
+
+    gig = (
+        Gig.objects.select_related("created_by")
+        .only(
+            "id",
+            "title",
+            "city",
+            "location",
+            "event_date",
+            "start_time",
+            "end_time",
+            "budget",
+            "created_by_id",
+        )
+        .filter(id=gig_id)
+        .first()
+    )
+    if not gig:
+        return
+
+    city_raw = (gig.city or "").strip()
+    if not city_raw:
+        return
+
+    city_name = _extract_city_name(city_raw)
+    city_key = _normalize_city_key(city_name)
+    if not city_key:
+        return
+
+    # Busca candidatos por match simples de cidade; o matching "tolerante" final e feito em Python.
+    musicians = (
+        Musician.objects.select_related("user")
+        .filter(is_active=True)
+        .exclude(user_id=gig.created_by_id)
+        .exclude(city__isnull=True)
+        .exclude(city__exact="")
+    )
+
+    # Limita o universo ao que o DB consegue filtrar bem (performance).
+    # - cidade exatamente igual (case-insensitive)
+    # - ou cidade começando com o nome (cobre formatos como "Cidade/UF")
+    musicians = musicians.filter(city__istartswith=city_name)
+
+    # Comparacao final tolerante (ex: "São Paulo" vs "Sao Paulo")
+    recipients = []
+    for musician in musicians:
+        m_city_key = _normalize_city_key(_extract_city_name(musician.city))
+        if m_city_key == city_key:
+            recipients.append(musician.user)
+
+    if not recipients:
+        return
+
+    title = f"Nova vaga em {city_name}: {gig.title}"
+    date_text = gig.event_date.strftime("%d/%m/%Y") if gig.event_date else "A combinar"
+    time_text = ""
+    if gig.start_time and gig.end_time:
+        time_text = f"{gig.start_time.strftime('%H:%M')} - {gig.end_time.strftime('%H:%M')}"
+    elif gig.start_time:
+        time_text = gig.start_time.strftime("%H:%M")
+    else:
+        time_text = "A combinar"
+
+    body = (
+        f"Uma nova vaga foi publicada na sua cidade.\n\n"
+        f"- Vaga: {gig.title}\n"
+        f"- Cidade: {city_raw}\n"
+        f"- Data: {date_text}\n"
+        f"- Horario: {time_text}\n"
+        f"- Local: {gig.location or 'A combinar'}\n"
+        f"- Cache: {_format_fee(gig.budget)}\n\n"
+        f"Abra o app para ver os detalhes e se candidatar."
+    )
+
+    for user in recipients:
+        _notify_user(
+            user,
+            title=title,
+            body=body,
+            gig_id=gig.id,
+            object_id=gig.id,
+        )
 
 
 def notify_gig_application_created(gig, application) -> None:

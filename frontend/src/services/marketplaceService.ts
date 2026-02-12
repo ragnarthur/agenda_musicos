@@ -59,20 +59,34 @@ export const marketplaceService = {
     return response.data;
   },
 
-  getGigChat: async (gigId: number): Promise<MarketplaceGigChatMessage[]> => {
-    const response = await api.get(`/marketplace/gigs/${gigId}/chat/`);
+  getApplicationChat: async (
+    gigId: number,
+    applicationId: number
+  ): Promise<MarketplaceGigChatMessage[]> => {
+    const response = await api.get(
+      `/marketplace/gigs/${gigId}/applications/${applicationId}/chat/`
+    );
     return response.data;
   },
 
-  sendGigChatMessage: async (
+  sendApplicationChatMessage: async (
     gigId: number,
+    applicationId: number,
     message: string
   ): Promise<MarketplaceGigChatMessage> => {
-    const response = await api.post(`/marketplace/gigs/${gigId}/chat/`, { message });
+    const response = await api.post(
+      `/marketplace/gigs/${gigId}/applications/${applicationId}/chat/`,
+      { message }
+    );
     return response.data;
   },
 
-  clearGigChat: async (gigId: number): Promise<void> => {
-    await api.delete(`/marketplace/gigs/${gigId}/chat/`);
+  clearApplicationChat: async (
+    gigId: number,
+    applicationId: number
+  ): Promise<void> => {
+    await api.delete(
+      `/marketplace/gigs/${gigId}/applications/${applicationId}/chat/`
+    );
   },
 };

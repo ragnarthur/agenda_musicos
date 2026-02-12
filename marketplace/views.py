@@ -15,6 +15,7 @@ from notifications.services.marketplace_notifications import (
     notify_gig_chat_message,
     notify_gig_closed,
     notify_gig_hire_result,
+    notify_new_gig_in_city,
 )
 
 from .models import Gig, GigApplication, GigChatMessage
@@ -59,11 +60,12 @@ class GigViewSet(viewsets.ModelViewSet):
         contact_name = validated.get("contact_name") or user.get_full_name() or user.username
         contact_email = validated.get("contact_email") or user.email
 
-        serializer.save(
+        gig = serializer.save(
             created_by=user,
             contact_name=contact_name,
             contact_email=contact_email,
         )
+        transaction.on_commit(lambda gig_id=gig.id: notify_new_gig_in_city(gig_id))
 
     def perform_update(self, serializer):
         gig = self.get_object()
@@ -76,63 +78,70 @@ class GigViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("Apenas quem publicou a vaga pode excluir.")
         instance.delete()
 
-    def _get_hired_application(self, gig):
-        return (
-            gig.applications.select_related("musician__user")
-            .filter(status="hired")
-            .first()
-        )
+    def _get_application_for_chat(self, gig, application_id):
+        """Busca a candidatura, garantindo que pertence a esta vaga."""
+        try:
+            return gig.applications.select_related("musician__user").get(id=application_id)
+        except GigApplication.DoesNotExist:
+            raise PermissionDenied("Candidatura não encontrada nesta vaga.")
 
-    def _assert_chat_access(self, gig, user, hired_application=None):
-        hired_application = hired_application or self._get_hired_application(gig)
-        if user.is_staff or gig.created_by_id == user.id:
-            return hired_application
-        if hired_application and hired_application.musician.user_id == user.id:
-            return hired_application
-        raise PermissionDenied("Acesso restrito aos envolvidos na contratação.")
+    def _assert_application_chat_access(self, gig, application, user):
+        """Acesso ao chat: dono da vaga OU o candidato desta application (+ staff)."""
+        if user.is_staff:
+            return
+        if gig.created_by_id == user.id:
+            return
+        if application.musician.user_id == user.id:
+            return
+        raise PermissionDenied("Acesso restrito aos envolvidos nesta candidatura.")
 
-    def _chat_recipients(self, gig, hired_application, sender_id: int):
-        recipients = []
+    def _application_chat_recipients(self, gig, application, sender_id: int):
+        recipients = {}
         if gig.created_by and gig.created_by_id != sender_id:
-            recipients.append(gig.created_by)
-        if hired_application and hired_application.musician.user_id != sender_id:
-            recipients.append(hired_application.musician.user)
-        # Evita duplicidade por segurança
-        deduped = {}
-        for user in recipients:
-            deduped[user.id] = user
-        return list(deduped.values())
+            recipients[gig.created_by_id] = gig.created_by
+        if application.musician.user_id != sender_id:
+            recipients[application.musician.user_id] = application.musician.user
+        return list(recipients.values())
 
-    @action(detail=True, methods=["get", "post", "delete"])
-    def chat(self, request, pk=None):
+    @action(
+        detail=True,
+        methods=["get", "post", "delete"],
+        url_path=r"applications/(?P<application_id>\d+)/chat",
+        url_name="application-chat",
+    )
+    def application_chat(self, request, pk=None, application_id=None):
         """
-        Chat da contratação:
-        - GET: lista mensagens
-        - POST: envia mensagem (apenas vaga contratada)
-        - DELETE: limpa histórico do chat
+        Chat 1:1 por candidatura:
+        - GET: lista mensagens da candidatura
+        - POST: envia mensagem (disponível desde a candidatura)
+        - DELETE: limpa histórico do chat da candidatura
         """
         gig = self.get_object()
-        hired_application = self._assert_chat_access(
-            gig, request.user, hired_application=self._get_hired_application(gig)
-        )
+        application = self._get_application_for_chat(gig, application_id)
+        self._assert_application_chat_access(gig, application, request.user)
 
-        if request.method.lower() == "get":
-            messages = gig.chat_messages.select_related("sender").all()
+        if request.method.upper() == "GET":
+            messages = GigChatMessage.objects.filter(
+                application=application
+            ).select_related("sender")
             serializer = GigChatMessageSerializer(messages, many=True)
             return Response(serializer.data)
 
-        if request.method.lower() == "delete":
-            gig.chat_messages.all().delete()
+        if request.method.upper() == "DELETE":
+            GigChatMessage.objects.filter(application=application).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        if gig.status != "hired" or not hired_application:
+        # POST
+        if gig.status in ("closed", "cancelled"):
             return Response(
-                {"detail": "Chat disponível somente após contratação da vaga."},
+                {"detail": "Chat indisponível para vagas encerradas."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        message = sanitize_string(request.data.get("message", ""), max_length=600, allow_empty=True)
-        if not message:
+        message_text = sanitize_string(
+            request.data.get("message", ""), max_length=600, allow_empty=True
+        )
+        if not message_text:
             return Response(
                 {"detail": "Mensagem inválida."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -140,11 +149,12 @@ class GigViewSet(viewsets.ModelViewSet):
 
         chat_message = GigChatMessage.objects.create(
             gig=gig,
+            application=application,
             sender=request.user,
-            message=message,
+            message=message_text,
         )
 
-        recipients = self._chat_recipients(gig, hired_application, request.user.id)
+        recipients = self._application_chat_recipients(gig, application, request.user.id)
         if recipients:
             notify_gig_chat_message(gig, chat_message, recipients)
 

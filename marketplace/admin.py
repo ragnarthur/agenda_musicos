@@ -19,6 +19,6 @@ class GigApplicationAdmin(admin.ModelAdmin):
 
 @admin.register(GigChatMessage)
 class GigChatMessageAdmin(admin.ModelAdmin):
-    list_display = ("gig", "sender", "created_at")
+    list_display = ("gig", "application", "sender", "created_at")
     list_filter = ("created_at",)
     search_fields = ("gig__title", "sender__username", "message")

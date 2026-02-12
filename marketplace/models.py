@@ -90,10 +90,17 @@ class GigApplication(models.Model):
 
 class GigChatMessage(models.Model):
     """
-    Chat curto entre criador da vaga e músico contratado.
+    Chat 1:1 entre criador da vaga e um candidato (por candidatura).
     """
 
     gig = models.ForeignKey(Gig, on_delete=models.CASCADE, related_name="chat_messages")
+    application = models.ForeignKey(
+        GigApplication,
+        on_delete=models.CASCADE,
+        related_name="chat_messages",
+        null=True,
+        blank=True,
+    )
     sender = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="gig_chat_messages_sent"
     )

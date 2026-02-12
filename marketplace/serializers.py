@@ -12,6 +12,7 @@ class GigApplicationSerializer(serializers.ModelSerializer):
     """Candidatura de músico a uma oportunidade."""
 
     musician_name = serializers.SerializerMethodField()
+    chat_message_count = serializers.SerializerMethodField()
 
     class Meta:
         model = GigApplication
@@ -24,11 +25,17 @@ class GigApplicationSerializer(serializers.ModelSerializer):
             "expected_fee",
             "status",
             "created_at",
+            "chat_message_count",
         ]
-        read_only_fields = ["id", "gig", "musician", "status", "created_at"]
+        read_only_fields = ["id", "gig", "musician", "status", "created_at", "chat_message_count"]
 
     def get_musician_name(self, obj) -> str:
         return obj.musician.user.get_full_name() or obj.musician.user.username
+
+    def get_chat_message_count(self, obj) -> int:
+        if hasattr(obj, "_chat_count"):
+            return obj._chat_count
+        return obj.chat_messages.count()
 
     def validate_cover_letter(self, value):
         """Limita tamanho da carta de apresentação"""
@@ -199,8 +206,8 @@ class GigChatMessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GigChatMessage
-        fields = ["id", "gig", "sender", "sender_name", "message", "created_at"]
-        read_only_fields = ["id", "gig", "sender", "sender_name", "created_at"]
+        fields = ["id", "gig", "application", "sender", "sender_name", "message", "created_at"]
+        read_only_fields = ["id", "gig", "application", "sender", "sender_name", "created_at"]
 
     def get_sender_name(self, obj) -> str:
         return obj.sender.get_full_name() or obj.sender.username
