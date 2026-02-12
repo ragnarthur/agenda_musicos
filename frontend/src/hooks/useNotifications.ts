@@ -67,7 +67,9 @@ export function useDashboardNotifications() {
     '/dashboard/notifications',
     fetchDashboardNotifications,
     {
-      revalidateOnFocus: false,
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      refreshInterval: 60000,
       dedupingInterval: 30000,
     }
   );

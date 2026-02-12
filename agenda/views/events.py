@@ -236,18 +236,25 @@ class EventViewSet(viewsets.ModelViewSet):
         # Meus eventos com respostas pendentes de músicos
         # (usado no Dashboard para "Respostas Pendentes")
         if self.request.query_params.get("pending_responses") == "true":
+            today = timezone.now().date()
+            org = get_user_organization(self.request.user)
             queryset = queryset.filter(
                 created_by=self.request.user,
                 status__in=["proposed", "confirmed", "approved"],
-                avail_pending__gt=0,
-            )
+                event_date__gte=today,
+                availabilities__response="pending",
+            ).distinct()
+            if org:
+                queryset = queryset.filter(organization=org)
 
         # Pendentes de convite (eventos propostos onde o músico tem availability pendente)
         if self.request.query_params.get("pending_approval") == "true":
             try:
                 musician = self.request.user.musician_profile
+                today = timezone.now().date()
                 queryset = queryset.filter(
                     status__in=["proposed", "confirmed", "approved"],
+                    event_date__gte=today,
                     availabilities__musician=musician,
                     availabilities__response="pending",
                 ).distinct()
@@ -1056,8 +1063,12 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         try:
             musician = request.user.musician_profile
+            today = timezone.now().date()
             events = Event.objects.filter(
-                availabilities__musician=musician, availabilities__response="pending"
+                status__in=["proposed", "confirmed", "approved"],
+                event_date__gte=today,
+                availabilities__musician=musician,
+                availabilities__response="pending",
             ).distinct()
 
             org = get_user_organization(request.user)

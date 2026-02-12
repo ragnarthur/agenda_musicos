@@ -58,13 +58,14 @@ const Dashboard: React.FC = memo(() => {
     pendingApprovalsCount,
     pendingResponsesCount,
     isLoading: loadingNotifications,
+    mutate: mutateNotifications,
   } = useDashboardNotifications();
 
   const loading = loadingEvents || loadingNotifications || loadingPastEvents;
 
   const handleRefresh = useCallback(async () => {
-    await Promise.all([mutateUpcoming(), mutatePast()]);
-  }, [mutateUpcoming, mutatePast]);
+    await Promise.all([mutateUpcoming(), mutatePast(), mutateNotifications()]);
+  }, [mutateUpcoming, mutatePast, mutateNotifications]);
 
   const { events, todayEvents, nextEvent, nextComputedStatus } = useMemo(() => {
     const sorted = [...upcomingEvents].sort((a, b) => getStartDateTime(a) - getStartDateTime(b));
