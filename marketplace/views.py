@@ -2,8 +2,10 @@ from decimal import Decimal, InvalidOperation
 
 from django.db import transaction
 from django.db.models import Count
+from django.db.models.functions import Coalesce
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -29,10 +31,48 @@ class GigViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        from datetime import datetime
+
+        from django.db.models import DateTimeField, OuterRef, Prefetch, Q, Subquery, Value
+        from django.utils import timezone
+
+        from .models import GigApplicationChatReadState
+
+        epoch = timezone.make_aware(datetime(1970, 1, 1))
+        user = getattr(self.request, "user", None)
+
+        # Annotate chat counts on applications to avoid N+1 in serializers.
+        applications_qs = GigApplication.objects.select_related("musician__user")
+        if user and user.is_authenticated:
+            last_read_subq = (
+                GigApplicationChatReadState.objects.filter(application=OuterRef("pk"), user=user)
+                .values("last_read_at")[:1]
+            )
+            last_read_expr = Coalesce(
+                Subquery(last_read_subq, output_field=DateTimeField()),
+                Value(epoch),
+            )
+            applications_qs = applications_qs.annotate(
+                _chat_count=Count("chat_messages", distinct=True),
+                _unread_chat_count=Count(
+                    "chat_messages",
+                    filter=Q(chat_messages__created_at__gt=last_read_expr)
+                    & ~Q(chat_messages__sender_id=user.id),
+                    distinct=True,
+                ),
+            )
+        else:
+            from django.db.models import IntegerField
+
+            applications_qs = applications_qs.annotate(
+                _chat_count=Count("chat_messages", distinct=True),
+                _unread_chat_count=Value(0, output_field=IntegerField()),
+            )
+
         qs = (
             Gig.objects.all()
             .select_related("created_by")
-            .prefetch_related("applications__musician__user")
+            .prefetch_related(Prefetch("applications", queryset=applications_qs))
             .annotate(applications_total=Count("applications"))
         )
 
@@ -103,6 +143,19 @@ class GigViewSet(viewsets.ModelViewSet):
             recipients[application.musician.user_id] = application.musician.user
         return list(recipients.values())
 
+    def _mark_application_chat_read(self, application, user) -> None:
+        from django.utils import timezone
+
+        from .models import GigApplicationChatReadState
+
+        if not user or not user.is_authenticated:
+            return
+        GigApplicationChatReadState.objects.update_or_create(
+            application=application,
+            user=user,
+            defaults={"last_read_at": timezone.now()},
+        )
+
     @action(
         detail=True,
         methods=["get", "post", "delete"],
@@ -125,6 +178,7 @@ class GigViewSet(viewsets.ModelViewSet):
                 application=application
             ).select_related("sender")
             serializer = GigChatMessageSerializer(messages, many=True)
+            self._mark_application_chat_read(application, request.user)
             return Response(serializer.data)
 
         if request.method.upper() == "DELETE":
@@ -153,6 +207,9 @@ class GigViewSet(viewsets.ModelViewSet):
             sender=request.user,
             message=message_text,
         )
+
+        # Sender just saw the thread (and their own message).
+        self._mark_application_chat_read(application, request.user)
 
         recipients = self._application_chat_recipients(gig, application, request.user.id)
         if recipients:
@@ -334,12 +391,80 @@ class GigApplicationViewSet(
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        from datetime import datetime
+
+        from django.db.models import DateTimeField, OuterRef, Q, Subquery, Value
+        from django.utils import timezone
+
+        from .models import GigApplicationChatReadState
+
         musician = getattr(self.request.user, "musician_profile", None)
         if not musician:
             return GigApplication.objects.none()
 
+        epoch = timezone.make_aware(datetime(1970, 1, 1))
+        last_read_subq = (
+            GigApplicationChatReadState.objects.filter(
+                application=OuterRef("pk"), user=self.request.user
+            )
+            .values("last_read_at")[:1]
+        )
+        last_read_expr = Coalesce(
+            Subquery(last_read_subq, output_field=DateTimeField()),
+            Value(epoch),
+        )
+
         return (
             GigApplication.objects.filter(musician=musician)
             .select_related("gig", "musician__user")
+            .annotate(
+                _chat_count=Count("chat_messages", distinct=True),
+                _unread_chat_count=Count(
+                    "chat_messages",
+                    filter=Q(chat_messages__created_at__gt=last_read_expr)
+                    & ~Q(chat_messages__sender_id=self.request.user.id),
+                    distinct=True,
+                ),
+            )
             .order_by("-created_at")
         )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def marketplace_chat_unread_count(request):
+    """
+    GET /api/marketplace/chat/unread-count/
+    Soma de mensagens nao lidas no chat de Vagas (por candidatura) para o usuario logado.
+    """
+    from datetime import datetime
+
+    from django.db.models import DateTimeField, OuterRef, Q, Subquery, Value
+    from django.utils import timezone
+
+    from .models import GigApplicationChatReadState
+
+    epoch = timezone.make_aware(datetime(1970, 1, 1))
+    last_read_subq = (
+        GigApplicationChatReadState.objects.filter(
+            application_id=OuterRef("application_id"), user=request.user
+        )
+        .values("last_read_at")[:1]
+    )
+    last_read_expr = Coalesce(
+        Subquery(last_read_subq, output_field=DateTimeField()),
+        Value(epoch),
+    )
+
+    count = (
+        GigChatMessage.objects.filter(application__isnull=False)
+        .filter(
+            Q(application__gig__created_by_id=request.user.id)
+            | Q(application__musician__user_id=request.user.id)
+        )
+        .exclude(sender_id=request.user.id)
+        .filter(created_at__gt=last_read_expr)
+        .count()
+    )
+
+    return Response({"count": count})

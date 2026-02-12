@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
 
 from agenda.models import Musician, Organization
 
@@ -114,6 +115,33 @@ class GigChatMessage(models.Model):
 
     def __str__(self):
         return f"Chat #{self.gig_id} - {self.sender.username}"
+
+
+class GigApplicationChatReadState(models.Model):
+    """
+    Controla o "lido/nao lido" do chat por candidatura e usuario.
+    """
+
+    application = models.ForeignKey(
+        GigApplication, on_delete=models.CASCADE, related_name="chat_read_states"
+    )
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="gig_application_chat_reads"
+    )
+    last_read_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("application", "user")
+        indexes = [
+            models.Index(fields=["application", "user"]),
+            models.Index(fields=["user", "last_read_at"]),
+        ]
+        verbose_name = "Leitura do chat (vaga)"
+        verbose_name_plural = "Leituras do chat (vagas)"
+
+    def __str__(self):
+        return f"ReadState app={self.application_id} user={self.user_id}"
 
 
 # Create your models here.

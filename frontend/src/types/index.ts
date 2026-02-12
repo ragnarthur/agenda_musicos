@@ -239,6 +239,7 @@ export interface MarketplaceApplication {
   status: 'pending' | 'hired' | 'rejected';
   created_at: string;
   chat_message_count: number;
+  unread_chat_count?: number;
 }
 
 export interface MarketplaceGig {

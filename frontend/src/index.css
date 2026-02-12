@@ -1712,6 +1712,35 @@
   animation: badgeShake 0.4s ease-in-out;
 }
 
+/* Navbar notification nudge (triggered on unread count increase) */
+@keyframes navNotifNudge {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  18% {
+    transform: translateY(-2px) rotate(-10deg);
+  }
+  40% {
+    transform: translateY(0) rotate(0deg);
+  }
+  62% {
+    transform: translateY(-1px) rotate(10deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+.nav-notif-nudge {
+  animation: navNotifNudge 0.65s cubic-bezier(0.2, 0.8, 0.2, 1) 0s 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-notif-nudge {
+    animation: none;
+  }
+}
+
 /* Mini avatar for connection list */
 .mini-avatar {
   @apply h-8 w-8 rounded-full bg-gradient-to-br from-primary-100 to-primary-50

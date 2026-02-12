@@ -25,7 +25,7 @@ import PullToRefresh from '../components/common/PullToRefresh';
 import ConfirmModal from '../components/modals/ConfirmModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
-import { marketplaceService } from '../services/api';
+import { marketplaceService } from '../services/marketplaceService';
 import type {
   MarketplaceGig,
   MarketplaceApplication,
@@ -282,6 +282,27 @@ const Marketplace: React.FC = () => {
       setChatLoading(prev => ({ ...prev, [applicationId]: true }));
       const messages = await marketplaceService.getApplicationChat(gigId, applicationId);
       setChatByApp(prev => ({ ...prev, [applicationId]: messages }));
+      // Optimistic: opening the thread marks it as read on the backend.
+      setGigs(prev =>
+        prev.map(g => {
+          if (g.id !== gigId) return g;
+          if (!g.my_application || g.my_application.id !== applicationId) return g;
+          return {
+            ...g,
+            my_application: { ...g.my_application, unread_chat_count: 0 },
+          };
+        })
+      );
+      setApplicationsByGig(prev => {
+        const current = prev[gigId];
+        if (!current) return prev;
+        return {
+          ...prev,
+          [gigId]: current.map(app =>
+            app.id === applicationId ? { ...app, unread_chat_count: 0 } : app
+          ),
+        };
+      });
     } catch (err) {
       logError('Marketplace', err);
       setError(getErrorMessage(err));
@@ -866,7 +887,7 @@ const Marketplace: React.FC = () => {
                                       const appChatVisible = !!chatOpen[application.id];
                                       const appChatMessages = chatByApp[application.id] || [];
                                       const appChatDraft = chatDraftByApp[application.id] || '';
-                                      const msgCount = application.chat_message_count || 0;
+                                      const unreadCount = application.unread_chat_count || 0;
 
                                       return (
                                       <div
@@ -913,9 +934,10 @@ const Marketplace: React.FC = () => {
                                             >
                                               <MessageCircle className="h-3.5 w-3.5" />
                                               {appChatVisible ? 'Fechar chat' : 'Chat'}
-                                              {msgCount > 0 && !appChatVisible ? (
-                                                <span className="ml-1 rounded-full bg-blue-600 px-1.5 text-[10px] text-white">
-                                                  {msgCount}
+                                              {unreadCount > 0 && !appChatVisible ? (
+                                                <span className="relative ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+                                                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-60" />
+                                                  <span className="relative">{unreadCount}</span>
                                                 </span>
                                               ) : null}
                                             </button>
@@ -1008,7 +1030,7 @@ const Marketplace: React.FC = () => {
                           const myAppChatOpen = !!chatOpen[myAppId];
                           const myAppChatMessages = chatByApp[myAppId] || [];
                           const myAppChatDraft = chatDraftByApp[myAppId] || '';
-                          const myAppMsgCount = gig.my_application!.chat_message_count || 0;
+                          const myAppUnreadCount = gig.my_application!.unread_chat_count || 0;
 
                           return (
                           <div className="space-y-3">
@@ -1040,9 +1062,10 @@ const Marketplace: React.FC = () => {
                                   >
                                     <MessageCircle className="h-3.5 w-3.5" />
                                     {myAppChatOpen ? 'Fechar chat' : 'Chat'}
-                                    {myAppMsgCount > 0 && !myAppChatOpen ? (
-                                      <span className="ml-1 rounded-full bg-blue-600 px-1.5 text-[10px] text-white">
-                                        {myAppMsgCount}
+                                    {myAppUnreadCount > 0 && !myAppChatOpen ? (
+                                      <span className="relative ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-60" />
+                                        <span className="relative">{myAppUnreadCount}</span>
                                       </span>
                                     ) : null}
                                   </button>

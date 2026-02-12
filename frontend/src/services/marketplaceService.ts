@@ -89,4 +89,9 @@ export const marketplaceService = {
       `/marketplace/gigs/${gigId}/applications/${applicationId}/chat/`
     );
   },
+
+  getUnreadChatCount: async (): Promise<{ count: number }> => {
+    const response = await api.get('/marketplace/chat/unread-count/');
+    return response.data;
+  },
 };

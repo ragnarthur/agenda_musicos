@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from agenda.validators import sanitize_string
 
-from .models import Gig, GigApplication, GigChatMessage
+from .models import Gig, GigApplication, GigApplicationChatReadState, GigChatMessage
 
 
 class GigApplicationSerializer(serializers.ModelSerializer):
@@ -13,6 +13,7 @@ class GigApplicationSerializer(serializers.ModelSerializer):
 
     musician_name = serializers.SerializerMethodField()
     chat_message_count = serializers.SerializerMethodField()
+    unread_chat_count = serializers.SerializerMethodField()
 
     class Meta:
         model = GigApplication
@@ -26,8 +27,17 @@ class GigApplicationSerializer(serializers.ModelSerializer):
             "status",
             "created_at",
             "chat_message_count",
+            "unread_chat_count",
         ]
-        read_only_fields = ["id", "gig", "musician", "status", "created_at", "chat_message_count"]
+        read_only_fields = [
+            "id",
+            "gig",
+            "musician",
+            "status",
+            "created_at",
+            "chat_message_count",
+            "unread_chat_count",
+        ]
 
     def get_musician_name(self, obj) -> str:
         return obj.musician.user.get_full_name() or obj.musician.user.username
@@ -36,6 +46,31 @@ class GigApplicationSerializer(serializers.ModelSerializer):
         if hasattr(obj, "_chat_count"):
             return obj._chat_count
         return obj.chat_messages.count()
+
+    def get_unread_chat_count(self, obj) -> int:
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return 0
+
+        if hasattr(obj, "_unread_chat_count"):
+            return obj._unread_chat_count
+
+        # Fallback (menos eficiente): calcula via queries.
+        from datetime import datetime
+        from django.utils import timezone
+
+        epoch = timezone.make_aware(datetime(1970, 1, 1))
+        last_read_at = (
+            GigApplicationChatReadState.objects.filter(application=obj, user=request.user)
+            .values_list("last_read_at", flat=True)
+            .first()
+        ) or epoch
+
+        return (
+            obj.chat_messages.exclude(sender_id=request.user.id)
+            .filter(created_at__gt=last_read_at)
+            .count()
+        )
 
     def validate_cover_letter(self, value):
         """Limita tamanho da carta de apresentação"""
@@ -173,9 +208,17 @@ class GigSerializer(serializers.ModelSerializer):
         if not musician:
             return None
 
-        try:
-            application = obj.applications.get(musician=musician)
-        except GigApplication.DoesNotExist:
+        application = None
+        cached_apps = getattr(obj, "_prefetched_objects_cache", {}).get("applications")
+        if cached_apps is not None:
+            application = next((app for app in cached_apps if app.musician_id == musician.id), None)
+        else:
+            try:
+                application = obj.applications.get(musician=musician)
+            except GigApplication.DoesNotExist:
+                application = None
+
+        if not application:
             return None
 
         return GigApplicationSerializer(application).data

@@ -285,46 +285,64 @@ class GigChatAPITest(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_only_owner_and_hired_musician_can_access_chat(self):
-        self._hire()
+    def _chat_url(self) -> str:
+        return (
+            f"/api/marketplace/gigs/{self.gig.id}/applications/{self.application.id}/chat/"
+        )
 
+    def _unread_count_url(self) -> str:
+        return "/api/marketplace/chat/unread-count/"
+
+    def test_only_owner_and_application_musician_can_access_chat(self):
         self.client.force_authenticate(user=self.owner)
-        owner_response = self.client.get(f"/api/marketplace/gigs/{self.gig.id}/chat/")
+        owner_response = self.client.get(self._chat_url())
         self.assertEqual(owner_response.status_code, status.HTTP_200_OK)
 
         self.client.force_authenticate(user=self.hired_user)
-        hired_response = self.client.get(f"/api/marketplace/gigs/{self.gig.id}/chat/")
+        hired_response = self.client.get(self._chat_url())
         self.assertEqual(hired_response.status_code, status.HTTP_200_OK)
 
         self.client.force_authenticate(user=self.other_user)
-        denied_response = self.client.get(f"/api/marketplace/gigs/{self.gig.id}/chat/")
+        denied_response = self.client.get(self._chat_url())
         self.assertEqual(denied_response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_send_message_only_after_hire(self):
+    def test_send_message_and_block_after_close(self):
         self.client.force_authenticate(user=self.owner)
-        before_hire = self.client.post(
-            f"/api/marketplace/gigs/{self.gig.id}/chat/",
-            {"message": "Teste antes da contratação"},
-        )
-        self.assertEqual(before_hire.status_code, status.HTTP_400_BAD_REQUEST)
+        sent = self.client.post(self._chat_url(), {"message": "Mensagem antes de encerrar"})
+        self.assertEqual(sent.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(sent.data["message"], "Mensagem antes de encerrar")
 
-        self._hire()
-        self.client.force_authenticate(user=self.owner)
-        after_hire = self.client.post(
-            f"/api/marketplace/gigs/{self.gig.id}/chat/",
-            {"message": "Tudo certo para o evento?"},
+        close_response = self.client.post(
+            f"/api/marketplace/gigs/{self.gig.id}/close/",
+            {"status": "closed"},
         )
-        self.assertEqual(after_hire.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(after_hire.data["message"], "Tudo certo para o evento?")
+        self.assertEqual(close_response.status_code, status.HTTP_200_OK)
+
+        blocked = self.client.post(self._chat_url(), {"message": "Mensagem apos encerrar"})
+        self.assertEqual(blocked.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_unread_counts_mark_read_on_get(self):
+        # Owner sends a message; hired user should have 1 unread.
+        self.client.force_authenticate(user=self.owner)
+        self.client.post(self._chat_url(), {"message": "Oi candidato"})
+
+        self.client.force_authenticate(user=self.hired_user)
+        unread_before = self.client.get(self._unread_count_url())
+        self.assertEqual(unread_before.status_code, status.HTTP_200_OK)
+        self.assertEqual(unread_before.data["count"], 1)
+
+        # Opening the chat marks it as read.
+        self.client.get(self._chat_url())
+
+        unread_after = self.client.get(self._unread_count_url())
+        self.assertEqual(unread_after.status_code, status.HTTP_200_OK)
+        self.assertEqual(unread_after.data["count"], 0)
 
     def test_close_gig_clears_chat_messages(self):
         self._hire()
 
         self.client.force_authenticate(user=self.owner)
-        self.client.post(
-            f"/api/marketplace/gigs/{self.gig.id}/chat/",
-            {"message": "Mensagem para limpar"},
-        )
+        self.client.post(self._chat_url(), {"message": "Mensagem para limpar"})
         self.assertEqual(GigChatMessage.objects.filter(gig=self.gig).count(), 1)
 
         close_response = self.client.post(

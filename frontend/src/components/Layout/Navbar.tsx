@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../hooks/useNotifications';
+import { useMarketplaceChatUnread } from '../../hooks/useMarketplaceChatUnread';
 import OwlMascot from '../ui/OwlMascot';
 import ThemeToggle from './ThemeToggle';
 import CityBadge from '../CityBadge';
@@ -30,14 +31,18 @@ const Navbar: React.FC = memo(() => {
   const navigate = useNavigate();
   const location = useLocation();
   const { theme } = useTheme();
+  const [marketplaceAttention, setMarketplaceAttention] = useState(false);
   const [openDesktopMore, setOpenDesktopMore] = useState(false);
   const [openMore, setOpenMore] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollYRef = useRef(0);
   const isMobileRef = useRef(false);
+  const marketplaceUnreadPrevRef = useRef<number | null>(null);
+  const marketplaceAttentionTimeoutRef = useRef<number | null>(null);
 
   // Use SWR hook for notifications - shared across Navbar and Dashboard
   const { pendingMyResponse, pendingApproval } = useNotifications();
+  const { unreadCount: marketplaceUnread } = useMarketplaceChatUnread();
 
   const isStaff = Boolean(user?.user?.is_staff);
 
@@ -45,6 +50,31 @@ const Navbar: React.FC = memo(() => {
     await logout();
     navigate('/login');
   }, [logout, navigate]);
+
+  useEffect(() => {
+    const prev = marketplaceUnreadPrevRef.current;
+    // Don't trigger attention on initial fetch.
+    if (prev === null) {
+      marketplaceUnreadPrevRef.current = marketplaceUnread;
+      return;
+    }
+
+    const increased = marketplaceUnread > prev;
+    const isOnMarketplace = location.pathname.startsWith('/marketplace');
+
+    if (increased && !isOnMarketplace) {
+      setMarketplaceAttention(true);
+      if (marketplaceAttentionTimeoutRef.current) {
+        window.clearTimeout(marketplaceAttentionTimeoutRef.current);
+      }
+      marketplaceAttentionTimeoutRef.current = window.setTimeout(() => {
+        setMarketplaceAttention(false);
+        marketplaceAttentionTimeoutRef.current = null;
+      }, 6000);
+    }
+
+    marketplaceUnreadPrevRef.current = marketplaceUnread;
+  }, [marketplaceUnread, location.pathname]);
 
   useEffect(() => {
     if (!openDesktopMore) return;
@@ -180,7 +210,14 @@ const Navbar: React.FC = memo(() => {
               icon={<Clock className="h-5 w-5" />}
               label="Datas Disponíveis"
             />
-            <AppNavLink to="/marketplace" icon={<Megaphone className="h-5 w-5" />} label="Vagas" />
+            <AppNavLink
+              to="/marketplace"
+              icon={<Megaphone className="h-5 w-5" />}
+              label="Vagas"
+              badge={marketplaceUnread}
+              badgePulse
+              attention={marketplaceAttention}
+            />
             <div className="relative z-[60]" data-more-menu="desktop">
               <button
                 type="button"
@@ -335,8 +372,16 @@ const Navbar: React.FC = memo(() => {
                       }`
                     }
                   >
-                    <Megaphone className="h-4 w-4" />
-                    Vagas
+                    <div className="relative">
+                      <Megaphone className="h-4 w-4" />
+                      {marketplaceUnread > 0 && (
+                        <span className="absolute -top-2 -right-2 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow ring-2 ring-white/90 dark:ring-slate-950">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-60" />
+                          <span className="relative">{marketplaceUnread}</span>
+                        </span>
+                      )}
+                    </div>
+                    <span>Vagas</span>
                   </RouterNavLink>
                   <RouterNavLink
                     to="/configuracoes/notificacoes"
@@ -483,7 +528,15 @@ const Navbar: React.FC = memo(() => {
               onClick={() => setOpenMore(false)}
               className="flex items-center gap-3 px-3 py-2.5 text-slate-700 hover:bg-slate-900/5 rounded-lg transition-colors dark:text-slate-200 dark:hover:bg-white/5"
             >
-              <Megaphone className="h-5 w-5" />
+              <div className="relative">
+                <Megaphone className="h-5 w-5" />
+                {marketplaceUnread > 0 && (
+                  <span className="absolute -top-2 -right-2 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow ring-2 ring-white/90 dark:ring-slate-950">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-60" />
+                    <span className="relative">{marketplaceUnread}</span>
+                  </span>
+                )}
+              </div>
               <span className="text-sm">Vagas</span>
             </Link>
             <Link
@@ -517,7 +570,9 @@ const AppNavLink: React.FC<{
   label: string;
   badge?: number;
   accent?: boolean;
-}> = memo(({ to, icon, label, badge, accent }) => (
+  badgePulse?: boolean;
+  attention?: boolean;
+}> = memo(({ to, icon, label, badge, accent, badgePulse, attention }) => (
   <RouterNavLink
     to={to}
     className={({ isActive }) => {
@@ -527,18 +582,24 @@ const AppNavLink: React.FC<{
           ? 'bg-amber-500/10 text-amber-900 dark:text-amber-100'
           : 'bg-slate-900/5 text-slate-900 dark:bg-white/10 dark:text-white'
         : '';
-      return `group flex items-center space-x-1 transition-all relative rounded-full px-2 py-1 ${hoverTone} ${activeTone} hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
+      const attentionTone = attention
+        ? 'ring-2 ring-rose-300/70 shadow-[0_0_0_6px_rgba(244,63,94,0.12)]'
+        : '';
+      return `group flex items-center space-x-1 transition-all relative rounded-full px-2 py-1 ${hoverTone} ${activeTone} ${attentionTone} hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
         accent
           ? 'text-amber-700 hover:text-amber-900 dark:text-amber-200 dark:hover:text-amber-100'
           : 'text-slate-700 hover:text-slate-900 dark:text-slate-100 dark:hover:text-white'
       } after:absolute after:left-0 after:-bottom-0.5 after:h-0.5 after:w-full after:rounded-full after:bg-gradient-to-r after:from-primary-400 after:via-indigo-300 after:to-emerald-300 after:transition-transform after:duration-300 after:origin-left after:scale-x-0 group-hover:after:scale-x-100 group-focus-visible:after:scale-x-100 ${isActive ? 'after:scale-x-100' : ''}`;
     }}
   >
-    {icon}
+    <span className={attention ? 'nav-notif-nudge' : ''}>{icon}</span>
     <span>{label}</span>
     {typeof badge === 'number' && badge > 0 && (
-      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 min-w-5 px-1 flex items-center justify-center">
-        {badge}
+      <span className="absolute -top-2 -right-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-xs font-bold text-white shadow ring-2 ring-white/90 dark:ring-slate-950">
+        {badgePulse && (
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-60" />
+        )}
+        <span className="relative">{badge}</span>
       </span>
     )}
   </RouterNavLink>
@@ -551,7 +612,9 @@ const AppNavLinkCompact: React.FC<{
   label: string;
   badge?: number;
   accent?: boolean;
-}> = memo(({ to, icon, label, badge, accent }) => (
+  badgePulse?: boolean;
+  attention?: boolean;
+}> = memo(({ to, icon, label, badge, accent, badgePulse, attention }) => (
   <RouterNavLink
     to={to}
     className={({ isActive }) => {
@@ -561,18 +624,24 @@ const AppNavLinkCompact: React.FC<{
           ? 'bg-amber-500/10 text-amber-900 dark:text-amber-100'
           : 'bg-slate-900/5 text-slate-900 dark:bg-white/10 dark:text-white'
         : '';
-      return `group relative inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm transition-all ${hoverTone} ${activeTone} hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
+      const attentionTone = attention
+        ? 'ring-2 ring-rose-300/70 shadow-[0_0_0_6px_rgba(244,63,94,0.12)]'
+        : '';
+      return `group relative inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm transition-all ${hoverTone} ${activeTone} ${attentionTone} hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
         accent
           ? 'text-amber-700 hover:text-amber-900 dark:text-amber-200 dark:hover:text-amber-100'
           : 'text-slate-700 hover:text-slate-900 dark:text-slate-100 dark:hover:text-white'
       }`;
     }}
   >
-    {icon}
+    <span className={attention ? 'nav-notif-nudge' : ''}>{icon}</span>
     <span>{label}</span>
     {typeof badge === 'number' && badge > 0 && (
-      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 min-w-5 px-1 flex items-center justify-center">
-        {badge}
+      <span className="absolute -top-2 -right-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-xs font-bold text-white shadow ring-2 ring-white/90 dark:ring-slate-950">
+        {badgePulse && (
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-60" />
+        )}
+        <span className="relative">{badge}</span>
       </span>
     )}
   </RouterNavLink>
