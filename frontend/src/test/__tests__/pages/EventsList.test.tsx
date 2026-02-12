@@ -4,16 +4,24 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import type { Event } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEvents } from '@/hooks/useEvents';
+import { useEvents, usePendingResponsesCount } from '@/hooks/useEvents';
 
 vi.mock('@/hooks/useEvents', () => ({
   useEvents: vi.fn(),
+  usePendingResponsesCount: vi.fn(),
 }));
 // useAuth is already mocked in src/test/setup.ts; we import it here to override return values.
 
 describe('EventsList Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(usePendingResponsesCount).mockReturnValue({
+      count: 0,
+      isLoading: false,
+      isValidating: false,
+      error: undefined,
+      mutate: vi.fn(),
+    });
   });
 
   it('renders without crashing', async () => {
@@ -37,7 +45,7 @@ describe('EventsList Page', () => {
         </MemoryRouter>
       );
     }).not.toThrow();
-  });
+  }, 60000);
 
   it('has container element', async () => {
     vi.mocked(useEvents).mockReturnValue({

@@ -1,6 +1,6 @@
 // pages/EventsList.tsx
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Plus,
   Calendar as CalendarIcon,
@@ -9,6 +9,7 @@ import {
   Users,
   Clock,
   Sparkles,
+  Zap,
   Filter,
   Coins,
   Edit,
@@ -18,7 +19,7 @@ import {
 import Layout from '../components/Layout/Layout';
 import PullToRefresh from '../components/common/PullToRefresh';
 import { SkeletonCard } from '../components/common/Skeleton';
-import { useEvents } from '../hooks/useEvents';
+import { useEvents, usePendingResponsesCount } from '../hooks/useEvents';
 import { useAuth } from '../contexts/AuthContext';
 import ConfirmModal from '../components/modals/ConfirmModal';
 import type { Availability, Event } from '../types';
@@ -75,12 +76,29 @@ const getStartDateTime = (event: Event): number => {
 
 const EventsList: React.FC = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const didInitFromUrl = useRef(false);
   const [filter, setFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [debouncedSearch, setDebouncedSearch] = useState<string>('');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('upcoming');
+  const [showPendingResponses, setShowPendingResponses] = useState(false);
   const [pendingAction, setPendingAction] = useState<null | { type: 'cancel' | 'delete'; event: Event }>(null);
   const [actionLoading, setActionLoading] = useState(false);
+
+  const { count: pendingResponsesCount } = usePendingResponsesCount();
+
+  useEffect(() => {
+    if (didInitFromUrl.current) return;
+    didInitFromUrl.current = true;
+
+    const pending = searchParams.get('pending_responses');
+    if (pending === 'true' || pending === '1') {
+      setShowPendingResponses(true);
+      setTimeFilter('all');
+      setFilter('all');
+    }
+  }, [searchParams]);
 
   // Debounce search term - single effect, no duplicate calls
   useEffect(() => {
@@ -99,13 +117,18 @@ const EventsList: React.FC = () => {
     if (debouncedSearch) {
       p.search = debouncedSearch;
     }
-    if (timeFilter === 'upcoming') {
-      p.upcoming = true;
-    } else if (timeFilter === 'past') {
-      p.past = true;
+    if (showPendingResponses) {
+      p.pending_responses = true;
+      p.my_proposals = true;
+    } else {
+      if (timeFilter === 'upcoming') {
+        p.upcoming = true;
+      } else if (timeFilter === 'past') {
+        p.past = true;
+      }
     }
     return p;
-  }, [filter, debouncedSearch, timeFilter]);
+  }, [filter, debouncedSearch, timeFilter, showPendingResponses]);
 
   const { events, count, isLoading, isLoadingMore, hasMore, loadMore, mutate } = useEvents(params);
 
@@ -193,6 +216,21 @@ const EventsList: React.FC = () => {
   const clearSearch = useCallback(() => {
     setSearchTerm('');
   }, []);
+
+  const togglePendingResponses = useCallback(() => {
+    const next = !showPendingResponses;
+    setShowPendingResponses(next);
+
+    const nextParams = new URLSearchParams(searchParams);
+    if (next) {
+      nextParams.set('pending_responses', 'true');
+      setTimeFilter('all');
+      setFilter('all');
+    } else {
+      nextParams.delete('pending_responses');
+    }
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, setSearchParams, showPendingResponses]);
 
   const getStatusBorderClass = (status?: string) => {
     switch (status) {
@@ -419,6 +457,55 @@ const EventsList: React.FC = () => {
           </div>
 
           <div className="mt-5 flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 no-scrollbar sm:flex-wrap sm:overflow-visible sm:pb-0 sm:mx-0 sm:px-0">
+            <button
+              type="button"
+              onClick={togglePendingResponses}
+              className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-extrabold transition-all touch-manipulation min-h-[44px] whitespace-nowrap ${
+                showPendingResponses
+                  ? 'border-transparent bg-gradient-to-r from-amber-500 via-rose-500 to-fuchsia-600 text-white shadow-lg shadow-amber-200/50 hover:shadow-xl hover:-translate-y-0.5'
+                  : pendingResponsesCount > 0
+                    ? 'border-amber-200 bg-gradient-to-br from-amber-50/80 via-white/90 to-white/70 text-amber-900 shadow-md hover:shadow-lg hover:-translate-y-0.5'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-amber-200'
+              }`}
+              aria-pressed={showPendingResponses}
+              title="Mostra apenas eventos criados por você com respostas de músicos pendentes"
+            >
+              <span className="relative inline-flex h-2.5 w-2.5">
+                <span
+                  className={`absolute inline-flex h-full w-full rounded-full ${
+                    pendingResponsesCount > 0 ? 'animate-ping bg-amber-400 opacity-60' : 'bg-slate-300 opacity-40'
+                  }`}
+                />
+                <span
+                  className={`relative inline-flex h-2.5 w-2.5 rounded-full ${
+                    pendingResponsesCount > 0
+                      ? showPendingResponses
+                        ? 'bg-white'
+                        : 'bg-amber-600'
+                      : 'bg-slate-400'
+                  }`}
+                />
+              </span>
+              <Zap className={`h-4 w-4 ${showPendingResponses ? 'text-white' : 'text-amber-600'}`} />
+              <span>Respostas pendentes</span>
+              {pendingResponsesCount > 0 && (
+                <span
+                  className={`ml-1 inline-flex min-w-[26px] items-center justify-center rounded-full px-2 py-0.5 text-xs font-black tabular-nums ${
+                    showPendingResponses
+                      ? 'bg-white/20 text-white border border-white/20'
+                      : 'bg-amber-100 text-amber-800 border border-amber-200'
+                  }`}
+                >
+                  {pendingResponsesCount}
+                </span>
+              )}
+              {showPendingResponses && (
+                <span className="ml-1 rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-black tracking-wide border border-white/15">
+                  ATIVO
+                </span>
+              )}
+            </button>
+
             {(
               [
                 { value: 'upcoming', label: 'Próximos' },
@@ -428,8 +515,9 @@ const EventsList: React.FC = () => {
             ).map(item => (
               <button
                 key={item.value}
+                disabled={showPendingResponses}
                 onClick={() => setTimeFilter(item.value)}
-                className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-semibold transition-all touch-manipulation min-h-[44px] whitespace-nowrap ${
+                className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-semibold transition-all touch-manipulation min-h-[44px] whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed ${
                   timeFilter === item.value
                     ? 'border-indigo-500 bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-200/60'
                     : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-white hover:border-indigo-200'

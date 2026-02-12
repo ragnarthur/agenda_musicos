@@ -293,7 +293,7 @@ const Dashboard: React.FC = memo(() => {
               }
             >
               <Link
-                to="/eventos"
+                to="/eventos?pending_responses=true"
                 className="bg-white dark:bg-gray-800 rounded-2xl border border-amber-200 dark:border-amber-800 p-4 sm:p-6 hover:shadow-xl hover:-translate-y-0.5 transition-all block"
               >
                 <Zap className="h-8 w-8 text-amber-600 dark:text-amber-400" />

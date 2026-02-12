@@ -8,6 +8,7 @@ interface EventsParams {
   status?: string;
   my_proposals?: boolean;
   pending_approval?: boolean;
+  pending_responses?: boolean;
   search?: string;
   past?: boolean;
   upcoming?: boolean;
@@ -21,6 +22,7 @@ const buildKey = (params?: EventsParams, page?: number) => {
   if (params?.status) queryParts.push(`status=${params.status}`);
   if (params?.my_proposals) queryParts.push('my_proposals=true');
   if (params?.pending_approval) queryParts.push('pending_approval=true');
+  if (params?.pending_responses) queryParts.push('pending_responses=true');
   if (params?.search) queryParts.push(`search=${encodeURIComponent(params.search)}`);
   if (params?.past) queryParts.push('past=true');
   if (params?.upcoming) queryParts.push('upcoming=true');
@@ -109,6 +111,33 @@ export function usePendingApproval() {
   return {
     events: data ?? [],
     count: data?.length ?? 0,
+    isLoading,
+    isValidating,
+    error,
+    mutate,
+  };
+}
+
+export function usePendingResponsesCount() {
+  const key = '/events?pending_responses=true&my_proposals=true&page_size=1';
+  const { data, error, isLoading, isValidating, mutate } = useSWR<number>(
+    key,
+    async () => {
+      const page = await eventService.getAllPaginated({
+        my_proposals: true,
+        pending_responses: true,
+        page_size: 1,
+      });
+      return page.count ?? 0;
+    },
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 30000,
+    }
+  );
+
+  return {
+    count: data ?? 0,
     isLoading,
     isValidating,
     error,
