@@ -4,6 +4,7 @@ import ContractorNavbar from './ContractorNavbar';
 import ContractorBottomNav from './ContractorBottomNav';
 import AnimatedBackground from '../Layout/AnimatedBackground';
 import OfflineBanner from '../common/OfflineBanner';
+import AppVersionMessage from '../common/AppVersionMessage';
 
 interface ContractorLayoutProps {
   children: React.ReactNode;
@@ -66,6 +67,7 @@ const ContractorLayout: React.FC<ContractorLayoutProps> = ({ children }) => {
             <span className="mr-1 text-base text-primary-600 dark:text-primary-400">®</span>
             DXM Tech. Todos os direitos reservados.
           </p>
+          <AppVersionMessage className="mt-1 text-[11px] sm:text-xs font-medium text-slate-500 dark:text-slate-300/90" />
         </footer>
       </div>
 

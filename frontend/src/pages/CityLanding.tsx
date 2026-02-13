@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { MapPin, Star, Music, Building2, UserPlus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
+import AppVersionMessage from '../components/common/AppVersionMessage';
 import Loading from '../components/common/Loading';
 import { getCityBySlug, getCityDisplayName, type City } from '../config/cities';
 import {
@@ -287,6 +288,7 @@ const CityLanding: React.FC = () => {
         {/* Footer */}
         <footer className="container mx-auto px-4 py-8 text-center">
           <p className="text-gray-400 text-sm">© 2026 DXM Tech. Todos os direitos reservados.</p>
+          <AppVersionMessage className="mt-1 text-xs text-gray-500" />
         </footer>
       </div>
     </FullscreenBackground>

@@ -14,6 +14,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import Loading from '../components/common/Loading';
 import ContactButton from '../components/common/ContactButton';
+import AppVersionMessage from '../components/common/AppVersionMessage';
 import { CompactCalendar, type CalendarEvent } from '../components/calendar';
 import {
   publicMusicianService,
@@ -554,6 +555,7 @@ const MusicianPublicProfile: React.FC = () => {
         {/* Footer */}
         <footer className="container mx-auto px-4 py-8 text-center">
           <p className="text-gray-400 text-sm">© 2026 DXM Tech. Todos os direitos reservados.</p>
+          <AppVersionMessage className="mt-1 text-xs text-gray-500" />
         </footer>
       </div>
 

@@ -1,9 +1,35 @@
 // https://vite.dev/config/
+import { execSync } from 'node:child_process';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+const getGitShortSha = (): string => {
+  const fromEnv = String(process.env.GITHUB_SHA || '').trim();
+  if (fromEnv) return fromEnv.slice(0, 7);
+
+  try {
+    return execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString()
+      .trim();
+  } catch {
+    return '';
+  }
+};
+
+const buildDateLabel = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
+const appVersion = String(process.env.VITE_APP_VERSION || '').trim();
+const explicitReleaseLabel = String(process.env.VITE_RELEASE_LABEL || '').trim();
+const gitShortSha = getGitShortSha();
+const fallbackReleaseLabel = appVersion
+  ? `${appVersion}${gitShortSha ? ` · ${gitShortSha}` : ''}`
+  : `build ${buildDateLabel}${gitShortSha ? ` · ${gitShortSha}` : ''}`;
+const resolvedReleaseLabel = explicitReleaseLabel || fallbackReleaseLabel;
+
 export default defineConfig({
+  define: {
+    'import.meta.env.VITE_RELEASE_LABEL': JSON.stringify(resolvedReleaseLabel),
+  },
   plugins: [
     react(),
     VitePWA({
