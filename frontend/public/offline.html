@@ -157,7 +157,8 @@
     let isUpdating = false;
 
     function tryReconnect() {
-      window.location.reload();
+      // Tenta voltar para a raiz da SPA em vez de recarregar a mesma offline page.
+      window.location.assign('/');
     }
 
     async function updateApp() {
@@ -178,8 +179,8 @@
 
         const registration = await navigator.serviceWorker.getRegistration();
         if (!registration) {
-          status.textContent = 'App sem service worker ativo. Recarregando...';
-          setTimeout(() => window.location.reload(), 700);
+          status.textContent = 'Service worker nao encontrado. Tentando abrir o app...';
+          setTimeout(() => window.location.assign('/'), 700);
           return;
         }
 
@@ -218,13 +219,9 @@
         }
 
         status.textContent = navigator.onLine
-          ? 'Aplicativo ja esta atualizado. Recarregando...'
+          ? 'Aplicativo ja esta atualizado. Toque em "Tentar novamente".'
           : 'Sem conexao para buscar nova versao.';
         status.classList.toggle('online', navigator.onLine);
-
-        if (navigator.onLine) {
-          setTimeout(() => window.location.reload(), 900);
-        }
       } catch (error) {
         console.warn('[offline] update app failed', error);
         status.textContent = navigator.onLine
@@ -242,9 +239,8 @@
     function updateStatus() {
       const status = document.getElementById('status');
       if (navigator.onLine) {
-        status.textContent = 'Conexão detectada! Recarregando...';
+        status.textContent = 'Conexao detectada! Toque em "Tentar novamente" ou "Atualizar aplicativo".';
         status.classList.add('online');
-        setTimeout(() => window.location.reload(), 1000);
       } else {
         status.textContent = 'Sem conexão com a internet';
         status.classList.remove('online');
