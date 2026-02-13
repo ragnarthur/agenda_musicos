@@ -1308,6 +1308,7 @@ def list_all_musicians_public(request):
     # Busca geral mais abrangente (nome, instrumento, bio)
     if search:
         search_normalized = normalize_search_text(search)
+        genre_search = search_normalized.replace(" ", "_")
         queryset = queryset.filter(
             Q(user__first_name__icontains=search)
             | Q(user__last_name__icontains=search)
@@ -1318,6 +1319,9 @@ def list_all_musicians_public(request):
             | Q(instruments__icontains=search)
             | Q(instruments__icontains=search_normalized)
             | Q(bio__icontains=search)
+            | Q(musical_genres__icontains=search)
+            | Q(musical_genres__icontains=search_normalized)
+            | Q(musical_genres__icontains=genre_search)
         )
 
     if genre:
