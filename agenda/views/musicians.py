@@ -44,6 +44,7 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
         search = self.request.query_params.get("search")
         if search:
             search_normalized = normalize_search_text(search)
+            genre_search = search_normalized.replace(" ", "_")
             queryset = queryset.filter(
                 Q(user__first_name__icontains=search)
                 | Q(user__last_name__icontains=search)
@@ -56,6 +57,9 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
                 | Q(instrument__icontains=search_normalized)
                 | Q(instruments__icontains=search)
                 | Q(instruments__icontains=search_normalized)
+                | Q(musical_genres__icontains=search)
+                | Q(musical_genres__icontains=search_normalized)
+                | Q(musical_genres__icontains=genre_search)
             )
         instrument = self.request.query_params.get("instrument")
         if instrument and instrument != "all":
