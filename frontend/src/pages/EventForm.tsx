@@ -13,10 +13,14 @@ import { logError } from '../utils/logger';
 import type { Event, EventCreate, AvailableMusician, Musician } from '../types';
 import { format, parseISO, isBefore } from 'date-fns';
 import InstrumentIcon from '../components/common/InstrumentIcon';
-import { INSTRUMENT_LABELS as BASE_INSTRUMENT_LABELS } from '../utils/formatting';
+import {
+  formatInstrumentLabel,
+  maskCurrencyInput,
+  normalizeInstrumentKey,
+  unmaskCurrency,
+} from '../utils/formatting';
 import { sanitizeOptionalText, sanitizeText } from '../utils/sanitize';
 import { getMobileInputProps, getTimeProps } from '../utils/mobileInputs';
-import { maskCurrencyInput, unmaskCurrency } from '../utils/formatting';
 import { getGenreLabel } from '../config/genres';
 
 interface ConflictInfo {
@@ -26,16 +30,24 @@ interface ConflictInfo {
   bufferMinutes: number;
 }
 
-const instrumentLabels: Record<string, string> = {
-  ...BASE_INSTRUMENT_LABELS,
-};
+const QUICK_INSTRUMENT_LIMIT = 6;
 
 const resolveInstrumentLabel = (instrument: string): string => {
   if (!instrument) return 'Instrumento';
-  const label = instrumentLabels[instrument];
-  if (label) return label;
-  const pretty = instrument.replace(/_/g, ' ');
-  return pretty.charAt(0).toUpperCase() + pretty.slice(1);
+  const normalized = normalizeInstrumentKey(instrument);
+  return formatInstrumentLabel(normalized || instrument) || 'Instrumento';
+};
+
+const getNormalizedInstrumentList = (musician: AvailableMusician): string[] => {
+  const list =
+    musician.instruments && musician.instruments.length > 0
+      ? musician.instruments
+      : musician.instrument
+        ? [musician.instrument]
+        : [];
+
+  const normalized = list.map(inst => normalizeInstrumentKey(inst)).filter(Boolean);
+  return Array.from(new Set(normalized));
 };
 
 // Presets de duração para atalhos comuns
@@ -63,6 +75,7 @@ const EventForm: React.FC = () => {
   const [instrumentFilter, setInstrumentFilter] = useState<string>('all');
   const [genreFilter, setGenreFilter] = useState<string>('all');
   const [musicianQuery, setMusicianQuery] = useState<string>('');
+  const [showAllInstrumentFilters, setShowAllInstrumentFilters] = useState(false);
   const dateInputRef = useRef<HTMLInputElement | null>(null);
   const [conflictInfo, setConflictInfo] = useState<ConflictInfo>({
     loading: false,
@@ -146,6 +159,7 @@ const EventForm: React.FC = () => {
       setInstrumentFilter('all');
       setGenreFilter('all');
       setMusicianQuery('');
+      setShowAllInstrumentFilters(false);
       return;
     }
 
@@ -165,13 +179,16 @@ const EventForm: React.FC = () => {
         }
         const musicians = aggregated;
         const mapped = musicians.map(musician => {
-          const instruments =
+          const rawInstruments =
             musician.instruments && musician.instruments.length > 0
               ? musician.instruments
               : musician.instrument
                 ? [musician.instrument]
                 : [];
-          const primary = instruments[0] || musician.instrument;
+          const instruments = Array.from(
+            new Set(rawInstruments.map(inst => normalizeInstrumentKey(inst)).filter(Boolean))
+          );
+          const primary = instruments[0] || normalizeInstrumentKey(musician.instrument) || '';
           return {
             musician_id: musician.id,
             musician_name: musician.full_name,
@@ -213,7 +230,7 @@ const EventForm: React.FC = () => {
   const instrumentOptions = useMemo(() => {
     const counts: Record<string, number> = {};
     availableMusicians.forEach(m => {
-      const list = m.instruments && m.instruments.length > 0 ? m.instruments : [m.instrument];
+      const list = getNormalizedInstrumentList(m);
       list.forEach((inst: string) => {
         counts[inst] = (counts[inst] || 0) + 1;
       });
@@ -225,6 +242,13 @@ const EventForm: React.FC = () => {
     }));
     return options.sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
   }, [availableMusicians]);
+
+  const quickInstrumentOptions = useMemo(() => {
+    const sorted = [...instrumentOptions].sort(
+      (a, b) => b.count - a.count || a.label.localeCompare(b.label, 'pt-BR')
+    );
+    return showAllInstrumentFilters ? sorted : sorted.slice(0, QUICK_INSTRUMENT_LIMIT);
+  }, [instrumentOptions, showAllInstrumentFilters]);
 
   const genreOptions = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -251,7 +275,7 @@ const EventForm: React.FC = () => {
   const filteredMusicians = useMemo(() => {
     const q = normalizeSearch(musicianQuery);
     return availableMusicians.filter(m => {
-      const list = m.instruments && m.instruments.length > 0 ? m.instruments : [m.instrument];
+      const list = getNormalizedInstrumentList(m);
       const byFilter = instrumentFilter === 'all' ? true : list.includes(instrumentFilter);
       const genres = Array.isArray(m.musical_genres) ? m.musical_genres : [];
       const byGenre = genreFilter === 'all' ? true : genres.includes(genreFilter);
@@ -274,10 +298,7 @@ const EventForm: React.FC = () => {
   }, [availableMusicians, instrumentFilter, genreFilter, musicianQuery]);
 
   const getInstrumentDisplay = (musician: AvailableMusician): string => {
-    const list =
-      musician.instruments && musician.instruments.length > 0
-        ? musician.instruments
-        : [musician.instrument];
+    const list = getNormalizedInstrumentList(musician);
     return list.map(resolveInstrumentLabel).join(' · ');
   };
 
@@ -827,7 +848,7 @@ const EventForm: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:items-end mb-3">
-                  <div className="min-w-0 md:col-span-6">
+                  <div className="min-w-0 md:col-span-5">
                     <label className="text-xs font-semibold text-gray-700 block leading-tight">
                       Buscar
                     </label>
@@ -844,7 +865,26 @@ const EventForm: React.FC = () => {
                       />
                     </div>
                   </div>
-                  <div className="min-w-0 md:col-span-4">
+                  <div className="min-w-0 md:col-span-3">
+                    <label className="text-xs font-semibold text-gray-700 block leading-tight">
+                      Instrumento
+                    </label>
+                    <div className="mt-1.5">
+                      <select
+                        value={instrumentFilter}
+                        onChange={e => setInstrumentFilter(e.target.value)}
+                        className="input-field"
+                      >
+                        <option value="all">Todos</option>
+                        {instrumentOptions.map(opt => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label} ({opt.count})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="min-w-0 md:col-span-2">
                     <label className="text-xs font-semibold text-gray-700 block leading-tight">
                       Estilo
                     </label>
@@ -870,12 +910,9 @@ const EventForm: React.FC = () => {
                         setInstrumentFilter('all');
                         setGenreFilter('all');
                         setMusicianQuery('');
+                        setShowAllInstrumentFilters(false);
                       }}
-                      className={`w-full md:w-auto min-h-[44px] px-4 py-2 rounded-lg text-sm font-semibold border transition-colors whitespace-nowrap ${
-                        instrumentFilter === 'all' && genreFilter === 'all' && !musicianQuery
-                          ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300'
-                      }`}
+                      className="w-full md:w-auto min-h-[44px] px-4 py-2 rounded-lg text-sm font-semibold border transition-colors whitespace-nowrap bg-white text-gray-700 border-gray-200 hover:border-purple-300"
                     >
                       Limpar filtros
                     </button>
@@ -883,36 +920,78 @@ const EventForm: React.FC = () => {
                 </div>
 
                 {instrumentOptions.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    <button
-                      type="button"
-                      onClick={() => setInstrumentFilter('all')}
-                      className={`px-3 py-1.5 rounded-full text-sm border transition ${
-                        instrumentFilter === 'all'
-                          ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300'
-                      }`}
-                    >
-                      Todos
-                    </button>
-                    {instrumentOptions.map(opt => (
+                  <div className="mb-3 rounded-xl border border-gray-200/80 bg-white/80 p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Atalhos por instrumento
+                      </p>
+                      {instrumentOptions.length > QUICK_INSTRUMENT_LIMIT && (
+                        <button
+                          type="button"
+                          onClick={() => setShowAllInstrumentFilters(prev => !prev)}
+                          className="text-xs font-semibold text-purple-700 hover:text-purple-800"
+                        >
+                          {showAllInstrumentFilters ? 'Mostrar menos' : 'Ver todos'}
+                        </button>
+                      )}
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {quickInstrumentOptions.map(opt => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setInstrumentFilter(opt.value)}
+                          className={`px-3 py-1.5 rounded-full text-sm border transition inline-flex items-center gap-2 ${
+                            instrumentFilter === opt.value
+                              ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                              : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300'
+                          }`}
+                        >
+                          <span className="flex items-center gap-1">
+                            <InstrumentIcon instrument={opt.value} size={16} />
+                            {opt.label}
+                          </span>
+                          <span className="text-xs opacity-75">({opt.count})</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(instrumentFilter !== 'all' || genreFilter !== 'all' || musicianQuery.trim()) && (
+                  <div className="mb-3 flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-medium text-gray-500">Filtros ativos:</span>
+                    {instrumentFilter !== 'all' && (
                       <button
-                        key={opt.value}
                         type="button"
-                        onClick={() => setInstrumentFilter(opt.value)}
-                        className={`px-3 py-1.5 rounded-full text-sm border transition inline-flex items-center gap-2 ${
-                          instrumentFilter === opt.value
-                            ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                            : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300'
-                        }`}
+                        onClick={() => setInstrumentFilter('all')}
+                        className="px-2 py-1 rounded-full text-xs font-medium border border-purple-200 bg-purple-50 text-purple-700"
                       >
-                        <span className="flex items-center gap-1">
-                          <InstrumentIcon instrument={opt.value} size={16} />
-                          {opt.label}
-                        </span>
-                        <span className="text-xs text-gray-500 ml-1">({opt.count})</span>
+                        Instrumento: {resolveInstrumentLabel(instrumentFilter)} x
                       </button>
-                    ))}
+                    )}
+                    {genreFilter !== 'all' && (
+                      <button
+                        type="button"
+                        onClick={() => setGenreFilter('all')}
+                        className="px-2 py-1 rounded-full text-xs font-medium border border-indigo-200 bg-indigo-50 text-indigo-700"
+                      >
+                        Estilo: {getGenreLabel(genreFilter)} x
+                      </button>
+                    )}
+                    {musicianQuery.trim() && (
+                      <button
+                        type="button"
+                        onClick={() => setMusicianQuery('')}
+                        className="px-2 py-1 rounded-full text-xs font-medium border border-gray-300 bg-gray-100 text-gray-700"
+                      >
+                        Busca: "{musicianQuery.trim()}" x
+                      </button>
+                    )}
+                    <span className="ml-auto text-xs font-medium text-gray-500">
+                      {filteredMusicians.length} resultado
+                      {filteredMusicians.length !== 1 ? 's' : ''}
+                    </span>
                   </div>
                 )}
 
@@ -962,7 +1041,10 @@ const EventForm: React.FC = () => {
                                     : 'bg-gray-100 text-gray-600'
                               }`}
                             >
-                              <InstrumentIcon instrument={musician.instrument} size={18} />
+                              <InstrumentIcon
+                                instrument={getNormalizedInstrumentList(musician)[0] || musician.instrument}
+                                size={18}
+                              />
                             </div>
                             <div>
                               <p className="font-medium text-gray-900">
