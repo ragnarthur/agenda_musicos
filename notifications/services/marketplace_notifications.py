@@ -256,24 +256,25 @@ def notify_gig_application_created(gig, application) -> None:
     )
 
 
-def notify_gig_hire_result(gig, hired_application, rejected_applications) -> None:
+def notify_gig_hire_result(gig, hired_applications, rejected_applications) -> None:
     """Notifica todos os envolvidos após contratação em uma vaga."""
-    hired_user = hired_application.musician.user
-    hired_title = f"Parabens! Voce foi contratado: {gig.title}"
-    hired_body = (
-        f"🎉 Sua candidatura foi aprovada!\n\n"
-        f"📋 Detalhes\n"
-        f" • Cache aprovado: {_format_fee(hired_application.expected_fee)}\n"
-        f" • Status atual: ✅ Contratado\n\n"
-        f"Abra o app para visualizar os detalhes de contato do contratante."
-    )
-    _notify_user(
-        hired_user,
-        title=hired_title,
-        body=hired_body,
-        gig_id=gig.id,
-        object_id=hired_application.id,
-    )
+    for hired_application in hired_applications:
+        hired_user = hired_application.musician.user
+        hired_title = f"Parabens! Voce foi contratado: {gig.title}"
+        hired_body = (
+            f"🎉 Sua candidatura foi aprovada!\n\n"
+            f"📋 Detalhes\n"
+            f" • Cache aprovado: {_format_fee(hired_application.expected_fee)}\n"
+            f" • Status atual: ✅ Contratado\n\n"
+            f"Abra o app para visualizar os detalhes de contato do contratante."
+        )
+        _notify_user(
+            hired_user,
+            title=hired_title,
+            body=hired_body,
+            gig_id=gig.id,
+            object_id=hired_application.id,
+        )
 
     for application in rejected_applications:
         rejected_user = application.musician.user
@@ -293,11 +294,15 @@ def notify_gig_hire_result(gig, hired_application, rejected_applications) -> Non
 
     if gig.created_by:
         owner_title = f"Contratacao concluida: {gig.title}"
-        owner_name = hired_user.get_full_name() or hired_user.username
+        hired_names = [
+            app.musician.user.get_full_name() or app.musician.user.username
+            for app in hired_applications
+        ]
+        owner_names_text = ", ".join(hired_names)
         owner_body = (
             f"Voce concluiu a contratacao da vaga.\n\n"
             f"📋 Resumo\n"
-            f" • Musico contratado: {owner_name}\n"
+            f" • Musicos contratados: {owner_names_text}\n"
             f" • Candidaturas recusadas: {len(rejected_applications)}\n\n"
             f"Todas as partes foram notificadas."
         )
@@ -306,7 +311,7 @@ def notify_gig_hire_result(gig, hired_application, rejected_applications) -> Non
             title=owner_title,
             body=owner_body,
             gig_id=gig.id,
-            object_id=hired_application.id,
+            object_id=gig.id,
         )
 
 

@@ -2,13 +2,14 @@ from decimal import Decimal, InvalidOperation
 
 from django.db import transaction
 from django.db.models import Count
+from django.utils import timezone
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from agenda.models import Musician
+from agenda.models import Availability, Event, Musician
 from agenda.validators import sanitize_string
 from notifications.services.marketplace_notifications import (
     notify_gig_application_created,
@@ -102,6 +103,95 @@ class GigViewSet(viewsets.ModelViewSet):
         if application.musician.user_id != sender_id:
             recipients[application.musician.user_id] = application.musician.user
         return list(recipients.values())
+
+    def _parse_hire_application_ids(self, request):
+        """
+        Suporta contratação individual (`application_id`) e em lote (`application_ids`).
+        Retorna lista deduplicada de ids (int).
+        """
+        single_id = request.data.get("application_id")
+        many_ids = request.data.get("application_ids")
+
+        if many_ids is not None:
+            if not isinstance(many_ids, list) or not many_ids:
+                raise ValueError("application_ids deve ser uma lista com pelo menos 1 item.")
+            raw_ids = many_ids
+        elif single_id is not None:
+            raw_ids = [single_id]
+        else:
+            raise ValueError("Informe application_id ou application_ids.")
+
+        parsed = []
+        for item in raw_ids:
+            try:
+                parsed.append(int(item))
+            except (TypeError, ValueError):
+                raise ValueError("IDs de candidatura inválidos.")
+
+        # Preserva ordem e remove duplicados
+        return list(dict.fromkeys(parsed))
+
+    def _ensure_gig_schedule_for_hire(self, gig):
+        """
+        A contratação gera evento na agenda dos envolvidos.
+        Logo, exige data e horário completos na vaga.
+        """
+        if not gig.event_date or not gig.start_time or not gig.end_time:
+            raise ValueError(
+                "Defina data, horário de início e horário de término da vaga antes de contratar."
+            )
+
+    def _create_event_for_hired_band(self, gig, hired_applications):
+        """
+        Cria um evento confirmado na agenda ao concluir contratação via vaga.
+        O criador da vaga e os músicos contratados entram como `available`.
+        """
+        if not gig.created_by:
+            return
+
+        creator_musician = getattr(gig.created_by, "musician_profile", None)
+        if not creator_musician:
+            return
+
+        now = timezone.now()
+        event = Event.objects.create(
+            title=f"[Vaga] {gig.title}",
+            description=(
+                f"Evento gerado automaticamente a partir da vaga #{gig.id}.\n\n"
+                f"{gig.description or ''}".strip()
+            ),
+            location=gig.location or "Local a combinar",
+            venue_contact=(gig.contact_name or "").strip() or None,
+            payment_amount=gig.budget,
+            event_date=gig.event_date,
+            start_time=gig.start_time,
+            end_time=gig.end_time,
+            is_solo=False,
+            is_private=True,
+            status="confirmed",
+            organization=gig.organization,
+            created_by=gig.created_by,
+            approved_by=gig.created_by,
+            approved_at=now,
+        )
+
+        participant_ids = {creator_musician.id}
+        participant_ids.update(app.musician_id for app in hired_applications)
+
+        participants = Musician.objects.filter(id__in=participant_ids, is_active=True)
+        for musician in participants:
+            note = "Contratação confirmada via Vagas."
+            if musician.id == creator_musician.id:
+                note = "Evento criado automaticamente a partir de vaga contratada."
+            Availability.objects.update_or_create(
+                musician=musician,
+                event=event,
+                defaults={
+                    "response": "available",
+                    "notes": note,
+                    "responded_at": now,
+                },
+            )
 
     @action(
         detail=True,
@@ -242,54 +332,75 @@ class GigViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def hire(self, request, pk=None):
-        """Contrata um músico para a vaga, rejeitando os demais."""
+        """Contrata um ou mais músicos para a vaga, rejeitando os demais pendentes."""
         gig = self.get_object()
         if gig.created_by != request.user and not request.user.is_staff:
             return Response(
                 {"detail": "Apenas quem publicou a vaga pode contratar."},
                 status=status.HTTP_403_FORBIDDEN,
             )
-        if gig.status in ["closed", "cancelled"]:
-            return Response(
-                {"detail": "Esta vaga já foi encerrada e não pode contratar."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if gig.status == "hired":
-            return Response(
-                {"detail": "Esta vaga já possui músico contratado."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
 
-        application_id = request.data.get("application_id")
         try:
-            application = gig.applications.select_related("musician__user").get(id=application_id)
-        except GigApplication.DoesNotExist:
+            selected_ids = self._parse_hire_application_ids(request)
+            self._ensure_gig_schedule_for_hire(gig)
+        except ValueError as exc:
             return Response(
-                {"detail": "Candidatura não encontrada para esta vaga."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        if application.status != "pending":
-            return Response(
-                {"detail": "Apenas candidaturas pendentes podem ser contratadas."},
                 status=status.HTTP_400_BAD_REQUEST,
+                data={"detail": str(exc)},
             )
-
-        rejected_applications = list(
-            gig.applications.select_related("musician__user")
-            .filter(status="pending")
-            .exclude(id=application.id)
-        )
 
         with transaction.atomic():
-            gig.applications.filter(status="pending").exclude(id=application_id).update(status="rejected")
-            application.status = "hired"
-            application.save(update_fields=["status"])
-            gig.status = "hired"
-            gig.save(update_fields=["status", "updated_at"])
+            locked_gig = Gig.objects.select_for_update().get(id=gig.id)
 
-        notify_gig_hire_result(gig, application, rejected_applications)
+            if locked_gig.status in ["closed", "cancelled"]:
+                return Response(
+                    {"detail": "Esta vaga já foi encerrada e não pode contratar."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if locked_gig.status == "hired":
+                return Response(
+                    {"detail": "Esta vaga já possui contratação concluída."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-        serializer = GigSerializer(gig, context={"request": request})
+            selected_applications = list(
+                locked_gig.applications.select_related("musician__user").filter(id__in=selected_ids)
+            )
+            if len(selected_applications) != len(selected_ids):
+                return Response(
+                    {"detail": "Uma ou mais candidaturas não foram encontradas para esta vaga."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            non_pending = [app for app in selected_applications if app.status != "pending"]
+            if non_pending:
+                return Response(
+                    {"detail": "Apenas candidaturas pendentes podem ser contratadas."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            rejected_applications = list(
+                locked_gig.applications.select_related("musician__user")
+                .filter(status="pending")
+                .exclude(id__in=selected_ids)
+            )
+
+            locked_gig.applications.filter(status="pending").exclude(id__in=selected_ids).update(
+                status="rejected"
+            )
+            locked_gig.applications.filter(id__in=selected_ids).update(status="hired")
+
+            locked_gig.status = "hired"
+            locked_gig.save(update_fields=["status", "updated_at"])
+
+            hired_applications = list(
+                locked_gig.applications.select_related("musician__user").filter(id__in=selected_ids)
+            )
+            self._create_event_for_hired_band(locked_gig, hired_applications)
+
+        notify_gig_hire_result(locked_gig, hired_applications, rejected_applications)
+
+        serializer = GigSerializer(locked_gig, context={"request": request})
         return Response(serializer.data)
 
     @action(detail=True, methods=["post"])

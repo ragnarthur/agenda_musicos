@@ -60,7 +60,7 @@ type ApplyForm = { cover_letter: string; expected_fee: string };
 type CityOption = { id: number; name: string; state: string };
 type CloseStatus = 'closed' | 'cancelled';
 type CloseTarget = { gig: MarketplaceGig; status: CloseStatus } | null;
-type HireTarget = { gig: MarketplaceGig; application: MarketplaceApplication } | null;
+type HireTarget = { gig: MarketplaceGig; applications: MarketplaceApplication[] } | null;
 const DURATION_PRESETS = ['1', '2', '3', '4'];
 
 const extractCityName = (raw: string | null | undefined): string => {
@@ -111,6 +111,9 @@ const Marketplace: React.FC = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [hireTarget, setHireTarget] = useState<HireTarget>(null);
   const [hireLoading, setHireLoading] = useState(false);
+  const [selectedApplicationsByGig, setSelectedApplicationsByGig] = useState<
+    Record<number, number[]>
+  >({});
   const [closeTarget, setCloseTarget] = useState<CloseTarget>(null);
   const [closeLoading, setCloseLoading] = useState(false);
   const [applicationsByGig, setApplicationsByGig] = useState<Record<number, MarketplaceApplication[]>>(
@@ -164,6 +167,16 @@ const Marketplace: React.FC = () => {
           if (gig.applications) {
             next[gig.id] = gig.applications;
           }
+        });
+        return next;
+      });
+      setSelectedApplicationsByGig(prev => {
+        const next: Record<number, number[]> = { ...prev };
+        gigsData.forEach(gig => {
+          const apps = (gig.applications || []).filter(app => app.status === 'pending');
+          const validIds = new Set(apps.map(app => app.id));
+          const current = prev[gig.id] || [];
+          next[gig.id] = current.filter(id => validIds.has(id));
         });
         return next;
       });
@@ -249,6 +262,23 @@ const Marketplace: React.FC = () => {
     },
     [applicationsByGig]
   );
+
+  const hasGigSchedule = (gig: MarketplaceGig): boolean =>
+    Boolean(gig.event_date && gig.start_time && gig.end_time);
+
+  const toggleApplicationSelection = (gigId: number, applicationId: number) => {
+    setSelectedApplicationsByGig(prev => {
+      const current = prev[gigId] || [];
+      const next = current.includes(applicationId)
+        ? current.filter(id => id !== applicationId)
+        : [...current, applicationId];
+      return { ...prev, [gigId]: next };
+    });
+  };
+
+  const clearApplicationSelection = (gigId: number) => {
+    setSelectedApplicationsByGig(prev => ({ ...prev, [gigId]: [] }));
+  };
 
   const toggleApplications = async (gig: MarketplaceGig) => {
     const shouldOpen = !applicationsOpen[gig.id];
@@ -338,9 +368,11 @@ const Marketplace: React.FC = () => {
     if (!hireTarget) return;
     try {
       setHireLoading(true);
-      await marketplaceService.hireApplication(hireTarget.gig.id, hireTarget.application.id);
+      const selectedIds = hireTarget.applications.map(app => app.id);
+      await marketplaceService.hireApplication(hireTarget.gig.id, selectedIds);
       setHireTarget(null);
       setApplicationsOpen(prev => ({ ...prev, [hireTarget.gig.id]: true }));
+      setSelectedApplicationsByGig(prev => ({ ...prev, [hireTarget.gig.id]: [] }));
       await loadData();
     } catch (err) {
       logError('Marketplace', err);
@@ -736,6 +768,11 @@ const Marketplace: React.FC = () => {
                   );
                   const canCloseGig = !['closed', 'cancelled'].includes(gig.status);
                   const canHire = ['open', 'in_review'].includes(gig.status);
+                  const canHireWithSchedule = canHire && hasGigSchedule(gig);
+                  const selectedIds = selectedApplicationsByGig[gig.id] || [];
+                  const selectedPendingApplications = ownerPendingApplications.filter(app =>
+                    selectedIds.includes(app.id)
+                  );
                   const canChat = !['closed', 'cancelled'].includes(gig.status);
 
                   return (
@@ -847,7 +884,47 @@ const Marketplace: React.FC = () => {
                                 Pendentes: {ownerPendingApplications.length} de{' '}
                                 {ownerApplications.length} candidatura(s)
                               </p>
+                              {!canHireWithSchedule && canHire ? (
+                                <p className="text-xs text-amber-700 mt-2">
+                                  Defina data e horário da vaga para contratar e bloquear a agenda da
+                                  banda automaticamente.
+                                </p>
+                              ) : null}
                             </div>
+
+                            {ownerPendingApplications.length > 1 && canHireWithSchedule ? (
+                              <div className="rounded-lg border border-purple-200 bg-purple-50/50 px-3 py-2">
+                                <p className="text-xs font-semibold text-purple-900">
+                                  Formar banda nesta vaga
+                                </p>
+                                <p className="text-xs text-purple-800 mt-0.5">
+                                  Selecione 2 ou mais candidaturas pendentes e contrate em lote.
+                                </p>
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  <button
+                                    type="button"
+                                    disabled={selectedPendingApplications.length === 0}
+                                    onClick={() =>
+                                      setHireTarget({
+                                        gig,
+                                        applications: selectedPendingApplications,
+                                      })
+                                    }
+                                    className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                                  >
+                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                    Contratar selecionados ({selectedPendingApplications.length})
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => clearApplicationSelection(gig.id)}
+                                    className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-gray-400 transition-colors"
+                                  >
+                                    Limpar seleção
+                                  </button>
+                                </div>
+                              </div>
+                            ) : null}
 
                             {applicationsVisible ? (
                               <div className="rounded-lg border border-gray-100 p-3">
@@ -874,9 +951,21 @@ const Marketplace: React.FC = () => {
                                         className="rounded-lg border border-gray-100 p-3"
                                       >
                                         <div className="flex flex-wrap items-center justify-between gap-2">
-                                          <p className="font-semibold text-gray-900">
-                                            {application.musician_name}
-                                          </p>
+                                          <div className="flex items-center gap-2">
+                                            {application.status === 'pending' && canHireWithSchedule ? (
+                                              <input
+                                                type="checkbox"
+                                                checked={selectedIds.includes(application.id)}
+                                                onChange={() =>
+                                                  toggleApplicationSelection(gig.id, application.id)
+                                                }
+                                                className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                              />
+                                            ) : null}
+                                            <p className="font-semibold text-gray-900">
+                                              {application.musician_name}
+                                            </p>
+                                          </div>
                                           <span
                                             className={`px-2 py-1 rounded-full text-xs font-semibold ${statusStyles[application.status] || 'bg-gray-100 text-gray-700'}`}
                                           >
@@ -895,14 +984,14 @@ const Marketplace: React.FC = () => {
                                           </p>
                                         ) : null}
                                         <div className="flex flex-wrap items-center gap-2 mt-3">
-                                          {application.status === 'pending' && canHire ? (
+                                          {application.status === 'pending' && canHireWithSchedule ? (
                                             <button
                                               type="button"
-                                              onClick={() => setHireTarget({ gig, application })}
+                                              onClick={() => setHireTarget({ gig, applications: [application] })}
                                               className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-700 transition-colors"
                                             >
                                               <CheckCircle2 className="h-3.5 w-3.5" />
-                                              Contratar músico
+                                              Contratar este músico
                                             </button>
                                           ) : null}
                                           {canChat ? (
@@ -1588,10 +1677,27 @@ const Marketplace: React.FC = () => {
         isOpen={!!hireTarget}
         onClose={() => setHireTarget(null)}
         onConfirm={handleHire}
-        title="Contratar candidato"
+        title="Confirmar contratação"
         message={
           hireTarget
-            ? `Deseja contratar ${hireTarget.application.musician_name} para a vaga "${hireTarget.gig.title}"? As demais candidaturas pendentes serão recusadas e todos serão notificados por e-mail e Telegram quando ativado.`
+            ? (
+                <div className="space-y-2">
+                  <p>
+                    Deseja contratar {hireTarget.applications.length}{' '}
+                    músico{hireTarget.applications.length > 1 ? 's' : ''} para a vaga "
+                    {hireTarget.gig.title}"?
+                  </p>
+                  <ul className="list-disc pl-5">
+                    {hireTarget.applications.map(app => (
+                      <li key={app.id}>{app.musician_name}</li>
+                    ))}
+                  </ul>
+                  <p>
+                    As demais candidaturas pendentes serão recusadas e data/horário da vaga serão
+                    adicionados automaticamente na agenda dos envolvidos.
+                  </p>
+                </div>
+              )
             : ''
         }
         confirmText="Contratar"

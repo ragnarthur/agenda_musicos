@@ -44,9 +44,13 @@ export const marketplaceService = {
     return response.data;
   },
 
-  hireApplication: async (gigId: number, applicationId: number): Promise<MarketplaceGig> => {
+  hireApplication: async (
+    gigId: number,
+    applicationIds: number[] | number
+  ): Promise<MarketplaceGig> => {
+    const ids = Array.isArray(applicationIds) ? applicationIds : [applicationIds];
     const response = await api.post(`/marketplace/gigs/${gigId}/hire/`, {
-      application_id: applicationId,
+      application_ids: ids,
     });
     return response.data;
   },

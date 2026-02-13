@@ -7,7 +7,7 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from agenda.models import Musician, Organization
+from agenda.models import Availability, Event, Musician, Organization
 
 from .models import Gig, GigApplication, GigChatMessage
 
@@ -196,7 +196,14 @@ class GigWorkflowTest(APITestCase):
         # 1. Cliente cria gig
         self.client.force_authenticate(user=self.client_user)
         response = self.client.post(
-            "/api/marketplace/gigs/", {"title": "Show Completo", "budget": "2000.00"}
+            "/api/marketplace/gigs/",
+            {
+                "title": "Show Completo",
+                "budget": "2000.00",
+                "event_date": "2026-12-20",
+                "start_time": "20:00",
+                "end_time": "23:00",
+            },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         gig_id = response.data["id"]
@@ -226,6 +233,81 @@ class GigWorkflowTest(APITestCase):
         # 5. Verifica que candidatura está como contratada
         application.refresh_from_db()
         self.assertEqual(application.status, "hired")
+
+        # 6. Verifica evento automático na agenda
+        event = Event.objects.get(title="[Vaga] Show Completo")
+        self.assertEqual(event.status, "confirmed")
+        self.assertEqual(event.created_by, self.client_user)
+        self.assertEqual(event.event_date.isoformat(), "2026-12-20")
+        self.assertEqual(event.start_time.isoformat(), "20:00:00")
+        self.assertEqual(event.end_time.isoformat(), "23:00:00")
+
+        creator_availability = Availability.objects.get(event=event, musician=self.client_musician)
+        candidate_availability = Availability.objects.get(
+            event=event, musician=self.candidate_musician
+        )
+        self.assertEqual(creator_availability.response, "available")
+        self.assertEqual(candidate_availability.response, "available")
+
+    def test_hire_multiple_candidates_creates_single_event_with_band(self):
+        second_user = User.objects.create_user(
+            username="candidate2", email="candidate2@example.com", password="testpass123"
+        )
+        second_musician = Musician.objects.create(
+            user=second_user,
+            organization=self.client_org,
+            instrument="bass",
+            role="member",
+        )
+
+        self.client.force_authenticate(user=self.client_user)
+        create_resp = self.client.post(
+            "/api/marketplace/gigs/",
+            {
+                "title": "Show Banda",
+                "event_date": "2026-12-21",
+                "start_time": "21:00",
+                "end_time": "23:30",
+            },
+        )
+        self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
+        gig_id = create_resp.data["id"]
+
+        self.client.force_authenticate(user=self.candidate_user)
+        self.client.post(f"/api/marketplace/gigs/{gig_id}/apply/", {"expected_fee": "1200.00"})
+
+        self.client.force_authenticate(user=second_user)
+        self.client.post(f"/api/marketplace/gigs/{gig_id}/apply/", {"expected_fee": "900.00"})
+
+        app1 = GigApplication.objects.get(gig_id=gig_id, musician=self.candidate_musician)
+        app2 = GigApplication.objects.get(gig_id=gig_id, musician=second_musician)
+
+        self.client.force_authenticate(user=self.client_user)
+        hire_resp = self.client.post(
+            f"/api/marketplace/gigs/{gig_id}/hire/",
+            {"application_ids": [app1.id, app2.id]},
+            format="json",
+        )
+        self.assertEqual(hire_resp.status_code, status.HTTP_200_OK)
+
+        app1.refresh_from_db()
+        app2.refresh_from_db()
+        self.assertEqual(app1.status, "hired")
+        self.assertEqual(app2.status, "hired")
+
+        gig = Gig.objects.get(id=gig_id)
+        self.assertEqual(gig.status, "hired")
+
+        event = Event.objects.get(title="[Vaga] Show Banda")
+        participant_ids = set(Availability.objects.filter(event=event).values_list("musician_id", flat=True))
+        self.assertSetEqual(
+            participant_ids,
+            {self.client_musician.id, self.candidate_musician.id, second_musician.id},
+        )
+        self.assertEqual(
+            Availability.objects.filter(event=event, response="available").count(),
+            3,
+        )
 
 
 class GigChatAPITest(APITestCase):
