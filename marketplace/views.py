@@ -141,6 +141,35 @@ class GigViewSet(viewsets.ModelViewSet):
                 "Defina data, horário de início e horário de término da vaga antes de contratar."
             )
 
+    def _validate_fee_against_budget_on_apply(self, gig, expected_fee):
+        """Impede candidatura com cachê acima do orçamento da vaga."""
+        if gig.budget is None or expected_fee is None:
+            return
+        if expected_fee > gig.budget:
+            raise ValueError(
+                "O cachê informado não pode ser maior que o orçamento total da vaga."
+            )
+
+    def _validate_selected_fees_against_budget(self, gig, selected_applications):
+        """
+        Garante que a soma dos músicos selecionados não ultrapasse o orçamento da vaga.
+        Quando há orçamento definido, cada candidatura selecionada precisa ter cachê.
+        """
+        if gig.budget is None:
+            return
+
+        missing_fee = [app for app in selected_applications if app.expected_fee is None]
+        if missing_fee:
+            raise ValueError(
+                "Para contratar com orçamento definido, todos os músicos selecionados precisam informar cachê."
+            )
+
+        selected_total = sum((app.expected_fee or Decimal("0")) for app in selected_applications)
+        if selected_total > gig.budget:
+            raise ValueError(
+                "A soma dos cachês selecionados excede o orçamento total da vaga."
+            )
+
     def _create_event_for_hired_band(self, gig, hired_applications):
         """
         Cria um evento confirmado na agenda ao concluir contratação via vaga.
@@ -293,6 +322,13 @@ class GigViewSet(viewsets.ModelViewSet):
                     {"detail": "Valor esperado não pode ser negativo."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            try:
+                self._validate_fee_against_budget_on_apply(gig, expected_fee)
+            except ValueError as exc:
+                return Response(
+                    {"detail": str(exc)},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         if GigApplication.objects.filter(gig=gig, musician=musician).exists():
             return Response(
@@ -376,6 +412,15 @@ class GigViewSet(viewsets.ModelViewSet):
             if non_pending:
                 return Response(
                     {"detail": "Apenas candidaturas pendentes podem ser contratadas."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            try:
+                self._validate_selected_fees_against_budget(
+                    locked_gig, selected_applications
+                )
+            except ValueError as exc:
+                return Response(
+                    {"detail": str(exc)},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 

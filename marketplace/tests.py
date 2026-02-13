@@ -142,6 +142,21 @@ class GigAPITest(APITestCase):
         # Verifica que candidatura foi criada
         self.assertTrue(GigApplication.objects.filter(gig=gig, musician=self.musician).exists())
 
+    def test_apply_fee_cannot_exceed_gig_budget(self):
+        """Impede candidatura com cachê acima do orçamento total da vaga."""
+        gig = Gig.objects.create(
+            title="Gig com orçamento",
+            organization=self.organization,
+            status="open",
+            budget=Decimal("1000.00"),
+        )
+        response = self.client.post(
+            f"/api/marketplace/gigs/{gig.id}/apply/",
+            {"expected_fee": "1500.00"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("orçamento", response.data.get("detail", "").lower())
+
     def test_cannot_apply_twice(self):
         """Testa que não pode candidatar duas vezes."""
         gig = Gig.objects.create(title="Gig Única", organization=self.organization, status="open")
@@ -274,10 +289,18 @@ class GigWorkflowTest(APITestCase):
         gig_id = create_resp.data["id"]
 
         self.client.force_authenticate(user=self.candidate_user)
-        self.client.post(f"/api/marketplace/gigs/{gig_id}/apply/", {"expected_fee": "1200.00"})
+        first_apply = self.client.post(
+            f"/api/marketplace/gigs/{gig_id}/apply/",
+            {"expected_fee": "1200.00"},
+        )
+        self.assertEqual(first_apply.status_code, status.HTTP_201_CREATED)
 
         self.client.force_authenticate(user=second_user)
-        self.client.post(f"/api/marketplace/gigs/{gig_id}/apply/", {"expected_fee": "900.00"})
+        second_apply = self.client.post(
+            f"/api/marketplace/gigs/{gig_id}/apply/",
+            {"expected_fee": "900.00"},
+        )
+        self.assertEqual(second_apply.status_code, status.HTTP_201_CREATED)
 
         app1 = GigApplication.objects.get(gig_id=gig_id, musician=self.candidate_musician)
         app2 = GigApplication.objects.get(gig_id=gig_id, musician=second_musician)
@@ -308,6 +331,62 @@ class GigWorkflowTest(APITestCase):
             Availability.objects.filter(event=event, response="available").count(),
             3,
         )
+
+    def test_hire_multiple_candidates_rejects_when_sum_exceeds_budget(self):
+        second_user = User.objects.create_user(
+            username="candidate3", email="candidate3@example.com", password="testpass123"
+        )
+        second_musician = Musician.objects.create(
+            user=second_user,
+            organization=self.client_org,
+            instrument="keyboard",
+            role="member",
+        )
+
+        self.client.force_authenticate(user=self.client_user)
+        create_resp = self.client.post(
+            "/api/marketplace/gigs/",
+            {
+                "title": "Show Orçamento Limitado",
+                "budget": "1500.00",
+                "event_date": "2026-12-22",
+                "start_time": "20:00",
+                "end_time": "22:00",
+            },
+        )
+        self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
+        gig_id = create_resp.data["id"]
+
+        self.client.force_authenticate(user=self.candidate_user)
+        first_apply = self.client.post(
+            f"/api/marketplace/gigs/{gig_id}/apply/",
+            {"expected_fee": "900.00"},
+        )
+        self.assertEqual(first_apply.status_code, status.HTTP_201_CREATED)
+
+        self.client.force_authenticate(user=second_user)
+        second_apply = self.client.post(
+            f"/api/marketplace/gigs/{gig_id}/apply/",
+            {"expected_fee": "800.00"},
+        )
+        self.assertEqual(second_apply.status_code, status.HTTP_201_CREATED)
+
+        app1 = GigApplication.objects.get(gig_id=gig_id, musician=self.candidate_musician)
+        app2 = GigApplication.objects.get(gig_id=gig_id, musician=second_musician)
+
+        self.client.force_authenticate(user=self.client_user)
+        hire_resp = self.client.post(
+            f"/api/marketplace/gigs/{gig_id}/hire/",
+            {"application_ids": [app1.id, app2.id]},
+            format="json",
+        )
+        self.assertEqual(hire_resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("excede", hire_resp.data.get("detail", "").lower())
+
+        app1.refresh_from_db()
+        app2.refresh_from_db()
+        self.assertEqual(app1.status, "pending")
+        self.assertEqual(app2.status, "pending")
 
 
 class GigChatAPITest(APITestCase):
