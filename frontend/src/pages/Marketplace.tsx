@@ -240,13 +240,24 @@ const Marketplace: React.FC = () => {
     }));
   };
 
-  const handleApply = async (gigId: number) => {
+  const handleApply = async (gig: MarketplaceGig) => {
+    const gigId = gig.id;
     const payload = applyForms[gigId] || { cover_letter: '', expected_fee: '' };
+    const normalizedExpectedFee = normalizeCurrency(payload.expected_fee);
+    const expectedFeeValue = normalizedExpectedFee ? Number(normalizedExpectedFee) : 0;
+    const budgetDefined = gig.budget !== null && gig.budget !== undefined && gig.budget !== '';
+    const budgetValue = parseCurrencyValue(gig.budget);
+
+    if (budgetDefined && normalizedExpectedFee && expectedFeeValue > budgetValue) {
+      setError('Seu cachê não pode ser maior que o orçamento total da vaga.');
+      return;
+    }
+
     try {
       await marketplaceService.applyToGig(gigId, {
         ...payload,
         cover_letter: sanitizeOptionalText(payload.cover_letter, 2000) || '',
-        expected_fee: normalizeCurrency(payload.expected_fee),
+        expected_fee: normalizedExpectedFee,
       });
       await loadData();
     } catch (err) {
@@ -420,6 +431,12 @@ const Marketplace: React.FC = () => {
     const num = typeof value === 'string' ? Number(value) : value;
     if (Number.isNaN(num)) return 'A combinar';
     return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
+
+  const parseCurrencyValue = (value?: string | number | null): number => {
+    if (value === null || value === undefined || value === '') return 0;
+    const parsed = typeof value === 'string' ? Number(value) : value;
+    return Number.isFinite(parsed) ? parsed : 0;
   };
 
   const formatTime = (value?: string | null) => {
@@ -759,6 +776,8 @@ const Marketplace: React.FC = () => {
               ) : (
                 visibleGigs.map(gig => {
                   const applyForm = applyForms[gig.id] || { cover_letter: '', expected_fee: '' };
+                  const normalizedApplyFee = normalizeCurrency(applyForm.expected_fee || '');
+                  const applyFeeValue = normalizedApplyFee ? Number(normalizedApplyFee) : 0;
                   const canApply = gig.status === 'open' || gig.status === 'in_review';
                   const isOwner = gig.created_by ? gig.created_by === user?.user.id : false;
                   const ownerApplications = getOwnerApplications(gig);
@@ -773,6 +792,24 @@ const Marketplace: React.FC = () => {
                   const selectedPendingApplications = ownerPendingApplications.filter(app =>
                     selectedIds.includes(app.id)
                   );
+                  const gigBudgetDefined =
+                    gig.budget !== null && gig.budget !== undefined && gig.budget !== '';
+                  const gigBudgetValue = parseCurrencyValue(gig.budget);
+                  const selectedBudgetTotal = selectedPendingApplications.reduce(
+                    (acc, app) => acc + parseCurrencyValue(app.expected_fee),
+                    0
+                  );
+                  const selectedHasMissingFee = selectedPendingApplications.some(
+                    app => app.expected_fee === undefined || app.expected_fee === null || app.expected_fee === ''
+                  );
+                  const isSelectedOverBudget =
+                    gigBudgetDefined && selectedBudgetTotal > gigBudgetValue;
+                  const canHireSelected =
+                    selectedPendingApplications.length > 0 &&
+                    !selectedHasMissingFee &&
+                    !isSelectedOverBudget;
+                  const isApplyOverBudget =
+                    gigBudgetDefined && normalizedApplyFee && applyFeeValue > gigBudgetValue;
                   const canChat = !['closed', 'cancelled'].includes(gig.status);
 
                   return (
@@ -884,6 +921,11 @@ const Marketplace: React.FC = () => {
                                 Pendentes: {ownerPendingApplications.length} de{' '}
                                 {ownerApplications.length} candidatura(s)
                               </p>
+                              {gigBudgetDefined ? (
+                                <p className="text-xs text-primary-800 mt-1">
+                                  Orçamento total: {formatCurrency(gig.budget)}
+                                </p>
+                              ) : null}
                               {!canHireWithSchedule && canHire ? (
                                 <p className="text-xs text-amber-700 mt-2">
                                   Defina data e horário da vaga para contratar e bloquear a agenda da
@@ -903,7 +945,7 @@ const Marketplace: React.FC = () => {
                                 <div className="mt-2 flex flex-wrap gap-2">
                                   <button
                                     type="button"
-                                    disabled={selectedPendingApplications.length === 0}
+                                    disabled={!canHireSelected}
                                     onClick={() =>
                                       setHireTarget({
                                         gig,
@@ -923,6 +965,26 @@ const Marketplace: React.FC = () => {
                                     Limpar seleção
                                   </button>
                                 </div>
+                                {selectedPendingApplications.length > 0 ? (
+                                  <div className="mt-2 text-xs">
+                                    <p className="text-purple-800">
+                                      Total selecionado: {formatCurrency(selectedBudgetTotal)}
+                                      {gigBudgetDefined
+                                        ? ` / Orçamento: ${formatCurrency(gig.budget)}`
+                                        : ''}
+                                    </p>
+                                    {selectedHasMissingFee ? (
+                                      <p className="text-amber-700 mt-1">
+                                        Há músico selecionado sem cachê informado.
+                                      </p>
+                                    ) : null}
+                                    {isSelectedOverBudget ? (
+                                      <p className="text-rose-700 mt-1">
+                                        A soma dos cachês selecionados ultrapassa o orçamento da vaga.
+                                      </p>
+                                    ) : null}
+                                  </div>
+                                ) : null}
                               </div>
                             ) : null}
 
@@ -978,6 +1040,22 @@ const Marketplace: React.FC = () => {
                                         <p className="text-sm text-gray-700 mt-2">
                                           Cache: {formatCurrency(application.expected_fee)}
                                         </p>
+                                        {gigBudgetDefined &&
+                                        parseCurrencyValue(application.expected_fee) > gigBudgetValue ? (
+                                          <p className="text-xs text-rose-700 mt-1">
+                                            Cachê acima do orçamento total da vaga (
+                                            {formatCurrency(gig.budget)}).
+                                          </p>
+                                        ) : null}
+                                        {gigBudgetDefined &&
+                                        (application.expected_fee === null ||
+                                          application.expected_fee === undefined ||
+                                          application.expected_fee === '') ? (
+                                          <p className="text-xs text-amber-700 mt-1">
+                                            Informe o cachê deste candidato para contratar com orçamento
+                                            definido.
+                                          </p>
+                                        ) : null}
                                         {application.cover_letter ? (
                                           <p className="text-xs text-gray-600 mt-1">
                                             {application.cover_letter}
@@ -987,8 +1065,13 @@ const Marketplace: React.FC = () => {
                                           {application.status === 'pending' && canHireWithSchedule ? (
                                             <button
                                               type="button"
+                                              disabled={
+                                                gigBudgetDefined &&
+                                                (parseCurrencyValue(application.expected_fee) > gigBudgetValue ||
+                                                  !application.expected_fee)
+                                              }
                                               onClick={() => setHireTarget({ gig, applications: [application] })}
-                                              className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-700 transition-colors"
+                                              className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                                             >
                                               <CheckCircle2 className="h-3.5 w-3.5" />
                                               Contratar este músico
@@ -1239,13 +1322,19 @@ const Marketplace: React.FC = () => {
                               />
                               <button
                                 className="btn-primary w-full sm:w-auto flex items-center justify-center gap-1"
-                                onClick={() => handleApply(gig.id)}
-                                disabled={!canApply}
+                                onClick={() => handleApply(gig)}
+                                disabled={!canApply || Boolean(isApplyOverBudget)}
                               >
                                 <Send className="h-4 w-4" />
                                 Candidatar
                               </button>
                             </div>
+                            {isApplyOverBudget ? (
+                              <p className="text-xs text-rose-700">
+                                O cachê informado ultrapassa o orçamento da vaga (
+                                {formatCurrency(gig.budget)}).
+                              </p>
+                            ) : null}
                           </div>
                         )}
                       </div>
