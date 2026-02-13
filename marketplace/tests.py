@@ -229,7 +229,7 @@ class GigWorkflowTest(APITestCase):
 
 
 class GigChatAPITest(APITestCase):
-    """Testes do chat curto entre criador da vaga e músico contratado."""
+    """Testes do chat per-application entre criador da vaga e candidato."""
 
     def setUp(self):
         self.owner = User.objects.create_user(
@@ -277,6 +277,9 @@ class GigChatAPITest(APITestCase):
             expected_fee=Decimal("500.00"),
         )
 
+    def _chat_url(self):
+        return f"/api/marketplace/gigs/{self.gig.id}/applications/{self.application.id}/chat/"
+
     def _hire(self):
         self.client.force_authenticate(user=self.owner)
         response = self.client.post(
@@ -285,44 +288,44 @@ class GigChatAPITest(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_only_owner_and_hired_musician_can_access_chat(self):
-        self._hire()
-
+    def test_only_owner_and_candidate_can_access_chat(self):
+        """Dono da vaga e candidato acessam; terceiros recebem 403."""
         self.client.force_authenticate(user=self.owner)
-        owner_response = self.client.get(f"/api/marketplace/gigs/{self.gig.id}/chat/")
+        owner_response = self.client.get(self._chat_url())
         self.assertEqual(owner_response.status_code, status.HTTP_200_OK)
 
         self.client.force_authenticate(user=self.hired_user)
-        hired_response = self.client.get(f"/api/marketplace/gigs/{self.gig.id}/chat/")
-        self.assertEqual(hired_response.status_code, status.HTTP_200_OK)
+        candidate_response = self.client.get(self._chat_url())
+        self.assertEqual(candidate_response.status_code, status.HTTP_200_OK)
 
         self.client.force_authenticate(user=self.other_user)
-        denied_response = self.client.get(f"/api/marketplace/gigs/{self.gig.id}/chat/")
+        denied_response = self.client.get(self._chat_url())
         self.assertEqual(denied_response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_send_message_only_after_hire(self):
+    def test_send_message_and_block_after_close(self):
+        """Chat disponivel desde a candidatura, bloqueado apos encerramento."""
         self.client.force_authenticate(user=self.owner)
-        before_hire = self.client.post(
-            f"/api/marketplace/gigs/{self.gig.id}/chat/",
-            {"message": "Teste antes da contratação"},
-        )
-        self.assertEqual(before_hire.status_code, status.HTTP_400_BAD_REQUEST)
-
-        self._hire()
-        self.client.force_authenticate(user=self.owner)
-        after_hire = self.client.post(
-            f"/api/marketplace/gigs/{self.gig.id}/chat/",
+        open_msg = self.client.post(
+            self._chat_url(),
             {"message": "Tudo certo para o evento?"},
         )
-        self.assertEqual(after_hire.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(after_hire.data["message"], "Tudo certo para o evento?")
+        self.assertEqual(open_msg.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(open_msg.data["message"], "Tudo certo para o evento?")
+
+        # Fecha a vaga — chat deve ser bloqueado
+        self.gig.status = "closed"
+        self.gig.save(update_fields=["status"])
+
+        closed_msg = self.client.post(
+            self._chat_url(),
+            {"message": "Mensagem apos fechamento"},
+        )
+        self.assertEqual(closed_msg.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_close_gig_clears_chat_messages(self):
-        self._hire()
-
         self.client.force_authenticate(user=self.owner)
         self.client.post(
-            f"/api/marketplace/gigs/{self.gig.id}/chat/",
+            self._chat_url(),
             {"message": "Mensagem para limpar"},
         )
         self.assertEqual(GigChatMessage.objects.filter(gig=self.gig).count(), 1)
