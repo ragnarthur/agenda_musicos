@@ -7,6 +7,7 @@ import AnimatedBackground from './AnimatedBackground';
 import InstallBanner from '../common/InstallBanner';
 import OfflineBanner from '../common/OfflineBanner';
 import PwaUpdatePrompt from '../common/PwaUpdatePrompt';
+import AppVersionMessage from '../common/AppVersionMessage';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -80,6 +81,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <span className="mr-1 text-base text-primary-600 dark:text-primary-400">®</span>
             DXM Tech. Todos os direitos reservados.
           </p>
+          <AppVersionMessage className="mt-1 text-[11px] sm:text-xs font-medium text-slate-500 dark:text-slate-300/90" />
         </footer>
       </div>
 

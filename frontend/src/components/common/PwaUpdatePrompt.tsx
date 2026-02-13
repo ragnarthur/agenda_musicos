@@ -1,19 +1,35 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { RefreshCw, X } from 'lucide-react';
 import { registerSW } from 'virtual:pwa-register';
-import { showToast } from '../../utils/toast';
+import toast, { showToast } from '../../utils/toast';
 import { haptics } from '../../hooks/useHaptics';
 
 type UpdateSW = (reloadPage?: boolean) => Promise<void>;
 
 // Checa atualizacao do SW em background (leve) para reduzir usuarios presos em versoes antigas.
 const SW_UPDATE_INTERVAL_MS = 60 * 60 * 1000; // 1h
+const SW_UPDATE_MIN_GAP_MS = 2 * 60 * 1000; // evita checagens repetidas em foco/visibilidade
+const SW_UPDATE_FALLBACK_RELOAD_MS = 10 * 1000; // fallback para recarregar se updateSW travar
 
 export default function PwaUpdatePrompt() {
   const [needRefresh, setNeedRefresh] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const registeredRef = useRef(false);
   const updateSWRef = useRef<UpdateSW | null>(null);
+  const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
+  const lastUpdateCheckRef = useRef(0);
+
+  const checkForUpdates = useCallback(() => {
+    const registration = registrationRef.current;
+    if (!registration) return;
+
+    const now = Date.now();
+    if (now - lastUpdateCheckRef.current < SW_UPDATE_MIN_GAP_MS) return;
+    lastUpdateCheckRef.current = now;
+
+    registration.update().catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     if (registeredRef.current) return;
@@ -29,9 +45,8 @@ export default function PwaUpdatePrompt() {
       },
       onRegisteredSW(_swUrl: string, registration?: ServiceWorkerRegistration) {
         if (!registration) return;
-        window.setInterval(() => {
-          registration.update().catch(() => undefined);
-        }, SW_UPDATE_INTERVAL_MS);
+        registrationRef.current = registration;
+        checkForUpdates();
       },
       onRegisterError(error: unknown) {
         // Sem barulho pro usuario; apenas log para debug.
@@ -40,22 +55,51 @@ export default function PwaUpdatePrompt() {
     });
 
     updateSWRef.current = update;
-  }, []);
+
+    const intervalId = window.setInterval(checkForUpdates, SW_UPDATE_INTERVAL_MS);
+    const handleFocus = () => checkForUpdates();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkForUpdates();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [checkForUpdates]);
 
   const handleUpdate = async () => {
-    if (!updateSWRef.current) return;
+    if (!updateSWRef.current || isUpdating) return;
     haptics.medium();
-    showToast.loading('Atualizando...');
+    setIsUpdating(true);
+    setNeedRefresh(false);
+    const loadingToastId = showToast.loading('Atualizando...');
+    const fallbackReloadId = window.setTimeout(() => {
+      window.location.reload();
+    }, SW_UPDATE_FALLBACK_RELOAD_MS);
+
     try {
       // true => recarrega a pagina apos ativar o novo SW
       await updateSWRef.current(true);
     } catch (err) {
       console.error('[pwa] update failed', err);
       showToast.error('Nao foi possivel atualizar agora.');
+      setNeedRefresh(true);
+    } finally {
+      window.clearTimeout(fallbackReloadId);
+      toast.dismiss(loadingToastId);
+      setIsUpdating(false);
     }
   };
 
   const handleDismiss = () => {
+    if (isUpdating) return;
     haptics.light();
     setNeedRefresh(false);
   };
@@ -85,12 +129,14 @@ export default function PwaUpdatePrompt() {
                 <div className="mt-3 flex items-center gap-2">
                   <button
                     onClick={handleUpdate}
-                    className="px-3 py-2 rounded-lg bg-amber-500/20 text-amber-200 hover:bg-amber-500/30 transition-colors text-sm font-semibold min-h-[44px]"
+                    disabled={isUpdating}
+                    className="px-3 py-2 rounded-lg bg-amber-500/20 text-amber-200 hover:bg-amber-500/30 transition-colors text-sm font-semibold min-h-[44px] disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    Atualizar agora
+                    {isUpdating ? 'Atualizando...' : 'Atualizar agora'}
                   </button>
                   <button
                     onClick={handleDismiss}
+                    disabled={isUpdating}
                     className="px-3 py-2 rounded-lg bg-white/10 text-slate-200 hover:bg-white/15 transition-colors text-sm font-medium min-h-[44px]"
                   >
                     Depois
@@ -100,6 +146,7 @@ export default function PwaUpdatePrompt() {
 
               <button
                 onClick={handleDismiss}
+                disabled={isUpdating}
                 className="flex-shrink-0 p-3 -m-2 text-slate-300/70 hover:text-white transition-colors min-h-[44px] min-w-[44px]"
                 aria-label="Fechar"
               >
