@@ -76,12 +76,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {children}
         </main>
 
-        <footer className="hidden md:block border-t border-slate-200/70 bg-white/70 px-4 py-6 text-center text-sm font-semibold text-slate-600 backdrop-blur dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-200">
+        <footer className="border-t border-slate-200/70 bg-white/70 px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+5.25rem)] text-center text-[11px] font-medium text-slate-600 backdrop-blur dark:border-white/10 dark:bg-white/5 dark:text-slate-200 md:px-4 md:py-6 md:text-sm md:font-semibold">
+          <p className="text-[11px] sm:text-xs md:text-sm text-slate-600 dark:text-slate-200">
             <span className="mr-1 text-base text-primary-600 dark:text-primary-400">®</span>
             DXM Tech. Todos os direitos reservados.
           </p>
-          <AppVersionMessage className="mt-1 text-[11px] sm:text-xs font-medium text-slate-500 dark:text-slate-300/90" />
+          <AppVersionMessage className="mt-1 text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-300/90" />
         </footer>
       </div>
 
