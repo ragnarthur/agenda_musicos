@@ -52,3 +52,10 @@ class PublicMusicianGenresTest(APITestCase):
         self.assertIn(self.m1.id, ids)
         self.assertNotIn(self.m2.id, ids)
 
+    def test_filter_all_musicians_by_search_includes_musical_genres(self):
+        resp = self.client.get("/api/musicians/all/?search=pop")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = self._unwrap_results(resp.data)
+        ids = {item["id"] for item in results}
+        self.assertIn(self.m1.id, ids)
+        self.assertNotIn(self.m2.id, ids)
