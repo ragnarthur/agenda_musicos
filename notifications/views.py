@@ -151,23 +151,28 @@ class TelegramWebhookView(APIView):
             )
             provider.send_message(
                 chat_id,
-                f"*Conta conectada com sucesso, {name}!*\n\n"
-                f"Agora voce recebera notificacoes de:\n"
-                f"- Convites para eventos\n"
-                f"- Confirmacoes de shows\n"
-                f"- Respostas de disponibilidade\n\n"
-                f"Para desconectar, acesse o app em Configuracoes > Notificacoes.",
+                provider.format_system_message(
+                    f"✅ <b>Conta conectada com sucesso, {TelegramProvider._escape_html(name)}!</b>\n\n"
+                    f"Agora voce recebera notificacoes de:\n"
+                    f" • Convites para eventos\n"
+                    f" • Confirmacoes de shows\n"
+                    f" • Respostas de disponibilidade\n\n"
+                    f"Para desconectar, acesse o app em\n"
+                    f"<b>Configuracoes</b> &gt; <b>Notificacoes</b>."
+                ),
             )
         else:
             # Codigo invalido ou expirado
             provider.send_message(
                 chat_id,
-                "Codigo invalido ou expirado.\n\n"
-                "Para conectar sua conta:\n"
-                "1. Acesse o app GigFlow\n"
-                "2. Va em Configuracoes > Notificacoes\n"
-                "3. Clique em 'Conectar Telegram'\n"
-                "4. Envie o codigo gerado aqui",
+                provider.format_system_message(
+                    "⚠️ <b>Codigo invalido ou expirado.</b>\n\n"
+                    "Para conectar sua conta:\n"
+                    " 1. Acesse o app GigFlow\n"
+                    " 2. Va em <b>Configuracoes</b> &gt; <b>Notificacoes</b>\n"
+                    " 3. Clique em <b>Conectar Telegram</b>\n"
+                    " 4. Envie o codigo gerado aqui"
+                ),
             )
 
     def _send_welcome(self, chat_id: str):
@@ -176,15 +181,17 @@ class TelegramWebhookView(APIView):
         if provider.is_configured():
             provider.send_message(
                 chat_id,
-                "*Bem-vindo ao GigFlow - Agenda!*\n\n"
-                "Para conectar sua conta e receber notificacoes:\n\n"
-                "1. Acesse o app GigFlow\n"
-                "2. Va em Configuracoes > Notificacoes\n"
-                "3. Clique em 'Conectar Telegram'\n"
-                "4. Envie o codigo de 6 caracteres aqui\n\n"
-                "Comandos disponiveis:\n"
-                "/start - Ver esta mensagem\n"
-                "/status - Verificar status da conexao",
+                provider.format_system_message(
+                    "👋 <b>Bem-vindo ao GigFlow Agenda!</b>\n\n"
+                    "Para conectar sua conta e receber notificacoes:\n\n"
+                    " 1. Acesse o app GigFlow\n"
+                    " 2. Va em <b>Configuracoes</b> &gt; <b>Notificacoes</b>\n"
+                    " 3. Clique em <b>Conectar Telegram</b>\n"
+                    " 4. Envie o codigo de 6 caracteres aqui\n\n"
+                    "📌 <b>Comandos disponiveis:</b>\n"
+                    " /start — Ver esta mensagem\n"
+                    " /status — Verificar status da conexao"
+                ),
             )
 
     def _handle_unknown_message(self, chat_id: str, text: str):
@@ -206,13 +213,15 @@ class TelegramWebhookView(APIView):
         # Chat nao conectado - envia instrucoes de como conectar
         provider.send_message(
             chat_id,
-            "*Este chat nao esta conectado a nenhuma conta.*\n\n"
-            "Para conectar e receber notificacoes:\n"
-            "1. Acesse o app GigFlow\n"
-            "2. Va em Configuracoes > Notificacoes\n"
-            "3. Clique em 'Conectar Telegram'\n"
-            "4. Envie o codigo de 6 caracteres aqui\n\n"
-            "_Se ja tem um codigo, envie-o agora!_",
+            provider.format_system_message(
+                "🔗 <b>Este chat nao esta conectado a nenhuma conta.</b>\n\n"
+                "Para conectar e receber notificacoes:\n"
+                " 1. Acesse o app GigFlow\n"
+                " 2. Va em <b>Configuracoes</b> &gt; <b>Notificacoes</b>\n"
+                " 3. Clique em <b>Conectar Telegram</b>\n"
+                " 4. Envie o codigo de 6 caracteres aqui\n\n"
+                "<i>Se ja tem um codigo, envie-o agora!</i>"
+            ),
         )
 
     def _send_status(self, chat_id: str):
@@ -231,23 +240,27 @@ class TelegramWebhookView(APIView):
 
             provider.send_message(
                 chat_id,
-                f"*Status: Conectado*\n\n"
-                f"Conta: {name}\n"
-                f"Email: {user.email}\n\n"
-                f"Voce esta recebendo notificacoes neste chat.\n\n"
-                f"_Se precisar reconectar (ex: banco resetado), va em Configuracoes > Notificacoes no app e clique em 'Reconectar'._",
+                provider.format_system_message(
+                    f"🟢 <b>Status: Conectado</b>\n\n"
+                    f" • Conta: {TelegramProvider._escape_html(name)}\n"
+                    f" • Email: {TelegramProvider._escape_html(user.email)}\n\n"
+                    f"Voce esta recebendo notificacoes neste chat.\n\n"
+                    f"<i>Se precisar reconectar, va em Configuracoes &gt; Notificacoes no app e clique em Reconectar.</i>"
+                ),
             )
         except NotificationPreference.DoesNotExist:
             provider.send_message(
                 chat_id,
-                "*Status: Nao conectado*\n\n"
-                "Este chat nao esta vinculado a nenhuma conta.\n\n"
-                "*Para conectar ou reconectar:*\n"
-                "1. Acesse o app GigFlow\n"
-                "2. Va em Configuracoes > Notificacoes\n"
-                "3. Clique em 'Conectar Telegram' ou 'Reconectar'\n"
-                "4. Envie o codigo de 6 caracteres aqui\n\n"
-                "_Se voce ja tem um codigo, envie agora!_",
+                provider.format_system_message(
+                    "🔴 <b>Status: Nao conectado</b>\n\n"
+                    "Este chat nao esta vinculado a nenhuma conta.\n\n"
+                    "Para conectar ou reconectar:\n"
+                    " 1. Acesse o app GigFlow\n"
+                    " 2. Va em <b>Configuracoes</b> &gt; <b>Notificacoes</b>\n"
+                    " 3. Clique em <b>Conectar Telegram</b> ou <b>Reconectar</b>\n"
+                    " 4. Envie o codigo de 6 caracteres aqui\n\n"
+                    "<i>Se voce ja tem um codigo, envie agora!</i>"
+                ),
             )
 
 

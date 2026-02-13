@@ -196,12 +196,13 @@ def notify_new_gig_in_city(gig_id: int) -> None:
 
     body = (
         f"Uma nova vaga foi publicada na sua cidade.\n\n"
-        f"- Vaga: {gig.title}\n"
-        f"- Cidade: {city_raw}\n"
-        f"- Data: {date_text}\n"
-        f"- Horario: {time_text}\n"
-        f"- Local: {gig.location or 'A combinar'}\n"
-        f"- Cache: {_format_fee(gig.budget)}\n\n"
+        f"📋 Detalhes da vaga\n"
+        f" • Vaga: {gig.title}\n"
+        f" • Cidade: {city_raw}\n"
+        f" • Data: {date_text}\n"
+        f" • Horario: {time_text}\n"
+        f" • Local: {gig.location or 'A combinar'}\n"
+        f" • Cache: {_format_fee(gig.budget)}\n\n"
         f"Abra o app para ver os detalhes e se candidatar."
     )
 
@@ -225,9 +226,10 @@ def notify_gig_application_created(gig, application) -> None:
         owner_title = f"Nova candidatura na vaga: {gig.title}"
         owner_body = (
             f"{musician_name} enviou uma candidatura.\n\n"
-            f"- Cache proposto: {fee_text}\n"
-            f"- Status: aguardando sua análise\n\n"
-            f"Abra o app para revisar a proposta e decidir a contratação."
+            f"📋 Detalhes\n"
+            f" • Cache proposto: {fee_text}\n"
+            f" • Status: ⏳ aguardando sua analise\n\n"
+            f"Abra o app para revisar a proposta e decidir a contratacao."
         )
         _notify_user(
             gig.created_by,
@@ -240,9 +242,10 @@ def notify_gig_application_created(gig, application) -> None:
     musician_title = f"Candidatura enviada: {gig.title}"
     musician_body = (
         f"Sua candidatura foi enviada com sucesso.\n\n"
-        f"- Cache informado: {fee_text}\n"
-        f"- Status atual: Pendente\n\n"
-        f"Você será notificado quando houver atualização do criador da vaga."
+        f"📋 Detalhes\n"
+        f" • Cache informado: {fee_text}\n"
+        f" • Status atual: ⏳ Pendente\n\n"
+        f"Voce sera notificado quando houver atualizacao do criador da vaga."
     )
     _notify_user(
         musician_user,
@@ -256,11 +259,12 @@ def notify_gig_application_created(gig, application) -> None:
 def notify_gig_hire_result(gig, hired_application, rejected_applications) -> None:
     """Notifica todos os envolvidos após contratação em uma vaga."""
     hired_user = hired_application.musician.user
-    hired_title = f"Parabéns! Você foi contratado na vaga: {gig.title}"
+    hired_title = f"Parabens! Voce foi contratado: {gig.title}"
     hired_body = (
-        f"Sua candidatura foi aprovada.\n\n"
-        f"- Cache aprovado: {_format_fee(hired_application.expected_fee)}\n"
-        f"- Status atual: Contratado\n\n"
+        f"🎉 Sua candidatura foi aprovada!\n\n"
+        f"📋 Detalhes\n"
+        f" • Cache aprovado: {_format_fee(hired_application.expected_fee)}\n"
+        f" • Status atual: ✅ Contratado\n\n"
         f"Abra o app para visualizar os detalhes de contato do contratante."
     )
     _notify_user(
@@ -273,10 +277,10 @@ def notify_gig_hire_result(gig, hired_application, rejected_applications) -> Non
 
     for application in rejected_applications:
         rejected_user = application.musician.user
-        rejected_title = f"Atualização da vaga: {gig.title}"
+        rejected_title = f"Atualizacao da vaga: {gig.title}"
         rejected_body = (
-            f"A vaga foi preenchida com outro músico.\n\n"
-            f"- Status da sua candidatura: Recusada\n\n"
+            f"A vaga foi preenchida com outro musico.\n\n"
+            f" • Status da sua candidatura: ❌ Recusada\n\n"
             f"Continue acompanhando novas vagas no marketplace."
         )
         _notify_user(
@@ -288,13 +292,14 @@ def notify_gig_hire_result(gig, hired_application, rejected_applications) -> Non
         )
 
     if gig.created_by:
-        owner_title = f"Contratação concluída: {gig.title}"
+        owner_title = f"Contratacao concluida: {gig.title}"
         owner_name = hired_user.get_full_name() or hired_user.username
         owner_body = (
-            f"Você concluiu a contratação da vaga.\n\n"
-            f"- Músico contratado: {owner_name}\n"
-            f"- Candidaturas recusadas: {len(rejected_applications)}\n\n"
-            f"Todas as partes foram notificadas por e-mail e Telegram (quando ativado)."
+            f"Voce concluiu a contratacao da vaga.\n\n"
+            f"📋 Resumo\n"
+            f" • Musico contratado: {owner_name}\n"
+            f" • Candidaturas recusadas: {len(rejected_applications)}\n\n"
+            f"Todas as partes foram notificadas."
         )
         _notify_user(
             gig.created_by,
@@ -312,11 +317,11 @@ def notify_gig_chat_message(gig, chat_message, recipients) -> None:
     if len(preview) > 140:
         preview = f"{preview[:137]}..."
 
-    title = f"Nova mensagem no chat da vaga: {gig.title}"
+    title = f"Nova mensagem no chat: {gig.title}"
     body = (
-        f"{sender_name} enviou uma nova mensagem.\n\n"
+        f"💬 {sender_name} enviou uma nova mensagem.\n\n"
         f'"{preview}"\n\n'
-        "Abra o app para responder no chat da contratação."
+        "Abra o app para responder no chat da contratacao."
     )
 
     for user in recipients:
@@ -339,8 +344,8 @@ def notify_gig_closed(gig, closed_status: str, affected_applications) -> None:
         musician_user = application.musician.user
         title = f"Vaga {status_label}: {gig.title}"
         body = (
-            f"A vaga foi {status_label} pelo criador.\n\n"
-            f"- Status da sua candidatura: Recusada\n\n"
+            f"⚠️ A vaga foi {status_label} pelo criador.\n\n"
+            f" • Status da sua candidatura: ❌ Recusada\n\n"
             f"Acompanhe novas oportunidades no marketplace."
         )
         _notify_user(
@@ -355,7 +360,8 @@ def notify_gig_closed(gig, closed_status: str, affected_applications) -> None:
         owner_title = f"Vaga {status_label}: {gig.title}"
         owner_body = (
             f"A vaga foi marcada como {status_label}.\n\n"
-            f"- Candidaturas impactadas: {len(affected_applications)}\n\n"
+            f"📋 Resumo\n"
+            f" • Candidaturas impactadas: {len(affected_applications)}\n\n"
             f"Os candidatos afetados foram notificados."
         )
         _notify_user(
