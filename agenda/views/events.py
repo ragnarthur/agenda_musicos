@@ -239,6 +239,7 @@ class EventViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(
                 created_by=self.request.user,
                 status__in=["proposed", "confirmed", "approved"],
+                event_date__gte=timezone.localdate(),
                 avail_pending__gt=0,
             )
 
@@ -248,6 +249,7 @@ class EventViewSet(viewsets.ModelViewSet):
                 musician = self.request.user.musician_profile
                 queryset = queryset.filter(
                     status__in=["proposed", "confirmed", "approved"],
+                    event_date__gte=timezone.localdate(),
                     availabilities__musician=musician,
                     availabilities__response="pending",
                 ).distinct()
