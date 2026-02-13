@@ -296,16 +296,18 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
         # Converter para lista
         events = list(events_queryset)
 
-        # 2. Buscar disponibilidades públicas
+        # 2. Buscar disponibilidades do músico
         availabilities_queryset = LeaderAvailability.objects.filter(
             leader=musician,
             is_active=True,
-            is_public=True,
             date__gte=today,
             date__lte=end_date,
         ).order_by("date", "start_time")
 
-        # Se não for dono, já está filtrando apenas públicas acima
+        # Apenas o dono com include_private=true pode ver disponibilidades privadas
+        if not (is_owner and include_private):
+            availabilities_queryset = availabilities_queryset.filter(is_public=True)
+
         availabilities = list(availabilities_queryset)
 
         # 3. Serializar resposta

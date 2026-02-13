@@ -81,6 +81,42 @@ const normalizeCityKey = (raw: string | null | undefined): string => {
   return noAccents.replace(/\s+/g, ' ').trim();
 };
 
+const GIG_HISTORY_WINDOW_DAYS = 14;
+const GIG_HISTORY_WINDOW_MS = GIG_HISTORY_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+const GIG_HISTORY_STATUSES = new Set(['closed', 'cancelled']);
+
+const getGigHistoryAnchorDate = (gig: MarketplaceGig): Date | null => {
+  // Para vagas encerradas, priorizamos updated_at (momento de encerramento).
+  const updatedAt = new Date(gig.updated_at);
+  if (!Number.isNaN(updatedAt.getTime())) return updatedAt;
+
+  if (gig.event_date) {
+    const [year, month, day] = gig.event_date.split('T')[0].split('-').map(Number);
+    if (year && month && day) {
+      const [hours, minutes] = (gig.end_time || '23:59')
+        .slice(0, 5)
+        .split(':')
+        .map(Number);
+      const safeHours = Number.isFinite(hours) ? hours : 23;
+      const safeMinutes = Number.isFinite(minutes) ? minutes : 59;
+      return new Date(year, month - 1, day, safeHours, safeMinutes, 0, 0);
+    }
+  }
+
+  const createdAt = new Date(gig.created_at);
+  if (!Number.isNaN(createdAt.getTime())) return createdAt;
+
+  return null;
+};
+
+const isGigInHistoryWindow = (gig: MarketplaceGig, now: Date): boolean => {
+  if (!GIG_HISTORY_STATUSES.has(gig.status)) return false;
+  const anchorDate = getGigHistoryAnchorDate(gig);
+  if (!anchorDate) return false;
+  const ageMs = now.getTime() - anchorDate.getTime();
+  return ageMs >= 0 && ageMs <= GIG_HISTORY_WINDOW_MS;
+};
+
 const Marketplace: React.FC = () => {
   const { user } = useAuth();
   const [gigs, setGigs] = useState<MarketplaceGig[]>([]);
@@ -552,6 +588,31 @@ const Marketplace: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const renderMyGigListButton = (gig: MarketplaceGig) => (
+    <button
+      key={gig.id}
+      type="button"
+      onClick={() => scrollToGig(gig.id)}
+      className="w-full text-left border border-gray-100 rounded-lg p-3 transition hover:border-primary-200 hover:bg-primary-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-200"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-semibold text-gray-900 truncate">{gig.title}</p>
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-semibold ${statusStyles[gig.status] || 'bg-gray-100 text-gray-700'}`}
+        >
+          {statusLabel[gig.status] || gig.status}
+        </span>
+      </div>
+      <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-600">
+        <span>{gig.city || 'Cidade a combinar'}</span>
+        <span>•</span>
+        <span>{formatDate(gig.event_date)}</span>
+        <span>•</span>
+        <span>Candidaturas: {gig.applications_count}</span>
+      </div>
+    </button>
+  );
+
   useEffect(() => {
     if (!cityOpen) return undefined;
 
@@ -647,13 +708,21 @@ const Marketplace: React.FC = () => {
     }
   }, [duration, customDuration, customDurationActive]);
 
-  const myGigs = gigs.filter(gig => gig.created_by === user?.user.id);
+  const now = new Date();
   const cityFilterKey = normalizeCityKey(cityFilter);
-  const visibleGigs = gigs.filter(gig => {
+  const gigsByCity = gigs.filter(gig => {
     if (!cityFilterKey) return true;
     const gigKey = normalizeCityKey(gig.city);
     return gigKey.startsWith(cityFilterKey);
   });
+  const activeVisibleGigs = gigsByCity.filter(gig => !GIG_HISTORY_STATUSES.has(gig.status));
+  const historicalVisibleGigs = gigsByCity.filter(gig => isGigInHistoryWindow(gig, now));
+  const visibleGigs = [...activeVisibleGigs, ...historicalVisibleGigs];
+  const historicalVisibleGigIds = new Set(historicalVisibleGigs.map(gig => gig.id));
+
+  const myGigs = gigs.filter(gig => gig.created_by === user?.user.id);
+  const myActiveGigs = myGigs.filter(gig => !GIG_HISTORY_STATUSES.has(gig.status));
+  const myHistoricalGigs = myGigs.filter(gig => isGigInHistoryWindow(gig, now));
 
   return (
     <Layout>
@@ -747,7 +816,11 @@ const Marketplace: React.FC = () => {
                 </div>
               ) : visibleGigs.length === 0 ? (
                 <div className="card-contrast">
-                  <p className="text-gray-700">Nenhuma vaga encontrada para o filtro atual.</p>
+                  <p className="text-gray-700">
+                    {cityFilterKey
+                      ? 'Nenhuma vaga encontrada para o filtro atual.'
+                      : 'Não há vagas ativas nem histórico recente para exibir.'}
+                  </p>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <button
                       type="button"
@@ -774,7 +847,12 @@ const Marketplace: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                visibleGigs.map(gig => {
+                visibleGigs.map((gig, index) => {
+                  const isHistoricalGig = historicalVisibleGigIds.has(gig.id);
+                  const previousGig = index > 0 ? visibleGigs[index - 1] : null;
+                  const showHistoryHeader =
+                    isHistoricalGig &&
+                    (!previousGig || !historicalVisibleGigIds.has(previousGig.id));
                   const applyForm = applyForms[gig.id] || { cover_letter: '', expected_fee: '' };
                   const normalizedApplyFee = normalizeCurrency(applyForm.expected_fee || '');
                   const applyFeeValue = normalizedApplyFee ? Number(normalizedApplyFee) : 0;
@@ -813,9 +891,19 @@ const Marketplace: React.FC = () => {
                   const canChat = !['closed', 'cancelled'].includes(gig.status);
 
                   return (
+                    <React.Fragment key={gig.id}>
+                    {showHistoryHeader ? (
+                      <div className="card-contrast border-slate-200/80 bg-slate-50/60">
+                        <h3 className="text-base font-semibold text-gray-900">
+                          Histórico de vagas (últimos {GIG_HISTORY_WINDOW_DAYS} dias)
+                        </h3>
+                        <p className="mt-1 text-xs text-gray-600">
+                          Vagas encerradas ficam disponíveis aqui por {GIG_HISTORY_WINDOW_DAYS} dias.
+                        </p>
+                      </div>
+                    ) : null}
                     <div
                       id={`gig-${gig.id}`}
-                      key={gig.id}
                       className="card-contrast hover:shadow-2xl transition-all"
                     >
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -1339,6 +1427,7 @@ const Marketplace: React.FC = () => {
                         )}
                       </div>
                     </div>
+                    </React.Fragment>
                   );
                 })
               )}
@@ -1373,34 +1462,22 @@ const Marketplace: React.FC = () => {
                     </button>
                   ) : null}
                 </div>
-                {myGigs.length === 0 ? (
+                {myActiveGigs.length === 0 && myHistoricalGigs.length === 0 ? (
                   <p className="text-sm text-gray-600">Você ainda não publicou nenhuma vaga.</p>
                 ) : (
                   <div className="space-y-3">
-                    {myGigs.map(gig => (
-                      <button
-                        key={gig.id}
-                        type="button"
-                        onClick={() => scrollToGig(gig.id)}
-                        className="w-full text-left border border-gray-100 rounded-lg p-3 transition hover:border-primary-200 hover:bg-primary-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-200"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="font-semibold text-gray-900 truncate">{gig.title}</p>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-semibold ${statusStyles[gig.status] || 'bg-gray-100 text-gray-700'}`}
-                          >
-                            {statusLabel[gig.status] || gig.status}
-                          </span>
-                        </div>
-                        <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-600">
-                          <span>{gig.city || 'Cidade a combinar'}</span>
-                          <span>•</span>
-                          <span>{formatDate(gig.event_date)}</span>
-                          <span>•</span>
-                          <span>Candidaturas: {gig.applications_count}</span>
-                        </div>
-                      </button>
-                    ))}
+                    {myActiveGigs.map(renderMyGigListButton)}
+                    {myHistoricalGigs.length > 0 ? (
+                      <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
+                        <p className="text-xs font-semibold text-slate-700">
+                          Histórico ({GIG_HISTORY_WINDOW_DAYS} dias)
+                        </p>
+                        <p className="mt-1 text-xs text-slate-600">
+                          Vagas encerradas recentes ficam aqui temporariamente.
+                        </p>
+                      </div>
+                    ) : null}
+                    {myHistoricalGigs.map(renderMyGigListButton)}
                   </div>
                 )}
               </div>

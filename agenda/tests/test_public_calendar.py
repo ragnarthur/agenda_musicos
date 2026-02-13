@@ -10,7 +10,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 
-from agenda.models import Availability, Event, Musician
+from agenda.models import Availability, Event, LeaderAvailability, Musician
 
 
 class PublicCalendarTests(APITestCase):
@@ -68,6 +68,17 @@ class PublicCalendarTests(APITestCase):
             )
 
         return event
+
+    def _create_leader_availability(self, is_public=False, notes="Disponível"):
+        return LeaderAvailability.objects.create(
+            leader=self.musician_owner,
+            date=self.future_date,
+            start_time=time(14, 0),
+            end_time=time(18, 0),
+            notes=notes,
+            is_public=is_public,
+            is_active=True,
+        )
 
     def test_owner_sees_event_with_availability_even_if_proposed(self):
         """Dono do perfil deve ver eventos onde tem disponibilidade, mesmo em proposed."""
@@ -211,3 +222,53 @@ class PublicCalendarTests(APITestCase):
         )
         self.assertEqual(event_data["status"], "proposed")
         self.assertEqual(event_data["title"], "Evento Privado")
+
+    def test_owner_with_include_private_sees_private_availability(self):
+        """Dono com include_private=true deve ver disponibilidades privadas."""
+        private_availability = self._create_leader_availability(
+            is_public=False,
+            notes="Slot privado",
+        )
+
+        self.client.force_authenticate(user=self.user_owner)
+        url = reverse("musician-public-calendar", args=[self.musician_owner.id])
+        response = self.client.get(url, {"include_private": "true"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        availability_ids = [item["id"] for item in response.data["availabilities"]]
+        self.assertIn(private_availability.id, availability_ids)
+
+    def test_owner_without_include_private_does_not_see_private_availability(self):
+        """Dono sem include_private não deve ver disponibilidades privadas."""
+        private_availability = self._create_leader_availability(
+            is_public=False,
+            notes="Não deve aparecer",
+        )
+
+        self.client.force_authenticate(user=self.user_owner)
+        url = reverse("musician-public-calendar", args=[self.musician_owner.id])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        availability_ids = [item["id"] for item in response.data["availabilities"]]
+        self.assertNotIn(private_availability.id, availability_ids)
+
+    def test_visitor_cannot_see_private_availability_even_with_include_private(self):
+        """Visitante nunca deve ver disponibilidade privada, mesmo com include_private."""
+        private_availability = self._create_leader_availability(
+            is_public=False,
+            notes="Privada",
+        )
+        public_availability = self._create_leader_availability(
+            is_public=True,
+            notes="Pública",
+        )
+
+        self.client.force_authenticate(user=self.user_other)
+        url = reverse("musician-public-calendar", args=[self.musician_owner.id])
+        response = self.client.get(url, {"include_private": "true"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        availability_ids = [item["id"] for item in response.data["availabilities"]]
+        self.assertNotIn(private_availability.id, availability_ids)
+        self.assertIn(public_availability.id, availability_ids)
