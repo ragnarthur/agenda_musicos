@@ -12,6 +12,23 @@ logger = logging.getLogger(__name__)
 MAX_RETRIES = 3
 RETRY_DELAY = 1  # segundos (exponencial: 1, 2, 4)
 
+# Branding
+SEPARATOR = "━━━━━━━━━━━━━━━━━"
+SIGNATURE = "🎶 GigFlow Agenda"
+
+# Emoji por notification_type
+NOTIFICATION_EMOJI = {
+    "event_invite": "🎵",
+    "availability_response": "📨",
+    "event_confirmed": "✅",
+    "event_cancelled": "❌",
+    "marketplace_activity": "💼",
+    "quote_request_new": "📋",
+    "quote_proposal_received": "💰",
+    "quote_reservation_created": "🤝",
+    "quote_booking_confirmed": "🎉",
+}
+
 
 class TelegramProvider(BaseProvider):
     """
@@ -57,7 +74,6 @@ class TelegramProvider(BaseProvider):
                 success=False, error_message="Usuario sem chat_id configurado"
             )
 
-        # Formata mensagem para Telegram (suporta Markdown)
         message = self._format_telegram_message(payload)
 
         last_error = None
@@ -68,7 +84,7 @@ class TelegramProvider(BaseProvider):
                     json={
                         "chat_id": chat_id,
                         "text": message,
-                        "parse_mode": "Markdown",
+                        "parse_mode": "HTML",
                         "disable_web_page_preview": False,
                     },
                     timeout=10,
@@ -106,50 +122,41 @@ class TelegramProvider(BaseProvider):
         )
 
     def _format_telegram_message(self, payload: NotificationPayload) -> str:
-        """Formata mensagem com Markdown para Telegram"""
-        lines = [
-            f"*{self._escape_markdown(payload.title)}*",
-            "",
-            self._escape_markdown(payload.body),
-        ]
+        """Formata mensagem com HTML para Telegram, com emoji e assinatura."""
+        emoji = NOTIFICATION_EMOJI.get(payload.notification_type, "🔔")
+        title = f"{emoji} <b>{self._escape_html(payload.title)}</b>"
+        body = self._escape_html(payload.body)
 
-        # Adiciona link se disponivel
+        parts = [title, "", body]
+
         url = payload.data.get("url")
         if url:
-            lines.append("")
-            lines.append(f"[Ver detalhes]({url})")
+            parts.append("")
+            parts.append(f'🔗 <a href="{url}">Abrir no GigFlow Agenda</a>')
 
-        return "\n".join(lines)
+        parts.append(self._build_footer())
+        return "\n".join(parts)
 
-    def _escape_markdown(self, text: str) -> str:
-        """Escapa caracteres especiais do Markdown"""
-        # Caracteres que precisam ser escapados no Markdown v1
-        special_chars = [
-            "_",
-            "*",
-            "[",
-            "]",
-            "(",
-            ")",
-            "~",
-            "`",
-            ">",
-            "#",
-            "+",
-            "-",
-            "=",
-            "|",
-            "{",
-            "}",
-            ".",
-            "!",
-        ]
-        for char in special_chars:
-            text = text.replace(char, f"\\{char}")
-        return text
+    @staticmethod
+    def _escape_html(text: str) -> str:
+        """Escapa caracteres especiais para HTML do Telegram."""
+        return (
+            text.replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+        )
+
+    @staticmethod
+    def _build_footer() -> str:
+        """Retorna separador + assinatura da marca."""
+        return f"\n{SEPARATOR}\n{SIGNATURE}"
+
+    def format_system_message(self, text: str) -> str:
+        """Formata mensagem de sistema (welcome, status, etc.) com footer."""
+        return f"{text}\n{self._build_footer()}"
 
     def send_message(
-        self, chat_id: str, text: str, parse_mode: str = "Markdown"
+        self, chat_id: str, text: str, parse_mode: str = "HTML"
     ) -> NotificationResult:
         """
         Envia mensagem generica para um chat_id.
