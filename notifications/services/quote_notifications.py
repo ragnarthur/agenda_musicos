@@ -57,10 +57,10 @@ def notify_new_quote_request(quote_request):
             title = "Novo pedido de orcamento"
             body = (
                 f"{contractor.name} enviou um pedido de orcamento.\n\n"
-                f"📋 Detalhes\n"
-                f" • Evento: {quote_request.event_type}\n"
-                f" • Data: {event_date}\n"
-                f" • Local: {location}\n\n"
+                f"Detalhes:\n"
+                f"- Evento: {quote_request.event_type}\n"
+                f"- Data: {event_date}\n"
+                f"- Local: {location}\n\n"
                 f"Acesse o app para enviar sua proposta."
             )
             notification_service.send_notification(
@@ -118,9 +118,8 @@ def notify_proposal_received(quote_request, proposal):
             value_text = f"R$ {proposal.proposed_value}" if proposal.proposed_value else "A combinar"
             body = (
                 f"{musician_name} enviou uma proposta.\n\n"
-                f"💰 Proposta\n"
-                f" • Evento: {quote_request.event_type}\n"
-                f" • Valor proposto: {value_text}\n\n"
+                f"- Evento: {quote_request.event_type}\n"
+                f"- Valor proposto: {value_text}\n\n"
                 f"Acesse o app para aceitar ou recusar."
             )
             notification_service.send_notification(
@@ -178,11 +177,11 @@ def notify_reservation_created(quote_request):
             title = "Proposta aceita! Reserva criada"
             body = (
                 f"{contractor.name} aceitou sua proposta!\n\n"
-                f"📋 Detalhes da reserva\n"
-                f" • Evento: {quote_request.event_type}\n"
-                f" • Data: {event_date}\n"
-                f" • Local: {location}\n\n"
-                f"⚡ ACAO NECESSARIA: Confirme a reserva no app."
+                f"Detalhes da reserva:\n"
+                f"- Evento: {quote_request.event_type}\n"
+                f"- Data: {event_date}\n"
+                f"- Local: {location}\n\n"
+                f"ACAO NECESSARIA: Confirme a reserva no app."
             )
             notification_service.send_notification(
                 user=user,
@@ -239,11 +238,11 @@ def notify_booking_confirmed(quote_request):
         if prefs and prefs.telegram_verified and prefs.preferred_channel == "telegram":
             title = "Reserva confirmada!"
             body = (
-                f"🎉 {musician_name} confirmou a reserva!\n\n"
-                f"📋 Detalhes do evento\n"
-                f" • Evento: {quote_request.event_type}\n"
-                f" • Data: {event_date}\n"
-                f" • Local: {location}\n\n"
+                f"{musician_name} confirmou a reserva!\n\n"
+                f"Detalhes do evento:\n"
+                f"- Evento: {quote_request.event_type}\n"
+                f"- Data: {event_date}\n"
+                f"- Local: {location}\n\n"
                 f"Tudo certo! Agora e so aguardar o dia do evento."
             )
             notification_service.send_notification(

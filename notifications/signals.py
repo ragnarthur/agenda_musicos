@@ -44,9 +44,9 @@ def _format_event_lines(event):
     date_label = f"{event_date} ({relative})" if relative else event_date
 
     lines = [
-        f" • Data: {date_label}",
-        f" • Horario: {start_time} - {end_time}",
-        f" • Local: {event.location}",
+        f"- Data: {date_label}",
+        f"- Horario: {start_time} - {end_time}",
+        f"- Local: {event.location}",
     ]
     return lines
 
@@ -99,16 +99,12 @@ def notify_on_availability_created(sender, instance, created, **kwargs):
     event_lines = _format_event_lines(event)
     event_lines_text = "\n".join(event_lines)
     event_date = event.event_date.strftime("%d/%m/%Y")
-    body = (
-        f"Voce recebeu um convite para tocar.\n\n"
-        f"📋 Resumo do evento\n"
-        f"{event_lines_text}\n"
-    )
+    body = f"Voce recebeu um convite para tocar.\n\n" f"Resumo do evento\n" f"{event_lines_text}\n"
 
     if inviter_name:
-        body += f" • Convidado por: {inviter_name}\n"
+        body += f"- Convidado por: {inviter_name}\n"
 
-    body += "\n⏳ Aguardando sua resposta\nAbra o app para confirmar sua disponibilidade."
+    body += "\nStatus: aguardando sua resposta.\nAbra o app para confirmar sua disponibilidade."
 
     try:
         result = notification_service.send_notification(
@@ -162,9 +158,9 @@ def notify_on_availability_response(sender, instance, created, **kwargs):
     musician_name = instance.musician.user.get_full_name() or instance.musician.user.username
 
     response_labels = {
-        "available": "✅ confirmou presenca",
-        "unavailable": "❌ nao podera comparecer",
-        "maybe": "❓ ainda esta em duvida",
+        "available": "confirmou presenca",
+        "unavailable": "nao podera comparecer",
+        "maybe": "ainda esta em duvida",
     }
 
     response_text = response_labels.get(instance.response, "respondeu")
@@ -177,7 +173,7 @@ def notify_on_availability_response(sender, instance, created, **kwargs):
     event_lines_text = "\n".join(event_lines)
     body = (
         f"{musician_name} {response_text}.\n\n"
-        f"📋 Resumo do evento\n"
+        f"Resumo do evento\n"
         f"{event_lines_text}\n\n"
         f"Acesse o app para acompanhar o status."
     )
@@ -233,10 +229,10 @@ def notify_on_event_confirmed(sender, instance, created, **kwargs):
     event_lines = _format_event_lines(instance)
     event_lines_text = "\n".join(event_lines)
     body = (
-        f"O evento foi confirmado!\n\n"
-        f"📋 Resumo do evento\n"
+        f"O evento foi confirmado.\n\n"
+        f"Resumo do evento\n"
         f"{event_lines_text}\n\n"
-        f"🎉 Equipe confirmada. Nos vemos la!"
+        f"Equipe confirmada. Nos vemos la!"
     )
 
     # Notifica todos os musicos que aceitaram
@@ -296,9 +292,9 @@ def notify_on_event_cancelled(sender, instance, created, **kwargs):
     event_lines_text = "\n".join(event_lines)
     body = (
         f"O evento foi cancelado.\n\n"
-        f"📋 Resumo do evento\n"
+        f"Resumo do evento\n"
         f"{event_lines_text}\n\n"
-        f"📅 Se precisar, voce pode reagendar uma nova data."
+        f"Se precisar, voce pode reagendar uma nova data."
     )
 
     # Notifica todos os musicos envolvidos (exceto quem cancelou)
