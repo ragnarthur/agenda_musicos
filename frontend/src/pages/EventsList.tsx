@@ -25,7 +25,7 @@ import ConfirmModal from '../components/modals/ConfirmModal';
 import type { Availability, Event } from '../types';
 import { format, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { getEventComputedStatus } from '../utils/events';
+import { getEventComputedStatus, hasEventEnded } from '../utils/events';
 import { formatCurrency, formatInstrumentLabel, getMusicianDisplayName } from '../utils/formatting';
 import { eventService } from '../services/eventService';
 import { showToast } from '../utils/toast';
@@ -74,6 +74,63 @@ const getStartDateTime = (event: Event): number => {
   return 0;
 };
 
+const getCreatedAtDateTime = (event: Event): number => {
+  try {
+    return parseISO(event.created_at).getTime();
+  } catch {
+    return 0;
+  }
+};
+
+const STATUS_IMPORTANCE: Record<string, number> = {
+  proposed: 80,
+  approved: 70,
+  confirmed: 60,
+  completed: 30,
+  rejected: 20,
+  cancelled: 10,
+};
+
+const getEventImportanceScore = (event: Event, currentUserId?: number): number => {
+  const computedStatus = getEventComputedStatus(event).status;
+  let score = STATUS_IMPORTANCE[computedStatus] ?? 0;
+
+  const pendingResponses = event.availability_summary?.pending ?? 0;
+  if (pendingResponses > 0 && currentUserId && event.created_by === currentUserId) {
+    score += 25;
+  }
+
+  const startAt = getStartDateTime(event);
+  if (startAt > 0) {
+    const hoursUntilEvent = (startAt - Date.now()) / (1000 * 60 * 60);
+    if (hoursUntilEvent >= 0 && hoursUntilEvent <= 24) {
+      score += 10;
+    }
+  }
+
+  return score;
+};
+
+const compareByImportance = (
+  a: Event,
+  b: Event,
+  timeFilter: TimeFilter,
+  currentUserId?: number
+): number => {
+  const scoreDiff = getEventImportanceScore(b, currentUserId) - getEventImportanceScore(a, currentUserId);
+  if (scoreDiff !== 0) return scoreDiff;
+
+  const aStart = getStartDateTime(a);
+  const bStart = getStartDateTime(b);
+  if (timeFilter === 'past') {
+    if (aStart !== bStart) return bStart - aStart;
+  } else if (aStart !== bStart) {
+    return aStart - bStart;
+  }
+
+  return getCreatedAtDateTime(b) - getCreatedAtDateTime(a);
+};
+
 const EventsList: React.FC = () => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -92,11 +149,18 @@ const EventsList: React.FC = () => {
     if (didInitFromUrl.current) return;
     didInitFromUrl.current = true;
 
+    const isTruthy = (value: string | null) => value === 'true' || value === '1';
     const pending = searchParams.get('pending_responses');
-    if (pending === 'true' || pending === '1') {
+    if (isTruthy(pending)) {
       setShowPendingResponses(true);
       setTimeFilter('all');
       setFilter('all');
+      return;
+    }
+
+    const past = searchParams.get('past');
+    if (isTruthy(past)) {
+      setTimeFilter('past');
     }
   }, [searchParams]);
 
@@ -130,7 +194,7 @@ const EventsList: React.FC = () => {
     return p;
   }, [filter, debouncedSearch, timeFilter, showPendingResponses]);
 
-  const { events, count, isLoading, isLoadingMore, hasMore, loadMore, mutate } = useEvents(params);
+  const { events, isLoading, isLoadingMore, hasMore, loadMore, mutate } = useEvents(params);
 
   const handleRefresh = useCallback(async () => {
     await mutate();
@@ -163,9 +227,19 @@ const EventsList: React.FC = () => {
     }
   }, [pendingAction, mutate]);
 
+  const filteredEvents = useMemo(() => {
+    if (showPendingResponses || timeFilter === 'all') return events;
+    if (timeFilter === 'past') {
+      return events.filter(event => hasEventEnded(event));
+    }
+    return events.filter(event => !hasEventEnded(event));
+  }, [events, showPendingResponses, timeFilter]);
+
   const groups = useMemo(() => {
     const byDate = new Map<string, Event[]>();
-    events.forEach(event => {
+    const today = startOfDay(new Date());
+
+    filteredEvents.forEach(event => {
       try {
         const key = format(parseISO(event.event_date), 'yyyy-MM-dd');
         if (!byDate.has(key)) byDate.set(key, []);
@@ -176,10 +250,29 @@ const EventsList: React.FC = () => {
     });
 
     return Array.from(byDate.entries())
-      .sort(([a], [b]) => (a < b ? -1 : 1))
+      .sort(([a], [b]) => {
+        const aDate = parseISO(a).getTime();
+        const bDate = parseISO(b).getTime();
+
+        if (timeFilter === 'past') {
+          return bDate - aDate;
+        }
+
+        if (timeFilter === 'all') {
+          const aIsPast = aDate < today.getTime();
+          const bIsPast = bDate < today.getTime();
+          if (aIsPast !== bIsPast) {
+            return aIsPast ? 1 : -1;
+          }
+          if (aIsPast && bIsPast) {
+            return bDate - aDate;
+          }
+        }
+
+        return aDate - bDate;
+      })
       .map(([dateKey, list]) => {
         const dateObj = parseISO(dateKey);
-        const today = startOfDay(new Date());
         const diffDays = Math.floor((dateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
         const relative =
@@ -200,18 +293,18 @@ const EventsList: React.FC = () => {
           relative,
           ring,
           count: list.length,
-          events: list.sort((a, b) => getStartDateTime(a) - getStartDateTime(b)),
+          events: list.sort((a, b) => compareByImportance(a, b, timeFilter, currentUserId)),
         };
       });
-  }, [events]);
+  }, [filteredEvents, timeFilter, currentUserId]);
 
   const statistics = useMemo(() => {
-    const confirmed = events.filter(ev => ev.status === 'confirmed' || ev.status === 'approved');
+    const confirmed = filteredEvents.filter(ev => ev.status === 'confirmed' || ev.status === 'approved');
     return {
-      total: count || events.length,
+      total: filteredEvents.length,
       confirmed: confirmed.length,
     };
-  }, [events, count]);
+  }, [filteredEvents]);
 
   const clearSearch = useCallback(() => {
     setSearchTerm('');

@@ -35,7 +35,7 @@ const FALLBACK_INSTRUMENTS: Instrument[] = [
   { id: 22, name: 'banjo', display_name: 'Banjo', type: 'predefined', usage_count: 0 },
   { id: 23, name: 'bandolim', display_name: 'Bandolim', type: 'predefined', usage_count: 0 },
   { id: 24, name: 'dj', display_name: 'DJ', type: 'predefined', usage_count: 0 },
-  { id: 25, name: 'produtora', display_name: 'Produtor(a)', type: 'predefined', usage_count: 0 },
+  { id: 25, name: 'produtora', display_name: 'Produtor', type: 'predefined', usage_count: 0 },
 ];
 
 export const useInstruments = () => {

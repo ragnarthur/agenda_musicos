@@ -216,7 +216,7 @@ export const INSTRUMENT_LABELS: Record<string, string> = {
   banjo: 'Banjo',
   mandolin: 'Bandolim',
   dj: 'DJ',
-  producer: 'Produtor(a)',
+  producer: 'Produtor',
   other: 'Outro',
   electric_guitar: 'Guitarra elétrica',
   'electric guitar': 'Guitarra elétrica',
@@ -236,6 +236,9 @@ const INSTRUMENT_SYNONYMS: Record<string, string> = {
   violonista: 'acoustic_guitar',
   acoustic_guitar: 'acoustic_guitar',
   'acoustic guitar': 'acoustic_guitar',
+  produtor: 'producer',
+  produtora: 'producer',
+  producer: 'producer',
 };
 
 export const normalizeInstrumentKey = (instrument?: string): string => {
