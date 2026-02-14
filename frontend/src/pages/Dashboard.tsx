@@ -9,6 +9,7 @@ import Skeleton, { SkeletonCard } from '../components/common/Skeleton';
 import { CompactCalendar } from '../components/calendar';
 import { useAuth } from '../contexts/AuthContext';
 import { usePastEvents, useUpcomingEvents } from '../hooks/useEvents';
+import { useMusicianEvents } from '../hooks/useMusicianEvents';
 import { useDashboardNotifications } from '../hooks/useNotifications';
 import type { Event } from '../types';
 import { isToday, parseISO } from 'date-fns';
@@ -49,10 +50,20 @@ const isEventToday = (event: Event): boolean => {
 const Dashboard: React.FC = memo(() => {
   const { user } = useAuth();
   const prefersReducedMotion = useReducedMotion();
+  const musicianId = user?.id ?? 0;
 
   const { events: upcomingEvents, isLoading: loadingEvents, mutate: mutateUpcoming } = useUpcomingEvents();
   const { events: pastEvents, isLoading: loadingPastEvents, mutate: mutatePast } = usePastEvents({
     daysBack: 30,
+  });
+  const {
+    events: musicianCalendarEvents,
+    loading: loadingCalendar,
+    error: calendarError,
+    mutate: mutateCalendar,
+  } = useMusicianEvents({
+    musicianId,
+    isOwnProfile: true,
   });
   const {
     pendingApprovalsCount,
@@ -60,11 +71,11 @@ const Dashboard: React.FC = memo(() => {
     isLoading: loadingNotifications,
   } = useDashboardNotifications();
 
-  const loading = loadingEvents || loadingNotifications || loadingPastEvents;
+  const loading = loadingEvents || loadingNotifications || loadingPastEvents || loadingCalendar;
 
   const handleRefresh = useCallback(async () => {
-    await Promise.all([mutateUpcoming(), mutatePast()]);
-  }, [mutateUpcoming, mutatePast]);
+    await Promise.all([mutateUpcoming(), mutatePast(), mutateCalendar()]);
+  }, [mutateUpcoming, mutatePast, mutateCalendar]);
 
   const { events, todayEvents, nextEvent, nextComputedStatus } = useMemo(() => {
     const sorted = [...upcomingEvents].sort((a, b) => getStartDateTime(a) - getStartDateTime(b));
@@ -81,13 +92,19 @@ const Dashboard: React.FC = memo(() => {
 
   const agendaCount = events.length;
 
-  const calendarEvents = useMemo(() => {
+  const fallbackCalendarEvents = useMemo(() => {
     const merged = new Map<number, Event>();
     [...upcomingEvents, ...pastEvents].forEach(event => {
       merged.set(event.id, event);
     });
     return Array.from(merged.values());
   }, [upcomingEvents, pastEvents]);
+
+  const calendarEvents = useMemo(() => {
+    if (musicianCalendarEvents.length > 0) return musicianCalendarEvents;
+    if (calendarError) return fallbackCalendarEvents;
+    return fallbackCalendarEvents;
+  }, [musicianCalendarEvents, calendarError, fallbackCalendarEvents]);
 
   const recentCompletedEvents = useMemo(() => {
     return [...pastEvents]
