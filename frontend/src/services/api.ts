@@ -4,10 +4,6 @@ import toast from 'react-hot-toast';
 import {
   clearStoredAccessToken,
   clearStoredRefreshToken,
-  getStoredAccessToken,
-  getStoredRefreshToken,
-  setStoredAccessToken,
-  setStoredRefreshToken,
 } from '../utils/tokenStorage';
 import { ADMIN_ROUTES } from '../routes/adminRoutes';
 
@@ -36,44 +32,10 @@ export const uploadApi = axios.create({
 
 let refreshingPromise: Promise<void> | null = null;
 
-const shouldFallbackToStoredRefresh = (error: unknown): boolean => {
-  if (!axios.isAxiosError(error)) return false;
-  const status = error.response?.status;
-  const detail = (error.response?.data as { detail?: string } | undefined)?.detail || '';
-  return status === 401 && detail.toLowerCase().includes('refresh token ausente');
-};
-
 const refreshAuthToken = async (): Promise<void> => {
   if (!refreshingPromise) {
     const doRefresh = async () => {
-      const storedRefresh = getStoredRefreshToken();
-
-      try {
-        // Tenta refresh com cookie primeiro (pré-rotado)
-        const response = await axios.post(
-          `${API_URL}/token/refresh/`,
-          {},
-          { withCredentials: true }
-        );
-        setStoredAccessToken((response.data as { access?: string } | undefined)?.access);
-        setStoredRefreshToken((response.data as { refresh?: string } | undefined)?.refresh);
-        return;
-      } catch (error) {
-        const status = axios.isAxiosError(error) ? error.response?.status : undefined;
-
-        // Se o refresh com cookie falhar com 401 ou mensagem específica, tenta com o token armazenado
-        if ((status === 401 || shouldFallbackToStoredRefresh(error)) && storedRefresh) {
-          const response = await axios.post(
-            `${API_URL}/token/refresh/`,
-            { refresh: storedRefresh },
-            { withCredentials: true }
-          );
-          setStoredAccessToken((response.data as { access?: string } | undefined)?.access);
-          setStoredRefreshToken((response.data as { refresh?: string } | undefined)?.refresh);
-        } else {
-          throw error;
-        }
-      }
+      await axios.post(`${API_URL}/token/refresh/`, {}, { withCredentials: true });
     };
 
     refreshingPromise = doRefresh()
@@ -90,17 +52,6 @@ const refreshAuthToken = async (): Promise<void> => {
   }
   return refreshingPromise;
 };
-
-// Interceptor para injetar Authorization quando houver access token armazenado
-api.interceptors.request.use(config => {
-  const accessToken = getStoredAccessToken();
-  if (accessToken) {
-    const headers = config.headers ?? {};
-    headers.Authorization = `Bearer ${accessToken}`;
-    config.headers = headers;
-  }
-  return config;
-});
 
 // Interceptor para refresh de token
 api.interceptors.response.use(

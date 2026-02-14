@@ -239,14 +239,16 @@ class ContractorLoginTest(APITestCase):
         )
 
     def test_login_success(self):
-        """Login com credenciais válidas retorna tokens."""
+        """Login com credenciais válidas retorna cookies HttpOnly."""
         data = {
             "email": "login@test.com",
             "password": "SenhaForte123!",
         }
         response = self.client.post("/api/contractor/token/", data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("access", response.data)
+        self.assertNotIn("access", response.data)
+        self.assertIn("access_token", response.cookies)
+        self.assertIn("refresh_token", response.cookies)
 
     def test_login_wrong_password(self):
         """Login com senha errada falha."""

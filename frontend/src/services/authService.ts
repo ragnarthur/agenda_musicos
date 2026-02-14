@@ -3,9 +3,7 @@ import { api } from './api';
 import type { LoginCredentials } from '../types';
 
 export const authService = {
-  login: async (
-    credentials: LoginCredentials
-  ): Promise<{ detail?: string; access?: string; refresh?: string }> => {
+  login: async (credentials: LoginCredentials): Promise<{ detail?: string }> => {
     const response = await api.post('/token/', credentials);
     return response.data;
   },
