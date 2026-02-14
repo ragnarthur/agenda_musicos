@@ -61,6 +61,7 @@ type CityOption = { id: number; name: string; state: string };
 type CloseStatus = 'closed' | 'cancelled';
 type CloseTarget = { gig: MarketplaceGig; status: CloseStatus } | null;
 type HireTarget = { gig: MarketplaceGig; applications: MarketplaceApplication[] } | null;
+type GigListViewMode = 'active' | 'history' | 'all';
 const DURATION_PRESETS = ['1', '2', '3', '4'];
 
 const extractCityName = (raw: string | null | undefined): string => {
@@ -127,6 +128,8 @@ const Marketplace: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [cityFilter, setCityFilter] = useState('');
   const [cityFilterTouched, setCityFilterTouched] = useState(false);
+  const [mainGigViewMode, setMainGigViewMode] = useState<GigListViewMode>('active');
+  const [myGigViewMode, setMyGigViewMode] = useState<GigListViewMode>('active');
 
   useBodyScrollLock(showCreateModal);
   const [form, setForm] = useState({
@@ -717,12 +720,23 @@ const Marketplace: React.FC = () => {
   });
   const activeVisibleGigs = gigsByCity.filter(gig => !GIG_HISTORY_STATUSES.has(gig.status));
   const historicalVisibleGigs = gigsByCity.filter(gig => isGigInHistoryWindow(gig, now));
-  const visibleGigs = [...activeVisibleGigs, ...historicalVisibleGigs];
+  const visibleGigs =
+    mainGigViewMode === 'active'
+      ? activeVisibleGigs
+      : mainGigViewMode === 'history'
+        ? historicalVisibleGigs
+        : [...activeVisibleGigs, ...historicalVisibleGigs];
   const historicalVisibleGigIds = new Set(historicalVisibleGigs.map(gig => gig.id));
 
   const myGigs = gigs.filter(gig => gig.created_by === user?.user.id);
   const myActiveGigs = myGigs.filter(gig => !GIG_HISTORY_STATUSES.has(gig.status));
   const myHistoricalGigs = myGigs.filter(gig => isGigInHistoryWindow(gig, now));
+  const myVisibleGigs =
+    myGigViewMode === 'active'
+      ? myActiveGigs
+      : myGigViewMode === 'history'
+        ? myHistoricalGigs
+        : [...myActiveGigs, ...myHistoricalGigs];
 
   return (
     <Layout>
@@ -810,6 +824,57 @@ const Marketplace: React.FC = () => {
                 </div>
               </div>
 
+              <div className="card-contrast border-gray-100">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-gray-900">Exibição das vagas</h3>
+                  <span className="text-xs text-gray-600">
+                    {visibleGigs.length} resultado{visibleGigs.length === 1 ? '' : 's'}
+                  </span>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setMainGigViewMode('active')}
+                    className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      mainGigViewMode === 'active'
+                        ? 'border-primary-300 bg-primary-100 text-primary-800'
+                        : 'border-gray-200 text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    Abertas ({activeVisibleGigs.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMainGigViewMode('history')}
+                    className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      mainGigViewMode === 'history'
+                        ? 'border-slate-300 bg-slate-100 text-slate-800'
+                        : 'border-gray-200 text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    Histórico ({historicalVisibleGigs.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMainGigViewMode('all')}
+                    className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      mainGigViewMode === 'all'
+                        ? 'border-gray-300 bg-gray-100 text-gray-800'
+                        : 'border-gray-200 text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    Todas
+                  </button>
+                </div>
+                <p className="mt-2 text-xs text-gray-600">
+                  {mainGigViewMode === 'active'
+                    ? 'Foco nas vagas abertas, em avaliação e contratadas.'
+                    : mainGigViewMode === 'history'
+                      ? `Mostrando somente vagas encerradas dos últimos ${GIG_HISTORY_WINDOW_DAYS} dias.`
+                      : 'Mostrando vagas ativas e histórico recente na mesma lista.'}
+                </p>
+              </div>
+
               {gigs.length === 0 ? (
                 <div className="card-contrast">
                   <p className="text-gray-700">Não há oportunidades ativas. Publique a primeira.</p>
@@ -819,7 +884,11 @@ const Marketplace: React.FC = () => {
                   <p className="text-gray-700">
                     {cityFilterKey
                       ? 'Nenhuma vaga encontrada para o filtro atual.'
-                      : 'Não há vagas ativas nem histórico recente para exibir.'}
+                      : mainGigViewMode === 'active'
+                        ? 'Não há vagas ativas para exibir.'
+                        : mainGigViewMode === 'history'
+                          ? `Não há vagas encerradas nos últimos ${GIG_HISTORY_WINDOW_DAYS} dias.`
+                          : 'Não há vagas ativas nem histórico recente para exibir.'}
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <button
@@ -851,6 +920,7 @@ const Marketplace: React.FC = () => {
                   const isHistoricalGig = historicalVisibleGigIds.has(gig.id);
                   const previousGig = index > 0 ? visibleGigs[index - 1] : null;
                   const showHistoryHeader =
+                    mainGigViewMode === 'all' &&
                     isHistoricalGig &&
                     (!previousGig || !historicalVisibleGigIds.has(previousGig.id));
                   const applyForm = applyForms[gig.id] || { cover_letter: '', expected_fee: '' };
@@ -904,7 +974,9 @@ const Marketplace: React.FC = () => {
                     ) : null}
                     <div
                       id={`gig-${gig.id}`}
-                      className="card-contrast hover:shadow-2xl transition-all"
+                      className={`card-contrast hover:shadow-2xl transition-all ${
+                        isHistoricalGig ? 'border-slate-200/80 bg-slate-50/60' : ''
+                      }`}
                     >
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                         <div>
@@ -1462,22 +1534,71 @@ const Marketplace: React.FC = () => {
                     </button>
                   ) : null}
                 </div>
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setMyGigViewMode('active')}
+                    className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      myGigViewMode === 'active'
+                        ? 'border-primary-300 bg-primary-100 text-primary-800'
+                        : 'border-gray-200 text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    Abertas ({myActiveGigs.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMyGigViewMode('history')}
+                    className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      myGigViewMode === 'history'
+                        ? 'border-slate-300 bg-slate-100 text-slate-800'
+                        : 'border-gray-200 text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    Histórico ({myHistoricalGigs.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMyGigViewMode('all')}
+                    className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      myGigViewMode === 'all'
+                        ? 'border-gray-300 bg-gray-100 text-gray-800'
+                        : 'border-gray-200 text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    Todas
+                  </button>
+                </div>
                 {myActiveGigs.length === 0 && myHistoricalGigs.length === 0 ? (
                   <p className="text-sm text-gray-600">Você ainda não publicou nenhuma vaga.</p>
+                ) : myVisibleGigs.length === 0 ? (
+                  <p className="text-sm text-gray-600">
+                    {myGigViewMode === 'active'
+                      ? 'Você não possui vagas abertas no momento.'
+                      : myGigViewMode === 'history'
+                        ? `Você não possui vagas no histórico dos últimos ${GIG_HISTORY_WINDOW_DAYS} dias.`
+                        : 'Não há vagas para exibir.'}
+                  </p>
                 ) : (
                   <div className="space-y-3">
-                    {myActiveGigs.map(renderMyGigListButton)}
-                    {myHistoricalGigs.length > 0 ? (
-                      <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
-                        <p className="text-xs font-semibold text-slate-700">
-                          Histórico ({GIG_HISTORY_WINDOW_DAYS} dias)
-                        </p>
-                        <p className="mt-1 text-xs text-slate-600">
-                          Vagas encerradas recentes ficam aqui temporariamente.
-                        </p>
-                      </div>
-                    ) : null}
-                    {myHistoricalGigs.map(renderMyGigListButton)}
+                    {myGigViewMode === 'all' ? (
+                      <>
+                        {myActiveGigs.map(renderMyGigListButton)}
+                        {myHistoricalGigs.length > 0 ? (
+                          <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
+                            <p className="text-xs font-semibold text-slate-700">
+                              Histórico ({GIG_HISTORY_WINDOW_DAYS} dias)
+                            </p>
+                            <p className="mt-1 text-xs text-slate-600">
+                              Vagas encerradas recentes ficam aqui temporariamente.
+                            </p>
+                          </div>
+                        ) : null}
+                        {myHistoricalGigs.map(renderMyGigListButton)}
+                      </>
+                    ) : (
+                      myVisibleGigs.map(renderMyGigListButton)
+                    )}
                   </div>
                 )}
               </div>
