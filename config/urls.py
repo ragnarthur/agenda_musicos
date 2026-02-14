@@ -5,6 +5,8 @@ URL configuration for config project.
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.core.cache import cache
+from django.db import connection
 from django.http import JsonResponse
 from django.urls import include, path
 from drf_spectacular.views import (
@@ -27,6 +29,36 @@ from config.auth_views import (
 
 def healthz(_request):
     return JsonResponse({"status": "ok"})
+
+
+def readyz(_request):
+    checks = {"database": "ok", "cache": "ok"}
+    status_code = 200
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+    except Exception:
+        checks["database"] = "error"
+        status_code = 503
+
+    try:
+        cache_key = "readyz:ping"
+        cache.set(cache_key, "1", timeout=10)
+        if cache.get(cache_key) != "1":
+            raise RuntimeError("cache ping failed")
+    except Exception:
+        checks["cache"] = "error"
+        status_code = 503
+
+    return JsonResponse(
+        {
+            "status": "ok" if status_code == 200 else "degraded",
+            "checks": checks,
+        },
+        status=status_code,
+    )
 
 
 urlpatterns = [
@@ -56,6 +88,7 @@ urlpatterns = [
         GoogleRegisterMusicianView.as_view(),
         name="google_register_musician",
     ),
+    path("api/readyz/", readyz),
     path("healthz/", healthz),
 ]
 

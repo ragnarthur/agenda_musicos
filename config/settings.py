@@ -91,6 +91,12 @@ SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=False, cast=bool)
 # Cookie secure controlado por env (você já usa no auth_views.py)
 COOKIE_SECURE = config("COOKIE_SECURE", default=(not DEBUG), cast=bool)
 
+if not DEBUG and not COOKIE_SECURE:
+    raise RuntimeError("COOKIE_SECURE deve ser True em produção.")
+
+if not DEBUG and ENABLE_API_DOCS:
+    raise RuntimeError("ENABLE_API_DOCS deve ser False em produção.")
+
 # Security Headers (aplicados automaticamente em produção)
 if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000  # 1 ano
@@ -370,6 +376,18 @@ if DEBUG:
     CORS_ALLOW_CREDENTIALS = True
 
 CORS_URLS_REGEX = r"^/api/.*$"
+
+if not DEBUG:
+    if CORS_ALLOW_CREDENTIALS and not CORS_ALLOWED_ORIGINS:
+        raise RuntimeError(
+            "CORS_ALLOW_CREDENTIALS=True requer CORS_ALLOWED_ORIGINS configurado em produção."
+        )
+    if not CSRF_TRUSTED_ORIGINS:
+        raise RuntimeError("CSRF_TRUSTED_ORIGINS está vazio em produção.")
+    if any(not origin.startswith("https://") for origin in CSRF_TRUSTED_ORIGINS):
+        raise RuntimeError(
+            "CSRF_TRUSTED_ORIGINS deve conter apenas origens HTTPS em produção."
+        )
 
 
 # =========================================================
