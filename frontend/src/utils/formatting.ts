@@ -247,9 +247,36 @@ export const normalizeInstrumentKey = (instrument?: string): string => {
   return INSTRUMENT_SYNONYMS[key] || key;
 };
 
-export const formatInstrumentLabel = (instrument?: string): string => {
+const normalizeGenderKey = (gender?: string | null): string => {
+  if (!gender) return '';
+  return gender.trim().toLowerCase();
+};
+
+const FEMALE_GENDER_KEYS = new Set(['female', 'feminino', 'feminina', 'f', 'woman', 'mulher']);
+const MALE_GENDER_KEYS = new Set(['male', 'masculino', 'masculina', 'm', 'man', 'homem']);
+
+const getProducerLabel = (rawInstrumentKey: string, gender?: string | null): string => {
+  const normalizedGender = normalizeGenderKey(gender);
+  if (FEMALE_GENDER_KEYS.has(normalizedGender)) return 'Produtora';
+  if (MALE_GENDER_KEYS.has(normalizedGender)) return 'Produtor';
+
+  // Fallback quando não há gênero salvo: respeita o termo enviado no instrumento.
+  if (rawInstrumentKey === 'produtora') return 'Produtora';
+  return 'Produtor';
+};
+
+export const formatInstrumentLabel = (
+  instrument?: string,
+  options?: { gender?: string | null }
+): string => {
   if (!instrument) return '';
+  const rawInstrumentKey = instrument.trim().toLowerCase();
   const key = normalizeInstrumentKey(instrument);
+
+  if (key === 'producer') {
+    return getProducerLabel(rawInstrumentKey, options?.gender);
+  }
+
   const label = INSTRUMENT_LABELS[key];
   if (label) return label;
 

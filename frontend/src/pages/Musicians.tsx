@@ -56,8 +56,28 @@ const Musicians: React.FC = () => {
     return emojis[key] || '🎵';
   };
 
-  const getInstrumentLabel = (instrument: string) => {
+  const getMusicianGender = (musician: Musician): string | null => {
+    const musicianWithGender = musician as Musician & {
+      gender?: string | null;
+      sex?: string | null;
+      user?: Musician['user'] & { gender?: string | null; sex?: string | null };
+    };
+
+    return (
+      musicianWithGender.gender ||
+      musicianWithGender.sex ||
+      musicianWithGender.user?.gender ||
+      musicianWithGender.user?.sex ||
+      null
+    );
+  };
+
+  const getInstrumentLabel = (instrument: string, musician: Musician) => {
     const key = normalizeInstrumentKey(instrument);
+    if (key === 'producer') {
+      return formatInstrumentLabel(instrument, { gender: getMusicianGender(musician) });
+    }
+
     const displayMap: Record<string, string> = {
       vocal: 'Vocalista',
       guitar: 'Guitarrista',
@@ -83,10 +103,10 @@ const Musicians: React.FC = () => {
       banjo: 'Banjo',
       mandolin: 'Bandolinista',
       dj: 'DJ',
-      producer: 'Produtor(a)',
       other: 'Outro',
     };
-    return displayMap[key] || formatInstrumentLabel(key);
+
+    return displayMap[key] || formatInstrumentLabel(instrument);
   };
 
   const cardGrid = {
@@ -180,12 +200,17 @@ const Musicians: React.FC = () => {
             animate="show"
           >
             {musicians.map((musician: Musician) => {
-              const instrumentKeys = Array.from(
-                new Set(
-                  getMusicianInstruments(musician)
-                    .map(inst => normalizeInstrumentKey(inst))
-                    .filter(Boolean)
-                )
+              const instrumentEntries = Array.from(
+                getMusicianInstruments(musician).reduce((map, inst) => {
+                  const rawInstrument = inst?.trim();
+                  if (!rawInstrument) return map;
+                  const normalized = normalizeInstrumentKey(rawInstrument);
+                  if (!normalized) return map;
+                  if (!map.has(normalized)) {
+                    map.set(normalized, rawInstrument);
+                  }
+                  return map;
+                }, new Map<string, string>())
               );
               const emoji = getInstrumentEmoji(musician.instrument, musician.bio);
               const username = musician.instagram || musician.user?.username || '';
@@ -265,12 +290,12 @@ const Musicians: React.FC = () => {
 
                     {/* Badges de Instrumentos */}
                     <div className="mt-4 flex flex-wrap gap-2">
-                      {instrumentKeys.map(inst => (
+                      {instrumentEntries.map(([normalizedKey, rawInstrument]) => (
                         <span
-                          key={inst}
+                          key={normalizedKey}
                           className="status-chip default transition-transform duration-400 group-hover:-translate-y-0.5"
                         >
-                          {getInstrumentLabel(inst)}
+                          {getInstrumentLabel(rawInstrument, musician)}
                         </span>
                       ))}
                     </div>
