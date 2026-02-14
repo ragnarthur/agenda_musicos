@@ -101,6 +101,8 @@ const RegisterInvite: React.FC = () => {
   );
 
   useEffect(() => {
+    let isMounted = true;
+    let timerId: number | null = null;
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
     if (!clientId) {
@@ -108,35 +110,34 @@ const RegisterInvite: React.FC = () => {
       return;
     }
 
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.onload = () => {
-      if (window.google) {
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: handleGoogleCallback,
+    const initializeGoogle = () => {
+      if (!isMounted) return;
+      if (!window.google) {
+        timerId = window.setTimeout(initializeGoogle, 150);
+        return;
+      }
+
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleGoogleCallback,
+      });
+      const buttonDiv = document.getElementById('google-signin-invite');
+      if (buttonDiv) {
+        window.google.accounts.id.renderButton(buttonDiv, {
+          theme: 'outline',
+          size: 'large',
+          text: 'signup_with',
+          width: '100%',
         });
-        const buttonDiv = document.getElementById('google-signin-invite');
-        if (buttonDiv) {
-          window.google.accounts.id.renderButton(buttonDiv, {
-            theme: 'outline',
-            size: 'large',
-            text: 'signup_with',
-            width: '100%',
-          });
-        }
       }
     };
-    script.onerror = () => {
-      console.error('Erro ao carregar Google Sign-In');
-    };
-    document.body.appendChild(script);
+
+    initializeGoogle();
+
     return () => {
-      try {
-        document.body.removeChild(script);
-      } catch {
-        // Script já removido
+      isMounted = false;
+      if (timerId !== null) {
+        window.clearTimeout(timerId);
       }
     };
   }, [handleGoogleCallback]);

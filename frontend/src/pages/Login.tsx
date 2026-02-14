@@ -51,19 +51,17 @@ const Login: React.FC = () => {
       try {
         const result = await googleAuthService.authenticate(response.credential, 'musician');
         if (result.new_user) {
-          // Salvar dados do Google em sessionStorage ao invés de query params
-          sessionStorage.setItem(
-            '_googleRegisterData',
-            JSON.stringify({
-              email: result.email,
-              firstName: result.first_name,
-              lastName: result.last_name,
-              picture: result.picture,
-            })
-          );
-
           showToast.error('Conta não encontrada. Solicite acesso primeiro.');
-          navigate('/solicitar-acesso');
+          navigate('/solicitar-acesso', {
+            state: {
+              googleRegisterData: {
+                email: result.email,
+                firstName: result.first_name,
+                lastName: result.last_name,
+                picture: result.picture,
+              },
+            },
+          });
           return;
         }
 
@@ -96,6 +94,7 @@ const Login: React.FC = () => {
 
   useEffect(() => {
     let isMounted = true;
+    let timerId: number | null = null;
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
     if (!clientId) {
@@ -103,40 +102,37 @@ const Login: React.FC = () => {
       return;
     }
 
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.onload = () => {
+    const initializeGoogle = () => {
       if (!isMounted) return;
-      if (window.google) {
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: (response: { credential: string }) => {
-            if (!isMounted) return;
-            handleGoogleCallback(response);
-          },
+      if (!window.google) {
+        timerId = window.setTimeout(initializeGoogle, 150);
+        return;
+      }
+
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: (response: { credential: string }) => {
+          if (!isMounted) return;
+          handleGoogleCallback(response);
+        },
+      });
+      const buttonDiv = document.getElementById('google-signin-button');
+      if (buttonDiv) {
+        window.google.accounts.id.renderButton(buttonDiv, {
+          theme: 'outline',
+          size: 'large',
+          text: 'signin_with',
+          width: 360,
         });
-        const buttonDiv = document.getElementById('google-signin-button');
-        if (buttonDiv) {
-          window.google.accounts.id.renderButton(buttonDiv, {
-            theme: 'outline',
-            size: 'large',
-            text: 'signin_with',
-            width: 360,
-          });
-        }
       }
     };
-    script.onerror = () => {
-      console.error('Erro ao carregar Google Sign-In');
-    };
-    document.body.appendChild(script);
+
+    initializeGoogle();
+
     return () => {
       isMounted = false;
-      try {
-        document.body.removeChild(script);
-      } catch {
-        // Script já removido
+      if (timerId !== null) {
+        window.clearTimeout(timerId);
       }
     };
   }, [handleGoogleCallback]);

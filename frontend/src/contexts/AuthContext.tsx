@@ -111,18 +111,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       const musician = await musicianService.getMe();
       setUser(musician);
-
-      // Atualizar avatar do Google se existir no sessionStorage
-      const googleAvatar = sessionStorage.getItem('_googleAvatarUrl');
-      if (googleAvatar) {
-        try {
-          await musicianService.updateAvatar(googleAvatar);
-          sessionStorage.removeItem('_googleAvatarUrl');
-          // Avatar atualizado com sucesso
-        } catch (avatarError) {
-          console.warn('Erro ao atualizar avatar do Google:', avatarError);
-        }
-      }
     } catch (error) {
       logError('Erro ao iniciar sessão:', error);
       throw error;

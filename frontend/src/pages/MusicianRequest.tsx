@@ -1,7 +1,7 @@
 // pages/MusicianRequest.tsx
 // Formulário público para músicos solicitarem acesso à plataforma
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { Music, Send, CheckCircle, Search, Check, Disc3 } from 'lucide-react';
@@ -76,6 +76,7 @@ const styles = `
 
 export default function MusicianRequest() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -87,6 +88,7 @@ export default function MusicianRequest() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const { instruments, loading: loadingInstruments, createCustomInstrument } = useInstruments();
   const googleCallbackRef = useRef<(response: { credential: string }) => void>(() => {});
+  const appliedGooglePrefillRef = useRef(false);
 
   const {
     register,
@@ -177,6 +179,7 @@ export default function MusicianRequest() {
   // Carregar Google Sign-In
   useEffect(() => {
     let isMounted = true;
+    let timerId: number | null = null;
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
     if (!clientId) {
@@ -184,67 +187,74 @@ export default function MusicianRequest() {
       return;
     }
 
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.onload = () => {
+    const initializeGoogle = () => {
       if (!isMounted) return;
-      if (window.google) {
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: (response: { credential: string }) => {
-            if (!isMounted) return;
-            googleCallbackRef.current(response);
-          },
-        });
+      if (!window.google) {
+        timerId = window.setTimeout(initializeGoogle, 150);
+        return;
+      }
 
-        // Renderizar botão oficial do Google
-        const buttonDiv = document.getElementById('google-signin-request');
-        if (buttonDiv) {
-          window.google.accounts.id.renderButton(buttonDiv, {
-            theme: 'outline',
-            size: 'large',
-            width: '100%',
-          });
-        }
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: (response: { credential: string }) => {
+          if (!isMounted) return;
+          googleCallbackRef.current(response);
+        },
+      });
+
+      // Renderizar botão oficial do Google
+      const buttonDiv = document.getElementById('google-signin-request');
+      if (buttonDiv) {
+        window.google.accounts.id.renderButton(buttonDiv, {
+          theme: 'outline',
+          size: 'large',
+          width: '100%',
+        });
       }
     };
-    script.onerror = () => {
-      console.error('Erro ao carregar Google Sign-In');
-    };
-    document.body.appendChild(script);
+
+    initializeGoogle();
+
     return () => {
       isMounted = false;
-      try {
-        document.body.removeChild(script);
-      } catch {
-        // Script já removido
+      if (timerId !== null) {
+        window.clearTimeout(timerId);
       }
     };
   }, []);
 
   useEffect(() => {
-    const googleData = sessionStorage.getItem('_googleRegisterData');
-    if (!googleData) return;
+    if (appliedGooglePrefillRef.current) return;
+    const stateData = (
+      location.state as
+        | {
+            googleRegisterData?: {
+              email?: string;
+              firstName?: string;
+              lastName?: string;
+            };
+          }
+        | null
+        | undefined
+    )?.googleRegisterData;
 
-    try {
-      const data = JSON.parse(googleData);
-      const fullName = [data.firstName, data.lastName].filter(Boolean).join(' ').trim();
+    if (!stateData) return;
 
-      if (fullName) {
-        setValue('full_name', fullName, { shouldDirty: true });
-      }
-      if (data.email) {
-        setValue('email', data.email, { shouldDirty: true });
-      }
+    const fullName = [stateData.firstName, stateData.lastName]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
 
-      showToast.success('Dados do Google carregados. Complete o formulário.');
-    } catch (error) {
-      console.error('Erro ao processar dados do Google:', error);
-    } finally {
-      sessionStorage.removeItem('_googleRegisterData');
+    if (fullName) {
+      setValue('full_name', fullName, { shouldDirty: true });
     }
-  }, [setValue]);
+    if (stateData.email) {
+      setValue('email', stateData.email, { shouldDirty: true });
+    }
+
+    appliedGooglePrefillRef.current = true;
+    showToast.success('Dados do Google carregados. Complete o formulário.');
+  }, [location.state, setValue]);
 
   // Handler para Google Auth
   const handleGoogleCallback = async (response: { credential: string }) => {
@@ -254,22 +264,15 @@ export default function MusicianRequest() {
     try {
       const result = await googleAuthService.authenticate(response.credential, 'musician');
       if (result.new_user) {
-        // Salvar dados do Google em sessionStorage
-        sessionStorage.setItem(
-          '_googleRegisterData',
-          JSON.stringify({
-            email: result.email,
-            firstName: result.first_name,
-            lastName: result.last_name,
-            picture: result.picture,
-          })
-        );
-        if (result.picture) {
-          sessionStorage.setItem('_googleAvatarUrl', result.picture);
+        const fullName = [result.first_name, result.last_name].filter(Boolean).join(' ').trim();
+        if (fullName) {
+          setValue('full_name', fullName, { shouldDirty: true });
+        }
+        if (result.email) {
+          setValue('email', result.email, { shouldDirty: true });
         }
 
         showToast.success('Dados do Google carregados. Complete o formulário.');
-        window.location.reload();
         return;
       }
 

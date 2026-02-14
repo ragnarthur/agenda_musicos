@@ -1,17 +1,15 @@
 // utils/tokenStorage.ts
 
-const ACCESS_TOKEN_KEY = 'gigflow_access_token';
-
-// Refresh token fica somente em memoria para reduzir exposicao a XSS.
+// Tokens ficam somente em memoria para reduzir exposicao a XSS.
+let accessToken: string | null = null;
 let refreshToken: string | null = null;
 
 export const getStoredAccessToken = (): string | null => {
-  return sessionStorage.getItem(ACCESS_TOKEN_KEY);
+  return accessToken;
 };
 
 export const setStoredAccessToken = (token?: string | null): void => {
-  if (!token) return;
-  sessionStorage.setItem(ACCESS_TOKEN_KEY, token);
+  accessToken = token ?? null;
 };
 
 export const getStoredRefreshToken = (): string | null => {
@@ -23,7 +21,7 @@ export const setStoredRefreshToken = (token?: string | null): void => {
 };
 
 export const clearStoredAccessToken = (): void => {
-  sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  accessToken = null;
 };
 
 export const clearStoredRefreshToken = (): void => {

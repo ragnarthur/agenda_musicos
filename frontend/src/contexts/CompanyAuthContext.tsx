@@ -55,7 +55,6 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
       try {
         // Verifica se há uma sessão ativa nesta janela do navegador
         const hasActiveSession = sessionStorage.getItem(SESSION_KEY);
-        const organizationData = sessionStorage.getItem('contractorProfile');
         // Verifica se usuário optou por "Permanecer conectado"
         const rememberMe = localStorage.getItem(REMEMBER_KEY) === 'true';
 
@@ -75,17 +74,11 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
           sessionStorage.setItem(SESSION_KEY, 'true');
         }
 
-        if (organizationData && isMounted) {
-          // Usar dados cached do sessionStorage primeiro
-          const org = JSON.parse(organizationData);
-          setOrganization(org);
-
-          // Depois validar com backend
+        if (isMounted && (hasActiveSession || rememberMe)) {
           try {
             const dashboard = await contractorService.getDashboard();
             if (isMounted) {
               setOrganization(dashboard.contractor);
-              sessionStorage.setItem('contractorProfile', JSON.stringify(dashboard.contractor));
             }
           } catch (error) {
             if (!isMounted) return;
@@ -133,7 +126,6 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
 
       // Armazenar dados da organização (tokens ficam em cookies httpOnly)
       setOrganization(response.contractor as ContractorProfile);
-      sessionStorage.setItem('contractorProfile', JSON.stringify(response.contractor));
 
       toast.success(`Bem-vindo(a), ${response.contractor.name}!`);
     } catch (error: unknown) {
@@ -163,7 +155,6 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
 
       // Armazenar dados da organização
       setOrganization(payload.organization);
-      sessionStorage.setItem('contractorProfile', JSON.stringify(payload.organization));
     },
     []
   );
@@ -181,7 +172,6 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
 
     // Limpar sessionStorage e preferência de "Permanecer conectado"
     sessionStorage.removeItem(SESSION_KEY);
-    sessionStorage.removeItem('contractorProfile');
     localStorage.removeItem(REMEMBER_KEY);
     clearStoredAccessToken();
     clearStoredRefreshToken();
@@ -201,7 +191,6 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
       // Este método pode ser usado para validar a sessão se necessário
       const dashboard = await contractorService.getDashboard();
       setOrganization(dashboard.contractor);
-      sessionStorage.setItem('contractorProfile', JSON.stringify(dashboard.contractor));
     } catch (error) {
       console.error('Erro ao renovar sessão:', error);
       logout();
@@ -213,7 +202,6 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
     try {
       const updatedOrg = await contractorService.updateProfile(data);
       setOrganization(updatedOrg);
-      sessionStorage.setItem('contractorProfile', JSON.stringify(updatedOrg));
       toast.success('Perfil atualizado com sucesso!');
     } catch (error: unknown) {
       const message =

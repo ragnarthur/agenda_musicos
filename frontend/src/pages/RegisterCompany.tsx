@@ -95,11 +95,6 @@ export default function RegisterCompany() {
             picture: result.picture,
           });
 
-          // Salvar picture para usar como avatar inicial (opcional)
-          if (result.picture) {
-            sessionStorage.setItem('_googlePicture', result.picture);
-          }
-
           toast.success('Conta Google conectada! Complete seus dados de contratante.');
         } else if (result.user_type === 'contractor' && result.contractor) {
           // Usuário já existe - fazer login
@@ -136,6 +131,7 @@ export default function RegisterCompany() {
   // Renderiza botão do Google
   useEffect(() => {
     let isMounted = true;
+    let timerId: number | null = null;
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
     if (!clientId) {
@@ -143,40 +139,37 @@ export default function RegisterCompany() {
       return;
     }
 
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.onload = () => {
+    const initializeGoogle = () => {
       if (!isMounted) return;
-      if (window.google) {
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: (response: { credential: string }) => {
-            if (!isMounted) return;
-            handleGoogleCallback(response);
-          },
+      if (!window.google) {
+        timerId = window.setTimeout(initializeGoogle, 150);
+        return;
+      }
+
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: (response: { credential: string }) => {
+          if (!isMounted) return;
+          handleGoogleCallback(response);
+        },
+      });
+      const buttonDiv = document.getElementById('google-signin-button');
+      if (buttonDiv) {
+        window.google.accounts.id.renderButton(buttonDiv, {
+          theme: 'outline',
+          size: 'large',
+          text: 'signup_with',
+          width: '100%',
         });
-        const buttonDiv = document.getElementById('google-signin-button');
-        if (buttonDiv) {
-          window.google.accounts.id.renderButton(buttonDiv, {
-            theme: 'outline',
-            size: 'large',
-            text: 'signup_with',
-            width: '100%',
-          });
-        }
       }
     };
-    script.onerror = () => {
-      console.error('Erro ao carregar Google Sign-In');
-    };
-    document.body.appendChild(script);
+
+    initializeGoogle();
+
     return () => {
       isMounted = false;
-      try {
-        document.body.removeChild(script);
-      } catch {
-        // Script já removido
+      if (timerId !== null) {
+        window.clearTimeout(timerId);
       }
     };
   }, [handleGoogleCallback]);
