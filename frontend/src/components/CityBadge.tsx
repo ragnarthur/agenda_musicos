@@ -3,6 +3,7 @@ import { MapPin, Navigation } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { BRAZILIAN_STATE_OPTIONS, getStateAbbreviation } from '../config/locations';
+import { useAuth } from '../contexts/AuthContext';
 import {
   clearLocationPreference,
   getLocationPreference,
@@ -19,6 +20,7 @@ interface CityBadgeProps {
 }
 
 const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' }) => {
+  const { user } = useAuth();
   const { city, state, isLoading, error, getLocation } = useGeolocation({ autoStart: false });
   const [menuOpen, setMenuOpen] = useState(false);
   const initialPreference = useMemo(() => getLocationPreference(), []);
@@ -30,6 +32,9 @@ const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' 
   const [cityError, setCityError] = useState<string | null>(null);
   const datalistId = useId();
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const profileCity = user?.city?.trim() || '';
+  const profileState = user?.state?.trim() || '';
+  const profileStateAbbreviation = getStateAbbreviation(profileState) || '';
 
   useEffect(() => {
     const onPreferenceUpdated = (event: Event) => {
@@ -103,8 +108,25 @@ const CityBadge: React.FC<CityBadgeProps> = ({ variant = 'dark', className = '' 
     };
   }, [manualState]);
 
-  const displayCity = preference?.city || city;
-  const displayState = preference?.state || state;
+  useEffect(() => {
+    if (preference) return;
+    if (manualCity || manualState) return;
+    if (!profileCity && !profileStateAbbreviation) return;
+
+    const rafId = window.requestAnimationFrame(() => {
+      if (profileCity) {
+        setManualCity(profileCity);
+      }
+      if (profileStateAbbreviation) {
+        setManualState(profileStateAbbreviation);
+      }
+    });
+
+    return () => window.cancelAnimationFrame(rafId);
+  }, [manualCity, manualState, preference, profileCity, profileStateAbbreviation]);
+
+  const displayCity = preference?.city || city || profileCity;
+  const displayState = preference?.state || state || profileStateAbbreviation || profileState;
 
   const label = useMemo(() => {
     const stateAbbr = getStateAbbreviation(displayState);
