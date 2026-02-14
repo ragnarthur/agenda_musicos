@@ -568,8 +568,6 @@ export const contractorService = {
     password: string
   ): Promise<{
     detail: string;
-    access: string;
-    refresh: string;
     user_type: string;
     contractor: { id: number; name: string };
   }> => {
@@ -590,8 +588,8 @@ export const contractorService = {
   },
 
   // Refresh token
-  refreshToken: async (refreshToken: string): Promise<{ access: string; refresh?: string }> => {
-    const response = await api.post('/token/refresh/', { refresh: refreshToken });
+  refreshToken: async (): Promise<{ detail: string }> => {
+    const response = await api.post('/token/refresh/', {});
     return response.data;
   },
 };
@@ -630,8 +628,6 @@ export const googleAuthService = {
     last_name?: string;
     picture?: string;
     user_type?: string;
-    access?: string;
-    refresh?: string;
     contractor?: { id: number; name: string };
   }> => {
     const response = await api.post('/auth/google/', { credential, user_type: userType });
@@ -644,8 +640,6 @@ export const googleAuthService = {
     inviteToken: string
   ): Promise<{
     detail: string;
-    access: string;
-    refresh: string;
     user_type: string;
   }> => {
     const response = await api.post('/auth/google/register-musician/', {

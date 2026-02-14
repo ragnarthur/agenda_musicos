@@ -78,8 +78,10 @@ class GoogleAuthTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.json()["new_user"])
-        self.assertIn("access", response.json())
-        self.assertIn("refresh", response.json())
+        self.assertNotIn("access", response.json())
+        self.assertNotIn("refresh", response.json())
+        self.assertIn("access_token", response.cookies)
+        self.assertIn("refresh_token", response.cookies)
 
     def test_google_auth_missing_credential(self):
         """Teste: Credential ausente retorna 400"""

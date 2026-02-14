@@ -15,8 +15,6 @@ import { contractorService, type ContractorProfile } from '../services/publicApi
 import {
   clearStoredAccessToken,
   clearStoredRefreshToken,
-  setStoredAccessToken,
-  setStoredRefreshToken,
 } from '../utils/tokenStorage';
 
 interface CompanyAuthContextType {
@@ -24,7 +22,7 @@ interface CompanyAuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
-  setSession: (payload: { organization: ContractorProfile; access?: string; refresh?: string }, rememberMe?: boolean) => void;
+  setSession: (payload: { organization: ContractorProfile }, rememberMe?: boolean) => void;
   logout: () => void;
   refreshToken: () => Promise<void>;
   updateOrganization: (data: Partial<ContractorProfile>) => Promise<void>;
@@ -114,8 +112,6 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
 
       // Marcar sessão como ativa
       sessionStorage.setItem(SESSION_KEY, 'true');
-      setStoredAccessToken(response.access);
-      setStoredRefreshToken(response.refresh);
 
       // Armazena preferência de "Permanecer conectado"
       if (rememberMe) {
@@ -140,11 +136,9 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
   }, []);
 
   const setSession = useCallback(
-    (payload: { organization: ContractorProfile; access?: string; refresh?: string }, rememberMe?: boolean) => {
+    (payload: { organization: ContractorProfile }, rememberMe?: boolean) => {
       // Marcar sessão como ativa
       sessionStorage.setItem(SESSION_KEY, 'true');
-      setStoredAccessToken(payload.access);
-      setStoredRefreshToken(payload.refresh);
 
       // Armazena preferência de "Permanecer conectado"
       if (rememberMe) {

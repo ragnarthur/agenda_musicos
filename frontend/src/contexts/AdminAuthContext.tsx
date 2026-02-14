@@ -4,8 +4,6 @@ import { adminService, api } from '../services/api';
 import {
   clearStoredAccessToken,
   clearStoredRefreshToken,
-  setStoredAccessToken,
-  setStoredRefreshToken,
 } from '../utils/tokenStorage';
 
 const SESSION_KEY = 'gigflow_admin_session';
@@ -72,8 +70,6 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         throw new Error('Acesso negado. Esta área é restrita a administradores.');
       }
 
-      setStoredAccessToken(data.access);
-      setStoredRefreshToken(data.refresh);
       sessionStorage.setItem(SESSION_KEY, 'true');
 
       // Armazena preferência de "Permanecer conectado"

@@ -56,20 +56,24 @@ urlpatterns = [
         GoogleRegisterMusicianView.as_view(),
         name="google_register_musician",
     ),
-    # API Documentation (OpenAPI/Swagger)
-    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
-    path(
-        "api/docs/",
-        SpectacularSwaggerView.as_view(url_name="schema"),
-        name="swagger-ui",
-    ),
-    path(
-        "api/redoc/",
-        SpectacularRedocView.as_view(url_name="schema"),
-        name="redoc",
-    ),
     path("healthz/", healthz),
 ]
+
+if settings.ENABLE_API_DOCS:
+    urlpatterns += [
+        # API Documentation (OpenAPI/Swagger)
+        path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+        path(
+            "api/docs/",
+            SpectacularSwaggerView.as_view(url_name="schema"),
+            name="swagger-ui",
+        ),
+        path(
+            "api/redoc/",
+            SpectacularRedocView.as_view(url_name="schema"),
+            name="redoc",
+        ),
+    ]
 
 # Serve media files in development
 if settings.DEBUG:

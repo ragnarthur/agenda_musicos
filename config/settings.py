@@ -47,6 +47,7 @@ def env_csv(name: str, default: str = "") -> list[str]:
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=False, cast=bool)
 CSP_HEADER = config("CSP_HEADER", default="").strip()
+ENABLE_API_DOCS = config("ENABLE_API_DOCS", default=DEBUG, cast=bool)
 
 # Admin URL protegida
 import secrets

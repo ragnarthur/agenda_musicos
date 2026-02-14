@@ -100,8 +100,6 @@ export default function RegisterCompany() {
           // Usuário já existe - fazer login
           setSession({
             organization: result.contractor as ContractorProfile,
-            access: result.access,
-            refresh: result.refresh,
           });
           toast.success('Login realizado!');
           navigate('/contratante/dashboard');

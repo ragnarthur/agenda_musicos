@@ -58,8 +58,6 @@ export default function LoginCompany() {
         } else if (result.user_type === 'contractor' && result.contractor) {
           setSession({
             organization: result.contractor as ContractorProfile,
-            access: result.access,
-            refresh: result.refresh,
           }, rememberMe);
           toast.success('Login realizado!');
           navigate('/contratante/dashboard');

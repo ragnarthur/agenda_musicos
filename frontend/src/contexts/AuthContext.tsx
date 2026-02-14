@@ -6,8 +6,6 @@ import { authService, musicianService } from '../services/api';
 import {
   clearStoredAccessToken,
   clearStoredRefreshToken,
-  setStoredAccessToken,
-  setStoredRefreshToken,
 } from '../utils/tokenStorage';
 import { logError } from '../utils/logger';
 
@@ -82,9 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = useCallback(async (credentials: LoginCredentials, rememberMe?: boolean) => {
     try {
-      const data = await authService.login(credentials);
-      setStoredAccessToken(data.access);
-      setStoredRefreshToken(data.refresh);
+      await authService.login(credentials);
       sessionStorage.setItem(SESSION_KEY, 'true');
       // Armazena preferência de "Permanecer conectado"
       if (rememberMe) {
