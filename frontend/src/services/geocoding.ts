@@ -29,6 +29,14 @@ class GeocodingService {
   private lastRequestTime = 0;
   private readonly MIN_REQUEST_INTERVAL = 1000; // 1 segundo (rate limit do Nominatim)
 
+  private buildNominatimUrl(path: string, query: Record<string, string>): string {
+    const url = new URL(path, NOMINATIM_API);
+    // Garante que nenhuma regressão force chamada HTTP em produção.
+    url.protocol = 'https:';
+    Object.entries(query).forEach(([key, value]) => url.searchParams.set(key, value));
+    return url.toString();
+  }
+
   private generateCacheKey(lat: number, lon: number): string {
     return `${lat.toFixed(4)},${lon.toFixed(4)}`;
   }
@@ -89,7 +97,12 @@ class GeocodingService {
       // Respeitar rate limit
       await this.waitForRateLimit();
 
-      const url = `${NOMINATIM_API}/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=pt-BR`;
+      const url = this.buildNominatimUrl('/reverse', {
+        format: 'json',
+        lat: String(lat),
+        lon: String(lon),
+        'accept-language': 'pt-BR',
+      });
 
       const response = await fetch(url, {
         headers: {
@@ -149,9 +162,13 @@ class GeocodingService {
       await this.waitForRateLimit();
 
       const query = state ? `${city}, ${state}, ${country}` : `${city}, ${country}`;
-      const encodedQuery = encodeURIComponent(query);
 
-      const url = `${NOMINATIM_API}/search?q=${encodedQuery}&format=json&limit=1&accept-language=pt-BR`;
+      const url = this.buildNominatimUrl('/search', {
+        q: query,
+        format: 'json',
+        limit: '1',
+        'accept-language': 'pt-BR',
+      });
 
       const response = await fetch(url, {
         headers: {
