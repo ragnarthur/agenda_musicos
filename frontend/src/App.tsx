@@ -33,6 +33,7 @@ const AdminUsers = lazy(() =>
 const AdminOrganizations = lazy(() =>
   import('./pages/admin/AdminBundle').then(module => ({ default: module.AdminOrganizations }))
 );
+const AdminAlertsTest = lazy(() => import('./pages/admin/AlertsTest'));
 const StatusPage = lazy(() => import('./components/StatusPage'));
 const Login = lazy(() => import('./pages/Login'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -527,6 +528,7 @@ function AppRoutes() {
           <Route path={ADMIN_CHILD_ROUTES.usersDetail} element={<AdminUsers />} />
           <Route path={ADMIN_CHILD_ROUTES.organizations} element={<AdminOrganizations />} />
           <Route path={ADMIN_CHILD_ROUTES.organizationsDetail} element={<AdminOrganizations />} />
+          <Route path={ADMIN_CHILD_ROUTES.alertsTest} element={<AdminAlertsTest />} />
         </Route>
 
         {/* Public Status Page */}

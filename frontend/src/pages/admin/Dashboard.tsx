@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { TrendingUp, Users, Building2, Clock, ArrowRight, RefreshCw } from 'lucide-react';
+import { TrendingUp, Users, Building2, Clock, ArrowRight, RefreshCw, ShieldAlert } from 'lucide-react';
 import { cityAdminService, type DashboardStatsExtended } from '../../services/publicApi';
 import {
   AdminStatCard,
@@ -140,6 +140,13 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          <Link
+            to={ADMIN_ROUTES.alertsTest}
+            className="btn-admin-ghost px-4 py-2 min-h-[44px] inline-flex items-center gap-2 font-medium"
+          >
+            <ShieldAlert className="h-4 w-4" />
+            Testar alertas
+          </Link>
           <AdminButton
             variant="secondary"
             icon={RefreshCw}

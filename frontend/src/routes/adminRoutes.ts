@@ -4,6 +4,7 @@ export const ADMIN_ROUTES = {
   base: '/admin',
   login: '/admin/login',
   dashboard: '/admin/dashboard',
+  alertsTest: '/admin/teste-alertas',
   requests: '/admin/solicitacoes',
   requestsDetail: (id: string | number) => `/admin/solicitacoes/${id}`,
   bookingAudit: '/admin/auditoria-reservas',
@@ -18,6 +19,7 @@ export const ADMIN_ROUTES = {
 
 export const ADMIN_CHILD_ROUTES = {
   dashboard: 'dashboard',
+  alertsTest: 'teste-alertas',
   requests: 'solicitacoes',
   requestsDetail: 'solicitacoes/:id',
   bookingAudit: 'auditoria-reservas',
@@ -64,6 +66,7 @@ export const adminNavItems = [
 
 export const adminRouteLabels: Record<string, string> = {
   [ADMIN_ROUTES.dashboard]: 'Dashboard',
+  [ADMIN_ROUTES.alertsTest]: 'Teste de Alertas',
   [ADMIN_ROUTES.requests]: 'Solicitações',
   [ADMIN_ROUTES.users]: 'Usuários',
   [ADMIN_ROUTES.organizations]: 'Contratantes',
