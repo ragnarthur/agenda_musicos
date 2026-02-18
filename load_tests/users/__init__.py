@@ -1,0 +1,1 @@
+"""Usuarios simulados do Locust."""

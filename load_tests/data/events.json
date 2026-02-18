@@ -1,0 +1,12 @@
+{
+  "templates": [
+    {
+      "title_prefix": "[LOAD]",
+      "location": "Local de teste",
+      "start_time": "19:00",
+      "end_time": "22:00",
+      "payment_amount": "500.00"
+    }
+  ],
+  "notes": "Templates auxiliares para criacao de eventos no teste de carga."
+}
