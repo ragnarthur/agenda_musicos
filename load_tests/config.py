@@ -56,6 +56,8 @@ WEIGHT_EVENT_DETAIL: Final[int] = _env_int("LOCUST_WEIGHT_EVENT_DETAIL", 10)
 WEIGHT_SET_AVAILABILITY: Final[int] = _env_int("LOCUST_WEIGHT_SET_AVAILABILITY", 7)
 WEIGHT_LIST_QUOTES: Final[int] = _env_int("LOCUST_WEIGHT_LIST_QUOTES", 10)
 WEIGHT_LIST_GIGS: Final[int] = _env_int("LOCUST_WEIGHT_LIST_GIGS", 10)
+# Upload de avatar: desabilitado por padrao (write task); ativar com LOCUST_WEIGHT_UPLOAD_AVATAR=100
+WEIGHT_UPLOAD_AVATAR: Final[int] = _env_int("LOCUST_WEIGHT_UPLOAD_AVATAR", 0)
 
 # ID de músico usado como fallback para criação de quote quando cached_musician_ids está vazio.
 # Deve corresponder a um músico ativo no ambiente de teste.

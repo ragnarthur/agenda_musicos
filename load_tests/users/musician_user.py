@@ -5,7 +5,14 @@ from __future__ import annotations
 from locust import HttpUser, between, task
 
 from load_tests import config
-from load_tests.tasks import auth_tasks, event_tasks, marketplace_tasks, musician_tasks, quote_tasks
+from load_tests.tasks import (
+    auth_tasks,
+    event_tasks,
+    marketplace_tasks,
+    musician_tasks,
+    quote_tasks,
+    upload_tasks,
+)
 
 
 class MusicianUser(HttpUser):
@@ -77,3 +84,10 @@ class MusicianUser(HttpUser):
             auth_tasks.login_musician(self, force=True)
             return
         marketplace_tasks.list_gigs(self)
+
+    @task(config.WEIGHT_UPLOAD_AVATAR)
+    def upload_avatar(self):
+        if not self.authenticated:
+            auth_tasks.login_musician(self, force=True)
+            return
+        upload_tasks.upload_avatar(self)

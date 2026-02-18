@@ -17,6 +17,7 @@ on:
           - status
           - seed-test-data
           - load-test
+          - upload-stress
 
 permissions:
   contents: read
@@ -230,6 +231,80 @@ jobs:
           check_url "https://${DOMAIN}/healthz/" "healthz" "${DOMAIN}"
           check_url "https://${DOMAIN}/api/readyz/" "readyz-main-domain" "${DOMAIN}"
           check_url "https://${API_DOMAIN}/api/readyz/" "readyz-api-domain" "${API_DOMAIN}"
+
+      - name: Executar upload stress test (foto de perfil)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'upload-stress'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$APP_DIR"
+
+          # Garantir usuario de teste
+          docker compose --env-file .env.prod -f docker-compose.prod.yml \
+            exec -T backend python manage.py seed_test_data
+
+          NGINX_CONTAINER=$(docker compose --env-file .env.prod -f docker-compose.prod.yml ps -q nginx)
+          NGINX_IP=$(docker inspect "$NGINX_CONTAINER" --format '{{(index .NetworkSettings.Networks "agenda_musicos_internal").IPAddress}}')
+          DOMAIN="${{ secrets.PROD_DOMAIN }}"
+          if [ -z "${DOMAIN:-}" ]; then DOMAIN="gigflowagenda.com.br"; fi
+
+          RESULT_DIR="$APP_DIR/load_tests/results"
+          mkdir -p "$RESULT_DIR"
+          chmod 777 "$RESULT_DIR"
+          STAMP=$(date +%Y%m%d-%H%M%S)
+
+          echo "[upload-stress] nginx IP=${NGINX_IP} domain=${DOMAIN}"
+
+          # Fase de upload: 50 usuarios simultaneos enviando fotos por 5 minutos
+          # WEIGHT_UPLOAD_AVATAR=100 garante que 100% das tarefas sejam uploads
+          docker run --rm \
+            --network agenda_musicos_internal \
+            --add-host "${DOMAIN}:${NGINX_IP}" \
+            -v "$APP_DIR:/app" \
+            -w /app \
+            -e "LOCUST_HOST=https://${DOMAIN}" \
+            -e LOCUST_WEIGHT_AUTH=0 \
+            -e LOCUST_ENABLE_WRITE_TASKS=true \
+            -e LOCUST_WEIGHT_UPLOAD_AVATAR=100 \
+            -e LOCUST_WEIGHT_LIST_EVENTS=0 \
+            -e LOCUST_WEIGHT_LIST_MUSICIANS=0 \
+            -e LOCUST_WEIGHT_CREATE_EVENT=0 \
+            -e LOCUST_WEIGHT_EVENT_DETAIL=0 \
+            -e LOCUST_WEIGHT_SET_AVAILABILITY=0 \
+            -e LOCUST_WEIGHT_LIST_QUOTES=0 \
+            -e LOCUST_WEIGHT_LIST_GIGS=0 \
+            locustio/locust:2.39.1 \
+            -f load_tests/locustfile.py \
+            --headless \
+            --users 50 \
+            --spawn-rate 1 \
+            --run-time 5m \
+            --print-stats \
+            --csv "load_tests/results/${STAMP}-upload" \
+            --host "https://${DOMAIN}"
+
+          echo ""
+          echo "=== RESUMO DO UPLOAD STRESS ==="
+          for csv in "${RESULT_DIR}/${STAMP}-upload"*_stats.csv; do
+            [ -f "$csv" ] || continue
+            python3 - "$csv" <<'PY'
+          import csv, sys
+          rows = list(csv.DictReader(open(sys.argv[1])))
+          agg = next((r for r in rows if r["Name"] == "Aggregated"), None)
+          if agg:
+              total = int(agg["Request Count"])
+              fails = int(agg["Failure Count"])
+              pct   = fails / max(total, 1) * 100
+              print(f"  Uploads totais: {total} | Falhas: {fails} ({pct:.1f}%)")
+              print(f"  Avg: {float(agg['Average Response Time']):.0f}ms | P95: {agg['95%']}ms | P99: {agg['99%']}ms")
+              print(f"  Uploads/s: {float(agg['Requests/s']):.2f}")
+          PY
+          done
+          echo ""
+          echo "=== Uso de disco em /media/avatars/ ==="
+          docker compose --env-file .env.prod -f docker-compose.prod.yml \
+            exec -T backend sh -c "du -sh /app/media/avatars/ 2>/dev/null || echo 'Diretorio vazio'"
+          echo "================================"
 
       - name: Verificacao final da stack
         shell: bash
