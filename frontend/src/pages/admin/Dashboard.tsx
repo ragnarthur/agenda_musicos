@@ -1,6 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { TrendingUp, Users, Building2, Clock, ArrowRight, RefreshCw, ShieldAlert } from 'lucide-react';
+import {
+  TrendingUp,
+  Users,
+  Building2,
+  Clock,
+  ArrowRight,
+  RefreshCw,
+  ShieldAlert,
+} from 'lucide-react';
 import { cityAdminService, type DashboardStatsExtended } from '../../services/publicApi';
 import {
   AdminStatCard,
