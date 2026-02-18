@@ -126,6 +126,7 @@ jobs:
               -v "$APP_DIR:/app" \
               -w /app \
               -e "LOCUST_HOST=http://${DOMAIN}:8000" \
+              -e LOCUST_WEIGHT_AUTH=0 \
               locustio/locust:2.39.1 \
               -f load_tests/locustfile.py \
               --headless \
@@ -139,17 +140,20 @@ jobs:
             sleep 10
           }
 
-          # Fase 1: ramp-up ate 100 (baseline)
-          run_phase "f1-ramp-100"   100  1   3m
+          # spawn_rate=0.4/s = 24/min (DRF throttle login=30/min por IP)
+          # Cada fase tem runtime suficiente para spawnar todos os users antes do steady state
+
+          # Fase 1: ramp-up ate 100 (100/0.4=250s ramp + 110s steady = 360s=6m)
+          run_phase "f1-ramp-100"   100  0.4  6m
           # Fase 2: 100 constante (steady state)
-          run_phase "f2-const-100"  100  2   5m
-          # Fase 3: ramp-up ate 300
-          run_phase "f3-ramp-300"   300  3   3m
+          run_phase "f2-const-100"  100  0.4  5m
+          # Fase 3: ramp-up ate 300 (200 novos / 0.4 = 500s ramp + 100s steady = 600s=10m)
+          run_phase "f3-ramp-300"   300  0.4  10m
           # Fase 4: 300 constante
-          run_phase "f4-const-300"  300  5   5m
-          # Fase 5: breakpoint incremental
+          run_phase "f4-const-300"  300  0.4  5m
+          # Fase 5: breakpoint incremental (200 novos por fase = 500s ramp + 100s steady = 10m)
           for users in 500 700 900; do
-            run_phase "f5-break-${users}" "$users" 10 3m || {
+            run_phase "f5-break-${users}" "$users" 0.4 10m || {
               echo "[load-test] BREAKPOINT atingido em ${users} usuarios."; break
             }
           done
