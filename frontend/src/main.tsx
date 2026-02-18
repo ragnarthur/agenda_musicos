@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { onCLS, onINP, onLCP, onFCP, onTTFB } from 'web-vitals';
-import { initSentry } from './lib/sentry';
+import { initSentry } from './utils/sentry';
 import './index.css';
 import App from './App.tsx';
 

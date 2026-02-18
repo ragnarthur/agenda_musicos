@@ -1,6 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
-import { Sentry } from '../lib/sentry';
+import { Sentry } from '../utils/sentry';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
