@@ -70,6 +70,19 @@ class FlowTester:
         self.errors = []
         self.successes = []
 
+    def _apply_bearer_from_login_response(self, response):
+        """Extrai access_token do cookie e aplica como Authorization no client de teste."""
+        access_cookie = response.cookies.get("access_token")
+        access_token = access_cookie.value if access_cookie else None
+
+        if access_token:
+            self.client.defaults["HTTP_AUTHORIZATION"] = f"Bearer {access_token}"
+            print_success("Bearer token aplicado no client de teste")
+            return True
+
+        print_warning("access_token não veio no cookie; requests autenticadas podem falhar")
+        return False
+
     def cleanup(self):
         """Remove dados de teste anteriores"""
         print_info("Limpando dados de teste anteriores...")
@@ -252,7 +265,7 @@ class FlowTester:
         if response.status_code == 200:
             print_success("Login realizado com sucesso!")
             self.successes.append("Login funcionando")
-            # Cookies JWT devem estar setados
+            self._apply_bearer_from_login_response(response)
         else:
             print_error(f"Login falhou: {response.status_code} - {response.content}")
             self.errors.append("Login falhou")
@@ -265,7 +278,7 @@ class FlowTester:
         print_header("5. TESTE DE ENDPOINTS AUTENTICADOS")
 
         # Primeiro faz login para obter cookies
-        self.client.post(
+        login_response = self.client.post(
             "/api/token/",
             {
                 "username": getattr(self, "registered_username", self.test_username),
@@ -273,6 +286,7 @@ class FlowTester:
             },
             content_type="application/json",
         )
+        self._apply_bearer_from_login_response(login_response)
 
         # 5.1 GET /api/musicians/me/
         print_info("Testando GET /api/musicians/me/...")

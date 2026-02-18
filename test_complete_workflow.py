@@ -57,15 +57,17 @@ def login(username, password):
     if response.status_code == 200:
         data = safe_json(response)
         token = extract_access_token(data)
+        if not token:
+            # Fallback para endpoints que só retornam cookie HttpOnly.
+            token = response.cookies.get("access_token") or session.cookies.get("access_token")
+
         print(f"✓ Login bem-sucedido: {username}")
         if token:
+            if "access" not in data:
+                print("  - Usando access_token extraído do cookie.")
             return {"session": session, "token": token}
 
-        if session.cookies:
-            print("  - Token não veio no body; usando autenticação por cookie.")
-            return {"session": session, "token": None}
-
-        print("✗ Login retornou 200, mas sem token e sem cookie de sessão.")
+        print("✗ Login retornou 200, mas sem token no body e sem access_token em cookie.")
         print(response.text)
         return None
 
