@@ -125,17 +125,17 @@ build_and_deploy() {
     cd "$PROJECT_DIR"
 
     print_step "Parando containers existentes..."
-    if ! run_with_timeout "$DOCKER_DOWN_TIMEOUT_SECONDS" "docker compose down" dc down; then
+    if ! run_with_timeout "$DOCKER_DOWN_TIMEOUT_SECONDS" "docker compose down" docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" down; then
         print_warning "Falha ao parar stack (seguindo para reconstruir)."
     fi
 
-    run_with_timeout "$DOCKER_UP_TIMEOUT_SECONDS" "docker compose up --build" dc up -d --build --remove-orphans
+    run_with_timeout "$DOCKER_UP_TIMEOUT_SECONDS" "docker compose up --build" docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --build --remove-orphans
 
     print_step "Reiniciando nginx para atualizar upstream do backend..."
-    run_with_timeout "$DOCKER_RESTART_TIMEOUT_SECONDS" "docker compose restart nginx" dc restart nginx
+    run_with_timeout "$DOCKER_RESTART_TIMEOUT_SECONDS" "docker compose restart nginx" docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" restart nginx
 
     print_step "Status dos containers:"
-    run_with_timeout "$DOCKER_STATUS_TIMEOUT_SECONDS" "docker compose ps" dc ps
+    run_with_timeout "$DOCKER_STATUS_TIMEOUT_SECONDS" "docker compose ps" docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" ps
 }
 
 check_health() {
@@ -178,7 +178,7 @@ check_health() {
 
 show_logs() {
     print_step "Ultimas linhas dos logs:"
-    run_with_timeout "$DOCKER_STATUS_TIMEOUT_SECONDS" "docker compose logs --tail=20" dc logs --tail=20
+    run_with_timeout "$DOCKER_STATUS_TIMEOUT_SECONDS" "docker compose logs --tail=20" docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" logs --tail=20
 }
 
 generate_ssl() {
@@ -194,10 +194,10 @@ generate_ssl() {
         return 1
     fi
 
-    run_with_timeout "$DOCKER_RESTART_TIMEOUT_SECONDS" "Parando nginx para liberar porta 80" dc stop nginx
+    run_with_timeout "$DOCKER_RESTART_TIMEOUT_SECONDS" "Parando nginx para liberar porta 80" docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" stop nginx
 
     run_with_timeout "$CERTBOT_TIMEOUT_SECONDS" "Gerando certificado SSL" \
-        dc run --rm certbot certonly \
+        docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" run --rm certbot certonly \
         --standalone \
         --email "admin@$DOMAIN" \
         --agree-tos \
@@ -206,15 +206,15 @@ generate_ssl() {
         -d "www.$DOMAIN" \
         -d "api.$DOMAIN"
 
-    run_with_timeout "$DOCKER_RESTART_TIMEOUT_SECONDS" "Subindo nginx" dc up -d nginx
+    run_with_timeout "$DOCKER_RESTART_TIMEOUT_SECONDS" "Subindo nginx" docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d nginx
 
     print_step "Certificado SSL gerado com sucesso!"
 }
 
 renew_ssl() {
     print_step "Renovando certificado SSL..."
-    run_with_timeout "$CERTBOT_TIMEOUT_SECONDS" "Certbot renew" dc run --rm certbot renew
-    run_with_timeout "$DOCKER_RESTART_TIMEOUT_SECONDS" "Recarregando nginx" dc exec nginx nginx -s reload
+    run_with_timeout "$CERTBOT_TIMEOUT_SECONDS" "Certbot renew" docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" run --rm certbot renew
+    run_with_timeout "$DOCKER_RESTART_TIMEOUT_SECONDS" "Recarregando nginx" docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec nginx nginx -s reload
     print_step "Certificado renovado!"
 }
 
@@ -253,7 +253,7 @@ run_build() {
 run_restart() {
     trap 'collect_diagnostics' ERR
     cd "$PROJECT_DIR"
-    run_with_timeout "$DOCKER_RESTART_TIMEOUT_SECONDS" "docker compose restart" dc restart
+    run_with_timeout "$DOCKER_RESTART_TIMEOUT_SECONDS" "docker compose restart" docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" restart
     check_health
     trap - ERR
 }
@@ -261,7 +261,7 @@ run_restart() {
 run_stop() {
     trap 'collect_diagnostics' ERR
     cd "$PROJECT_DIR"
-    run_with_timeout "$DOCKER_DOWN_TIMEOUT_SECONDS" "docker compose down --remove-orphans" dc down --remove-orphans
+    run_with_timeout "$DOCKER_DOWN_TIMEOUT_SECONDS" "docker compose down --remove-orphans" docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" down --remove-orphans
     print_step "Containers parados"
     trap - ERR
 }
@@ -293,7 +293,7 @@ main() {
             ;;
         status)
             cd "$PROJECT_DIR"
-            run_with_timeout "$DOCKER_STATUS_TIMEOUT_SECONDS" "docker compose ps" dc ps
+            run_with_timeout "$DOCKER_STATUS_TIMEOUT_SECONDS" "docker compose ps" docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" ps
             check_health
             ;;
         ssl)
