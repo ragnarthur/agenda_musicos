@@ -95,6 +95,7 @@ jobs:
 
           RESULT_DIR="$APP_DIR/load_tests/results"
           mkdir -p "$RESULT_DIR"
+          chmod 777 "$RESULT_DIR"
           STAMP=$(date +%Y%m%d-%H%M%S)
 
           # Usar imagem oficial locustio/locust na rede interna Docker
