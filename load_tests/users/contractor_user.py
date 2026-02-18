@@ -26,7 +26,9 @@ class ContractorUser(HttpUser):
             auth_tasks.login_contractor(self, force=True)
             if self.authenticated:
                 event_tasks.list_events(self, name="GET /api/events/ (warmup contractor)")
-                musician_tasks.list_public_musicians(self, name="GET /api/musicians/all/ (warmup contractor)")
+                musician_tasks.list_public_musicians(
+                    self, name="GET /api/musicians/all/ (warmup contractor)"
+                )
 
     @task(10)
     def reauthenticate(self):
