@@ -15,6 +15,7 @@ on:
         options:
           - deploy
           - status
+          - seed-test-data
 
 permissions:
   contents: read
@@ -68,6 +69,15 @@ jobs:
           else
             ./deploy.sh deploy
           fi
+
+      - name: Seed dados de teste (load test users)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'seed-test-data'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$APP_DIR"
+          docker compose --env-file .env.prod -f docker-compose.prod.yml exec -T backend \
+            python manage.py seed_test_data
 
       - name: Consultar status remoto
         if: github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'status')
