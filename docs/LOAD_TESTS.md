@@ -75,11 +75,15 @@ LOCUST_ENABLE_WRITE_TASKS=true ./load_tests/scripts/run_stress_profile.sh
 ```
 
 Fases implementadas:
-1. ramp-up gradual (10 -> 100, 5 min)
-2. carga constante (100, 10 min)
-3. ramp-up agressivo (100 -> 500, 5 min)
-4. carga maxima (500, 10 min)
-5. stress incremental ate quebra de gate
+1. `f1-ramp-100` (0 -> 100, `spawn_rate=0.4`, 6 min)
+2. `f2-const-100` (100 estavel, `spawn_rate=0.4`, 5 min)
+3. `f3-ramp-300` (rampa para alvo 300, `spawn_rate=0.4`, 10 min, concorrencia efetiva ~240)
+4. `f4-const-300` (300 alvo, `spawn_rate=0.4`, 5 min)
+5. `f5-break-{500,700,900}` (`spawn_rate=0.4`, 10 min por fase)
+
+Observacoes de alinhamento com CI/CD:
+- `LOCUST_WEIGHT_AUTH=0` por padrao no script de stress para evitar flood de login durante a rampa.
+- O comportamento acima esta alinhado com o workflow `cd-production.yml` no modo `load-test`.
 
 ## 7. Variaveis de ambiente principais
 
@@ -87,6 +91,7 @@ Fases implementadas:
 - `LOCUST_MUSICIAN_USERNAME` / `LOCUST_MUSICIAN_PASSWORD`
 - `LOCUST_CONTRACTOR_EMAIL` / `LOCUST_CONTRACTOR_PASSWORD`
 - `LOCUST_ENABLE_WRITE_TASKS` (`false` por default)
+- `LOCUST_WEIGHT_AUTH` (default `0` no `run_stress_profile.sh`)
 - `LOCUST_MAX_FAIL_RATIO` (default `0.05`)
 - `LOCUST_MAX_P95_MS` (default `1200`)
 

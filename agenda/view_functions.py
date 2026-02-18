@@ -808,12 +808,19 @@ def list_contractor_quote_requests(request):
 
     contractor = request.user.contractor_profile
     status_filter = request.query_params.get("status")
-    queryset = QuoteRequest.objects.filter(contractor=contractor).order_by("-created_at")
+    queryset = (
+        QuoteRequest.objects.filter(contractor=contractor)
+        .select_related("musician__user", "contractor")
+        .order_by("-created_at")
+    )
     if status_filter:
         queryset = queryset.filter(status=status_filter)
 
-    serializer = QuoteRequestSerializer(queryset, many=True, context={"request": request})
-    return Response(serializer.data)
+    paginator = PageNumberPagination()
+    paginator.page_size = 20
+    page = paginator.paginate_queryset(queryset, request)
+    serializer = QuoteRequestSerializer(page, many=True, context={"request": request})
+    return paginator.get_paginated_response(serializer.data)
 
 
 @api_view(["GET"])
@@ -828,12 +835,19 @@ def list_musician_quote_requests(request):
         )
 
     status_filter = request.query_params.get("status")
-    queryset = QuoteRequest.objects.filter(musician=musician).order_by("-created_at")
+    queryset = (
+        QuoteRequest.objects.filter(musician=musician)
+        .select_related("musician__user", "contractor")
+        .order_by("-created_at")
+    )
     if status_filter:
         queryset = queryset.filter(status=status_filter)
 
-    serializer = QuoteRequestSerializer(queryset, many=True, context={"request": request})
-    return Response(serializer.data)
+    paginator = PageNumberPagination()
+    paginator.page_size = 20
+    page = paginator.paginate_queryset(queryset, request)
+    serializer = QuoteRequestSerializer(page, many=True, context={"request": request})
+    return paginator.get_paginated_response(serializer.data)
 
 
 @api_view(["GET"])
@@ -1237,6 +1251,12 @@ def list_all_musicians_public(request):
         limit = default_limit
     limit = max(1, min(limit, max_limit))
 
+    params_key = "&".join(f"{k}={v}" for k, v in sorted(request.GET.items()))
+    cache_key = f"musicians:all:v1:{params_key}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return Response(cached)
+
     queryset = Musician.objects.filter(is_active=True).select_related("user")
 
     if city:
@@ -1289,10 +1309,14 @@ def list_all_musicians_public(request):
     page = paginator.paginate_queryset(queryset, request)
     if page is not None:
         serializer = MusicianPublicSerializer(page, many=True, context={"request": request})
-        return paginator.get_paginated_response(serializer.data)
+        resp_data = paginator.get_paginated_response(serializer.data).data
+        cache.set(cache_key, resp_data, timeout=60)
+        return Response(resp_data)
 
     serializer = MusicianPublicSerializer(queryset[:limit], many=True, context={"request": request})
-    return Response(serializer.data)
+    result = serializer.data
+    cache.set(cache_key, result, timeout=60)
+    return Response(result)
 
 
 @api_view(["GET"])

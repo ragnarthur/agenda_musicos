@@ -9,8 +9,9 @@ mkdir -p "$RESULT_DIR"
 
 export LOCUST_HOST="${LOCUST_HOST:-http://127.0.0.1:8000}"
 export LOCUST_ENABLE_WRITE_TASKS="${LOCUST_ENABLE_WRITE_TASKS:-true}"
+export LOCUST_WEIGHT_AUTH="${LOCUST_WEIGHT_AUTH:-0}"
 
-SLEEP_BETWEEN_PHASES="${LOCUST_PHASE_SLEEP_SECONDS:-20}"
+SLEEP_BETWEEN_PHASES="${LOCUST_PHASE_SLEEP_SECONDS:-10}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
 run_phase() {
@@ -34,22 +35,27 @@ run_phase() {
   sleep "$SLEEP_BETWEEN_PHASES"
 }
 
-# Fase 1: 10 -> 100 (ramp-up gradual)
-run_phase "phase1-ramp-10-100" "100" "0.3" "5m"
+# Perfil alinhado com a esteira CD (modo load-test):
+# - spawn_rate=0.4/s para ficar abaixo do throttle de login (30/min por IP)
+# - LOCUST_WEIGHT_AUTH=0 para evitar reauth flood
+# - fases f1..f5 com a mesma nomenclatura e duracoes da pipeline
 
-# Fase 2: 100 constante
-run_phase "phase2-const-100" "100" "2" "10m"
+# Fase 1: ramp-up ate 100 (100 / 0.4 = 250s de rampa + folga)
+run_phase "f1-ramp-100" "100" "0.4" "6m"
 
-# Fase 3: 100 -> 500 (ramp-up agressivo)
-run_phase "phase3-ramp-100-500" "500" "1.3" "5m"
+# Fase 2: 100 constante (steady state)
+run_phase "f2-const-100" "100" "0.4" "5m"
 
-# Fase 4: 500 constante
-run_phase "phase4-const-500" "500" "5" "10m"
+# Fase 3: rampa para alvo 300 (com 10m, concorrencia efetiva atinge ~240)
+run_phase "f3-ramp-300" "300" "0.4" "10m"
 
-# Fase 5: stress incremental ate falhar pelos gates de qualidade.
-for users in 600 700 800 900 1000; do
-  label="phase5-break-${users}"
-  if ! run_phase "$label" "$users" "8" "4m"; then
+# Fase 4: 300 constante
+run_phase "f4-const-300" "300" "0.4" "5m"
+
+# Fase 5: breakpoint incremental.
+for users in 500 700 900; do
+  label="f5-break-${users}"
+  if ! run_phase "$label" "$users" "0.4" "10m"; then
     echo "[stress] interrompido na carga de ${users} usuarios."
     exit 1
   fi

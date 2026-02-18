@@ -19,6 +19,33 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  pgbouncer:
+    image: pgbouncer/pgbouncer:1.23
+    environment:
+      DATABASES_HOST: db
+      DATABASES_PORT: "5432"
+      DATABASES_USER: ${POSTGRES_USER}
+      DATABASES_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASES_DBNAME: ${POSTGRES_DB}
+      # session mode: compatível com CONN_MAX_AGE do Django; limita conexões reais ao Postgres
+      POOL_MODE: session
+      MAX_CLIENT_CONN: "200"
+      DEFAULT_POOL_SIZE: "30"
+      SERVER_IDLE_TIMEOUT: "60"
+      CLIENT_IDLE_TIMEOUT: "0"
+      LOG_CONNECTIONS: "0"
+      LOG_DISCONNECTIONS: "0"
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - internal
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -37,7 +64,7 @@ services:
     env_file:
       - .env.prod
     depends_on:
-      - db
+      - pgbouncer
       - redis
     volumes:
       - staticfiles:/app/staticfiles
@@ -52,11 +79,23 @@ services:
         python manage.py collectstatic --noinput &&
         exec gunicorn config.wsgi:application \
           --bind 0.0.0.0:8000 \
-          --workers 3 \
-          --threads 2 \
-          --timeout 120 \
+          --workers 2 \
+          --threads 6 \
+          --worker-class gthread \
+          --timeout 30 \
+          --keepalive 5 \
+          --max-requests 1000 \
+          --max-requests-jitter 100 \
           --access-logfile - \
           --error-logfile -
+    deploy:
+      resources:
+        limits:
+          cpus: "0.8"
+          memory: 1.5G
+        reservations:
+          cpus: "0.2"
+          memory: 256M
     restart: unless-stopped
     networks:
       - internal

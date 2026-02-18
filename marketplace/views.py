@@ -1,5 +1,6 @@
 from decimal import Decimal, InvalidOperation
 
+from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Count
 from django.utils import timezone
@@ -47,6 +48,20 @@ class GigViewSet(viewsets.ModelViewSet):
             qs = qs.filter(created_by=self.request.user)
 
         return qs
+
+    def list(self, request, *args, **kwargs):
+        mine = request.query_params.get("mine")
+        # Cache per-user (my_application field is user-specific)
+        if mine not in ("true", "1", "yes"):
+            params_key = "&".join(f"{k}={v}" for k, v in sorted(request.GET.items()))
+            cache_key = f"gigs:list:v1:u{request.user.id}:{params_key}"
+            cached = cache.get(cache_key)
+            if cached is not None:
+                return Response(cached)
+            response = super().list(request, *args, **kwargs)
+            cache.set(cache_key, response.data, timeout=30)
+            return response
+        return super().list(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         user = self.request.user

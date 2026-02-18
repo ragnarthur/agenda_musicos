@@ -170,9 +170,19 @@ class GigSerializer(serializers.ModelSerializer):
         if not musician:
             return None
 
-        try:
-            application = obj.applications.get(musician=musician)
-        except GigApplication.DoesNotExist:
+        # Usa o prefetch cache para evitar N+1 queries na listagem
+        cached_apps = getattr(obj, "_prefetched_objects_cache", {}).get("applications")
+        if cached_apps is not None:
+            application = next(
+                (app for app in cached_apps if app.musician_id == musician.id), None
+            )
+        else:
+            try:
+                application = obj.applications.get(musician=musician)
+            except GigApplication.DoesNotExist:
+                application = None
+
+        if not application:
             return None
 
         return GigApplicationSerializer(application).data
