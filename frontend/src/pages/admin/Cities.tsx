@@ -1,6 +1,16 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { MapPin, Building2, Users, Plus, Edit2, Trash2, ChevronRight, Mail, Music2 } from 'lucide-react';
+import {
+  MapPin,
+  Building2,
+  Users,
+  Plus,
+  Edit2,
+  Trash2,
+  ChevronRight,
+  Mail,
+  Music2,
+} from 'lucide-react';
 import {
   cityAdminService,
   type City,
@@ -24,8 +34,33 @@ import {
 } from '../../components/admin';
 
 const VALID_UFS = [
-  'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG',
-  'PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO',
+  'AC',
+  'AL',
+  'AP',
+  'AM',
+  'BA',
+  'CE',
+  'DF',
+  'ES',
+  'GO',
+  'MA',
+  'MT',
+  'MS',
+  'MG',
+  'PA',
+  'PB',
+  'PR',
+  'PE',
+  'PI',
+  'RJ',
+  'RN',
+  'RS',
+  'RO',
+  'RR',
+  'SC',
+  'SP',
+  'SE',
+  'TO',
 ];
 
 const statusColors: Record<City['status'], string> = {
@@ -62,7 +97,9 @@ const CityCard: React.FC<{
   <div className={`admin-card p-4 border-2 ${statusColors[city.status]}`}>
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-3">
       <div>
-        <h3 className="font-semibold text-white">{city.name}, {city.state}</h3>
+        <h3 className="font-semibold text-white">
+          {city.name}, {city.state}
+        </h3>
         <AdminStatusBadge status={statusBadgeMap[city.status]} label={city.status_display} />
       </div>
       <div className="flex gap-1">
@@ -116,7 +153,11 @@ const CityForm: React.FC<{
   editingCity: City | null;
 }> = ({ isOpen, onClose, onSave, editingCity }) => {
   const [formData, setFormData] = useState<CityCreate>({
-    name: '', state: '', status: 'planning', description: '', priority: 0,
+    name: '',
+    state: '',
+    status: 'planning',
+    description: '',
+    priority: 0,
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -138,10 +179,14 @@ const CityForm: React.FC<{
 
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
-    if (!formData.name || formData.name.trim().length < 2) errors.name = 'Nome deve ter no mínimo 2 caracteres';
-    else if (formData.name.trim().length > 100) errors.name = 'Nome deve ter no máximo 100 caracteres';
-    if (!formData.state || !VALID_UFS.includes(formData.state.toUpperCase())) errors.state = 'UF inválida';
-    if (formData.description && formData.description.length > 500) errors.description = 'Máximo 500 caracteres';
+    if (!formData.name || formData.name.trim().length < 2)
+      errors.name = 'Nome deve ter no mínimo 2 caracteres';
+    else if (formData.name.trim().length > 100)
+      errors.name = 'Nome deve ter no máximo 100 caracteres';
+    if (!formData.state || !VALID_UFS.includes(formData.state.toUpperCase()))
+      errors.state = 'UF inválida';
+    if (formData.description && formData.description.length > 500)
+      errors.description = 'Máximo 500 caracteres';
     const priority = formData.priority ?? 0;
     if (priority < 0 || priority > 999) errors.priority = 'Prioridade deve ser entre 0 e 999';
     setFormErrors(errors);
@@ -155,7 +200,9 @@ const CityForm: React.FC<{
     try {
       await onSave(formData);
       onClose();
-    } catch { /* handled by parent */ } finally {
+    } catch {
+      /* handled by parent */
+    } finally {
       setSubmitting(false);
     }
   };
@@ -173,7 +220,10 @@ const CityForm: React.FC<{
           <input
             type="text"
             value={formData.name}
-            onChange={e => { setFormData({ ...formData, name: e.target.value }); setFormErrors(prev => ({ ...prev, name: '' })); }}
+            onChange={e => {
+              setFormData({ ...formData, name: e.target.value });
+              setFormErrors(prev => ({ ...prev, name: '' }));
+            }}
             className={`admin-input ${formErrors.name ? 'border-red-500' : ''}`}
             placeholder="Ex: Monte Carmelo"
             required
@@ -186,7 +236,10 @@ const CityForm: React.FC<{
           <input
             type="text"
             value={formData.state}
-            onChange={e => { setFormData({ ...formData, state: e.target.value.toUpperCase().slice(0, 2) }); setFormErrors(prev => ({ ...prev, state: '' })); }}
+            onChange={e => {
+              setFormData({ ...formData, state: e.target.value.toUpperCase().slice(0, 2) });
+              setFormErrors(prev => ({ ...prev, state: '' }));
+            }}
             className={`admin-input ${formErrors.state ? 'border-red-500' : ''}`}
             placeholder="Ex: MG"
             maxLength={2}
@@ -199,7 +252,9 @@ const CityForm: React.FC<{
           <label className="admin-label">Status</label>
           <select
             value={formData.status}
-            onChange={e => setFormData({ ...formData, status: e.target.value as CityCreate['status'] })}
+            onChange={e =>
+              setFormData({ ...formData, status: e.target.value as CityCreate['status'] })
+            }
             className="admin-select"
           >
             <option value="planning">Em Planejamento</option>
@@ -212,12 +267,17 @@ const CityForm: React.FC<{
           <label className="admin-label">Descrição (opcional)</label>
           <textarea
             value={formData.description || ''}
-            onChange={e => { setFormData({ ...formData, description: e.target.value }); setFormErrors(prev => ({ ...prev, description: '' })); }}
+            onChange={e => {
+              setFormData({ ...formData, description: e.target.value });
+              setFormErrors(prev => ({ ...prev, description: '' }));
+            }}
             className={`admin-textarea min-h-[96px] ${formErrors.description ? 'border-red-500' : ''}`}
             rows={3}
             placeholder="Notas sobre a cidade..."
           />
-          {formErrors.description && <p className="text-sm text-red-400 mt-1">{formErrors.description}</p>}
+          {formErrors.description && (
+            <p className="text-sm text-red-400 mt-1">{formErrors.description}</p>
+          )}
           <p className="text-xs text-slate-500 mt-1">{formData.description?.length || 0}/500</p>
         </div>
 
@@ -226,12 +286,17 @@ const CityForm: React.FC<{
           <input
             type="number"
             value={formData.priority}
-            onChange={e => { setFormData({ ...formData, priority: parseInt(e.target.value) || 0 }); setFormErrors(prev => ({ ...prev, priority: '' })); }}
+            onChange={e => {
+              setFormData({ ...formData, priority: parseInt(e.target.value) || 0 });
+              setFormErrors(prev => ({ ...prev, priority: '' }));
+            }}
             className={`admin-input ${formErrors.priority ? 'border-red-500' : ''}`}
             min={0}
             max={999}
           />
-          {formErrors.priority && <p className="text-sm text-red-400 mt-1">{formErrors.priority}</p>}
+          {formErrors.priority && (
+            <p className="text-sm text-red-400 mt-1">{formErrors.priority}</p>
+          )}
           <p className="text-xs text-slate-500 mt-1">Maior = mais importante (0-999)</p>
         </div>
 
@@ -325,7 +390,9 @@ const Cities: React.FC = () => {
       else await fetchCities(ac.signal);
     };
     loadTabData();
-    return () => { ac.abort(); };
+    return () => {
+      ac.abort();
+    };
   }, [activeTab, fetchCityStats, fetchCities, fetchExtendedStats]);
 
   useEffect(() => {
@@ -338,12 +405,17 @@ const Cities: React.FC = () => {
   useEffect(() => {
     const ac = new AbortController();
     if (selectedCity) fetchCityDetail(selectedCity.city, selectedCity.state, ac.signal);
-    return () => { ac.abort(); };
+    return () => {
+      ac.abort();
+    };
   }, [selectedCity, fetchCityDetail]);
 
   useEffect(() => {
     if (stateParam && cityParam) {
-      setSelectedCity({ state: decodeURIComponent(stateParam), city: decodeURIComponent(cityParam) });
+      setSelectedCity({
+        state: decodeURIComponent(stateParam),
+        city: decodeURIComponent(cityParam),
+      });
       if (activeTab !== 'stats') setActiveTab('stats');
       return;
     }
@@ -392,11 +464,14 @@ const Cities: React.FC = () => {
     }
   };
 
-  const citiesByStatus = useMemo(() => ({
-    partner: cities.filter(c => c.status === 'partner'),
-    expansion: cities.filter(c => c.status === 'expansion'),
-    planning: cities.filter(c => c.status === 'planning'),
-  }), [cities]);
+  const citiesByStatus = useMemo(
+    () => ({
+      partner: cities.filter(c => c.status === 'partner'),
+      expansion: cities.filter(c => c.status === 'expansion'),
+      planning: cities.filter(c => c.status === 'planning'),
+    }),
+    [cities]
+  );
 
   const tabs = [
     { key: 'stats', label: 'Por Cidade' },
@@ -458,8 +533,13 @@ const Cities: React.FC = () => {
                     <AdminCard key={request.id}>
                       <div className="space-y-3">
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                          <span className="text-lg font-semibold text-white">{request.full_name}</span>
-                          <AdminStatusBadge status={request.status} label={request.status_display} />
+                          <span className="text-lg font-semibold text-white">
+                            {request.full_name}
+                          </span>
+                          <AdminStatusBadge
+                            status={request.status}
+                            label={request.status_display}
+                          />
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-400">
                           <span className="flex items-center gap-2">
@@ -511,7 +591,9 @@ const Cities: React.FC = () => {
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <h3 className="font-semibold text-white">{cs.city}, {cs.state}</h3>
+                          <h3 className="font-semibold text-white">
+                            {cs.city}, {cs.state}
+                          </h3>
                           {cs.city_obj && (
                             <AdminStatusBadge
                               status={statusBadgeMap[cs.city_obj.status]}
@@ -522,10 +604,22 @@ const Cities: React.FC = () => {
                         <ChevronRight className="h-5 w-5 text-slate-500" />
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div><p className="text-slate-500">Total</p><p className="font-semibold text-white">{cs.total_requests}</p></div>
-                        <div><p className="text-slate-500">Pendentes</p><p className="font-semibold text-amber-400">{cs.pending_requests}</p></div>
-                        <div><p className="text-slate-500">Aprovados</p><p className="font-semibold text-emerald-400">{cs.approved_requests}</p></div>
-                        <div><p className="text-slate-500">Músicos</p><p className="font-semibold text-blue-400">{cs.active_musicians}</p></div>
+                        <div>
+                          <p className="text-slate-500">Total</p>
+                          <p className="font-semibold text-white">{cs.total_requests}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">Pendentes</p>
+                          <p className="font-semibold text-amber-400">{cs.pending_requests}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">Aprovados</p>
+                          <p className="font-semibold text-emerald-400">{cs.approved_requests}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">Músicos</p>
+                          <p className="font-semibold text-blue-400">{cs.active_musicians}</p>
+                        </div>
                       </div>
                     </AdminCard>
                   ))}
@@ -540,7 +634,14 @@ const Cities: React.FC = () => {
       {activeTab === 'management' && (
         <>
           <div className="flex justify-end">
-            <AdminButton variant="primary" icon={Plus} onClick={() => { setEditingCity(null); setCityFormOpen(true); }}>
+            <AdminButton
+              variant="primary"
+              icon={Plus}
+              onClick={() => {
+                setEditingCity(null);
+                setCityFormOpen(true);
+              }}
+            >
               Nova Cidade
             </AdminButton>
           </div>
@@ -552,14 +653,24 @@ const Cities: React.FC = () => {
               icon={Building2}
               title="Nenhuma cidade cadastrada"
               description="Cadastre cidades para organizar a expansão da plataforma."
-              action={{ label: 'Cadastrar Cidade', onClick: () => { setEditingCity(null); setCityFormOpen(true); } }}
+              action={{
+                label: 'Cadastrar Cidade',
+                onClick: () => {
+                  setEditingCity(null);
+                  setCityFormOpen(true);
+                },
+              }}
             />
           ) : (
             <div className="space-y-8">
               {(['partner', 'expansion', 'planning'] as const).map(status => {
                 const group = citiesByStatus[status];
                 if (group.length === 0) return null;
-                const labels: Record<string, string> = { partner: 'Parceiras', expansion: 'Em Expansão', planning: 'Em Planejamento' };
+                const labels: Record<string, string> = {
+                  partner: 'Parceiras',
+                  expansion: 'Em Expansão',
+                  planning: 'Em Planejamento',
+                };
                 return (
                   <div key={status}>
                     <h3 className="text-lg font-semibold text-white mb-3">{labels[status]}</h3>
@@ -568,7 +679,10 @@ const Cities: React.FC = () => {
                         <CityCard
                           key={city.id}
                           city={city}
-                          onEdit={c => { setEditingCity(c); setCityFormOpen(true); }}
+                          onEdit={c => {
+                            setEditingCity(c);
+                            setCityFormOpen(true);
+                          }}
                           onDelete={c => setCityToDelete(c)}
                           onChangeStatus={handleChangeStatus}
                         />
@@ -585,7 +699,10 @@ const Cities: React.FC = () => {
       {/* City Form Modal */}
       <CityForm
         isOpen={cityFormOpen}
-        onClose={() => { setCityFormOpen(false); setEditingCity(null); }}
+        onClose={() => {
+          setCityFormOpen(false);
+          setEditingCity(null);
+        }}
         onSave={handleSaveCity}
         editingCity={editingCity}
       />

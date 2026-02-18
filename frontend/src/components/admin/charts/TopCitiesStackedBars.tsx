@@ -1,12 +1,4 @@
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 type CityDatum = {
   label: string;
@@ -22,7 +14,7 @@ export default function TopCitiesStackedBars({
   items: Array<{ city: string; state: string; total: number; pending: number }>;
   max?: number;
 }) {
-  const data: CityDatum[] = items.slice(0, max).map((c) => ({
+  const data: CityDatum[] = items.slice(0, max).map(c => ({
     label: `${c.city}-${c.state}`,
     pending: c.pending,
     other: Math.max(0, c.total - c.pending),
@@ -66,7 +58,7 @@ export default function TopCitiesStackedBars({
               if (name === 'other') return [value, 'Outras'];
               return [value, name];
             }}
-            labelFormatter={(label) => String(label).replace('-', ' / ')}
+            labelFormatter={label => String(label).replace('-', ' / ')}
           />
           <Bar dataKey="other" stackId="a" fill="rgba(99,102,241,0.45)" radius={[10, 10, 0, 0]} />
           <Bar dataKey="pending" stackId="a" fill="#f59e0b" radius={[10, 10, 0, 0]} />
@@ -79,11 +71,13 @@ export default function TopCitiesStackedBars({
           Pendentes
         </div>
         <div className="flex items-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-full" style={{ background: 'rgba(99,102,241,0.45)' }} />
+          <span
+            className="h-2.5 w-2.5 rounded-full"
+            style={{ background: 'rgba(99,102,241,0.45)' }}
+          />
           Outras
         </div>
       </div>
     </div>
   );
 }
-

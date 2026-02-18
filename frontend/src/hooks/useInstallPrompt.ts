@@ -45,7 +45,9 @@ export function useInstallPrompt(): InstallPromptState {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window);
 
   // Detecta se é dispositivo mobile (Android ou iOS)
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
 
   // Verifica se já está instalado (standalone mode)
   useEffect(() => {

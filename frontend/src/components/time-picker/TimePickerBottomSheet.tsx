@@ -79,10 +79,7 @@ const TimePickerBottomSheetInner: React.FC<InnerProps> = ({
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
                 <Clock className="h-5 w-5 text-primary-600" />
-                <h2
-                  id="timepicker-title"
-                  className="text-lg font-semibold text-gray-900"
-                >
+                <h2 id="timepicker-title" className="text-lg font-semibold text-gray-900">
                   Selecione o horário
                 </h2>
               </div>

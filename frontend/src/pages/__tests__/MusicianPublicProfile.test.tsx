@@ -87,7 +87,9 @@ describe('MusicianPublicProfile', () => {
     const button = await screen.findByRole('button', { name: 'Solicitar Orçamento' });
     fireEvent.click(button);
 
-    expect(await screen.findByRole('heading', { name: /Solicitar orçamento/i })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: /Solicitar orçamento/i })
+    ).toBeInTheDocument();
   });
 
   it('redireciona para cadastro de contratante quando não autenticada', async () => {

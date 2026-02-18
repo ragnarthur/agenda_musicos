@@ -2,7 +2,13 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TrendingUp, Users, Building2, Clock, ArrowRight, RefreshCw } from 'lucide-react';
 import { cityAdminService, type DashboardStatsExtended } from '../../services/publicApi';
-import { AdminStatCard, AdminHero, AdminCard, AdminLoading, AdminButton } from '../../components/admin';
+import {
+  AdminStatCard,
+  AdminHero,
+  AdminCard,
+  AdminLoading,
+  AdminButton,
+} from '../../components/admin';
 import { showToast } from '../../utils/toast';
 import { ADMIN_ROUTES } from '../../routes/adminRoutes';
 import {
@@ -126,7 +132,7 @@ const AdminDashboard: React.FC = () => {
             <input
               type="checkbox"
               checked={autoRefresh}
-              onChange={(e) => setAutoRefresh(e.target.checked)}
+              onChange={e => setAutoRefresh(e.target.checked)}
               className="h-4 w-4 accent-amber-400"
             />
             Auto-refresh (1 min)
@@ -146,7 +152,7 @@ const AdminDashboard: React.FC = () => {
       </AdminCard>
 
       {/* Quick Actions */}
-      {extendedStats && (extendedStats.requests.pending > 0) && (
+      {extendedStats && extendedStats.requests.pending > 0 && (
         <AdminCard>
           <h2 className="text-lg font-semibold text-white mb-3">Ações Rápidas</h2>
           <div className="flex flex-wrap gap-3">
@@ -187,16 +193,25 @@ const AdminDashboard: React.FC = () => {
             />
           </AdminChartCard>
 
-          <AdminChartCard
-            title="Insights"
-            subtitle="Leituras rápidas para priorização"
-          >
+          <AdminChartCard title="Insights" subtitle="Leituras rápidas para priorização">
             <div className="space-y-3">
               {[
-                { label: 'Taxa de aprovação', value: `${insights.approvalRate}%`, color: 'text-emerald-400' },
-                { label: 'Taxa de rejeição', value: `${insights.rejectionRate}%`, color: 'text-red-400' },
-                { label: 'Fila pendente', value: `${insights.pendingRate}%`, color: 'text-amber-400' },
-              ].map((row) => (
+                {
+                  label: 'Taxa de aprovação',
+                  value: `${insights.approvalRate}%`,
+                  color: 'text-emerald-400',
+                },
+                {
+                  label: 'Taxa de rejeição',
+                  value: `${insights.rejectionRate}%`,
+                  color: 'text-red-400',
+                },
+                {
+                  label: 'Fila pendente',
+                  value: `${insights.pendingRate}%`,
+                  color: 'text-amber-400',
+                },
+              ].map(row => (
                 <div
                   key={row.label}
                   className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-4"
@@ -207,12 +222,23 @@ const AdminDashboard: React.FC = () => {
               ))}
 
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wide">Total no ciclo</p>
+                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wide">
+                  Total no ciclo
+                </p>
                 <p className="mt-1 text-2xl font-bold text-white tabular-nums">{insights.total}</p>
                 <p className="mt-2 text-sm text-slate-400">
-                  Pendentes: <span className="text-amber-300 font-semibold tabular-nums">{insights.pending}</span>{' '}
-                  | Aprovadas: <span className="text-emerald-300 font-semibold tabular-nums">{insights.approved}</span>{' '}
-                  | Rejeitadas: <span className="text-red-300 font-semibold tabular-nums">{insights.rejected}</span>
+                  Pendentes:{' '}
+                  <span className="text-amber-300 font-semibold tabular-nums">
+                    {insights.pending}
+                  </span>{' '}
+                  | Aprovadas:{' '}
+                  <span className="text-emerald-300 font-semibold tabular-nums">
+                    {insights.approved}
+                  </span>{' '}
+                  | Rejeitadas:{' '}
+                  <span className="text-red-300 font-semibold tabular-nums">
+                    {insights.rejected}
+                  </span>
                 </p>
               </div>
             </div>

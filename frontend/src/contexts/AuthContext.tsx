@@ -3,10 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import type { AuthContextType, LoginCredentials, Musician } from '../types';
 import { authService, musicianService } from '../services/api';
-import {
-  clearStoredAccessToken,
-  clearStoredRefreshToken,
-} from '../utils/tokenStorage';
+import { clearStoredAccessToken, clearStoredRefreshToken } from '../utils/tokenStorage';
 import { logError } from '../utils/logger';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

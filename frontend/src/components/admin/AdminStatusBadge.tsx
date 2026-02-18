@@ -17,15 +17,34 @@ interface AdminStatusBadgeProps {
   label?: string;
 }
 
-const statusConfig: Record<StatusType, { icon: React.ElementType; classes: string; defaultLabel: string }> = {
+const statusConfig: Record<
+  StatusType,
+  { icon: React.ElementType; classes: string; defaultLabel: string }
+> = {
   pending: { icon: Clock, classes: 'bg-amber-500/20 text-amber-400', defaultLabel: 'Pendente' },
-  approved: { icon: CheckCircle, classes: 'bg-emerald-500/20 text-emerald-400', defaultLabel: 'Aprovado' },
+  approved: {
+    icon: CheckCircle,
+    classes: 'bg-emerald-500/20 text-emerald-400',
+    defaultLabel: 'Aprovado',
+  },
   rejected: { icon: XCircle, classes: 'bg-red-500/20 text-red-400', defaultLabel: 'Rejeitado' },
   cancelled: { icon: Ban, classes: 'bg-slate-600/40 text-slate-400', defaultLabel: 'Cancelado' },
-  responded: { icon: CheckCircle, classes: 'bg-emerald-500/20 text-emerald-400', defaultLabel: 'Respondido' },
+  responded: {
+    icon: CheckCircle,
+    classes: 'bg-emerald-500/20 text-emerald-400',
+    defaultLabel: 'Respondido',
+  },
   reserved: { icon: Clock, classes: 'bg-blue-500/20 text-blue-400', defaultLabel: 'Reservado' },
-  confirmed: { icon: CheckCircle, classes: 'bg-indigo-500/20 text-indigo-400', defaultLabel: 'Confirmado' },
-  completed: { icon: CheckCircle, classes: 'bg-emerald-500/20 text-emerald-400', defaultLabel: 'Concluído' },
+  confirmed: {
+    icon: CheckCircle,
+    classes: 'bg-indigo-500/20 text-indigo-400',
+    defaultLabel: 'Confirmado',
+  },
+  completed: {
+    icon: CheckCircle,
+    classes: 'bg-emerald-500/20 text-emerald-400',
+    defaultLabel: 'Concluído',
+  },
   declined: { icon: XCircle, classes: 'bg-red-500/20 text-red-400', defaultLabel: 'Recusado' },
 };
 
@@ -39,7 +58,9 @@ export const AdminStatusBadge: React.FC<AdminStatusBadgeProps> = ({ status, labe
   const Icon = config.icon;
 
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${config.classes}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${config.classes}`}
+    >
       <Icon className="w-3.5 h-3.5" />
       {label || config.defaultLabel}
     </span>

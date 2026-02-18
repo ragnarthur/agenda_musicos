@@ -47,18 +47,10 @@ const getStatusLabel = (status: BadgeStatus): string => {
   }
 };
 
-export const AdminBadge: React.FC<AdminBadgeProps> = ({
-  status,
-  size = 'md',
-  className = '',
-}) => {
+export const AdminBadge: React.FC<AdminBadgeProps> = ({ status, size = 'md', className = '' }) => {
   const sizeClass = size === 'sm' ? 'admin-badge-sm' : 'admin-badge-md';
   const statusClass = getStatusClasses(status);
   const label = getStatusLabel(status);
 
-  return (
-    <span className={`admin-badge ${sizeClass} ${statusClass} ${className}`}>
-      {label}
-    </span>
-  );
+  return <span className={`admin-badge ${sizeClass} ${statusClass} ${className}`}>{label}</span>;
 };

@@ -73,7 +73,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
           >
             <div
               className={`${getSizeClasses(size)} w-full bg-slate-900/95 backdrop-blur border border-white/10 rounded-2xl shadow-2xl max-h-[90svh] overflow-y-auto pointer-events-auto`}
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               <div className="sticky top-0 bg-slate-900/95 backdrop-blur border-b border-white/10 p-4 sm:p-6 flex items-start justify-between z-10">
                 <h2 className="text-xl font-bold text-white">{title}</h2>

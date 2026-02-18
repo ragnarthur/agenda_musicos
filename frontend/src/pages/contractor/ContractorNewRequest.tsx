@@ -1,14 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  Calendar,
-  MapPin,
-  Clock,
-  FileText,
-  Music,
-  X,
-  Send,
-} from 'lucide-react';
+import { Calendar, MapPin, Clock, FileText, Music, X, Send } from 'lucide-react';
 import ContractorLayout from '../../components/contractor/ContractorLayout';
 import FormField from '../../components/form/FormField';
 import {
@@ -57,7 +49,8 @@ export default function ContractorNewRequest() {
   // Pre-fill musician from URL param
   useEffect(() => {
     if (musicianIdParam) {
-      publicMusicianService.getPublicProfile(Number(musicianIdParam))
+      publicMusicianService
+        .getPublicProfile(Number(musicianIdParam))
         .then(musician => setSelectedMusician(musician))
         .catch(() => showToast.error('Músico não encontrado'));
     }
@@ -65,7 +58,8 @@ export default function ContractorNewRequest() {
 
   useEffect(() => {
     let active = true;
-    publicMusicGenresService.listAvailable()
+    publicMusicGenresService
+      .listAvailable()
       .then(genres => {
         if (!active) return;
         setAvailableGenres(genres);
@@ -80,11 +74,9 @@ export default function ContractorNewRequest() {
   }, []);
 
   const genreOptions = useMemo(() => {
-    const base = (availableGenres.length > 0
-      ? availableGenres
-      : MUSICAL_GENRES.map(g => g.value)
-    )
-      .filter(Boolean);
+    const base = (
+      availableGenres.length > 0 ? availableGenres : MUSICAL_GENRES.map(g => g.value)
+    ).filter(Boolean);
 
     const unique = Array.from(new Set(base));
     unique.sort((a, b) => getGenreLabel(a).localeCompare(getGenreLabel(b), 'pt-BR'));
@@ -99,12 +91,13 @@ export default function ContractorNewRequest() {
 
     let active = true;
     setLoadingGenreMusicians(true);
-    allMusiciansService.list({
-      genre,
-      state: locationState || undefined,
-      city: debouncedLocationCity || undefined,
-      limit: 50,
-    })
+    allMusiciansService
+      .list({
+        genre,
+        state: locationState || undefined,
+        city: debouncedLocationCity || undefined,
+        limit: 50,
+      })
       .then(data => {
         if (!active) return;
         setGenreMusicians(data);
@@ -131,38 +124,51 @@ export default function ContractorNewRequest() {
     setSelectedMusician(null);
   };
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
 
-    if (!selectedMusician) {
-      showToast.error('Selecione um músico');
-      return;
-    }
-    if (!eventDate || !eventType || !locationState || !locationCity) {
-      showToast.error('Preencha todos os campos obrigatórios');
-      return;
-    }
+      if (!selectedMusician) {
+        showToast.error('Selecione um músico');
+        return;
+      }
+      if (!eventDate || !eventType || !locationState || !locationCity) {
+        showToast.error('Preencha todos os campos obrigatórios');
+        return;
+      }
 
-    setSubmitting(true);
-    try {
-      await quoteRequestService.create({
-        musician: selectedMusician.id,
-        event_date: eventDate,
-        event_type: eventType,
-        location_state: locationState,
-        location_city: locationCity,
-        venue_name: venueName || undefined,
-        duration_hours: durationHours ? Number(durationHours) : undefined,
-        notes: notes || undefined,
-      });
-      showToast.success('Pedido enviado com sucesso!');
-      navigate(CONTRACTOR_ROUTES.requests);
-    } catch (error) {
-      showToast.apiError(error);
-    } finally {
-      setSubmitting(false);
-    }
-  }, [selectedMusician, eventDate, eventType, locationState, locationCity, venueName, durationHours, notes, navigate]);
+      setSubmitting(true);
+      try {
+        await quoteRequestService.create({
+          musician: selectedMusician.id,
+          event_date: eventDate,
+          event_type: eventType,
+          location_state: locationState,
+          location_city: locationCity,
+          venue_name: venueName || undefined,
+          duration_hours: durationHours ? Number(durationHours) : undefined,
+          notes: notes || undefined,
+        });
+        showToast.success('Pedido enviado com sucesso!');
+        navigate(CONTRACTOR_ROUTES.requests);
+      } catch (error) {
+        showToast.apiError(error);
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [
+      selectedMusician,
+      eventDate,
+      eventType,
+      locationState,
+      locationCity,
+      venueName,
+      durationHours,
+      notes,
+      navigate,
+    ]
+  );
 
   // Minimum date = today
   const today = new Date().toISOString().split('T')[0];
@@ -217,7 +223,12 @@ export default function ContractorNewRequest() {
               </FormField>
             ) : (
               <>
-                <FormField id="genre" label="Estilo musical" required icon={<Music className="w-4 h-4" />}>
+                <FormField
+                  id="genre"
+                  label="Estilo musical"
+                  required
+                  icon={<Music className="w-4 h-4" />}
+                >
                   <select
                     id="genre"
                     value={genre}
@@ -230,12 +241,19 @@ export default function ContractorNewRequest() {
                   >
                     <option value="">Selecione...</option>
                     {genreOptions.map(value => (
-                      <option key={value} value={value}>{getGenreLabel(value)}</option>
+                      <option key={value} value={value}>
+                        {getGenreLabel(value)}
+                      </option>
                     ))}
                   </select>
                 </FormField>
 
-                <FormField id="musician_select" label="Músico" required icon={<Music className="w-4 h-4" />}>
+                <FormField
+                  id="musician_select"
+                  label="Músico"
+                  required
+                  icon={<Music className="w-4 h-4" />}
+                >
                   <select
                     id="musician_select"
                     value=""
@@ -261,7 +279,9 @@ export default function ContractorNewRequest() {
                       <option key={musician.id} value={musician.id}>
                         {musician.full_name}
                         {musician.instrument ? ` · ${musician.instrument}` : ''}
-                        {musician.city && musician.state ? ` · ${musician.city}-${musician.state}` : ''}
+                        {musician.city && musician.state
+                          ? ` · ${musician.city}-${musician.state}`
+                          : ''}
                       </option>
                     ))}
                   </select>
@@ -270,7 +290,12 @@ export default function ContractorNewRequest() {
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField id="event_date" label="Data do Evento" required icon={<Calendar className="w-4 h-4" />}>
+              <FormField
+                id="event_date"
+                label="Data do Evento"
+                required
+                icon={<Calendar className="w-4 h-4" />}
+              >
                 <input
                   id="event_date"
                   type="date"
@@ -281,7 +306,12 @@ export default function ContractorNewRequest() {
                   required
                 />
               </FormField>
-              <FormField id="event_type" label="Tipo de Evento" required icon={<FileText className="w-4 h-4" />}>
+              <FormField
+                id="event_type"
+                label="Tipo de Evento"
+                required
+                icon={<FileText className="w-4 h-4" />}
+              >
                 <input
                   id="event_type"
                   type="text"
@@ -295,7 +325,12 @@ export default function ContractorNewRequest() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField id="location_state" label="Estado" required icon={<MapPin className="w-4 h-4" />}>
+              <FormField
+                id="location_state"
+                label="Estado"
+                required
+                icon={<MapPin className="w-4 h-4" />}
+              >
                 <select
                   id="location_state"
                   value={locationState}
@@ -305,11 +340,18 @@ export default function ContractorNewRequest() {
                 >
                   <option value="">Selecione...</option>
                   {BRAZILIAN_STATES.map(({ value, label }) => (
-                    <option key={value} value={value}>{label}</option>
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
                   ))}
                 </select>
               </FormField>
-              <FormField id="location_city" label="Cidade" required icon={<MapPin className="w-4 h-4" />}>
+              <FormField
+                id="location_city"
+                label="Cidade"
+                required
+                icon={<MapPin className="w-4 h-4" />}
+              >
                 <input
                   id="location_city"
                   type="text"
@@ -333,7 +375,11 @@ export default function ContractorNewRequest() {
                   className="input-field pl-10"
                 />
               </FormField>
-              <FormField id="duration_hours" label="Duração (horas)" icon={<Clock className="w-4 h-4" />}>
+              <FormField
+                id="duration_hours"
+                label="Duração (horas)"
+                icon={<Clock className="w-4 h-4" />}
+              >
                 <input
                   id="duration_hours"
                   type="number"

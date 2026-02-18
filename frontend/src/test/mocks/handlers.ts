@@ -95,7 +95,10 @@ export const handlers = [
     let filteredEvents = [...mockEvents];
 
     if (status) {
-      const statuses = status.split(',').map(s => s.trim()).filter(Boolean);
+      const statuses = status
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
       filteredEvents = filteredEvents.filter(e => statuses.includes(e.status));
     }
 

@@ -1,12 +1,4 @@
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 type Datum = { label: string; value: number };
 
@@ -25,11 +17,7 @@ export default function TopListBars({
   return (
     <div className="h-[280px]">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          data={sliced}
-          layout="vertical"
-          margin={{ top: 6, right: 8, left: 8, bottom: 6 }}
-        >
+        <BarChart data={sliced} layout="vertical" margin={{ top: 6, right: 8, left: 8, bottom: 6 }}>
           <CartesianGrid stroke="rgba(255,255,255,0.08)" horizontal={false} />
           <XAxis
             type="number"
@@ -54,7 +42,7 @@ export default function TopListBars({
               color: '#fff',
               fontSize: 12,
             }}
-            formatter={(value) => [value ?? 0, valueLabel]}
+            formatter={value => [value ?? 0, valueLabel]}
           />
           <Bar dataKey="value" fill="#6366f1" radius={[10, 10, 10, 10]} />
         </BarChart>

@@ -18,14 +18,8 @@ export default function PullToRefresh({
   disabled = false,
   className = '',
 }: PullToRefreshProps) {
-  const {
-    isRefreshing,
-    pullProgress,
-    isPulling,
-    onTouchStart,
-    onTouchMove,
-    onTouchEnd,
-  } = usePullToRefresh({ onRefresh, disabled });
+  const { isRefreshing, pullProgress, isPulling, onTouchStart, onTouchMove, onTouchEnd } =
+    usePullToRefresh({ onRefresh, disabled });
 
   const indicatorY = isPulling || isRefreshing ? Math.min(pullProgress * 80, 80) : 0;
   const rotation = pullProgress * 180;
@@ -52,15 +46,10 @@ export default function PullToRefresh({
           {isRefreshing ? (
             <Loader2 className="w-5 h-5 text-indigo-600 animate-spin" />
           ) : (
-            <motion.div
-              animate={{ rotate: rotation }}
-              transition={{ type: 'spring', damping: 20 }}
-            >
+            <motion.div animate={{ rotate: rotation }} transition={{ type: 'spring', damping: 20 }}>
               <ArrowDown
                 className={`w-5 h-5 transition-colors ${
-                  pullProgress >= 1
-                    ? 'text-indigo-600'
-                    : 'text-gray-400 dark:text-gray-500'
+                  pullProgress >= 1 ? 'text-indigo-600' : 'text-gray-400 dark:text-gray-500'
                 }`}
               />
             </motion.div>

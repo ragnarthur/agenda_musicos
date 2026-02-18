@@ -11,7 +11,7 @@ vi.mock('virtual:pwa-register', () => ({
 // Many smoke tests just assert "renders without crashing" and don't care about
 // Auth/Theme state. We keep real Providers available (used by renderWithProviders),
 // but mock the hooks to avoid requiring Provider wiring in every test file.
-vi.mock('../contexts/AuthContext', async (importOriginal) => {
+vi.mock('../contexts/AuthContext', async importOriginal => {
   const actual = await importOriginal<typeof import('../contexts/AuthContext')>();
   const defaultAuthState = {
     user: null,
@@ -29,7 +29,7 @@ vi.mock('../contexts/AuthContext', async (importOriginal) => {
   };
 });
 
-vi.mock('../contexts/useTheme', async (importOriginal) => {
+vi.mock('../contexts/useTheme', async importOriginal => {
   const actual = await importOriginal<typeof import('../contexts/useTheme')>();
   return {
     ...actual,

@@ -223,7 +223,7 @@ export default function BookingAudit() {
       });
     }
 
-    const acceptedProposal = proposals.find((p) => p.status === 'accepted');
+    const acceptedProposal = proposals.find(p => p.status === 'accepted');
     if (acceptedProposal && !hasBooking) {
       out.push({
         id: 'accepted_without_booking',
@@ -246,7 +246,7 @@ export default function BookingAudit() {
       }
     }
 
-    if (reqStatus === 'declined' && proposals.some((p) => p.status === 'accepted')) {
+    if (reqStatus === 'declined' && proposals.some(p => p.status === 'accepted')) {
       out.push({
         id: 'status_mismatch_declined',
         severity: 'high',
@@ -350,7 +350,12 @@ export default function BookingAudit() {
                 <div className="hidden md:block text-xs text-slate-400">
                   Atualizado:{' '}
                   <span className="text-slate-200 font-semibold tabular-nums">
-                    {lastUpdatedAt ? lastUpdatedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}
+                    {lastUpdatedAt
+                      ? lastUpdatedAt.toLocaleTimeString('pt-BR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      : '-'}
                   </span>
                 </div>
                 <AdminButton
@@ -374,14 +379,12 @@ export default function BookingAudit() {
             />
           </AdminChartCard>
 
-          <AdminChartCard
-            title="Top Musicos"
-            subtitle="Mais reservas no periodo"
-          >
+          <AdminChartCard title="Top Musicos" subtitle="Mais reservas no periodo">
             <TopListBars
               valueLabel="Reservas"
-              data={stats.top_musicians.map((m) => ({
-                label: `${m.request__musician__user__first_name} ${m.request__musician__user__last_name}`.trim(),
+              data={stats.top_musicians.map(m => ({
+                label:
+                  `${m.request__musician__user__first_name} ${m.request__musician__user__last_name}`.trim(),
                 value: m.booking_count,
               }))}
             />
@@ -394,29 +397,38 @@ export default function BookingAudit() {
           >
             <TopListBars
               valueLabel="Pedidos"
-              data={stats.top_cities.map((c) => ({
+              data={stats.top_cities.map(c => ({
                 label: `${c.location_city}-${c.location_state}`,
                 value: c.request_count,
               }))}
             />
           </AdminChartCard>
 
-          <AdminChartCard
-            title="Ultimos 30 dias"
-            subtitle="Volume recente"
-          >
+          <AdminChartCard title="Ultimos 30 dias" subtitle="Volume recente">
             <div className="grid grid-cols-1 gap-3">
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wide">Pedidos</p>
-                <p className="mt-1 text-3xl font-bold text-white tabular-nums">{stats.last_30_days.requests}</p>
+                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wide">
+                  Pedidos
+                </p>
+                <p className="mt-1 text-3xl font-bold text-white tabular-nums">
+                  {stats.last_30_days.requests}
+                </p>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wide">Reservas</p>
-                <p className="mt-1 text-3xl font-bold text-white tabular-nums">{stats.last_30_days.bookings}</p>
+                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wide">
+                  Reservas
+                </p>
+                <p className="mt-1 text-3xl font-bold text-white tabular-nums">
+                  {stats.last_30_days.bookings}
+                </p>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wide">Conversao</p>
-                <p className="mt-1 text-3xl font-bold text-emerald-300 tabular-nums">{stats.global.conversion_rate}%</p>
+                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wide">
+                  Conversao
+                </p>
+                <p className="mt-1 text-3xl font-bold text-emerald-300 tabular-nums">
+                  {stats.global.conversion_rate}%
+                </p>
               </div>
             </div>
           </AdminChartCard>
@@ -481,7 +493,8 @@ export default function BookingAudit() {
         <div className="p-4 border-b border-white/10">
           <h2 className="text-lg font-semibold text-white">Pedidos de Orçamento</h2>
           <p className="text-sm text-slate-400 mt-1">
-            {requests.length} pedido{requests.length !== 1 ? 's' : ''} encontrado{requests.length !== 1 ? 's' : ''}
+            {requests.length} pedido{requests.length !== 1 ? 's' : ''} encontrado
+            {requests.length !== 1 ? 's' : ''}
           </p>
         </div>
 
@@ -498,11 +511,16 @@ export default function BookingAudit() {
             <table className="w-full">
               <thead className="bg-white/5">
                 <tr>
-                  {['Data', 'Contratante', 'Músico', 'Evento', 'Local', 'Status', 'Ações'].map(header => (
-                    <th key={header} className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
-                      {header}
-                    </th>
-                  ))}
+                  {['Data', 'Contratante', 'Músico', 'Evento', 'Local', 'Status', 'Ações'].map(
+                    header => (
+                      <th
+                        key={header}
+                        className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider"
+                      >
+                        {header}
+                      </th>
+                    )
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -568,10 +586,13 @@ export default function BookingAudit() {
             >
               Exportar JSON
             </AdminButton>
-            <AdminButton variant="secondary" onClick={() => {
-              setDetailsOpen(false);
-              setSelectedRequest(null);
-            }}>
+            <AdminButton
+              variant="secondary"
+              onClick={() => {
+                setDetailsOpen(false);
+                setSelectedRequest(null);
+              }}
+            >
               Fechar
             </AdminButton>
           </>
@@ -590,7 +611,9 @@ export default function BookingAudit() {
                   <p className="mt-1 text-sm text-slate-400">
                     Score: <span className="text-white font-bold tabular-nums">{auditScore}</span>
                     {findings.length > 0 ? (
-                      <span className="ml-2 text-slate-400">({findings.length} achado{findings.length !== 1 ? 's' : ''})</span>
+                      <span className="ml-2 text-slate-400">
+                        ({findings.length} achado{findings.length !== 1 ? 's' : ''})
+                      </span>
                     ) : null}
                   </p>
                 </div>
@@ -607,7 +630,7 @@ export default function BookingAudit() {
 
               {findings.length > 0 && (
                 <div className="mt-3 grid grid-cols-1 gap-2">
-                  {findings.map((f) => (
+                  {findings.map(f => (
                     <div
                       key={f.id}
                       className="rounded-lg border border-white/10 bg-slate-950/30 p-3"
@@ -623,7 +646,11 @@ export default function BookingAudit() {
                                 : 'px-2 py-0.5 rounded-full bg-slate-500/20 text-slate-200 text-xs font-semibold'
                           }
                         >
-                          {f.severity === 'high' ? 'Alta' : f.severity === 'medium' ? 'Media' : 'Baixa'}
+                          {f.severity === 'high'
+                            ? 'Alta'
+                            : f.severity === 'medium'
+                              ? 'Media'
+                              : 'Baixa'}
                         </span>
                       </div>
                       <p className="mt-1 text-sm text-slate-400">{f.details}</p>
@@ -637,12 +664,23 @@ export default function BookingAudit() {
             <div>
               <h3 className="text-base font-semibold text-white mb-3">Informações do Pedido</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-slate-300">
-                <p><strong className="text-white">Contratante:</strong> {selectedRequest.request.contractor_name}</p>
-                <p><strong className="text-white">Músico:</strong> {selectedRequest.request.musician_name}</p>
-                <p><strong className="text-white">Evento:</strong> {selectedRequest.request.event_type}</p>
+                <p>
+                  <strong className="text-white">Contratante:</strong>{' '}
+                  {selectedRequest.request.contractor_name}
+                </p>
+                <p>
+                  <strong className="text-white">Músico:</strong>{' '}
+                  {selectedRequest.request.musician_name}
+                </p>
+                <p>
+                  <strong className="text-white">Evento:</strong>{' '}
+                  {selectedRequest.request.event_type}
+                </p>
                 <p>
                   <strong className="text-white">Data:</strong>{' '}
-                  {selectedRequest.request.event_date ? formatDate(selectedRequest.request.event_date) : '-'}
+                  {selectedRequest.request.event_date
+                    ? formatDate(selectedRequest.request.event_date)
+                    : '-'}
                 </p>
                 <p>
                   <strong className="text-white">Local:</strong>{' '}
@@ -650,7 +688,10 @@ export default function BookingAudit() {
                 </p>
                 <p>
                   <strong className="text-white">Status:</strong>{' '}
-                  <AdminStatusBadge status={selectedRequest.request.status} label={selectedRequest.request.status_display} />
+                  <AdminStatusBadge
+                    status={selectedRequest.request.status}
+                    label={selectedRequest.request.status_display}
+                  />
                 </p>
               </div>
               {selectedRequest.request.notes && (
@@ -668,23 +709,37 @@ export default function BookingAudit() {
                 <div className="space-y-2 text-sm text-slate-300">
                   <p>
                     <strong className="text-white">Status:</strong>{' '}
-                    <AdminStatusBadge status={selectedRequest.booking.status} label={selectedRequest.booking.status_display} />
+                    <AdminStatusBadge
+                      status={selectedRequest.booking.status}
+                      label={selectedRequest.booking.status_display}
+                    />
                   </p>
-                  <p><strong className="text-white">Reservado em:</strong> {formatDateTime(selectedRequest.booking.reserved_at)}</p>
+                  <p>
+                    <strong className="text-white">Reservado em:</strong>{' '}
+                    {formatDateTime(selectedRequest.booking.reserved_at)}
+                  </p>
                   {selectedRequest.booking.confirmed_at && (
-                    <p><strong className="text-white">Confirmado em:</strong> {formatDateTime(selectedRequest.booking.confirmed_at)}</p>
+                    <p>
+                      <strong className="text-white">Confirmado em:</strong>{' '}
+                      {formatDateTime(selectedRequest.booking.confirmed_at)}
+                    </p>
                   )}
                   {selectedRequest.booking.completed_at && (
-                    <p><strong className="text-white">Concluído em:</strong> {formatDateTime(selectedRequest.booking.completed_at)}</p>
+                    <p>
+                      <strong className="text-white">Concluído em:</strong>{' '}
+                      {formatDateTime(selectedRequest.booking.completed_at)}
+                    </p>
                   )}
                   {selectedRequest.booking.cancel_reason && (
                     <p className="text-red-400">
-                      <strong className="text-white">Motivo do cancelamento:</strong> {selectedRequest.booking.cancel_reason}
+                      <strong className="text-white">Motivo do cancelamento:</strong>{' '}
+                      {selectedRequest.booking.cancel_reason}
                     </p>
                   )}
                 </div>
 
-                {(selectedRequest.booking.status === 'reserved' || selectedRequest.booking.status === 'confirmed') && (
+                {(selectedRequest.booking.status === 'reserved' ||
+                  selectedRequest.booking.status === 'confirmed') && (
                   <AdminButton
                     variant="danger"
                     size="sm"
@@ -707,15 +762,26 @@ export default function BookingAudit() {
                   {selectedRequest.proposals.map(proposal => (
                     <div key={proposal.id} className="border border-white/10 rounded-lg p-4">
                       <div className="flex items-start justify-between mb-2">
-                        <AdminStatusBadge status={proposal.status} label={proposal.status_display} />
-                        <span className="text-xs text-slate-500">{formatDateTime(proposal.created_at)}</span>
+                        <AdminStatusBadge
+                          status={proposal.status}
+                          label={proposal.status_display}
+                        />
+                        <span className="text-xs text-slate-500">
+                          {formatDateTime(proposal.created_at)}
+                        </span>
                       </div>
                       <p className="text-sm text-slate-300 mb-2">{proposal.message}</p>
                       {proposal.proposed_value && (
-                        <p className="text-sm text-slate-400"><strong className="text-white">Valor:</strong> {formatCurrency(proposal.proposed_value)}</p>
+                        <p className="text-sm text-slate-400">
+                          <strong className="text-white">Valor:</strong>{' '}
+                          {formatCurrency(proposal.proposed_value)}
+                        </p>
                       )}
                       {proposal.valid_until && (
-                        <p className="text-sm text-slate-400"><strong className="text-white">Válido até:</strong> {formatDate(proposal.valid_until)}</p>
+                        <p className="text-sm text-slate-400">
+                          <strong className="text-white">Válido até:</strong>{' '}
+                          {formatDate(proposal.valid_until)}
+                        </p>
                       )}
                     </div>
                   ))}
@@ -736,7 +802,9 @@ export default function BookingAudit() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
                           <p className="text-sm font-medium text-white">{event.action}</p>
-                          <span className="text-xs text-slate-500">{formatDateTime(event.created_at)}</span>
+                          <span className="text-xs text-slate-500">
+                            {formatDateTime(event.created_at)}
+                          </span>
                         </div>
                         {event.actor_name && (
                           <p className="text-xs text-slate-400">por {event.actor_name}</p>
@@ -767,10 +835,13 @@ export default function BookingAudit() {
         size="sm"
         footer={
           <>
-            <AdminButton variant="secondary" onClick={() => {
-              setCancelModalOpen(false);
-              setCancelReason('');
-            }}>
+            <AdminButton
+              variant="secondary"
+              onClick={() => {
+                setCancelModalOpen(false);
+                setCancelReason('');
+              }}
+            >
               Voltar
             </AdminButton>
             <AdminButton

@@ -9,10 +9,7 @@ interface UseMusicianEventsParams {
   isOwnProfile?: boolean;
 }
 
-export function useMusicianEvents({
-  musicianId,
-  isOwnProfile = false,
-}: UseMusicianEventsParams) {
+export function useMusicianEvents({ musicianId, isOwnProfile = false }: UseMusicianEventsParams) {
   const {
     data: calendarData,
     error,
@@ -45,7 +42,7 @@ export function useMusicianEvents({
     }
 
     if (availabilities && availabilities.length > 0) {
-      availabilities.forEach((avail) => {
+      availabilities.forEach(avail => {
         const availabilityEvent: CalendarEvent = {
           id: avail.id * -1,
           title: avail.notes || 'Disponível',

@@ -56,9 +56,12 @@ export default function LoginCompany() {
           toast.error('Conta não encontrada. Faça o cadastro primeiro.');
           navigate('/contratante/cadastro');
         } else if (result.user_type === 'contractor' && result.contractor) {
-          setSession({
-            organization: result.contractor as ContractorProfile,
-          }, rememberMe);
+          setSession(
+            {
+              organization: result.contractor as ContractorProfile,
+            },
+            rememberMe
+          );
           toast.success('Login realizado!');
           navigate('/contratante/dashboard');
         } else {
@@ -168,7 +171,9 @@ export default function LoginCompany() {
 
         {/* Card de Login */}
         <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Entrar como Contratante</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+            Entrar como Contratante
+          </h2>
 
           {/* Google Sign In */}
           <div className="relative mb-6">
@@ -243,7 +248,9 @@ export default function LoginCompany() {
                     onChange={e => setRememberMe(e.target.checked)}
                     className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                   />
-                  <span className="text-xs text-gray-600 dark:text-gray-400">Permanecer conectado</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-400">
+                    Permanecer conectado
+                  </span>
                 </label>
               </div>
             </div>

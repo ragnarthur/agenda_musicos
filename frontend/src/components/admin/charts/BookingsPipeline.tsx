@@ -1,12 +1,4 @@
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 type Datum = { stage: string; value: number };
 
@@ -57,7 +49,7 @@ export default function BookingsPipeline({
               color: '#fff',
               fontSize: 12,
             }}
-            formatter={(value) => [value, 'Qtd']}
+            formatter={value => [value, 'Qtd']}
           />
           <Bar dataKey="value" fill="#22c55e" radius={[10, 10, 8, 8]} />
         </BarChart>
@@ -65,4 +57,3 @@ export default function BookingsPipeline({
     </div>
   );
 }
-

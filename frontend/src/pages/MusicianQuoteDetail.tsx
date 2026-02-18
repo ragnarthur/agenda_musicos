@@ -14,11 +14,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import {
-  quoteRequestService,
-  type QuoteRequest,
-  type QuoteProposal,
-} from '../services/publicApi';
+import { quoteRequestService, type QuoteRequest, type QuoteProposal } from '../services/publicApi';
 import Layout from '../components/Layout/Layout';
 
 export default function MusicianQuoteDetail() {
@@ -36,7 +32,7 @@ export default function MusicianQuoteDetail() {
 
   const loadQuoteAndProposals = useCallback(async () => {
     if (!id) return;
-    
+
     setLoading(true);
     try {
       const [quoteData, proposalsData] = await Promise.all([
@@ -71,20 +67,20 @@ export default function MusicianQuoteDetail() {
       if (proposalValidUntil) payload.valid_until = proposalValidUntil;
 
       await quoteRequestService.sendProposal(Number(id), payload);
-      
+
       // Recarregar propostas
       const newProposals = await quoteRequestService.listProposals(Number(id));
       setProposals(newProposals);
-      
+
       // Recarregar status do pedido
       const updatedQuote = await quoteRequestService.get(Number(id));
       setQuote(updatedQuote);
-      
+
       // Limpar formulário
       setProposalMessage('');
       setProposalValue('');
       setProposalValidUntil('');
-      
+
       toast.success('Proposta enviada com sucesso!');
     } catch (error) {
       toast.error('Erro ao enviar proposta');
@@ -96,16 +92,16 @@ export default function MusicianQuoteDetail() {
 
   const handleConfirmBooking = async () => {
     if (!quote) return;
-    
+
     if (!confirm('Tem certeza que deseja confirmar esta reserva?')) return;
-    
+
     try {
       await quoteRequestService.confirmBooking(Number(id));
-      
+
       // Recarregar status
       const updatedQuote = await quoteRequestService.get(Number(id));
       setQuote(updatedQuote);
-      
+
       toast.success('Reserva confirmada com sucesso!');
     } catch (error) {
       toast.error('Erro ao confirmar reserva');
@@ -227,7 +223,9 @@ export default function MusicianQuoteDetail() {
                     Solicitação de {quote.contractor_name}
                   </p>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(quote.status)}`}>
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(quote.status)}`}
+                >
                   {quote.status_display}
                 </span>
               </div>

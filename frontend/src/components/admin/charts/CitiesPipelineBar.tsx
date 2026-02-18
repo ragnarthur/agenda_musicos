@@ -52,11 +52,11 @@ export default function CitiesPipelineBar({
               color: '#fff',
               fontSize: 12,
             }}
-            formatter={(value) => [value, 'Cidades']}
+            formatter={value => [value, 'Cidades']}
             labelStyle={{ color: 'rgba(226,232,240,0.9)' }}
           />
           <Bar dataKey="value" radius={[10, 10, 8, 8]}>
-            {data.map((d) => (
+            {data.map(d => (
               <Cell key={d.name} fill={d.color} />
             ))}
           </Bar>

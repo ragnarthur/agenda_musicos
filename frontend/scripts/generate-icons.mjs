@@ -115,7 +115,7 @@ function createSplashSvg(width, height) {
   const titleY = iconY + iconSize + Math.round(height * 0.04);
   const subtitleY = titleY + Math.round(height * 0.035);
   const titleSize = Math.round(width * 0.065);
-  const subtitleSize = Math.round(width * 0.030);
+  const subtitleSize = Math.round(width * 0.03);
 
   return `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
@@ -250,7 +250,9 @@ async function generateSplashScreens() {
   for (const [w, h] of sizes) {
     const splashSvg = createSplashSvg(w, h);
     const filename = `splash-${w}x${h}.png`;
-    await sharp(Buffer.from(splashSvg)).png().toFile(join(PUBLIC, 'splash', filename));
+    await sharp(Buffer.from(splashSvg))
+      .png()
+      .toFile(join(PUBLIC, 'splash', filename));
     console.log(`  ${filename}`);
   }
 }

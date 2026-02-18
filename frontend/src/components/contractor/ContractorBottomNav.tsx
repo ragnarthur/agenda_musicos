@@ -23,10 +23,7 @@ const ContractorBottomNav: React.FC = () => {
   }, []);
 
   // Hide on login/register pages
-  if (
-    location.pathname === '/contratante/login' ||
-    location.pathname === '/contratante/cadastro'
-  ) {
+  if (location.pathname === '/contratante/login' || location.pathname === '/contratante/cadastro') {
     return null;
   }
 
@@ -37,14 +34,13 @@ const ContractorBottomNav: React.FC = () => {
       }`}
     >
       <div className="flex items-center justify-around px-2 py-2">
-        {contractorNavItems.map((item) => {
+        {contractorNavItems.map(item => {
           const Icon = item.icon;
           const isAction = 'isAction' in item && item.isAction;
           const isActive =
             item.path === '/contratante/dashboard'
               ? location.pathname === '/contratante/dashboard'
-              : location.pathname === item.path ||
-                location.pathname.startsWith(`${item.path}/`);
+              : location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
 
           if (isAction) {
             return (

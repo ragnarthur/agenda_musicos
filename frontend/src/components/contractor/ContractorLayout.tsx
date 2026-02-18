@@ -54,11 +54,7 @@ const ContractorLayout: React.FC<ContractorLayoutProps> = ({ children }) => {
       <ContractorNavbar />
 
       <div className="relative z-10 flex min-h-[100svh] flex-col pt-4 sm:pt-6">
-        <main
-          id="main-content"
-          ref={mainRef}
-          className="page-shell flex-1 pb-24 md:pb-16"
-        >
+        <main id="main-content" ref={mainRef} className="page-shell flex-1 pb-24 md:pb-16">
           {children}
         </main>
 

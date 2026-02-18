@@ -2,16 +2,7 @@
 // Catálogo público global de músicos
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Search,
-  MapPin,
-  Music,
-  Star,
-  Users,
-  Filter,
-  ChevronDown,
-  Calendar,
-} from 'lucide-react';
+import { Search, MapPin, Music, Star, Users, Filter, ChevronDown, Calendar } from 'lucide-react';
 import { allMusiciansService, type MusicianPublic } from '../services/publicApi';
 import { BRAZILIAN_STATES } from '../config/cities';
 import { formatInstrumentLabel, normalizeInstrumentKey } from '../utils/formatting';
@@ -39,7 +30,7 @@ export default function OurMusicians() {
   const navigate = useNavigate();
   const [musicians, setMusicians] = useState<MusicianPublic[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Filtros
   const [search, setSearch] = useState('');
   const [city, setCity] = useState('');
@@ -57,7 +48,8 @@ export default function OurMusicians() {
 
   usePageMeta({
     title: 'Catálogo de Músicos - GigFlow',
-    description: 'Encontre músicos profissionais para seu evento. Filtre por cidade, instrumento e avaliação no catálogo do GigFlow.',
+    description:
+      'Encontre músicos profissionais para seu evento. Filtre por cidade, instrumento e avaliação no catálogo do GigFlow.',
   });
 
   const loadMusicians = useCallback(async () => {
@@ -131,7 +123,9 @@ export default function OurMusicians() {
           >
             <Filter className="w-5 h-5" />
             Filtros
-            <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`}
+            />
           </button>
 
           {/* Busca sempre visível */}
@@ -157,10 +151,12 @@ export default function OurMusicians() {
                   value={state}
                   onChange={e => setState(e.target.value)}
                   className="w-full px-4 py-2 bg-white dark:bg-white/10 border border-slate-200 dark:border-white/20 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  >
+                >
                   <option value="">Todos</option>
                   {BRAZILIAN_STATES.map(({ value, label }) => (
-                    <option key={value} value={value}>{label}</option>
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -228,9 +224,7 @@ export default function OurMusicians() {
         ) : musicians.length === 0 ? (
           <div className="text-center py-12">
             <Users className="w-16 h-16 mx-auto mb-4 text-slate-400 dark:text-gray-400" />
-            <p className="text-xl text-slate-700 dark:text-gray-300">
-              Nenhum músico encontrado
-            </p>
+            <p className="text-xl text-slate-700 dark:text-gray-300">Nenhum músico encontrado</p>
             <p className="text-sm text-slate-500 dark:text-gray-400 mt-2">
               Tente ajustar os filtros de busca
             </p>
@@ -238,7 +232,8 @@ export default function OurMusicians() {
         ) : (
           <>
             <p className="text-slate-600 dark:text-gray-400 mb-6">
-              {musicians.length} músico{musicians.length !== 1 ? 's' : ''} encontrado{musicians.length !== 1 ? 's' : ''}
+              {musicians.length} músico{musicians.length !== 1 ? 's' : ''} encontrado
+              {musicians.length !== 1 ? 's' : ''}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -259,92 +254,95 @@ export default function OurMusicians() {
                 const extraCount = secondaryInstruments.length - visibleSecondary.length;
 
                 return (
-                <div
-                  key={musician.id}
-                  className="bg-white/80 dark:bg-white/5 backdrop-blur-lg rounded-2xl border border-slate-200/70 dark:border-white/10 overflow-hidden hover:border-slate-300 dark:hover:border-white/20 transition-all hover:transform hover:scale-105 shadow-lg shadow-slate-200/50 dark:shadow-black/20"
-                >
-                  {/* Foto/Avatar */}
-                  <div className="aspect-square bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
-                    {musician.avatar_url ? (
-                      <img
-                        src={musician.avatar_url}
-                        alt={musician.full_name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <Music className="w-16 h-16 text-white/50" />
-                    )}
-                  </div>
-
-                  {/* Info */}
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1 truncate">
-                      {musician.full_name}
-                    </h3>
-                    
-                    {/* Instrumentos */}
-                    <div className="flex items-center gap-1 text-slate-600 dark:text-gray-300 text-sm mb-2 flex-wrap">
-                      {getInstrumentIcon()}
-                      {primaryInstrument && (
-                        <span>{formatInstrumentLabel(primaryInstrument)}</span>
-                      )}
-                      {secondaryInstruments.length > 0 && (
-                        <>
-                          {visibleSecondary.map((inst, idx) => (
-                              <span key={idx} className="text-slate-500 dark:text-gray-400">
-                                {idx === 0 ? ' • ' : ', '}{formatInstrumentLabel(inst)}
-                              </span>
-                            ))}
-                          {extraCount > 0 && (
-                            <span className="text-slate-500/80 dark:text-gray-500">
-                              +{extraCount}
-                            </span>
-                          )}
-                        </>
+                  <div
+                    key={musician.id}
+                    className="bg-white/80 dark:bg-white/5 backdrop-blur-lg rounded-2xl border border-slate-200/70 dark:border-white/10 overflow-hidden hover:border-slate-300 dark:hover:border-white/20 transition-all hover:transform hover:scale-105 shadow-lg shadow-slate-200/50 dark:shadow-black/20"
+                  >
+                    {/* Foto/Avatar */}
+                    <div className="aspect-square bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+                      {musician.avatar_url ? (
+                        <img
+                          src={musician.avatar_url}
+                          alt={musician.full_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Music className="w-16 h-16 text-white/50" />
                       )}
                     </div>
 
-                    {/* Localização */}
-                    {musician.city && musician.state && (
-                      <div className="flex items-center gap-1 text-slate-500 dark:text-gray-400 text-sm mb-3">
-                        <MapPin className="w-4 h-4" />
-                        <span>{musician.city} - {musician.state}</span>
+                    {/* Info */}
+                    <div className="p-4">
+                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1 truncate">
+                        {musician.full_name}
+                      </h3>
+
+                      {/* Instrumentos */}
+                      <div className="flex items-center gap-1 text-slate-600 dark:text-gray-300 text-sm mb-2 flex-wrap">
+                        {getInstrumentIcon()}
+                        {primaryInstrument && (
+                          <span>{formatInstrumentLabel(primaryInstrument)}</span>
+                        )}
+                        {secondaryInstruments.length > 0 && (
+                          <>
+                            {visibleSecondary.map((inst, idx) => (
+                              <span key={idx} className="text-slate-500 dark:text-gray-400">
+                                {idx === 0 ? ' • ' : ', '}
+                                {formatInstrumentLabel(inst)}
+                              </span>
+                            ))}
+                            {extraCount > 0 && (
+                              <span className="text-slate-500/80 dark:text-gray-500">
+                                +{extraCount}
+                              </span>
+                            )}
+                          </>
+                        )}
                       </div>
-                    )}
 
-                    {/* Avaliação */}
-                    {musician.average_rating > 0 && (
-                      <div className="flex items-center gap-1 mb-4">
-                        {renderStars(musician.average_rating)}
-                        <span className="text-sm text-slate-500 dark:text-gray-400 ml-1">
-                          ({musician.total_ratings})
-                        </span>
-                      </div>
-                    )}
+                      {/* Localização */}
+                      {musician.city && musician.state && (
+                        <div className="flex items-center gap-1 text-slate-500 dark:text-gray-400 text-sm mb-3">
+                          <MapPin className="w-4 h-4" />
+                          <span>
+                            {musician.city} - {musician.state}
+                          </span>
+                        </div>
+                      )}
 
-                    {/* Bio */}
-                    {musician.bio && (
-                      <p className="text-sm text-slate-600 dark:text-gray-400 line-clamp-2 mb-4">
-                        {musician.bio}
-                      </p>
-                    )}
+                      {/* Avaliação */}
+                      {musician.average_rating > 0 && (
+                        <div className="flex items-center gap-1 mb-4">
+                          {renderStars(musician.average_rating)}
+                          <span className="text-sm text-slate-500 dark:text-gray-400 ml-1">
+                            ({musician.total_ratings})
+                          </span>
+                        </div>
+                      )}
 
-                    {/* Botão */}
-                    <button
-                      onClick={() => handleRequestQuote(musician.id)}
-                      className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Calendar className="w-4 h-4" />
-                      Solicitar Orçamento
-                    </button>
+                      {/* Bio */}
+                      {musician.bio && (
+                        <p className="text-sm text-slate-600 dark:text-gray-400 line-clamp-2 mb-4">
+                          {musician.bio}
+                        </p>
+                      )}
+
+                      {/* Botão */}
+                      <button
+                        onClick={() => handleRequestQuote(musician.id)}
+                        className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Calendar className="w-4 h-4" />
+                        Solicitar Orçamento
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )})}
+                );
+              })}
             </div>
           </>
         )}
       </div>
-
     </div>
   );
 }

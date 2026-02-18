@@ -48,4 +48,3 @@ const AppToaster: React.FC = memo(() => {
 AppToaster.displayName = 'AppToaster';
 
 export default AppToaster;
-

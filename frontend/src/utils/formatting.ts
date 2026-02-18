@@ -232,7 +232,7 @@ const INSTRUMENT_SYNONYMS: Record<string, string> = {
   vocalist: 'vocal',
   vocalista: 'vocal',
   violao: 'acoustic_guitar',
-  'violão': 'acoustic_guitar',
+  violão: 'acoustic_guitar',
   violonista: 'acoustic_guitar',
   acoustic_guitar: 'acoustic_guitar',
   'acoustic guitar': 'acoustic_guitar',
@@ -397,11 +397,11 @@ export function unmaskPhone(value: string): string {
  */
 export function maskCurrencyInput(value: string): string {
   const cleanValue = value.replace(/\D/g, '');
-  
+
   if (!cleanValue) return '';
-  
+
   const numberValue = Number.parseInt(cleanValue, 10) / 100;
-  
+
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
@@ -421,19 +421,19 @@ export function maskCurrencyInput(value: string): string {
  */
 export function unmaskCurrency(value: string): string {
   const cleanValue = value.replace(/[^\d,.]/g, '');
-  
+
   if (!cleanValue) return '';
-  
+
   const hasComma = cleanValue.includes(',');
   const hasDot = cleanValue.includes('.');
-  
+
   if (hasComma && hasDot) {
     return cleanValue.replace(/\./g, '').replace(',', '.');
   }
-  
+
   if (hasComma) {
     return cleanValue.replace(',', '.');
   }
-  
+
   return cleanValue;
 }

@@ -272,12 +272,8 @@ const NotificationSettings: React.FC = () => {
                 className="w-5 h-5 rounded border-slate-300 bg-white text-violet-600 focus:ring-violet-500 dark:border-slate-600 dark:bg-slate-700 dark:text-violet-400"
               />
               <div>
-                <span className="text-slate-800 dark:text-slate-200">
-                  Usar email como fallback
-                </span>
-                <p className="text-xs text-subtle">
-                  Se o canal preferido falhar, enviar por email
-                </p>
+                <span className="text-slate-800 dark:text-slate-200">Usar email como fallback</span>
+                <p className="text-xs text-subtle">Se o canal preferido falhar, enviar por email</p>
               </div>
             </label>
           </div>

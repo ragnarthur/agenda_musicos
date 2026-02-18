@@ -1,15 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
-import {
-  ArrowLeft,
-  Star,
-  MapPin,
-  Music,
-  Building2,
-  UserPlus,
-  X,
-  FileText,
-} from 'lucide-react';
+import { ArrowLeft, Star, MapPin, Music, Building2, UserPlus, X, FileText } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import Loading from '../components/common/Loading';
@@ -101,7 +92,10 @@ const MusicianPublicProfile: React.FC = () => {
       try {
         const musicianData = await publicMusicianService.getPublicProfile(Number(id));
         setMusician(musicianData);
-        trackEvent('musician_profile_view', { musicianId: Number(id), musicianName: musicianData.full_name });
+        trackEvent('musician_profile_view', {
+          musicianId: Number(id),
+          musicianName: musicianData.full_name,
+        });
 
         // Fetch sponsors for the city context
         if (city) {
@@ -231,9 +225,7 @@ const MusicianPublicProfile: React.FC = () => {
         location_city: locationCity,
         location_state: locationState,
         venue_name: contactForm.venue_name.trim() || undefined,
-        duration_hours: contactForm.duration_hours
-          ? Number(contactForm.duration_hours)
-          : undefined,
+        duration_hours: contactForm.duration_hours ? Number(contactForm.duration_hours) : undefined,
         notes: notes || undefined,
       });
       showToast.success('Pedido de orçamento enviado com sucesso!');
@@ -284,22 +276,26 @@ const MusicianPublicProfile: React.FC = () => {
     );
   }
 
-  const jsonLd = musician ? {
-    '@context': 'https://schema.org',
-    '@type': 'Person',
-    name: musician.full_name,
-    jobTitle: 'Músico',
-    ...(musician.city && musician.state ? {
-      address: {
-        '@type': 'PostalAddress',
-        addressLocality: musician.city,
-        addressRegion: musician.state,
-        addressCountry: 'BR',
-      },
-    } : {}),
-    ...(musician.avatar_url ? { image: musician.avatar_url } : {}),
-    ...(musician.bio ? { description: musician.bio } : {}),
-  } : null;
+  const jsonLd = musician
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'Person',
+        name: musician.full_name,
+        jobTitle: 'Músico',
+        ...(musician.city && musician.state
+          ? {
+              address: {
+                '@type': 'PostalAddress',
+                addressLocality: musician.city,
+                addressRegion: musician.state,
+                addressCountry: 'BR',
+              },
+            }
+          : {}),
+        ...(musician.avatar_url ? { image: musician.avatar_url } : {}),
+        ...(musician.bio ? { description: musician.bio } : {}),
+      }
+    : null;
 
   // Avoid XSS via `</script>` when embedding JSON-LD using dangerouslySetInnerHTML.
   // JSON.stringify does not escape `<`, so a malicious string could break out of the script tag.
@@ -313,10 +309,7 @@ const MusicianPublicProfile: React.FC = () => {
   return (
     <FullscreenBackground enableBlueWaves>
       {jsonLdString && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: jsonLdString }}
-        />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString }} />
       )}
       <div className="relative z-10 min-h-[100svh]">
         {/* Back Button */}
@@ -416,7 +409,6 @@ const MusicianPublicProfile: React.FC = () => {
                     </span>
                   </div>
                 )}
-
               </div>
 
               {/* Bio */}

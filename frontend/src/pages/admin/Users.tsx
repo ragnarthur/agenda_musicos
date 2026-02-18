@@ -172,7 +172,11 @@ const AdminUsers: React.FC = () => {
         stats={[
           { label: 'Total Usuários', value: users.length, icon: Users },
           { label: 'Staff', value: users.filter(u => u.is_staff).length, icon: Shield },
-          { label: 'Superadmins', value: users.filter(u => u.is_superuser).length, icon: UserCheck },
+          {
+            label: 'Superadmins',
+            value: users.filter(u => u.is_superuser).length,
+            icon: UserCheck,
+          },
         ]}
       />
 
@@ -217,12 +221,14 @@ const AdminUsers: React.FC = () => {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
-                      <AdminButton variant="ghost" size="sm" onClick={() => handleViewDetails(user)}>
+                      <AdminButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewDetails(user)}
+                      >
                         Detalhes
                       </AdminButton>
-                      {user.is_superuser && (
-                        <AdminBadge status="planned" size="sm" />
-                      )}
+                      {user.is_superuser && <AdminBadge status="planned" size="sm" />}
                       {user.is_staff && !user.is_superuser && (
                         <AdminBadge status="active" size="sm" />
                       )}

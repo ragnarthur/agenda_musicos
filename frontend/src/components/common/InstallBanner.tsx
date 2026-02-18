@@ -66,9 +66,7 @@ export default function InstallBanner() {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-white font-semibold text-sm">
-                    Instalar GigFlow
-                  </h3>
+                  <h3 className="text-white font-semibold text-sm">Instalar GigFlow</h3>
                   <p className="text-white/80 text-xs mt-0.5 leading-relaxed">
                     Adicione à tela inicial para acesso rápido e experiência de app nativo.
                   </p>
@@ -118,7 +116,7 @@ export default function InstallBanner() {
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className="bg-white dark:bg-gray-800 rounded-t-3xl w-full max-w-md p-6 pb-safe"
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               <div className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-6" />
 
@@ -133,7 +131,8 @@ export default function InstallBanner() {
                   </span>
                   <div>
                     <p className="text-gray-700 dark:text-gray-300 text-sm">
-                      Toque no botão <Share className="inline w-4 h-4 text-blue-500" /> de compartilhar na barra do Safari
+                      Toque no botão <Share className="inline w-4 h-4 text-blue-500" /> de
+                      compartilhar na barra do Safari
                     </p>
                   </div>
                 </li>

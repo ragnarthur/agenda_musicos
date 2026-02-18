@@ -18,7 +18,7 @@ interface AdminTabsProps {
 export const AdminTabs: React.FC<AdminTabsProps> = ({ tabs, active, onChange, className = '' }) => {
   return (
     <div className={`admin-tabs ${className}`}>
-      {tabs.map((tab) => {
+      {tabs.map(tab => {
         const isActive = active === tab.key;
         const Icon = tab.icon;
 

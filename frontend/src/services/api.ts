@@ -1,10 +1,7 @@
 // services/api.ts - Configuração base do Axios
 import axios, { AxiosError } from 'axios';
 import toast from 'react-hot-toast';
-import {
-  clearStoredAccessToken,
-  clearStoredRefreshToken,
-} from '../utils/tokenStorage';
+import { clearStoredAccessToken, clearStoredRefreshToken } from '../utils/tokenStorage';
 import { ADMIN_ROUTES } from '../routes/adminRoutes';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';

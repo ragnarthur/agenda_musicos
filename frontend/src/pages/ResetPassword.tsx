@@ -73,7 +73,9 @@ const ResetPassword: React.FC = () => {
               <Lock className="h-5 w-5 text-primary-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Definir nova senha</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Definir nova senha
+              </h1>
               <p className="text-sm text-gray-600 dark:text-slate-300">
                 Escolha uma senha segura para acessar sua conta.
               </p>
@@ -93,7 +95,10 @@ const ResetPassword: React.FC = () => {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2"
+                >
                   Nova senha
                 </label>
                 <div className="relative">

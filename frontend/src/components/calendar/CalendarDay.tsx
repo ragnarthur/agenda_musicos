@@ -34,8 +34,7 @@ const CalendarDay: React.FC<CalendarDayProps> = memo(
       ? 'text-gray-900 dark:text-white'
       : 'text-gray-400 dark:text-slate-500';
 
-    const todayClasses =
-      isToday && !isSelected ? 'ring-2 ring-primary-400 ring-inset' : '';
+    const todayClasses = isToday && !isSelected ? 'ring-2 ring-primary-400 ring-inset' : '';
 
     const selectedClasses = isSelected
       ? 'bg-primary-600 text-white'
@@ -45,13 +44,7 @@ const CalendarDay: React.FC<CalendarDayProps> = memo(
 
     const eventBgClass = getEventBgClass();
 
-    const cellClasses = [
-      baseClasses,
-      monthClasses,
-      todayClasses,
-      selectedClasses,
-      eventBgClass,
-    ]
+    const cellClasses = [baseClasses, monthClasses, todayClasses, selectedClasses, eventBgClass]
       .filter(Boolean)
       .join(' ');
 
@@ -63,9 +56,7 @@ const CalendarDay: React.FC<CalendarDayProps> = memo(
         aria-label={`${dayNumber} - ${eventStatus.totalCount} eventos`}
         aria-pressed={isSelected}
       >
-        <span
-          className={`text-sm font-medium ${isToday && !isSelected ? 'font-bold' : ''}`}
-        >
+        <span className={`text-sm font-medium ${isToday && !isSelected ? 'font-bold' : ''}`}>
           {dayNumber}
         </span>
       </button>

@@ -20,9 +20,7 @@ interface EventData {
 export function trackEvent(name: EventName, data?: EventData) {
   // Fire a DOM CustomEvent so any analytics script can listen
   if (typeof window !== 'undefined') {
-    window.dispatchEvent(
-      new CustomEvent('analytics', { detail: { name, ...data } })
-    );
+    window.dispatchEvent(new CustomEvent('analytics', { detail: { name, ...data } }));
   }
 
   if (import.meta.env.DEV) {

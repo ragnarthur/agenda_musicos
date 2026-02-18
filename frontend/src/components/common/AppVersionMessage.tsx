@@ -8,9 +8,7 @@ const formatReleaseLabel = (rawLabel: string): string => {
   const normalized = rawLabel.replace(/\s+/g, ' ').trim();
   if (!normalized) return 'Canal estavel';
 
-  const buildWithDate = normalized.match(
-    /^build\s+(\d{4})[./-](\d{2})[./-](\d{2})$/i
-  );
+  const buildWithDate = normalized.match(/^build\s+(\d{4})[./-](\d{2})[./-](\d{2})$/i);
   if (buildWithDate) {
     const [, year, month, day] = buildWithDate;
     return `Build de ${day}/${month}/${year}`;
@@ -43,11 +41,7 @@ const resolveReleaseLabel = (): string => {
 const AppVersionMessage: React.FC<AppVersionMessageProps> = ({ className = '' }) => {
   const releaseLabel = resolveReleaseLabel();
 
-  return (
-    <p className={className}>
-      Versao do aplicativo: {releaseLabel}.
-    </p>
-  );
+  return <p className={className}>Versao do aplicativo: {releaseLabel}.</p>;
 };
 
 export default AppVersionMessage;

@@ -25,7 +25,9 @@ const CityLanding: React.FC = () => {
   const [city, setCity] = useState<City | null>(null);
 
   usePageMeta({
-    title: city ? `Músicos em ${getCityDisplayName(city)} - GigFlow` : 'Músicos por Cidade - GigFlow',
+    title: city
+      ? `Músicos em ${getCityDisplayName(city)} - GigFlow`
+      : 'Músicos por Cidade - GigFlow',
     description: city
       ? `Encontre músicos profissionais em ${getCityDisplayName(city)}. Veja perfis, avaliações e solicite orçamentos.`
       : 'Encontre músicos profissionais na sua cidade.',
@@ -112,9 +114,7 @@ const CityLanding: React.FC = () => {
           >
             <div className="flex items-center justify-center gap-2 text-primary-400 mb-4">
               <MapPin className="h-5 w-5 sm:h-6 sm:w-6" />
-              <span className="text-base sm:text-lg font-medium">
-                {getCityDisplayName(city)}
-              </span>
+              <span className="text-base sm:text-lg font-medium">{getCityDisplayName(city)}</span>
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
               Músicos em {city.name}
@@ -377,10 +377,7 @@ const MusicianCard: React.FC<MusicianCardProps> = ({ musician, delay, city }) =>
               </span>
             )}
             {visibleSecondary.map(inst => (
-              <span
-                key={inst}
-                className="px-2 py-1 bg-white/10 text-gray-300 rounded-full text-xs"
-              >
+              <span key={inst} className="px-2 py-1 bg-white/10 text-gray-300 rounded-full text-xs">
                 {formatInstrumentLabel(inst)}
               </span>
             ))}

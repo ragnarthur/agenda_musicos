@@ -4,7 +4,10 @@ import { useState, useCallback } from 'react';
 import type { ImgHTMLAttributes } from 'react';
 import { User } from 'lucide-react';
 
-interface OptimizedImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'onLoad' | 'onError' | 'src'> {
+interface OptimizedImageProps extends Omit<
+  ImgHTMLAttributes<HTMLImageElement>,
+  'onLoad' | 'onError' | 'src'
+> {
   src: string | null | undefined;
   alt: string;
   fallback?: 'avatar' | 'cover' | 'none';
@@ -46,9 +49,7 @@ export default function OptimizedImage({
         role="img"
         aria-label={alt}
       >
-        {fallback === 'avatar' && (
-          <User className="w-1/2 h-1/2 text-gray-400 dark:text-gray-500" />
-        )}
+        {fallback === 'avatar' && <User className="w-1/2 h-1/2 text-gray-400 dark:text-gray-500" />}
         {fallback === 'cover' && (
           <div className="w-full h-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20" />
         )}

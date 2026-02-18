@@ -290,11 +290,11 @@ const Requests: React.FC = () => {
           {/* Sort Controls */}
           <div className="flex flex-wrap gap-2 items-center">
             <span className="text-sm font-medium text-slate-400">Ordenar:</span>
-            {([
+            {[
               { field: 'name' as SortField, label: 'Nome' },
               { field: 'created_at' as SortField, label: 'Data' },
               { field: 'status' as SortField, label: 'Status' },
-            ]).map(({ field, label }) => (
+            ].map(({ field, label }) => (
               <button
                 key={field}
                 onClick={() => handleSort(field)}
@@ -359,7 +359,11 @@ const Requests: React.FC = () => {
                   </p>
 
                   <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                    <AdminButton variant="secondary" size="sm" onClick={() => handleViewDetails(request)}>
+                    <AdminButton
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleViewDetails(request)}
+                    >
                       Detalhes
                     </AdminButton>
                     {request.status === 'pending' && (
@@ -470,7 +474,10 @@ const Requests: React.FC = () => {
               </div>
               <div>
                 <strong className="text-white">Status:</strong>{' '}
-                <AdminStatusBadge status={selectedRequest.status} label={selectedRequest.status_display} />
+                <AdminStatusBadge
+                  status={selectedRequest.status}
+                  label={selectedRequest.status_display}
+                />
               </div>
               {selectedRequest.instagram && (
                 <div>

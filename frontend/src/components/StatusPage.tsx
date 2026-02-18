@@ -39,7 +39,8 @@ const STATUS_CONFIG: Record<string, { label: string; message: string; classes: s
   },
   approved: {
     label: 'Aprovada',
-    message: 'Parabéns! Sua solicitação foi aprovada. Verifique seu e-mail para os próximos passos.',
+    message:
+      'Parabéns! Sua solicitação foi aprovada. Verifique seu e-mail para os próximos passos.',
     classes: 'bg-green-100 text-green-800 border-green-200',
   },
   rejected: {
@@ -128,8 +129,12 @@ const StatusPage: React.FC = () => {
       <div className="bg-white/95 dark:bg-slate-900/95 shadow border-b border-gray-200 dark:border-white/10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="text-center">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Acompanhar Solicitação</h1>
-            <p className="mt-2 text-gray-600 dark:text-slate-400">Consulte o status da sua solicitação de cadastro</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+              Acompanhar Solicitação
+            </h1>
+            <p className="mt-2 text-gray-600 dark:text-slate-400">
+              Consulte o status da sua solicitação de cadastro
+            </p>
           </div>
         </div>
       </div>
@@ -163,7 +168,9 @@ const StatusPage: React.FC = () => {
                     onChange={e => setSearchType(e.target.value as 'email' | 'id')}
                     className="mr-2 accent-primary-600"
                   />
-                  <span className="text-gray-700 dark:text-slate-300">Buscar por ID da solicitação</span>
+                  <span className="text-gray-700 dark:text-slate-300">
+                    Buscar por ID da solicitação
+                  </span>
                 </label>
               </div>
             </div>
@@ -204,11 +211,7 @@ const StatusPage: React.FC = () => {
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary w-full"
-            >
+            <button type="submit" disabled={loading} className="btn-primary w-full">
               {loading ? 'Buscando...' : 'Consultar Status'}
             </button>
           </form>
@@ -242,7 +245,9 @@ const StatusPage: React.FC = () => {
 
             {/* Status Message */}
             <div className="px-6 py-4 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-white/10">
-              <p className="text-gray-700 dark:text-slate-300">{config(requestStatus.status).message}</p>
+              <p className="text-gray-700 dark:text-slate-300">
+                {config(requestStatus.status).message}
+              </p>
             </div>
 
             {/* Request Information */}
@@ -255,15 +260,21 @@ const StatusPage: React.FC = () => {
                   </h3>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-500 dark:text-slate-400">Nome</label>
+                      <label className="block text-sm font-medium text-gray-500 dark:text-slate-400">
+                        Nome
+                      </label>
                       <p className="text-gray-900 dark:text-white">{requestStatus.artist_name}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-500 dark:text-slate-400">E-mail</label>
+                      <label className="block text-sm font-medium text-gray-500 dark:text-slate-400">
+                        E-mail
+                      </label>
                       <p className="text-gray-900 dark:text-white">{requestStatus.artist_email}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-500 dark:text-slate-400">Telefone</label>
+                      <label className="block text-sm font-medium text-gray-500 dark:text-slate-400">
+                        Telefone
+                      </label>
                       <p className="text-gray-900 dark:text-white">{requestStatus.artist_phone}</p>
                     </div>
                   </div>
@@ -276,15 +287,21 @@ const StatusPage: React.FC = () => {
                   </h3>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-500 dark:text-slate-400">Tipo de Evento</label>
+                      <label className="block text-sm font-medium text-gray-500 dark:text-slate-400">
+                        Tipo de Evento
+                      </label>
                       <p className="text-gray-900 dark:text-white">{requestStatus.event_type}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-500 dark:text-slate-400">Data</label>
+                      <label className="block text-sm font-medium text-gray-500 dark:text-slate-400">
+                        Data
+                      </label>
                       <p className="text-gray-900 dark:text-white">{requestStatus.event_date}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-500 dark:text-slate-400">Horário</label>
+                      <label className="block text-sm font-medium text-gray-500 dark:text-slate-400">
+                        Horário
+                      </label>
                       <p className="text-gray-900 dark:text-white">{requestStatus.event_time}</p>
                     </div>
                   </div>
@@ -295,7 +312,9 @@ const StatusPage: React.FC = () => {
               <div className="mt-6 pt-6 border-t border-gray-200 dark:border-white/10 space-y-4">
                 {requestStatus.notes && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-500 dark:text-slate-400">Observações</label>
+                    <label className="block text-sm font-medium text-gray-500 dark:text-slate-400">
+                      Observações
+                    </label>
                     <p className="text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-800 p-3 rounded-lg mt-1">
                       {requestStatus.notes}
                     </p>
@@ -318,7 +337,9 @@ const StatusPage: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-500 dark:text-slate-400">
                       Orçamento Estimado
                     </label>
-                    <p className="text-gray-900 dark:text-white">{formatCurrency(requestStatus.estimated_budget)}</p>
+                    <p className="text-gray-900 dark:text-white">
+                      {formatCurrency(requestStatus.estimated_budget)}
+                    </p>
                   </div>
                 )}
               </div>
@@ -352,9 +373,12 @@ const StatusPage: React.FC = () => {
         {searched && !error && !requestStatus && (
           <div className="card text-center py-8">
             <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Nenhuma solicitação encontrada</h3>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              Nenhuma solicitação encontrada
+            </h3>
             <p className="text-gray-600 dark:text-slate-400">
-              Não encontramos solicitações com os dados informados. Verifique as informações e tente novamente.
+              Não encontramos solicitações com os dados informados. Verifique as informações e tente
+              novamente.
             </p>
           </div>
         )}

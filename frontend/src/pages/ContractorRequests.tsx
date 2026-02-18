@@ -69,9 +69,7 @@ export default function ContractorRequests() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             Meus Pedidos
           </h1>
-          <p className="text-sm text-muted mt-1">
-            Acompanhe os orçamentos enviados para músicos
-          </p>
+          <p className="text-sm text-muted mt-1">Acompanhe os orçamentos enviados para músicos</p>
         </div>
 
         {/* Status Filter Tabs */}
@@ -97,7 +95,11 @@ export default function ContractorRequests() {
         ) : requests.length === 0 ? (
           <EmptyState
             icon={MessageSquare}
-            title={filter === 'all' ? 'Nenhum pedido enviado' : `Nenhum pedido ${STATUS_FILTERS.find(f => f.key === filter)?.label.toLowerCase()}`}
+            title={
+              filter === 'all'
+                ? 'Nenhum pedido enviado'
+                : `Nenhum pedido ${STATUS_FILTERS.find(f => f.key === filter)?.label.toLowerCase()}`
+            }
             description="Busque músicos e envie pedidos de orçamento"
             action={{
               label: 'Buscar Músicos',

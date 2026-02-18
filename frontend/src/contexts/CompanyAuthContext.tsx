@@ -12,10 +12,7 @@ import React, {
 } from 'react';
 import toast from 'react-hot-toast';
 import { contractorService, type ContractorProfile } from '../services/publicApi';
-import {
-  clearStoredAccessToken,
-  clearStoredRefreshToken,
-} from '../utils/tokenStorage';
+import { clearStoredAccessToken, clearStoredRefreshToken } from '../utils/tokenStorage';
 
 interface CompanyAuthContextType {
   organization: ContractorProfile | null;
@@ -105,35 +102,38 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
     };
   }, []);
 
-  const login = useCallback(async (email: string, password: string, rememberMe?: boolean): Promise<void> => {
-    try {
-      setLoading(true);
-      const response = await contractorService.login(email.toLowerCase().trim(), password);
+  const login = useCallback(
+    async (email: string, password: string, rememberMe?: boolean): Promise<void> => {
+      try {
+        setLoading(true);
+        const response = await contractorService.login(email.toLowerCase().trim(), password);
 
-      // Marcar sessão como ativa
-      sessionStorage.setItem(SESSION_KEY, 'true');
+        // Marcar sessão como ativa
+        sessionStorage.setItem(SESSION_KEY, 'true');
 
-      // Armazena preferência de "Permanecer conectado"
-      if (rememberMe) {
-        localStorage.setItem(REMEMBER_KEY, 'true');
-      } else {
-        localStorage.removeItem(REMEMBER_KEY);
+        // Armazena preferência de "Permanecer conectado"
+        if (rememberMe) {
+          localStorage.setItem(REMEMBER_KEY, 'true');
+        } else {
+          localStorage.removeItem(REMEMBER_KEY);
+        }
+
+        // Armazenar dados da organização (tokens ficam em cookies httpOnly)
+        setOrganization(response.contractor as ContractorProfile);
+
+        toast.success(`Bem-vindo(a), ${response.contractor.name}!`);
+      } catch (error: unknown) {
+        const message =
+          (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+          'Erro ao fazer login. Verifique suas credenciais.';
+        toast.error(message);
+        throw error;
+      } finally {
+        setLoading(false);
       }
-
-      // Armazenar dados da organização (tokens ficam em cookies httpOnly)
-      setOrganization(response.contractor as ContractorProfile);
-
-      toast.success(`Bem-vindo(a), ${response.contractor.name}!`);
-    } catch (error: unknown) {
-      const message =
-        (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
-        'Erro ao fazer login. Verifique suas credenciais.';
-      toast.error(message);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   const setSession = useCallback(
     (payload: { organization: ContractorProfile }, rememberMe?: boolean) => {
@@ -192,19 +192,22 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
     }
   }, [logout]);
 
-  const updateOrganization = useCallback(async (data: Partial<ContractorProfile>): Promise<void> => {
-    try {
-      const updatedOrg = await contractorService.updateProfile(data);
-      setOrganization(updatedOrg);
-      toast.success('Perfil atualizado com sucesso!');
-    } catch (error: unknown) {
-      const message =
-        (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
-        'Erro ao atualizar perfil.';
-      toast.error(message);
-      throw error;
-    }
-  }, []);
+  const updateOrganization = useCallback(
+    async (data: Partial<ContractorProfile>): Promise<void> => {
+      try {
+        const updatedOrg = await contractorService.updateProfile(data);
+        setOrganization(updatedOrg);
+        toast.success('Perfil atualizado com sucesso!');
+      } catch (error: unknown) {
+        const message =
+          (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+          'Erro ao atualizar perfil.';
+        toast.error(message);
+        throw error;
+      }
+    },
+    []
+  );
 
   const value = useMemo<CompanyAuthContextType>(
     () => ({

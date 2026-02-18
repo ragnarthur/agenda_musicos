@@ -46,7 +46,10 @@ export const SkeletonCard: React.FC<SkeletonCardProps> = ({ count = 1, className
   return (
     <div className={`grid grid-cols-1 gap-4 ${className}`.trim()}>
       {Array.from({ length: count }).map((_, index) => (
-        <div key={index} className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+        <div
+          key={index}
+          className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700"
+        >
           <Skeleton className="h-6 w-3/4 mb-3" />
           <SkeletonText lines={2} />
         </div>
@@ -61,7 +64,11 @@ interface SkeletonListProps {
   className?: string;
 }
 
-export const SkeletonList: React.FC<SkeletonListProps> = ({ items = 5, showAvatar = false, className = '' }) => {
+export const SkeletonList: React.FC<SkeletonListProps> = ({
+  items = 5,
+  showAvatar = false,
+  className = '',
+}) => {
   return (
     <div className={`space-y-4 ${className}`.trim()}>
       {Array.from({ length: items }).map((_, index) => (

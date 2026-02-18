@@ -54,7 +54,8 @@ export default function ContractorBrowseMusicians() {
 
   useEffect(() => {
     let active = true;
-    publicMusicGenresService.listAvailable()
+    publicMusicGenresService
+      .listAvailable()
       .then(genres => {
         if (!active) return;
         setAvailableGenres(genres);
@@ -70,11 +71,9 @@ export default function ContractorBrowseMusicians() {
   }, []);
 
   const genreOptions = useMemo(() => {
-    const base = (availableGenres.length > 0
-      ? availableGenres
-      : MUSICAL_GENRES.map(g => g.value)
-    )
-      .filter(Boolean);
+    const base = (
+      availableGenres.length > 0 ? availableGenres : MUSICAL_GENRES.map(g => g.value)
+    ).filter(Boolean);
 
     const unique = Array.from(new Set(base));
     unique.sort((a, b) => getGenreLabel(a).localeCompare(getGenreLabel(b), 'pt-BR'));
@@ -126,9 +125,7 @@ export default function ContractorBrowseMusicians() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             Buscar Músicos
           </h1>
-          <p className="text-sm text-muted mt-1">
-            Encontre músicos profissionais para seu evento
-          </p>
+          <p className="text-sm text-muted mt-1">Encontre músicos profissionais para seu evento</p>
         </div>
 
         {/* Filters */}
@@ -154,7 +151,9 @@ export default function ContractorBrowseMusicians() {
               >
                 <option value="">Todos os estilos</option>
                 {genreOptions.map(value => (
-                  <option key={value} value={value}>{getGenreLabel(value)}</option>
+                  <option key={value} value={value}>
+                    {getGenreLabel(value)}
+                  </option>
                 ))}
               </select>
             </div>
@@ -166,7 +165,9 @@ export default function ContractorBrowseMusicians() {
           >
             <Filter className="w-4 h-4" />
             Filtros avançados
-            <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`}
+            />
           </button>
 
           {showFilters && (
@@ -182,7 +183,9 @@ export default function ContractorBrowseMusicians() {
                 >
                   <option value="">Todos</option>
                   {BRAZILIAN_STATES.map(({ value, label }) => (
-                    <option key={value} value={value}>{label}</option>
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -242,14 +245,13 @@ export default function ContractorBrowseMusicians() {
             <p className="text-lg font-semibold text-gray-900 dark:text-white">
               Nenhum músico encontrado
             </p>
-            <p className="text-sm text-muted mt-1">
-              Tente ajustar os filtros de busca
-            </p>
+            <p className="text-sm text-muted mt-1">Tente ajustar os filtros de busca</p>
           </div>
         ) : (
           <>
             <p className="text-sm text-muted">
-              {musicians.length} músico{musicians.length !== 1 ? 's' : ''} encontrado{musicians.length !== 1 ? 's' : ''}
+              {musicians.length} músico{musicians.length !== 1 ? 's' : ''} encontrado
+              {musicians.length !== 1 ? 's' : ''}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {musicians.map((musician, index) => {
@@ -304,7 +306,8 @@ export default function ContractorBrowseMusicians() {
                         )}
                         {secondaryInstruments.slice(0, 2).map((inst, idx) => (
                           <span key={idx} className="text-gray-400">
-                            {idx === 0 ? ' · ' : ', '}{formatInstrumentLabel(inst)}
+                            {idx === 0 ? ' · ' : ', '}
+                            {formatInstrumentLabel(inst)}
                           </span>
                         ))}
                         {secondaryInstruments.length > 2 && (
@@ -329,9 +332,7 @@ export default function ContractorBrowseMusicians() {
                       )}
 
                       {musician.bio && (
-                        <p className="text-sm text-muted line-clamp-2 mt-2">
-                          {musician.bio}
-                        </p>
+                        <p className="text-sm text-muted line-clamp-2 mt-2">{musician.bio}</p>
                       )}
 
                       {/* Actions */}

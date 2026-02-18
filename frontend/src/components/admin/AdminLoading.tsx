@@ -5,7 +5,7 @@ export const AdminLoading: React.FC<{ count?: number }> = ({ count = 1 }) => {
     <>
       {/* Skeleton Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {[1, 2, 3, 4].map((i) => (
+        {[1, 2, 3, 4].map(i => (
           <div key={i} className="admin-card p-4 animate-pulse">
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 bg-slate-700 rounded-xl" />

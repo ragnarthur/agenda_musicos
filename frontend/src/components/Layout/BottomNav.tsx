@@ -29,10 +29,12 @@ const BottomNav: React.FC = () => {
   }, []);
 
   // Don't show on login/register, admin, or contractor pages
-  if (location.pathname.startsWith('/login') ||
-      location.pathname.startsWith('/register') ||
-      location.pathname.startsWith('/admin') ||
-      location.pathname.startsWith('/contratante')) {
+  if (
+    location.pathname.startsWith('/login') ||
+    location.pathname.startsWith('/register') ||
+    location.pathname.startsWith('/admin') ||
+    location.pathname.startsWith('/contratante')
+  ) {
     return null;
   }
 
@@ -53,7 +55,7 @@ const BottomNav: React.FC = () => {
       }`}
     >
       <div className="flex items-center justify-around px-2 py-2">
-        {navItems.map((item) => {
+        {navItems.map(item => {
           const Icon = item.icon;
           const isActive =
             item.to === '/dashboard'
@@ -86,7 +88,9 @@ const BottomNav: React.FC = () => {
                   : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
               }`}
             >
-              <Icon className={`w-5 h-5 mb-0.5 ${isActive ? 'scale-110' : ''} transition-transform`} />
+              <Icon
+                className={`w-5 h-5 mb-0.5 ${isActive ? 'scale-110' : ''} transition-transform`}
+              />
               <span className="text-[10px] font-medium">{item.label}</span>
               {isActive && (
                 <span className="absolute bottom-1 w-1 h-1 rounded-full bg-primary-600 dark:bg-primary-400" />

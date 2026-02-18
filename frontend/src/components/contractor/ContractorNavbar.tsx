@@ -1,13 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState, memo } from 'react';
 import { Link, NavLink as RouterNavLink, useLocation, useNavigate } from 'react-router-dom';
-import {
-  Home,
-  Search,
-  MessageSquare,
-  LogOut,
-  Menu,
-  X,
-} from 'lucide-react';
+import { Home, Search, MessageSquare, LogOut, Menu, X } from 'lucide-react';
 import { useCompanyAuth } from '../../contexts/CompanyAuthContext';
 import { CONTRACTOR_ROUTES } from '../../routes/contractorRoutes';
 import OwlMascot from '../ui/OwlMascot';

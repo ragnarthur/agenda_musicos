@@ -409,7 +409,10 @@ export const quoteRequestService = {
   },
 
   // Contratante - aceitar proposta (reserva)
-  acceptProposal: async (id: number, proposalId: number): Promise<{
+  acceptProposal: async (
+    id: number,
+    proposalId: number
+  ): Promise<{
     request: QuoteRequest;
   }> => {
     const response = await api.post(`/quotes/${id}/accept/`, { proposal_id: proposalId });
@@ -467,10 +470,8 @@ export const publicMusicianService = {
     const response = await api.get('/musicians/public-by-city/', {
       params: { city, state, instrument },
     });
-    const payload = response.data as
-      | { results?: MusicianPublic[] }
-      | MusicianPublic[];
-    return Array.isArray(payload) ? payload : payload.results ?? [];
+    const payload = response.data as { results?: MusicianPublic[] } | MusicianPublic[];
+    return Array.isArray(payload) ? payload : (payload.results ?? []);
   },
 
   // Obter perfil público de um músico
@@ -542,10 +543,8 @@ export const allMusiciansService = {
   }): Promise<MusicianPublic[]> => {
     const response = await api.get('/musicians/all/', { params });
     // Lidar com resposta paginada ou array direto
-    const payload = response.data as
-      | { results?: MusicianPublic[] }
-      | MusicianPublic[];
-    return Array.isArray(payload) ? payload : payload.results ?? [];
+    const payload = response.data as { results?: MusicianPublic[] } | MusicianPublic[];
+    return Array.isArray(payload) ? payload : (payload.results ?? []);
   },
 };
 
@@ -667,7 +666,11 @@ export const cityAdminService = {
     return response.data;
   },
 
-  getRequestsByCityDetail: async (city: string, state: string, signal?: AbortSignal): Promise<CityRequestsDetail> => {
+  getRequestsByCityDetail: async (
+    city: string,
+    state: string,
+    signal?: AbortSignal
+  ): Promise<CityRequestsDetail> => {
     const response = await api.get(
       `/admin/requests-by-city/${encodeURIComponent(city)}/${encodeURIComponent(state)}/`,
       { signal }
@@ -722,7 +725,9 @@ export const adminContractorService = {
     return response.data;
   },
 
-  delete: async (id: number): Promise<{
+  delete: async (
+    id: number
+  ): Promise<{
     message: string;
     deleted_contractor: {
       id: number;
@@ -750,7 +755,9 @@ export const adminBookingService = {
     return response.data;
   },
 
-  getAuditDetails: async (requestId: number): Promise<{
+  getAuditDetails: async (
+    requestId: number
+  ): Promise<{
     request: QuoteRequest;
     proposals: QuoteProposal[];
     booking: Booking | null;
@@ -761,7 +768,9 @@ export const adminBookingService = {
   },
 
   cancelBooking: async (requestId: number, adminReason: string): Promise<{ message: string }> => {
-    const response = await api.post(`/admin/bookings/${requestId}/cancel/`, { admin_reason: adminReason });
+    const response = await api.post(`/admin/bookings/${requestId}/cancel/`, {
+      admin_reason: adminReason,
+    });
     return response.data;
   },
 
@@ -777,7 +786,9 @@ export const adminOrganizationService = {
     return response.data;
   },
 
-  delete: async (id: number): Promise<{
+  delete: async (
+    id: number
+  ): Promise<{
     message: string;
     deleted_organization: {
       id: number;

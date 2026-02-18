@@ -257,7 +257,10 @@ const FinancialSettings: React.FC = () => {
     } catch (error) {
       logError('Erro ao salvar valores:', error);
       const message = getErrorMessage(error);
-      if (message.toLowerCase().includes('limite mensal') && message.toLowerCase().includes('nome')) {
+      if (
+        message.toLowerCase().includes('limite mensal') &&
+        message.toLowerCase().includes('nome')
+      ) {
         toast.error('Limite mensal atingido. Você pode alterar o nome apenas 2 vezes por mês.');
       } else {
         toast.error(message);
@@ -364,9 +367,7 @@ const FinancialSettings: React.FC = () => {
             <div className="flex items-center gap-3 mb-4">
               <FileText className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
               <div>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-                  Mini-bio
-                </h2>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Mini-bio</h2>
                 <p className="text-muted text-sm">
                   Escreva um pouco sobre você e sua experiência musical.
                 </p>
@@ -453,7 +454,9 @@ const FinancialSettings: React.FC = () => {
                 {selectedInstruments.length > 0 && (
                   <>
                     <p className="mt-3 text-xs text-emerald-700 dark:text-emerald-400">
-                      {selectedInstruments.length} instrumento{selectedInstruments.length > 1 ? 's' : ''} selecionado{selectedInstruments.length > 1 ? 's' : ''}
+                      {selectedInstruments.length} instrumento
+                      {selectedInstruments.length > 1 ? 's' : ''} selecionado
+                      {selectedInstruments.length > 1 ? 's' : ''}
                     </p>
                     <div className="mt-4 rounded-lg border border-slate-200/70 bg-white/70 p-3 dark:border-slate-700/70 dark:bg-slate-900/60">
                       <label className="block text-xs font-medium text-slate-700 mb-2 dark:text-slate-300">
@@ -478,9 +481,7 @@ const FinancialSettings: React.FC = () => {
                 )}
 
                 {selectedInstruments.length === 0 && (
-                  <p className="mt-3 text-xs text-amber-400">
-                    Selecione pelo menos um instrumento
-                  </p>
+                  <p className="mt-3 text-xs text-amber-400">Selecione pelo menos um instrumento</p>
                 )}
               </>
             )}
@@ -491,7 +492,9 @@ const FinancialSettings: React.FC = () => {
             <div className="flex items-center gap-3 mb-4">
               <Disc3 className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
               <div>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Gêneros Musicais</h2>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                  Gêneros Musicais
+                </h2>
                 <p className="text-muted text-sm">
                   Selecione até 5 gêneros musicais que você mais toca.
                 </p>
@@ -515,7 +518,8 @@ const FinancialSettings: React.FC = () => {
             </div>
             {selectedGenres.length > 0 && (
               <p className="mt-3 text-xs text-emerald-700 dark:text-emerald-400">
-                {selectedGenres.length} gênero{selectedGenres.length > 1 ? 's' : ''} selecionado{selectedGenres.length > 1 ? 's' : ''}
+                {selectedGenres.length} gênero{selectedGenres.length > 1 ? 's' : ''} selecionado
+                {selectedGenres.length > 1 ? 's' : ''}
               </p>
             )}
           </div>
@@ -551,7 +555,9 @@ const FinancialSettings: React.FC = () => {
                 <p className="text-xs text-subtle mt-1">Formato: R$ 0,00</p>
               </label>
               <label className="block">
-                <span className="text-sm text-slate-700 dark:text-slate-200">Valor por km (R$)</span>
+                <span className="text-sm text-slate-700 dark:text-slate-200">
+                  Valor por km (R$)
+                </span>
                 <div className="flex items-center gap-2 mt-1">
                   <div className="flex-1 relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 dark:text-slate-300">
@@ -580,7 +586,9 @@ const FinancialSettings: React.FC = () => {
               <div className="flex items-center gap-3">
                 <Sparkles className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Pacotes de equipamentos</h2>
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                    Pacotes de equipamentos
+                  </h2>
                   <p className="text-muted text-sm">
                     Liste os recursos que você leva (som, mesa, microfones, luz, etc) e seus
                     valores.
@@ -604,7 +612,9 @@ const FinancialSettings: React.FC = () => {
                   className="grid grid-cols-1 sm:grid-cols-12 gap-3 bg-white/70 border border-slate-200/70 rounded-lg p-3 dark:bg-slate-900/50 dark:border-slate-700/60"
                 >
                   <div className="sm:col-span-7">
-                    <label className="text-sm text-slate-700 dark:text-slate-200">Equipamento/serviço</label>
+                    <label className="text-sm text-slate-700 dark:text-slate-200">
+                      Equipamento/serviço
+                    </label>
                     <input
                       type="text"
                       value={item.name}
@@ -647,9 +657,7 @@ const FinancialSettings: React.FC = () => {
                 </div>
               ))}
               {equipmentRows.length === 0 && (
-                <p className="text-sm text-muted">
-                  Adicione itens para ofertar seus equipamentos.
-                </p>
+                <p className="text-sm text-muted">Adicione itens para ofertar seus equipamentos.</p>
               )}
             </div>
           </div>
@@ -657,7 +665,9 @@ const FinancialSettings: React.FC = () => {
           {/* Resumo */}
           <div className="surface-card rounded-xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Resumo rápido</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                Resumo rápido
+              </h3>
               <p className="text-muted text-sm">
                 Estas informações ajudam o contratante a entender seu pacote completo.
               </p>

@@ -32,9 +32,7 @@ class AdminErrorBoundary extends React.Component<React.PropsWithChildren, AdminE
     return (
       <div className="bg-slate-900/90 backdrop-blur rounded-xl shadow p-8 text-center">
         <h2 className="text-2xl font-bold text-white mb-2">Algo deu errado</h2>
-        <p className="text-slate-300 mb-6">
-          Tente recarregar a pagina ou voltar para o dashboard.
-        </p>
+        <p className="text-slate-300 mb-6">Tente recarregar a pagina ou voltar para o dashboard.</p>
         {this.state.error?.message && (
           <p className="text-xs text-slate-400 mb-6">{this.state.error.message}</p>
         )}

@@ -22,7 +22,9 @@ interface PullToRefreshHandlers {
   onTouchEnd: () => void;
 }
 
-export function usePullToRefresh(options: PullToRefreshOptions): PullToRefreshState & PullToRefreshHandlers {
+export function usePullToRefresh(
+  options: PullToRefreshOptions
+): PullToRefreshState & PullToRefreshHandlers {
   const { onRefresh, threshold = 80, maxPull = 120, disabled = false } = options;
 
   const [isRefreshing, setIsRefreshing] = useState(false);

@@ -121,9 +121,7 @@ export default function MusicianMessages() {
                 </span>
               )}
             </h1>
-            <p className="text-subtle mt-1">
-              Solicitações de orçamento feitas por contratantes
-            </p>
+            <p className="text-subtle mt-1">Solicitações de orçamento feitas por contratantes</p>
           </div>
         </div>
 

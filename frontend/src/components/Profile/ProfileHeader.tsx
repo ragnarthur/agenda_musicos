@@ -56,14 +56,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const handleWhatsAppClick = () => {
     if (musician.whatsapp) {
       const phone = musician.whatsapp.replace(/\D/g, '');
-      const text = encodeURIComponent(
-        `Olá ${musician.full_name}, vi seu perfil na Rede Musical!`
-      );
-      window.open(
-        `https://wa.me/55${phone}?text=${text}`,
-        '_blank',
-        'noopener,noreferrer'
-      );
+      const text = encodeURIComponent(`Olá ${musician.full_name}, vi seu perfil na Rede Musical!`);
+      window.open(`https://wa.me/55${phone}?text=${text}`, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -246,17 +240,19 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 )}
 
                 <div className="flex flex-wrap gap-2">
-                  {getMusicianInstruments(musician).slice(0, 3).map((inst, idx) => (
-                    <motion.span
-                      key={idx}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: idx * 0.1 }}
-                      className="px-2 sm:px-3 py-1 backdrop-blur-sm bg-primary-500/15 dark:bg-primary-400/10 text-primary-800 dark:text-primary-200 rounded-full text-xs sm:text-sm border border-primary-200/40 dark:border-primary-400/20 hover:bg-primary-500/25 dark:hover:bg-primary-400/20 transition-colors"
-                    >
-                      {formatInstrumentLabel(inst)}
-                    </motion.span>
-                  ))}
+                  {getMusicianInstruments(musician)
+                    .slice(0, 3)
+                    .map((inst, idx) => (
+                      <motion.span
+                        key={idx}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: idx * 0.1 }}
+                        className="px-2 sm:px-3 py-1 backdrop-blur-sm bg-primary-500/15 dark:bg-primary-400/10 text-primary-800 dark:text-primary-200 rounded-full text-xs sm:text-sm border border-primary-200/40 dark:border-primary-400/20 hover:bg-primary-500/25 dark:hover:bg-primary-400/20 transition-colors"
+                      >
+                        {formatInstrumentLabel(inst)}
+                      </motion.span>
+                    ))}
                 </div>
               </div>
 

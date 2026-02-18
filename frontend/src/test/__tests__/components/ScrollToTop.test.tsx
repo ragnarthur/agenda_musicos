@@ -38,4 +38,3 @@ describe('ScrollToTop', () => {
     expect(scrollToSpy).toHaveBeenCalledWith({ top: 0, left: 0, behavior: 'auto' });
   });
 });
-

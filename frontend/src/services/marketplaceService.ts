@@ -1,10 +1,6 @@
 // services/marketplaceService.ts
 import { api } from './api';
-import type {
-  MarketplaceGig,
-  MarketplaceApplication,
-  MarketplaceGigChatMessage,
-} from '../types';
+import type { MarketplaceGig, MarketplaceApplication, MarketplaceGigChatMessage } from '../types';
 
 export const marketplaceService = {
   getGigs: async (params?: { status?: string; mine?: boolean }): Promise<MarketplaceGig[]> => {
@@ -85,12 +81,7 @@ export const marketplaceService = {
     return response.data;
   },
 
-  clearApplicationChat: async (
-    gigId: number,
-    applicationId: number
-  ): Promise<void> => {
-    await api.delete(
-      `/marketplace/gigs/${gigId}/applications/${applicationId}/chat/`
-    );
+  clearApplicationChat: async (gigId: number, applicationId: number): Promise<void> => {
+    await api.delete(`/marketplace/gigs/${gigId}/applications/${applicationId}/chat/`);
   },
 };

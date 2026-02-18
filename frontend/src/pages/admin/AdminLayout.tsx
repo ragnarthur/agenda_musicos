@@ -84,8 +84,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           {navItems.map(item => {
             const isActive =
               location.pathname === item.path ||
-              (item.path !== ADMIN_ROUTES.dashboard &&
-                location.pathname.startsWith(item.path));
+              (item.path !== ADMIN_ROUTES.dashboard && location.pathname.startsWith(item.path));
             const Icon = item.icon;
 
             return (

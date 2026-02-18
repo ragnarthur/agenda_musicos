@@ -136,15 +136,14 @@ const DayEventsSheet: React.FC<DayEventsSheetProps> = ({
               <div className="overflow-y-auto max-h-[calc(70vh-100px)] pb-safe">
                 {events.length === 0 ? (
                   <div className="p-8 text-center">
-                    <p className="text-gray-500 dark:text-gray-400">
-                      Nenhum evento neste dia
-                    </p>
+                    <p className="text-gray-500 dark:text-gray-400">Nenhum evento neste dia</p>
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                    {events.map(event => (
+                    {events.map(event =>
                       (() => {
-                        const isAvailability = event.isAvailability === true || event.status === 'available';
+                        const isAvailability =
+                          event.isAvailability === true || event.status === 'available';
                         const computed =
                           !isAvailability && isRealEvent(event)
                             ? getEventComputedStatus(event)
@@ -186,12 +185,13 @@ const DayEventsSheet: React.FC<DayEventsSheetProps> = ({
                                         statusKey === 'completed'
                                           ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
                                           : (event.status as string) === 'available'
-                                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                                          : event.status === 'confirmed' || event.status === 'approved'
-                                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                            : event.status === 'proposed'
-                                              ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                                              : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                            : event.status === 'confirmed' ||
+                                                event.status === 'approved'
+                                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                              : event.status === 'proposed'
+                                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                                : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
                                       }`}
                                     >
                                       {getStatusLabel(statusKey)}
@@ -203,8 +203,7 @@ const DayEventsSheet: React.FC<DayEventsSheetProps> = ({
                                       <span className="flex items-center gap-1">
                                         <Clock className="w-3 h-3" />
                                         {event.start_time.slice(0, 5)}
-                                        {event.end_time &&
-                                          ` - ${event.end_time.slice(0, 5)}`}
+                                        {event.end_time && ` - ${event.end_time.slice(0, 5)}`}
                                       </span>
                                     )}
                                     {event.location && (
@@ -223,15 +222,18 @@ const DayEventsSheet: React.FC<DayEventsSheetProps> = ({
                                         statusKey === 'completed'
                                           ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
                                           : (event.status as string) === 'available'
-                                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                                          : event.status === 'confirmed' || event.status === 'approved'
-                                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                            : event.status === 'proposed'
-                                              ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                                              : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                            : event.status === 'confirmed' ||
+                                                event.status === 'approved'
+                                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                              : event.status === 'proposed'
+                                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                                : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
                                       }`}
                                     >
-                                      {computed?.label || event.status_display || getStatusLabel(statusKey)}
+                                      {computed?.label ||
+                                        event.status_display ||
+                                        getStatusLabel(statusKey)}
                                     </span>
                                   </div>
                                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
@@ -239,8 +241,7 @@ const DayEventsSheet: React.FC<DayEventsSheetProps> = ({
                                       <span className="flex items-center gap-1">
                                         <Clock className="w-3 h-3" />
                                         {event.start_time.slice(0, 5)}
-                                        {event.end_time &&
-                                          ` - ${event.end_time.slice(0, 5)}`}
+                                        {event.end_time && ` - ${event.end_time.slice(0, 5)}`}
                                       </span>
                                     )}
                                   </div>
@@ -255,7 +256,7 @@ const DayEventsSheet: React.FC<DayEventsSheetProps> = ({
                           </Wrapper>
                         );
                       })()
-                    ))}
+                    )}
                   </div>
                 )}
               </div>

@@ -1,10 +1,4 @@
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-} from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 type Datum = { name: string; value: number; color: string };
 
@@ -60,9 +54,7 @@ export default function RequestsStatusDonut({
 
       <div className="md:col-span-2">
         <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-          <p className="text-xs font-semibold text-slate-300 uppercase tracking-wide">
-            Total
-          </p>
+          <p className="text-xs font-semibold text-slate-300 uppercase tracking-wide">Total</p>
           <p className="mt-1 text-3xl font-bold text-white">{total}</p>
 
           <div className="mt-4 space-y-2 text-sm">
@@ -85,4 +77,3 @@ export default function RequestsStatusDonut({
     </div>
   );
 }
-

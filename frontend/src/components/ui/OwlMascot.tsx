@@ -44,7 +44,9 @@ const OwlMascot: React.FC<OwlMascotProps> = memo(({ className, autoplay = true }
   const lottieStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
 
   if (!loaded || !animationData) {
-    return <div className={`owl-mascot-placeholder ${mascotClassName}`} style={{ opacity: '0.5' }} />;
+    return (
+      <div className={`owl-mascot-placeholder ${mascotClassName}`} style={{ opacity: '0.5' }} />
+    );
   }
 
   return (

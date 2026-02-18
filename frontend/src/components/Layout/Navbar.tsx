@@ -496,7 +496,10 @@ const Navbar: React.FC = memo(() => {
             </Link>
             <div className="border-t border-slate-200/70 pt-2 mt-2 dark:border-white/10">
               <button
-                onClick={() => { setOpenMore(false); handleLogout(); }}
+                onClick={() => {
+                  setOpenMore(false);
+                  handleLogout();
+                }}
                 className="flex items-center gap-3 w-full px-3 py-2.5 text-red-600 hover:bg-red-500/10 rounded-lg transition-colors dark:text-red-300"
               >
                 <LogOut className="h-5 w-5" />
@@ -521,7 +524,9 @@ const AppNavLink: React.FC<{
   <RouterNavLink
     to={to}
     className={({ isActive }) => {
-      const hoverTone = accent ? 'hover:bg-amber-500/10' : 'hover:bg-slate-900/5 dark:hover:bg-white/10';
+      const hoverTone = accent
+        ? 'hover:bg-amber-500/10'
+        : 'hover:bg-slate-900/5 dark:hover:bg-white/10';
       const activeTone = isActive
         ? accent
           ? 'bg-amber-500/10 text-amber-900 dark:text-amber-100'
@@ -555,7 +560,9 @@ const AppNavLinkCompact: React.FC<{
   <RouterNavLink
     to={to}
     className={({ isActive }) => {
-      const hoverTone = accent ? 'hover:bg-amber-500/10' : 'hover:bg-slate-900/5 dark:hover:bg-white/10';
+      const hoverTone = accent
+        ? 'hover:bg-amber-500/10'
+        : 'hover:bg-slate-900/5 dark:hover:bg-white/10';
       const activeTone = isActive
         ? accent
           ? 'bg-amber-500/10 text-amber-900 dark:text-amber-100'

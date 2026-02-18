@@ -1,4 +1,4 @@
-import { jsx as _jsx } from "react/jsx-runtime";
+import { jsx as _jsx } from 'react/jsx-runtime';
 import { fireEvent, render, screen } from '@testing-library/react';
 import MusicianPublicProfile from '../MusicianPublicProfile';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -8,73 +8,83 @@ const getPublicProfileMock = vi.hoisted(() => vi.fn());
 const listSponsorsMock = vi.hoisted(() => vi.fn());
 const companyAuthState = vi.hoisted(() => ({ value: false }));
 vi.mock('../../components/Layout/FullscreenBackground', () => ({
-    default: ({ children }) => _jsx("div", { children: children }),
+  default: ({ children }) => _jsx('div', { children: children }),
 }));
 vi.mock('../../services/publicApi', () => ({
-    quoteRequestService: {
-      create: vi.fn(),
-    },
-    publicMusicianService: {
-        getPublicProfile: getPublicProfileMock,
-        listSponsors: listSponsorsMock,
-    },
+  quoteRequestService: {
+    create: vi.fn(),
+  },
+  publicMusicianService: {
+    getPublicProfile: getPublicProfileMock,
+    listSponsors: listSponsorsMock,
+  },
 }));
 vi.mock('../../contexts/CompanyAuthContext', () => ({
-    useCompanyAuth: () => ({
-        isAuthenticated: companyAuthState.value,
-    }),
+  useCompanyAuth: () => ({
+    isAuthenticated: companyAuthState.value,
+  }),
 }));
 vi.mock('../../utils/toast', () => ({
-    showToast: {
-        success: vi.fn(),
-        error: vi.fn(),
-        apiError: vi.fn(),
-    },
+  showToast: {
+    success: vi.fn(),
+    error: vi.fn(),
+    apiError: vi.fn(),
+  },
 }));
 vi.mock('react-router-dom', async () => {
-    const actual = await vi.importActual('react-router-dom');
-    return {
-        ...actual,
-        useNavigate: () => navigateMock,
-    };
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => navigateMock,
+  };
 });
 describe('MusicianPublicProfile', () => {
-    const mockMusician = {
-        id: 1,
-        full_name: 'João Silva',
-        instrument: 'guitar',
-        instruments: ['guitar'],
-        bio: null,
-        city: 'São Paulo',
-        state: 'SP',
-        instagram: null,
-        avatar_url: null,
-        cover_image_url: null,
-        average_rating: 0,
-        total_ratings: 0,
-    };
-    const renderPage = () => render(_jsx(MemoryRouter, { initialEntries: ['/musico/1'], children: _jsx(Routes, { children: _jsx(Route, { path: "/musico/:id", element: _jsx(MusicianPublicProfile, {}) }) }) }));
-    beforeEach(() => {
-        navigateMock.mockReset();
-        getPublicProfileMock.mockReset();
-        listSponsorsMock.mockReset();
-        companyAuthState.value = false;
-    });
-    it('abre modal de contato quando contratante está autenticado', async () => {
-        companyAuthState.value = true;
-        getPublicProfileMock.mockResolvedValue(mockMusician);
-        listSponsorsMock.mockResolvedValue([]);
-        renderPage();
-      const button = await screen.findByRole('button', { name: 'Solicitar Orçamento' });
-        fireEvent.click(button);
-      expect(await screen.findByRole('heading', { name: /Solicitar orçamento/i })).toBeInTheDocument();
-    });
-    it('redireciona para cadastro de contratante quando não autenticada', async () => {
-        getPublicProfileMock.mockResolvedValue(mockMusician);
-        listSponsorsMock.mockResolvedValue([]);
-        renderPage();
-      const button = await screen.findByRole('button', { name: 'Solicitar Orçamento' });
-        fireEvent.click(button);
-        expect(navigateMock).toHaveBeenCalledWith('/contratante/cadastro');
-    });
+  const mockMusician = {
+    id: 1,
+    full_name: 'João Silva',
+    instrument: 'guitar',
+    instruments: ['guitar'],
+    bio: null,
+    city: 'São Paulo',
+    state: 'SP',
+    instagram: null,
+    avatar_url: null,
+    cover_image_url: null,
+    average_rating: 0,
+    total_ratings: 0,
+  };
+  const renderPage = () =>
+    render(
+      _jsx(MemoryRouter, {
+        initialEntries: ['/musico/1'],
+        children: _jsx(Routes, {
+          children: _jsx(Route, { path: '/musico/:id', element: _jsx(MusicianPublicProfile, {}) }),
+        }),
+      })
+    );
+  beforeEach(() => {
+    navigateMock.mockReset();
+    getPublicProfileMock.mockReset();
+    listSponsorsMock.mockReset();
+    companyAuthState.value = false;
+  });
+  it('abre modal de contato quando contratante está autenticado', async () => {
+    companyAuthState.value = true;
+    getPublicProfileMock.mockResolvedValue(mockMusician);
+    listSponsorsMock.mockResolvedValue([]);
+    renderPage();
+    const button = await screen.findByRole('button', { name: 'Solicitar Orçamento' });
+    fireEvent.click(button);
+    expect(
+      await screen.findByRole('heading', { name: /Solicitar orçamento/i })
+    ).toBeInTheDocument();
+  });
+  it('redireciona para cadastro de contratante quando não autenticada', async () => {
+    getPublicProfileMock.mockResolvedValue(mockMusician);
+    listSponsorsMock.mockResolvedValue([]);
+    renderPage();
+    const button = await screen.findByRole('button', { name: 'Solicitar Orçamento' });
+    fireEvent.click(button);
+    expect(navigateMock).toHaveBeenCalledWith('/contratante/cadastro');
+  });
 });

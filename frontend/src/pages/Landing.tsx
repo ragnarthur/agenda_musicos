@@ -56,7 +56,8 @@ const Landing: React.FC = () => {
 
   usePageMeta({
     title: 'GigFlow - Encontre Músicos Profissionais',
-    description: 'Plataforma para encontrar e contratar músicos profissionais para seu evento. Gerencie agenda, eventos e conexões musicais.',
+    description:
+      'Plataforma para encontrar e contratar músicos profissionais para seu evento. Gerencie agenda, eventos e conexões musicais.',
   });
 
   const handleInstall = async () => {
@@ -557,7 +558,7 @@ const Landing: React.FC = () => {
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className="bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-6 pb-safe"
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               <div className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-6 sm:hidden" />
 
@@ -574,7 +575,8 @@ const Landing: React.FC = () => {
                     1
                   </span>
                   <p className="text-gray-700 dark:text-gray-300 text-sm pt-0.5">
-                    Toque no botão <Share className="inline w-4 h-4 text-blue-500 mx-1" /> <strong>Compartilhar</strong> na barra do Safari
+                    Toque no botão <Share className="inline w-4 h-4 text-blue-500 mx-1" />{' '}
+                    <strong>Compartilhar</strong> na barra do Safari
                   </p>
                 </li>
                 <li className="flex items-start gap-3">
@@ -622,7 +624,7 @@ const Landing: React.FC = () => {
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className="bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-6 pb-safe"
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               <div className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-6 sm:hidden" />
 
@@ -639,7 +641,8 @@ const Landing: React.FC = () => {
                     1
                   </span>
                   <p className="text-gray-700 dark:text-gray-300 text-sm pt-0.5">
-                    Toque no menu <MoreVertical className="inline w-4 h-4 text-gray-500 mx-1" /> no canto superior direito do Chrome
+                    Toque no menu <MoreVertical className="inline w-4 h-4 text-gray-500 mx-1" /> no
+                    canto superior direito do Chrome
                   </p>
                 </li>
                 <li className="flex items-start gap-3">
@@ -647,7 +650,8 @@ const Landing: React.FC = () => {
                     2
                   </span>
                   <p className="text-gray-700 dark:text-gray-300 text-sm pt-0.5">
-                    Toque em <strong>"Adicionar à tela inicial"</strong> ou <strong>"Instalar aplicativo"</strong>
+                    Toque em <strong>"Adicionar à tela inicial"</strong> ou{' '}
+                    <strong>"Instalar aplicativo"</strong>
                   </p>
                 </li>
                 <li className="flex items-start gap-3">

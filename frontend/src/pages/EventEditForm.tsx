@@ -2,7 +2,19 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSWRConfig } from 'swr';
-import { Calendar, MapPin, Clock, Phone, FileText, Save, X, Coins, Info, Users, UserPlus } from 'lucide-react';
+import {
+  Calendar,
+  MapPin,
+  Clock,
+  Phone,
+  FileText,
+  Save,
+  X,
+  Coins,
+  Info,
+  Users,
+  UserPlus,
+} from 'lucide-react';
 import { parseISO, isBefore, isValid } from 'date-fns';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
@@ -15,7 +27,12 @@ import { sanitizeOptionalText, sanitizeText } from '../utils/sanitize';
 import { getErrorMessage } from '../utils/toast';
 import { getTimeProps } from '../utils/mobileInputs';
 import InstrumentIcon from '../components/common/InstrumentIcon';
-import { INSTRUMENT_LABELS as BASE_INSTRUMENT_LABELS, normalizeInstrumentKey, maskCurrencyInput, unmaskCurrency } from '../utils/formatting';
+import {
+  INSTRUMENT_LABELS as BASE_INSTRUMENT_LABELS,
+  normalizeInstrumentKey,
+  maskCurrencyInput,
+  unmaskCurrency,
+} from '../utils/formatting';
 
 const instrumentLabels: Record<string, string> = {
   ...BASE_INSTRUMENT_LABELS,
@@ -614,9 +631,7 @@ const EventEditForm: React.FC = () => {
             <div className="rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-50 via-white to-indigo-50 dark:from-slate-900/90 dark:via-slate-900/80 dark:to-slate-800/80 dark:border-white/10 p-4 space-y-3 shadow-lg shadow-black/5 dark:shadow-black/40">
               <div className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-purple-600 dark:text-primary-300" />
-                <h3 className="text-sm font-semibold text-gray-900">
-                  Convidar mais músicos
-                </h3>
+                <h3 className="text-sm font-semibold text-gray-900">Convidar mais músicos</h3>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-[1fr,240px] gap-2 md:items-end">
@@ -718,47 +733,46 @@ const EventEditForm: React.FC = () => {
                     {filteredMusicians.map(musician => {
                       const selectedInstrument = selectedMusicians[musician.musician_id];
                       const isSelected = Boolean(selectedInstrument);
-                      const displayInstrument = selectedInstrument || getDisplayInstrument(musician);
+                      const displayInstrument =
+                        selectedInstrument || getDisplayInstrument(musician);
                       return (
-                      <div
-                        key={musician.musician_id}
-                        onClick={() => toggleMusicianSelection(musician)}
-                        className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
-                          isSelected
-                            ? 'border-purple-500 bg-purple-50 shadow-sm dark:bg-purple-500/10 dark:border-purple-400/50'
-                            : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/50 dark:bg-slate-900/50 dark:border-white/10 dark:hover:border-purple-400/40 dark:hover:bg-slate-900/70'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`p-2 rounded-lg ${
-                              isSelected
-                                ? 'bg-purple-600 text-white'
-                                : 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-slate-200'
-                            }`}
-                          >
-                            <InstrumentIcon instrument={displayInstrument} size={18} />
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{musician.musician_name}</p>
-                            <p className="text-xs text-gray-500">
-                              {getInstrumentDisplay(musician, displayInstrument)}
-                            </p>
-                          </div>
-                        </div>
                         <div
-                          className={`flex items-center justify-center w-6 h-6 rounded-full border-2 ${
+                          key={musician.musician_id}
+                          onClick={() => toggleMusicianSelection(musician)}
+                          className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
                             isSelected
-                              ? 'border-purple-600 bg-purple-600'
-                              : 'border-gray-300 dark:border-white/20'
+                              ? 'border-purple-500 bg-purple-50 shadow-sm dark:bg-purple-500/10 dark:border-purple-400/50'
+                              : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/50 dark:bg-slate-900/50 dark:border-white/10 dark:hover:border-purple-400/40 dark:hover:bg-slate-900/70'
                           }`}
                         >
-                          {isSelected && (
-                            <UserPlus className="h-4 w-4 text-white" />
-                          )}
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`p-2 rounded-lg ${
+                                isSelected
+                                  ? 'bg-purple-600 text-white'
+                                  : 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-slate-200'
+                              }`}
+                            >
+                              <InstrumentIcon instrument={displayInstrument} size={18} />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{musician.musician_name}</p>
+                              <p className="text-xs text-gray-500">
+                                {getInstrumentDisplay(musician, displayInstrument)}
+                              </p>
+                            </div>
+                          </div>
+                          <div
+                            className={`flex items-center justify-center w-6 h-6 rounded-full border-2 ${
+                              isSelected
+                                ? 'border-purple-600 bg-purple-600'
+                                : 'border-gray-300 dark:border-white/20'
+                            }`}
+                          >
+                            {isSelected && <UserPlus className="h-4 w-4 text-white" />}
+                          </div>
                         </div>
-                      </div>
-                    );
+                      );
                     })}
                   </div>
                   {Object.keys(selectedMusicians).length > 0 && (

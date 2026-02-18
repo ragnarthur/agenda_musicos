@@ -240,10 +240,7 @@ export default function MusicianRequest() {
 
     if (!stateData) return;
 
-    const fullName = [stateData.firstName, stateData.lastName]
-      .filter(Boolean)
-      .join(' ')
-      .trim();
+    const fullName = [stateData.firstName, stateData.lastName].filter(Boolean).join(' ').trim();
 
     if (fullName) {
       setValue('full_name', fullName, { shouldDirty: true });
@@ -666,7 +663,8 @@ export default function MusicianRequest() {
                 {selectedGenres.length > 0 && (
                   <p className="mt-2 text-xs text-purple-600 dark:text-purple-400 flex items-center gap-1">
                     <Check className="h-3 w-3" />
-                    {selectedGenres.length} gênero{selectedGenres.length > 1 ? 's' : ''} selecionado{selectedGenres.length > 1 ? 's' : ''}
+                    {selectedGenres.length} gênero{selectedGenres.length > 1 ? 's' : ''} selecionado
+                    {selectedGenres.length > 1 ? 's' : ''}
                   </p>
                 )}
               </div>

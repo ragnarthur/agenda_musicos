@@ -1,14 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  User,
-  MapPin,
-  Mail,
-  Phone,
-  LogOut,
-  Save,
-  Calendar,
-} from 'lucide-react';
+import { User, MapPin, Mail, Phone, LogOut, Save, Calendar } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import ContractorLayout from '../../components/contractor/ContractorLayout';
 import FormField from '../../components/form/FormField';
@@ -28,27 +20,30 @@ export default function ContractorProfile() {
   const [city, setCity] = useState(organization?.city || '');
   const [saving, setSaving] = useState(false);
 
-  const handleSave = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) {
-      showToast.error('Nome é obrigatório');
-      return;
-    }
+  const handleSave = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!name.trim()) {
+        showToast.error('Nome é obrigatório');
+        return;
+      }
 
-    setSaving(true);
-    try {
-      await updateOrganization({
-        name: name.trim(),
-        phone: phone.trim() || null,
-        state: state || null,
-        city: city.trim() || null,
-      });
-    } catch {
-      // Error toast is handled by updateOrganization
-    } finally {
-      setSaving(false);
-    }
-  }, [name, phone, state, city, updateOrganization]);
+      setSaving(true);
+      try {
+        await updateOrganization({
+          name: name.trim(),
+          phone: phone.trim() || null,
+          state: state || null,
+          city: city.trim() || null,
+        });
+      } catch {
+        // Error toast is handled by updateOrganization
+      } finally {
+        setSaving(false);
+      }
+    },
+    [name, phone, state, city, updateOrganization]
+  );
 
   const handleLogout = useCallback(() => {
     logout();
@@ -70,9 +65,7 @@ export default function ContractorProfile() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             Meu Perfil
           </h1>
-          <p className="text-sm text-muted mt-1">
-            Gerencie suas informações pessoais
-          </p>
+          <p className="text-sm text-muted mt-1">Gerencie suas informações pessoais</p>
         </div>
 
         {/* Profile Header */}
@@ -80,7 +73,11 @@ export default function ContractorProfile() {
           className="hero-panel"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={prefersReducedMotion ? { duration: 0.3 } : { type: 'spring', stiffness: 120, damping: 18 }}
+          transition={
+            prefersReducedMotion
+              ? { duration: 0.3 }
+              : { type: 'spring', stiffness: 120, damping: 18 }
+          }
         >
           <div className="hero-animated" />
           <div className="relative flex items-center gap-4">
@@ -120,7 +117,12 @@ export default function ContractorProfile() {
             Editar Perfil
           </h3>
           <form onSubmit={handleSave} className="space-y-4">
-            <FormField id="name" label="Nome / Empresa" required icon={<User className="w-4 h-4" />}>
+            <FormField
+              id="name"
+              label="Nome / Empresa"
+              required
+              icon={<User className="w-4 h-4" />}
+            >
               <input
                 id="name"
                 type="text"
@@ -152,7 +154,9 @@ export default function ContractorProfile() {
                 >
                   <option value="">Selecione...</option>
                   {BRAZILIAN_STATES.map(({ value, label }) => (
-                    <option key={value} value={value}>{label}</option>
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
                   ))}
                 </select>
               </FormField>
@@ -196,9 +200,7 @@ export default function ContractorProfile() {
               : { type: 'spring', stiffness: 120, damping: 18, delay: 0.1 }
           }
         >
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Conta
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Conta</h3>
           {organization?.created_at && (
             <div className="flex items-center gap-2 text-sm text-muted mb-4">
               <Calendar className="w-4 h-4" />

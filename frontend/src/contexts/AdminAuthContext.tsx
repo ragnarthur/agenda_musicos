@@ -1,10 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { adminService, api } from '../services/api';
-import {
-  clearStoredAccessToken,
-  clearStoredRefreshToken,
-} from '../utils/tokenStorage';
+import { clearStoredAccessToken, clearStoredRefreshToken } from '../utils/tokenStorage';
 
 const SESSION_KEY = 'gigflow_admin_session';
 const REMEMBER_KEY = 'gigflow_admin_remember';

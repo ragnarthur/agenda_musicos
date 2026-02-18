@@ -373,9 +373,7 @@ const MusicianProfile: React.FC = () => {
             />
 
             {calendarLoading && (
-              <p className="text-center text-sm text-muted mt-2">
-                Carregando agenda...
-              </p>
+              <p className="text-center text-sm text-muted mt-2">Carregando agenda...</p>
             )}
             {calendarError && (
               <p className="text-center text-sm text-red-500 dark:text-red-400 mt-2">
@@ -504,9 +502,7 @@ const MusicianProfile: React.FC = () => {
               <div>
                 <div className="flex items-center gap-2 mb-4">
                   <Music className="h-5 w-5 text-indigo-500" />
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                    Instrumentos
-                  </h2>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">Instrumentos</h2>
                 </div>
                 {getMusicianInstruments(musician).length > 0 ? (
                   <div className="flex flex-wrap gap-2">

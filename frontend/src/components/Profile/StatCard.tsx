@@ -27,7 +27,9 @@ const StatCard: React.FC<StatCardProps> = ({ icon, value, label, color = 'blue' 
       >
         {icon}
       </div>
-      <div className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1 break-words min-w-0">{value}</div>
+      <div className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1 break-words min-w-0">
+        {value}
+      </div>
       <div className="text-sm text-muted">{label}</div>
     </motion.div>
   );

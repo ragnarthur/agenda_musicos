@@ -202,9 +202,7 @@ export default function ContractorDashboard() {
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Pedidos Recentes
                   </h2>
-                  <p className="text-sm text-muted">
-                    Últimas solicitações enviadas
-                  </p>
+                  <p className="text-sm text-muted">Últimas solicitações enviadas</p>
                 </div>
                 {requests.length > 0 && (
                   <Link

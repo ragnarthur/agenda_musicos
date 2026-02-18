@@ -12,11 +12,7 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
-import {
-  quoteRequestService,
-  type QuoteRequest,
-  type QuoteProposal,
-} from '../services/publicApi';
+import { quoteRequestService, type QuoteRequest, type QuoteProposal } from '../services/publicApi';
 import ContractorLayout from '../components/contractor/ContractorLayout';
 import ConfirmModal from '../components/modals/ConfirmModal';
 import Skeleton from '../components/common/Skeleton';
@@ -179,7 +175,8 @@ export default function ContractorQuoteDetail() {
     setConfirmModal({
       isOpen: true,
       title: 'Cancelar Pedido',
-      message: 'Tem certeza que deseja cancelar este pedido de orçamento? Esta ação não pode ser desfeita.',
+      message:
+        'Tem certeza que deseja cancelar este pedido de orçamento? Esta ação não pode ser desfeita.',
       confirmText: 'Cancelar Pedido',
       variant: 'danger',
       onConfirm: async () => {
@@ -268,7 +265,11 @@ export default function ContractorQuoteDetail() {
           className="card-contrast"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={prefersReducedMotion ? { duration: 0.3 } : { type: 'spring', stiffness: 120, damping: 18 }}
+          transition={
+            prefersReducedMotion
+              ? { duration: 0.3 }
+              : { type: 'spring', stiffness: 120, damping: 18 }
+          }
         >
           <div className="flex items-start justify-between gap-3 mb-4">
             <div>
@@ -285,7 +286,9 @@ export default function ContractorQuoteDetail() {
                 </Link>
               </p>
             </div>
-            <span className={`text-xs px-3 py-1.5 rounded-full font-medium ${getStatusColor(quote.status)}`}>
+            <span
+              className={`text-xs px-3 py-1.5 rounded-full font-medium ${getStatusColor(quote.status)}`}
+            >
               {quote.status_display}
             </span>
           </div>
@@ -407,9 +410,7 @@ export default function ContractorQuoteDetail() {
             Propostas recebidas
           </h2>
           {proposals.length === 0 ? (
-            <p className="text-sm text-muted text-center py-6">
-              Nenhuma proposta recebida ainda
-            </p>
+            <p className="text-sm text-muted text-center py-6">Nenhuma proposta recebida ainda</p>
           ) : (
             <div className="space-y-4">
               {proposals.map(proposal => (

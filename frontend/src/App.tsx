@@ -58,7 +58,9 @@ const LoginContractor = lazy(() => import('./pages/LoginCompany'));
 const RegisterContractor = lazy(() => import('./pages/RegisterCompany'));
 const ContractorRequests = lazy(() => import('./pages/ContractorRequests'));
 const ContractorDashboard = lazy(() => import('./pages/contractor/ContractorDashboard'));
-const ContractorBrowseMusicians = lazy(() => import('./pages/contractor/ContractorBrowseMusicians'));
+const ContractorBrowseMusicians = lazy(
+  () => import('./pages/contractor/ContractorBrowseMusicians')
+);
 const ContractorNewRequest = lazy(() => import('./pages/contractor/ContractorNewRequest'));
 const ContractorProfile = lazy(() => import('./pages/contractor/ContractorProfile'));
 
@@ -167,13 +169,13 @@ const PublicRoute: React.FC<{ children: React.ReactElement }> = ({ children }) =
   }
 
   // Se já estiver autenticado, redireciona para o dashboard correto
-    if (isAuthenticated) {
-      if (userType === 'admin') {
-        return <Navigate to={ADMIN_ROUTES.dashboard} replace />;
-      }
-      if (userType === 'contractor') {
-        return <Navigate to="/contratante/dashboard" replace />;
-      }
+  if (isAuthenticated) {
+    if (userType === 'admin') {
+      return <Navigate to={ADMIN_ROUTES.dashboard} replace />;
+    }
+    if (userType === 'contractor') {
+      return <Navigate to="/contratante/dashboard" replace />;
+    }
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -204,13 +206,13 @@ const LandingRoute: React.FC<{ children: React.ReactElement }> = ({ children }) 
   }
 
   // Se autenticado, redireciona para dashboard correto
-    if (isAuthenticated) {
-      if (userType === 'admin') {
-        return <Navigate to={ADMIN_ROUTES.dashboard} replace />;
-      }
-      if (userType === 'contractor') {
-        return <Navigate to="/contratante/dashboard" replace />;
-      }
+  if (isAuthenticated) {
+    if (userType === 'admin') {
+      return <Navigate to={ADMIN_ROUTES.dashboard} replace />;
+    }
+    if (userType === 'contractor') {
+      return <Navigate to="/contratante/dashboard" replace />;
+    }
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -523,10 +525,7 @@ function AppRoutes() {
           <Route path={ADMIN_CHILD_ROUTES.users} element={<AdminUsers />} />
           <Route path={ADMIN_CHILD_ROUTES.usersDetail} element={<AdminUsers />} />
           <Route path={ADMIN_CHILD_ROUTES.organizations} element={<AdminOrganizations />} />
-          <Route
-            path={ADMIN_CHILD_ROUTES.organizationsDetail}
-            element={<AdminOrganizations />}
-          />
+          <Route path={ADMIN_CHILD_ROUTES.organizationsDetail} element={<AdminOrganizations />} />
         </Route>
 
         {/* Public Status Page */}

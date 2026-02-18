@@ -70,8 +70,8 @@ function generateIconSVG(size) {
   <!-- Calendário -->
   <g filter="url(#shadow)">
     <!-- Argolas do calendário -->
-    <rect x="${ring1X - ringWidth/2}" y="${ringY}" width="${ringWidth}" height="${ringHeight}" rx="${ringWidth/2}" fill="white" opacity="0.9"/>
-    <rect x="${ring2X - ringWidth/2}" y="${ringY}" width="${ringWidth}" height="${ringHeight}" rx="${ringWidth/2}" fill="white" opacity="0.9"/>
+    <rect x="${ring1X - ringWidth / 2}" y="${ringY}" width="${ringWidth}" height="${ringHeight}" rx="${ringWidth / 2}" fill="white" opacity="0.9"/>
+    <rect x="${ring2X - ringWidth / 2}" y="${ringY}" width="${ringWidth}" height="${ringHeight}" rx="${ringWidth / 2}" fill="white" opacity="0.9"/>
 
     <!-- Corpo do calendário -->
     <rect x="${calX}" y="${calY}" width="${calWidth}" height="${calHeight}" rx="${calRadius}" fill="white" opacity="0.95"/>
@@ -117,9 +117,7 @@ async function generateIcons() {
     const svgContent = generateIconSVG(size);
     const pngPath = path.join(publicDir, `icon-${size}.png`);
 
-    await sharp(Buffer.from(svgContent))
-      .png()
-      .toFile(pngPath);
+    await sharp(Buffer.from(svgContent)).png().toFile(pngPath);
 
     console.log(`✓ icon-${size}.png (${size}x${size})`);
   }
@@ -130,17 +128,11 @@ async function generateIcons() {
 
   // Gera PNG para favicon (32x32 é o mais comum)
   const favicon32Path = path.join(publicDir, 'favicon-32.png');
-  await sharp(Buffer.from(svgContent))
-    .resize(32, 32)
-    .png()
-    .toFile(favicon32Path);
+  await sharp(Buffer.from(svgContent)).resize(32, 32).png().toFile(favicon32Path);
 
   // Copia como favicon.ico (navegadores modernos aceitam PNG)
   const faviconPath = path.join(publicDir, 'favicon.ico');
-  await sharp(Buffer.from(svgContent))
-    .resize(32, 32)
-    .png()
-    .toFile(faviconPath);
+  await sharp(Buffer.from(svgContent)).resize(32, 32).png().toFile(faviconPath);
 
   console.log(`✓ favicon.ico (32x32)`);
 

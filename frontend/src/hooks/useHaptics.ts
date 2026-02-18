@@ -29,8 +29,7 @@ export function useHaptics(): HapticsHook {
 
       try {
         // Se for uma string, busca o padrão predefinido
-        const vibrationPattern =
-          typeof pattern === 'string' ? HAPTIC_PATTERNS[pattern] : pattern;
+        const vibrationPattern = typeof pattern === 'string' ? HAPTIC_PATTERNS[pattern] : pattern;
 
         navigator.vibrate(vibrationPattern);
       } catch (error) {

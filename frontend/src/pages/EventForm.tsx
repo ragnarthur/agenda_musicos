@@ -1,7 +1,17 @@
 // pages/EventForm.tsx
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Save, X, CheckCircle, Info, Sparkles, Users, UserPlus, Clock, AlertCircle } from 'lucide-react';
+import {
+  Save,
+  X,
+  CheckCircle,
+  Info,
+  Sparkles,
+  Users,
+  UserPlus,
+  Clock,
+  AlertCircle,
+} from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import ConflictPreview from '../components/event/ConflictPreview';
 import ProposalSummary from '../components/event/ProposalSummary';
@@ -283,13 +293,7 @@ const EventForm: React.FC = () => {
       const labelsConcat = list.map(resolveInstrumentLabel).join(' ');
       const genresLabel = genres.map(getGenreLabel).join(' ');
       const searchable = normalizeSearch(
-        [
-          m.musician_name,
-          labelsConcat,
-          list.join(' '),
-          genres.join(' '),
-          genresLabel,
-        ].join(' ')
+        [m.musician_name, labelsConcat, list.join(' '), genres.join(' '), genresLabel].join(' ')
       );
       const byQuery = q ? searchable.includes(q) : true;
 
@@ -625,10 +629,7 @@ const EventForm: React.FC = () => {
                 >
                   Início *
                 </label>
-                <div
-                  className="relative"
-                  onClick={() => setShowTimePicker('start')}
-                >
+                <div className="relative" onClick={() => setShowTimePicker('start')}>
                   <input
                     id="start_time"
                     name="start_time"
@@ -665,10 +666,7 @@ const EventForm: React.FC = () => {
                 <label htmlFor="end_time" className="block text-sm font-medium text-gray-700 mb-2">
                   Término *
                 </label>
-                <div
-                  className="relative"
-                  onClick={() => setShowTimePicker('end')}
-                >
+                <div className="relative" onClick={() => setShowTimePicker('end')}>
                   <input
                     id="end_time"
                     name="end_time"
@@ -842,9 +840,7 @@ const EventForm: React.FC = () => {
               <div className="rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-50 via-white to-indigo-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Users className="h-5 w-5 text-purple-600" />
-                  <h3 className="text-sm font-semibold text-gray-900">
-                    Selecionar músicos
-                  </h3>
+                  <h3 className="text-sm font-semibold text-gray-900">Selecionar músicos</h3>
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:items-end mb-3">
@@ -1042,7 +1038,9 @@ const EventForm: React.FC = () => {
                               }`}
                             >
                               <InstrumentIcon
-                                instrument={getNormalizedInstrumentList(musician)[0] || musician.instrument}
+                                instrument={
+                                  getNormalizedInstrumentList(musician)[0] || musician.instrument
+                                }
                                 size={18}
                               />
                             </div>
