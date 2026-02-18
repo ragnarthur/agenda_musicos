@@ -93,6 +93,27 @@ jobs:
             "import urllib.request, sys; r=urllib.request.urlopen('http://localhost:8000/healthz/',timeout=5); print('Backend acessivel via exec OK, status:', r.status)" \
             || { echo "Backend nao respondeu ao healthz"; exit 1; }
 
+          # Garantir que usuario de teste existe
+          echo "Criando/verificando usuario de teste livia_vocal..."
+          docker compose --env-file .env.prod -f docker-compose.prod.yml \
+            exec -T backend python manage.py seed_test_data
+          echo "Usuario de teste OK"
+
+          # Debug: testar login diretamente antes do Locust
+          echo "Testando login livia_vocal no backend..."
+          docker compose --env-file .env.prod -f docker-compose.prod.yml \
+            exec -T backend python -c "
+import json, urllib.request, urllib.error
+url = 'http://localhost:8000/api/token/'
+data = json.dumps({'username': 'livia_vocal', 'password': 'livia_vocal2026@'}).encode()
+req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
+try:
+    r = urllib.request.urlopen(req)
+    print('[debug-login] SUCCESS HTTP', r.status)
+except urllib.error.HTTPError as e:
+    print('[debug-login] FAILED HTTP', e.code, e.read()[:400])
+" || true
+
           RESULT_DIR="$APP_DIR/load_tests/results"
           mkdir -p "$RESULT_DIR"
           chmod 777 "$RESULT_DIR"
