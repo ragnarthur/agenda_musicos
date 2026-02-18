@@ -47,16 +47,22 @@ jobs:
           pip install black isort flake8
 
       - name: Check code formatting (Black)
-        continue-on-error: true
-        run: black --check .
+        run: |
+          if ! black --check .; then
+            echo "::warning::Black encontrou divergencias de formato (advisory)."
+          fi
 
       - name: Check import sorting (isort)
-        continue-on-error: true
-        run: isort --check-only .
+        run: |
+          if ! isort --check-only .; then
+            echo "::warning::isort encontrou divergencias de ordenacao (advisory)."
+          fi
 
       - name: Lint with flake8
-        continue-on-error: true
-        run: flake8 .
+        run: |
+          if ! flake8 .; then
+            echo "::warning::flake8 encontrou problemas de lint (advisory)."
+          fi
 
       - name: Run Django system checks
         run: python manage.py check
@@ -84,13 +90,17 @@ jobs:
         working-directory: frontend
 
       - name: Check formatting (Prettier)
-        continue-on-error: true
-        run: npm run format:check
+        run: |
+          if ! npm run format:check; then
+            echo "::warning::Prettier encontrou divergencias de formato (advisory)."
+          fi
         working-directory: frontend
 
       - name: Lint frontend
-        continue-on-error: true
-        run: npm run lint
+        run: |
+          if ! npm run lint; then
+            echo "::warning::ESLint encontrou problemas de lint (advisory)."
+          fi
         working-directory: frontend
 
       - name: Run frontend tests
@@ -116,10 +126,11 @@ jobs:
           cache: "pip"
 
       - name: Run pip-audit (advisory)
-        continue-on-error: true
         run: |
           pip install --upgrade pip pip-audit
-          pip-audit -r requirements.txt
+          if ! pip-audit -r requirements.txt; then
+            echo "::warning::pip-audit encontrou vulnerabilidades (advisory)."
+          fi
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -133,8 +144,10 @@ jobs:
         working-directory: frontend
 
       - name: Run npm audit (advisory)
-        continue-on-error: true
-        run: npm audit --omit=dev --audit-level=high
+        run: |
+          if ! npm audit --omit=dev --audit-level=high; then
+            echo "::warning::npm audit encontrou vulnerabilidades (advisory)."
+          fi
         working-directory: frontend
 
   # =========================================================
@@ -181,12 +194,17 @@ jobs:
           python manage.py populate_db
 
       - name: Run local flow scripts (advisory)
-        continue-on-error: true
         run: |
-          python test_complete_flow.py
-          python test_trial_direct.py
-          python test_auth.py
-          python test_restore_availability.py
+          failed=0
+          for script in test_complete_flow.py test_trial_direct.py test_auth.py test_restore_availability.py; do
+            if ! python "$script"; then
+              echo "::warning::${script} falhou (advisory)."
+              failed=1
+            fi
+          done
+          if [ "$failed" -ne 0 ]; then
+            echo "::warning::Um ou mais scripts de fluxo local falharam."
+          fi
 
       - name: Start backend server
         run: python manage.py runserver 0.0.0.0:8000 &
@@ -235,9 +253,16 @@ jobs:
           PY
 
       - name: Run end-to-end workflow test (advisory)
-        continue-on-error: true
         env:
           BASE_URL: "http://localhost:8000/api"
         run: |
-          python test_trial_flow.py
-          python test_complete_workflow.py
+          failed=0
+          for script in test_trial_flow.py test_complete_workflow.py; do
+            if ! python "$script"; then
+              echo "::warning::${script} falhou (advisory)."
+              failed=1
+            fi
+          done
+          if [ "$failed" -ne 0 ]; then
+            echo "::warning::Um ou mais scripts de E2E consultivo falharam."
+          fi

@@ -4,8 +4,8 @@ Script de teste completo do sistema de agenda de músicos.
 Testa funcionalidades principais incluindo shows solo e convites.
 """
 
-import json
 import os
+import sys
 from datetime import datetime, timedelta
 
 import requests
@@ -28,27 +28,62 @@ def print_section(title):
     print(f"{'='*60}")
 
 
+def safe_json(response):
+    try:
+        return response.json()
+    except ValueError:
+        return {}
+
+
+def extract_access_token(payload):
+    if not isinstance(payload, dict):
+        return None
+
+    for key in ("access", "access_token", "token", "jwt"):
+        token = payload.get(key)
+        if isinstance(token, str) and token:
+            return token
+
+    return None
+
+
 def login(username, password):
-    """Faz login e retorna o token"""
-    response = requests.post(
+    """Faz login e retorna contexto de autenticação (session + token opcional)."""
+    session = requests.Session()
+    response = session.post(
         f"{BASE_URL}/token/", json={"username": username, "password": password}
     )
+
     if response.status_code == 200:
-        data = response.json()
+        data = safe_json(response)
+        token = extract_access_token(data)
         print(f"✓ Login bem-sucedido: {username}")
-        return data["access"]
-    else:
-        print(f"✗ Erro no login: {response.status_code}")
+        if token:
+            return {"session": session, "token": token}
+
+        if session.cookies:
+            print("  - Token não veio no body; usando autenticação por cookie.")
+            return {"session": session, "token": None}
+
+        print("✗ Login retornou 200, mas sem token e sem cookie de sessão.")
         print(response.text)
         return None
 
+    print(f"✗ Erro no login: {response.status_code}")
+    print(response.text)
+    return None
 
-def get_headers(token):
-    """Retorna headers com autenticação"""
-    return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+
+def auth_headers(auth):
+    """Retorna headers com autenticação (Bearer opcional + cookie de sessão)."""
+    headers = {"Content-Type": "application/json"}
+    token = auth.get("token")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return headers
 
 
-def test_create_regular_event(token):
+def test_create_regular_event(auth):
     """Testa criação de evento normal (com convites)"""
     print_section("Teste 1: Criar Evento Normal (com banda)")
 
@@ -66,7 +101,9 @@ def test_create_regular_event(token):
         "is_solo": False,
     }
 
-    response = requests.post(f"{BASE_URL}/events/", headers=get_headers(token), json=event_data)
+    response = auth["session"].post(
+        f"{BASE_URL}/events/", headers=auth_headers(auth), json=event_data
+    )
 
     if response.status_code == 201:
         event = response.json()
@@ -82,7 +119,7 @@ def test_create_regular_event(token):
         return None
 
 
-def test_create_solo_event(token):
+def test_create_solo_event(auth):
     """Testa criação de evento solo (não requer convites)"""
     print_section("Teste 2: Criar Show Solo")
 
@@ -99,7 +136,9 @@ def test_create_solo_event(token):
         "is_solo": True,
     }
 
-    response = requests.post(f"{BASE_URL}/events/", headers=get_headers(token), json=event_data)
+    response = auth["session"].post(
+        f"{BASE_URL}/events/", headers=auth_headers(auth), json=event_data
+    )
 
     if response.status_code == 201:
         event = response.json()
@@ -123,11 +162,13 @@ def test_create_solo_event(token):
         return None
 
 
-def test_approve_event(token, event_id):
+def test_approve_event(auth, event_id):
     """Testa confirmação de evento pelo convidado"""
     print_section(f"Teste 3: Confirmar Evento #{event_id}")
 
-    response = requests.post(f"{BASE_URL}/events/{event_id}/approve/", headers=get_headers(token))
+    response = auth["session"].post(
+        f"{BASE_URL}/events/{event_id}/approve/", headers=auth_headers(auth)
+    )
 
     if response.status_code == 200:
         event = response.json()
@@ -141,7 +182,7 @@ def test_approve_event(token, event_id):
         return False
 
 
-def test_edit_event(token, event_id):
+def test_edit_event(auth, event_id):
     """Testa edição de evento"""
     print_section(f"Teste 4: Editar Evento #{event_id}")
 
@@ -157,8 +198,8 @@ def test_edit_event(token, event_id):
         "is_solo": False,
     }
 
-    response = requests.put(
-        f"{BASE_URL}/events/{event_id}/", headers=get_headers(token), json=updated_data
+    response = auth["session"].put(
+        f"{BASE_URL}/events/{event_id}/", headers=auth_headers(auth), json=updated_data
     )
 
     if response.status_code == 200:
@@ -173,7 +214,7 @@ def test_edit_event(token, event_id):
         return False
 
 
-def test_create_leader_availability(token):
+def test_create_leader_availability(auth):
     """Testa cadastro de disponibilidade do baterista"""
     print_section("Teste 5: Cadastrar Disponibilidade do Baterista")
 
@@ -188,8 +229,8 @@ def test_create_leader_availability(token):
             "notes": f"Disponível para shows no dia {date}",
         }
 
-        response = requests.post(
-            f"{BASE_URL}/leader-availabilities/", headers=get_headers(token), json=avail_data
+        response = auth["session"].post(
+            f"{BASE_URL}/leader-availabilities/", headers=auth_headers(auth), json=avail_data
         )
 
         if response.status_code == 201:
@@ -206,12 +247,12 @@ def test_create_leader_availability(token):
     return availabilities
 
 
-def test_get_leader_availabilities(token):
+def test_get_leader_availabilities(auth):
     """Testa listagem de disponibilidades do baterista"""
     print_section("Teste 6: Listar Disponibilidades do Baterista")
 
-    response = requests.get(
-        f"{BASE_URL}/leader-availabilities/?upcoming=true", headers=get_headers(token)
+    response = auth["session"].get(
+        f"{BASE_URL}/leader-availabilities/?upcoming=true", headers=auth_headers(auth)
     )
 
     if response.status_code == 200:
@@ -230,11 +271,13 @@ def test_get_leader_availabilities(token):
         return False
 
 
-def test_delete_event(token, event_id):
+def test_delete_event(auth, event_id):
     """Testa deleção de evento"""
     print_section(f"Teste 7: Deletar Evento #{event_id}")
 
-    response = requests.delete(f"{BASE_URL}/events/{event_id}/", headers=get_headers(token))
+    response = auth["session"].delete(
+        f"{BASE_URL}/events/{event_id}/", headers=auth_headers(auth)
+    )
 
     if response.status_code == 204:
         print(f"✓ Evento deletado com sucesso!")
@@ -245,7 +288,7 @@ def test_delete_event(token, event_id):
         return False
 
 
-def test_cross_midnight_event(token_creator, token_approver):
+def test_cross_midnight_event(auth_creator, auth_approver):
     """Cria evento que cruza meia-noite (23:00–02:00) e confirma."""
     print_section("Teste 8: Evento cruzando meia-noite")
 
@@ -262,7 +305,9 @@ def test_cross_midnight_event(token_creator, token_approver):
         "is_solo": False,
     }
 
-    resp = requests.post(f"{BASE_URL}/events/", headers=get_headers(token_creator), json=payload)
+    resp = auth_creator["session"].post(
+        f"{BASE_URL}/events/", headers=auth_headers(auth_creator), json=payload
+    )
     if resp.status_code != 201:
         print(f"✗ Falha ao criar evento cruzando meia-noite: {resp.status_code}")
         print(resp.text)
@@ -272,8 +317,8 @@ def test_cross_midnight_event(token_creator, token_approver):
     print(f"✓ Evento criado (cruza meia-noite): ID {event['id']}, status {event['status']}")
 
     # Confirmar com o baterista
-    resp_appr = requests.post(
-        f"{BASE_URL}/events/{event['id']}/approve/", headers=get_headers(token_approver)
+    resp_appr = auth_approver["session"].post(
+        f"{BASE_URL}/events/{event['id']}/approve/", headers=auth_headers(auth_approver)
     )
     if resp_appr.status_code != 200:
         print(f"✗ Falha ao confirmar evento cruzando meia-noite: {resp_appr.status_code}")
@@ -292,63 +337,63 @@ def main():
 
     # Login dos usuários
     print_section("Fazendo login dos usuários")
-    arthur_token = login("arthur", CREDENTIALS["arthur"]["password"])
-    roberto_token = login("roberto", CREDENTIALS["roberto"]["password"])
+    arthur_auth = login("arthur", CREDENTIALS["arthur"]["password"])
+    roberto_auth = login("roberto", CREDENTIALS["roberto"]["password"])
 
-    if not arthur_token or not roberto_token:
+    if not arthur_auth or not roberto_auth:
         print("\n✗ Erro nos logins. Abortando testes.")
-        return
+        return False
 
     # Executar testes
     results = {"passed": 0, "failed": 0}
 
     # Teste 1: Criar evento normal (Arthur)
-    event_id = test_create_regular_event(arthur_token)
+    event_id = test_create_regular_event(arthur_auth)
     if event_id:
         results["passed"] += 1
     else:
         results["failed"] += 1
 
     # Teste 2: Criar show solo (Arthur)
-    solo_event_id = test_create_solo_event(arthur_token)
+    solo_event_id = test_create_solo_event(arthur_auth)
     if solo_event_id:
         results["passed"] += 1
     else:
         results["failed"] += 1
 
     # Teste 3: Confirmar evento (Roberto)
-    if event_id and test_approve_event(roberto_token, event_id):
+    if event_id and test_approve_event(roberto_auth, event_id):
         results["passed"] += 1
     else:
         results["failed"] += 1
 
     # Teste 4: Editar evento (Arthur)
-    if event_id and test_edit_event(arthur_token, event_id):
+    if event_id and test_edit_event(arthur_auth, event_id):
         results["passed"] += 1
     else:
         results["failed"] += 1
 
     # Teste 5: Cadastrar disponibilidades (Roberto)
-    avail_ids = test_create_leader_availability(roberto_token)
+    avail_ids = test_create_leader_availability(roberto_auth)
     if len(avail_ids) >= 2:
         results["passed"] += 1
     else:
         results["failed"] += 1
 
     # Teste 6: Listar disponibilidades (Arthur)
-    if test_get_leader_availabilities(arthur_token):
+    if test_get_leader_availabilities(arthur_auth):
         results["passed"] += 1
     else:
         results["failed"] += 1
 
     # Teste 7: Deletar show solo (Arthur)
-    if solo_event_id and test_delete_event(arthur_token, solo_event_id):
+    if solo_event_id and test_delete_event(arthur_auth, solo_event_id):
         results["passed"] += 1
     else:
         results["failed"] += 1
 
     # Teste 8: Evento cruzando meia-noite (Arthur cria, Roberto confirma)
-    if test_cross_midnight_event(arthur_token, roberto_token):
+    if test_cross_midnight_event(arthur_auth, roberto_auth):
         results["passed"] += 1
     else:
         results["failed"] += 1
@@ -361,9 +406,11 @@ def main():
 
     if results["failed"] == 0:
         print("\n🎉 TODOS OS TESTES PASSARAM! Sistema está funcionando corretamente.")
+        return True
     else:
         print("\n⚠️  Alguns testes falharam. Verifique os erros acima.")
+        return False
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(0 if main() else 1)
