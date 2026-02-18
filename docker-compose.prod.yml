@@ -20,7 +20,7 @@ services:
         max-file: "3"
 
   pgbouncer:
-    image: pgbouncer/pgbouncer:1.23
+    image: pgbouncer/pgbouncer:1.15.0
     environment:
       DATABASES_HOST: db
       DATABASES_PORT: "5432"
@@ -75,6 +75,24 @@ services:
       - sh
       - -c
       - |
+        python - <<'PY'
+        import socket
+        import time
+        import sys
+
+        host = "pgbouncer"
+        port = 5432
+        for attempt in range(60):
+            try:
+                with socket.create_connection((host, port), timeout=2):
+                    print("PgBouncer pronto")
+                    break
+            except OSError:
+                print(f"Aguardando PgBouncer ({attempt + 1}/60)...")
+                time.sleep(2)
+        else:
+            sys.exit("PgBouncer não ficou pronto a tempo")
+        PY
         python manage.py migrate --noinput &&
         python manage.py collectstatic --noinput &&
         exec gunicorn config.wsgi:application \

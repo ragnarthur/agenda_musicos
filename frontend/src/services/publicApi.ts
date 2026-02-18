@@ -219,6 +219,15 @@ export interface InviteValidation {
   instagram: string | null;
 }
 
+const parseListResponse = <T>(payload: unknown): T[] => {
+  if (Array.isArray(payload)) return payload as T[];
+  if (payload && typeof payload === 'object') {
+    const results = (payload as { results?: unknown }).results;
+    if (Array.isArray(results)) return results as T[];
+  }
+  return [];
+};
+
 export interface ContractorDashboard {
   contractor: ContractorProfile;
   stats: {
@@ -384,13 +393,13 @@ export const quoteRequestService = {
   // Músico - listar recebidas
   listReceived: async (status?: string): Promise<QuoteRequest[]> => {
     const response = await api.get('/quotes/musician/', { params: { status } });
-    return response.data;
+    return parseListResponse<QuoteRequest>(response.data);
   },
 
   // Contratante - listar enviadas
   listSent: async (status?: string): Promise<QuoteRequest[]> => {
     const response = await api.get('/quotes/contractor/', { params: { status } });
-    return response.data;
+    return parseListResponse<QuoteRequest>(response.data);
   },
 
   // Detalhe

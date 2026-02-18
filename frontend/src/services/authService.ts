@@ -1,6 +1,7 @@
 // services/authService.ts - Serviço de autenticação
 import { api } from './api';
 import type { LoginCredentials } from '../types';
+import { clearStoredAccessToken, clearStoredRefreshToken } from '../utils/tokenStorage';
 
 export const authService = {
   login: async (credentials: LoginCredentials): Promise<{ detail?: string }> => {
@@ -13,8 +14,6 @@ export const authService = {
       await api.post('/token/logout/');
     } finally {
       // Garantir que tokens sejam limpos mesmo se a requisição falhar
-      const { clearStoredAccessToken, clearStoredRefreshToken } =
-        await import('../utils/tokenStorage');
       clearStoredAccessToken();
       clearStoredRefreshToken();
     }
