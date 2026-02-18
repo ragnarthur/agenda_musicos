@@ -87,9 +87,7 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
                     )
         return queryset
 
-    @action(
-        detail=False, methods=["get", "patch"], permission_classes=[IsAuthenticated]
-    )
+    @action(detail=False, methods=["get", "patch"], permission_classes=[IsAuthenticated])
     def me(self, request):
         """
         GET /musicians/me/
@@ -197,6 +195,7 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
         }
         """
         from rest_framework.permissions import IsAuthenticated
+
         from ..models import Availability, Event
 
         try:

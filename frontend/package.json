@@ -13,7 +13,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:ci": "vitest run"
+    "test:ci": "vitest run",
+    "analyze": "ANALYZE=true vite build"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
@@ -26,7 +27,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
-    "@iconify/react": "^6.0.2",
+    "@sentry/react": "^10.39.0",
     "axios": "^1.13.5",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.26",
@@ -40,6 +41,7 @@
     "react-router-dom": "^7.10.1",
     "recharts": "^3.7.0",
     "swr": "^2.3.8",
+    "web-vitals": "^5.1.0",
     "zod": "^4.1.13"
   },
   "devDependencies": {
@@ -65,7 +67,7 @@
     "msw": "^2.12.7",
     "postcss": "^8.5.6",
     "prettier": "^3.5.3",
-    "sharp": "^0.34.5",
+    "rollup-plugin-visualizer": "^6.0.5",
     "tailwindcss": "^3.4.18",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",

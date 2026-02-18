@@ -59,15 +59,11 @@ class InstrumentViewSet(viewsets.ReadOnlyModelViewSet):
         POST /api/instruments/create_custom/
         Body: { "display_name": "Cavaquinho" }
         """
-        serializer = InstrumentCreateSerializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = InstrumentCreateSerializer(data=request.data, context={"request": request})
 
         if serializer.is_valid():
             instrument = serializer.save()
-            return Response(
-                InstrumentSerializer(instrument).data, status=status.HTTP_201_CREATED
-            )
+            return Response(InstrumentSerializer(instrument).data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

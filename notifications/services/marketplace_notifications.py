@@ -126,8 +126,8 @@ def notify_new_gig_in_city(gig_id: int) -> None:
     - Não notifica o criador da vaga.
     """
     try:
-        from marketplace.models import Gig  # Import local para evitar ciclo
         from agenda.models import Musician
+        from marketplace.models import Gig  # Import local para evitar ciclo
     except Exception:
         logger.exception("Falha ao importar modelos para notificar nova vaga.")
         return

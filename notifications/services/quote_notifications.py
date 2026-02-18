@@ -3,6 +3,7 @@ Servico de notificacoes para Quote Requests.
 
 Envia notificacoes via Email (sempre) e Telegram (se configurado pelo usuario).
 """
+
 import logging
 
 from django.conf import settings
@@ -115,7 +116,9 @@ def notify_proposal_received(quote_request, proposal):
         prefs = getattr(user, "notification_preferences", None)
         if prefs and prefs.telegram_verified and prefs.preferred_channel == "telegram":
             title = "Nova proposta recebida"
-            value_text = f"R$ {proposal.proposed_value}" if proposal.proposed_value else "A combinar"
+            value_text = (
+                f"R$ {proposal.proposed_value}" if proposal.proposed_value else "A combinar"
+            )
             body = (
                 f"{musician_name} enviou uma proposta.\n\n"
                 f"💰 Proposta\n"

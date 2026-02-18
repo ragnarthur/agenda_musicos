@@ -3,24 +3,26 @@ from calendar import month_name
 from datetime import datetime, timedelta
 
 from django.db.models import Count, Q, Sum
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
 
 from .models import (
+    Booking,
+    BookingEvent,
     City,
     Event,
     Musician,
     MusicianRequest,
-    QuoteRequest,
     QuoteProposal,
-    Booking,
-    BookingEvent,
+    QuoteRequest,
 )
 from .serializers import (
+    BookingEventSerializer,
+    BookingSerializer,
     CityCreateSerializer,
     CitySerializer,
     EventListSerializer,
@@ -29,8 +31,6 @@ from .serializers import (
     MusicianRequestSerializer,
     QuoteProposalSerializer,
     QuoteRequestSerializer,
-    BookingSerializer,
-    BookingEventSerializer,
 )
 from .throttles import PublicRateThrottle
 
@@ -43,9 +43,7 @@ def dashboard_stats(request):
     """Get dashboard statistics for admin panel"""
     try:
         now = timezone.now()
-        current_month_start = now.replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
-        )
+        current_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
         # Request counts
         total_requests = MusicianRequest.objects.count()
@@ -94,9 +92,7 @@ def booking_request_detail(request, pk):
         serializer = MusicianRequestSerializer(request_obj)
         return Response(serializer.data)
     except MusicianRequest.DoesNotExist:
-        return Response(
-            {"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception:
         logger.exception("Erro ao obter detalhe de booking request no admin.")
         return Response(
@@ -134,9 +130,7 @@ def approve_booking_request(request, pk):
             }
         )
     except MusicianRequest.DoesNotExist:
-        return Response(
-            {"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception:
         logger.exception("Erro ao aprovar booking request no admin.")
         return Response(
@@ -164,9 +158,7 @@ def reject_booking_request(request, pk):
         # Email is sent via email_service.send_rejection_notification in view_functions.py
         return Response({"message": "Request rejected successfully"})
     except MusicianRequest.DoesNotExist:
-        return Response(
-            {"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception:
         logger.exception("Erro ao rejeitar booking request no admin.")
         return Response(
@@ -180,9 +172,7 @@ def reject_booking_request(request, pk):
 def admin_events_list(request):
     """Get all events for admin management"""
     try:
-        events = Event.objects.select_related("created_by", "approved_by").order_by(
-            "-event_date"
-        )
+        events = Event.objects.select_related("created_by", "approved_by").order_by("-event_date")
         serializer = EventListSerializer(events, many=True)
         return Response(serializer.data)
     except Exception:
@@ -210,9 +200,7 @@ def public_request_status(request):
 
         if email:
             # Search by email, return the most recent request
-            requests = MusicianRequest.objects.filter(email__iexact=email).order_by(
-                "-created_at"
-            )
+            requests = MusicianRequest.objects.filter(email__iexact=email).order_by("-created_at")
             if not requests.exists():
                 return Response([], status=status.HTTP_200_OK)
 
@@ -227,9 +215,7 @@ def public_request_status(request):
                 serializer = MusicianRequestPublicStatusSerializer(request_obj)
                 return Response(serializer.data)
             except MusicianRequest.DoesNotExist:
-                return Response(
-                    {"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND
-                )
+                return Response({"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception:
         logger.exception("Erro ao consultar status publico de request.")
         return Response(
@@ -242,7 +228,7 @@ def public_request_status(request):
 @permission_classes([IsAuthenticated, IsAdminUser])
 def list_all_quote_requests(request):
     """Lista todos os pedidos de orçamento com filtros"""
-    from .models import QuoteRequest, QuoteProposal, Booking
+    from .models import Booking, QuoteProposal, QuoteRequest
 
     status = request.query_params.get("status")
     city = request.query_params.get("city")
@@ -267,15 +253,13 @@ def list_all_quote_requests(request):
 @permission_classes([IsAuthenticated, IsAdminUser])
 def get_quote_request_audit(request, request_id):
     """Retorna detalhes completos e timeline de auditoria do pedido"""
-    from .models import BookingEvent, Booking, QuoteProposal, QuoteRequest
+    from .models import Booking, BookingEvent, QuoteProposal, QuoteRequest
 
     quote_request = get_object_or_404(QuoteRequest, id=request_id)
 
     proposals = QuoteProposal.objects.filter(request=quote_request)
     booking = getattr(quote_request, "booking", None)
-    events = BookingEvent.objects.filter(request=quote_request).select_related(
-        "actor_user"
-    )
+    events = BookingEvent.objects.filter(request=quote_request).select_related("actor_user")
 
     return Response(
         {
@@ -315,10 +299,12 @@ def admin_cancel_booking(request, request_id):
 @permission_classes([IsAuthenticated, IsAdminUser])
 def get_booking_statistics(request):
     """Estatísticas globais de reservas para admin"""
-    from .models import QuoteRequest, Booking
-    from django.db.models import Count, Q
     from datetime import timedelta
+
+    from django.db.models import Count, Q
     from django.utils import timezone
+
+    from .models import Booking, QuoteRequest
 
     now = timezone.now()
     last_30_days = now - timedelta(days=30)
@@ -330,14 +316,10 @@ def get_booking_statistics(request):
     completed_bookings = Booking.objects.filter(status="completed").count()
     cancelled_bookings = Booking.objects.filter(status="cancelled").count()
 
-    requests_last_30d = QuoteRequest.objects.filter(
-        created_at__gte=last_30_days
-    ).count()
+    requests_last_30d = QuoteRequest.objects.filter(created_at__gte=last_30_days).count()
     bookings_last_30d = Booking.objects.filter(reserved_at__gte=last_30_days).count()
 
-    conversion_rate = (
-        (confirmed_bookings / total_requests * 100) if total_requests > 0 else 0
-    )
+    conversion_rate = (confirmed_bookings / total_requests * 100) if total_requests > 0 else 0
 
     top_musicians = (
         Booking.objects.select_related("request__musician__user")
@@ -457,9 +439,7 @@ def dashboard_stats_extended(request):
 
         # City stats
         partner_cities = City.objects.filter(status="partner", is_active=True).count()
-        expansion_cities = City.objects.filter(
-            status="expansion", is_active=True
-        ).count()
+        expansion_cities = City.objects.filter(status="expansion", is_active=True).count()
         planning_cities = City.objects.filter(status="planning", is_active=True).count()
 
         # Top cities by requests
@@ -527,9 +507,7 @@ def requests_by_city(request):
 
             # Check if city is registered
             try:
-                city_obj = City.objects.get(
-                    name__iexact=stat["city"], state__iexact=stat["state"]
-                )
+                city_obj = City.objects.get(name__iexact=stat["city"], state__iexact=stat["state"])
                 stat["city_obj"] = {
                     "id": city_obj.id,
                     "status": city_obj.status,
@@ -609,9 +587,7 @@ def city_list_create(request):
             serializer = CityCreateSerializer(data=request.data)
             if serializer.is_valid():
                 city = serializer.save(created_by=request.user)
-                return Response(
-                    CitySerializer(city).data, status=status.HTTP_201_CREATED
-                )
+                return Response(CitySerializer(city).data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception:
@@ -629,9 +605,7 @@ def city_detail(request, pk):
     try:
         city = City.objects.get(pk=pk)
     except City.DoesNotExist:
-        return Response(
-            {"error": "Cidade não encontrada"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"error": "Cidade não encontrada"}, status=status.HTTP_404_NOT_FOUND)
 
     try:
         if request.method == "GET":
@@ -666,9 +640,7 @@ def city_change_status(request, pk):
     try:
         city = City.objects.get(pk=pk)
     except City.DoesNotExist:
-        return Response(
-            {"error": "Cidade não encontrada"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"error": "Cidade não encontrada"}, status=status.HTTP_404_NOT_FOUND)
 
     try:
         new_status = request.data.get("status")

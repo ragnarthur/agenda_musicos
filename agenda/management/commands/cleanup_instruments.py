@@ -105,20 +105,14 @@ class Command(BaseCommand):
             new_instruments = unique
 
             # Verificar se houve mudança
-            changed = (
-                new_instrument != old_instrument or new_instruments != old_instruments
-            )
+            changed = new_instrument != old_instrument or new_instruments != old_instruments
 
             if changed:
                 updated += 1
-                self.stdout.write(
-                    f"\n{self.style.WARNING(username)}:"
-                )
+                self.stdout.write(f"\n{self.style.WARNING(username)}:")
                 self.stdout.write(f"  Antes: instrument='{old_instrument}'")
                 self.stdout.write(f"         instruments={old_instruments}")
-                self.stdout.write(
-                    f"  Depois: instrument='{self.style.SUCCESS(new_instrument)}'"
-                )
+                self.stdout.write(f"  Depois: instrument='{self.style.SUCCESS(new_instrument)}'")
                 self.stdout.write(
                     f"          instruments={self.style.SUCCESS(str(new_instruments))}"
                 )
@@ -137,7 +131,5 @@ class Command(BaseCommand):
 
         if dry_run and updated > 0:
             self.stdout.write(
-                self.style.WARNING(
-                    "\nExecute sem --dry-run para aplicar as alterações."
-                )
+                self.style.WARNING("\nExecute sem --dry-run para aplicar as alterações.")
             )

@@ -3,11 +3,11 @@
 ViewSet para gerenciamento de conexões entre músicos.
 """
 
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 from ..models import Connection, Musician
 from ..pagination import StandardResultsSetPagination
@@ -15,11 +15,7 @@ from ..serializers import ConnectionSerializer
 
 
 @extend_schema(
-    parameters=[
-        OpenApiParameter(
-            name="id", type=int, location="path", description="ID da conexão"
-        )
-    ]
+    parameters=[OpenApiParameter(name="id", type=int, location="path", description="ID da conexão")]
 )
 class ConnectionViewSet(viewsets.ModelViewSet):
     """
@@ -61,8 +57,6 @@ class ConnectionViewSet(viewsets.ModelViewSet):
 
         target = serializer.validated_data.get("target")
         if target == musician:
-            raise ValidationError(
-                {"detail": "Não é possível criar conexão consigo mesmo."}
-            )
+            raise ValidationError({"detail": "Não é possível criar conexão consigo mesmo."})
 
         serializer.save(follower=musician)

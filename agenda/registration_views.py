@@ -27,11 +27,10 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .image_download import RemoteImageError, download_image_from_url
-from .image_processing import MAX_AVATAR_BYTES, MAX_AVATAR_SIZE, _process_profile_image
-
 from notifications.services.email_service import send_welcome_email
 
+from .image_download import RemoteImageError, download_image_from_url
+from .image_processing import MAX_AVATAR_BYTES, MAX_AVATAR_SIZE, _process_profile_image
 from .models import (
     Membership,
     Musician,
@@ -96,10 +95,7 @@ class CheckEmailView(APIView):
         if user_exists:
             return Response({"available": False, "reason": "already_registered"})
         if request_entry:
-            if (
-                request_entry.status in ["pending", "approved"]
-                and not request_entry.invite_used
-            ):
+            if request_entry.status in ["pending", "approved"] and not request_entry.invite_used:
                 return Response({"available": False, "reason": "pending_verification"})
             return Response({"available": False, "reason": request_entry.status})
 
@@ -141,9 +137,7 @@ class RegisterWithInviteView(APIView):
                     {"error": "Este convite já foi utilizado."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            return Response(
-                {"error": "Convite expirado."}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "Convite expirado."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Validações de campos
         required_fields = ["password"]
@@ -160,16 +154,12 @@ class RegisterWithInviteView(APIView):
         try:
             validate_password(password)
         except DjangoValidationError as e:
-            return Response(
-                {"password": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"password": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
 
         # Usa dados do MusicianRequest ou permite override
         email = musician_request.email
         first_name = data.get("first_name") or musician_request.full_name.split()[0]
-        last_name = data.get("last_name") or " ".join(
-            musician_request.full_name.split()[1:]
-        )
+        last_name = data.get("last_name") or " ".join(musician_request.full_name.split()[1:])
         username = data.get("username") or email.split("@")[0]
 
         # Validação de username único
@@ -190,9 +180,8 @@ class RegisterWithInviteView(APIView):
 
         try:
             with transaction.atomic():
-                musician_request = (
-                    MusicianRequest.objects.select_for_update()
-                    .get(invite_token=invite_token)
+                musician_request = MusicianRequest.objects.select_for_update().get(
+                    invite_token=invite_token
                 )
 
                 if not musician_request.is_invite_valid():
@@ -227,9 +216,7 @@ class RegisterWithInviteView(APIView):
                     else:
                         # Instrumento principal já está na lista, removemos duplicados
                         instruments = [musician_request.instrument] + [
-                            inst
-                            for inst in instruments
-                            if inst != musician_request.instrument
+                            inst for inst in instruments if inst != musician_request.instrument
                         ]
 
                 musician = Musician.objects.create(
@@ -325,8 +312,8 @@ class RegisterContractorView(APIView):
     throttle_classes = [BurstRateThrottle]
 
     def post(self, request):
-        from .serializers import ContractorRegisterSerializer
         from .models import ContractorProfile
+        from .serializers import ContractorRegisterSerializer
 
         serializer = ContractorRegisterSerializer(data=request.data)
         if not serializer.is_valid():
@@ -344,9 +331,7 @@ class RegisterContractorView(APIView):
         try:
             validate_password(password)
         except DjangoValidationError as e:
-            return Response(
-                {"password": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"password": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
 
         # Username único baseado no email
         username = email.split("@")[0]
@@ -439,9 +424,7 @@ def update_avatar(request):
     try:
         musician = request.user.musician_profile
     except Musician.DoesNotExist:
-        return Response(
-            {"detail": "Perfil não encontrado."}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"detail": "Perfil não encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
     try:
         content = download_image_from_url(

@@ -60,7 +60,7 @@ jobs:
 
       - name: Lint with flake8
         run: |
-          if ! flake8 .; then
+          if ! flake8 agenda config marketplace notifications --select=E9,F63,F7,F82 --exclude='*/migrations/*'; then
             echo "::warning::flake8 encontrou problemas de lint (advisory)."
           fi
 

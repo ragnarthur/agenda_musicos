@@ -4,8 +4,8 @@ Script para corrigir instrumentos duplicados do músico Arthur Araújo
 Executado via: cat script.py | docker compose exec -f docker-compose.prod.yml backend python -
 """
 
-import sys
 import os
+import sys
 
 # Configuração Django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")

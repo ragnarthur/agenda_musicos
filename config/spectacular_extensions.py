@@ -19,4 +19,3 @@ class CookieOrHeaderJWTAuthenticationScheme(OpenApiAuthenticationExtension):
             token_prefix="Bearer",
             bearer_format="JWT",
         )
-

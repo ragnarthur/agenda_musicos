@@ -57,9 +57,9 @@ def test_get_admin_requests():
 
         if response.status_code == 200:
             print("✅ Lista obtida com sucesso!")
-            requests = response.json()
-            print(f"Total de solicitações: {len(requests)}")
-            return requests
+            request_list = response.json()
+            print(f"Total de solicitações: {len(request_list)}")
+            return request_list
         else:
             print(f"❌ Erro ao obter lista: {response.status_code}")
             return None

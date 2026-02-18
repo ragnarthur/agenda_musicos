@@ -199,9 +199,7 @@ class CookieTokenLogoutView(CookieTokenMixin, APIView):
     permission_classes = []
 
     def post(self, request):
-        response = Response(
-            {"detail": "Logout realizado com sucesso."}, status=status.HTTP_200_OK
-        )
+        response = Response({"detail": "Logout realizado com sucesso."}, status=status.HTTP_200_OK)
         self.clear_auth_cookies(response)
         return response
 
@@ -243,9 +241,7 @@ class AdminTokenObtainPairView(CookieTokenMixin, TokenObtainPairView):
         # Valida se usuário tem is_staff
         if not user or not user.is_staff:
             return Response(
-                {
-                    "detail": "Acesso negado. Este endpoint é restrito a administradores."
-                },
+                {"detail": "Acesso negado. Este endpoint é restrito a administradores."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -392,9 +388,7 @@ class GoogleAuthView(CookieTokenMixin, APIView):
         # Usuário existe - faz login
         # Verifica tipo de conta
         has_musician_profile = hasattr(user, "musician_profile")
-        contractor_profile = (
-            ContractorProfile.objects.filter(user=user, is_active=True).first()
-        )
+        contractor_profile = ContractorProfile.objects.filter(user=user, is_active=True).first()
 
         if not contractor_profile and not has_musician_profile:
             return Response(
@@ -517,9 +511,7 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
 
             if email != musician_request.email:
                 return Response(
-                    {
-                        "detail": "O email da conta Google deve ser o mesmo da solicitação."
-                    },
+                    {"detail": "O email da conta Google deve ser o mesmo da solicitação."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -556,18 +548,14 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
                     username=username,
                     email=email,
                     first_name=given_name or musician_request.full_name.split()[0],
-                    last_name=family_name
-                    or " ".join(musician_request.full_name.split()[1:]),
+                    last_name=family_name or " ".join(musician_request.full_name.split()[1:]),
                 )
                 user.set_unusable_password()  # Login apenas via Google
                 user.save()
 
                 # Cria músico
                 instruments = musician_request.instruments or []
-                if (
-                    musician_request.instrument
-                    and musician_request.instrument not in instruments
-                ):
+                if musician_request.instrument and musician_request.instrument not in instruments:
                     instruments.insert(0, musician_request.instrument)
 
                 musician = Musician.objects.create(

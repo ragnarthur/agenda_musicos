@@ -100,9 +100,7 @@ def notify_on_availability_created(sender, instance, created, **kwargs):
     event_lines_text = "\n".join(event_lines)
     event_date = event.event_date.strftime("%d/%m/%Y")
     body = (
-        f"Voce recebeu um convite para tocar.\n\n"
-        f"📋 Resumo do evento\n"
-        f"{event_lines_text}\n"
+        f"Voce recebeu um convite para tocar.\n\n" f"📋 Resumo do evento\n" f"{event_lines_text}\n"
     )
 
     if inviter_name:

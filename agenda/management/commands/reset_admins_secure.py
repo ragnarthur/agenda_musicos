@@ -41,9 +41,7 @@ class Command(BaseCommand):
 
         if not force:
             self.stdout.write(
-                self.style.WARNING(
-                    "⚠️  ATENÇÃO: Isso vai resetar todos os admins existentes!"
-                )
+                self.style.WARNING("⚠️  ATENÇÃO: Isso vai resetar todos os admins existentes!")
             )
             self.stdout.write(self.style.WARNING("Admins existentes serão DELETADOS."))
             confirm = input("Tem certeza que deseja continuar? (yes/no): ")
@@ -68,13 +66,9 @@ class Command(BaseCommand):
             user.save()
             created += 1
             self.stdout.write(
-                self.style.SUCCESS(
-                    f"✓ Admin {user.username} criado com senha: Teste123@"
-                )
+                self.style.SUCCESS(f"✓ Admin {user.username} criado com senha: Teste123@")
             )
 
         self.stdout.write(
-            self.style.SUCCESS(
-                f"\n=== Concluído ===\nAdmins criados: {created}\nSenhas: Teste123@"
-            )
+            self.style.SUCCESS(f"\n=== Concluído ===\nAdmins criados: {created}\nSenhas: Teste123@")
         )

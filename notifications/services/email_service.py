@@ -95,14 +95,10 @@ class EmailService:
         except TemplateDoesNotExist:
             # Generate basic text version from context
             text_content = cls._generate_text_fallback(subject, context)
-            logger.warning(
-                f"Plain text template not found: {text_template}, using fallback"
-            )
+            logger.warning(f"Plain text template not found: {text_template}, using fallback")
 
         # Prepare email
-        sender = from_email or getattr(
-            settings, "DEFAULT_FROM_EMAIL", cls.DEFAULT_FROM_EMAIL
-        )
+        sender = from_email or getattr(settings, "DEFAULT_FROM_EMAIL", cls.DEFAULT_FROM_EMAIL)
 
         email = EmailMultiAlternatives(
             subject=subject,
@@ -172,9 +168,7 @@ class EmailService:
 
 
 # Convenience functions for common email types
-def send_verification_email(
-    to_email: str, first_name: str, verification_url: str
-) -> bool:
+def send_verification_email(to_email: str, first_name: str, verification_url: str) -> bool:
     """Send email verification email."""
     return EmailService.send(
         template_name="verification",
@@ -200,9 +194,7 @@ def send_password_reset_email(to_email: str, first_name: str, reset_url: str) ->
     )
 
 
-def send_welcome_email(
-    to_email: str, first_name: str, username: str, login_url: str
-) -> bool:
+def send_welcome_email(to_email: str, first_name: str, username: str, login_url: str) -> bool:
     """Send welcome email after registration."""
     return EmailService.send(
         template_name="welcome",

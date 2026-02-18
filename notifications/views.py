@@ -58,7 +58,11 @@ class TelegramWebhookView(APIView):
 
         # Em produção, não aceite webhook sem secret token.
         # Isso reduz superfícies de spam e tentativas de brute force no endpoint público.
-        if not settings.DEBUG and TelegramProvider().is_configured() and not telegram_webhook_secret:
+        if (
+            not settings.DEBUG
+            and TelegramProvider().is_configured()
+            and not telegram_webhook_secret
+        ):
             logger.error("TELEGRAM_WEBHOOK_SECRET ausente em produção; webhook recusado.")
             return Response({"error": "Not configured"}, status=503)
 
@@ -75,10 +79,7 @@ class TelegramWebhookView(APIView):
         # Extrair mensagem
         message = data.get("message", {})
         chat_id = str(message.get("chat", {}).get("id", ""))
-        text = (
-            sanitize_string(message.get("text", ""), max_length=200, allow_empty=True)
-            or ""
-        )
+        text = sanitize_string(message.get("text", ""), max_length=200, allow_empty=True) or ""
         username = (
             sanitize_string(
                 message.get("from", {}).get("username", ""),
@@ -130,9 +131,7 @@ class TelegramWebhookView(APIView):
 
         if verification:
             # Atualiza preferencias do usuario
-            prefs, _ = NotificationPreference.objects.get_or_create(
-                user=verification.user
-            )
+            prefs, _ = NotificationPreference.objects.get_or_create(user=verification.user)
             prefs.telegram_chat_id = chat_id
             prefs.telegram_verified = True
             prefs.preferred_channel = NotificationChannel.TELEGRAM
@@ -146,9 +145,7 @@ class TelegramWebhookView(APIView):
             )
 
             # Envia confirmacao
-            name = (
-                first_name or verification.user.first_name or verification.user.username
-            )
+            name = first_name or verification.user.first_name or verification.user.username
             provider.send_message(
                 chat_id,
                 provider.format_system_message(
@@ -328,9 +325,7 @@ class NotificationPreferenceView(APIView):
 
     def patch(self, request):
         prefs, _ = NotificationPreference.objects.get_or_create(user=request.user)
-        serializer = NotificationPreferenceSerializer(
-            prefs, data=request.data, partial=True
-        )
+        serializer = NotificationPreferenceSerializer(prefs, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
@@ -351,9 +346,7 @@ class NotificationLogListView(APIView):
         except (TypeError, ValueError):
             limit = 50
 
-        logs = NotificationLog.objects.filter(user=request.user).order_by("-created_at")[
-            :limit
-        ]
+        logs = NotificationLog.objects.filter(user=request.user).order_by("-created_at")[:limit]
         serializer = NotificationLogSerializer(logs, many=True)
         return Response(serializer.data)
 
@@ -375,16 +368,12 @@ class TelegramConnectView(APIView):
             )
 
         # Invalida codigos antigos
-        TelegramVerification.objects.filter(user=request.user, used=False).update(
-            used=True
-        )
+        TelegramVerification.objects.filter(user=request.user, used=False).update(used=True)
 
         code = None
         for _ in range(5):
             candidate = secrets.token_hex(3).upper()
-            if not TelegramVerification.objects.filter(
-                verification_code=candidate
-            ).exists():
+            if not TelegramVerification.objects.filter(verification_code=candidate).exists():
                 code = candidate
                 break
 
@@ -436,9 +425,7 @@ class TelegramDisconnectView(APIView):
             prefs.preferred_channel = NotificationChannel.EMAIL
         prefs.save()
 
-        TelegramVerification.objects.filter(user=request.user, used=False).update(
-            used=True
-        )
+        TelegramVerification.objects.filter(user=request.user, used=False).update(used=True)
 
         payload = {"success": True, "message": "Telegram desconectado."}
         serializer = TelegramDisconnectSerializer(payload)

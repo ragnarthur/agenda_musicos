@@ -152,10 +152,7 @@ class GigSerializer(serializers.ModelSerializer):
         if cached_apps is None:
             cached_apps = list(obj.applications.all())
 
-        return any(
-            app.musician_id == musician.id and app.status == "hired"
-            for app in cached_apps
-        )
+        return any(app.musician_id == musician.id and app.status == "hired" for app in cached_apps)
 
     def get_applications_count(self, obj) -> int:
         # Usa anotação se disponível (evita query adicional)
@@ -185,9 +182,7 @@ class GigSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         request = self.context.get("request")
         is_owner = (
-            request
-            and request.user.is_authenticated
-            and instance.created_by_id == request.user.id
+            request and request.user.is_authenticated and instance.created_by_id == request.user.id
         )
 
         if not is_owner:

@@ -63,9 +63,7 @@ class EventViewSet(viewsets.ModelViewSet):
     """
 
     queryset = (
-        Event.objects.prefetch_related(
-            "availabilities__musician__user", "logs__performed_by"
-        )
+        Event.objects.prefetch_related("availabilities__musician__user", "logs__performed_by")
         .select_related("created_by", "approved_by")
         .all()
     )
@@ -113,9 +111,7 @@ class EventViewSet(viewsets.ModelViewSet):
             return
 
         invited_musicians_ids = list(dict.fromkeys(invited_musicians_ids))
-        invited_musicians = Musician.objects.filter(
-            id__in=invited_musicians_ids, is_active=True
-        )
+        invited_musicians = Musician.objects.filter(id__in=invited_musicians_ids, is_active=True)
 
         if event.created_by_id:
             invited_musicians = invited_musicians.exclude(user=event.created_by)
@@ -152,18 +148,14 @@ class EventViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         invited_musicians_ids = serializer.validated_data.pop("invited_musicians", [])
-        required_instruments = serializer.validated_data.pop(
-            "required_instruments", None
-        )
+        required_instruments = serializer.validated_data.pop("required_instruments", None)
 
         updated_event = serializer.save()
 
         self._apply_invitations(updated_event, invited_musicians_ids)
         self._replace_required_instruments(updated_event, required_instruments)
 
-        output = EventDetailSerializer(
-            updated_event, context={"request": request}
-        ).data
+        output = EventDetailSerializer(updated_event, context={"request": request}).data
         return Response(output)
 
     def partial_update(self, request, *args, **kwargs):
@@ -185,12 +177,8 @@ class EventViewSet(viewsets.ModelViewSet):
 
         # Adiciona anotações para contagem de disponibilidades (otimização N+1)
         queryset = queryset.annotate(
-            avail_pending=Count(
-                "availabilities", filter=Q(availabilities__response="pending")
-            ),
-            avail_available=Count(
-                "availabilities", filter=Q(availabilities__response="available")
-            ),
+            avail_pending=Count("availabilities", filter=Q(availabilities__response="pending")),
+            avail_available=Count("availabilities", filter=Q(availabilities__response="available")),
             avail_unavailable=Count(
                 "availabilities", filter=Q(availabilities__response="unavailable")
             ),
@@ -261,12 +249,8 @@ class EventViewSet(viewsets.ModelViewSet):
         if search:
             # Limita tamanho da query para prevenir DoS
             if len(search) > 100:
-                raise ValidationError(
-                    {"search": "Busca não pode ter mais de 100 caracteres."}
-                )
-            queryset = queryset.filter(
-                Q(title__icontains=search) | Q(location__icontains=search)
-            )
+                raise ValidationError({"search": "Busca não pode ter mais de 100 caracteres."})
+            queryset = queryset.filter(Q(title__icontains=search) | Q(location__icontains=search))
 
         # Eventos passados
         if self.request.query_params.get("past") == "true":
@@ -282,9 +266,7 @@ class EventViewSet(viewsets.ModelViewSet):
                         {"days_back": "days_back deve ser um número inteiro positivo."}
                     )
                 if days_back <= 0:
-                    raise ValidationError(
-                        {"days_back": "days_back deve ser maior que zero."}
-                    )
+                    raise ValidationError({"days_back": "days_back deve ser maior que zero."})
                 start_date = today - timedelta(days=days_back)
                 queryset = queryset.filter(event_date__gte=start_date)
 
@@ -293,7 +275,7 @@ class EventViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(event_date__gte=timezone.now().date())
 
         # Ordenação consistente para paginação
-        return queryset.order_by('-event_date', '-id')
+        return queryset.order_by("-event_date", "-id")
 
     @action(detail=False, methods=["post"])
     def preview_conflicts(self, request):
@@ -332,9 +314,7 @@ class EventViewSet(viewsets.ModelViewSet):
             )
             .select_related("created_by", "approved_by")
             .annotate(
-                avail_pending=Count(
-                    "availabilities", filter=Q(availabilities__response="pending")
-                ),
+                avail_pending=Count("availabilities", filter=Q(availabilities__response="pending")),
                 avail_available=Count(
                     "availabilities", filter=Q(availabilities__response="available")
                 ),
@@ -354,9 +334,7 @@ class EventViewSet(viewsets.ModelViewSet):
             except Musician.DoesNotExist:
                 conflicts = conflicts.filter(created_by=request.user)
 
-        serializer = EventListSerializer(
-            conflicts, many=True, context={"request": request}
-        )
+        serializer = EventListSerializer(conflicts, many=True, context={"request": request})
         return Response(
             {
                 "has_conflicts": conflicts.exists(),
@@ -396,9 +374,7 @@ class EventViewSet(viewsets.ModelViewSet):
                     approved_by=self.request.user,
                     approved_at=timezone.now(),
                 )
-                self._log_event(
-                    event, "created", "Show solo confirmado automaticamente."
-                )
+                self._log_event(event, "created", "Show solo confirmado automaticamente.")
             else:
                 event = serializer.save(
                     created_by=self.request.user,
@@ -460,9 +436,7 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         Apenas o criador pode deletar o evento de forma definitiva.
         """
-        request_user = (
-            getattr(self, "request", None).user if hasattr(self, "request") else None
-        )
+        request_user = getattr(self, "request", None).user if hasattr(self, "request") else None
         if request_user and instance.created_by and instance.created_by != request_user:
             raise PermissionDenied("Apenas o criador pode deletar este evento.")
 
@@ -503,9 +477,7 @@ class EventViewSet(viewsets.ModelViewSet):
         """Cria registro de histórico do evento"""
         EventLog.objects.create(
             event=event,
-            performed_by=getattr(self.request, "user", None)
-            if hasattr(self, "request")
-            else None,
+            performed_by=getattr(self.request, "user", None) if hasattr(self, "request") else None,
             action=action,
             description=description,
         )
@@ -528,9 +500,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
         event_end = event.end_datetime
         if not event_end and event.event_date and event.end_time:
-            event_end = timezone.make_aware(
-                datetime.combine(event.event_date, event.end_time)
-            )
+            event_end = timezone.make_aware(datetime.combine(event.event_date, event.end_time))
 
         if event_end and event_end >= timezone.now():
             return (
@@ -539,9 +509,7 @@ class EventViewSet(viewsets.ModelViewSet):
                 status.HTTP_400_BAD_REQUEST,
             )
 
-        already_rated = MusicianRating.objects.filter(
-            event=event, rated_by=user
-        ).exists()
+        already_rated = MusicianRating.objects.filter(event=event, rated_by=user).exists()
         if already_rated:
             return (
                 False,
@@ -568,14 +536,10 @@ class EventViewSet(viewsets.ModelViewSet):
         with transaction.atomic():
             # Re-busca o evento com lock exclusivo e tratamento de erro
             try:
-                locked_event = Event.objects.select_for_update(nowait=False).get(
-                    pk=event.pk
-                )
+                locked_event = Event.objects.select_for_update(nowait=False).get(pk=event.pk)
             except Exception as e:
                 logger.error(f"Erro ao obter lock do evento {event.pk}: {e}")
-                raise ValidationError(
-                    {"detail": "Conflito ao confirmar evento. Tente novamente."}
-                )
+                raise ValidationError({"detail": "Conflito ao confirmar evento. Tente novamente."})
 
             if locked_event.status in ["cancelled", "rejected"]:
                 logger.warning(
@@ -686,9 +650,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
         if created or availability.response == "available":
             approver_name = request.user.get_full_name() or request.user.username
-            self._log_event(
-                event, "availability", f"Convite confirmado por {approver_name}."
-            )
+            self._log_event(event, "availability", f"Convite confirmado por {approver_name}.")
 
         self._check_and_confirm_event(event, confirmed_by=request.user)
         serializer = EventDetailSerializer(event, context={"request": request})
@@ -817,11 +779,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
         if response_value not in valid_responses:
             return Response(
-                {
-                    "detail": (
-                        "Resposta inválida. Selecione 'Disponível' ou 'Indisponível'."
-                    )
-                },
+                {"detail": ("Resposta inválida. Selecione 'Disponível' ou 'Indisponível'.")},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -850,11 +808,7 @@ class EventViewSet(viewsets.ModelViewSet):
             "unavailable": "Indisponível",
         }
         response_label = response_labels.get(response_value, response_value)
-        if (
-            created
-            or prev_response != response_value
-            or prev_notes != (sanitized_notes or "")
-        ):
+        if created or prev_response != response_value or prev_notes != (sanitized_notes or ""):
             self._log_event(
                 event,
                 "availability",
@@ -898,9 +852,7 @@ class EventViewSet(viewsets.ModelViewSet):
         ratings_data = serializer.validated_data["ratings"]
 
         allowed_musician_ids = set(
-            event.availabilities.filter(response="available").values_list(
-                "musician_id", flat=True
-            )
+            event.availabilities.filter(response="available").values_list("musician_id", flat=True)
         )
         try:
             creator_musician = event.created_by.musician_profile
@@ -960,9 +912,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
             if musician_id in seen_ids:
                 return Response(
-                    {
-                        "detail": "Não é permitido avaliar o mesmo músico mais de uma vez."
-                    },
+                    {"detail": "Não é permitido avaliar o mesmo músico mais de uma vez."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -1084,9 +1034,7 @@ class EventViewSet(viewsets.ModelViewSet):
                 )
             )
 
-            serializer = EventListSerializer(
-                events, many=True, context={"request": request}
-            )
+            serializer = EventListSerializer(events, many=True, context={"request": request})
             return Response(serializer.data)
         except Musician.DoesNotExist:
             return Response([], status=status.HTTP_200_OK)

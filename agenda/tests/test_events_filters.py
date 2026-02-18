@@ -57,9 +57,7 @@ class PastEventsFilterTest(APITestCase):
         _future = self._create_event(5)
 
         url = reverse("event-list")
-        response = self.client.get(
-            f"{url}?past=true&days_back=30&status=confirmed,approved"
-        )
+        response = self.client.get(f"{url}?past=true&days_back=30&status=confirmed,approved")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         returned_ids = {item["id"] for item in response.data.get("results", [])}

@@ -12,12 +12,8 @@ class Command(BaseCommand):
             type=str,
             help="URL publica do webhook (ex: https://meusite.com/api/notifications/telegram/webhook/)",
         )
-        parser.add_argument(
-            "--delete", action="store_true", help="Remove webhook existente"
-        )
-        parser.add_argument(
-            "--info", action="store_true", help="Mostra informacoes do bot"
-        )
+        parser.add_argument("--delete", action="store_true", help="Remove webhook existente")
+        parser.add_argument("--info", action="store_true", help="Mostra informacoes do bot")
         parser.add_argument(
             "--secret",
             type=str,
@@ -78,9 +74,7 @@ class Command(BaseCommand):
                 self.stdout.write(f"  ID: {bot.get('id')}")
                 self.stdout.write(f"  Nome: {bot.get('first_name')}")
                 self.stdout.write(f"  Username: @{bot.get('username')}")
-                self.stdout.write(
-                    f"  Pode entrar em grupos: {bot.get('can_join_groups', False)}"
-                )
+                self.stdout.write(f"  Pode entrar em grupos: {bot.get('can_join_groups', False)}")
                 self.stdout.write("")
 
                 # Mostra webhook atual
@@ -155,9 +149,7 @@ class Command(BaseCommand):
             data = response.json()
 
             if data.get("ok"):
-                self.stdout.write(
-                    self.style.SUCCESS(f"Webhook configurado com sucesso!")
-                )
+                self.stdout.write(self.style.SUCCESS(f"Webhook configurado com sucesso!"))
                 self.stdout.write(f"  URL: {webhook_url}")
                 if secret:
                     self.stdout.write(f"  Secreto configurado: {secret[:10]}...")
@@ -166,9 +158,7 @@ class Command(BaseCommand):
                 # Mostra info do bot
                 self._show_bot_info(base_url)
             else:
-                self.stderr.write(
-                    self.style.ERROR(f"Erro: {data.get('description', data)}")
-                )
+                self.stderr.write(self.style.ERROR(f"Erro: {data.get('description', data)}"))
 
         except Exception as e:
             self.stderr.write(self.style.ERROR(f"Erro ao configurar webhook: {e}"))

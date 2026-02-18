@@ -41,6 +41,7 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
   const [organization, setOrganization] = useState<ContractorProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const logoutRef = useRef<() => void>(() => {});
+  const organizationRef = useRef<ContractorProfile | null>(null);
 
   // Verificar se já existe uma sessão ativa
   useEffect(() => {
@@ -155,7 +156,8 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
 
   const logout = useCallback((): void => {
     // Revogar token do Google se existir
-    const contractorEmail = organization?.email;
+    // Use ref to avoid stale closure on organization
+    const contractorEmail = organizationRef.current?.email;
     if (contractorEmail && window.google?.accounts?.id) {
       window.google.accounts.id.revoke(contractorEmail, done => {
         if (done.error) {
@@ -175,9 +177,10 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
     setLoading(false);
 
     toast.success('Logout realizado com sucesso!');
-  }, [organization]);
+  }, []);
 
   logoutRef.current = logout;
+  organizationRef.current = organization;
 
   const refreshToken = useCallback(async (): Promise<void> => {
     try {

@@ -140,11 +140,7 @@ class TelegramProvider(BaseProvider):
     @staticmethod
     def _escape_html(text: str) -> str:
         """Escapa caracteres especiais para HTML do Telegram."""
-        return (
-            text.replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-        )
+        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
     @staticmethod
     def _build_footer() -> str:
@@ -155,9 +151,7 @@ class TelegramProvider(BaseProvider):
         """Formata mensagem de sistema (welcome, status, etc.) com footer."""
         return f"{text}\n{self._build_footer()}"
 
-    def send_message(
-        self, chat_id: str, text: str, parse_mode: str = "HTML"
-    ) -> NotificationResult:
+    def send_message(self, chat_id: str, text: str, parse_mode: str = "HTML") -> NotificationResult:
         """
         Envia mensagem generica para um chat_id.
         Util para mensagens de sistema como verificacao.

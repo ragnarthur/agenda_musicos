@@ -9,6 +9,7 @@ from datetime import date, timedelta
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -19,14 +20,11 @@ from ..instrument_utils import get_instrument_label
 from ..models import Event, LeaderAvailability, Musician
 from ..serializers import EventListSerializer, LeaderAvailabilitySerializer
 from ..utils import get_user_organization, split_availability_with_events
-from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 
 @extend_schema(
     parameters=[
-        OpenApiParameter(
-            name="id", type=int, location="path", description="ID da disponibilidade"
-        )
+        OpenApiParameter(name="id", type=int, location="path", description="ID da disponibilidade")
     ]
 )
 class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
@@ -54,9 +52,7 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         - ?mine=true (apenas minhas)
         - ?instrument=<instrument> (filtrar por instrumento do músico)
         """
-        queryset = LeaderAvailability.objects.filter(is_active=True).select_related(
-            "leader__user"
-        )
+        queryset = LeaderAvailability.objects.filter(is_active=True).select_related("leader__user")
 
         mine_param = self.request.query_params.get("mine") == "true"
         public_param = self.request.query_params.get("public") == "true"
@@ -172,9 +168,7 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_update(self, serializer):
         """
@@ -185,9 +179,7 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
 
             # Verifica se a disponibilidade pertence ao músico
             if serializer.instance.leader != musician:
-                raise PermissionDenied(
-                    "Você não pode editar disponibilidades de outros músicos."
-                )
+                raise PermissionDenied("Você não pode editar disponibilidades de outros músicos.")
 
             instance = serializer.save()
             buffer = timedelta(minutes=40)
@@ -212,9 +204,7 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
             musician = self.request.user.musician_profile
 
             if instance.leader != musician:
-                raise PermissionDenied(
-                    "Você não pode excluir disponibilidades de outros músicos."
-                )
+                raise PermissionDenied("Você não pode excluir disponibilidades de outros músicos.")
 
             super().perform_destroy(instance)
         except Musician.DoesNotExist:
@@ -229,9 +219,7 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         availability = self.get_object()
         conflicting = availability.get_conflicting_events()
 
-        serializer = EventListSerializer(
-            conflicting, many=True, context={"request": request}
-        )
+        serializer = EventListSerializer(conflicting, many=True, context={"request": request})
         return Response(serializer.data)
 
     @action(detail=False, methods=["get"])
@@ -286,16 +274,12 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         for avail in availabilities:
             availabilities_map.setdefault(avail.leader_id, []).append(avail)
 
-        only_available = (
-            request.query_params.get("only_available", "").lower() == "true"
-        )
+        only_available = request.query_params.get("only_available", "").lower() == "true"
 
         result = []
         for musician in musicians:
             avail_list = availabilities_map.get(musician.id, [])
-            primary_avail = (
-                min(avail_list, key=lambda x: x.start_time) if avail_list else None
-            )
+            primary_avail = min(avail_list, key=lambda x: x.start_time) if avail_list else None
 
             # Se only_available=true, pula músicos sem disponibilidade
             if only_available and not primary_avail:
@@ -313,18 +297,13 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
 
             musician_data = {
                 "musician_id": musician.id,
-                "musician_name": musician.user.get_full_name()
-                or musician.user.username,
+                "musician_name": musician.user.get_full_name() or musician.user.username,
                 "instrument": musician.instrument,
                 "instrument_display": get_instrument_label(musician.instrument),
                 "has_availability": primary_avail is not None,
                 "availability_id": primary_avail.id if primary_avail else None,
-                "start_time": primary_avail.start_time.strftime("%H:%M")
-                if primary_avail
-                else None,
-                "end_time": primary_avail.end_time.strftime("%H:%M")
-                if primary_avail
-                else None,
+                "start_time": primary_avail.start_time.strftime("%H:%M") if primary_avail else None,
+                "end_time": primary_avail.end_time.strftime("%H:%M") if primary_avail else None,
                 "notes": primary_avail.notes if primary_avail else None,
                 "availability_count": len(avail_list),
                 "availability_slots": availability_slots,

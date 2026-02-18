@@ -1,5 +1,5 @@
 import React from 'react';
-import { Icon } from '@iconify/react';
+import { Guitar, Drum, Piano, Mic2, Music } from 'lucide-react';
 
 type Props = {
   instrument: string;
@@ -7,22 +7,22 @@ type Props = {
   size?: number;
 };
 
-const iconMap: Record<string, string> = {
-  acoustic_guitar: 'mdi:guitar-acoustic',
-  guitar: 'mdi:guitar-electric',
-  bass: 'mdi:guitar-electric',
-  drums: 'mdi:drum',
-  keyboard: 'mdi:piano',
-  percussion: 'mdi:drum',
-  vocal: 'mdi:microphone-variant',
+const iconMap: Record<string, React.FC<{ size?: number; className?: string }>> = {
+  acoustic_guitar: Guitar,
+  guitar: Guitar,
+  bass: Guitar,
+  drums: Drum,
+  keyboard: Piano,
+  percussion: Drum,
+  vocal: Mic2,
 };
 
 /**
  * Ícone de instrumento com base no nome retornado pela API.
  */
 export const InstrumentIcon: React.FC<Props> = ({ instrument, className, size = 22 }) => {
-  const icon = iconMap[instrument] || 'mdi:music-circle';
-  return <Icon icon={icon} width={size} height={size} className={className} />;
+  const IconComponent = iconMap[instrument] || Music;
+  return <IconComponent size={size} className={className} />;
 };
 
 export default InstrumentIcon;

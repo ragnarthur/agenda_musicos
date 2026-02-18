@@ -1,22 +1,19 @@
 from django.urls import path
-from agenda.admin_views import (
-    # Stats
+
+from agenda.admin_views import (  # Stats; Requests; Events; Cities
+    admin_events_list,
+    admin_reports,
+    approve_booking_request,
+    booking_request_detail,
+    booking_requests_list,
+    city_change_status,
+    city_detail,
+    city_list_create,
     dashboard_stats,
     dashboard_stats_extended,
-    admin_reports,
-    # Requests
-    booking_requests_list,
-    booking_request_detail,
-    approve_booking_request,
     reject_booking_request,
-    # Events
-    admin_events_list,
-    # Cities
     requests_by_city,
     requests_by_city_detail,
-    city_list_create,
-    city_detail,
-    city_change_status,
 )
 
 urlpatterns = [
@@ -36,9 +33,7 @@ urlpatterns = [
         approve_booking_request,
         name="admin-request-approve",
     ),
-    path(
-        "requests/<int:pk>/reject/", reject_booking_request, name="admin-request-reject"
-    ),
+    path("requests/<int:pk>/reject/", reject_booking_request, name="admin-request-reject"),
     # Events
     path("events/", admin_events_list, name="admin-events"),
     # Cities

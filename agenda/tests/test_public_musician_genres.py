@@ -8,12 +8,8 @@ from agenda.models import Musician
 
 class PublicMusicianGenresTest(APITestCase):
     def setUp(self):
-        u1 = User.objects.create_user(
-            username="m1", email="m1@test.com", password="senha12345"
-        )
-        u2 = User.objects.create_user(
-            username="m2", email="m2@test.com", password="senha12345"
-        )
+        u1 = User.objects.create_user(username="m1", email="m1@test.com", password="senha12345")
+        u2 = User.objects.create_user(username="m2", email="m2@test.com", password="senha12345")
         self.m1 = Musician.objects.create(
             user=u1,
             instrument="guitar",

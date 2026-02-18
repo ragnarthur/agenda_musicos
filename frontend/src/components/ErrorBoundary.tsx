@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { Sentry } from '../lib/sentry';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -10,26 +11,36 @@ interface ErrorBoundaryProps {
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
+  eventId: string | null;
 }
 
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, eventId: null };
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Report to Sentry
+    const eventId = Sentry.captureException(error, {
+      extra: { componentStack: errorInfo.componentStack },
+    });
+    this.setState({ eventId });
+
+    // Always log to console for debugging
+    console.error('[ErrorBoundary]', error, errorInfo);
+
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
     }
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: null });
+    this.setState({ hasError: false, error: null, eventId: null });
     window.location.reload();
   };
 
@@ -58,6 +69,9 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
               <RefreshCw className="w-4 h-4" />
               Recarregar página
             </button>
+            {this.state.eventId && (
+              <p className="mt-4 text-xs text-gray-400">ID do erro: {this.state.eventId}</p>
+            )}
           </div>
         </div>
       );

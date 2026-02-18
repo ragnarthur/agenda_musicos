@@ -9,6 +9,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 // Instância principal da API
 export const api = axios.create({
   baseURL: API_URL,
+  timeout: 15_000,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -21,6 +22,7 @@ export const api = axios.create({
 // Instância dedicada para uploads (sem Content-Type fixo)
 export const uploadApi = axios.create({
   baseURL: API_URL,
+  timeout: 60_000,
   withCredentials: true,
   headers: {
     'X-Requested-With': 'XMLHttpRequest',

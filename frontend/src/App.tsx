@@ -5,6 +5,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CompanyAuthProvider, useCompanyAuth } from './contexts/CompanyAuthContext';
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext';
+import { SWRConfig } from 'swr';
 import Loading from './components/common/Loading';
 import AppToaster from './components/common/AppToaster';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -549,18 +550,31 @@ function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
-      <ThemeProvider>
-        <AuthProvider>
-          <CompanyAuthProvider>
-            <AdminAuthProvider>
-              <ErrorBoundary>
-                <AppRoutes />
-              </ErrorBoundary>
-              <AppToaster />
-            </AdminAuthProvider>
-          </CompanyAuthProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      <SWRConfig
+        value={{
+          dedupingInterval: 10_000,
+          revalidateOnFocus: false,
+          errorRetryCount: 3,
+          shouldRetryOnError: (error: { status?: number }) => {
+            // Don't retry on auth errors
+            if (error?.status === 401 || error?.status === 403) return false;
+            return true;
+          },
+        }}
+      >
+        <ThemeProvider>
+          <AuthProvider>
+            <CompanyAuthProvider>
+              <AdminAuthProvider>
+                <ErrorBoundary>
+                  <AppRoutes />
+                </ErrorBoundary>
+                <AppToaster />
+              </AdminAuthProvider>
+            </CompanyAuthProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </SWRConfig>
     </BrowserRouter>
   );
 }

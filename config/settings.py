@@ -53,9 +53,7 @@ ENABLE_API_DOCS = config("ENABLE_API_DOCS", default=DEBUG, cast=bool)
 import secrets
 import sys
 
-IS_TESTING = any(
-    arg == "test" or arg == "pytest" or arg.endswith("pytest") for arg in sys.argv
-)
+IS_TESTING = any(arg == "test" or arg == "pytest" or arg.endswith("pytest") for arg in sys.argv)
 
 if DEBUG or IS_TESTING:
     ADMIN_URL = config("ADMIN_URL", default="admin-secret-" + secrets.token_urlsafe(16))
@@ -191,21 +189,14 @@ if DATABASE_URL:
         parsed_port = None
 
     query = parse_qs(parsed.query)
-    sslmode = query.get("sslmode", [None])[0] or (
-        "require" if DB_SSL_REQUIRE else "disable"
-    )
+    sslmode = query.get("sslmode", [None])[0] or ("require" if DB_SSL_REQUIRE else "disable")
 
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": (parsed.path or "").lstrip("/")
-            or config("POSTGRES_DB", default="postgres"),
-            "USER": unquote(
-                parsed.username or config("POSTGRES_USER", default="postgres")
-            ),
-            "PASSWORD": unquote(
-                parsed.password or config("POSTGRES_PASSWORD", default="")
-            ),
+            "NAME": (parsed.path or "").lstrip("/") or config("POSTGRES_DB", default="postgres"),
+            "USER": unquote(parsed.username or config("POSTGRES_USER", default="postgres")),
+            "PASSWORD": unquote(parsed.password or config("POSTGRES_PASSWORD", default="")),
             "HOST": parsed.hostname or "db",
             "PORT": parsed_port or 5432,
             "CONN_MAX_AGE": 60,
@@ -247,9 +238,7 @@ else:
 # Password validation
 # =========================================================
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
@@ -336,18 +325,14 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(
         minutes=max(int(config("JWT_ACCESS_MINUTES", default=60)), 15)
     ),
-    "REFRESH_TOKEN_LIFETIME": timedelta(
-        days=max(int(config("JWT_REFRESH_DAYS", default=7)), 1)
-    ),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=max(int(config("JWT_REFRESH_DAYS", default=7)), 1)),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
 if not DEBUG:
-    REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = (
-        "rest_framework.renderers.JSONRenderer",
-    )
+    REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = ("rest_framework.renderers.JSONRenderer",)
 
 
 # =========================================================
@@ -385,9 +370,7 @@ if not DEBUG:
     if not CSRF_TRUSTED_ORIGINS:
         raise RuntimeError("CSRF_TRUSTED_ORIGINS está vazio em produção.")
     if any(not origin.startswith("https://") for origin in CSRF_TRUSTED_ORIGINS):
-        raise RuntimeError(
-            "CSRF_TRUSTED_ORIGINS deve conter apenas origens HTTPS em produção."
-        )
+        raise RuntimeError("CSRF_TRUSTED_ORIGINS deve conter apenas origens HTTPS em produção.")
 
 
 # =========================================================

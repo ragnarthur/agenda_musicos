@@ -24,6 +24,14 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from notifications.services.email_service import send_rejection_email
+from notifications.services.quote_notifications import (
+    notify_booking_confirmed,
+    notify_new_quote_request,
+    notify_proposal_received,
+    notify_reservation_created,
+)
+
 from .image_processing import (
     MAX_AVATAR_BYTES,
     MAX_AVATAR_SIZE,
@@ -63,14 +71,6 @@ from .serializers import (
     QuoteRequestSerializer,
 )
 from .throttles import PublicRateThrottle
-
-from notifications.services.email_service import send_rejection_email
-from notifications.services.quote_notifications import (
-    notify_booking_confirmed,
-    notify_new_quote_request,
-    notify_proposal_received,
-    notify_reservation_created,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -173,9 +173,7 @@ def upload_avatar(request):
             "Upload de avatar sem perfil de músico | user_id=%s",
             getattr(request.user, "id", None),
         )
-        return Response(
-            {"detail": "Perfil não encontrado"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"detail": "Perfil não encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except ValueError as exc:
         logger.warning(
             "Upload de avatar inválido | user_id=%s",
@@ -237,9 +235,7 @@ def upload_cover(request):
             "Upload de capa sem perfil de músico | user_id=%s",
             getattr(request.user, "id", None),
         )
-        return Response(
-            {"detail": "Perfil não encontrado"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"detail": "Perfil não encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except ValueError as exc:
         logger.warning(
             "Upload de capa inválido | user_id=%s",
@@ -314,9 +310,7 @@ def get_musician_connections(request, musician_id):
                     "full_name": target.user.get_full_name() or target.user.username,
                     "instrument": target.instrument,
                     "avatar": (
-                        request.build_absolute_uri(target.avatar.url)
-                        if target.avatar
-                        else None
+                        request.build_absolute_uri(target.avatar.url) if target.avatar else None
                     ),
                 }
             )
@@ -332,9 +326,7 @@ def get_musician_connections(request, musician_id):
         )
 
     except Musician.DoesNotExist:
-        return Response(
-            {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except Exception:
         logger.exception("Erro ao buscar conexões")
         return Response(
@@ -355,15 +347,11 @@ def get_musician_reviews(request, musician_id):
             .select_related("rated_by", "event")
             .order_by("-created_at")[:10]
         )
-        serializer = MusicianRatingSerializer(
-            reviews, many=True, context={"request": request}
-        )
+        serializer = MusicianRatingSerializer(reviews, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     except Musician.DoesNotExist:
-        return Response(
-            {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except Exception:
         logger.exception("Erro ao buscar avaliações")
         return Response(
@@ -390,17 +378,13 @@ def get_musician_badges(request, musician_id):
                     "name": badge.get_badge_type_display(),
                     "description": badge.description,
                     "icon": badge.icon,
-                    "awarded_at": badge.awarded_at.isoformat()
-                    if badge.awarded_at
-                    else None,
+                    "awarded_at": badge.awarded_at.isoformat() if badge.awarded_at else None,
                 }
             )
         return Response(badge_data, status=status.HTTP_200_OK)
 
     except Musician.DoesNotExist:
-        return Response(
-            {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except Exception:
         logger.exception("Erro ao buscar badges")
         return Response(
@@ -453,9 +437,7 @@ def get_musician_stats(request, musician_id):
         )
 
     except Musician.DoesNotExist:
-        return Response(
-            {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except Exception:
         logger.exception("Erro ao buscar estatísticas")
         return Response(
@@ -507,9 +489,7 @@ def get_musician_connection_status(request, musician_id):
         )
 
     except Musician.DoesNotExist:
-        return Response(
-            {"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"detail": "Músico não encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except Exception:
         logger.exception("Erro ao verificar conexão")
         return Response(
@@ -624,9 +604,7 @@ def approve_musician_request(request, request_id):
 
     if musician_request.status != "pending":
         return Response(
-            {
-                "detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"
-            },
+            {"detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -695,9 +673,11 @@ def resend_musician_request_invite(request, request_id):
         {
             "message": "Email reenviado com sucesso!",
             "invite_token": musician_request.invite_token,
-            "invite_expires_at": musician_request.invite_expires_at.isoformat()
-            if musician_request.invite_expires_at
-            else None,
+            "invite_expires_at": (
+                musician_request.invite_expires_at.isoformat()
+                if musician_request.invite_expires_at
+                else None
+            ),
         },
         status=status.HTTP_200_OK,
     )
@@ -713,9 +693,7 @@ def reject_musician_request(request, request_id):
 
     if musician_request.status != "pending":
         return Response(
-            {
-                "detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"
-            },
+            {"detail": f"Solicitação já foi {musician_request.get_status_display().lower()}"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -741,9 +719,7 @@ def reject_musician_request(request, request_id):
 def validate_invite_token(request):
     token = request.query_params.get("token")
     if not token:
-        return Response(
-            {"detail": "Token não fornecido"}, status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"detail": "Token não fornecido"}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         musician_request = MusicianRequest.objects.get(invite_token=token)
@@ -756,9 +732,7 @@ def validate_invite_token(request):
                 {"detail": "Este convite já foi utilizado"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        return Response(
-            {"detail": "Convite expirado"}, status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"detail": "Convite expirado"}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response(
         {
@@ -834,15 +808,11 @@ def list_contractor_quote_requests(request):
 
     contractor = request.user.contractor_profile
     status_filter = request.query_params.get("status")
-    queryset = QuoteRequest.objects.filter(contractor=contractor).order_by(
-        "-created_at"
-    )
+    queryset = QuoteRequest.objects.filter(contractor=contractor).order_by("-created_at")
     if status_filter:
         queryset = queryset.filter(status=status_filter)
 
-    serializer = QuoteRequestSerializer(
-        queryset, many=True, context={"request": request}
-    )
+    serializer = QuoteRequestSerializer(queryset, many=True, context={"request": request})
     return Response(serializer.data)
 
 
@@ -862,9 +832,7 @@ def list_musician_quote_requests(request):
     if status_filter:
         queryset = queryset.filter(status=status_filter)
 
-    serializer = QuoteRequestSerializer(
-        queryset, many=True, context={"request": request}
-    )
+    serializer = QuoteRequestSerializer(queryset, many=True, context={"request": request})
     return Response(serializer.data)
 
 
@@ -914,9 +882,7 @@ def musician_send_proposal(request, request_id):
     serializer = QuoteProposalCreateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
-    proposal = QuoteProposal.objects.create(
-        request=quote_request, **serializer.validated_data
-    )
+    proposal = QuoteProposal.objects.create(request=quote_request, **serializer.validated_data)
 
     quote_request.status = "responded"
     quote_request.save(update_fields=["status", "updated_at"])
@@ -980,9 +946,7 @@ def contractor_accept_proposal(request, request_id):
 
     return Response(
         {
-            "request": QuoteRequestSerializer(
-                quote_request, context={"request": request}
-            ).data,
+            "request": QuoteRequestSerializer(quote_request, context={"request": request}).data,
             "booking": BookingSerializer(booking, context={"request": request}).data,
         }
     )
@@ -1012,9 +976,7 @@ def musician_confirm_booking(request, request_id):
 
     booking = getattr(quote_request, "booking", None)
     if not booking:
-        return Response(
-            {"detail": "Reserva não encontrada."}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"detail": "Reserva não encontrada."}, status=status.HTTP_404_NOT_FOUND)
     if booking.status != "reserved":
         return Response(
             {"detail": "Esta reserva não pode ser confirmada."},
@@ -1054,12 +1016,8 @@ def list_quote_proposals(request, request_id):
     if not is_contractor and not is_musician:
         return Response({"detail": "Acesso negado"}, status=status.HTTP_403_FORBIDDEN)
 
-    proposals = QuoteProposal.objects.filter(request=quote_request).order_by(
-        "-created_at"
-    )
-    serializer = QuoteProposalSerializer(
-        proposals, many=True, context={"request": request}
-    )
+    proposals = QuoteProposal.objects.filter(request=quote_request).order_by("-created_at")
+    serializer = QuoteProposalSerializer(proposals, many=True, context={"request": request})
     return Response(serializer.data)
 
 
@@ -1118,9 +1076,7 @@ def cancel_quote_request(request, request_id):
     quote_request.status = "cancelled"
     quote_request.save(update_fields=["status", "updated_at"])
 
-    QuoteProposal.objects.filter(request=quote_request, status="sent").update(
-        status="expired"
-    )
+    QuoteProposal.objects.filter(request=quote_request, status="sent").update(status="expired")
 
     _log_booking_event(
         quote_request,
@@ -1166,9 +1122,7 @@ def cancel_booking(request, request_id):
     quote_request.status = "cancelled"
     quote_request.save(update_fields=["status", "updated_at"])
 
-    QuoteProposal.objects.filter(request=quote_request, status="sent").update(
-        status="expired"
-    )
+    QuoteProposal.objects.filter(request=quote_request, status="sent").update(status="expired")
 
     actor_type = "contractor" if is_contractor else "musician"
     _log_booking_event(
@@ -1223,14 +1177,10 @@ def list_musicians_by_city(request):
     paginator.page_size = 50
     page = paginator.paginate_queryset(queryset, request)
     if page is not None:
-        serializer = MusicianPublicSerializer(
-            page, many=True, context={"request": request}
-        )
+        serializer = MusicianPublicSerializer(page, many=True, context={"request": request})
         return paginator.get_paginated_response(serializer.data)
 
-    serializer = MusicianPublicSerializer(
-        queryset, many=True, context={"request": request}
-    )
+    serializer = MusicianPublicSerializer(queryset, many=True, context={"request": request})
     return Response(serializer.data)
 
 
@@ -1263,9 +1213,7 @@ def list_sponsors(request):
         day_offset = date.today().toordinal() % len(sponsors)
         sponsors = sponsors[day_offset:] + sponsors[:day_offset]
 
-    serializer = OrganizationPublicSerializer(
-        sponsors, many=True, context={"request": request}
-    )
+    serializer = OrganizationPublicSerializer(sponsors, many=True, context={"request": request})
     cache.set(cache_key, serializer.data, 60 * 60)  # 1 hour
     return Response(serializer.data)
 
@@ -1340,14 +1288,10 @@ def list_all_musicians_public(request):
     paginator.page_size = limit
     page = paginator.paginate_queryset(queryset, request)
     if page is not None:
-        serializer = MusicianPublicSerializer(
-            page, many=True, context={"request": request}
-        )
+        serializer = MusicianPublicSerializer(page, many=True, context={"request": request})
         return paginator.get_paginated_response(serializer.data)
 
-    serializer = MusicianPublicSerializer(
-        queryset[:limit], many=True, context={"request": request}
-    )
+    serializer = MusicianPublicSerializer(queryset[:limit], many=True, context={"request": request})
     return Response(serializer.data)
 
 
@@ -1506,8 +1450,10 @@ def get_musician_contact(request, musician_id):
         user_agent=request.META.get("HTTP_USER_AGENT", "")[:500],
     )
 
-    return Response({
-        "whatsapp": musician.whatsapp,
-        "phone": musician.phone,
-        "instagram": musician.instagram,
-    })
+    return Response(
+        {
+            "whatsapp": musician.whatsapp,
+            "phone": musician.phone,
+            "instagram": musician.instagram,
+        }
+    )

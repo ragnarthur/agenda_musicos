@@ -3,10 +3,10 @@
 ViewSet para gerenciamento de disponibilidades de músicos.
 """
 
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import viewsets
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
-from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 from ..models import Availability, Musician
 from ..serializers import AvailabilitySerializer
@@ -15,9 +15,7 @@ from ..utils import get_user_organization
 
 @extend_schema(
     parameters=[
-        OpenApiParameter(
-            name="id", type=int, location="path", description="ID da disponibilidade"
-        )
+        OpenApiParameter(name="id", type=int, location="path", description="ID da disponibilidade")
     ]
 )
 class AvailabilityViewSet(viewsets.ModelViewSet):
@@ -63,9 +61,7 @@ class AvailabilityViewSet(viewsets.ModelViewSet):
             if not event:
                 raise ValidationError({"event": "Evento é obrigatório."})
 
-            existing = Availability.objects.filter(
-                musician=musician, event=event
-            ).first()
+            existing = Availability.objects.filter(musician=musician, event=event).first()
             if not existing:
                 raise PermissionDenied("Você não foi convidado para este evento.")
 
@@ -83,9 +79,7 @@ class AvailabilityViewSet(viewsets.ModelViewSet):
             musician = self.request.user.musician_profile
             # Verifica se a availability pertence ao músico
             if serializer.instance.musician != musician:
-                raise PermissionDenied(
-                    "Você não pode editar disponibilidades de outros músicos."
-                )
+                raise PermissionDenied("Você não pode editar disponibilidades de outros músicos.")
             serializer.save()
         except Musician.DoesNotExist:
             raise ValidationError({"detail": "Usuário não possui perfil de músico."})
@@ -96,9 +90,7 @@ class AvailabilityViewSet(viewsets.ModelViewSet):
             musician = self.request.user.musician_profile
             # Verifica se a availability pertence ao músico
             if instance.musician != musician:
-                raise PermissionDenied(
-                    "Você não pode deletar disponibilidades de outros músicos."
-                )
+                raise PermissionDenied("Você não pode deletar disponibilidades de outros músicos.")
             super().perform_destroy(instance)
         except Musician.DoesNotExist:
             raise ValidationError({"detail": "Usuário não possui perfil de músico."})

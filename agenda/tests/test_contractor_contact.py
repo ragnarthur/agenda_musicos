@@ -194,9 +194,7 @@ class ContractorRegistrationTest(APITestCase):
         self.assertIn(response.status_code, [status.HTTP_200_OK, status.HTTP_201_CREATED])
 
         # Verifica que o ContractorProfile foi criado
-        self.assertTrue(
-            ContractorProfile.objects.filter(name="Empresa Teste").exists()
-        )
+        self.assertTrue(ContractorProfile.objects.filter(name="Empresa Teste").exists())
 
     def test_register_contractor_duplicate_email(self):
         """Registro com email duplicado falha."""
@@ -257,7 +255,9 @@ class ContractorLoginTest(APITestCase):
             "password": "SenhaErrada",
         }
         response = self.client.post("/api/contractor/token/", data, format="json")
-        self.assertIn(response.status_code, [status.HTTP_400_BAD_REQUEST, status.HTTP_401_UNAUTHORIZED])
+        self.assertIn(
+            response.status_code, [status.HTTP_400_BAD_REQUEST, status.HTTP_401_UNAUTHORIZED]
+        )
 
     def test_login_nonexistent_email(self):
         """Login com email inexistente falha."""
@@ -266,4 +266,6 @@ class ContractorLoginTest(APITestCase):
             "password": "SenhaForte123!",
         }
         response = self.client.post("/api/contractor/token/", data, format="json")
-        self.assertIn(response.status_code, [status.HTTP_400_BAD_REQUEST, status.HTTP_401_UNAUTHORIZED])
+        self.assertIn(
+            response.status_code, [status.HTTP_400_BAD_REQUEST, status.HTTP_401_UNAUTHORIZED]
+        )

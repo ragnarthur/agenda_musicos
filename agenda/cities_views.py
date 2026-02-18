@@ -2,7 +2,7 @@
 # Views para registro de interesse em cidades
 import logging
 
-from django.db.models import Q
+from django.db.models import Count, Q
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny

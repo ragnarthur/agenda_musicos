@@ -58,16 +58,16 @@ def test_get_admin_requests():
 
         if response.status_code == 200:
             print("✅ Lista obtida com sucesso!")
-            requests = response.json()
-            print(f"Total de solicitações: {len(requests)}")
+            request_list = response.json()
+            print(f"Total de solicitações: {len(request_list)}")
 
-            if requests:
+            if request_list:
                 print("\n📋 Solicitações encontradas:")
-                for req in requests[:5]:  # Apenas as 5 primeiras
+                for req in request_list[:5]:  # Apenas as 5 primeiras
                     print(f"  • ID: {req['id']} | Status: {req['status']}")
             else:
                 print("Nenhuma solicitação encontrada")
-            return requests
+            return request_list
         else:
             print(f"❌ Erro ao obter lista: {response.status_code}")
             print(f"Response: {response.text}")
@@ -160,12 +160,12 @@ def test_complete_flow():
         return False
 
     print("\n🚀 Teste 2: Listar solicitações")
-    requests = test_get_admin_requests()
+    request_list = test_get_admin_requests()
 
-    if requests and len(requests) > 0:
-        last_request_id = requests[0]["id"]
+    if request_list and len(request_list) > 0:
+        last_request_id = request_list[0]["id"]
         print(f"\n🚀 Teste 3: Fluxo completo para solicitação #{last_request_id}")
-        success = test_complete_flow(last_request_id)
+        success = test_approval_flow(last_request_id)
 
         if success:
             print("✅ ✅ Teste 4: Validar token")

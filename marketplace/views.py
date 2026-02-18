@@ -146,9 +146,7 @@ class GigViewSet(viewsets.ModelViewSet):
         if gig.budget is None or expected_fee is None:
             return
         if expected_fee > gig.budget:
-            raise ValueError(
-                "O cachê informado não pode ser maior que o orçamento total da vaga."
-            )
+            raise ValueError("O cachê informado não pode ser maior que o orçamento total da vaga.")
 
     def _validate_selected_fees_against_budget(self, gig, selected_applications):
         """
@@ -166,9 +164,7 @@ class GigViewSet(viewsets.ModelViewSet):
 
         selected_total = sum((app.expected_fee or Decimal("0")) for app in selected_applications)
         if selected_total > gig.budget:
-            raise ValueError(
-                "A soma dos cachês selecionados excede o orçamento total da vaga."
-            )
+            raise ValueError("A soma dos cachês selecionados excede o orçamento total da vaga.")
 
     def _create_event_for_hired_band(self, gig, hired_applications):
         """
@@ -240,9 +236,9 @@ class GigViewSet(viewsets.ModelViewSet):
         self._assert_application_chat_access(gig, application, request.user)
 
         if request.method.upper() == "GET":
-            messages = GigChatMessage.objects.filter(
-                application=application
-            ).select_related("sender")
+            messages = GigChatMessage.objects.filter(application=application).select_related(
+                "sender"
+            )
             serializer = GigChatMessageSerializer(messages, many=True)
             return Response(serializer.data)
 
@@ -415,9 +411,7 @@ class GigViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             try:
-                self._validate_selected_fees_against_budget(
-                    locked_gig, selected_applications
-                )
+                self._validate_selected_fees_against_budget(locked_gig, selected_applications)
             except ValueError as exc:
                 return Response(
                     {"detail": str(exc)},

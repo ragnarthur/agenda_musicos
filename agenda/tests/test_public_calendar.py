@@ -8,7 +8,7 @@ from datetime import date, time, timedelta
 from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase, APIClient
+from rest_framework.test import APIClient, APITestCase
 
 from agenda.models import Availability, Event, LeaderAvailability, Musician
 

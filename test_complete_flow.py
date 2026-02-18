@@ -117,9 +117,7 @@ class FlowTester:
             print_success(f"Solicitação criada com sucesso para {self.test_email}")
             self.successes.append("Solicitação criada")
         else:
-            print_error(
-                f"Falha ao criar solicitação: {response.status_code} - {response.content}"
-            )
+            print_error(f"Falha ao criar solicitação: {response.status_code} - {response.content}")
             self.errors.append("Solicitação falhou")
             return False
 
@@ -139,7 +137,9 @@ class FlowTester:
         print_header("2. TESTE DE APROVAÇÃO ADMIN")
 
         if not hasattr(self, "request_id"):
-            print_error("ID da solicitação não disponível. Execute test_registration_flow primeiro.")
+            print_error(
+                "ID da solicitação não disponível. Execute test_registration_flow primeiro."
+            )
             return False
 
         admin_user = User.objects.filter(username="admin_teste").first()

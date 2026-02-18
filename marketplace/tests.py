@@ -322,7 +322,9 @@ class GigWorkflowTest(APITestCase):
         self.assertEqual(gig.status, "hired")
 
         event = Event.objects.get(title="[Vaga] Show Banda")
-        participant_ids = set(Availability.objects.filter(event=event).values_list("musician_id", flat=True))
+        participant_ids = set(
+            Availability.objects.filter(event=event).values_list("musician_id", flat=True)
+        )
         self.assertSetEqual(
             participant_ids,
             {self.client_musician.id, self.candidate_musician.id, second_musician.id},

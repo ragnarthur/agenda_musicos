@@ -62,16 +62,12 @@ class Command(BaseCommand):
                     user.save()
                     updated_count += 1
                     self.stdout.write(
-                        self.style.SUCCESS(
-                            f"✓ Admin {username} atualizado com senha fixa"
-                        )
+                        self.style.SUCCESS(f"✓ Admin {username} atualizado com senha fixa")
                     )
 
             except Exception as e:
                 self.stdout.write(
-                    self.style.ERROR(
-                        f"✗ Erro ao criar/atualizar admin {username}: {str(e)}"
-                    )
+                    self.style.ERROR(f"✗ Erro ao criar/atualizar admin {username}: {str(e)}")
                 )
 
         self.stdout.write(

@@ -5,24 +5,25 @@ Views para gerenciamento de administradores e usuários.
 import logging
 from datetime import timedelta
 
+from django.contrib.auth import get_user_model
+from django.db.models import Q
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from django.db.models import Q
-from django.contrib.auth import get_user_model
-from django.utils import timezone
 
+from notifications.services.email_service import send_user_deletion_email
+
+from .models import AuditLog, ContactView, ContractorProfile, MusicianRequest, Organization
 from .permissions import IsAppOwner
 from .serializers import (
-    AdminUserSerializer,
     AdminCreateSerializer,
     AdminUpdateSerializer,
+    AdminUserSerializer,
     ContractorProfileSerializer,
     OrganizationSerializer,
 )
-from .models import AuditLog, ContactView, ContractorProfile, MusicianRequest, Organization
-from notifications.services.email_service import send_user_deletion_email
 
 User = get_user_model()
 
@@ -33,9 +34,7 @@ logger = logging.getLogger(__name__)
 @permission_classes([IsAuthenticated, IsAdminUser, IsAppOwner])
 def list_admin_users(request):
     """Lista todos os usuários admin (apenas owners)"""
-    admins = User.objects.filter(Q(is_staff=True) | Q(is_superuser=True)).order_by(
-        "-date_joined"
-    )
+    admins = User.objects.filter(Q(is_staff=True) | Q(is_superuser=True)).order_by("-date_joined")
 
     serializer = AdminUserSerializer(admins, many=True)
     return Response(serializer.data)
@@ -61,10 +60,7 @@ def list_all_users(request):
 @permission_classes([IsAuthenticated, IsAdminUser, IsAppOwner])
 def list_contractors(request):
     """Lista todos os contratantes"""
-    contractors = (
-        ContractorProfile.objects.select_related("user")
-        .order_by("-created_at")
-    )
+    contractors = ContractorProfile.objects.select_related("user").order_by("-created_at")
     serializer = ContractorProfileSerializer(contractors, many=True)
     return Response(serializer.data)
 
@@ -98,9 +94,7 @@ def delete_contractor(request, pk):
             status=status.HTTP_200_OK,
         )
     except ContractorProfile.DoesNotExist:
-        return Response(
-            {"error": "Contratante não encontrado"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"error": "Contratante não encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         logger.error(f"Error deleting contractor {pk}: {str(e)}", exc_info=True)
         return Response(
@@ -178,9 +172,7 @@ def delete_organization(request, pk):
         )
 
     except Organization.DoesNotExist:
-        return Response(
-            {"error": "Organização não encontrada"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"error": "Organização não encontrada"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         logger.error(f"Error deleting organization {pk}: {str(e)}", exc_info=True)
         return Response(
@@ -203,9 +195,7 @@ def get_admin_user(request, pk):
         serializer = AdminUserSerializer(user)
         return Response(serializer.data)
     except User.DoesNotExist:
-        return Response(
-            {"error": "Usuário não encontrado"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"error": "Usuário não encontrado"}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(["POST"])
@@ -252,9 +242,7 @@ def update_admin_user(request, pk):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     except User.DoesNotExist:
-        return Response(
-            {"error": "Usuário não encontrado"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"error": "Usuário não encontrado"}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(["DELETE"])
@@ -285,9 +273,7 @@ def delete_admin_user(request, pk):
         )
 
     except User.DoesNotExist:
-        return Response(
-            {"error": "Usuário não encontrado"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"error": "Usuário não encontrado"}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(["POST"])
@@ -324,9 +310,7 @@ def reset_admin_password(request, pk):
         )
 
     except User.DoesNotExist:
-        return Response(
-            {"error": "Usuário não encontrado"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"error": "Usuário não encontrado"}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(["DELETE"])
@@ -354,9 +338,7 @@ def delete_user(request, pk):
                 f"by {request.user.username} from {client_ip}"
             )
             return Response(
-                {
-                    "error": "admin_1 e admin_2 são usuários protegidos e não podem ser deletados"
-                },
+                {"error": "admin_1 e admin_2 são usuários protegidos e não podem ser deletados"},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -432,9 +414,7 @@ def delete_user(request, pk):
 
     except User.DoesNotExist:
         logger.error(f"User not found for deletion: pk={pk}")
-        return Response(
-            {"error": "Usuário não encontrado"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"error": "Usuário não encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         logger.error(f"Error deleting user {pk}: {str(e)}", exc_info=True)
         return Response(
@@ -448,9 +428,7 @@ def delete_user(request, pk):
 def list_organizations(request):
     """Lista todas as organizações para admin"""
     try:
-        organizations = Organization.objects.select_related("owner").order_by(
-            "-created_at"
-        )
+        organizations = Organization.objects.select_related("owner").order_by("-created_at")
 
         data = []
         for org in organizations:

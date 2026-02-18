@@ -3,6 +3,7 @@ import { execSync } from 'node:child_process';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 const getGitShortSha = (): string => {
   const fromEnv = String(process.env.GITHUB_SHA || '').trim();
@@ -32,6 +33,16 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    ...(process.env.ANALYZE
+      ? [
+          visualizer({
+            filename: 'dist/bundle-report.html',
+            open: true,
+            gzipSize: true,
+            brotliSize: true,
+          }),
+        ]
+      : []),
     VitePWA({
       // A gente registra via `virtual:pwa-register` para mostrar "Atualizacao disponivel" no app.
       injectRegister: false,

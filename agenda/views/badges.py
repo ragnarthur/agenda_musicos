@@ -3,10 +3,10 @@
 ViewSet para gerenciamento de badges/conquistas dos músicos.
 """
 
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 from ..models import Musician, MusicianBadge
 from ..serializers import MusicianBadgeSerializer
@@ -14,11 +14,7 @@ from ..utils import award_badges_for_musician, get_badge_progress
 
 
 @extend_schema(
-    parameters=[
-        OpenApiParameter(
-            name="id", type=int, location="path", description="ID do badge"
-        )
-    ]
+    parameters=[OpenApiParameter(name="id", type=int, location="path", description="ID do badge")]
 )
 class BadgeViewSet(viewsets.ReadOnlyModelViewSet):
     """

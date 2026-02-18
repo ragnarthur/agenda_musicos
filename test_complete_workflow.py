@@ -50,9 +50,7 @@ def extract_access_token(payload):
 def login(username, password):
     """Faz login e retorna contexto de autenticação (session + token opcional)."""
     session = requests.Session()
-    response = session.post(
-        f"{BASE_URL}/token/", json={"username": username, "password": password}
-    )
+    response = session.post(f"{BASE_URL}/token/", json={"username": username, "password": password})
 
     if response.status_code == 200:
         data = safe_json(response)
@@ -283,9 +281,7 @@ def test_delete_event(auth, event_id):
     """Testa deleção de evento"""
     print_section(f"Teste 7: Deletar Evento #{event_id}")
 
-    response = auth["session"].delete(
-        f"{BASE_URL}/events/{event_id}/", headers=auth_headers(auth)
-    )
+    response = auth["session"].delete(f"{BASE_URL}/events/{event_id}/", headers=auth_headers(auth))
 
     if response.status_code == 204:
         print(f"✓ Evento deletado com sucesso!")
@@ -425,7 +421,9 @@ def main():
     print(f"✓ Testes passados: {results['passed']}")
     print(f"⚠ Testes pulados: {results['skipped']}")
     print(f"✗ Testes falhados: {results['failed']}")
-    print(f"\nTotal: {results['passed'] + results['skipped'] + results['failed']} testes executados")
+    print(
+        f"\nTotal: {results['passed'] + results['skipped'] + results['failed']} testes executados"
+    )
 
     if results["failed"] == 0:
         print("\n🎉 TODOS OS TESTES PASSARAM! Sistema está funcionando corretamente.")

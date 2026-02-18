@@ -8,8 +8,8 @@ from .admin_management_views import (
     create_admin_user,
     delete_admin_user,
     delete_contractor,
-    delete_user,
     delete_organization,
+    delete_user,
     get_admin_user,
     list_admin_users,
     list_all_users,
@@ -55,32 +55,32 @@ from .view_functions import (  # Musician Request views; Quote Request views; Pu
     cancel_booking,
     cancel_quote_request,
     contractor_accept_proposal,
-    create_quote_request,
     create_musician_request,
+    create_quote_request,
     decline_quote_proposal,
-    get_musician_contact,
-    list_all_musicians_public,
-    list_available_musical_genres,
-    list_quote_proposals,
     get_contractor_dashboard,
     get_musician_badges,
     get_musician_connection_status,
     get_musician_connections,
+    get_musician_contact,
     get_musician_public_profile,
     get_musician_request,
     get_musician_reviews,
     get_musician_stats,
     get_quote_request,
     get_unread_messages_count,
-    list_musician_requests,
-    list_musicians_by_city,
+    list_all_musicians_public,
+    list_available_musical_genres,
     list_contractor_quote_requests,
     list_musician_quote_requests,
+    list_musician_requests,
+    list_musicians_by_city,
+    list_quote_proposals,
     list_sponsors,
-    reject_musician_request,
-    resend_musician_request_invite,
     musician_confirm_booking,
     musician_send_proposal,
+    reject_musician_request,
+    resend_musician_request_invite,
     update_contractor_profile,
     upload_avatar,
     upload_cover,
@@ -101,9 +101,7 @@ router = DefaultRouter()
 router.register("musicians", MusicianViewSet, basename="musician")
 router.register("events", EventViewSet, basename="event")
 router.register("availabilities", AvailabilityViewSet, basename="availability")
-router.register(
-    "leader-availabilities", LeaderAvailabilityViewSet, basename="leader-availability"
-)
+router.register("leader-availabilities", LeaderAvailabilityViewSet, basename="leader-availability")
 router.register("connections", ConnectionViewSet, basename="connection")
 router.register("badges", BadgeViewSet, basename="badge")
 router.register("instruments", InstrumentViewSet, basename="instrument")
@@ -148,9 +146,7 @@ urlpatterns = [
         get_musician_badges,
         name="musician-badges",
     ),
-    path(
-        "musicians/<int:musician_id>/stats/", get_musician_stats, name="musician-stats"
-    ),
+    path("musicians/<int:musician_id>/stats/", get_musician_stats, name="musician-stats"),
     path(
         "musicians/<int:musician_id>/connection-status/",
         get_musician_connection_status,
@@ -265,9 +261,7 @@ urlpatterns = [
     # =========================================================================
     # Contractor (Dashboard, Perfil)
     # =========================================================================
-    path(
-        "contractor/dashboard/", get_contractor_dashboard, name="contractor-dashboard"
-    ),
+    path("contractor/dashboard/", get_contractor_dashboard, name="contractor-dashboard"),
     path("contractor/profile/", update_contractor_profile, name="contractor-profile"),
     # =========================================================================
     # Messages
