@@ -20,13 +20,13 @@ services:
         max-file: "3"
 
   pgbouncer:
-    image: pgbouncer/pgbouncer:1.15.0
+    image: edoburu/pgbouncer:1.25.1
     environment:
-      DATABASES_HOST: db
-      DATABASES_PORT: "5432"
-      DATABASES_USER: ${POSTGRES_USER}
-      DATABASES_PASSWORD: ${POSTGRES_PASSWORD}
-      DATABASES_DBNAME: ${POSTGRES_DB}
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
       # session mode: compatível com CONN_MAX_AGE do Django; limita conexões reais ao Postgres
       POOL_MODE: session
       MAX_CLIENT_CONN: "200"
@@ -106,14 +106,9 @@ services:
           --max-requests-jitter 100 \
           --access-logfile - \
           --error-logfile -
-    deploy:
-      resources:
-        limits:
-          cpus: "0.8"
-          memory: 1.5G
-        reservations:
-          cpus: "0.2"
-          memory: 256M
+    mem_limit: 1536m
+    memswap_limit: 1536m
+    cpus: '0.8'
     restart: unless-stopped
     networks:
       - internal
