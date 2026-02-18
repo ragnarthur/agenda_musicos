@@ -3,11 +3,11 @@
 # =============================================================================
 # Deploy Script - Agenda de Musicos (Docker)
 # =============================================================================
-# Servidor: Configure DOMAIN e SERVER_IP via variáveis de ambiente
+# Servidor: Configure DOMAIN e SERVER_IP via variaveis de ambiente
 # Dominio: gigflowagenda.com.br
 # =============================================================================
 
-set -e
+set -euo pipefail
 
 # Cores
 RED='\033[0;31m'
@@ -16,8 +16,19 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 PROJECT_DIR="/opt/agenda-musicos/agenda_musicos"
+COMPOSE_FILE="docker-compose.prod.yml"
+ENV_FILE=".env.prod"
 DOMAIN="${DOMAIN:-gigflowagenda.com.br}"
 SERVER_IP="${SERVER_IP:-127.0.0.1}"
+
+# Timeouts (segundos) - ajustaveis por variavel de ambiente
+GIT_FETCH_TIMEOUT_SECONDS="${GIT_FETCH_TIMEOUT_SECONDS:-120}"
+GIT_RESET_TIMEOUT_SECONDS="${GIT_RESET_TIMEOUT_SECONDS:-60}"
+DOCKER_DOWN_TIMEOUT_SECONDS="${DOCKER_DOWN_TIMEOUT_SECONDS:-120}"
+DOCKER_UP_TIMEOUT_SECONDS="${DOCKER_UP_TIMEOUT_SECONDS:-900}"
+DOCKER_RESTART_TIMEOUT_SECONDS="${DOCKER_RESTART_TIMEOUT_SECONDS:-90}"
+DOCKER_STATUS_TIMEOUT_SECONDS="${DOCKER_STATUS_TIMEOUT_SECONDS:-60}"
+CERTBOT_TIMEOUT_SECONDS="${CERTBOT_TIMEOUT_SECONDS:-600}"
 
 print_step() {
     echo -e "${GREEN}==>${NC} $1"
@@ -31,17 +42,56 @@ print_error() {
     echo -e "${RED}ERRO:${NC} $1"
 }
 
+dc() {
+    docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" "$@"
+}
+
+run_with_timeout() {
+    local timeout_seconds="$1"
+    local description="$2"
+    shift 2
+
+    if command -v timeout >/dev/null 2>&1; then
+        print_step "${description} (timeout: ${timeout_seconds}s)"
+        if timeout --foreground "${timeout_seconds}" "$@"; then
+            return 0
+        fi
+        local status=$?
+        if [ "$status" -eq 124 ]; then
+            print_error "Timeout apos ${timeout_seconds}s em: ${description}"
+        elif [ "$status" -ne 0 ]; then
+            print_error "Falha (${status}) em: ${description}"
+        fi
+        return "$status"
+    fi
+
+    print_warning "Comando 'timeout' indisponivel; executando sem limite: ${description}"
+    if "$@"; then
+        return 0
+    fi
+    local status=$?
+    print_error "Falha (${status}) em: ${description}"
+    return "$status"
+}
+
+collect_diagnostics() {
+    print_warning "Coletando diagnostico da stack..."
+    cd "$PROJECT_DIR" || return 0
+    dc ps || true
+    dc logs --tail=100 backend frontend nginx || true
+}
+
 # =============================================================================
 # Funcoes
 # =============================================================================
 
 check_docker() {
-    if ! command -v docker &> /dev/null; then
+    if ! command -v docker &>/dev/null; then
         print_error "Docker nao instalado. Execute: curl -fsSL https://get.docker.com | sh"
         exit 1
     fi
 
-    if ! command -v docker compose &> /dev/null; then
+    if ! docker compose version >/dev/null 2>&1; then
         print_error "Docker Compose nao instalado."
         exit 1
     fi
@@ -51,17 +101,19 @@ check_docker() {
 
 update_code() {
     print_step "Atualizando codigo do repositorio..."
-    cd $PROJECT_DIR
+    cd "$PROJECT_DIR"
+
     local before_rev after_rev
     before_rev=$(git rev-parse HEAD 2>/dev/null || true)
-    git fetch origin
-    git reset --hard origin/main
+
+    run_with_timeout "$GIT_FETCH_TIMEOUT_SECONDS" "Atualizando refs remotas (git fetch)" git fetch origin
+    run_with_timeout "$GIT_RESET_TIMEOUT_SECONDS" "Sincronizando com origin/main (git reset)" git reset --hard origin/main
+
     after_rev=$(git rev-parse HEAD 2>/dev/null || true)
     print_step "Codigo atualizado"
 
     # Este script atualiza o proprio arquivo via git reset --hard. Quando isso acontece,
-    # as funcoes ja carregadas na memoria continuam sendo as antigas. Reexecutamos o
-    # script para aplicar a nova versao imediatamente.
+    # as funcoes carregadas na memoria continuam antigas. Reexecuta para aplicar versao nova.
     if [ -z "${DEPLOY_REEXEC:-}" ] && [ -n "$before_rev" ] && [ -n "$after_rev" ] && [ "$before_rev" != "$after_rev" ]; then
         print_step "Reiniciando deploy com a versao atualizada do script..."
         export DEPLOY_REEXEC=1
@@ -70,31 +122,33 @@ update_code() {
 }
 
 build_and_deploy() {
-    print_step "Parando containers existentes..."
-    cd $PROJECT_DIR
-    docker compose --env-file .env.prod -f docker-compose.prod.yml down || true
+    cd "$PROJECT_DIR"
 
-    print_step "Construindo e iniciando containers..."
-    docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build --remove-orphans
+    print_step "Parando containers existentes..."
+    if ! run_with_timeout "$DOCKER_DOWN_TIMEOUT_SECONDS" "docker compose down" dc down; then
+        print_warning "Falha ao parar stack (seguindo para reconstruir)."
+    fi
+
+    run_with_timeout "$DOCKER_UP_TIMEOUT_SECONDS" "docker compose up --build" dc up -d --build --remove-orphans
+
     print_step "Reiniciando nginx para atualizar upstream do backend..."
-    docker compose --env-file .env.prod -f docker-compose.prod.yml restart nginx
+    run_with_timeout "$DOCKER_RESTART_TIMEOUT_SECONDS" "docker compose restart nginx" dc restart nginx
 
     print_step "Status dos containers:"
-    docker compose --env-file .env.prod -f docker-compose.prod.yml ps
+    run_with_timeout "$DOCKER_STATUS_TIMEOUT_SECONDS" "docker compose ps" dc ps
 }
 
 check_health() {
     print_step "Verificando saude dos servicos..."
 
     # Importante:
-    # - O backend nao expõe 8000 no host (apenas na rede interna do Docker).
+    # - O backend nao expoe 8000 no host (apenas na rede interna do Docker).
     # - O nginx pode responder 444 em :80 quando o Host nao bate (default_server).
     # Para evitar falso-negativos, validamos via HTTPS do nginx com SNI/Host corretos.
 
     local curl_opts
     curl_opts=(-sS -o /dev/null --connect-timeout 2 --max-time 5)
 
-    # Use --resolve para testar o origin local (bypass Cloudflare/DNS) e garantir SNI.
     local resolve_opt=()
     if command -v curl >/dev/null 2>&1; then
         resolve_opt=(--resolve "${DOMAIN}:443:127.0.0.1")
@@ -124,14 +178,14 @@ check_health() {
 
 show_logs() {
     print_step "Ultimas linhas dos logs:"
-    docker compose --env-file .env.prod -f docker-compose.prod.yml logs --tail=20
+    run_with_timeout "$DOCKER_STATUS_TIMEOUT_SECONDS" "docker compose logs --tail=20" dc logs --tail=20
 }
 
 generate_ssl() {
     print_step "Gerando certificado SSL com Let's Encrypt..."
 
     # Verificar se DNS esta propagado
-    RESOLVED_IP=$(dig +short $DOMAIN)
+    RESOLVED_IP=$(dig +short "$DOMAIN")
 
     if [ -z "$SERVER_IP" ] || [ "$RESOLVED_IP" != "$SERVER_IP" ]; then
         print_warning "DNS ainda nao propagado. $DOMAIN aponta para: $RESOLVED_IP"
@@ -140,29 +194,27 @@ generate_ssl() {
         return 1
     fi
 
-    # Parar nginx para liberar porta 80
-    docker compose --env-file .env.prod -f docker-compose.prod.yml stop nginx
+    run_with_timeout "$DOCKER_RESTART_TIMEOUT_SECONDS" "Parando nginx para liberar porta 80" dc stop nginx
 
-    # Gerar certificado
-    docker compose --env-file .env.prod -f docker-compose.prod.yml run --rm certbot certonly \
+    run_with_timeout "$CERTBOT_TIMEOUT_SECONDS" "Gerando certificado SSL" \
+        dc run --rm certbot certonly \
         --standalone \
-        --email admin@$DOMAIN \
+        --email "admin@$DOMAIN" \
         --agree-tos \
         --no-eff-email \
-        -d $DOMAIN \
-        -d www.$DOMAIN \
-        -d api.$DOMAIN
+        -d "$DOMAIN" \
+        -d "www.$DOMAIN" \
+        -d "api.$DOMAIN"
 
-    # Reiniciar nginx
-    docker compose --env-file .env.prod -f docker-compose.prod.yml up -d nginx
+    run_with_timeout "$DOCKER_RESTART_TIMEOUT_SECONDS" "Subindo nginx" dc up -d nginx
 
     print_step "Certificado SSL gerado com sucesso!"
 }
 
 renew_ssl() {
     print_step "Renovando certificado SSL..."
-    docker compose --env-file .env.prod -f docker-compose.prod.yml run --rm certbot renew
-    docker compose --env-file .env.prod -f docker-compose.prod.yml exec nginx nginx -s reload
+    run_with_timeout "$CERTBOT_TIMEOUT_SECONDS" "Certbot renew" dc run --rm certbot renew
+    run_with_timeout "$DOCKER_RESTART_TIMEOUT_SECONDS" "Recarregando nginx" dc exec nginx nginx -s reload
     print_step "Certificado renovado!"
 }
 
@@ -182,6 +234,38 @@ show_help() {
     echo ""
 }
 
+run_deploy() {
+    local command="$1"
+    trap 'collect_diagnostics' ERR
+    update_code "$command"
+    build_and_deploy
+    check_health
+    trap - ERR
+}
+
+run_build() {
+    trap 'collect_diagnostics' ERR
+    build_and_deploy
+    check_health
+    trap - ERR
+}
+
+run_restart() {
+    trap 'collect_diagnostics' ERR
+    cd "$PROJECT_DIR"
+    run_with_timeout "$DOCKER_RESTART_TIMEOUT_SECONDS" "docker compose restart" dc restart
+    check_health
+    trap - ERR
+}
+
+run_stop() {
+    trap 'collect_diagnostics' ERR
+    cd "$PROJECT_DIR"
+    run_with_timeout "$DOCKER_DOWN_TIMEOUT_SECONDS" "docker compose down --remove-orphans" dc down --remove-orphans
+    print_step "Containers parados"
+    trap - ERR
+}
+
 # =============================================================================
 # Main
 # =============================================================================
@@ -196,21 +280,20 @@ main() {
 
     COMMAND=${1:-deploy}
 
-    case $COMMAND in
+    case "$COMMAND" in
         deploy)
-            update_code "$COMMAND"
-            build_and_deploy
-            check_health
+            run_deploy "$COMMAND"
             ;;
         build)
-            build_and_deploy
-            check_health
+            run_build
             ;;
         logs)
-            docker compose --env-file .env.prod -f docker-compose.prod.yml logs -f
+            cd "$PROJECT_DIR"
+            dc logs -f
             ;;
         status)
-            docker compose --env-file .env.prod -f docker-compose.prod.yml ps
+            cd "$PROJECT_DIR"
+            run_with_timeout "$DOCKER_STATUS_TIMEOUT_SECONDS" "docker compose ps" dc ps
             check_health
             ;;
         ssl)
@@ -220,12 +303,10 @@ main() {
             renew_ssl
             ;;
         restart)
-            docker compose --env-file .env.prod -f docker-compose.prod.yml restart
-            check_health
+            run_restart
             ;;
         stop)
-            docker compose --env-file .env.prod -f docker-compose.prod.yml down --remove-orphans
-            print_step "Containers parados"
+            run_stop
             ;;
         help|--help|-h)
             show_help
@@ -241,7 +322,7 @@ main() {
     echo -e "${GREEN}Concluido!${NC}"
 }
 
-# Verificar e mudar para diretório do projeto
+# Verificar e mudar para diretorio do projeto
 if [ -d "$PROJECT_DIR" ]; then
     cd "$PROJECT_DIR"
 else
@@ -249,8 +330,8 @@ else
     if [ -d "$PROJECT_DIR_FALLBACK" ]; then
         cd "$PROJECT_DIR_FALLBACK"
     else
-        print_error "Diretório do projeto não encontrado: $PROJECT_DIR"
-        print_error "Certifique-se de estar no diretório correto ou configure PROJECT_DIR"
+        print_error "Diretorio do projeto nao encontrado: $PROJECT_DIR"
+        print_error "Certifique-se de estar no diretorio correto ou configure PROJECT_DIR"
         exit 1
     fi
 fi

@@ -29,6 +29,7 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: [self-hosted, prod-server]
+    timeout-minutes: 25
     environment: production
     steps:
       - name: Definir diretorio da aplicacao
@@ -62,7 +63,11 @@ jobs:
         run: |
           set -euo pipefail
           cd "$APP_DIR"
-          ./deploy.sh deploy
+          if command -v timeout >/dev/null 2>&1; then
+            timeout --foreground 20m ./deploy.sh deploy
+          else
+            ./deploy.sh deploy
+          fi
 
       - name: Consultar status remoto
         if: github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'status')
@@ -70,7 +75,11 @@ jobs:
         run: |
           set -euo pipefail
           cd "$APP_DIR"
-          ./deploy.sh status
+          if command -v timeout >/dev/null 2>&1; then
+            timeout --foreground 3m ./deploy.sh status
+          else
+            ./deploy.sh status
+          fi
 
       - name: Validar healthz e readyz
         shell: bash
@@ -95,7 +104,7 @@ jobs:
 
             echo "Validando ${label}: ${url}"
             for i in $(seq 1 "$attempts"); do
-              code=$(curl -s -o /dev/null -w "%{http_code}" --resolve "${host}:443:127.0.0.1" "$url" || echo "000")
+              code=$(curl -sS -o /dev/null -w "%{http_code}" --connect-timeout 3 --max-time 8 --resolve "${host}:443:127.0.0.1" "$url" || echo "000")
               if [ "$code" = "200" ]; then
                 echo "${label} OK (200)"
                 return 0
@@ -118,3 +127,14 @@ jobs:
           set -euo pipefail
           cd "$APP_DIR"
           docker compose --env-file .env.prod -f docker-compose.prod.yml ps
+
+      - name: Coletar diagnostico em falha
+        if: failure()
+        shell: bash
+        run: |
+          set +e
+          cd "$APP_DIR"
+          echo "== docker compose ps =="
+          docker compose --env-file .env.prod -f docker-compose.prod.yml ps
+          echo "== ultimos logs (backend/frontend/nginx) =="
+          docker compose --env-file .env.prod -f docker-compose.prod.yml logs --tail=120 backend frontend nginx
