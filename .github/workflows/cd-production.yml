@@ -80,17 +80,22 @@ jobs:
           if [ -z "${DOMAIN:-}" ]; then
             DOMAIN="gigflowagenda.com.br"
           fi
+          API_DOMAIN="${{ secrets.PROD_API_DOMAIN }}"
+          if [ -z "${API_DOMAIN:-}" ]; then
+            API_DOMAIN="api.${DOMAIN}"
+          fi
 
           check_url () {
             local url="$1"
             local label="$2"
+            local host="$3"
             local attempts=10
             local wait_seconds=5
             local code="000"
 
             echo "Validando ${label}: ${url}"
             for i in $(seq 1 "$attempts"); do
-              code=$(curl -s -o /dev/null -w "%{http_code}" --resolve "${DOMAIN}:443:127.0.0.1" "$url" || echo "000")
+              code=$(curl -s -o /dev/null -w "%{http_code}" --resolve "${host}:443:127.0.0.1" "$url" || echo "000")
               if [ "$code" = "200" ]; then
                 echo "${label} OK (200)"
                 return 0
@@ -103,8 +108,9 @@ jobs:
             return 1
           }
 
-          check_url "https://${DOMAIN}/healthz/" "healthz"
-          check_url "https://${DOMAIN}/api/readyz/" "readyz"
+          check_url "https://${DOMAIN}/healthz/" "healthz" "${DOMAIN}"
+          check_url "https://${DOMAIN}/api/readyz/" "readyz-main-domain" "${DOMAIN}"
+          check_url "https://${API_DOMAIN}/api/readyz/" "readyz-api-domain" "${API_DOMAIN}"
 
       - name: Verificacao final da stack
         shell: bash
