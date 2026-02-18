@@ -16,6 +16,7 @@ on:
           - deploy
           - status
           - seed-test-data
+          - load-test
 
 permissions:
   contents: read
@@ -30,7 +31,7 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: [self-hosted, prod-server]
-    timeout-minutes: 25
+    timeout-minutes: 60
     environment: production
     steps:
       - name: Definir diretorio da aplicacao
@@ -78,6 +79,78 @@ jobs:
           cd "$APP_DIR"
           docker compose --env-file .env.prod -f docker-compose.prod.yml exec -T backend \
             python manage.py seed_test_data
+
+      - name: Executar load test (interno - bypass nginx)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'load-test'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$APP_DIR"
+
+          # Instalar locust no ambiente do runner (idempotente)
+          python3 -m pip install --quiet --user locust==2.39.1
+
+          # Obter IP interno do container backend (rede Docker interna, sem passar pelo nginx)
+          BACKEND_IP=$(docker inspect agenda_musicos-backend-1 \
+            --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+          echo "Backend IP interno: $BACKEND_IP"
+          BACKEND_URL="http://${BACKEND_IP}:8000"
+
+          # Verificar conectividade direta com o backend
+          curl -sf --max-time 5 "${BACKEND_URL}/healthz/" | python3 -m json.tool || \
+            { echo "Backend nao acessivel em ${BACKEND_URL}"; exit 1; }
+
+          RESULT_DIR="$APP_DIR/load_tests/results"
+          mkdir -p "$RESULT_DIR"
+          STAMP=$(date +%Y%m%d-%H%M%S)
+
+          run_phase() {
+            local label="$1" users="$2" spawn_rate="$3" runtime="$4"
+            local csv="${RESULT_DIR}/${STAMP}-${label}"
+            echo ""
+            echo "=== [load-test] fase=${label} users=${users} runtime=${runtime} ==="
+            python3 -m locust -f load_tests/locustfile.py \
+              --headless \
+              --users "$users" \
+              --spawn-rate "$spawn_rate" \
+              --run-time "$runtime" \
+              --print-stats \
+              --csv "$csv" \
+              --host "$BACKEND_URL"
+            echo "[load-test] aguardando 10s antes da proxima fase..."
+            sleep 10
+          }
+
+          # Fase 1: ramp-up ate 100 (baseline)
+          run_phase "f1-ramp-100"   100  1   3m
+          # Fase 2: 100 constante (steady state)
+          run_phase "f2-const-100"  100  2   5m
+          # Fase 3: ramp-up ate 300
+          run_phase "f3-ramp-300"   300  3   3m
+          # Fase 4: 300 constante
+          run_phase "f4-const-300"  300  5   5m
+          # Fase 5: breakpoint incremental
+          for users in 500 700 900; do
+            run_phase "f5-break-${users}" "$users" 10 3m || {
+              echo "[load-test] BREAKPOINT atingido em ${users} usuarios."; break
+            }
+          done
+
+          echo ""
+          echo "=== RESUMO DO LOAD TEST ==="
+          for csv in "${RESULT_DIR}/${STAMP}"*_stats.csv; do
+            echo "--- $(basename $csv) ---"
+            python3 - "$csv" <<'PY'
+          import csv, sys
+          rows = list(csv.DictReader(open(sys.argv[1])))
+          agg = next((r for r in rows if r["Name"] == "Aggregated"), None)
+          if agg:
+              print(f"  Requests: {agg['Request Count']} | Failures: {agg['Failure Count']} ({float(agg['Failure Count'])/max(int(agg['Request Count']),1)*100:.1f}%)")
+              print(f"  Avg: {float(agg['Average Response Time']):.0f}ms | P50: {agg['50%']}ms | P95: {agg['95%']}ms | P99: {agg['99%']}ms")
+              print(f"  RPS: {float(agg['Requests/s']):.1f}")
+          PY
+          done
+          echo "==========================="
 
       - name: Consultar status remoto
         if: github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'status')
