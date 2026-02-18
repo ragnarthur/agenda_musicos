@@ -20,7 +20,7 @@ services:
         max-file: "3"
 
   pgbouncer:
-    image: edoburu/pgbouncer:1.25.1
+    image: edoburu/pgbouncer:v1.25.1-p0
     environment:
       DB_HOST: db
       DB_PORT: "5432"
