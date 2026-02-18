@@ -89,8 +89,8 @@ jobs:
 
           # Verificar conectividade direta com o backend via Docker exec (sem sair da rede interna)
           docker compose --env-file .env.prod -f docker-compose.prod.yml \
-            exec -T backend curl -sf --max-time 5 http://localhost:8000/healthz/ \
-            && echo "Backend acessivel via exec OK" \
+            exec -T backend python -c \
+            "import urllib.request, sys; r=urllib.request.urlopen('http://localhost:8000/healthz/',timeout=5); print('Backend acessivel via exec OK, status:', r.status)" \
             || { echo "Backend nao respondeu ao healthz"; exit 1; }
 
           RESULT_DIR="$APP_DIR/load_tests/results"
