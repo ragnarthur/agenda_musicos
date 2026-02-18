@@ -80,43 +80,43 @@ jobs:
           docker compose --env-file .env.prod -f docker-compose.prod.yml exec -T backend \
             python manage.py seed_test_data
 
-      - name: Executar load test (interno - bypass nginx)
+      - name: Executar load test (interno - bypass nginx via Docker)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'load-test'
         shell: bash
         run: |
           set -euo pipefail
           cd "$APP_DIR"
 
-          # Instalar locust no ambiente do runner (idempotente)
-          python3 -m pip install --quiet --user locust==2.39.1
-
-          # Obter IP interno do container backend (rede Docker interna, sem passar pelo nginx)
-          BACKEND_IP=$(docker inspect agenda_musicos-backend-1 \
-            --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
-          echo "Backend IP interno: $BACKEND_IP"
-          BACKEND_URL="http://${BACKEND_IP}:8000"
-
-          # Verificar conectividade direta com o backend
-          curl -sf --max-time 5 "${BACKEND_URL}/healthz/" | python3 -m json.tool || \
-            { echo "Backend nao acessivel em ${BACKEND_URL}"; exit 1; }
+          # Verificar conectividade direta com o backend via Docker exec (sem sair da rede interna)
+          docker compose --env-file .env.prod -f docker-compose.prod.yml \
+            exec -T backend curl -sf --max-time 5 http://localhost:8000/healthz/ \
+            && echo "Backend acessivel via exec OK" \
+            || { echo "Backend nao respondeu ao healthz"; exit 1; }
 
           RESULT_DIR="$APP_DIR/load_tests/results"
           mkdir -p "$RESULT_DIR"
           STAMP=$(date +%Y%m%d-%H%M%S)
 
+          # Usar imagem oficial locustio/locust na rede interna Docker
+          # backend:8000 resolve pelo DNS interno do Docker Compose
           run_phase() {
             local label="$1" users="$2" spawn_rate="$3" runtime="$4"
-            local csv="${RESULT_DIR}/${STAMP}-${label}"
+            local csv_prefix="load_tests/results/${STAMP}-${label}"
             echo ""
             echo "=== [load-test] fase=${label} users=${users} runtime=${runtime} ==="
-            python3 -m locust -f load_tests/locustfile.py \
+            docker run --rm \
+              --network agenda_musicos_internal \
+              -v "$APP_DIR:/app" \
+              -w /app \
+              locustio/locust:2.39.1 \
+              -f load_tests/locustfile.py \
               --headless \
               --users "$users" \
               --spawn-rate "$spawn_rate" \
               --run-time "$runtime" \
               --print-stats \
-              --csv "$csv" \
-              --host "$BACKEND_URL"
+              --csv "$csv_prefix" \
+              --host http://backend:8000
             echo "[load-test] aguardando 10s antes da proxima fase..."
             sleep 10
           }
@@ -139,13 +139,17 @@ jobs:
           echo ""
           echo "=== RESUMO DO LOAD TEST ==="
           for csv in "${RESULT_DIR}/${STAMP}"*_stats.csv; do
-            echo "--- $(basename $csv) ---"
+            [ -f "$csv" ] || continue
+            echo "--- $(basename "$csv") ---"
             python3 - "$csv" <<'PY'
           import csv, sys
           rows = list(csv.DictReader(open(sys.argv[1])))
           agg = next((r for r in rows if r["Name"] == "Aggregated"), None)
           if agg:
-              print(f"  Requests: {agg['Request Count']} | Failures: {agg['Failure Count']} ({float(agg['Failure Count'])/max(int(agg['Request Count']),1)*100:.1f}%)")
+              total = int(agg["Request Count"])
+              fails = int(agg["Failure Count"])
+              pct   = fails / max(total, 1) * 100
+              print(f"  Requests: {total} | Failures: {fails} ({pct:.1f}%)")
               print(f"  Avg: {float(agg['Average Response Time']):.0f}ms | P50: {agg['50%']}ms | P95: {agg['95%']}ms | P99: {agg['99%']}ms")
               print(f"  RPS: {float(agg['Requests/s']):.1f}")
           PY
