@@ -109,6 +109,7 @@ jobs:
               --network agenda_musicos_internal \
               -v "$APP_DIR:/app" \
               -w /app \
+              -e LOCUST_HOST=http://backend:8000 \
               locustio/locust:2.39.1 \
               -f load_tests/locustfile.py \
               --headless \
