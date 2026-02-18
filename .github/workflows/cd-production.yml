@@ -99,28 +99,22 @@ jobs:
             exec -T backend python manage.py seed_test_data
           echo "Usuario de teste OK"
 
-          # Debug: testar login diretamente antes do Locust
-          echo "Testando login livia_vocal no backend..."
-          docker compose --env-file .env.prod -f docker-compose.prod.yml \
-            exec -T backend python -c "
-import json, urllib.request, urllib.error
-url = 'http://localhost:8000/api/token/'
-data = json.dumps({'username': 'livia_vocal', 'password': 'livia_vocal2026@'}).encode()
-req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
-try:
-    r = urllib.request.urlopen(req)
-    print('[debug-login] SUCCESS HTTP', r.status)
-except urllib.error.HTTPError as e:
-    print('[debug-login] FAILED HTTP', e.code, e.read()[:400])
-" || true
+          # Resolver IP do backend na rede interna para injetar Host header correto
+          # (Django ALLOWED_HOSTS rejeita "backend:8000"; usar o dominio real com --add-host)
+          BACKEND_CONTAINER=$(docker compose --env-file .env.prod -f docker-compose.prod.yml ps -q backend)
+          BACKEND_IP=$(docker inspect "$BACKEND_CONTAINER" --format '{{(index .NetworkSettings.Networks "agenda_musicos_internal").IPAddress}}')
+          DOMAIN="${{ secrets.PROD_DOMAIN }}"
+          if [ -z "${DOMAIN:-}" ]; then DOMAIN="gigflowagenda.com.br"; fi
+          echo "[load-test] backend IP=${BACKEND_IP} domain=${DOMAIN}"
 
           RESULT_DIR="$APP_DIR/load_tests/results"
           mkdir -p "$RESULT_DIR"
           chmod 777 "$RESULT_DIR"
           STAMP=$(date +%Y%m%d-%H%M%S)
 
-          # Usar imagem oficial locustio/locust na rede interna Docker
-          # backend:8000 resolve pelo DNS interno do Docker Compose
+          # Locust via Docker na rede interna:
+          # --add-host mapeia o dominio de producao para o IP interno do backend
+          # Evita nginx (sem rate-limit) e usa Host header aceito pelo Django ALLOWED_HOSTS
           run_phase() {
             local label="$1" users="$2" spawn_rate="$3" runtime="$4"
             local csv_prefix="load_tests/results/${STAMP}-${label}"
@@ -128,9 +122,10 @@ except urllib.error.HTTPError as e:
             echo "=== [load-test] fase=${label} users=${users} runtime=${runtime} ==="
             docker run --rm \
               --network agenda_musicos_internal \
+              --add-host "${DOMAIN}:${BACKEND_IP}" \
               -v "$APP_DIR:/app" \
               -w /app \
-              -e LOCUST_HOST=http://backend:8000 \
+              -e "LOCUST_HOST=http://${DOMAIN}:8000" \
               locustio/locust:2.39.1 \
               -f load_tests/locustfile.py \
               --headless \
@@ -139,7 +134,7 @@ except urllib.error.HTTPError as e:
               --run-time "$runtime" \
               --print-stats \
               --csv "$csv_prefix" \
-              --host http://backend:8000
+              --host "http://${DOMAIN}:8000"
             echo "[load-test] aguardando 10s antes da proxima fase..."
             sleep 10
           }
