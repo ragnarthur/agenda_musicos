@@ -356,8 +356,9 @@ agenda-musicos/
 │   ├── vitest.config.ts            # 🆕 Config Vitest
 │   └── package.json
 ├── docs/                            # Documentação
-│   ├── API_DOCUMENTATION.md        # 🆕 Guia Swagger/OpenAPI
-│   ├── authentication-flows.md
+│   ├── ARCHITECTURE.md              # Arquitetura do sistema
+│   ├── authentication-flows.md      # Fluxos de autenticação
+│   ├── CICD_PRODUCAO.md             # CI/CD e deploy
 │   └── ...
 ├── nginx.conf                       # Configuração Nginx
 ├── supervisor.conf                  # Configuração Supervisor
@@ -439,16 +440,14 @@ npm run test:ci
 - `src/test/example.test.tsx` - Exemplos de testes
 - Comandos: `test`, `test:ci`, `test:coverage`
 
-## 📚 Documentação Adicional
+## 📚 Documentação
 
-- `docs/API_DOCUMENTATION.md` - 🆕 Guia completo Swagger/OpenAPI
-- `docs/GUIA_COMPLETO.md` - Manual completo do usuário
-- `docs/DEPLOY.md` - Guia detalhado de deploy manual
-- `docs/PREPARACAO_PRODUCAO.md` - Checklist de produção
-- `docs/MELHORIAS_PROFISSIONAIS.md` - Melhorias implementadas
-- `docs/CONFIGURACAO_GOOGLE_OAUTH.md` - Setup OAuth Google
-- `agenda/views/REFACTORING_STATUS.md` - Status da refatoração
-- `agenda/serializers/REFACTORING_PLAN.md` - Plano de refatoração
+- `docs/ARCHITECTURE.md` - Arquitetura do sistema (componentes, modelo de domínio, fluxos, integrações)
+- `docs/authentication-flows.md` - Fluxos de autenticação (JWT, OAuth, sessão)
+- `docs/CICD_PRODUCAO.md` - Pipeline CI/CD e deploy em produção
+- `docs/configuracao-google-oauth.md` - Setup Google OAuth no servidor
+- `docs/troubleshooting-telegram-webhook.md` - Correção webhook Telegram
+- `deploy/automation/README.md` - Automações de backup e monitoramento
 
 ## 🐛 Troubleshooting
 

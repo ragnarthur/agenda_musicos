@@ -1,28 +1,40 @@
-# Agenda Músicos - Frontend
+# Agenda Musicos - Frontend
 
-Interface moderna e elegante para o sistema de gerenciamento de agenda de músicos.
+Interface moderna para o sistema GigFlow de gerenciamento de agenda para musicos.
 
-## 🚀 Instalação
+## Instalacao
 
 ```bash
 npm install
 npm run dev
 ```
 
-## 🔗 Backend
+## Backend
 
-Certifique-se de que o backend Django está rodando em http://localhost:8000
+Certifique-se de que o backend Django esta rodando em http://localhost:8000
 
-## 👥 Usuários de Teste
+## Tecnologias
 
-- **sara / sara2026@** - Vocalista (Membro)
-- **arthur / arthur2026@** - Guitarrista (Membro)
-- **roberto / roberto2026@** - Baterista (Membro)
+- React 19 + TypeScript 5.9
+- Vite 7
+- Tailwind CSS 3
+- React Router v6
+- SWR (data fetching)
+- Framer Motion (animacoes)
+- React Hook Form
+- Lucide (icones)
+- PWA (vite-plugin-pwa)
 
-## 🎨 Tecnologias
+## Scripts
 
-- React 18 + TypeScript
-- Vite
-- TailwindCSS
-- React Router
-- Axios
+```bash
+npm run dev          # Desenvolvimento (hot reload)
+npm run build        # Build de producao
+npm run preview      # Preview do build
+npm run lint         # ESLint
+npm run lint:fix     # ESLint com auto-fix
+npm run format       # Prettier
+npm run test         # Testes (watch)
+npm run test:ci      # Testes (CI)
+npm run test:coverage # Cobertura
+```
