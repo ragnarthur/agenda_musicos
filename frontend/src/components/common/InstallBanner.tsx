@@ -1,10 +1,11 @@
 // components/common/InstallBanner.tsx
 // Banner para incentivar instalação do PWA
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, Download, Share } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInstallPrompt } from '../../hooks/useInstallPrompt';
 import { haptics } from '../../hooks/useHaptics';
+import { trackEvent } from '../../utils/analytics';
 
 const VISIT_COUNT_KEY = 'gigflow_visit_count';
 const MIN_VISITS_TO_SHOW = 2;
@@ -13,6 +14,7 @@ export default function InstallBanner() {
   const { canInstall, isIOS, promptInstall, dismissPrompt } = useInstallPrompt();
   const [isVisible, setIsVisible] = useState(false);
   const [showIOSInstructions, setShowIOSInstructions] = useState(false);
+  const hasTrackedBannerViewRef = useRef(false);
 
   // Só mostra após algumas visitas
   useEffect(() => {
@@ -26,11 +28,20 @@ export default function InstallBanner() {
     }
   }, [canInstall]);
 
+  useEffect(() => {
+    if (isVisible && !hasTrackedBannerViewRef.current) {
+      hasTrackedBannerViewRef.current = true;
+      trackEvent('pwa_install_banner_shown', { ios: isIOS });
+    }
+  }, [isVisible, isIOS]);
+
   const handleInstall = async () => {
     haptics.medium();
+    trackEvent('pwa_install_click', { ios: isIOS });
 
     if (isIOS) {
       setShowIOSInstructions(true);
+      trackEvent('pwa_install_ios_instructions_opened');
     } else {
       const success = await promptInstall();
       if (success) {
@@ -42,6 +53,7 @@ export default function InstallBanner() {
 
   const handleDismiss = () => {
     haptics.light();
+    trackEvent('pwa_install_banner_dismissed');
     dismissPrompt();
     setIsVisible(false);
   };

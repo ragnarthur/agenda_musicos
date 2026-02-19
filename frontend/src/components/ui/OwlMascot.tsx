@@ -1,6 +1,7 @@
 import React, { memo, useMemo, useState, useEffect } from 'react';
 import Lottie from 'lottie-react';
 import { logger } from '../../utils/logger';
+import owlAnimationUrl from '../../assets/mascot/owl.json?url';
 
 type OwlMascotProps = {
   className?: string;
@@ -17,10 +18,14 @@ const OwlMascot: React.FC<OwlMascotProps> = memo(({ className, autoplay = true }
 
     const loadAnimation = async () => {
       try {
-        // Use dynamic import com Vite para code splitting
-        const module = await import('../../assets/mascot/owl.json');
+        // Carrega o JSON como asset estatico para evitar inflar chunk JS.
+        const response = await fetch(owlAnimationUrl, { cache: 'force-cache' });
+        if (!response.ok) {
+          throw new Error(`Failed to fetch owl animation: ${response.status}`);
+        }
+        const json = (await response.json()) as Record<string, unknown>;
         if (isMounted) {
-          setAnimationData(module.default as Record<string, unknown>);
+          setAnimationData(json);
           setLoaded(true);
         }
       } catch (error) {

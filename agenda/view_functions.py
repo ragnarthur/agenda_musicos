@@ -17,6 +17,7 @@ from django.db import connection
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
+from django.utils.dateparse import parse_datetime
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
@@ -54,6 +55,7 @@ from .models import (
     Organization,
     QuoteProposal,
     QuoteRequest,
+    PwaAnalyticsEvent,
 )
 from .serializers import (
     BookingEventSerializer,
@@ -73,6 +75,56 @@ from .serializers import (
 from .throttles import PublicRateThrottle
 
 logger = logging.getLogger(__name__)
+
+PWA_ANALYTICS_ALLOWED_EVENTS = {
+    "pwa_install_eligible",
+    "pwa_install_banner_shown",
+    "pwa_install_click",
+    "pwa_install_prompt_accepted",
+    "pwa_install_prompt_dismissed",
+    "pwa_install_banner_dismissed",
+    "pwa_install_ios_instructions_opened",
+    "pwa_installed",
+    "pwa_update_prompt_shown",
+    "pwa_update_apply_click",
+    "pwa_update_apply_success",
+    "pwa_update_apply_failed",
+    "pwa_update_prompt_dismissed",
+    "pwa_offline_ready",
+}
+
+
+def _get_client_ip(request) -> str | None:
+    forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR")
+
+
+def _sanitize_pwa_metadata(raw):
+    if not isinstance(raw, dict):
+        return {}
+
+    sanitized = {}
+    for key, value in list(raw.items())[:20]:
+        if not isinstance(key, str):
+            continue
+
+        safe_key = key.strip()[:64]
+        if not safe_key:
+            continue
+
+        if isinstance(value, (str, int, float, bool)) or value is None:
+            safe_value = value
+        else:
+            safe_value = str(value)
+
+        if isinstance(safe_value, str):
+            safe_value = safe_value[:300]
+
+        sanitized[safe_key] = safe_value
+
+    return sanitized
 
 
 # =============================================================================
@@ -1481,3 +1533,39 @@ def get_musician_contact(request, musician_id):
             "instagram": musician.instagram,
         }
     )
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+@throttle_classes([PublicRateThrottle])
+def collect_pwa_analytics(request):
+    """
+    POST /api/analytics/pwa/
+    Persiste eventos de funil PWA enviados pelo frontend.
+    """
+    event_name = str(request.data.get("event", "")).strip()
+    if event_name not in PWA_ANALYTICS_ALLOWED_EVENTS:
+        return Response({"detail": "invalid_event"}, status=status.HTTP_400_BAD_REQUEST)
+
+    metadata = _sanitize_pwa_metadata(request.data.get("data"))
+    path = str(request.data.get("path", "")).strip()[:255]
+    release_label = str(request.data.get("release", "")).strip()[:80]
+    occurred_at_raw = request.data.get("ts")
+    occurred_at = parse_datetime(occurred_at_raw) if isinstance(occurred_at_raw, str) else None
+    if occurred_at is None:
+        occurred_at = timezone.now()
+
+    user = request.user if getattr(request.user, "is_authenticated", False) else None
+    PwaAnalyticsEvent.objects.create(
+        user=user,
+        event_name=event_name,
+        metadata=metadata,
+        path=path,
+        release_label=release_label,
+        occurred_at=occurred_at,
+        ip_address=_get_client_ip(request),
+        user_agent=request.META.get("HTTP_USER_AGENT", "")[:500],
+        is_authenticated=bool(user),
+    )
+
+    return Response({"status": "accepted"}, status=status.HTTP_202_ACCEPTED)

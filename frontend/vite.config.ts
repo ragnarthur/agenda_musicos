@@ -78,16 +78,26 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/api/, /^\/gf-secure-admin\//],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/.*\/api\//i,
+            // Cache apenas de endpoints publicos para evitar persistir dados autenticados no SW.
+            urlPattern:
+              /^https?:\/\/[^/]+\/api\/(musicians\/public-by-city\/|musicians\/public\/\d+\/|musicians\/\d+\/public_calendar\/|musicians\/all\/|musicians\/genres\/|organizations\/sponsors\/)/i,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'api-cache',
+              cacheName: 'api-public-cache',
               expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60, // 1 hora
+                maxEntries: 120,
+                maxAgeSeconds: 60 * 5, // 5 minutos
               },
-              networkTimeoutSeconds: 10,
+              networkTimeoutSeconds: 6,
+              cacheableResponse: {
+                statuses: [200],
+              },
             },
+          },
+          {
+            // Demais GETs de /api ficam sem cache no SW (seguranca/consistencia de sessao).
+            urlPattern: /^https?:\/\/[^/]+\/api\//i,
+            handler: 'NetworkOnly',
           },
           {
             // Exclui ícones PWA e splash screens (já gerenciados pelo precache com revision hashes)

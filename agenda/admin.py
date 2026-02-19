@@ -1,7 +1,7 @@
 # agenda/admin.py
 from django.contrib import admin
 
-from .models import Availability, Event, Instrument, LeaderAvailability, Musician
+from .models import Availability, Event, Instrument, LeaderAvailability, Musician, PwaAnalyticsEvent
 
 
 @admin.register(Musician)
@@ -146,3 +146,30 @@ class InstrumentAdmin(admin.ModelAdmin):
         self.message_user(request, f"{count} instrumento(s) rejeitado(s).")
 
     reject_instruments.short_description = "Rejeitar instrumentos selecionados"
+
+
+@admin.register(PwaAnalyticsEvent)
+class PwaAnalyticsEventAdmin(admin.ModelAdmin):
+    list_display = [
+        "event_name",
+        "path",
+        "release_label",
+        "is_authenticated",
+        "user",
+        "occurred_at",
+    ]
+    list_filter = ["event_name", "is_authenticated", "release_label", "occurred_at"]
+    search_fields = ["event_name", "path", "release_label", "user__username"]
+    readonly_fields = [
+        "event_name",
+        "metadata",
+        "path",
+        "release_label",
+        "is_authenticated",
+        "user",
+        "occurred_at",
+        "ip_address",
+        "user_agent",
+        "created_at",
+    ]
+    ordering = ["-occurred_at"]

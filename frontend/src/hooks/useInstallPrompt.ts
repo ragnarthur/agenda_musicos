@@ -1,6 +1,7 @@
 // hooks/useInstallPrompt.ts
 // Hook para gerenciar instalação do PWA (Add to Home Screen)
 import { useState, useEffect, useCallback } from 'react';
+import { trackEvent } from '../utils/analytics';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -65,18 +66,23 @@ export function useInstallPrompt(): InstallPromptState {
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
+      trackEvent('pwa_install_eligible');
+    };
+
+    const handleAppInstalled = () => {
+      setIsInstalled(true);
+      setDeferredPrompt(null);
+      trackEvent('pwa_installed');
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
     // Detecta quando o app é instalado
-    window.addEventListener('appinstalled', () => {
-      setIsInstalled(true);
-      setDeferredPrompt(null);
-    });
+    window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
@@ -90,8 +96,11 @@ export function useInstallPrompt(): InstallPromptState {
 
       if (outcome === 'accepted') {
         setIsInstalled(true);
+        trackEvent('pwa_install_prompt_accepted');
         return true;
       }
+
+      trackEvent('pwa_install_prompt_dismissed');
     } catch (error) {
       console.error('Erro ao mostrar prompt de instalação:', error);
     }
@@ -107,8 +116,8 @@ export function useInstallPrompt(): InstallPromptState {
   }, []);
 
   return {
-    // Mostra botão se: não instalado, não dismissado, e (tem prompt OU é mobile)
-    canInstall: !isInstalled && !wasDismissed && (!!deferredPrompt || isMobile),
+    // Mostra botão se: não instalado, não dismissado e (iOS ou beforeinstallprompt disponível)
+    canInstall: !isInstalled && !wasDismissed && (isIOS || !!deferredPrompt),
     isInstalled,
     isIOS,
     isMobile,

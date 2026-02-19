@@ -4,6 +4,7 @@ import { RefreshCw, X } from 'lucide-react';
 import { registerSW } from 'virtual:pwa-register';
 import toast, { showToast } from '../../utils/toast';
 import { haptics } from '../../hooks/useHaptics';
+import { trackEvent } from '../../utils/analytics';
 
 type UpdateSW = (reloadPage?: boolean) => Promise<void>;
 
@@ -19,6 +20,7 @@ export default function PwaUpdatePrompt() {
   const updateSWRef = useRef<UpdateSW | null>(null);
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
   const lastUpdateCheckRef = useRef(0);
+  const hasTrackedPromptShownRef = useRef(false);
 
   const checkForUpdates = useCallback(() => {
     const registration = registrationRef.current;
@@ -42,6 +44,7 @@ export default function PwaUpdatePrompt() {
       },
       onOfflineReady() {
         showToast.success('App pronto para uso offline.');
+        trackEvent('pwa_offline_ready');
       },
       onRegisteredSW(_swUrl: string, registration?: ServiceWorkerRegistration) {
         if (!registration) return;
@@ -74,9 +77,21 @@ export default function PwaUpdatePrompt() {
     };
   }, [checkForUpdates]);
 
+  useEffect(() => {
+    if (needRefresh && !hasTrackedPromptShownRef.current) {
+      hasTrackedPromptShownRef.current = true;
+      trackEvent('pwa_update_prompt_shown');
+    }
+
+    if (!needRefresh) {
+      hasTrackedPromptShownRef.current = false;
+    }
+  }, [needRefresh]);
+
   const handleUpdate = async () => {
     if (!updateSWRef.current || isUpdating) return;
     haptics.medium();
+    trackEvent('pwa_update_apply_click');
     setIsUpdating(true);
     setNeedRefresh(false);
     const loadingToastId = showToast.loading('Atualizando...');
@@ -87,9 +102,11 @@ export default function PwaUpdatePrompt() {
     try {
       // true => recarrega a pagina apos ativar o novo SW
       await updateSWRef.current(true);
+      trackEvent('pwa_update_apply_success');
     } catch (err) {
       console.error('[pwa] update failed', err);
       showToast.error('Nao foi possivel atualizar agora.');
+      trackEvent('pwa_update_apply_failed');
       setNeedRefresh(true);
     } finally {
       window.clearTimeout(fallbackReloadId);
@@ -101,6 +118,7 @@ export default function PwaUpdatePrompt() {
   const handleDismiss = () => {
     if (isUpdating) return;
     haptics.light();
+    trackEvent('pwa_update_prompt_dismissed');
     setNeedRefresh(false);
   };
 

@@ -1275,6 +1275,44 @@ class ContactView(models.Model):
         return f"{self.contractor.name} → {self.musician.user.get_full_name()} ({self.viewed_at})"
 
 
+class PwaAnalyticsEvent(models.Model):
+    """
+    Evento de analytics do PWA enviado pelo frontend.
+
+    Usado para acompanhar funil de install/update/offline.
+    """
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="pwa_analytics_events",
+    )
+    event_name = models.CharField(max_length=80)
+    metadata = models.JSONField(default=dict, blank=True)
+    path = models.CharField(max_length=255, blank=True)
+    release_label = models.CharField(max_length=80, blank=True)
+    occurred_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True, max_length=500)
+    is_authenticated = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-occurred_at"]
+        verbose_name = "Evento Analytics PWA"
+        verbose_name_plural = "Eventos Analytics PWA"
+        indexes = [
+            models.Index(fields=["event_name", "-occurred_at"], name="pwa_event_name_ts_idx"),
+            models.Index(fields=["is_authenticated", "-occurred_at"], name="pwa_event_auth_ts_idx"),
+            models.Index(fields=["release_label"], name="pwa_event_release_idx"),
+        ]
+
+    def __str__(self):
+        return f"{self.event_name} ({self.occurred_at})"
+
+
 class AuditLog(models.Model):
     """
     Log de auditoria para ações críticas.
