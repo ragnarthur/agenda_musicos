@@ -36,7 +36,8 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: "Horario BRT"
-        run: echo "🕐 CI backend iniciado: $(TZ=America/Sao_Paulo date '+%d/%m/%Y %H:%M BRT')"
+        run: |
+          echo "🕐 CI backend iniciado: $(TZ=America/Sao_Paulo date '+%d/%m/%Y %H:%M BRT')"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -73,7 +74,8 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: "Horario BRT"
-        run: echo "🕐 CI frontend iniciado: $(TZ=America/Sao_Paulo date '+%d/%m/%Y %H:%M BRT')"
+        run: |
+          echo "🕐 CI frontend iniciado: $(TZ=America/Sao_Paulo date '+%d/%m/%Y %H:%M BRT')"
 
       - name: Set up Node
         uses: actions/setup-node@v4
