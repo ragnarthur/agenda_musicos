@@ -96,10 +96,13 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         if leader_id and public_param:
             queryset = queryset.filter(leader_id=leader_id)
 
-        # Filtro por instrumento
+        # Filtro por instrumento (checa campo primário OU lista de instrumentos)
         instrument = self.request.query_params.get("instrument")
         if instrument:
-            queryset = queryset.filter(leader__instrument=instrument)
+            queryset = queryset.filter(
+                Q(leader__instrument=instrument) |
+                Q(leader__instruments__icontains=instrument)
+            )
 
         # Busca por nome/username/instagram do músico (funciona em todos os modos)
         search = self.request.query_params.get("search")
@@ -261,10 +264,13 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
             except Musician.DoesNotExist:
                 return Response([])
 
-        # Filtro opcional por instrumento
+        # Filtro opcional por instrumento (checa campo primário OU lista de instrumentos)
         instrument = request.query_params.get("instrument")
         if instrument:
-            musicians = musicians.filter(instrument=instrument)
+            musicians = musicians.filter(
+                Q(instrument=instrument) |
+                Q(instruments__icontains=instrument)
+            )
 
         # Busca disponibilidades públicas na data (para associar aos músicos)
         availabilities_map = {}
