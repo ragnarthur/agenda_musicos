@@ -13,6 +13,7 @@ Este é o ViewSet mais complexo do sistema, responsável por:
 import logging
 from datetime import date, datetime, time, timedelta
 
+from django.core.cache import cache
 from django.db import models, transaction
 from django.db.models import Count, Q
 from django.utils import timezone
@@ -276,6 +277,17 @@ class EventViewSet(viewsets.ModelViewSet):
 
         # Ordenação consistente para paginação
         return queryset.order_by("-event_date", "-id")
+
+    def list(self, request, *args, **kwargs):
+        params_key = "&".join(f"{k}={v}" for k, v in sorted(request.GET.items()))
+        cache_key = f"events:list:v1:u{request.user.id}:{params_key}"
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached)
+
+        response = super().list(request, *args, **kwargs)
+        cache.set(cache_key, response.data, timeout=30)
+        return response
 
     @action(detail=False, methods=["post"])
     def preview_conflicts(self, request):
