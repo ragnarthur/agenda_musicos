@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { registerSW } from 'virtual:pwa-register';
 import PwaUpdatePrompt from '@/components/common/PwaUpdatePrompt';
@@ -29,42 +29,25 @@ vi.mock('@/utils/toast', () => ({
   },
 }));
 
-vi.mock('@/hooks/useHaptics', () => ({
-  haptics: {
-    medium: vi.fn(),
-    light: vi.fn(),
-    success: vi.fn(),
-  },
-}));
-
 describe('PwaUpdatePrompt', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('tracks prompt display and successful update', async () => {
-    const updateSW = vi.fn().mockResolvedValue(undefined);
+  it('shows loading toast and tracks event when auto-update fires', async () => {
+    const { showToast } = await import('@/utils/toast');
     vi.mocked(registerSW).mockImplementation((opts?: RegisterSWOptions) => {
       opts?.onNeedRefresh?.();
-      return updateSW;
+      return vi.fn().mockResolvedValue(undefined);
     });
 
     render(<PwaUpdatePrompt />);
 
     await waitFor(() => {
-      expect(screen.getByText('Atualizacao disponivel')).toBeInTheDocument();
+      expect(showToast.loading).toHaveBeenCalledWith('Atualizando para nova versao...');
     });
 
-    expect(trackEvent).toHaveBeenCalledWith('pwa_update_prompt_shown');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Atualizar agora' }));
-
-    await waitFor(() => {
-      expect(updateSW).toHaveBeenCalledWith(true);
-    });
-
-    expect(trackEvent).toHaveBeenCalledWith('pwa_update_apply_click');
-    expect(trackEvent).toHaveBeenCalledWith('pwa_update_apply_success');
+    expect(trackEvent).toHaveBeenCalledWith('pwa_auto_update_applied');
   });
 
   it('tracks offline-ready callback', async () => {
@@ -78,5 +61,11 @@ describe('PwaUpdatePrompt', () => {
     await waitFor(() => {
       expect(trackEvent).toHaveBeenCalledWith('pwa_offline_ready');
     });
+  });
+
+  it('renders null (no UI elements)', () => {
+    vi.mocked(registerSW).mockReturnValue(vi.fn().mockResolvedValue(undefined));
+    const { container } = render(<PwaUpdatePrompt />);
+    expect(container.firstChild).toBeNull();
   });
 });

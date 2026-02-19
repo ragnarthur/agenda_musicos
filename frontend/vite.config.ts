@@ -44,9 +44,9 @@ export default defineConfig({
         ]
       : []),
     VitePWA({
-      // A gente registra via `virtual:pwa-register` para mostrar "Atualizacao disponivel" no app.
+      // A gente registra via `virtual:pwa-register` para controlar o ciclo de update.
       injectRegister: false,
-      registerType: 'prompt',
+      registerType: 'autoUpdate',
       includeAssets: [
         'offline.html',
         'favicon.ico',
@@ -57,9 +57,9 @@ export default defineConfig({
       ],
       manifest: false, // Usar manifest.json existente
       workbox: {
-        // Com `registerType: prompt`, o SW fica em "waiting" ate o usuario aceitar atualizar.
+        // Com `registerType: autoUpdate`, o SW ativa imediatamente e recarrega a pagina.
         clientsClaim: true,
-        skipWaiting: false,
+        skipWaiting: true,
         cleanupOutdatedCaches: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         // Mantemos os arquivos antigos no servidor por compatibilidade,
