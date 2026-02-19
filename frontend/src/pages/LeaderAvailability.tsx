@@ -18,10 +18,12 @@ import {
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
 import ConfirmModal from '../components/modals/ConfirmModal';
+import MiniDatePicker from '../components/musicians/MiniDatePicker';
 import { leaderAvailabilityService, musicianService, type InstrumentOption } from '../services/api';
 import { getErrorMessage, showToast } from '../utils/toast';
 import type { LeaderAvailability, LeaderAvailabilityCreate } from '../types';
 import { format, parseISO, addDays, isAfter, isBefore, addWeeks } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { useAuth } from '../contexts/AuthContext';
 import { logError } from '../utils/logger';
 import { sanitizeOptionalText } from '../utils/sanitize';
@@ -41,6 +43,7 @@ const LeaderAvailabilityPage: React.FC = () => {
   const [showShared, setShowShared] = useState(false);
   const [instrumentFilter, setInstrumentFilter] = useState<string>('all');
   const [pendingDelete, setPendingDelete] = useState<LeaderAvailability | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<LeaderAvailabilityCreate>({
     date: '',
@@ -85,7 +88,10 @@ const LeaderAvailabilityPage: React.FC = () => {
       setLoading(true);
       const params: Record<string, string | number | boolean> = {};
 
-      if (timeFilter === 'upcoming') {
+      if (selectedDate) {
+        // Filtro por data específica: ignora upcoming/past para evitar conflito
+        params.date = selectedDate;
+      } else if (timeFilter === 'upcoming') {
         params.upcoming = true;
       } else if (timeFilter === 'past') {
         params.past = true;
@@ -118,7 +124,7 @@ const LeaderAvailabilityPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [timeFilter, searchTerm, showShared, instrumentFilter]);
+  }, [timeFilter, searchTerm, showShared, instrumentFilter, selectedDate]);
 
   // Carrega lista de instrumentos cadastrados
   const loadInstruments = useCallback(async () => {
@@ -376,6 +382,13 @@ const LeaderAvailabilityPage: React.FC = () => {
 
         {/* Tabs: Minhas Datas vs Explorar Músicos */}
         <div className="flex flex-col gap-4">
+          {/* Mini calendário de filtro — sempre visível */}
+          <MiniDatePicker
+            selectedDate={selectedDate}
+            onDateSelect={date => setSelectedDate(date)}
+            onClear={() => setSelectedDate(null)}
+          />
+
           {/* Tabs principais */}
           <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
             <button
@@ -404,24 +417,45 @@ const LeaderAvailabilityPage: React.FC = () => {
 
           {/* Filtros */}
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-              {[
-                { value: 'upcoming', label: 'Próximas' },
-                { value: 'all', label: 'Todas' },
-                { value: 'past', label: 'Passadas' },
-              ].map(item => (
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Chip de data ativa */}
+              {selectedDate && (
                 <button
-                  key={item.value}
-                  onClick={() => setTimeFilter(item.value as 'upcoming' | 'past' | 'all')}
-                  className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-semibold transition-all touch-manipulation whitespace-nowrap min-h-[44px] ${
-                    timeFilter === item.value
-                      ? 'border-indigo-500 bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-200/60'
-                      : 'border-white/60 bg-white/80 text-gray-700 hover:bg-white hover:border-indigo-200 dark:border-white/10 dark:bg-slate-900/40 dark:text-slate-200 dark:hover:bg-slate-900/60'
-                  }`}
+                  type="button"
+                  onClick={() => setSelectedDate(null)}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-primary-500 bg-primary-600 px-3 py-2 text-sm font-semibold text-white min-h-[44px] transition-colors hover:bg-primary-700"
                 >
-                  {item.label}
+                  <CalendarIcon className="h-3.5 w-3.5" />
+                  <span className="capitalize">
+                    {format(parseISO(selectedDate), "d 'de' MMM", { locale: ptBR })}
+                  </span>
+                  <span className="ml-0.5">×</span>
                 </button>
-              ))}
+              )}
+              <div
+                className={[
+                  'flex gap-2 overflow-x-auto pb-2 no-scrollbar transition-opacity',
+                  selectedDate ? 'opacity-40 pointer-events-none' : '',
+                ].join(' ')}
+              >
+                {[
+                  { value: 'upcoming', label: 'Próximas' },
+                  { value: 'all', label: 'Todas' },
+                  { value: 'past', label: 'Passadas' },
+                ].map(item => (
+                  <button
+                    key={item.value}
+                    onClick={() => setTimeFilter(item.value as 'upcoming' | 'past' | 'all')}
+                    className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-semibold transition-all touch-manipulation whitespace-nowrap min-h-[44px] ${
+                      timeFilter === item.value
+                        ? 'border-indigo-500 bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-200/60'
+                        : 'border-white/60 bg-white/80 text-gray-700 hover:bg-white hover:border-indigo-200 dark:border-white/10 dark:bg-slate-900/40 dark:text-slate-200 dark:hover:bg-slate-900/60'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Filtros de busca - visíveis apenas em "Explorar Músicos" */}

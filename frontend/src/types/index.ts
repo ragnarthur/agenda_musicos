@@ -142,6 +142,7 @@ export interface LeaderAvailability {
   leader_name: string;
   leader_instrument?: string;
   leader_instrument_display?: string;
+  leader_avatar_url?: string | null;
   date: string;
   start_time: string;
   end_time: string;

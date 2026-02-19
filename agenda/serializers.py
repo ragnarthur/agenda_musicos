@@ -959,6 +959,7 @@ class LeaderAvailabilitySerializer(serializers.ModelSerializer):
     leader_name = serializers.SerializerMethodField()
     leader_instrument = serializers.SerializerMethodField()
     leader_instrument_display = serializers.SerializerMethodField()
+    leader_avatar_url = serializers.SerializerMethodField()
     has_conflicts = serializers.SerializerMethodField()
     conflicting_events_count = serializers.SerializerMethodField()
 
@@ -970,6 +971,7 @@ class LeaderAvailabilitySerializer(serializers.ModelSerializer):
             "leader_name",
             "leader_instrument",
             "leader_instrument_display",
+            "leader_avatar_url",
             "date",
             "start_time",
             "end_time",
@@ -997,6 +999,14 @@ class LeaderAvailabilitySerializer(serializers.ModelSerializer):
 
     def get_leader_instrument(self, obj) -> str | None:
         return obj.leader.instrument if obj.leader else None
+
+    def get_leader_avatar_url(self, obj) -> str | None:
+        if obj.leader and obj.leader.avatar:
+            request = self.context.get("request")
+            if request:
+                return request.build_absolute_uri(obj.leader.avatar.url)
+            return obj.leader.avatar.url
+        return None
 
     def get_leader_instrument_display(self, obj) -> str | None:
         if not obj.leader or not obj.leader.instrument:

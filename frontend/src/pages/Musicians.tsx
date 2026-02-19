@@ -13,7 +13,7 @@ import {
   Clock,
   ExternalLink,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Layout from '../components/Layout/Layout';
@@ -67,7 +67,6 @@ const Musicians: React.FC = () => {
   const [page, setPage] = useState(initialDate ? 1 : initialPage);
   const [selectedDate, setSelectedDate] = useState<string | null>(initialDate);
   const [selectedInstrument, setSelectedInstrument] = useState(initialInstrument);
-  const [showCalendar, setShowCalendar] = useState(false);
   const isFirstDebounce = useRef(true);
 
   const activeInstrument = selectedInstrument !== 'all' ? selectedInstrument : undefined;
@@ -270,69 +269,14 @@ const Musicians: React.FC = () => {
 
           {/* Filter bar */}
           <div className="card-contrast space-y-3">
-            {/* Date filter row */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {selectedDate ? (
-                <button
-                  type="button"
-                  onClick={handleClearDate}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary-600 text-white text-sm font-medium min-h-[36px] transition-colors hover:bg-primary-700"
-                >
-                  <Calendar className="h-3.5 w-3.5" />
-                  <span className="capitalize">{formatDateLabel(selectedDate)}</span>
-                  <X className="h-3.5 w-3.5 ml-0.5" />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setShowCalendar(prev => !prev)}
-                  className={[
-                    'flex items-center gap-1.5 px-3 py-2 rounded-full border text-sm font-medium min-h-[36px] transition-colors',
-                    showCalendar
-                      ? 'bg-primary-50 border-primary-300 text-primary-700 dark:bg-primary-900/30 dark:border-primary-600 dark:text-primary-300'
-                      : 'border-gray-200 text-gray-600 hover:border-primary-300 hover:text-primary-600 dark:border-gray-600 dark:text-gray-400 dark:hover:border-primary-500 dark:hover:text-primary-400',
-                  ].join(' ')}
-                >
-                  <Calendar className="h-3.5 w-3.5" />
-                  <span>Filtrar por data</span>
-                </button>
-              )}
+            {/* Mini calendar — sempre visível */}
+            <MiniDatePicker
+              selectedDate={selectedDate}
+              onDateSelect={handleDateSelect}
+              onClear={handleClearDate}
+            />
 
-              {(selectedDate || selectedInstrument !== 'all') && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleClearDate();
-                    setSelectedInstrument('all');
-                  }}
-                  className="text-xs text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition-colors ml-1"
-                >
-                  Limpar filtros
-                </button>
-              )}
-            </div>
-
-            {/* Mini calendar */}
-            <AnimatePresence>
-              {showCalendar && (
-                <motion.div
-                  key="mini-calendar"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden"
-                >
-                  <MiniDatePicker
-                    selectedDate={selectedDate}
-                    onDateSelect={handleDateSelect}
-                    onClear={handleClearDate}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Instrument pills */}
+            {/* Instrument pills + Limpar filtros */}
             <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
               {INSTRUMENT_PILLS.map(pill => (
                 <button
@@ -350,6 +294,18 @@ const Musicians: React.FC = () => {
                 </button>
               ))}
             </div>
+            {(selectedDate || selectedInstrument !== 'all') && (
+              <button
+                type="button"
+                onClick={() => {
+                  handleClearDate();
+                  setSelectedInstrument('all');
+                }}
+                className="text-xs text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
+              >
+                Limpar filtros
+              </button>
+            )}
           </div>
 
           {/* Date filter result header */}
@@ -412,13 +368,6 @@ const Musicians: React.FC = () => {
                     ? 'Tente ajustar a busca ou remover o filtro de instrumento.'
                     : 'Tente selecionar outra data ou remover o filtro de instrumento.'}
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setShowCalendar(true)}
-                  className="btn-secondary mt-2"
-                >
-                  Escolher outra data
-                </button>
               </div>
             ) : (
               <motion.div
@@ -436,8 +385,16 @@ const Musicians: React.FC = () => {
                       {/* Header */}
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className="h-11 w-11 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center text-xl">
-                            🎵
+                          <div className="h-11 w-11 rounded-full overflow-hidden bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center text-xl flex-shrink-0">
+                            {avail.leader_avatar_url ? (
+                              <img
+                                src={avail.leader_avatar_url}
+                                alt={avail.leader_name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <span>🎵</span>
+                            )}
                           </div>
                           <div>
                             <h3 className="font-semibold text-gray-900 dark:text-white leading-snug">
