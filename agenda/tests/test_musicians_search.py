@@ -49,3 +49,56 @@ class MusicianSearchTest(APITestCase):
         self.assertIn(self.genre_musician.id, ids)
         self.assertIn(self.bio_musician.id, ids)
         self.assertNotIn(self.other_musician.id, ids)
+
+    def test_instrument_filter_supports_aliases(self):
+        alias_user = User.objects.create_user(
+            username="baixista_alias", email="baixo@test.com", password="senha12345"
+        )
+        alias_musician = Musician.objects.create(
+            user=alias_user,
+            instrument="baixo",
+            bio="Baixista de estúdio",
+            musical_genres=["pop"],
+            is_active=True,
+        )
+
+        response = self.client.get("/api/musicians/?instrument=bass")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        payload = response.data.get("results", response.data)
+        ids = {item["id"] for item in payload}
+
+        self.assertIn(alias_musician.id, ids)
+        self.assertNotIn(self.genre_musician.id, ids)
+        self.assertNotIn(self.bio_musician.id, ids)
+        self.assertNotIn(self.other_musician.id, ids)
+
+    def test_instrument_filter_supports_acoustic_guitar_aliases(self):
+        alias_user = User.objects.create_user(
+            username="violonista_alias", email="violao@test.com", password="senha12345"
+        )
+        alias_musician = Musician.objects.create(
+            user=alias_user,
+            instrument="violonista",
+            bio="Voz e violão",
+            musical_genres=["mpb"],
+            is_active=True,
+        )
+
+        response = self.client.get("/api/musicians/?instrument=acoustic%20guitar")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        payload = response.data.get("results", response.data)
+        ids = {item["id"] for item in payload}
+
+        self.assertIn(alias_musician.id, ids)
+        self.assertNotIn(self.genre_musician.id, ids)
+        self.assertNotIn(self.bio_musician.id, ids)
+        self.assertNotIn(self.other_musician.id, ids)
+
+    def test_invalid_instrument_filter_does_not_return_all(self):
+        response = self.client.get("/api/musicians/?instrument=instrumento_que_nao_existe")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        payload = response.data.get("results", response.data)
+        self.assertEqual(len(payload), 0)

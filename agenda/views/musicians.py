@@ -3,7 +3,6 @@
 ViewSet para gerenciamento de músicos.
 """
 
-from django.db import connection
 from django.db.models import Case, Count, IntegerField, Q, When
 from django.utils import timezone
 from rest_framework import status, viewsets
@@ -12,14 +11,14 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from ..instrument_utils import INSTRUMENT_LABELS
-from ..models import Instrument, LeaderAvailability, Musician
+from ..models import LeaderAvailability, Musician
 from ..pagination import StandardResultsSetPagination
 from ..serializers import (
     MusicianSerializer,
     MusicianUpdateSerializer,
     PublicCalendarSerializer,
 )
-from ..view_functions import normalize_search_text
+from ..view_functions import expand_instrument_search, normalize_search_text
 
 
 class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
@@ -63,28 +62,28 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
             )
         instrument = self.request.query_params.get("instrument")
         if instrument and instrument != "all":
-            # Validar instrument antes de usar
-            # Normalizar e validar que o instrumento existe
-            instrument_normalized = Instrument.normalize_name(instrument)
-            valid_instruments = Instrument.objects.filter(
-                name=instrument_normalized, is_approved=True
-            ).values_list("name", flat=True)
+            candidate_terms = set()
+            for term in expand_instrument_search(instrument):
+                raw_value = term.strip().lower()
+                if raw_value:
+                    candidate_terms.add(raw_value)
+                    candidate_terms.add(raw_value.replace(" ", "_"))
+                    candidate_terms.add(raw_value.replace("_", " "))
+                normalized = normalize_search_text(term)
+                if not normalized:
+                    continue
+                candidate_terms.add(normalized)
+                candidate_terms.add(normalized.replace(" ", "_"))
+                candidate_terms.add(normalized.replace("_", " "))
 
-            if not valid_instruments:
-                # Se não for um instrumento aprovado, não filtra
-                pass
+            if candidate_terms:
+                instrument_q = Q()
+                for term in candidate_terms:
+                    instrument_q |= Q(instrument__iexact=term)
+                    instrument_q |= Q(instruments__icontains=term)
+                queryset = queryset.filter(instrument_q)
             else:
-                # Usar valor validado
-                if connection.vendor == "sqlite":
-                    queryset = queryset.filter(
-                        Q(instrument=instrument_normalized)
-                        | Q(instruments__icontains=f'"{instrument_normalized}"')
-                    )
-                else:
-                    queryset = queryset.filter(
-                        Q(instrument=instrument_normalized)
-                        | Q(instruments__contains=[instrument_normalized])
-                    )
+                queryset = queryset.none()
         return queryset
 
     @action(detail=False, methods=["get", "patch"], permission_classes=[IsAuthenticated])

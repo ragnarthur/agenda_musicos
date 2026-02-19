@@ -20,6 +20,7 @@ from ..instrument_utils import get_instrument_label
 from ..models import Event, LeaderAvailability, Musician
 from ..serializers import EventListSerializer, LeaderAvailabilitySerializer
 from ..utils import get_user_organization, split_availability_with_events
+from ..view_functions import expand_instrument_search, normalize_search_text
 
 
 @extend_schema(
@@ -99,10 +100,28 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         # Filtro por instrumento (checa campo primário OU lista de instrumentos)
         instrument = self.request.query_params.get("instrument")
         if instrument:
-            queryset = queryset.filter(
-                Q(leader__instrument=instrument) |
-                Q(leader__instruments__icontains=instrument)
-            )
+            candidate_terms = set()
+            for term in expand_instrument_search(instrument):
+                raw_value = term.strip().lower()
+                if raw_value:
+                    candidate_terms.add(raw_value)
+                    candidate_terms.add(raw_value.replace(" ", "_"))
+                    candidate_terms.add(raw_value.replace("_", " "))
+                normalized = normalize_search_text(term)
+                if not normalized:
+                    continue
+                candidate_terms.add(normalized)
+                candidate_terms.add(normalized.replace(" ", "_"))
+                candidate_terms.add(normalized.replace("_", " "))
+
+            if candidate_terms:
+                instrument_q = Q()
+                for term in candidate_terms:
+                    instrument_q |= Q(leader__instrument__iexact=term)
+                    instrument_q |= Q(leader__instruments__icontains=term)
+                queryset = queryset.filter(instrument_q)
+            else:
+                queryset = queryset.none()
 
         # Busca por nome/username/instagram do músico (funciona em todos os modos)
         search = self.request.query_params.get("search")
@@ -267,10 +286,28 @@ class LeaderAvailabilityViewSet(viewsets.ModelViewSet):
         # Filtro opcional por instrumento (checa campo primário OU lista de instrumentos)
         instrument = request.query_params.get("instrument")
         if instrument:
-            musicians = musicians.filter(
-                Q(instrument=instrument) |
-                Q(instruments__icontains=instrument)
-            )
+            candidate_terms = set()
+            for term in expand_instrument_search(instrument):
+                raw_value = term.strip().lower()
+                if raw_value:
+                    candidate_terms.add(raw_value)
+                    candidate_terms.add(raw_value.replace(" ", "_"))
+                    candidate_terms.add(raw_value.replace("_", " "))
+                normalized = normalize_search_text(term)
+                if not normalized:
+                    continue
+                candidate_terms.add(normalized)
+                candidate_terms.add(normalized.replace(" ", "_"))
+                candidate_terms.add(normalized.replace("_", " "))
+
+            if candidate_terms:
+                instrument_q = Q()
+                for term in candidate_terms:
+                    instrument_q |= Q(instrument__iexact=term)
+                    instrument_q |= Q(instruments__icontains=term)
+                musicians = musicians.filter(instrument_q)
+            else:
+                musicians = musicians.none()
 
         # Busca disponibilidades públicas na data (para associar aos músicos)
         availabilities_map = {}

@@ -253,6 +253,41 @@ class LeaderAvailabilityAPITest(APITestCase):
         for r in results:
             self.assertEqual(r["leader_instrument"], "drums")
 
+    def test_filter_by_instrument_alias(self):
+        """Testa filtro por alias de instrumento (PT/EN)."""
+        user3 = User.objects.create_user(
+            username="baixista",
+            email="baixista@test.com",
+            password="pass123",
+            first_name="Beto",
+            last_name="Baixo",
+        )
+        Membership.objects.create(user=user3, organization=self.org, role="member", status="active")
+        musician3 = Musician.objects.create(
+            user=user3,
+            instrument="baixo",
+            role="member",
+            organization=self.org,
+            is_active=True,
+        )
+
+        LeaderAvailability.objects.create(
+            leader=musician3,
+            date=date.today() + timedelta(days=1),
+            start_time=time(16, 0),
+            end_time=time(18, 0),
+            is_active=True,
+            is_public=True,
+        )
+
+        response = self.client.get(self.list_url, {"public": "true", "instrument": "bass"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        results = self._extract_results(response)
+        instruments = {item["leader_instrument"] for item in results}
+        self.assertIn("baixo", instruments)
+        self.assertNotIn("drums", instruments)
+
     def test_search_by_name(self):
         """Testa busca por nome do músico"""
         # Criar disponibilidade pública
@@ -548,6 +583,29 @@ class AvailableMusiciansEndpointTest(APITestCase):
         # Apenas músico de drums (musician2), não o baixista
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["instrument"], "drums")
+
+    def test_available_musicians_filter_by_instrument_alias(self):
+        """Testa filtro por alias EN->PT no available_musicians."""
+        user3 = User.objects.create_user(
+            username="carlos_alias",
+            email="carlos_alias@test.com",
+            password="pass123",
+            first_name="Carlos",
+            last_name="Contrabaixo",
+        )
+        Membership.objects.create(user=user3, organization=self.org, role="member", status="active")
+        Musician.objects.create(
+            user=user3, instrument="baixo", organization=self.org, is_active=True
+        )
+
+        url = reverse("leader-availability-available-musicians")
+        response = self.client.get(
+            url, {"date": self.target_date.isoformat(), "instrument": "bass"}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["instrument"], "baixo")
 
     def test_available_musicians_only_available_filter(self):
         """Testa filtro only_available que retorna apenas músicos com disponibilidade"""
