@@ -3,7 +3,8 @@ import { useCallback } from 'react';
 import useSWR from 'swr';
 import useSWRInfinite from 'swr/infinite';
 import { musicianService } from '../services/api';
-import type { Musician } from '../types';
+import { leaderAvailabilityService } from '../services/leaderAvailabilityService';
+import type { Musician, LeaderAvailability } from '../types';
 
 interface MusiciansParams {
   search?: string;
@@ -115,6 +116,29 @@ export function useMusiciansInfinite(params?: MusiciansParams) {
     mutate,
     loadMore,
     reset,
+  };
+}
+
+export function useAvailabilitiesForDate(
+  date: string | null,
+  instrument?: string,
+  search?: string
+) {
+  const key = date
+    ? `/leader-availabilities/public?date=${date}&inst=${instrument || ''}&search=${encodeURIComponent(search || '')}`
+    : null;
+
+  const { data, error, isLoading, mutate } = useSWR<LeaderAvailability[]>(
+    key,
+    () => leaderAvailabilityService.getPublicForDate(date!, instrument, search),
+    { revalidateOnFocus: false, dedupingInterval: 60000 }
+  );
+
+  return {
+    availabilities: data ?? [],
+    isLoading,
+    error,
+    mutate,
   };
 }
 

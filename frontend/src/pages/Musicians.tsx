@@ -1,49 +1,150 @@
 // pages/Musicians.tsx
-import React, { useEffect, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { Users, Music, Phone, Mail, Instagram, Search } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import {
+  Users,
+  Music,
+  Phone,
+  Mail,
+  Instagram,
+  Search,
+  Calendar,
+  X,
+  Clock,
+  ExternalLink,
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import Layout from '../components/Layout/Layout';
 import PullToRefresh from '../components/common/PullToRefresh';
-import { useMusiciansPaginated } from '../hooks/useMusicians';
-import type { Musician } from '../types';
+import MiniDatePicker from '../components/musicians/MiniDatePicker';
+import { useMusiciansPaginated, useAvailabilitiesForDate } from '../hooks/useMusicians';
+import type { Musician, LeaderAvailability } from '../types';
 import {
   formatInstrumentLabel,
   getMusicianInstruments,
   normalizeInstrumentKey,
 } from '../utils/formatting';
 
-const Musicians: React.FC = () => {
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [page, setPage] = useState(1);
+const INSTRUMENT_PILLS: { key: string; label: string }[] = [
+  { key: 'all', label: 'Todos' },
+  { key: 'vocal', label: 'Vocalista' },
+  { key: 'guitar', label: 'Guitarrista' },
+  { key: 'acoustic_guitar', label: 'Violonista' },
+  { key: 'bass', label: 'Baixista' },
+  { key: 'drums', label: 'Baterista' },
+  { key: 'keyboard', label: 'Tecladista' },
+  { key: 'cajon', label: 'Cajón' },
+  { key: 'saxophone', label: 'Saxofonista' },
+  { key: 'violin', label: 'Violinista' },
+  { key: 'percussion', label: 'Percussionista' },
+];
 
-  // Debounce search and reset page
+const INSTRUMENT_KEYS = new Set(INSTRUMENT_PILLS.map(pill => pill.key));
+const DATE_QUERY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+const parsePositiveInt = (value: string | null, fallback = 1): number => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 1) return fallback;
+  return Math.floor(parsed);
+};
+
+const Musicians: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialSearch = searchParams.get('q')?.trim() ?? '';
+  const initialDateParam = searchParams.get('date');
+  const initialDate = initialDateParam && DATE_QUERY_REGEX.test(initialDateParam) ? initialDateParam : null;
+  const initialInstrumentParam = searchParams.get('instrument');
+  const initialInstrument =
+    initialInstrumentParam && INSTRUMENT_KEYS.has(initialInstrumentParam)
+      ? initialInstrumentParam
+      : 'all';
+  const initialPage = parsePositiveInt(searchParams.get('page'), 1);
+
+  const [search, setSearch] = useState(initialSearch);
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
+  const [page, setPage] = useState(initialDate ? 1 : initialPage);
+  const [selectedDate, setSelectedDate] = useState<string | null>(initialDate);
+  const [selectedInstrument, setSelectedInstrument] = useState(initialInstrument);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const isFirstDebounce = useRef(true);
+
+  const activeInstrument = selectedInstrument !== 'all' ? selectedInstrument : undefined;
+  const isDateFiltered = Boolean(selectedDate);
+
+  // Debounce search input to avoid request spam.
   useEffect(() => {
     const timer = setTimeout(() => {
-      setPage(1);
       setDebouncedSearch(search.trim());
     }, 300);
     return () => clearTimeout(timer);
   }, [search]);
 
+  useEffect(() => {
+    if (isFirstDebounce.current) {
+      isFirstDebounce.current = false;
+      return;
+    }
+    setPage(1);
+  }, [debouncedSearch]);
+
   const { musicians, count, hasNext, hasPrevious, isLoading, error, mutate } =
     useMusiciansPaginated({
       page,
       search: debouncedSearch || undefined,
+      instrument: !selectedDate ? activeInstrument : undefined,
     });
 
+  const {
+    availabilities,
+    isLoading: availLoading,
+    error: availError,
+    mutate: availMutate,
+  } = useAvailabilitiesForDate(selectedDate, activeInstrument, debouncedSearch || undefined);
+
   const handleRefresh = useCallback(async () => {
+    if (isDateFiltered) {
+      await availMutate();
+      return;
+    }
     await mutate();
-  }, [mutate]);
+  }, [isDateFiltered, availMutate, mutate]);
+
+  const handleDateSelect = useCallback((date: string) => {
+    setSelectedDate(date);
+    setShowCalendar(false);
+  }, []);
+
+  const handleClearDate = useCallback(() => {
+    setSelectedDate(null);
+    setShowCalendar(false);
+  }, []);
+
+  const handleInstrumentSelect = useCallback((key: string) => {
+    setSelectedInstrument(key);
+    setPage(1);
+  }, []);
+
+  useEffect(() => {
+    const nextParams = new URLSearchParams();
+    const trimmedSearch = search.trim();
+
+    if (trimmedSearch) nextParams.set('q', trimmedSearch);
+    if (selectedInstrument !== 'all') nextParams.set('instrument', selectedInstrument);
+    if (selectedDate) nextParams.set('date', selectedDate);
+    if (!selectedDate && page > 1) nextParams.set('page', String(page));
+
+    if (nextParams.toString() !== searchParams.toString()) {
+      setSearchParams(nextParams, { replace: true });
+    }
+  }, [search, selectedInstrument, selectedDate, page, searchParams, setSearchParams]);
 
   const getInstrumentEmoji = (instrument?: string, bio?: string) => {
     const key = normalizeInstrumentKey(instrument);
-    // Se é vocalista e a bio menciona violão/violonista, mostra emoji combinado
     if (key === 'vocal' && bio?.toLowerCase().includes('violon')) {
       return '🎤🎸';
     }
-
     const emojis: Record<string, string> = {
       vocal: '🎤',
       guitar: '🎸',
@@ -62,7 +163,6 @@ const Musicians: React.FC = () => {
       sex?: string | null;
       user?: Musician['user'] & { gender?: string | null; sex?: string | null };
     };
-
     return (
       musicianWithGender.gender ||
       musicianWithGender.sex ||
@@ -77,7 +177,6 @@ const Musicians: React.FC = () => {
     if (key === 'producer') {
       return formatInstrumentLabel(instrument, { gender: getMusicianGender(musician) });
     }
-
     const displayMap: Record<string, string> = {
       vocal: 'Vocalista',
       guitar: 'Guitarrista',
@@ -105,8 +204,15 @@ const Musicians: React.FC = () => {
       dj: 'DJ',
       other: 'Outro',
     };
-
     return displayMap[key] || formatInstrumentLabel(instrument);
+  };
+
+  const formatDateLabel = (dateStr: string) => {
+    try {
+      return format(parseISO(dateStr), "EEE',' d 'de' MMM", { locale: ptBR });
+    } catch {
+      return dateStr;
+    }
   };
 
   const cardGrid = {
@@ -119,9 +225,12 @@ const Musicians: React.FC = () => {
     show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };
 
+  const isLoaderActive = isDateFiltered ? availLoading : isLoading;
+  const hasError = isDateFiltered ? availError : error;
+
   return (
     <Layout>
-      <PullToRefresh onRefresh={handleRefresh} disabled={isLoading}>
+      <PullToRefresh onRefresh={handleRefresh} disabled={isLoaderActive}>
         <div className="page-stack">
           {/* Header */}
           <div className="hero-panel">
@@ -159,43 +268,225 @@ const Musicians: React.FC = () => {
             </div>
           </div>
 
-          {isLoading ? (
+          {/* Filter bar */}
+          <div className="card-contrast space-y-3">
+            {/* Date filter row */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {selectedDate ? (
+                <button
+                  type="button"
+                  onClick={handleClearDate}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary-600 text-white text-sm font-medium min-h-[36px] transition-colors hover:bg-primary-700"
+                >
+                  <Calendar className="h-3.5 w-3.5" />
+                  <span className="capitalize">{formatDateLabel(selectedDate)}</span>
+                  <X className="h-3.5 w-3.5 ml-0.5" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowCalendar(prev => !prev)}
+                  className={[
+                    'flex items-center gap-1.5 px-3 py-2 rounded-full border text-sm font-medium min-h-[36px] transition-colors',
+                    showCalendar
+                      ? 'bg-primary-50 border-primary-300 text-primary-700 dark:bg-primary-900/30 dark:border-primary-600 dark:text-primary-300'
+                      : 'border-gray-200 text-gray-600 hover:border-primary-300 hover:text-primary-600 dark:border-gray-600 dark:text-gray-400 dark:hover:border-primary-500 dark:hover:text-primary-400',
+                  ].join(' ')}
+                >
+                  <Calendar className="h-3.5 w-3.5" />
+                  <span>Filtrar por data</span>
+                </button>
+              )}
+
+              {(selectedDate || selectedInstrument !== 'all') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleClearDate();
+                    setSelectedInstrument('all');
+                  }}
+                  className="text-xs text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition-colors ml-1"
+                >
+                  Limpar filtros
+                </button>
+              )}
+            </div>
+
+            {/* Mini calendar */}
+            <AnimatePresence>
+              {showCalendar && (
+                <motion.div
+                  key="mini-calendar"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <MiniDatePicker
+                    selectedDate={selectedDate}
+                    onDateSelect={handleDateSelect}
+                    onClear={handleClearDate}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Instrument pills */}
+            <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
+              {INSTRUMENT_PILLS.map(pill => (
+                <button
+                  key={pill.key}
+                  type="button"
+                  onClick={() => handleInstrumentSelect(pill.key)}
+                  className={[
+                    'flex-shrink-0 px-2 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors min-h-[32px] whitespace-nowrap',
+                    selectedInstrument === pill.key
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600',
+                  ].join(' ')}
+                >
+                  {pill.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Date filter result header */}
+          {isDateFiltered && !availLoading && !availError && (
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 px-1">
+              <Calendar className="h-4 w-4 text-primary-500" />
+              <span>
+                <span className="font-semibold text-gray-800 dark:text-gray-200">
+                  {availabilities.length}
+                </span>{' '}
+                músico{availabilities.length !== 1 ? 's' : ''} disponíve
+                {availabilities.length !== 1 ? 'is' : 'l'} em{' '}
+                <span className="font-medium capitalize">{formatDateLabel(selectedDate!)}</span>
+              </span>
+            </div>
+          )}
+
+          {/* Content */}
+          {isLoaderActive ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
               {Array.from({ length: 6 }).map((_, idx) => (
-                <div key={`musician-skeleton-${idx}`} className="card-contrast space-y-4">
+                <div key={`skeleton-${idx}`} className="card-contrast space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-full bg-gray-200 animate-pulse" />
+                    <div className="h-12 w-12 rounded-full bg-gray-200 animate-pulse dark:bg-gray-700" />
                     <div className="space-y-2 flex-1">
-                      <div className="h-4 w-32 rounded-full bg-gray-200 animate-pulse" />
-                      <div className="h-3 w-24 rounded-full bg-gray-200 animate-pulse" />
+                      <div className="h-4 w-32 rounded-full bg-gray-200 animate-pulse dark:bg-gray-700" />
+                      <div className="h-3 w-24 rounded-full bg-gray-200 animate-pulse dark:bg-gray-700" />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <div className="h-3 w-full rounded-full bg-gray-200 animate-pulse" />
-                    <div className="h-3 w-5/6 rounded-full bg-gray-200 animate-pulse" />
+                    <div className="h-3 w-full rounded-full bg-gray-200 animate-pulse dark:bg-gray-700" />
+                    <div className="h-3 w-5/6 rounded-full bg-gray-200 animate-pulse dark:bg-gray-700" />
                   </div>
                   <div className="flex gap-2">
-                    <div className="h-6 w-20 rounded-full bg-gray-200 animate-pulse" />
-                    <div className="h-6 w-24 rounded-full bg-gray-200 animate-pulse" />
+                    <div className="h-6 w-20 rounded-full bg-gray-200 animate-pulse dark:bg-gray-700" />
+                    <div className="h-6 w-24 rounded-full bg-gray-200 animate-pulse dark:bg-gray-700" />
                   </div>
                 </div>
               ))}
             </div>
-          ) : error ? (
-            <div className="card-contrast bg-red-50/70 border-red-200 text-center">
-              <p className="text-red-800 mb-4">
+          ) : hasError ? (
+            <div className="card-contrast bg-red-50/70 border-red-200 text-center dark:bg-red-900/20 dark:border-red-800">
+              <p className="text-red-800 dark:text-red-300 mb-4">
                 Não foi possível carregar os músicos. Tente novamente.
               </p>
-              <button onClick={() => mutate()} className="btn-primary">
+              <button onClick={() => (isDateFiltered ? availMutate() : mutate())} className="btn-primary">
                 Tentar Novamente
               </button>
             </div>
+          ) : isDateFiltered ? (
+            /* ── Availability mode ── */
+            availabilities.length === 0 ? (
+              <div className="card-contrast text-center space-y-2">
+                <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-700 dark:text-gray-300 font-medium">
+                  Nenhum músico registrou disponibilidade para essa data
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {debouncedSearch
+                    ? 'Tente ajustar a busca ou remover o filtro de instrumento.'
+                    : 'Tente selecionar outra data ou remover o filtro de instrumento.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowCalendar(true)}
+                  className="btn-secondary mt-2"
+                >
+                  Escolher outra data
+                </button>
+              </div>
+            ) : (
+              <motion.div
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6"
+                variants={cardGrid}
+                initial="hidden"
+                animate="show"
+              >
+                {availabilities.map((avail: LeaderAvailability) => (
+                  <motion.div key={avail.id} variants={cardItem} whileHover={{ y: -4 }}>
+                    <Link
+                      to={`/musicos/${avail.leader}`}
+                      className="card-contrast hover:shadow-xl transition-all block group"
+                    >
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="h-11 w-11 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center text-xl">
+                            🎵
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900 dark:text-white leading-snug">
+                              {avail.leader_name}
+                            </h3>
+                            {avail.leader_instrument_display && (
+                              <p className="text-sm text-primary-600 dark:text-primary-400 font-medium">
+                                {avail.leader_instrument_display}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-primary-500 transition-colors mt-0.5 flex-shrink-0" />
+                      </div>
+
+                      {/* Time slot */}
+                      <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg px-3 py-2 mb-3">
+                        <Clock className="h-4 w-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                        <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                          {avail.start_time?.slice(0, 5)} – {avail.end_time?.slice(0, 5)}
+                        </span>
+                      </div>
+
+                      {/* Notes */}
+                      {avail.notes && (
+                        <div className="flex items-start gap-2 text-gray-600 dark:text-gray-400">
+                          <Music className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                          <span className="text-sm line-clamp-2">{avail.notes}</span>
+                        </div>
+                      )}
+
+                      {/* Footer */}
+                      <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                        <span className="text-xs text-primary-600 dark:text-primary-400 font-medium group-hover:underline">
+                          Ver perfil completo →
+                        </span>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )
           ) : musicians.length === 0 ? (
             <div className="card-contrast text-center">
               <Users className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-600">Nenhum músico cadastrado</p>
+              <p className="text-gray-600 dark:text-gray-400">Nenhum músico cadastrado</p>
             </div>
           ) : (
+            /* ── Normal paginated mode ── */
             <motion.div
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6"
               variants={cardGrid}
@@ -309,8 +600,8 @@ const Musicians: React.FC = () => {
             </motion.div>
           )}
 
-          {/* Informação */}
-          {!isLoading && musicians.length > 0 && (
+          {/* Pagination footer — only in normal mode */}
+          {!isDateFiltered && !isLoading && musicians.length > 0 && (
             <div className="card-contrast space-y-3">
               <div className="flex items-start space-x-3">
                 <Users className="h-5 w-5 text-primary-600 mt-0.5" />

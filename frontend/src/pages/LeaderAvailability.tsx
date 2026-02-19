@@ -13,6 +13,7 @@ import {
   Search,
   Share,
   Music,
+  RefreshCw,
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Loading from '../components/common/Loading';
@@ -20,7 +21,7 @@ import ConfirmModal from '../components/modals/ConfirmModal';
 import { leaderAvailabilityService, musicianService, type InstrumentOption } from '../services/api';
 import { getErrorMessage, showToast } from '../utils/toast';
 import type { LeaderAvailability, LeaderAvailabilityCreate } from '../types';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, addDays, isAfter, isBefore, addWeeks } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 import { logError } from '../utils/logger';
 import { sanitizeOptionalText } from '../utils/sanitize';
@@ -47,6 +48,37 @@ const LeaderAvailabilityPage: React.FC = () => {
     end_time: '',
     notes: '',
   });
+
+  // Recurrence state
+  const [recurrenceMode, setRecurrenceMode] = useState<'single' | 'recurring'>('single');
+  const [recurrenceDays, setRecurrenceDays] = useState<number[]>([]); // 0=Dom … 6=Sáb
+  const [recurrenceStart, setRecurrenceStart] = useState('');
+  const [recurrenceUntil, setRecurrenceUntil] = useState('');
+
+  const WEEKDAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+  const calculateRecurringDates = (weekdays: number[], from: string, until: string): string[] => {
+    if (!from || !until || weekdays.length === 0) return [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dates: string[] = [];
+    let current = parseISO(from);
+    const end = parseISO(until);
+    if (isAfter(current, end)) return [];
+    while (!isAfter(current, end)) {
+      if (weekdays.includes(current.getDay()) && !isBefore(current, today)) {
+        dates.push(format(current, 'yyyy-MM-dd'));
+      }
+      current = addDays(current, 1);
+    }
+    return dates;
+  };
+
+  const toggleRecurrenceDay = (day: number) => {
+    setRecurrenceDays(prev =>
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+    );
+  };
 
   const loadAvailabilities = useCallback(async () => {
     try {
@@ -113,6 +145,68 @@ const LeaderAvailabilityPage: React.FC = () => {
     setActionLoading(true);
 
     try {
+      // ── Modo recorrente (apenas criação, não edição) ──
+      if (recurrenceMode === 'recurring' && !editingId) {
+        const toMin = (t: string) => {
+          const [h, m] = t.split(':').map(Number);
+          return h * 60 + m;
+        };
+        if (!formData.start_time || !formData.end_time) {
+          setError('Preencha os horários de início e término');
+          setActionLoading(false);
+          return;
+        }
+        let dur = toMin(formData.end_time) - toMin(formData.start_time);
+        if (dur <= 0) dur += 24 * 60;
+        if (dur <= 0) {
+          setError('O horário de término deve ser posterior ao horário de início');
+          setActionLoading(false);
+          return;
+        }
+        if (recurrenceDays.length === 0) {
+          setError('Selecione ao menos um dia da semana');
+          setActionLoading(false);
+          return;
+        }
+        if (!recurrenceStart || !recurrenceUntil) {
+          setError('Preencha o período da recorrência');
+          setActionLoading(false);
+          return;
+        }
+        const dates = calculateRecurringDates(recurrenceDays, recurrenceStart, recurrenceUntil);
+        if (dates.length === 0) {
+          setError('Nenhuma data encontrada no período selecionado');
+          setActionLoading(false);
+          return;
+        }
+        const sanitizedNotes = sanitizeOptionalText(formData.notes, 1000);
+        const results = await Promise.allSettled(
+          dates.map(date =>
+            leaderAvailabilityService.create({
+              date,
+              start_time: formData.start_time,
+              end_time: formData.end_time,
+              notes: sanitizedNotes,
+              is_public: formData.is_public,
+            })
+          )
+        );
+        const ok = results.filter(r => r.status === 'fulfilled').length;
+        const fail = results.filter(r => r.status === 'rejected').length;
+        showToast.success(
+          `${ok} disponibilidade${ok !== 1 ? 's' : ''} criada${ok !== 1 ? 's' : ''}` +
+            (fail > 0
+              ? ` • ${fail} não pud${fail !== 1 ? 'eram' : 'e'} ser criada${fail !== 1 ? 's' : ''}`
+              : '')
+        );
+        setShowModal(false);
+        setEditingId(null);
+        resetForm();
+        await loadAvailabilities();
+        return;
+      }
+
+      // ── Modo dia único (comportamento original) ──
       // Validações: permite cruzar meia-noite, bloqueia duração zero
       const toMinutes = (time: string) => {
         const [h, m] = time.split(':').map(Number);
@@ -206,6 +300,10 @@ const LeaderAvailabilityPage: React.FC = () => {
       is_public: false,
     });
     setError('');
+    setRecurrenceMode('single');
+    setRecurrenceDays([]);
+    setRecurrenceStart('');
+    setRecurrenceUntil('');
   };
 
   const handleCloseModal = () => {
@@ -510,26 +608,136 @@ const LeaderAvailabilityPage: React.FC = () => {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm dark:bg-red-950/30 dark:border-red-800 dark:text-red-300">
                     {error}
                   </div>
                 )}
 
-                {/* Data */}
-                <div>
-                  <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
-                    Data *
-                  </label>
-                  <input
-                    id="date"
-                    name="date"
-                    type="date"
-                    value={formData.date}
-                    onChange={e => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                    className="input-field"
-                    required
-                  />
-                </div>
+                {/* Toggle: Dia único / Recorrente — só aparece na criação */}
+                {!editingId && (
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setRecurrenceMode('single')}
+                      className={[
+                        'flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium border transition-colors min-h-[40px]',
+                        recurrenceMode === 'single'
+                          ? 'bg-primary-600 text-white border-primary-600'
+                          : 'border-gray-200 text-gray-600 hover:border-primary-300 dark:border-gray-600 dark:text-gray-400',
+                      ].join(' ')}
+                    >
+                      <CalendarIcon className="h-4 w-4" />
+                      Dia único
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRecurrenceMode('recurring');
+                        // Default period: today → +8 weeks
+                        const today = new Date();
+                        const todayStr = format(today, 'yyyy-MM-dd');
+                        const untilStr = format(addWeeks(today, 8), 'yyyy-MM-dd');
+                        if (!recurrenceStart) setRecurrenceStart(todayStr);
+                        if (!recurrenceUntil) setRecurrenceUntil(untilStr);
+                      }}
+                      className={[
+                        'flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium border transition-colors min-h-[40px]',
+                        recurrenceMode === 'recurring'
+                          ? 'bg-primary-600 text-white border-primary-600'
+                          : 'border-gray-200 text-gray-600 hover:border-primary-300 dark:border-gray-600 dark:text-gray-400',
+                      ].join(' ')}
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      Recorrente
+                    </button>
+                  </div>
+                )}
+
+                {/* Data — modo dia único */}
+                {recurrenceMode === 'single' && (
+                  <div>
+                    <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Data *
+                    </label>
+                    <input
+                      id="date"
+                      name="date"
+                      type="date"
+                      value={formData.date}
+                      onChange={e => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                      className="input-field"
+                      required
+                    />
+                  </div>
+                )}
+
+                {/* Dias da semana + período — modo recorrente */}
+                {recurrenceMode === 'recurring' && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Dias da semana *
+                      </label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {WEEKDAY_LABELS.map((label, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => toggleRecurrenceDay(idx)}
+                            className={[
+                              'h-10 w-10 rounded-full text-xs font-semibold border transition-colors touch-manipulation',
+                              recurrenceDays.includes(idx)
+                                ? 'bg-primary-600 text-white border-primary-600'
+                                : 'border-gray-300 text-gray-600 hover:border-primary-400 dark:border-gray-600 dark:text-gray-400',
+                            ].join(' ')}
+                            aria-pressed={recurrenceDays.includes(idx)}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          A partir de *
+                        </label>
+                        <input
+                          type="date"
+                          value={recurrenceStart}
+                          onChange={e => setRecurrenceStart(e.target.value)}
+                          className="input-field"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Até *
+                        </label>
+                        <input
+                          type="date"
+                          value={recurrenceUntil}
+                          onChange={e => setRecurrenceUntil(e.target.value)}
+                          className="input-field"
+                          required
+                        />
+                      </div>
+                    </div>
+                    {/* Preview dinâmico */}
+                    {(() => {
+                      const dates = calculateRecurringDates(recurrenceDays, recurrenceStart, recurrenceUntil);
+                      if (dates.length === 0) return null;
+                      return (
+                        <div className="flex items-center gap-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/40 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
+                          <RefreshCw className="h-4 w-4 flex-shrink-0" />
+                          <span>
+                            <strong>{dates.length}</strong> disponibilidade{dates.length !== 1 ? 's' : ''} serão criadas
+                          </span>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
 
                 {/* Horários */}
                 <div className="grid grid-cols-2 gap-4">
@@ -614,7 +822,16 @@ const LeaderAvailabilityPage: React.FC = () => {
                     className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={actionLoading}
                   >
-                    {actionLoading ? 'Salvando...' : editingId ? 'Atualizar' : 'Cadastrar'}
+                    {actionLoading
+                      ? 'Salvando...'
+                      : editingId
+                        ? 'Atualizar'
+                        : recurrenceMode === 'recurring'
+                          ? (() => {
+                              const n = calculateRecurringDates(recurrenceDays, recurrenceStart, recurrenceUntil).length;
+                              return n > 0 ? `Criar ${n} disponibilidades` : 'Criar disponibilidades';
+                            })()
+                          : 'Cadastrar'}
                   </button>
                 </div>
               </form>

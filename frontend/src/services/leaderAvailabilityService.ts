@@ -23,4 +23,16 @@ export const leaderAvailabilityService = {
   delete: async (id: number): Promise<void> => {
     await api.delete(`/leader-availabilities/${id}/`);
   },
+
+  getPublicForDate: async (
+    date: string,
+    instrument?: string,
+    search?: string
+  ): Promise<LeaderAvailability[]> => {
+    const params: Record<string, string | boolean> = { public: true, date };
+    if (instrument && instrument !== 'all') params.instrument = instrument;
+    if (search?.trim()) params.search = search.trim();
+    const response = await api.get('/leader-availabilities/', { params });
+    return response.data;
+  },
 };
