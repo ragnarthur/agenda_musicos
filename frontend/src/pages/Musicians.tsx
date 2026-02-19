@@ -9,7 +9,6 @@ import {
   Instagram,
   Search,
   Calendar,
-  X,
   Clock,
   ExternalLink,
 } from 'lucide-react';
@@ -112,12 +111,10 @@ const Musicians: React.FC = () => {
 
   const handleDateSelect = useCallback((date: string) => {
     setSelectedDate(date);
-    setShowCalendar(false);
   }, []);
 
   const handleClearDate = useCallback(() => {
     setSelectedDate(null);
-    setShowCalendar(false);
   }, []);
 
   const handleInstrumentSelect = useCallback((key: string) => {

@@ -25,7 +25,8 @@ type EventName =
   | 'pwa_update_apply_success'
   | 'pwa_update_apply_failed'
   | 'pwa_update_prompt_dismissed'
-  | 'pwa_offline_ready';
+  | 'pwa_offline_ready'
+  | 'pwa_auto_update_applied';
 
 interface EventData {
   [key: string]: string | number | boolean | undefined;
