@@ -141,6 +141,14 @@ vi.mock('lottie-web', () => ({
   default: MockLottiePlayer,
 }));
 
+// lottie-react carrega lottie-web internamente via sub-paths nao interceptados pelo mock acima.
+// O lottie-web instala um setTimeout "checkReady" que dispara apos o teardown do jsdom,
+// gerando "document is not defined". Mockar lottie-react diretamente evita que o lottie-web
+// seja carregado de verdade.
+vi.mock('lottie-react', () => ({
+  default: vi.fn(() => null),
+}));
+
 vi.mock('react-router-dom', async () => ({
   ...(await vi.importActual('react-router-dom')),
   useNavigate: () => vi.fn(),
