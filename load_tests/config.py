@@ -67,4 +67,4 @@ SEARCH_TERMS: Final[list[str]] = ["vocal", "guitar", "drums", "keyboard", "samba
 
 # Gates para CI e relatorio headless.
 MAX_FAIL_RATIO: Final[float] = _env_float("LOCUST_MAX_FAIL_RATIO", 0.05)
-MAX_P95_MS: Final[float] = _env_float("LOCUST_MAX_P95_MS", 2000.0)
+MAX_P95_MS: Final[float] = _env_float("LOCUST_MAX_P95_MS", 1200.0)

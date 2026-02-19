@@ -100,7 +100,7 @@ services:
           --workers 2 \
           --threads 10 \
           --worker-class gthread \
-          --timeout 45 \
+          --timeout 35 \
           --keep-alive 5 \
           --max-requests 1000 \
           --max-requests-jitter 100 \

@@ -70,6 +70,8 @@ class EventViewSet(viewsets.ModelViewSet):
     )
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
+    events_list_cache_ttl_seconds = 30
+    events_list_cache_version_ttl_seconds = 60 * 60 * 24
 
     def get_permissions(self):
         """
@@ -105,6 +107,50 @@ class EventViewSet(viewsets.ModelViewSet):
         elif self.action in ["update", "partial_update"]:
             return EventUpdateSerializer
         return EventDetailSerializer
+
+    def _events_list_version_key(self, user_id: int) -> str:
+        return f"events:list:v2:u{user_id}:version"
+
+    def _get_events_list_version(self, user_id: int) -> int:
+        key = self._events_list_version_key(user_id)
+        version = cache.get(key)
+        if isinstance(version, int) and version > 0:
+            return version
+
+        cache.set(key, 1, timeout=self.events_list_cache_version_ttl_seconds)
+        return 1
+
+    def _bump_events_list_version(self, user_id: int) -> None:
+        key = self._events_list_version_key(user_id)
+        try:
+            cache.incr(key)
+            return
+        except Exception:
+            pass
+
+        current_version = cache.get(key)
+        if not isinstance(current_version, int) or current_version <= 0:
+            current_version = 1
+        cache.set(
+            key,
+            current_version + 1,
+            timeout=self.events_list_cache_version_ttl_seconds,
+        )
+
+    def _invalidate_events_list_cache(self, event: Event | None = None) -> None:
+        user_ids: set[int] = set()
+        request_user = getattr(self.request, "user", None)
+        if request_user and request_user.is_authenticated:
+            user_ids.add(request_user.id)
+
+        if event is not None:
+            if event.created_by_id:
+                user_ids.add(event.created_by_id)
+            participant_user_ids = event.availabilities.values_list("musician__user_id", flat=True)
+            user_ids.update(int(uid) for uid in participant_user_ids if uid)
+
+        for user_id in user_ids:
+            self._bump_events_list_version(user_id)
 
     def _apply_invitations(self, event, invited_musicians_ids):
         """Cria disponibilidades pendentes para músicos convidados (apenas novos)."""
@@ -155,6 +201,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
         self._apply_invitations(updated_event, invited_musicians_ids)
         self._replace_required_instruments(updated_event, required_instruments)
+        self._invalidate_events_list_cache(event=updated_event)
 
         output = EventDetailSerializer(updated_event, context={"request": request}).data
         return Response(output)
@@ -280,13 +327,14 @@ class EventViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         params_key = "&".join(f"{k}={v}" for k, v in sorted(request.GET.items()))
-        cache_key = f"events:list:v1:u{request.user.id}:{params_key}"
+        version = self._get_events_list_version(request.user.id)
+        cache_key = f"events:list:v2:u{request.user.id}:v{version}:{params_key}"
         cached = cache.get(cache_key)
         if cached is not None:
             return Response(cached)
 
         response = super().list(request, *args, **kwargs)
-        cache.set(cache_key, response.data, timeout=30)
+        cache.set(cache_key, response.data, timeout=self.events_list_cache_ttl_seconds)
         return response
 
     @action(detail=False, methods=["post"])
@@ -444,6 +492,8 @@ class EventViewSet(viewsets.ModelViewSet):
             if not is_solo:
                 self._check_and_confirm_event(event)
 
+        self._invalidate_events_list_cache(event=event)
+
     def perform_destroy(self, instance):
         """
         Apenas o criador pode deletar o evento de forma definitiva.
@@ -461,6 +511,7 @@ class EventViewSet(viewsets.ModelViewSet):
             f"IP: {self.request.META.get('REMOTE_ADDR', '')}"
         )
 
+        self._invalidate_events_list_cache(event=instance)
         super().perform_destroy(instance)
 
     def _save_required_instruments(self, event, required_instruments):
@@ -665,6 +716,7 @@ class EventViewSet(viewsets.ModelViewSet):
             self._log_event(event, "availability", f"Convite confirmado por {approver_name}.")
 
         self._check_and_confirm_event(event, confirmed_by=request.user)
+        self._invalidate_events_list_cache(event=event)
         serializer = EventDetailSerializer(event, context={"request": request})
         return Response(serializer.data)
 
@@ -719,6 +771,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
         # Se o evento estava confirmado, pode precisar voltar para proposed.
         self._check_and_confirm_event(event)
+        self._invalidate_events_list_cache(event=event)
         serializer = EventDetailSerializer(event, context={"request": request})
         return Response(serializer.data)
 
@@ -753,6 +806,7 @@ class EventViewSet(viewsets.ModelViewSet):
         event.status = "cancelled"
         event.save()
         self._log_event(event, "cancelled", "Evento cancelado pelo criador.")
+        self._invalidate_events_list_cache(event=event)
 
         serializer = EventDetailSerializer(event, context={"request": request})
         return Response(serializer.data)
@@ -831,6 +885,7 @@ class EventViewSet(viewsets.ModelViewSet):
         self._check_and_confirm_event(
             event, confirmed_by=request.user if response_value == "available" else None
         )
+        self._invalidate_events_list_cache(event=event)
 
         serializer = EventDetailSerializer(event, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
