@@ -4,9 +4,6 @@ import { useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import BottomNav from './BottomNav';
 import AnimatedBackground from './AnimatedBackground';
-import InstallBanner from '../common/InstallBanner';
-import OfflineBanner from '../common/OfflineBanner';
-import PwaUpdatePrompt from '../common/PwaUpdatePrompt';
 import AppVersionMessage from '../common/AppVersionMessage';
 
 interface LayoutProps {
@@ -51,11 +48,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="relative min-h-[100svh] bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
-      {/* Banners globais */}
-      <OfflineBanner />
-      <PwaUpdatePrompt />
-      <InstallBanner />
-
       {/* Aqui eu deixo o fundo estático pra economizar GPU no mobile, mas sem perder identidade */}
       {/* As partículas ficam só nas telas-chave (login/landing/cadastro). */}
       <AnimatedBackground enableBlueWaves enableParticles={false} />

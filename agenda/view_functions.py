@@ -89,8 +89,23 @@ PWA_ANALYTICS_ALLOWED_EVENTS = {
     "pwa_update_apply_click",
     "pwa_update_apply_success",
     "pwa_update_apply_failed",
+    "pwa_auto_update_applied",
     "pwa_update_prompt_dismissed",
     "pwa_offline_ready",
+}
+
+WEB_VITALS_ALLOWED_METRICS = {
+    "CLS",
+    "INP",
+    "LCP",
+    "FCP",
+    "TTFB",
+}
+
+WEB_VITALS_ALLOWED_RATINGS = {
+    "good",
+    "needs-improvement",
+    "poor",
 }
 
 
@@ -1583,6 +1598,51 @@ def collect_pwa_analytics(request):
         ip_address=_get_client_ip(request),
         user_agent=request.META.get("HTTP_USER_AGENT", "")[:500],
         is_authenticated=bool(user),
+    )
+
+    return Response({"status": "accepted"}, status=status.HTTP_202_ACCEPTED)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+@throttle_classes([PublicRateThrottle])
+def collect_web_vitals(request):
+    """
+    POST /api/vitals/
+    Recebe métricas de Core Web Vitals enviadas pelo frontend.
+    """
+    metric_name = str(request.data.get("name", "")).strip().upper()
+    if metric_name not in WEB_VITALS_ALLOWED_METRICS:
+        return Response({"detail": "invalid_metric"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        metric_value = float(request.data.get("value"))
+    except (TypeError, ValueError):
+        return Response({"detail": "invalid_value"}, status=status.HTTP_400_BAD_REQUEST)
+
+    if metric_value < 0 or metric_value > 600000:
+        return Response({"detail": "invalid_value"}, status=status.HTTP_400_BAD_REQUEST)
+
+    rating = str(request.data.get("rating", "")).strip().lower()
+    if rating not in WEB_VITALS_ALLOWED_RATINGS:
+        return Response({"detail": "invalid_rating"}, status=status.HTTP_400_BAD_REQUEST)
+
+    path = str(request.data.get("path", "")).strip()[:255]
+    release_label = str(request.data.get("release", "")).strip()[:80]
+    occurred_at_raw = request.data.get("ts")
+    occurred_at = parse_datetime(occurred_at_raw) if isinstance(occurred_at_raw, str) else None
+    if occurred_at is None:
+        occurred_at = timezone.now()
+
+    logger.info(
+        "web_vital_received metric=%s value=%.2f rating=%s path=%s release=%s at=%s ip=%s",
+        metric_name,
+        metric_value,
+        rating,
+        path or "-",
+        release_label or "-",
+        occurred_at.isoformat(),
+        _get_client_ip(request) or "-",
     )
 
     return Response({"status": "accepted"}, status=status.HTTP_202_ACCEPTED)

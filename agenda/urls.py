@@ -55,6 +55,7 @@ from .view_functions import (  # Musician Request views; Quote Request views; Pu
     cancel_booking,
     cancel_quote_request,
     collect_pwa_analytics,
+    collect_web_vitals,
     contractor_accept_proposal,
     create_musician_request,
     create_quote_request,
@@ -260,6 +261,7 @@ urlpatterns = [
     path("organizations/sponsors/", list_sponsors, name="sponsors"),
     path("musicians/all/", list_all_musicians_public, name="musicians-all"),
     path("analytics/pwa/", collect_pwa_analytics, name="analytics-pwa"),
+    path("vitals/", collect_web_vitals, name="web-vitals"),
     # =========================================================================
     # Contractor (Dashboard, Perfil)
     # =========================================================================

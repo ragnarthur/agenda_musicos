@@ -3,9 +3,6 @@ import { useLocation } from 'react-router-dom';
 import ContractorNavbar from './ContractorNavbar';
 import ContractorBottomNav from './ContractorBottomNav';
 import AnimatedBackground from '../Layout/AnimatedBackground';
-import OfflineBanner from '../common/OfflineBanner';
-import PwaUpdatePrompt from '../common/PwaUpdatePrompt';
-import InstallBanner from '../common/InstallBanner';
 import AppVersionMessage from '../common/AppVersionMessage';
 
 interface ContractorLayoutProps {
@@ -45,9 +42,6 @@ const ContractorLayout: React.FC<ContractorLayoutProps> = ({ children }) => {
 
   return (
     <div className="relative min-h-[100svh] bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
-      <OfflineBanner />
-      <PwaUpdatePrompt />
-      <InstallBanner />
       <AnimatedBackground enableBlueWaves enableParticles={false} />
       <a
         href="#main-content"

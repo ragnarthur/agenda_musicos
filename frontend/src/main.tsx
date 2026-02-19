@@ -27,13 +27,30 @@ const reportWebVital = ({
   if (import.meta.env.DEV) {
     console.info(`[Web Vital] ${name}: ${Math.round(value)}ms (${rating})`);
   }
-  // In production, send to analytics endpoint if available
-  if (import.meta.env.PROD && navigator.sendBeacon) {
-    navigator.sendBeacon(
-      '/api/vitals/',
-      JSON.stringify({ name, value: Math.round(value), rating })
-    );
+  if (!import.meta.env.PROD) return;
+
+  const payload = JSON.stringify({
+    name,
+    value: Math.round(value * 100) / 100,
+    rating,
+    path: window.location.pathname,
+    release: import.meta.env.VITE_RELEASE_LABEL || '',
+    ts: new Date().toISOString(),
+  });
+
+  if (navigator.sendBeacon) {
+    const blob = new Blob([payload], { type: 'application/json' });
+    const accepted = navigator.sendBeacon('/api/vitals/', blob);
+    if (accepted) return;
   }
+
+  void fetch('/api/vitals/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: payload,
+    keepalive: true,
+    cache: 'no-store',
+  }).catch(() => undefined);
 };
 
 onCLS(reportWebVital);

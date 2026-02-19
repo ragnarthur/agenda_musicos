@@ -289,7 +289,7 @@ const Landing: React.FC = () => {
 
   return (
     <FullscreenBackground enableBlueWaves>
-      <div className="relative z-10">
+      <main id="main-content" className="relative z-10">
         {/* Hero Section */}
         <section className="container mx-auto px-4 py-20 text-center">
           {/* User Type Toggle */}
@@ -540,7 +540,7 @@ const Landing: React.FC = () => {
             <Shield className="h-5 w-5 text-gray-400 group-hover:text-amber-400 transition-colors" />
           </Link>
         </section>
-      </div>
+      </main>
 
       {/* Modal de instruções para iOS */}
       <AnimatePresence>

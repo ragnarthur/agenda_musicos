@@ -179,7 +179,10 @@ const CityDisplay: React.FC<CityDisplayProps> = ({ onDismiss }) => {
               </button>
             </div>
             <button
+              type="button"
               onClick={handleDismiss}
+              aria-label="Fechar aviso de localização"
+              title="Fechar aviso de localização"
               className="text-red-400 hover:text-red-300 transition-colors flex-shrink-0"
             >
               <X className="h-4 w-4 sm:h-5 sm:w-5" />

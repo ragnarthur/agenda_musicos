@@ -10,6 +10,9 @@ import Loading from './components/common/Loading';
 import AppToaster from './components/common/AppToaster';
 import ErrorBoundary from './components/ErrorBoundary';
 import ScrollToTop from './components/routing/ScrollToTop';
+import InstallBanner from './components/common/InstallBanner';
+import OfflineBanner from './components/common/OfflineBanner';
+import PwaUpdatePrompt from './components/common/PwaUpdatePrompt';
 import { ADMIN_CHILD_ROUTES, ADMIN_ROUTES } from './routes/adminRoutes';
 
 // Lazy load de páginas para otimizar o bundle inicial
@@ -569,6 +572,9 @@ function App() {
             <CompanyAuthProvider>
               <AdminAuthProvider>
                 <ErrorBoundary>
+                  <OfflineBanner />
+                  <PwaUpdatePrompt />
+                  <InstallBanner />
                   <AppRoutes />
                 </ErrorBoundary>
                 <AppToaster />

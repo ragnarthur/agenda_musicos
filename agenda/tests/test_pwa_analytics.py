@@ -41,6 +41,20 @@ class PwaAnalyticsTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(PwaAnalyticsEvent.objects.count(), 0)
 
+    def test_accepts_auto_update_applied_event(self):
+        payload = {
+            "event": "pwa_auto_update_applied",
+            "data": {"trigger": "auto"},
+        }
+
+        response = self.client.post(self.url, payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.assertEqual(PwaAnalyticsEvent.objects.count(), 1)
+        event = PwaAnalyticsEvent.objects.first()
+        assert event is not None
+        self.assertEqual(event.event_name, "pwa_auto_update_applied")
+
     def test_sanitizes_metadata_and_links_authenticated_user(self):
         user = User.objects.create_user(username="ana", email="ana@test.com", password="123456")
         self.client.force_authenticate(user=user)
