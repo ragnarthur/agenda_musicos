@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
 
 
@@ -84,10 +84,9 @@ class Instrument(models.Model):
 
     def increment_usage(self):
         """Incrementa contador de uso."""
-        self.usage_count = models.F("usage_count") + 1
-        self.save(update_fields=["usage_count"])
-        # Refresh para ter o valor atualizado
-        self.refresh_from_db()
+        type(self).objects.filter(pk=self.pk).update(usage_count=models.F("usage_count") + 1)
+        # Refresh apenas do campo alterado para reduzir janela de leitura inconsistente.
+        self.refresh_from_db(fields=["usage_count"])
 
 
 class Organization(models.Model):
@@ -813,12 +812,21 @@ class MusicianRating(models.Model):
         from django.db.models import Avg
 
         musician = musician or self.musician
-        stats = MusicianRating.objects.filter(musician=musician).aggregate(
-            avg=Avg("rating"), total=models.Count("id")
-        )
-        musician.average_rating = stats["avg"] or 0
-        musician.total_ratings = stats["total"] or 0
-        musician.save(update_fields=["average_rating", "total_ratings"])
+        if not musician:
+            return
+
+        with transaction.atomic():
+            try:
+                locked_musician = Musician.objects.select_for_update().get(pk=musician.pk)
+            except Musician.DoesNotExist:
+                return
+
+            stats = MusicianRating.objects.filter(musician_id=locked_musician.pk).aggregate(
+                avg=Avg("rating"), total=models.Count("id")
+            )
+            locked_musician.average_rating = stats["avg"] or 0
+            locked_musician.total_ratings = stats["total"] or 0
+            locked_musician.save(update_fields=["average_rating", "total_ratings"])
 
 
 class Connection(models.Model):

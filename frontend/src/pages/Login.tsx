@@ -9,6 +9,7 @@ import OwlMascot from '../components/ui/OwlMascot';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import { getMobileInputProps } from '../utils/mobileInputs';
 import { googleAuthService } from '../services/publicApi';
+import { getHttpErrorDetail, getHttpErrorStatus } from '../utils/httpError';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -32,8 +33,7 @@ const Login: React.FC = () => {
       showToast.success('Login realizado com sucesso!');
       navigate('/dashboard');
     } catch (err: unknown) {
-      const error = err as { response?: { status?: number } };
-      if (error.response?.status === 401) {
+      if (getHttpErrorStatus(err) === 401) {
         setError('Usuário ou senha incorretos');
       } else {
         setError('Erro ao fazer login. Tente novamente.');
@@ -74,9 +74,8 @@ const Login: React.FC = () => {
         }
       } catch (error: unknown) {
         console.error('Google OAuth error:', error);
-        const message = (error as { response?: { data?: { detail?: string } } })?.response?.data
-          ?.detail;
-        const status = (error as { response?: { status?: number } })?.response?.status;
+        const message = getHttpErrorDetail(error);
+        const status = getHttpErrorStatus(error);
 
         if (status === 401) {
           showToast.error(message || 'Token do Google inválido ou expirado');

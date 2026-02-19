@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { geocodingService } from '../services/geocoding';
 import { isIOSSafari, getGeolocationTimeout, getPositionTimeout } from '../utils/browserDetection';
 
@@ -17,6 +17,8 @@ interface GeolocationData {
   hasPermission: boolean;
   isMonteCarmelo: boolean;
 }
+
+type GeolocationStateUpdater = GeolocationData | ((prev: GeolocationData) => GeolocationData);
 
 const CACHE_KEY = 'geolocation_data';
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hora em milissegundos
@@ -44,6 +46,13 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
     hasPermission: false,
     isMonteCarmelo: false,
   });
+  const isMountedRef = useRef(true);
+  const geolocationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const safeSetData = useCallback((updater: GeolocationStateUpdater) => {
+    if (!isMountedRef.current) return;
+    setData(updater);
+  }, []);
 
   const checkCache = useCallback(() => {
     try {
@@ -54,7 +63,7 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
 
         if (now - parsed.timestamp < CACHE_DURATION) {
           const isMonteCarmelo = parsed.data.city?.toLowerCase().includes('monte carmelo') || false;
-          setData({
+          safeSetData({
             city: parsed.data.city,
             state: parsed.data.state,
             country: parsed.data.country,
@@ -73,7 +82,7 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
       console.error('Erro ao ler cache:', error);
     }
     return false;
-  }, []);
+  }, [safeSetData]);
 
   const saveCache = useCallback((geoData: GeolocationData) => {
     try {
@@ -95,7 +104,7 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
 
   const requestPermission = useCallback(async () => {
     if (!navigator.geolocation) {
-      setData(prev => ({
+      safeSetData(prev => ({
         ...prev,
         isLoading: false,
         error: 'Geolocalização não é suportada neste navegador',
@@ -109,10 +118,10 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
       } as PermissionDescriptor);
 
       if (permission.state === 'granted') {
-        setData(prev => ({ ...prev, hasPermission: true }));
+        safeSetData(prev => ({ ...prev, hasPermission: true }));
         return true;
       } else if (permission.state === 'denied') {
-        setData(prev => ({
+        safeSetData(prev => ({
           ...prev,
           isLoading: false,
           error: 'Permissão de localização negada',
@@ -120,22 +129,22 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
         }));
         return false;
       } else if (permission.state === 'prompt') {
-        setData(prev => ({ ...prev, hasPermission: true }));
+        safeSetData(prev => ({ ...prev, hasPermission: true }));
         return true;
       }
     } catch {
       console.log('API de permissões não disponível, tentando geolocalização direta');
-      setData(prev => ({ ...prev, hasPermission: true }));
+      safeSetData(prev => ({ ...prev, hasPermission: true }));
       return true;
     }
 
     return false;
-  }, []);
+  }, [safeSetData]);
 
   const getLocation = useCallback(
     async (retryWithLowAccuracy = false) => {
       if (!navigator.geolocation) {
-        setData(prev => ({
+        safeSetData(prev => ({
           ...prev,
           isLoading: false,
           error: 'Geolocalização não é suportada neste navegador',
@@ -145,7 +154,7 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
 
       try {
         await requestPermission();
-        setData(prev => ({ ...prev, isLoading: true, error: null }));
+        safeSetData(prev => ({ ...prev, isLoading: true, error: null }));
 
         const timeoutDuration = getGeolocationTimeout();
         const positionTimeout = getPositionTimeout();
@@ -159,14 +168,17 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
             error.TIMEOUT = 3;
             reject(error);
           }, timeoutDuration);
+          geolocationTimeoutRef.current = timeoutId;
 
           navigator.geolocation.getCurrentPosition(
             position => {
               clearTimeout(timeoutId);
+              geolocationTimeoutRef.current = null;
               resolve(position);
             },
             error => {
               clearTimeout(timeoutId);
+              geolocationTimeoutRef.current = null;
               reject(error);
             },
             {
@@ -203,14 +215,14 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
             isMonteCarmelo,
           };
 
-          setData(newData);
+          safeSetData(newData);
           saveCache(newData); // Salvar no cache para evitar novas requisições
 
           console.log('Localização completa obtida:', newData);
         } else {
           // Geocoding falhou, mas temos coordenadas
           console.warn('Geocoding retornou nulo, salvando apenas coordenadas');
-          setData(prev => ({
+          safeSetData(prev => ({
             ...prev,
             coordinates: coords,
             isLoading: false,
@@ -258,15 +270,20 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
           }
         }
 
-        setData(prev => ({
+        safeSetData(prev => ({
           ...prev,
           isLoading: false,
           error: errorMessage,
           hasPermission: !hasErrorCode || error.code !== 1, // Se negado, não tem permissão
         }));
+      } finally {
+        if (geolocationTimeoutRef.current) {
+          clearTimeout(geolocationTimeoutRef.current);
+          geolocationTimeoutRef.current = null;
+        }
       }
     },
-    [requestPermission, saveCache]
+    [requestPermission, saveCache, safeSetData]
   );
 
   useEffect(() => {
@@ -280,7 +297,7 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
       }
 
       if (!autoStart) {
-        setData(prev => ({ ...prev, isLoading: false }));
+        safeSetData(prev => ({ ...prev, isLoading: false }));
         return;
       }
 
@@ -289,7 +306,7 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
     };
 
     initGeolocation();
-  }, [autoStart, checkCache, getLocation]);
+  }, [autoStart, checkCache, getLocation, safeSetData]);
 
   useEffect(() => {
     const onGeoUpdated = (event: Event) => {
@@ -302,7 +319,7 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
 
       const isMonteCarmelo = detail.data?.city?.toLowerCase().includes('monte carmelo') || false;
 
-      setData(prev => ({
+      safeSetData(prev => ({
         ...prev,
         city: detail.data?.city ?? prev.city,
         state: detail.data?.state ?? prev.state,
@@ -317,11 +334,21 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
 
     window.addEventListener('geolocation:updated', onGeoUpdated);
     return () => window.removeEventListener('geolocation:updated', onGeoUpdated);
+  }, [safeSetData]);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      if (geolocationTimeoutRef.current) {
+        clearTimeout(geolocationTimeoutRef.current);
+        geolocationTimeoutRef.current = null;
+      }
+    };
   }, []);
 
   const reset = useCallback(() => {
     localStorage.removeItem(CACHE_KEY);
-    setData({
+    safeSetData({
       city: null,
       state: null,
       country: null,
@@ -333,7 +360,7 @@ export const useGeolocation = (options: GeolocationOptions = {}) => {
     });
     // Após resetar, buscar nova localização
     getLocation();
-  }, [getLocation]);
+  }, [getLocation, safeSetData]);
 
   return {
     ...data,

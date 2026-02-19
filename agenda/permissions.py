@@ -35,6 +35,8 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
             return True
 
         # Escrita apenas para o criador
+        if not getattr(obj, "created_by", None):
+            return False
         return obj.created_by == request.user
 
 

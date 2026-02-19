@@ -1249,6 +1249,9 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
     logo_url = serializers.SerializerMethodField()
     owner_name = serializers.SerializerMethodField()
+    ALLOWED_LOGO_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp")
+    ALLOWED_LOGO_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
+    MAX_LOGO_SIZE_BYTES = 10 * 1024 * 1024
 
     class Meta:
         model = Organization
@@ -1286,6 +1289,23 @@ class OrganizationSerializer(serializers.ModelSerializer):
         if obj.owner:
             return obj.owner.get_full_name() or obj.owner.username
         return None
+
+    def validate_logo(self, value):
+        if not value:
+            return value
+
+        if value.size > self.MAX_LOGO_SIZE_BYTES:
+            raise serializers.ValidationError("Logo muito grande. Tamanho máximo: 10MB.")
+
+        file_name = (value.name or "").lower()
+        if not file_name.endswith(self.ALLOWED_LOGO_EXTENSIONS):
+            raise serializers.ValidationError("Formato inválido. Use JPG, PNG ou WEBP.")
+
+        content_type = (getattr(value, "content_type", "") or "").lower()
+        if content_type and content_type not in self.ALLOWED_LOGO_CONTENT_TYPES:
+            raise serializers.ValidationError("Tipo de arquivo inválido. Use JPG, PNG ou WEBP.")
+
+        return value
 
 
 class OrganizationPublicSerializer(serializers.ModelSerializer):

@@ -5,6 +5,7 @@ import type { AuthContextType, LoginCredentials, Musician } from '../types';
 import { authService, musicianService } from '../services/api';
 import { clearStoredAccessToken, clearStoredRefreshToken } from '../utils/tokenStorage';
 import { logError } from '../utils/logger';
+import { getHttpErrorStatus } from '../utils/httpError';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -52,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!isMounted) return;
         setUser(currentUser);
       } catch (error) {
-        const status = (error as { response?: { status?: number } })?.response?.status;
+        const status = getHttpErrorStatus(error);
         if (status !== 401) {
           logError('Erro ao carregar sessão do usuário:', error);
         }
@@ -115,7 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const currentUser = await musicianService.getMe();
       setUser(currentUser);
     } catch (error) {
-      const status = (error as { response?: { status?: number } })?.response?.status;
+      const status = getHttpErrorStatus(error);
       if (status !== 401) {
         logError('Erro ao atualizar sessão do usuário:', error);
       }

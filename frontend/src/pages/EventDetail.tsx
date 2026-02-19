@@ -52,7 +52,9 @@ const EventDetail: React.FC = () => {
       const data = await eventService.getById(parseInt(id));
       setEvent(data);
 
-      const myAvailability = data.availabilities?.find(a => a.musician.user.id === user?.user.id);
+      const myAvailability = data.availabilities?.find(
+        a => a.musician?.user?.id === user?.user?.id
+      );
 
       if (myAvailability) {
         setSelectedResponse(myAvailability.response);
