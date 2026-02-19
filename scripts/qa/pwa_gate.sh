@@ -33,6 +33,18 @@ ok() {
   echo "[OK] $1"
 }
 
+detect_python() {
+  if command -v python3 >/dev/null 2>&1; then
+    echo "python3"
+    return 0
+  fi
+  if command -v python >/dev/null 2>&1; then
+    echo "python"
+    return 0
+  fi
+  fail "Nenhum interpretador Python encontrado (python3/python)."
+}
+
 is_enabled() {
   local value="${1,,}"
   [[ "$value" == "1" || "$value" == "true" || "$value" == "yes" ]]
@@ -58,6 +70,7 @@ parse_host_port() {
 
 APP_HOST_PORT="$(parse_host_port "$APP_BASE_URL")" || fail "APP_BASE_URL invalida: $APP_BASE_URL"
 API_HOST_PORT="$(parse_host_port "$API_BASE_URL")" || fail "API_BASE_URL invalida: $API_BASE_URL"
+PYTHON_BIN="$(detect_python)"
 
 CURL_COMMON_ARGS=(
   -sS
@@ -116,7 +129,7 @@ assert_status() {
 
 assert_json_status_accepted() {
   local label="$1"
-  python - "$LAST_BODY_FILE" "$label" <<'PY'
+  "$PYTHON_BIN" - "$LAST_BODY_FILE" "$label" <<'PY'
 import json
 import sys
 
@@ -162,7 +175,7 @@ assert_status "200" "GET /offline.html"
 perform_request "GET" "${API_BASE_URL}/readyz/"
 assert_status "200" "GET /api/readyz/"
 
-python - "$LAST_BODY_FILE" <<'PY'
+"$PYTHON_BIN" - "$LAST_BODY_FILE" <<'PY'
 import json
 import sys
 
