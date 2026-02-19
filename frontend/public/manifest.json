@@ -52,7 +52,15 @@
       "icons": [{ "src": "/icon-192-20260210.png", "sizes": "192x192" }]
     }
   ],
-  "screenshots": [],
+  "screenshots": [
+    {
+      "src": "/screenshots/screen-musicians.png",
+      "sizes": "540x960",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Tela de acesso ao GigFlow"
+    }
+  ],
   "related_applications": [],
   "prefer_related_applications": false
 }
