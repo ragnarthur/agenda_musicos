@@ -213,12 +213,12 @@ const Musicians: React.FC = () => {
 
   const cardGrid = {
     hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.12, delayChildren: 0.08 } },
+    show: { opacity: 1, transition: { staggerChildren: 0.04, delayChildren: 0 } },
   };
 
   const cardItem = {
     hidden: { opacity: 0, y: 16 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+    show: { opacity: 1, y: 0, transition: { duration: 0.25 } },
   };
 
   const isLoaderActive = isDateFiltered ? availLoading : isLoading;
@@ -229,7 +229,7 @@ const Musicians: React.FC = () => {
       <PullToRefresh onRefresh={handleRefresh} disabled={isLoaderActive}>
         <div className="page-stack">
           {/* Header */}
-          <div className="hero-panel">
+          <div className="hero-panel" data-cascade-ignore>
             <div className="pointer-events-none absolute inset-0 -z-10 opacity-40 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.2),_transparent_40%)]" />
             <div className="flex items-start justify-between gap-4 flex-col sm:flex-row sm:items-center">
               <div className="flex items-center space-x-3">
@@ -265,7 +265,7 @@ const Musicians: React.FC = () => {
           </div>
 
           {/* Filter bar */}
-          <div className="card-contrast space-y-3">
+          <div className="card-contrast space-y-3" data-cascade-ignore>
             {/* Mini calendar — sempre visível */}
             <MiniDatePicker
               selectedDate={selectedDate}
@@ -273,23 +273,23 @@ const Musicians: React.FC = () => {
               onClear={handleClearDate}
             />
 
-            {/* Instrument pills + Limpar filtros */}
-            <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
-              {INSTRUMENT_PILLS.map(pill => (
-                <button
-                  key={pill.key}
-                  type="button"
-                  onClick={() => handleInstrumentSelect(pill.key)}
-                  className={[
-                    'flex-shrink-0 px-2 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors min-h-[32px] whitespace-nowrap',
-                    selectedInstrument === pill.key
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600',
-                  ].join(' ')}
-                >
-                  {pill.label}
-                </button>
-              ))}
+            {/* Instrument select (alternativa aos chips para reduzir poluicao visual e custo de render) */}
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="instrument-filter" className="text-xs font-medium text-gray-600">
+                Instrumento
+              </label>
+              <select
+                id="instrument-filter"
+                value={selectedInstrument}
+                onChange={event => handleInstrumentSelect(event.target.value)}
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-primary-300 focus:ring-2 focus:ring-primary-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+              >
+                {INSTRUMENT_PILLS.map(option => (
+                  <option key={option.key} value={option.key}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
             {(selectedDate || selectedInstrument !== 'all') && (
               <button
@@ -307,7 +307,7 @@ const Musicians: React.FC = () => {
 
           {/* Date filter result header */}
           {isDateFiltered && !availLoading && !availError && (
-            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 px-1">
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 px-1" data-cascade-ignore>
               <Calendar className="h-4 w-4 text-primary-500" />
               <span>
                 <span className="font-semibold text-gray-800 dark:text-gray-200">

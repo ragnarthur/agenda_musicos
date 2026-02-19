@@ -25,10 +25,13 @@ SERVER_IP="${SERVER_IP:-127.0.0.1}"
 GIT_FETCH_TIMEOUT_SECONDS="${GIT_FETCH_TIMEOUT_SECONDS:-120}"
 GIT_RESET_TIMEOUT_SECONDS="${GIT_RESET_TIMEOUT_SECONDS:-60}"
 DOCKER_DOWN_TIMEOUT_SECONDS="${DOCKER_DOWN_TIMEOUT_SECONDS:-120}"
+DOCKER_BUILD_TIMEOUT_SECONDS="${DOCKER_BUILD_TIMEOUT_SECONDS:-1200}"
 DOCKER_UP_TIMEOUT_SECONDS="${DOCKER_UP_TIMEOUT_SECONDS:-900}"
 DOCKER_RESTART_TIMEOUT_SECONDS="${DOCKER_RESTART_TIMEOUT_SECONDS:-90}"
 DOCKER_STATUS_TIMEOUT_SECONDS="${DOCKER_STATUS_TIMEOUT_SECONDS:-60}"
 CERTBOT_TIMEOUT_SECONDS="${CERTBOT_TIMEOUT_SECONDS:-600}"
+READY_WAIT_TIMEOUT_SECONDS="${READY_WAIT_TIMEOUT_SECONDS:-120}"
+READY_WAIT_INTERVAL_SECONDS="${READY_WAIT_INTERVAL_SECONDS:-3}"
 
 print_step() {
     echo -e "${GREEN}==>${NC} $1"
@@ -124,18 +127,50 @@ update_code() {
 build_and_deploy() {
     cd "$PROJECT_DIR"
 
-    print_step "Parando containers existentes..."
-    if ! run_with_timeout "$DOCKER_DOWN_TIMEOUT_SECONDS" "docker compose down" docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" down; then
-        print_warning "Falha ao parar stack (seguindo para reconstruir)."
+    # Evita janela longa de indisponibilidade: builda imagens com a stack antiga no ar
+    # e depois aplica o update em rolling-recreate do Compose.
+    run_with_timeout "$DOCKER_BUILD_TIMEOUT_SECONDS" "docker compose build backend frontend" \
+        docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build backend frontend
+
+    run_with_timeout "$DOCKER_UP_TIMEOUT_SECONDS" "docker compose up -d --remove-orphans" \
+        docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --remove-orphans
+
+    # Nginx nem sempre precisa restart, mas quando necessario esse passo garante upstream atualizado.
+    if ! run_with_timeout "$DOCKER_RESTART_TIMEOUT_SECONDS" "docker compose restart nginx" \
+        docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" restart nginx; then
+        print_warning "Falha ao reiniciar nginx (seguindo, checagem de saude vai validar)."
     fi
 
-    run_with_timeout "$DOCKER_UP_TIMEOUT_SECONDS" "docker compose up --build" docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --build --remove-orphans
-
-    print_step "Reiniciando nginx para atualizar upstream do backend..."
-    run_with_timeout "$DOCKER_RESTART_TIMEOUT_SECONDS" "docker compose restart nginx" docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" restart nginx
+    wait_for_readiness || print_warning "Backend ainda inicializando; as validacoes externas continuam no pipeline."
 
     print_step "Status dos containers:"
     run_with_timeout "$DOCKER_STATUS_TIMEOUT_SECONDS" "docker compose ps" docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" ps
+}
+
+wait_for_readiness() {
+    print_step "Aguardando backend ficar pronto (/api/readyz)..."
+
+    local max_attempts
+    max_attempts=$((READY_WAIT_TIMEOUT_SECONDS / READY_WAIT_INTERVAL_SECONDS))
+    if [ "$max_attempts" -lt 1 ]; then
+        max_attempts=1
+    fi
+
+    local attempt code
+    for attempt in $(seq 1 "$max_attempts"); do
+        code=$(curl -sS -o /dev/null -w "%{http_code}" --connect-timeout 2 --max-time 5 \
+            --resolve "${DOMAIN}:443:127.0.0.1" "https://${DOMAIN}/api/readyz/" || echo "000")
+
+        if [ "$code" = "200" ]; then
+            print_step "Backend pronto (readyz=200)."
+            return 0
+        fi
+
+        echo "  Tentativa ${attempt}/${max_attempts}: readyz=${code}"
+        sleep "$READY_WAIT_INTERVAL_SECONDS"
+    done
+
+    return 1
 }
 
 check_health() {
