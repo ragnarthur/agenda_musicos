@@ -162,7 +162,6 @@ export {
 } from './musicianService';
 // eventService/connectionService são importados diretamente para evitar chunks circulares
 export { badgeService, type BadgeProgressResponse } from './badgeService';
-export { leaderAvailabilityService } from './leaderAvailabilityService';
 export { marketplaceService } from './marketplaceService';
 export {
   notificationService,

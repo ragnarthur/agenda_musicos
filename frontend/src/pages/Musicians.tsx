@@ -1,5 +1,5 @@
 // pages/Musicians.tsx
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   Users,
@@ -66,7 +66,6 @@ const Musicians: React.FC = () => {
   const [page, setPage] = useState(initialDate ? 1 : initialPage);
   const [selectedDate, setSelectedDate] = useState<string | null>(initialDate);
   const [selectedInstrument, setSelectedInstrument] = useState(initialInstrument);
-  const isFirstDebounce = useRef(true);
 
   const activeInstrument = selectedInstrument !== 'all' ? selectedInstrument : undefined;
   const isDateFiltered = Boolean(selectedDate);
@@ -78,14 +77,6 @@ const Musicians: React.FC = () => {
     }, 300);
     return () => clearTimeout(timer);
   }, [search]);
-
-  useEffect(() => {
-    if (isFirstDebounce.current) {
-      isFirstDebounce.current = false;
-      return;
-    }
-    setPage(1);
-  }, [debouncedSearch]);
 
   const { musicians, count, hasNext, hasPrevious, isLoading, error, mutate } =
     useMusiciansPaginated({
@@ -119,6 +110,11 @@ const Musicians: React.FC = () => {
 
   const handleInstrumentSelect = useCallback((key: string) => {
     setSelectedInstrument(key);
+    setPage(1);
+  }, []);
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
     setPage(1);
   }, []);
 
@@ -255,7 +251,7 @@ const Musicians: React.FC = () => {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <input
                     value={search}
-                    onChange={event => setSearch(event.target.value)}
+                    onChange={event => handleSearchChange(event.target.value)}
                     placeholder="Buscar por nome, usuario ou instrumento"
                     className="w-full rounded-full border border-gray-200 bg-white/80 py-2 pl-9 pr-3 text-sm text-gray-700 shadow-sm focus:border-primary-300 focus:ring-2 focus:ring-primary-200"
                   />
