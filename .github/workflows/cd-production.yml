@@ -49,6 +49,7 @@ jobs:
       - name: Mostrar contexto do disparo
         shell: bash
         run: |
+          echo "🕐 Horario de Brasilia: $(TZ=America/Sao_Paulo date '+%d/%m/%Y %H:%M BRT')"
           echo "event_name=$GITHUB_EVENT_NAME"
           echo "runner_name=$RUNNER_NAME"
           echo "runner_os=$RUNNER_OS"
