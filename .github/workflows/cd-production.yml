@@ -87,6 +87,7 @@ jobs:
         run: |
           set -euo pipefail
           cd "$APP_DIR"
+          git pull --ff-only origin main
 
           # Verificar conectividade direta com o backend via Docker exec (sem sair da rede interna)
           docker compose --env-file .env.prod -f docker-compose.prod.yml \
@@ -238,6 +239,7 @@ jobs:
         run: |
           set -euo pipefail
           cd "$APP_DIR"
+          git pull --ff-only origin main
 
           # Garantir usuario de teste
           docker compose --env-file .env.prod -f docker-compose.prod.yml \
