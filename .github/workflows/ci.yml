@@ -50,22 +50,13 @@ jobs:
           pip install black isort flake8
 
       - name: Check code formatting (Black)
-        run: |
-          if ! black --check .; then
-            echo "::warning::Black encontrou divergencias de formato (advisory)."
-          fi
+        run: black --check .
 
       - name: Check import sorting (isort)
-        run: |
-          if ! isort --check-only .; then
-            echo "::warning::isort encontrou divergencias de ordenacao (advisory)."
-          fi
+        run: isort --check-only .
 
       - name: Lint with flake8
-        run: |
-          if ! flake8 agenda config marketplace notifications --select=E9,F63,F7,F82 --exclude='*/migrations/*'; then
-            echo "::warning::flake8 encontrou problemas de lint (advisory)."
-          fi
+        run: flake8 agenda config marketplace notifications --select=E9,F63,F7,F82 --exclude='*/migrations/*'
 
       - name: Run Django system checks
         run: python manage.py check
@@ -96,17 +87,11 @@ jobs:
         working-directory: frontend
 
       - name: Check formatting (Prettier)
-        run: |
-          if ! npm run format:check; then
-            echo "::warning::Prettier encontrou divergencias de formato (advisory)."
-          fi
+        run: npm run format:check
         working-directory: frontend
 
       - name: Lint frontend
-        run: |
-          if ! npm run lint; then
-            echo "::warning::ESLint encontrou problemas de lint (advisory)."
-          fi
+        run: npm run lint
         working-directory: frontend
 
       - name: Run frontend tests
@@ -118,7 +103,7 @@ jobs:
         working-directory: frontend
 
   # =========================================================
-  # SECURITY AUDIT - Dependency Vulnerability Scan (advisory)
+  # SECURITY AUDIT - Dependency Vulnerability Scan (blocking)
   # =========================================================
   security_audit:
     runs-on: ubuntu-latest
@@ -131,12 +116,10 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
-      - name: Run pip-audit (advisory)
+      - name: Run pip-audit
         run: |
           pip install --upgrade pip pip-audit
-          if ! pip-audit -r requirements.txt; then
-            echo "::warning::pip-audit encontrou vulnerabilidades (advisory)."
-          fi
+          pip-audit -r requirements.txt
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -149,11 +132,8 @@ jobs:
         run: npm ci
         working-directory: frontend
 
-      - name: Run npm audit (advisory)
-        run: |
-          if ! npm audit --omit=dev --audit-level=high; then
-            echo "::warning::npm audit encontrou vulnerabilidades (advisory)."
-          fi
+      - name: Run npm audit
+        run: npm audit --omit=dev --audit-level=high
         working-directory: frontend
 
   # =========================================================

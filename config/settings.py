@@ -419,6 +419,26 @@ LOGGING = {
     },
 }
 
+
+# =========================================================
+# Sentry (error monitoring)
+# =========================================================
+SENTRY_DSN = config("SENTRY_DSN", default="").strip()
+SENTRY_ENVIRONMENT = config("SENTRY_ENVIRONMENT", default=ENV_PROFILE).strip() or ENV_PROFILE
+SENTRY_TRACES_SAMPLE_RATE = config("SENTRY_TRACES_SAMPLE_RATE", default=0.0, cast=float)
+
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        environment=SENTRY_ENVIRONMENT,
+        integrations=[DjangoIntegration()],
+        send_default_pii=False,
+        traces_sample_rate=SENTRY_TRACES_SAMPLE_RATE,
+    )
+
 # =========================================================
 # API Documentation (OpenAPI/Swagger) - drf-spectacular
 # =========================================================

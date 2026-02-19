@@ -79,9 +79,7 @@ const LeaderAvailabilityPage: React.FC = () => {
   };
 
   const toggleRecurrenceDay = (day: number) => {
-    setRecurrenceDays(prev =>
-      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
-    );
+    setRecurrenceDays(prev => (prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]));
   };
 
   const loadAvailabilities = useCallback(async () => {
@@ -691,7 +689,10 @@ const LeaderAvailabilityPage: React.FC = () => {
                 {/* Data — modo dia único */}
                 {recurrenceMode === 'single' && (
                   <div>
-                    <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="date"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       Data *
                     </label>
                     <input
@@ -760,13 +761,18 @@ const LeaderAvailabilityPage: React.FC = () => {
                     </div>
                     {/* Preview dinâmico */}
                     {(() => {
-                      const dates = calculateRecurringDates(recurrenceDays, recurrenceStart, recurrenceUntil);
+                      const dates = calculateRecurringDates(
+                        recurrenceDays,
+                        recurrenceStart,
+                        recurrenceUntil
+                      );
                       if (dates.length === 0) return null;
                       return (
                         <div className="flex items-center gap-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/40 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
                           <RefreshCw className="h-4 w-4 flex-shrink-0" />
                           <span>
-                            <strong>{dates.length}</strong> disponibilidade{dates.length !== 1 ? 's' : ''} serão criadas
+                            <strong>{dates.length}</strong> disponibilidade
+                            {dates.length !== 1 ? 's' : ''} serão criadas
                           </span>
                         </div>
                       );
@@ -863,8 +869,14 @@ const LeaderAvailabilityPage: React.FC = () => {
                         ? 'Atualizar'
                         : recurrenceMode === 'recurring'
                           ? (() => {
-                              const n = calculateRecurringDates(recurrenceDays, recurrenceStart, recurrenceUntil).length;
-                              return n > 0 ? `Criar ${n} disponibilidades` : 'Criar disponibilidades';
+                              const n = calculateRecurringDates(
+                                recurrenceDays,
+                                recurrenceStart,
+                                recurrenceUntil
+                              ).length;
+                              return n > 0
+                                ? `Criar ${n} disponibilidades`
+                                : 'Criar disponibilidades';
                             })()
                           : 'Cadastrar'}
                   </button>

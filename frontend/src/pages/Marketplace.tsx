@@ -57,6 +57,7 @@ type CityOption = { id: number; name: string; state: string };
 type CloseStatus = 'closed' | 'cancelled';
 type CloseTarget = { gig: MarketplaceGig; status: CloseStatus } | null;
 type HireTarget = { gig: MarketplaceGig; applications: MarketplaceApplication[] } | null;
+type ClearChatTarget = { gigId: number; applicationId: number; counterpartName: string } | null;
 type GigListViewMode = 'active' | 'history' | 'all';
 const DURATION_PRESETS = ['1', '2', '3', '4'];
 
@@ -159,6 +160,7 @@ const Marketplace: React.FC = () => {
   const [chatSending, setChatSending] = useState<Record<number, boolean>>({});
   const [chatClearing, setChatClearing] = useState<Record<number, boolean>>({});
   const [chatDraftByApp, setChatDraftByApp] = useState<Record<number, string>>({});
+  const [clearChatTarget, setClearChatTarget] = useState<ClearChatTarget>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [cityQuery, setCityQuery] = useState('');
   const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
@@ -393,12 +395,7 @@ const Marketplace: React.FC = () => {
     }
   };
 
-  const handleClearAppChat = async (gigId: number, applicationId: number) => {
-    const confirmed = window.confirm(
-      'Deseja apagar todo o histórico do chat com este candidato? Esta ação não pode ser desfeita.'
-    );
-    if (!confirmed) return;
-
+  const clearAppChat = async (gigId: number, applicationId: number) => {
     try {
       setChatClearing(prev => ({ ...prev, [applicationId]: true }));
       await marketplaceService.clearApplicationChat(gigId, applicationId);
@@ -409,6 +406,16 @@ const Marketplace: React.FC = () => {
     } finally {
       setChatClearing(prev => ({ ...prev, [applicationId]: false }));
     }
+  };
+
+  const requestClearAppChat = (gigId: number, applicationId: number, counterpartName: string) => {
+    setClearChatTarget({ gigId, applicationId, counterpartName });
+  };
+
+  const handleConfirmClearAppChat = async () => {
+    if (!clearChatTarget) return;
+    await clearAppChat(clearChatTarget.gigId, clearChatTarget.applicationId);
+    setClearChatTarget(null);
   };
 
   const handleHire = async () => {
@@ -1288,7 +1295,11 @@ const Marketplace: React.FC = () => {
                                                     <button
                                                       type="button"
                                                       onClick={() =>
-                                                        handleClearAppChat(gig.id, application.id)
+                                                        requestClearAppChat(
+                                                          gig.id,
+                                                          application.id,
+                                                          application.musician_name
+                                                        )
                                                       }
                                                       disabled={chatClearing[application.id]}
                                                       className="inline-flex items-center gap-1 rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold text-rose-700 hover:border-rose-300 disabled:opacity-60 transition-colors"
@@ -1444,7 +1455,13 @@ const Marketplace: React.FC = () => {
                                           </p>
                                           <button
                                             type="button"
-                                            onClick={() => handleClearAppChat(gig.id, myAppId)}
+                                            onClick={() =>
+                                              requestClearAppChat(
+                                                gig.id,
+                                                myAppId,
+                                                gig.created_by_name || 'contratante'
+                                              )
+                                            }
                                             disabled={chatClearing[myAppId]}
                                             className="inline-flex items-center gap-1 rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold text-rose-700 hover:border-rose-300 disabled:opacity-60 transition-colors"
                                           >
@@ -2080,6 +2097,23 @@ const Marketplace: React.FC = () => {
           confirmVariant="warning"
           loading={closeLoading}
           icon={<Ban className="h-5 w-5" />}
+        />
+
+        <ConfirmModal
+          isOpen={!!clearChatTarget}
+          onClose={() => setClearChatTarget(null)}
+          onConfirm={handleConfirmClearAppChat}
+          title="Apagar histórico do chat"
+          message={
+            clearChatTarget
+              ? `Deseja apagar todo o histórico do chat com ${clearChatTarget.counterpartName}? Esta ação não pode ser desfeita.`
+              : ''
+          }
+          confirmText="Apagar"
+          cancelText="Cancelar"
+          confirmVariant="danger"
+          loading={clearChatTarget ? Boolean(chatClearing[clearChatTarget.applicationId]) : false}
+          icon={<Eraser className="h-5 w-5" />}
         />
 
         {showBackToTop && !showCreateModal ? (

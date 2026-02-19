@@ -61,6 +61,16 @@ jobs:
             echo "manual_mode=${{ github.event.inputs.mode }}"
           fi
 
+      - name: Registrar commit atual para rollback
+        if: github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'deploy')
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$APP_DIR"
+          PRE_DEPLOY_SHA=$(git rev-parse HEAD)
+          echo "PRE_DEPLOY_SHA=$PRE_DEPLOY_SHA" >> "$GITHUB_ENV"
+          echo "Commit antes do deploy: $PRE_DEPLOY_SHA"
+
       - name: Executar deploy remoto
         if: github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'deploy')
         shell: bash
@@ -326,3 +336,27 @@ jobs:
           docker compose --env-file .env.prod -f docker-compose.prod.yml ps
           echo "== ultimos logs (backend/frontend/nginx) =="
           docker compose --env-file .env.prod -f docker-compose.prod.yml logs --tail=120 backend frontend nginx
+
+      - name: Rollback automatico em falha de deploy
+        if: failure() && (github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'deploy'))
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$APP_DIR"
+
+          if [ -z "${PRE_DEPLOY_SHA:-}" ]; then
+            echo "PRE_DEPLOY_SHA ausente; rollback automatico ignorado."
+            exit 0
+          fi
+
+          CURRENT_SHA=$(git rev-parse HEAD || true)
+          echo "Rollback para commit anterior: $PRE_DEPLOY_SHA (atual: ${CURRENT_SHA:-desconhecido})"
+
+          git fetch origin
+          git reset --hard "$PRE_DEPLOY_SHA"
+
+          if command -v timeout >/dev/null 2>&1; then
+            timeout --foreground 20m ./deploy.sh build
+          else
+            ./deploy.sh build
+          fi

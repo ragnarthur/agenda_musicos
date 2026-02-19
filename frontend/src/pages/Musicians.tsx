@@ -53,7 +53,8 @@ const Musicians: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialSearch = searchParams.get('q')?.trim() ?? '';
   const initialDateParam = searchParams.get('date');
-  const initialDate = initialDateParam && DATE_QUERY_REGEX.test(initialDateParam) ? initialDateParam : null;
+  const initialDate =
+    initialDateParam && DATE_QUERY_REGEX.test(initialDateParam) ? initialDateParam : null;
   const initialInstrumentParam = searchParams.get('instrument');
   const initialInstrument =
     initialInstrumentParam && INSTRUMENT_KEYS.has(initialInstrumentParam)
@@ -308,7 +309,10 @@ const Musicians: React.FC = () => {
 
           {/* Date filter result header */}
           {isDateFiltered && !availLoading && !availError && (
-            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 px-1" data-cascade-ignore>
+            <div
+              className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 px-1"
+              data-cascade-ignore
+            >
               <Calendar className="h-4 w-4 text-primary-500" />
               <span>
                 <span className="font-semibold text-gray-800 dark:text-gray-200">
@@ -349,7 +353,10 @@ const Musicians: React.FC = () => {
               <p className="text-red-800 dark:text-red-300 mb-4">
                 Não foi possível carregar os músicos. Tente novamente.
               </p>
-              <button onClick={() => (isDateFiltered ? availMutate() : mutate())} className="btn-primary">
+              <button
+                onClick={() => (isDateFiltered ? availMutate() : mutate())}
+                className="btn-primary"
+              >
                 Tentar Novamente
               </button>
             </div>

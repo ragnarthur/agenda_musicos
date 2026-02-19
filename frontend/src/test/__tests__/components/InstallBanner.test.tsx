@@ -24,9 +24,7 @@ vi.mock('@/utils/analytics', () => ({
 vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: { children?: ReactNode }) => children,
   motion: {
-    div: ({ children, ...rest }: HTMLAttributes<HTMLDivElement>) => (
-      <div {...rest}>{children}</div>
-    ),
+    div: ({ children, ...rest }: HTMLAttributes<HTMLDivElement>) => <div {...rest}>{children}</div>,
   },
 }));
 

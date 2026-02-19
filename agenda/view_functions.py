@@ -17,8 +17,8 @@ from django.db import connection
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
-from django.utils.dateparse import parse_datetime
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.pagination import PageNumberPagination
@@ -53,9 +53,9 @@ from .models import (
     MusicianRating,
     MusicianRequest,
     Organization,
+    PwaAnalyticsEvent,
     QuoteProposal,
     QuoteRequest,
-    PwaAnalyticsEvent,
 )
 from .serializers import (
     BookingEventSerializer,

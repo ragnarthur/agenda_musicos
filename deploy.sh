@@ -32,6 +32,7 @@ DOCKER_STATUS_TIMEOUT_SECONDS="${DOCKER_STATUS_TIMEOUT_SECONDS:-60}"
 CERTBOT_TIMEOUT_SECONDS="${CERTBOT_TIMEOUT_SECONDS:-600}"
 READY_WAIT_TIMEOUT_SECONDS="${READY_WAIT_TIMEOUT_SECONDS:-120}"
 READY_WAIT_INTERVAL_SECONDS="${READY_WAIT_INTERVAL_SECONDS:-3}"
+DB_TASKS_TIMEOUT_SECONDS="${DB_TASKS_TIMEOUT_SECONDS:-900}"
 
 print_step() {
     echo -e "${GREEN}==>${NC} $1"
@@ -132,6 +133,8 @@ build_and_deploy() {
     run_with_timeout "$DOCKER_BUILD_TIMEOUT_SECONDS" "docker compose build backend frontend" \
         docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build backend frontend
 
+    run_database_tasks
+
     run_with_timeout "$DOCKER_UP_TIMEOUT_SECONDS" "docker compose up -d --remove-orphans" \
         docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --remove-orphans
 
@@ -145,6 +148,37 @@ build_and_deploy() {
 
     print_step "Status dos containers:"
     run_with_timeout "$DOCKER_STATUS_TIMEOUT_SECONDS" "docker compose ps" docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" ps
+}
+
+run_database_tasks() {
+    cd "$PROJECT_DIR"
+
+    run_with_timeout "$DOCKER_UP_TIMEOUT_SECONDS" "docker compose up -d db pgbouncer redis" \
+        docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d db pgbouncer redis
+
+    run_with_timeout "$DB_TASKS_TIMEOUT_SECONDS" "Executando migrations e collectstatic" \
+        docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" run --rm backend sh -c "
+python - <<'PY'
+import socket
+import time
+import sys
+
+host = 'pgbouncer'
+port = 5432
+for attempt in range(60):
+    try:
+        with socket.create_connection((host, port), timeout=2):
+            print('PgBouncer pronto')
+            break
+    except OSError:
+        print(f'Aguardando PgBouncer ({attempt + 1}/60)...')
+        time.sleep(2)
+else:
+    sys.exit('PgBouncer nao ficou pronto a tempo')
+PY
+python manage.py migrate --noinput
+python manage.py collectstatic --noinput
+"
 }
 
 wait_for_readiness() {
