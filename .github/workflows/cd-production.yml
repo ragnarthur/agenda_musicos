@@ -244,6 +244,24 @@ jobs:
           check_url "https://${DOMAIN}/api/readyz/" "readyz-main-domain" "${DOMAIN}"
           check_url "https://${API_DOMAIN}/api/readyz/" "readyz-api-domain" "${API_DOMAIN}"
 
+      - name: Executar PWA release gate em producao (blocking)
+        if: github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'deploy')
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$APP_DIR"
+
+          DOMAIN="${{ secrets.PROD_DOMAIN }}"
+          if [ -z "${DOMAIN:-}" ]; then
+            DOMAIN="gigflowagenda.com.br"
+          fi
+
+          chmod +x scripts/qa/pwa_gate.sh
+          APP_BASE_URL="https://${DOMAIN}" \
+          API_BASE_URL="https://${DOMAIN}/api" \
+          RESOLVE_IP="127.0.0.1" \
+          bash scripts/qa/pwa_gate.sh
+
       - name: Executar upload stress test (foto de perfil)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'upload-stress'
         shell: bash

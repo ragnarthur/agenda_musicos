@@ -2,7 +2,7 @@
 
 Este projeto usa GitHub Actions com dois workflows:
 
-- `CI` (`.github/workflows/ci.yml`): testes/lint/build backend e frontend.
+- `CI` (`.github/workflows/ci.yml`): testes/lint/build backend e frontend + gate PWA bloqueante.
 - `CD Production` (`.github/workflows/cd-production.yml`): deploy no servidor de producao via runner self-hosted.
 
 ## O que ja foi configurado
@@ -19,7 +19,7 @@ Este projeto usa GitHub Actions com dois workflows:
   - `PROD_SSH_KEY` (chave privada de deploy)
 - Branch protection na `main`:
   - PR obrigatorio para merge.
-  - Checks obrigatorios: `backend`, `frontend`, `e2e`.
+  - Checks obrigatorios: `backend`, `frontend`, `pwa_gate`, `e2e`.
   - Resolucao de conversa obrigatoria.
 - Environment `production` criado no GitHub.
 
@@ -42,7 +42,22 @@ Este projeto usa GitHub Actions com dois workflows:
 7. Quando esse `CI` da `main` concluir com sucesso, o `CD Production` dispara automaticamente no runner do proprio servidor e executa:
    - `./deploy.sh deploy`
    - `./deploy.sh status`
+   - `scripts/qa/pwa_gate.sh` (bloqueante)
    - `docker compose ... ps`
+
+## Quality Gate PWA
+
+- Script automatizado: `scripts/qa/pwa_gate.sh`
+- Checklist de homologacao: `docs/qa/PWA_RELEASE_GATE.md`
+- Runbook de incidente: `docs/qa/PWA_INCIDENT_RUNBOOK.md`
+
+Exemplo de execucao manual:
+
+```bash
+APP_BASE_URL="https://gigflowagenda.com.br" \
+API_BASE_URL="https://gigflowagenda.com.br/api" \
+bash scripts/qa/pwa_gate.sh
+```
 
 ## Disparo manual de deploy
 

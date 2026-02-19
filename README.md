@@ -445,6 +445,8 @@ npm run test:ci
 - `docs/ARCHITECTURE.md` - Arquitetura do sistema (componentes, modelo de domínio, fluxos, integrações)
 - `docs/authentication-flows.md` - Fluxos de autenticação (JWT, OAuth, sessão)
 - `docs/CICD_PRODUCAO.md` - Pipeline CI/CD e deploy em produção
+- `docs/qa/PWA_RELEASE_GATE.md` - Gate de release e checklist de homologação PWA
+- `docs/qa/PWA_INCIDENT_RUNBOOK.md` - Runbook de incidente para regressões PWA
 - `docs/configuracao-google-oauth.md` - Setup Google OAuth no servidor
 - `docs/troubleshooting-telegram-webhook.md` - Correção webhook Telegram
 - `deploy/automation/README.md` - Automações de backup e monitoramento

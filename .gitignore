@@ -71,6 +71,7 @@ AGENTS.md
 !README.md
 !frontend/README.md
 !docs/*.md
+!docs/**/*.md
 
 # Test coverage
 htmlcov/
