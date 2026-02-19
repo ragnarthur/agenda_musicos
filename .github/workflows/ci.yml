@@ -195,6 +195,8 @@ jobs:
         env:
           APP_BASE_URL: "http://127.0.0.1:4173"
           API_BASE_URL: "http://127.0.0.1:8000/api"
+          # vite preview nao replica headers de cache do nginx de producao
+          REQUIRE_SW_NO_STORE: "false"
         run: |
           chmod +x scripts/qa/pwa_gate.sh
           bash scripts/qa/pwa_gate.sh

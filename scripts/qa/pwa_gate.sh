@@ -12,6 +12,8 @@ RESOLVE_IP="${RESOLVE_IP:-}"
 
 CURL_CONNECT_TIMEOUT="${CURL_CONNECT_TIMEOUT:-5}"
 CURL_MAX_TIME="${CURL_MAX_TIME:-15}"
+REQUIRE_SW_NO_CACHE="${REQUIRE_SW_NO_CACHE:-true}"
+REQUIRE_SW_NO_STORE="${REQUIRE_SW_NO_STORE:-true}"
 
 TMP_FILES=()
 
@@ -29,6 +31,11 @@ fail() {
 
 ok() {
   echo "[OK] $1"
+}
+
+is_enabled() {
+  local value="${1,,}"
+  [[ "$value" == "1" || "$value" == "true" || "$value" == "yes" ]]
 }
 
 parse_host_port() {
@@ -141,9 +148,13 @@ perform_request "GET" "${APP_BASE_URL}/sw.js"
 assert_status "200" "GET /sw.js"
 
 sw_cache_control="$(awk -F': ' 'tolower($1)=="cache-control" {print tolower($2)}' "$LAST_HEADERS_FILE" | tr -d '\r')"
-[[ "$sw_cache_control" == *"no-cache"* ]] || fail "sw.js sem cache-control no-cache"
-[[ "$sw_cache_control" == *"no-store"* ]] || fail "sw.js sem cache-control no-store"
-ok "GET /sw.js -> cache-control contem no-cache e no-store"
+if is_enabled "$REQUIRE_SW_NO_CACHE"; then
+  [[ "$sw_cache_control" == *"no-cache"* ]] || fail "sw.js sem cache-control no-cache"
+fi
+if is_enabled "$REQUIRE_SW_NO_STORE"; then
+  [[ "$sw_cache_control" == *"no-store"* ]] || fail "sw.js sem cache-control no-store"
+fi
+ok "GET /sw.js -> cache-control validado"
 
 perform_request "GET" "${APP_BASE_URL}/offline.html"
 assert_status "200" "GET /offline.html"
