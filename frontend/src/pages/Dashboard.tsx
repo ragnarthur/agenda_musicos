@@ -91,9 +91,16 @@ const Dashboard: React.FC = memo(() => {
   const prefersReducedMotion = useReducedMotion();
   const musicianId = user?.id ?? 0;
 
-  const { events: upcomingEvents, isLoading: loadingEvents, mutate: mutateUpcoming } =
-    useUpcomingEvents();
-  const { events: pastEvents, isLoading: loadingPastEvents, mutate: mutatePast } = usePastEvents({
+  const {
+    events: upcomingEvents,
+    isLoading: loadingEvents,
+    mutate: mutateUpcoming,
+  } = useUpcomingEvents();
+  const {
+    events: pastEvents,
+    isLoading: loadingPastEvents,
+    mutate: mutatePast,
+  } = usePastEvents({
     daysBack: 30,
   });
   const {
@@ -166,7 +173,6 @@ const Dashboard: React.FC = memo(() => {
     <Layout>
       <PullToRefresh onRefresh={handleRefresh} disabled={loading}>
         <div className="page-stack pt-2">
-
           {/* Greeting */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -186,9 +192,7 @@ const Dashboard: React.FC = memo(() => {
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={
-                prefersReducedMotion ? { duration: 0.2 } : { delay: 0.06, duration: 0.3 }
-              }
+              transition={prefersReducedMotion ? { duration: 0.2 } : { delay: 0.06, duration: 0.3 }}
             >
               <div className="rounded-2xl bg-amber-50 dark:bg-amber-950/25 border border-amber-200 dark:border-amber-800/50 overflow-hidden">
                 <div className="flex items-center gap-2 px-4 pt-4 pb-2">
@@ -240,9 +244,7 @@ const Dashboard: React.FC = memo(() => {
             <motion.section
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={
-                prefersReducedMotion ? { duration: 0.2 } : { delay: 0.1, duration: 0.3 }
-              }
+              transition={prefersReducedMotion ? { duration: 0.2 } : { delay: 0.1, duration: 0.3 }}
             >
               <p className="text-xs font-heading font-semibold uppercase tracking-widest text-muted mb-3">
                 Hoje · {todayEvents.length}
@@ -282,9 +284,7 @@ const Dashboard: React.FC = memo(() => {
             <motion.section
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={
-                prefersReducedMotion ? { duration: 0.2 } : { delay: 0.14, duration: 0.3 }
-              }
+              transition={prefersReducedMotion ? { duration: 0.2 } : { delay: 0.14, duration: 0.3 }}
             >
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs font-heading font-semibold uppercase tracking-widest text-muted">
@@ -334,9 +334,7 @@ const Dashboard: React.FC = memo(() => {
             <motion.section
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={
-                prefersReducedMotion ? { duration: 0.2 } : { delay: 0.18, duration: 0.3 }
-              }
+              transition={prefersReducedMotion ? { duration: 0.2 } : { delay: 0.18, duration: 0.3 }}
             >
               <p className="text-xs font-heading font-semibold uppercase tracking-widest text-muted mb-3">
                 Mais tarde
@@ -377,9 +375,7 @@ const Dashboard: React.FC = memo(() => {
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={
-              prefersReducedMotion ? { duration: 0.2 } : { delay: 0.22, duration: 0.3 }
-            }
+            transition={prefersReducedMotion ? { duration: 0.2 } : { delay: 0.22, duration: 0.3 }}
           >
             <CompactCalendar events={calendarEvents} />
           </motion.div>
@@ -412,7 +408,6 @@ const Dashboard: React.FC = memo(() => {
               <Plus className="h-5 w-5" />
             </Link>
           </div>
-
         </div>
       </PullToRefresh>
     </Layout>

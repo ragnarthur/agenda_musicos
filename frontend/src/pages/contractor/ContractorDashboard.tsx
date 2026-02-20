@@ -1,12 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  Search,
-  PlusCircle,
-  Clock,
-  MessageSquare,
-  ChevronRight,
-} from 'lucide-react';
+import { Search, PlusCircle, Clock, MessageSquare, ChevronRight } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import ContractorLayout from '../../components/contractor/ContractorLayout';
 import PullToRefresh from '../../components/common/PullToRefresh';
@@ -64,10 +58,7 @@ export default function ContractorDashboard() {
     await fetchData();
   }, [fetchData]);
 
-  const pendingRequests = useMemo(
-    () => requests.filter(r => r.status === 'pending'),
-    [requests]
-  );
+  const pendingRequests = useMemo(() => requests.filter(r => r.status === 'pending'), [requests]);
   const respondedRequests = useMemo(
     () => requests.filter(r => r.status !== 'pending').slice(0, 3),
     [requests]
@@ -100,7 +91,6 @@ export default function ContractorDashboard() {
     <ContractorLayout>
       <PullToRefresh onRefresh={handleRefresh} disabled={loading}>
         <div className="page-stack pt-2">
-
           {/* Greeting */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -120,9 +110,7 @@ export default function ContractorDashboard() {
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={
-                prefersReducedMotion ? { duration: 0.2 } : { delay: 0.06, duration: 0.3 }
-              }
+              transition={prefersReducedMotion ? { duration: 0.2 } : { delay: 0.06, duration: 0.3 }}
             >
               <div className="rounded-2xl bg-amber-50 dark:bg-amber-950/25 border border-amber-200 dark:border-amber-800/50 overflow-hidden">
                 <div className="flex items-center gap-2 px-4 pt-4 pb-2">
@@ -161,9 +149,7 @@ export default function ContractorDashboard() {
             <motion.section
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={
-                prefersReducedMotion ? { duration: 0.2 } : { delay: 0.1, duration: 0.3 }
-              }
+              transition={prefersReducedMotion ? { duration: 0.2 } : { delay: 0.1, duration: 0.3 }}
             >
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs font-heading font-semibold uppercase tracking-widest text-muted">
@@ -232,9 +218,7 @@ export default function ContractorDashboard() {
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={
-              prefersReducedMotion ? { duration: 0.2 } : { delay: 0.18, duration: 0.3 }
-            }
+            transition={prefersReducedMotion ? { duration: 0.2 } : { delay: 0.18, duration: 0.3 }}
             className="flex flex-wrap gap-3"
           >
             <Link
@@ -252,7 +236,6 @@ export default function ContractorDashboard() {
               Novo Pedido
             </Link>
           </motion.div>
-
         </div>
       </PullToRefresh>
     </ContractorLayout>
