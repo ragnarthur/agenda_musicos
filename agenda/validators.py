@@ -3,8 +3,8 @@ import re
 
 from rest_framework import serializers
 
-_HTML_TAG_RE = re.compile(r'<[^>]+>', re.DOTALL)
-_DANGEROUS_PROTO_RE = re.compile(r'javascript\s*:', re.IGNORECASE)
+_HTML_TAG_RE = re.compile(r"<[^>]+>", re.DOTALL)
+_DANGEROUS_PROTO_RE = re.compile(r"javascript\s*:", re.IGNORECASE)
 
 
 def sanitize_string(value, *, max_length=None, allow_empty=True, to_lower=False, to_upper=False):
@@ -24,8 +24,8 @@ def sanitize_string(value, *, max_length=None, allow_empty=True, to_lower=False,
             "Este campo não pode estar vazio ou conter apenas espaços."
         )
     # Remove tags HTML e protocolos perigosos
-    cleaned = _HTML_TAG_RE.sub('', cleaned)
-    cleaned = _DANGEROUS_PROTO_RE.sub('', cleaned)
+    cleaned = _HTML_TAG_RE.sub("", cleaned)
+    cleaned = _DANGEROUS_PROTO_RE.sub("", cleaned)
     cleaned = cleaned.strip()
     if not cleaned:
         if allow_empty:
