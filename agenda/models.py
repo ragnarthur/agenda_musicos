@@ -198,7 +198,9 @@ class Membership(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["user", "organization"], name="unique_membership_user_org"),
+            models.UniqueConstraint(
+                fields=["user", "organization"], name="unique_membership_user_org"
+            ),
         ]
         ordering = ["organization__name", "user__username"]
         verbose_name = "Membro da organização"
