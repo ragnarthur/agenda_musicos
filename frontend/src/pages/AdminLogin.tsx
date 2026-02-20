@@ -48,9 +48,7 @@ const AdminLogin: React.FC = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-500/10 rounded-full mb-4 ring-1 ring-indigo-500/20">
             <Shield className="h-8 w-8 text-indigo-400" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-            GigFlow Admin
-          </h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">GigFlow Admin</h1>
           <p className="text-slate-400">Acesso Administrativo</p>
         </div>
 
@@ -78,9 +76,7 @@ const AdminLogin: React.FC = () => {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Senha
-              </label>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Senha</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <input
@@ -103,9 +99,7 @@ const AdminLogin: React.FC = () => {
                   onChange={e => setRememberMe(e.target.checked)}
                   className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-900"
                 />
-                <span className="text-sm text-slate-300">
-                  Permanecer conectado
-                </span>
+                <span className="text-sm text-slate-300">Permanecer conectado</span>
               </label>
             </div>
 
