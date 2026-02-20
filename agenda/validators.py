@@ -1,10 +1,15 @@
 # agenda/validators.py
+import re
+
 from rest_framework import serializers
+
+_HTML_TAG_RE = re.compile(r'<[^>]+>', re.DOTALL)
+_DANGEROUS_PROTO_RE = re.compile(r'javascript\s*:', re.IGNORECASE)
 
 
 def sanitize_string(value, *, max_length=None, allow_empty=True, to_lower=False, to_upper=False):
     """
-    Sanitiza uma string: trim, normaliza case e valida tamanho.
+    Sanitiza uma string: remove tags HTML, protocolos perigosos, trim, normaliza case e valida tamanho.
     Retorna None para strings vazias quando allow_empty=True.
     """
     if value is None:
@@ -12,6 +17,16 @@ def sanitize_string(value, *, max_length=None, allow_empty=True, to_lower=False,
     if not isinstance(value, str):
         return value
     cleaned = value.strip()
+    if not cleaned:
+        if allow_empty:
+            return None
+        raise serializers.ValidationError(
+            "Este campo não pode estar vazio ou conter apenas espaços."
+        )
+    # Remove tags HTML e protocolos perigosos
+    cleaned = _HTML_TAG_RE.sub('', cleaned)
+    cleaned = _DANGEROUS_PROTO_RE.sub('', cleaned)
+    cleaned = cleaned.strip()
     if not cleaned:
         if allow_empty:
             return None
