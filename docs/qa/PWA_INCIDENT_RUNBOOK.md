@@ -19,20 +19,21 @@ Guia rapido para diagnostico e resposta quando o PWA quebrar em producao.
 ## Triage imediato (5-10 min)
 
 1. Verificar run mais recente de CI e CD.
-2. Executar:
+2. Se falha no `pwa_gate`, baixar artefato `pwa-mobile-gate-artifacts` da run para traces/videos.
+3. Executar:
 
 ```bash
 ./deploy.sh status
 ```
 
-3. Verificar saude:
+4. Verificar saude:
 
 ```bash
 curl -sS https://gigflowagenda.com.br/healthz/
 curl -sS https://gigflowagenda.com.br/api/readyz/
 ```
 
-4. Rodar gate manual contra producao:
+5. Rodar gate manual contra producao:
 
 ```bash
 APP_BASE_URL="https://gigflowagenda.com.br" \

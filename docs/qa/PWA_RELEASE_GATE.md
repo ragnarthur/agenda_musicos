@@ -34,7 +34,25 @@ Validacoes obrigatorias:
 6. `POST /api/vitals/` retorna `202`
 7. `POST /api/analytics/pwa/` com `pwa_auto_update_applied` retorna `202`
 
-## Etapa 2: Smoke manual curto (obrigatorio para go-live)
+## Etapa 2: Smoke mobile automatizado (bloqueante no CI)
+
+Executado no job `pwa_gate` com Playwright:
+
+- Android Chrome emulado (Chromium / Pixel 5)
+- iOS Safari emulado (WebKit / iPhone SE)
+
+Cobertura obrigatoria:
+
+1. Rotas criticas carregam sem erro JS em runtime.
+2. Deep link `/musicos?instrument=bass` sem loop de loading.
+3. Aliases de instrumento em `/musicos`:
+   - `violao`
+   - `violonista`
+   - `acoustic_guitar`
+   - `acoustic guitar`
+4. `offline.html` renderiza CTA de reconexao.
+
+## Etapa 3: Smoke manual curto (recomendado para go-live)
 
 ### Android Chrome
 
@@ -78,6 +96,7 @@ Preencher no PR/release:
 Go-live permitido apenas quando:
 
 1. `backend`, `frontend`, `pwa_gate`, `e2e` e `security_audit` em verde.
-2. CD em verde.
-3. Smoke manual Android + iOS concluido.
-4. Nenhuma regressao critica de loading infinito.
+2. O `pwa_gate` inclui smoke HTTP + smoke mobile emulado (Android/iOS) sem falhas.
+3. CD em verde.
+4. Smoke manual Android + iOS concluido (quando houver janela de go-live).
+5. Nenhuma regressao critica de loading infinito.

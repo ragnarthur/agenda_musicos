@@ -153,6 +153,10 @@ jobs:
         run: npm ci
         working-directory: frontend
 
+      - name: Install Playwright browsers (mobile emulation)
+        run: npx playwright install --with-deps chromium webkit
+        working-directory: frontend
+
       - name: Prepare database
         run: python manage.py migrate --noinput
 
@@ -201,6 +205,12 @@ jobs:
           chmod +x scripts/qa/pwa_gate.sh
           bash scripts/qa/pwa_gate.sh
 
+      - name: Executar PWA mobile gate (iPhone SE + Android emulado, blocking)
+        env:
+          PWA_MOBILE_BASE_URL: "http://127.0.0.1:4173"
+        run: npm run test:pwa-mobile
+        working-directory: frontend
+
       - name: Coletar logs do gate em falha
         if: failure()
         run: |
@@ -208,6 +218,16 @@ jobs:
           tail -n 200 /tmp/pwa-gate-backend.log || true
           echo "=== frontend preview log ==="
           tail -n 200 /tmp/pwa-gate-frontend.log || true
+
+      - name: Upload artifacts do mobile gate (falha)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pwa-mobile-gate-artifacts
+          path: |
+            frontend/playwright-report-mobile
+            frontend/test-results-mobile
+          if-no-files-found: ignore
 
   # =========================================================
   # SECURITY AUDIT - Dependency Vulnerability Scan (blocking)
