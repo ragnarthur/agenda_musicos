@@ -231,7 +231,9 @@ def notify_new_gig_in_city(gig_id: int) -> None:
         )
         return
 
-    logger.info("[marketplace] Vaga %s — iniciando notificacao para %d usuario(s)", gig_id, len(recipients))
+    logger.info(
+        "[marketplace] Vaga %s — iniciando notificacao para %d usuario(s)", gig_id, len(recipients)
+    )
 
     title = f"Nova vaga em {city_name}: {gig.title}"
     date_text = gig.event_date.strftime("%d/%m/%Y") if gig.event_date else "A combinar"

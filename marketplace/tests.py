@@ -534,7 +534,9 @@ class MarketplaceNotificationServiceTest(TestCase):
             is_active=True,
         )
 
-    @patch("notifications.services.marketplace_notifications.notification_service.send_notification")
+    @patch(
+        "notifications.services.marketplace_notifications.notification_service.send_notification"
+    )
     @patch("notifications.services.marketplace_notifications.send_event_notification_email")
     def test_notify_new_gig_in_city_sends_email_and_telegram(self, email_mock, telegram_mock):
         gig = Gig.objects.create(
@@ -569,7 +571,9 @@ class MarketplaceNotificationServiceTest(TestCase):
         )
         self.recipient_musician.delete()
 
-        with self.assertLogs("notifications.services.marketplace_notifications", level="INFO") as logs:
+        with self.assertLogs(
+            "notifications.services.marketplace_notifications", level="INFO"
+        ) as logs:
             notify_new_gig_in_city(gig.id)
 
         output = "\n".join(logs.output)
