@@ -1,3 +1,5 @@
+import logging
+import threading
 from decimal import Decimal, InvalidOperation
 
 from django.core.cache import cache
@@ -22,6 +24,8 @@ from notifications.services.marketplace_notifications import (
 
 from .models import Gig, GigApplication, GigChatMessage
 from .serializers import GigApplicationSerializer, GigChatMessageSerializer, GigSerializer
+
+logger = logging.getLogger(__name__)
 
 
 class GigViewSet(viewsets.ModelViewSet):
@@ -81,7 +85,17 @@ class GigViewSet(viewsets.ModelViewSet):
             contact_name=contact_name,
             contact_email=contact_email,
         )
-        transaction.on_commit(lambda gig_id=gig.id: notify_new_gig_in_city(gig_id))
+        gig_id = gig.id
+
+        def _send_notifications():
+            try:
+                notify_new_gig_in_city(gig_id)
+            except Exception:
+                logger.exception("Falha ao notificar músicos sobre nova vaga %s", gig_id)
+
+        transaction.on_commit(
+            lambda: threading.Thread(target=_send_notifications, daemon=True).start()
+        )
 
     def perform_update(self, serializer):
         gig = self.get_object()

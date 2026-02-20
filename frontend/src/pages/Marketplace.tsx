@@ -2016,7 +2016,9 @@ const Marketplace: React.FC = () => {
                     className="btn-primary w-full flex items-center justify-center gap-2"
                     disabled={creating}
                   >
-                    {editingGig ? (
+                    {creating ? (
+                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                    ) : editingGig ? (
                       <PencilLine className="h-4 w-4" />
                     ) : (
                       <Megaphone className="h-4 w-4" />
