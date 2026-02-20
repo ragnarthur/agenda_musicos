@@ -11,7 +11,7 @@ interface AdminUser {
   username: string;
   email: string;
   first_name: string;
-  last_name: string;
+  last_name: string | null;
   is_staff: boolean;
   is_superuser: boolean;
 }

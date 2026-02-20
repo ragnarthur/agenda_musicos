@@ -141,7 +141,7 @@ const AdminDashboard: React.FC = () => {
               type="checkbox"
               checked={autoRefresh}
               onChange={e => setAutoRefresh(e.target.checked)}
-              className="h-4 w-4 accent-amber-400"
+              className="h-4 w-4 accent-indigo-400"
             />
             Auto-refresh (1 min)
           </label>

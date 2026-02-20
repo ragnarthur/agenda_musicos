@@ -300,7 +300,7 @@ const Requests: React.FC = () => {
                 onClick={() => handleSort(field)}
                 className={`min-h-[36px] px-3 py-1.5 rounded-lg text-sm transition-colors ${
                   sortField === field
-                    ? 'bg-blue-500/20 text-blue-400'
+                    ? 'bg-indigo-500/20 text-indigo-400'
                     : 'bg-white/5 text-slate-400 hover:bg-white/10'
                 }`}
               >

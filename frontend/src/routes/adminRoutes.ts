@@ -39,7 +39,7 @@ export const adminNavItems = [
   },
   {
     icon: Users,
-    label: 'Solicitacões',
+    label: 'Solicitações',
     path: ADMIN_ROUTES.requests,
   },
   {
