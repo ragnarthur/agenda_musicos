@@ -15,7 +15,8 @@ class LoginRateThrottle(SimpleRateThrottle):
     scope = "login"
 
     def get_cache_key(self, request, view):
-        # Usa IP + username para identificar tentativas
+        if request.user and request.user.is_authenticated:
+            return f"throttle_login_user_{request.user.pk}"
         ident = self.get_ident(request)
         username = request.data.get("username", "")
         return f"throttle_login_{ident}_{username}"
@@ -131,29 +132,15 @@ class PublicRateThrottle(SimpleRateThrottle):
         return self.get_ident(request)
 
 
-class PreviewConflictsRateThrottle(SimpleRateThrottle):
+class ContactViewRateThrottle(SimpleRateThrottle):
     """
-    Rate limiting para preview de conflitos.
-    Endpoint chamado frequentemente durante criação de eventos.
+    Rate limiting para visualização de contato de músicos.
+    Limita o número de contatos que um contractor pode consultar por hora.
     """
 
-    scope = "preview_conflicts"
+    scope = "contact_view"
 
     def get_cache_key(self, request, view):
         if request.user.is_authenticated:
-            return f"throttle_preview_{request.user.pk}"
-        return self.get_ident(request)
-
-
-class BurstRateThrottle(SimpleRateThrottle):
-    """
-    Rate limiting para prevenir burst requests.
-    Mais restritivo que o padrão para ações sensíveis.
-    """
-
-    scope = "burst"
-
-    def get_cache_key(self, request, view):
-        if request.user.is_authenticated:
-            return f"throttle_burst_{request.user.pk}"
+            return f"throttle_contact_view_{request.user.pk}"
         return self.get_ident(request)

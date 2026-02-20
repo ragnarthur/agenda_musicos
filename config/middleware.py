@@ -13,9 +13,9 @@ class CSPMiddleware:
         self.get_response = get_response
         default_csp = (
             "default-src 'self'; "
-            "img-src 'self' data: https:; "
+            "img-src 'self' https:; "
             "script-src 'self'; "
-            "style-src 'self' 'unsafe-inline'; "
+            "style-src 'self'; "
             "connect-src 'self'"
         )
         self.csp_header = getattr(settings, "CSP_HEADER", "") or default_csp

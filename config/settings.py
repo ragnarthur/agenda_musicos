@@ -318,6 +318,7 @@ REST_FRAMEWORK = {
         "profile_update": config("THROTTLE_PROFILE_UPDATE", default="30/min"),
         "check_email": config("THROTTLE_CHECK_EMAIL", default="10/min"),
         "public": config("THROTTLE_PUBLIC", default="100/min"),
+        "contact_view": config("THROTTLE_CONTACT_VIEW", default="50/hour"),
     },
 }
 

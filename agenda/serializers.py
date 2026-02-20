@@ -1730,6 +1730,16 @@ class QuoteProposalCreateSerializer(serializers.ModelSerializer):
     def validate_message(self, value):
         return sanitize_string(value, max_length=2000, allow_empty=False)
 
+    def validate_proposed_value(self, value):
+        if value is not None:
+            if value <= 0:
+                raise serializers.ValidationError("O valor proposto deve ser positivo.")
+            if value > Decimal("100000.00"):
+                raise serializers.ValidationError(
+                    "Valor excede o máximo permitido (R$ 100.000,00)."
+                )
+        return value
+
 
 class BookingSerializer(serializers.ModelSerializer):
     """Serializer de reserva."""

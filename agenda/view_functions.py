@@ -72,7 +72,7 @@ from .serializers import (
     QuoteRequestCreateSerializer,
     QuoteRequestSerializer,
 )
-from .throttles import PublicRateThrottle
+from .throttles import ContactViewRateThrottle, PublicRateThrottle
 
 logger = logging.getLogger(__name__)
 
@@ -1535,6 +1535,7 @@ def get_unread_messages_count(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@throttle_classes([ContactViewRateThrottle])
 def get_musician_contact(request, musician_id):
     """
     GET /api/musicians/<id>/contact/
