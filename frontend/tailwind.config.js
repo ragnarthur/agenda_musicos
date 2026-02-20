@@ -7,6 +7,10 @@ export default {
       screens: {
         xs: '375px', // iPhone SE and small mobile devices
       },
+      fontFamily: {
+        sans: ['DM Sans', 'system-ui', 'sans-serif'],
+        heading: ['Syne', 'system-ui', 'sans-serif'],
+      },
       spacing: {
         'safe-top': 'env(safe-area-inset-top)',
         'safe-bottom': 'env(safe-area-inset-bottom)',

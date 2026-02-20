@@ -1,19 +1,18 @@
 // pages/Dashboard.tsx
 import React, { useMemo, memo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, Plus, Users, ListChecks, Zap, Briefcase } from 'lucide-react';
+import { ChevronRight, Plus, Zap } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import Layout from '../components/Layout/Layout';
 import PullToRefresh from '../components/common/PullToRefresh';
-import Skeleton, { SkeletonCard } from '../components/common/Skeleton';
+import Skeleton from '../components/common/Skeleton';
 import { CompactCalendar } from '../components/calendar';
 import { useAuth } from '../contexts/AuthContext';
 import { usePastEvents, useUpcomingEvents } from '../hooks/useEvents';
 import { useMusicianEvents } from '../hooks/useMusicianEvents';
 import { useDashboardNotifications } from '../hooks/useNotifications';
 import type { Event } from '../types';
-import { isToday, parseISO } from 'date-fns';
-import { getEventComputedStatus } from '../utils/events';
+import { isToday, isTomorrow, parseISO } from 'date-fns';
 
 const getStartDateTime = (event: Event): number => {
   try {
@@ -35,7 +34,6 @@ const isEventToday = (event: Event): boolean => {
       return false;
     }
   }
-
   if (event.start_datetime) {
     try {
       return isToday(parseISO(event.start_datetime));
@@ -43,8 +41,49 @@ const isEventToday = (event: Event): boolean => {
       return false;
     }
   }
-
   return false;
+};
+
+const isEventWithin7Days = (event: Event): boolean => {
+  const dateStr = event.event_date;
+  if (!dateStr) return false;
+  try {
+    const d = parseISO(dateStr);
+    const start = new Date();
+    start.setHours(23, 59, 59, 999); // end of today
+    const end = new Date();
+    end.setDate(end.getDate() + 7);
+    end.setHours(23, 59, 59, 999);
+    return d > start && d <= end;
+  } catch {
+    return false;
+  }
+};
+
+const getEventDayLabel = (event: Event): string => {
+  const dateStr = event.event_date ?? event.start_datetime?.split('T')[0];
+  if (!dateStr) return '';
+  try {
+    const d = parseISO(dateStr);
+    if (isToday(d)) return 'Hoje';
+    if (isTomorrow(d)) return 'Amanhã';
+    return new Intl.DateTimeFormat('pt-BR', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    }).format(d);
+  } catch {
+    return dateStr;
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 6 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.04, duration: 0.22 },
+  }),
 };
 
 const Dashboard: React.FC = memo(() => {
@@ -52,27 +91,16 @@ const Dashboard: React.FC = memo(() => {
   const prefersReducedMotion = useReducedMotion();
   const musicianId = user?.id ?? 0;
 
-  const {
-    events: upcomingEvents,
-    isLoading: loadingEvents,
-    mutate: mutateUpcoming,
-  } = useUpcomingEvents();
-  const {
-    events: pastEvents,
-    isLoading: loadingPastEvents,
-    mutate: mutatePast,
-  } = usePastEvents({
+  const { events: upcomingEvents, isLoading: loadingEvents, mutate: mutateUpcoming } =
+    useUpcomingEvents();
+  const { events: pastEvents, isLoading: loadingPastEvents, mutate: mutatePast } = usePastEvents({
     daysBack: 30,
   });
   const {
     events: musicianCalendarEvents,
     loading: loadingCalendar,
-    error: calendarError,
     mutate: mutateCalendar,
-  } = useMusicianEvents({
-    musicianId,
-    isOwnProfile: true,
-  });
+  } = useMusicianEvents({ musicianId, isOwnProfile: true });
   const {
     pendingApprovalsCount,
     pendingResponsesCount,
@@ -85,52 +113,50 @@ const Dashboard: React.FC = memo(() => {
     await Promise.all([mutateUpcoming(), mutatePast(), mutateCalendar()]);
   }, [mutateUpcoming, mutatePast, mutateCalendar]);
 
-  const { events, todayEvents, nextEvent, nextComputedStatus } = useMemo(() => {
-    const sorted = [...upcomingEvents].sort((a, b) => getStartDateTime(a) - getStartDateTime(b));
-    const today = upcomingEvents.filter(isEventToday);
-    const next = sorted[0];
-    const nextStatus = next ? getEventComputedStatus(next) : null;
-    return {
-      events: sorted.slice(0, 5),
-      todayEvents: today,
-      nextEvent: next,
-      nextComputedStatus: nextStatus,
-    };
-  }, [upcomingEvents]);
+  const sorted = useMemo(
+    () => [...upcomingEvents].sort((a, b) => getStartDateTime(a) - getStartDateTime(b)),
+    [upcomingEvents]
+  );
 
-  const agendaCount = events.length;
+  const todayEvents = useMemo(() => sorted.filter(isEventToday), [sorted]);
+  const next7DaysEvents = useMemo(() => sorted.filter(isEventWithin7Days), [sorted]);
+  const laterEvents = useMemo(
+    () => sorted.filter(e => !isEventToday(e) && !isEventWithin7Days(e)).slice(0, 3),
+    [sorted]
+  );
 
   const fallbackCalendarEvents = useMemo(() => {
     const merged = new Map<number, Event>();
-    [...upcomingEvents, ...pastEvents].forEach(event => {
-      merged.set(event.id, event);
-    });
+    [...upcomingEvents, ...pastEvents].forEach(e => merged.set(e.id, e));
     return Array.from(merged.values());
   }, [upcomingEvents, pastEvents]);
 
-  const calendarEvents = useMemo(() => {
-    if (musicianCalendarEvents.length > 0) return musicianCalendarEvents;
-    if (calendarError) return fallbackCalendarEvents;
-    return fallbackCalendarEvents;
-  }, [musicianCalendarEvents, calendarError, fallbackCalendarEvents]);
+  const calendarEvents = useMemo(
+    () => (musicianCalendarEvents.length > 0 ? musicianCalendarEvents : fallbackCalendarEvents),
+    [musicianCalendarEvents, fallbackCalendarEvents]
+  );
 
-  const recentCompletedEvents = useMemo(() => {
-    return [...pastEvents]
-      .filter(event => getEventComputedStatus(event).status === 'completed')
-      .sort((a, b) => getStartDateTime(b) - getStartDateTime(a))
-      .slice(0, 5);
-  }, [pastEvents]);
+  const hasActions = pendingApprovalsCount > 0 || pendingResponsesCount > 0;
+  const totalActions = pendingApprovalsCount + pendingResponsesCount;
+
+  const greetingDate = useMemo(() => {
+    const str = new Intl.DateTimeFormat('pt-BR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    }).format(new Date());
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }, []);
 
   if (loading) {
     return (
       <Layout>
-        <div className="page-stack py-6 sm:py-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full hidden md:block" />
-          </div>
-          <SkeletonCard count={3} />
+        <div className="page-stack py-6">
+          <Skeleton className="h-8 w-40" />
+          <Skeleton className="h-4 w-56" />
+          <Skeleton className="h-28 w-full rounded-2xl" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
         </div>
       </Layout>
     );
@@ -139,279 +165,254 @@ const Dashboard: React.FC = memo(() => {
   return (
     <Layout>
       <PullToRefresh onRefresh={handleRefresh} disabled={loading}>
-        <div className="page-stack">
-          {/* Hero */}
-          <motion.div
-            className="hero-panel"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={
-              prefersReducedMotion
-                ? { duration: 0.3 }
-                : { type: 'spring', stiffness: 120, damping: 18 }
-            }
-          >
-            <div className="hero-animated" />
+        <div className="page-stack pt-2">
 
-            <div className="spotlight pointer-events-none absolute inset-0 -z-10" />
-            <div className="relative flex flex-col md:flex-row md:items-stretch md:justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold text-primary-700">Agenda Profissional</p>
-                <h1 className="mt-1 text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-                  Olá, {user?.user?.first_name || user?.user?.username || 'Músico'}!
-                </h1>
-                <p className="mt-2 text-sm text-muted">
-                  Centralize todos os seus shows, compromissos e disponibilidades em um só lugar.
-                </p>
-              </div>
-              <div>
-                <Link
-                  to="/eventos/novo"
-                  className="inline-flex items-center gap-2 rounded-full bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-md hover:bg-primary-700 transition-transform hover:-translate-y-0.5"
-                  title="Criar novo evento"
-                >
-                  <Plus className="h-4 w-4" />
-                  Novo Evento
-                </Link>
-                <Link
-                  to="/marketplace"
-                  className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white dark:border-gray-700 px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 hover:text-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800"
-                  title="Ver oportunidades no marketplace"
-                >
-                  <Briefcase className="h-4 w-4 text-gray-700 dark:text-gray-300" />
-                  Vagas
-                </Link>
-              </div>
-            </div>
+          {/* Greeting */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={prefersReducedMotion ? { duration: 0.2 } : { duration: 0.3 }}
+          >
+            <p className="text-xs text-muted uppercase tracking-widest font-heading mb-1">
+              {greetingDate}
+            </p>
+            <h1 className="text-2xl sm:text-3xl font-heading font-bold text-gray-900 dark:text-white">
+              Olá, {user?.user?.first_name || user?.user?.username || 'Músico'}
+            </h1>
           </motion.div>
 
-          {/* Compact Calendar - First content after hero */}
+          {/* Agir Agora */}
+          {hasActions && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={
+                prefersReducedMotion ? { duration: 0.2 } : { delay: 0.06, duration: 0.3 }
+              }
+            >
+              <div className="rounded-2xl bg-amber-50 dark:bg-amber-950/25 border border-amber-200 dark:border-amber-800/50 overflow-hidden">
+                <div className="flex items-center gap-2 px-4 pt-4 pb-2">
+                  <Zap className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                  <span className="text-xs font-heading font-semibold uppercase tracking-widest text-amber-700 dark:text-amber-400">
+                    Agir agora · {totalActions}
+                  </span>
+                </div>
+
+                {pendingApprovalsCount > 0 && (
+                  <Link
+                    to="/eventos"
+                    className="flex items-center justify-between px-4 py-3 border-t border-amber-100 dark:border-amber-900/50 hover:bg-amber-100/60 dark:hover:bg-amber-900/30 transition-colors"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                        {pendingApprovalsCount === 1
+                          ? '1 músico aguardando aprovação'
+                          : `${pendingApprovalsCount} músicos aguardando aprovação`}
+                      </p>
+                      <p className="text-xs text-muted">Revise e aprove as entradas</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted flex-shrink-0" />
+                  </Link>
+                )}
+
+                {pendingResponsesCount > 0 && (
+                  <Link
+                    to="/eventos?pending_responses=true"
+                    className="flex items-center justify-between px-4 py-3 border-t border-amber-100 dark:border-amber-900/50 hover:bg-amber-100/60 dark:hover:bg-amber-900/30 transition-colors"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                        {pendingResponsesCount === 1
+                          ? '1 proposta aguardando sua resposta'
+                          : `${pendingResponsesCount} propostas aguardando sua resposta`}
+                      </p>
+                      <p className="text-xs text-muted">Aceite ou recuse as propostas</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted flex-shrink-0" />
+                  </Link>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Hoje */}
+          {todayEvents.length > 0 && (
+            <motion.section
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={
+                prefersReducedMotion ? { duration: 0.2 } : { delay: 0.1, duration: 0.3 }
+              }
+            >
+              <p className="text-xs font-heading font-semibold uppercase tracking-widest text-muted mb-3">
+                Hoje · {todayEvents.length}
+              </p>
+              <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                {todayEvents.map((event, i) => (
+                  <motion.div
+                    key={event.id}
+                    custom={i}
+                    variants={!prefersReducedMotion ? itemVariants : undefined}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    <Link
+                      to={`/eventos/${event.id}`}
+                      className="flex items-center justify-between py-3 gap-3 hover:opacity-70 transition-opacity"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                          {event.title}
+                        </p>
+                        <p className="text-xs text-muted truncate">
+                          {event.start_time ? event.start_time.slice(0, 5) + 'h' : ''}
+                          {event.location ? ` · ${event.location}` : ''}
+                        </p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted flex-shrink-0" />
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.section>
+          )}
+
+          {/* Próximos 7 dias */}
+          {next7DaysEvents.length > 0 && (
+            <motion.section
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={
+                prefersReducedMotion ? { duration: 0.2 } : { delay: 0.14, duration: 0.3 }
+              }
+            >
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-heading font-semibold uppercase tracking-widest text-muted">
+                  Próximos 7 dias · {next7DaysEvents.length}
+                </p>
+                <Link
+                  to="/eventos"
+                  className="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline"
+                >
+                  Ver todos
+                </Link>
+              </div>
+              <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                {next7DaysEvents.map((event, i) => (
+                  <motion.div
+                    key={event.id}
+                    custom={i}
+                    variants={!prefersReducedMotion ? itemVariants : undefined}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    <Link
+                      to={`/eventos/${event.id}`}
+                      className="flex items-center justify-between py-3 gap-3 hover:opacity-70 transition-opacity"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                          {event.title}
+                        </p>
+                        {event.location && (
+                          <p className="text-xs text-muted truncate">{event.location}</p>
+                        )}
+                      </div>
+                      <span className="text-xs text-muted whitespace-nowrap flex-shrink-0 mr-1">
+                        {getEventDayLabel(event)}
+                      </span>
+                      <ChevronRight className="h-4 w-4 text-muted flex-shrink-0" />
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.section>
+          )}
+
+          {/* Mais tarde */}
+          {laterEvents.length > 0 && (
+            <motion.section
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={
+                prefersReducedMotion ? { duration: 0.2 } : { delay: 0.18, duration: 0.3 }
+              }
+            >
+              <p className="text-xs font-heading font-semibold uppercase tracking-widest text-muted mb-3">
+                Mais tarde
+              </p>
+              <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                {laterEvents.map((event, i) => (
+                  <motion.div
+                    key={event.id}
+                    custom={i}
+                    variants={!prefersReducedMotion ? itemVariants : undefined}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    <Link
+                      to={`/eventos/${event.id}`}
+                      className="flex items-center justify-between py-3 gap-3 hover:opacity-70 transition-opacity"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                          {event.title}
+                        </p>
+                        {event.location && (
+                          <p className="text-xs text-muted truncate">{event.location}</p>
+                        )}
+                      </div>
+                      <span className="text-xs text-muted whitespace-nowrap flex-shrink-0 mr-1">
+                        {getEventDayLabel(event)}
+                      </span>
+                      <ChevronRight className="h-4 w-4 text-muted flex-shrink-0" />
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.section>
+          )}
+
+          {/* Calendário */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={
-              prefersReducedMotion
-                ? { duration: 0.3 }
-                : { type: 'spring', stiffness: 120, damping: 18, delay: 0.05 }
+              prefersReducedMotion ? { duration: 0.2 } : { delay: 0.22, duration: 0.3 }
             }
           >
             <CompactCalendar events={calendarEvents} />
           </motion.div>
 
-          {/* Past Events */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={
-              prefersReducedMotion
-                ? { duration: 0.3 }
-                : { type: 'spring', stiffness: 120, damping: 18, delay: 0.08 }
-            }
-          >
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Eventos Concluídos (últimos 30 dias)
-                  </h2>
-                  <p className="text-sm text-muted">Relembre os shows recentes já realizados.</p>
-                </div>
-                <Link
-                  to="/eventos?past=true"
-                  className="text-sm font-semibold text-purple-700 hover:text-purple-800 dark:text-purple-300 dark:hover:text-purple-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/50 rounded"
-                >
-                  Ver histórico completo
-                </Link>
-              </div>
-
-              {recentCompletedEvents.length === 0 ? (
-                <div className="surface-card-soft border-dashed border-purple-200/70 dark:border-purple-300/25 p-6 text-center text-sm text-muted">
-                  Nenhum evento concluído nos últimos 30 dias.
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {recentCompletedEvents.map(event => (
-                    <Link
-                      key={event.id}
-                      to={`/eventos/${event.id}`}
-                      className="surface-card border-purple-200/70 dark:border-purple-300/25 p-4 hover:shadow-xl hover:-translate-y-0.5 transition-all"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-semibold uppercase text-purple-700 dark:text-purple-300">
-                          Concluído
-                        </span>
-                        <span className="text-xs text-subtle">{event.event_date}</span>
-                      </div>
-                      <p className="text-base font-semibold text-gray-900 dark:text-white">
-                        {event.title}
-                      </p>
-                      <p className="text-sm text-muted">{event.location || 'Local não definido'}</p>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Stats Cards */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={
-              prefersReducedMotion
-                ? { duration: 0.3 }
-                : { type: 'spring', stiffness: 120, damping: 18, delay: 0.1 }
-            }
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={
-                  prefersReducedMotion
-                    ? { duration: 0.3 }
-                    : { type: 'spring', stiffness: 120, damping: 18, delay: 0.1 }
-                }
-              >
-                <Link
-                  to="/eventos"
-                  className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 hover:shadow-xl hover:-translate-y-0.5 transition-all block"
-                >
-                  <Briefcase className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {agendaCount}
-                  </p>
-                  <p className="text-sm text-muted">Eventos Agendados</p>
-                </Link>
-              </motion.div>
-
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={
-                  prefersReducedMotion
-                    ? { duration: 0.3 }
-                    : { type: 'spring', stiffness: 120, damping: 18, delay: 0.15 }
-                }
-              >
-                <Link
-                  to="/eventos"
-                  className="bg-white dark:bg-gray-800 rounded-2xl border border-green-200 dark:border-green-800 p-4 sm:p-6 hover:shadow-xl hover:-translate-y-0.5 transition-all block"
-                >
-                  <ListChecks className="h-8 w-8 text-green-600 dark:text-green-400" />
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {pendingApprovalsCount}
-                  </p>
-                  <p className="text-sm text-muted">Solicitações Pendentes</p>
-                </Link>
-              </motion.div>
-
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={
-                  prefersReducedMotion
-                    ? { duration: 0.3 }
-                    : { type: 'spring', stiffness: 120, damping: 18, delay: 0.2 }
-                }
-              >
-                <Link
-                  to="/eventos?pending_responses=true"
-                  className="bg-white dark:bg-gray-800 rounded-2xl border border-amber-200 dark:border-amber-800 p-4 sm:p-6 hover:shadow-xl hover:-translate-y-0.5 transition-all block"
-                >
-                  <Zap className="h-8 w-8 text-amber-600 dark:text-amber-400" />
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {pendingResponsesCount}
-                  </p>
-                  <p className="text-sm text-muted">Respostas Pendentes</p>
-                </Link>
-              </motion.div>
-
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={
-                  prefersReducedMotion
-                    ? { duration: 0.3 }
-                    : { type: 'spring', stiffness: 120, damping: 18, delay: 0.25 }
-                }
-              >
-                <Link
-                  to="/disponibilidades"
-                  className="bg-white dark:bg-gray-800 rounded-2xl border border-indigo-200 dark:border-indigo-800 p-4 sm:p-6 hover:shadow-xl hover:-translate-y-0.5 transition-all block"
-                >
-                  <Clock className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {todayEvents.length}
-                  </p>
-                  <p className="text-sm text-muted">Compromissos de Hoje</p>
-                </Link>
-              </motion.div>
-            </div>
-          </motion.div>
-
-          {/* Next Event */}
-          {nextEvent && (
+          {/* Empty state */}
+          {upcomingEvents.length === 0 && !hasActions && (
             <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={
-                prefersReducedMotion
-                  ? { duration: 0.3 }
-                  : { type: 'spring', stiffness: 140, damping: 20, delay: 0.3 }
-              }
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-16"
             >
+              <p className="text-muted text-sm">Nenhum evento agendado.</p>
               <Link
-                to={`/eventos/${nextEvent.id}`}
-                className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 bg-white dark:from-gray-800 to-gray-900 rounded-2xl border border-indigo-200 dark:border-indigo-900 p-4 sm:p-6 hover:shadow-xl hover:-translate-y-0.5 transition-all block"
+                to="/eventos/novo"
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"
               >
-                <div className="flex items-start gap-3">
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                      Próximo Evento
-                    </p>
-                    {nextComputedStatus?.label && (
-                      <span className={`status-chip ${nextComputedStatus.status || 'default'}`}>
-                        {nextComputedStatus.label}
-                      </span>
-                    )}
-                  </div>
-                  <Briefcase className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
-                </div>
+                <Plus className="h-4 w-4" />
+                Criar Evento
               </Link>
             </motion.div>
           )}
 
-          {/* No Events */}
-          {events.length === 0 && !loading && (
-            <motion.div
-              initial={{ opacity: 0, y: 100 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={
-                prefersReducedMotion
-                  ? { duration: 0.3 }
-                  : { type: 'spring', stiffness: 120, damping: 18 }
-              }
+          {/* FAB */}
+          <div className="fixed bottom-20 right-4 sm:bottom-8 sm:right-6 z-30 pb-safe">
+            <Link
+              to="/eventos/novo"
+              className="flex items-center justify-center w-12 h-12 rounded-full bg-primary-600 text-white shadow-lg hover:bg-primary-700 transition-colors"
+              aria-label="Novo Evento"
             >
-              <div className="flex flex-col items-center justify-center py-20">
-                <div className="text-center">
-                  <Users className="h-12 w-12 text-gray-400" />
-                  <p className="mt-4 text-muted">Você ainda não tem eventos agendados.</p>
-                  <p className="text-sm text-muted">
-                    {user?.user?.first_name || user?.user?.username || 'Músico'}! Vamos criar o
-                    primeiro.
-                  </p>
-                  <Link
-                    to="/eventos/novo"
-                    className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-primary-700 transition-transform hover:-translate-y-0.5"
-                  >
-                    <Plus className="h-5 w-5" />
-                    Criar Evento
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
-          )}
+              <Plus className="h-5 w-5" />
+            </Link>
+          </div>
+
         </div>
       </PullToRefresh>
     </Layout>
