@@ -38,34 +38,39 @@ def _notify_user(
     object_id: int | None = None,
     include_email: bool = True,
     include_telegram: bool = True,
-) -> None:
+) -> tuple[bool, bool]:
+    email_sent = False
+    telegram_sent = False
+
     can_notify, prefs = _can_notify(user)
     if not can_notify:
-        return
+        return email_sent, telegram_sent
 
     url = _frontend_marketplace_url(gig_id)
 
     if include_email and user.email:
         try:
-            send_event_notification_email(
-                to_email=user.email,
-                template_name="notification",
-                subject=title,
-                context={
-                    "title": title,
-                    "body": body,
-                    "first_name": user.first_name or user.username,
-                    "action_url": url,
-                    "action_text": "Abrir Vagas",
-                    "preview_text": title,
-                },
+            email_sent = bool(
+                send_event_notification_email(
+                    to_email=user.email,
+                    template_name="notification",
+                    subject=title,
+                    context={
+                        "title": title,
+                        "body": body,
+                        "first_name": user.first_name or user.username,
+                        "action_url": url,
+                        "action_text": "Abrir Vagas",
+                        "preview_text": title,
+                    },
+                )
             )
         except Exception as exc:
             logger.error("Erro ao enviar email de marketplace para %s: %s", user.username, exc)
 
     if include_telegram and prefs.telegram_verified and prefs.telegram_chat_id:
         try:
-            notification_service.send_notification(
+            result = notification_service.send_notification(
                 user=user,
                 notification_type=NotificationType.MARKETPLACE_ACTIVITY,
                 title=title,
@@ -77,8 +82,19 @@ def _notify_user(
                 },
                 force_channel="telegram",
             )
+            telegram_sent = bool(getattr(result, "success", False))
         except Exception as exc:
             logger.error("Erro ao enviar Telegram de marketplace para %s: %s", user.username, exc)
+
+    if not email_sent and not telegram_sent:
+        logger.info(
+            "[marketplace] Usuario %s nao teve envio em nenhum canal (email_incluido=%s, telegram_incluido=%s)",
+            user.username,
+            include_email,
+            include_telegram,
+        )
+
+    return email_sent, telegram_sent
 
 
 def _extract_city_name(raw_city: str | None) -> str:
@@ -149,16 +165,31 @@ def notify_new_gig_in_city(gig_id: int) -> None:
         .first()
     )
     if not gig:
+        logger.info("[marketplace] Vaga %s nao encontrada para notificacao", gig_id)
         return
 
     city_raw = (gig.city or "").strip()
     if not city_raw:
+        logger.info("[marketplace] Vaga %s sem cidade definida; notificacao ignorada", gig_id)
         return
 
     city_name = _extract_city_name(city_raw)
     city_key = _normalize_city_key(city_name)
     if not city_key:
+        logger.info(
+            "[marketplace] Vaga %s sem city_key valido (city_raw=%r, city_name=%r)",
+            gig_id,
+            city_raw,
+            city_name,
+        )
         return
+
+    logger.info(
+        "[marketplace] Nova vaga %s — buscando musicos em city_key=%r (extraido de %r)",
+        gig_id,
+        city_key,
+        city_raw,
+    )
 
     # Busca candidatos por match simples de cidade; o matching "tolerante" final e feito em Python.
     musicians = (
@@ -173,6 +204,8 @@ def notify_new_gig_in_city(gig_id: int) -> None:
     # - cidade exatamente igual (case-insensitive)
     # - ou cidade começando com o nome (cobre formatos como "Cidade/UF")
     musicians = musicians.filter(city__istartswith=city_name)
+    db_count = musicians.count()
+    logger.info("[marketplace] Vaga %s — %d musico(s) candidato(s) no DB", gig_id, db_count)
 
     # Comparacao final tolerante (ex: "São Paulo" vs "Sao Paulo")
     recipients = []
@@ -181,8 +214,24 @@ def notify_new_gig_in_city(gig_id: int) -> None:
         if m_city_key == city_key:
             recipients.append(musician.user)
 
+    logger.info(
+        "[marketplace] Vaga %s — %d destinatario(s) apos filtro Python",
+        gig_id,
+        len(recipients),
+    )
+
     if not recipients:
+        logger.info(
+            "[marketplace] Vaga %s — nenhum destinatario em %r (city_key=%r). "
+            "DB retornou %d musico(s), nenhum passou no filtro Python.",
+            gig_id,
+            city_raw,
+            city_key,
+            db_count,
+        )
         return
+
+    logger.info("[marketplace] Vaga %s — iniciando notificacao para %d usuario(s)", gig_id, len(recipients))
 
     title = f"Nova vaga em {city_name}: {gig.title}"
     date_text = gig.event_date.strftime("%d/%m/%Y") if gig.event_date else "A combinar"
@@ -206,14 +255,38 @@ def notify_new_gig_in_city(gig_id: int) -> None:
         f"Abra o app para ver os detalhes e se candidatar."
     )
 
+    users_with_delivery = 0
+    users_without_delivery = 0
+    email_sent_count = 0
+    telegram_sent_count = 0
+
     for user in recipients:
-        _notify_user(
+        email_sent, telegram_sent = _notify_user(
             user,
             title=title,
             body=body,
             gig_id=gig.id,
             object_id=gig.id,
         )
+        if email_sent:
+            email_sent_count += 1
+        if telegram_sent:
+            telegram_sent_count += 1
+        if email_sent or telegram_sent:
+            users_with_delivery += 1
+        else:
+            users_without_delivery += 1
+
+    logger.info(
+        "[marketplace] Vaga %s — notificacoes processadas para %d/%d usuario(s) "
+        "(email=%d, telegram=%d, sem_envio=%d)",
+        gig_id,
+        users_with_delivery,
+        len(recipients),
+        email_sent_count,
+        telegram_sent_count,
+        users_without_delivery,
+    )
 
 
 def notify_gig_application_created(gig, application) -> None:

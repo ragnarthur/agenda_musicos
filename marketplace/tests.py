@@ -1,6 +1,7 @@
 # marketplace/tests.py
 from datetime import date, time
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -8,6 +9,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from agenda.models import Availability, Event, Musician, Organization
+from notifications.models import NotificationPreference
+from notifications.services.marketplace_notifications import notify_new_gig_in_city
 
 from .models import Gig, GigApplication, GigChatMessage
 
@@ -499,3 +502,76 @@ class GigChatAPITest(APITestCase):
         )
         self.assertEqual(close_response.status_code, status.HTTP_200_OK)
         self.assertEqual(GigChatMessage.objects.filter(gig=self.gig).count(), 0)
+
+
+class MarketplaceNotificationServiceTest(TestCase):
+    """Testes do serviço de notificação para novas vagas por cidade."""
+
+    def setUp(self):
+        self.creator = User.objects.create_user(
+            username="creator_notify", email="creator_notify@example.com", password="testpass123"
+        )
+        self.recipient = User.objects.create_user(
+            username="recipient_notify",
+            email="recipient_notify@example.com",
+            password="testpass123",
+        )
+
+        self.creator_musician = Musician.objects.create(
+            user=self.creator,
+            instrument="vocal",
+            role="member",
+            city="Monte Carmelo",
+            state="MG",
+            is_active=True,
+        )
+        self.recipient_musician = Musician.objects.create(
+            user=self.recipient,
+            instrument="guitar",
+            role="member",
+            city="Monte Carmelo",
+            state="MG",
+            is_active=True,
+        )
+
+    @patch("notifications.services.marketplace_notifications.notification_service.send_notification")
+    @patch("notifications.services.marketplace_notifications.send_event_notification_email")
+    def test_notify_new_gig_in_city_sends_email_and_telegram(self, email_mock, telegram_mock):
+        gig = Gig.objects.create(
+            title="Show em Monte Carmelo",
+            city="Monte Carmelo/MG",
+            created_by=self.creator,
+            status="open",
+        )
+        NotificationPreference.objects.update_or_create(
+            user=self.recipient,
+            defaults={
+                "notify_quote_requests": True,
+                "telegram_verified": True,
+                "telegram_chat_id": "123456",
+            },
+        )
+
+        notify_new_gig_in_city(gig.id)
+
+        self.assertEqual(email_mock.call_count, 1)
+        self.assertEqual(email_mock.call_args.kwargs["to_email"], self.recipient.email)
+        self.assertEqual(telegram_mock.call_count, 1)
+        self.assertEqual(telegram_mock.call_args.kwargs["user"], self.recipient)
+
+    @patch("notifications.services.marketplace_notifications.send_event_notification_email")
+    def test_notify_new_gig_in_city_logs_when_no_recipients(self, email_mock):
+        gig = Gig.objects.create(
+            title="Show sem destinatarios",
+            city="Monte Carmelo/MG",
+            created_by=self.creator,
+            status="open",
+        )
+        self.recipient_musician.delete()
+
+        with self.assertLogs("notifications.services.marketplace_notifications", level="INFO") as logs:
+            notify_new_gig_in_city(gig.id)
+
+        output = "\n".join(logs.output)
+        self.assertIn("nenhum destinatario", output)
+        self.assertEqual(email_mock.call_count, 0)
