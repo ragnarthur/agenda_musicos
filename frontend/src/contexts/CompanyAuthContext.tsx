@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -179,8 +180,10 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
     toast.success('Logout realizado com sucesso!');
   }, []);
 
-  logoutRef.current = logout;
-  organizationRef.current = organization;
+  useLayoutEffect(() => {
+    logoutRef.current = logout;
+    organizationRef.current = organization;
+  });
 
   const refreshToken = useCallback(async (): Promise<void> => {
     try {

@@ -152,7 +152,7 @@ def test_trial_flow():
     try:
         user.delete()  # Cascade deleta musician também
         print("   OK - Usuário removido")
-    except:
+    except Exception:
         print("   AVISO: Erro ao limpar dados")
 
     print("\n" + "=" * 40)

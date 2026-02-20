@@ -197,7 +197,9 @@ class Membership(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ("user", "organization")
+        constraints = [
+            models.UniqueConstraint(fields=["user", "organization"], name="unique_membership_user_org"),
+        ]
         ordering = ["organization__name", "user__username"]
         verbose_name = "Membro da organização"
         verbose_name_plural = "Membros das organizações"
@@ -785,7 +787,12 @@ class MusicianRating(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ["event", "musician", "rated_by"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["event", "musician", "rated_by"],
+                name="unique_musician_rating_per_event",
+            ),
+        ]
         ordering = ["-created_at"]
         verbose_name = "Avaliação de Músico"
         verbose_name_plural = "Avaliações de Músicos"

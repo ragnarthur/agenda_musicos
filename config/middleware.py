@@ -92,12 +92,11 @@ class MaxRequestSizeMiddleware:
             except (TypeError, ValueError):
                 content_length = None
         if content_length and content_length > self.max_size:
-            from rest_framework import status
-            from rest_framework.response import Response
+            from django.http import JsonResponse
 
-            return Response(
+            return JsonResponse(
                 {"detail": "Payload muito grande. Máximo: 10MB."},
-                status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                status=413,
             )
 
         return self.get_response(request)

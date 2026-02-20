@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { adminService, api } from '../services/api';
+import { getHttpErrorStatus } from '../utils/httpError';
 import { clearStoredAccessToken, clearStoredRefreshToken } from '../utils/tokenStorage';
 
 const SESSION_KEY = 'gigflow_admin_session';
@@ -44,7 +45,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const admin = await adminService.getMe();
       setUser(admin);
     } catch (error) {
-      const status = (error as { response?: { status?: number } })?.response?.status;
+      const status = getHttpErrorStatus(error);
       if (status !== 401) {
         console.error('Erro ao verificar autenticação do admin:', error);
       }

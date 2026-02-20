@@ -14,6 +14,7 @@ def normalize_musical_genres(apps, schema_editor):
     MusicianRequest = apps.get_model("agenda", "MusicianRequest")
 
     for Model in (Musician, MusicianRequest):
+        to_update = []
         for obj in Model.objects.all().iterator():
             genres = getattr(obj, "musical_genres", None)
             if not isinstance(genres, list):
@@ -38,7 +39,10 @@ def normalize_musical_genres(apps, schema_editor):
 
             if deduped != genres:
                 obj.musical_genres = deduped
-                obj.save(update_fields=["musical_genres"])
+                to_update.append(obj)
+
+        if to_update:
+            Model.objects.bulk_update(to_update, ["musical_genres"])
 
 
 class Migration(migrations.Migration):
