@@ -190,7 +190,11 @@ services:
         max-size: "10m"
         max-file: "3"
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/healthz/ || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget --header='Host: gigflowagenda.com.br' -q -O /dev/null http://127.0.0.1/healthz/ || exit 1",
+        ]
       interval: 20s
       timeout: 8s
       retries: 6

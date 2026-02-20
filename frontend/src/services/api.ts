@@ -30,8 +30,17 @@ export const uploadApi = axios.create({
 });
 
 let refreshingPromise: Promise<void> | null = null;
+let refreshBlockedUntil = 0;
+let lastRefreshError: unknown = null;
+let sessionExpiryHandlingInProgress = false;
+const REFRESH_RETRY_COOLDOWN_MS = 5000;
 
 const refreshAuthToken = async (): Promise<void> => {
+  const now = Date.now();
+  if (!refreshingPromise && refreshBlockedUntil > now) {
+    return Promise.reject(lastRefreshError ?? new Error('Refresh em cooldown'));
+  }
+
   if (!refreshingPromise) {
     const doRefresh = async () => {
       await axios.post(`${API_URL}/token/refresh/`, {}, { withCredentials: true });
@@ -39,14 +48,16 @@ const refreshAuthToken = async (): Promise<void> => {
 
     refreshingPromise = doRefresh()
       .then(() => {
-        refreshingPromise = null;
+        refreshBlockedUntil = 0;
+        lastRefreshError = null;
       })
-      .catch(() => {
-        // Não limpa refreshingPromise em caso de erro para evitar burst de requisições
-        // Aguarda 5 segundos antes de permitir nova tentativa
-        setTimeout(() => {
-          refreshingPromise = null;
-        }, 5000);
+      .catch(error => {
+        refreshBlockedUntil = Date.now() + REFRESH_RETRY_COOLDOWN_MS;
+        lastRefreshError = error;
+        throw error;
+      })
+      .finally(() => {
+        refreshingPromise = null;
       });
   }
   return refreshingPromise;
@@ -116,7 +127,13 @@ api.interceptors.response.use(
         const isUserProfileCall = originalRequest.url?.includes('/musicians/me/');
 
         // Em rotas públicas, não redirecionamos para login (ex: verificação de email)
-        if (!isPublicAuthPath && !isOnPublicRoute && !isUserProfileCall) {
+        if (
+          !sessionExpiryHandlingInProgress &&
+          !isPublicAuthPath &&
+          !isOnPublicRoute &&
+          !isUserProfileCall
+        ) {
+          sessionExpiryHandlingInProgress = true;
           toast.error('Sessão expirada. Faça login novamente.');
           setTimeout(() => {
             if (
