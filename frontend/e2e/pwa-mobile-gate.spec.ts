@@ -6,6 +6,7 @@ const INSTRUMENT_ALIASES = ['violao', 'violonista', 'acoustic_guitar', 'acoustic
 const BENIGN_ERROR_MARKERS = [
   'from accessing a frame with origin "https://accounts.google.com"',
   "can't access dead object",
+  'due to access control checks',
 ];
 
 const assertNoKnownOutageMarkers = async (route: string, page: Page) => {
