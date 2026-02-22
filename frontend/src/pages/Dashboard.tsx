@@ -209,7 +209,7 @@ const Dashboard: React.FC = memo(() => {
                   {user?.average_rating != null && (
                     <span className="flex items-center gap-1 text-xs bg-white/60 dark:bg-white/10 border border-gray-200/60 dark:border-white/10 rounded-full px-2.5 py-1 font-medium text-gray-700 dark:text-gray-300">
                       <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
-                      {user.average_rating.toFixed(1)}
+                      {Number(user.average_rating).toFixed(1)}
                     </span>
                   )}
                 </div>
@@ -475,7 +475,7 @@ const Dashboard: React.FC = memo(() => {
                   <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/10 flex items-center gap-1.5">
                     <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
                     <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                      {user.average_rating.toFixed(1)}
+                      {Number(user.average_rating).toFixed(1)}
                     </span>
                     {user.total_ratings != null && (
                       <span className="text-xs text-muted">· {user.total_ratings} avaliações</span>
