@@ -335,6 +335,7 @@ class Musician(models.Model):
     def __str__(self):
         return f"{self.user.get_full_name() or self.user.username} - {self.get_instrument_label()}"
 
+
 class Event(models.Model):
     """
     Representa uma proposta de evento/show na agenda.

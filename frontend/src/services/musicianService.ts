@@ -99,9 +99,7 @@ export const musicianService = {
     return response.data;
   },
 
-  getStats: async (
-    musicianId: number
-  ): Promise<{ total_events: number }> => {
+  getStats: async (musicianId: number): Promise<{ total_events: number }> => {
     const response = await api.get(`/musicians/${musicianId}/stats/`);
     return response.data;
   },
