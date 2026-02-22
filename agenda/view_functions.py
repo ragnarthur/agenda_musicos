@@ -496,27 +496,8 @@ def get_musician_stats(request, musician_id):
             .count()
         )
 
-        events_as_leader = Event.objects.filter(
-            created_by=musician.user, status__in=["confirmed", "approved"]
-        ).count()
-
-        events_as_member = (
-            Event.objects.filter(
-                availabilities__musician=musician,
-                availabilities__response="available",
-                status__in=["confirmed", "approved"],
-            )
-            .exclude(created_by=musician.user)
-            .distinct()
-            .count()
-        )
-
         return Response(
-            {
-                "total_events": total_events,
-                "events_as_leader": events_as_leader,
-                "events_as_member": events_as_member,
-            },
+            {"total_events": total_events},
             status=status.HTTP_200_OK,
         )
 

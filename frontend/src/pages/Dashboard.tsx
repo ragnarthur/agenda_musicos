@@ -203,9 +203,6 @@ const Dashboard: React.FC = memo(() => {
                   <span className="text-xs bg-white/60 dark:bg-white/10 border border-gray-200/60 dark:border-white/10 rounded-full px-2.5 py-1 font-medium text-gray-700 dark:text-gray-300">
                     {stats.total_events} eventos
                   </span>
-                  <span className="text-xs bg-white/60 dark:bg-white/10 border border-gray-200/60 dark:border-white/10 rounded-full px-2.5 py-1 font-medium text-gray-700 dark:text-gray-300">
-                    {stats.events_as_leader} como líder
-                  </span>
                   {user?.average_rating != null && (
                     <span className="flex items-center gap-1 text-xs bg-white/60 dark:bg-white/10 border border-gray-200/60 dark:border-white/10 rounded-full px-2.5 py-1 font-medium text-gray-700 dark:text-gray-300">
                       <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
@@ -451,24 +448,18 @@ const Dashboard: React.FC = memo(() => {
                 <p className="text-xs font-heading font-semibold uppercase tracking-widest text-muted mb-4">
                   Seus números
                 </p>
-                <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="grid grid-cols-2 gap-3 text-center">
                   <div>
                     <p className="text-2xl font-bold font-heading text-gray-900 dark:text-white leading-none">
                       {stats.total_events}
                     </p>
-                    <p className="text-xs text-muted mt-1">Total</p>
+                    <p className="text-xs text-muted mt-1">Eventos</p>
                   </div>
                   <div>
                     <p className="text-2xl font-bold font-heading text-gray-900 dark:text-white leading-none">
-                      {stats.events_as_leader}
+                      {user?.total_ratings ?? 0}
                     </p>
-                    <p className="text-xs text-muted mt-1">Líder</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold font-heading text-gray-900 dark:text-white leading-none">
-                      {stats.events_as_member}
-                    </p>
-                    <p className="text-xs text-muted mt-1">Membro</p>
+                    <p className="text-xs text-muted mt-1">Avaliações</p>
                   </div>
                 </div>
                 {user?.average_rating != null && (

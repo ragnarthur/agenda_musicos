@@ -89,7 +89,6 @@ class MusicianSerializer(serializers.ModelSerializer):
             "full_name",
             "instrument",
             "instruments",
-            "role",
             "bio",
             "phone",
             "instagram",

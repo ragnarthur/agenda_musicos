@@ -101,7 +101,7 @@ export const musicianService = {
 
   getStats: async (
     musicianId: number
-  ): Promise<{ total_events: number; events_as_leader: number; events_as_member: number }> => {
+  ): Promise<{ total_events: number }> => {
     const response = await api.get(`/musicians/${musicianId}/stats/`);
     return response.data;
   },

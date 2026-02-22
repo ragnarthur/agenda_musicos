@@ -335,11 +335,6 @@ class Musician(models.Model):
     def __str__(self):
         return f"{self.user.get_full_name() or self.user.username} - {self.get_instrument_label()}"
 
-    def is_leader(self):
-        """Compat: liderança foi descontinuada na plataforma."""
-        return False
-
-
 class Event(models.Model):
     """
     Representa uma proposta de evento/show na agenda.
