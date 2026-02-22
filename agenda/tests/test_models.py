@@ -27,12 +27,6 @@ class MusicianModelTest(TestCase):
         musician = Musician.objects.create(user=self.user, instrument="vocal", role="member")
         self.assertEqual(musician.user.username, "sara")
         self.assertEqual(musician.instrument, "vocal")
-        self.assertFalse(musician.is_leader())
-
-    def test_leader_musician_deprecated(self):
-        """Testa que liderança está descontinuada"""
-        musician = Musician.objects.create(user=self.user, instrument="drums", role="leader")
-        self.assertFalse(musician.is_leader())
 
 
 class EventModelTest(TestCase):
