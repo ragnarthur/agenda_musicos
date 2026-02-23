@@ -135,10 +135,15 @@ const AdminUsers: React.FC = () => {
     });
   };
 
-  const handleTogglePremium = async (targetUser: UsersListResponse[0]) => {
+  const handleSetPremium = async (targetUser: UsersListResponse[0], nextValue: boolean) => {
+    if (!targetUser.has_musician_profile) {
+      showToast.error('Usuário não possui perfil de músico.');
+      return;
+    }
+
     try {
       setTogglingPremium(targetUser.id);
-      const result = await adminService.togglePremium(targetUser.id);
+      const result = await adminService.setPremium(targetUser.id, nextValue);
       setUsers(prev =>
         prev.map(u =>
           u.id === targetUser.id ? { ...u, musician_is_premium: result.is_premium } : u
@@ -251,7 +256,7 @@ const AdminUsers: React.FC = () => {
                       >
                         Detalhes
                       </AdminButton>
-                      {user.musician_is_premium && (
+                      {user.has_musician_profile && user.musician_is_premium && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-300">
                           <Star className="h-3 w-3" />
                           Premium
@@ -371,8 +376,12 @@ const AdminUsers: React.FC = () => {
                 <AdminButton
                   variant={selectedUser.musician_is_premium ? 'secondary' : 'primary'}
                   size="sm"
-                  onClick={() => handleTogglePremium(selectedUser)}
-                  disabled={togglingPremium === selectedUser.id}
+                  onClick={() =>
+                    handleSetPremium(selectedUser, !Boolean(selectedUser.musician_is_premium))
+                  }
+                  disabled={
+                    togglingPremium === selectedUser.id || !selectedUser.has_musician_profile
+                  }
                 >
                   {togglingPremium === selectedUser.id
                     ? 'Aguarde...'
@@ -381,9 +390,14 @@ const AdminUsers: React.FC = () => {
                       : 'Ativar Premium'}
                 </AdminButton>
               </div>
-              {!selectedUser.musician_is_premium && (
+              {!selectedUser.has_musician_profile && (
                 <p className="text-xs text-slate-500 mt-1">
-                  Apenas músicos têm acesso ao Portal Cultural.
+                  Apenas usuários com perfil de músico podem receber acesso premium.
+                </p>
+              )}
+              {selectedUser.has_musician_profile && !selectedUser.musician_is_premium && (
+                <p className="text-xs text-slate-500 mt-1">
+                  Ative o premium para liberar o Portal Cultural desse músico.
                 </p>
               )}
             </div>

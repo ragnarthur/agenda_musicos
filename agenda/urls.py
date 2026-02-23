@@ -43,7 +43,11 @@ from .password_views import (
     PasswordResetConfirmView,
     PasswordResetRequestView,
 )
-from .premium_views import premium_portal  # noqa: E402
+from .premium_views import (  # noqa: E402
+    admin_cultural_notice_detail,
+    admin_cultural_notices,
+    premium_portal,
+)
 from .registration_views import (
     CheckEmailView,
     RegisterContractorView,
@@ -418,6 +422,16 @@ urlpatterns = [
         "admin/contact-views/stats/",
         contact_views_stats,
         name="admin-contact-views-stats",
+    ),
+    path(
+        "admin/cultural-notices/",
+        admin_cultural_notices,
+        name="admin-cultural-notices",
+    ),
+    path(
+        "admin/cultural-notices/<int:notice_id>/",
+        admin_cultural_notice_detail,
+        name="admin-cultural-notice-detail",
     ),
     # =========================================================================
     # Public Status Page

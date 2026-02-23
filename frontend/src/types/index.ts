@@ -43,11 +43,11 @@ export interface Musician {
 }
 
 export interface PortalItem {
-  source: 'salic' | 'mapas_culturais';
+  source: 'salic' | 'mapas_culturais' | 'curadoria_admin';
   external_id: string;
   title: string;
   description: string;
-  category: 'rouanet' | 'aldir_blanc' | 'festival' | 'edital' | 'premio' | 'other';
+  category: 'rouanet' | 'aldir_blanc' | 'festival' | 'edital' | 'premio' | 'noticia' | 'other';
   scope: 'nacional' | 'estadual' | 'municipal';
   state?: string;
   city?: string;

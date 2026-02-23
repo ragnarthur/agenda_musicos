@@ -19,6 +19,7 @@ const CATEGORY_LABELS: Record<PortalItem['category'], string> = {
   festival: 'Festival',
   edital: 'Edital',
   premio: 'Prêmio',
+  noticia: 'Notícia',
   other: 'Cultural',
 };
 
@@ -28,6 +29,7 @@ const CATEGORY_COLORS: Record<PortalItem['category'], string> = {
   festival: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
   edital: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
   premio: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300',
+  noticia: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300',
   other: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
 };
 
@@ -44,6 +46,7 @@ const FILTER_OPTIONS: { key: string; label: string }[] = [
   { key: 'festival', label: 'Festivais' },
   { key: 'edital', label: 'Editais' },
   { key: 'premio', label: 'Prêmios' },
+  { key: 'noticia', label: 'Notícias' },
 ];
 
 function deadlineChip(deadline?: string) {

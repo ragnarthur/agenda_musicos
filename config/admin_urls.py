@@ -1,6 +1,6 @@
 from django.urls import path
 
-from agenda.admin_management_views import toggle_premium
+from agenda.admin_management_views import set_premium, toggle_premium
 from agenda.admin_views import (
     approve_booking_request,
     booking_request_detail,
@@ -27,6 +27,8 @@ urlpatterns = [
         requests_by_city_detail,
         name="admin-city-requests-detail",
     ),
-    # Premium — toggle acesso premium de um músico
+    # Premium — endpoint explícito (preferencial)
+    path("users/<int:pk>/set-premium/", set_premium, name="admin-set-premium"),
+    # Premium — endpoint legado
     path("users/<int:pk>/toggle-premium/", toggle_premium, name="admin-toggle-premium"),
 ]

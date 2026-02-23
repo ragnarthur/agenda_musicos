@@ -11,6 +11,7 @@ export interface AdminMeResponse {
   is_superuser: boolean;
   is_active: boolean;
   date_joined: string;
+  has_musician_profile?: boolean;
   musician_is_premium?: boolean;
 }
 
@@ -31,8 +32,13 @@ export const adminService = {
     await api.delete(`/users/${id}/delete/`);
   },
 
-  togglePremium: async (id: number): Promise<{ is_premium: boolean; musician_id: number }> => {
-    const response = await api.patch(`/admin/users/${id}/toggle-premium/`);
+  setPremium: async (
+    id: number,
+    isPremium: boolean
+  ): Promise<{ is_premium: boolean; musician_id: number }> => {
+    const response = await api.patch(`/admin/users/${id}/set-premium/`, {
+      is_premium: isPremium,
+    });
     return response.data;
   },
 };

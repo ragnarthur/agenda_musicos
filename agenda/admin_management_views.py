@@ -45,7 +45,7 @@ def list_admin_users(request):
 def list_all_users(request):
     """Lista todos os usuários da plataforma para admin"""
     try:
-        users = User.objects.all().order_by("-date_joined")
+        users = User.objects.select_related("musician_profile").order_by("-date_joined")
         serializer = AdminUserSerializer(users, many=True)
         return Response(serializer.data)
     except Exception as e:
@@ -576,11 +576,54 @@ def contact_views_stats(request):
 
 
 @api_view(["PATCH"])
-@permission_classes([IsAuthenticated, IsAdminUser])
+@permission_classes([IsAuthenticated, IsAdminUser, IsAppOwner])
+def set_premium(request, pk):
+    """
+    Define explicitamente o acesso premium de um músico.
+    Body esperado: { "is_premium": true|false }
+    """
+    if "is_premium" not in request.data:
+        return Response(
+            {"detail": "Campo 'is_premium' é obrigatório."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    raw_is_premium = request.data.get("is_premium")
+    if not isinstance(raw_is_premium, bool):
+        return Response(
+            {"detail": "Campo 'is_premium' deve ser booleano."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    user = User.objects.filter(pk=pk).first()
+    if not user:
+        return Response({"detail": "Usuário não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+    if not hasattr(user, "musician_profile"):
+        return Response(
+            {"detail": "Usuário não possui perfil de músico."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    musician = user.musician_profile
+    musician.is_premium = raw_is_premium
+    musician.save(update_fields=["is_premium"])
+
+    logger.info(
+        "Admin %s definiu premium=%s para músico id=%s",
+        request.user.username,
+        musician.is_premium,
+        musician.id,
+    )
+
+    return Response({"is_premium": musician.is_premium, "musician_id": musician.id})
+
+
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated, IsAdminUser, IsAppOwner])
 def toggle_premium(request, pk):
     """
-    Alterna o acesso premium de um músico.
-    Retorna { is_premium: bool, musician_id: int }.
+    Compatibilidade: alterna premium quando endpoint legado é chamado sem body.
     """
     user = User.objects.filter(pk=pk).first()
     if not user:
@@ -596,10 +639,9 @@ def toggle_premium(request, pk):
     musician.is_premium = not musician.is_premium
     musician.save(update_fields=["is_premium"])
 
-    logger.info(
-        "Admin %s %s premium para músico id=%s",
+    logger.warning(
+        "Endpoint legado toggle-premium usado por admin=%s para musician_id=%s",
         request.user.username,
-        "ativou" if musician.is_premium else "revogou",
         musician.id,
     )
 

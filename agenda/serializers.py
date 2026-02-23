@@ -14,6 +14,7 @@ from .models import (
     City,
     Connection,
     ContractorProfile,
+    CulturalNotice,
     Event,
     EventInstrument,
     EventLog,
@@ -2012,6 +2013,9 @@ class CityStatsSerializer(serializers.Serializer):
 class AdminUserSerializer(serializers.ModelSerializer):
     """Serializer para gerenciar usuários admin"""
 
+    musician_is_premium = serializers.SerializerMethodField()
+    has_musician_profile = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
@@ -2024,8 +2028,19 @@ class AdminUserSerializer(serializers.ModelSerializer):
             "is_superuser",
             "is_active",
             "date_joined",
+            "musician_is_premium",
+            "has_musician_profile",
         ]
         read_only_fields = ["id", "date_joined"]
+
+    def get_musician_is_premium(self, obj) -> bool | None:
+        try:
+            return bool(obj.musician_profile.is_premium)
+        except Exception:
+            return None
+
+    def get_has_musician_profile(self, obj) -> bool:
+        return hasattr(obj, "musician_profile")
 
 
 class AdminCreateSerializer(serializers.ModelSerializer):
@@ -2067,6 +2082,53 @@ class AdminUpdateSerializer(serializers.ModelSerializer):
         if password:
             instance.set_password(password)
         return super().update(instance, validated_data)
+
+
+class CulturalNoticeSerializer(serializers.ModelSerializer):
+    """Serializer completo para CRUD administrativo do conteúdo premium."""
+
+    class Meta:
+        model = CulturalNotice
+        fields = [
+            "id",
+            "title",
+            "summary",
+            "category",
+            "state",
+            "city",
+            "source_name",
+            "source_url",
+            "deadline_at",
+            "event_date",
+            "published_at",
+            "is_active",
+            "created_by",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_by", "created_at", "updated_at"]
+
+
+class PremiumPortalItemSerializer(serializers.Serializer):
+    """
+    Serializer de saída do portal premium.
+    Mantém contrato estável consumido pelo frontend.
+    """
+
+    source = serializers.CharField()
+    external_id = serializers.CharField()
+    title = serializers.CharField()
+    description = serializers.CharField(allow_blank=True, required=False)
+    category = serializers.ChoiceField(
+        choices=["rouanet", "aldir_blanc", "festival", "edital", "premio", "noticia", "other"]
+    )
+    scope = serializers.ChoiceField(choices=["nacional", "estadual", "municipal"])
+    state = serializers.CharField(allow_blank=True, allow_null=True, required=False)
+    city = serializers.CharField(allow_blank=True, allow_null=True, required=False)
+    external_url = serializers.CharField(allow_blank=True, allow_null=True, required=False)
+    deadline = serializers.DateField(allow_null=True, required=False)
+    event_date = serializers.DateField(allow_null=True, required=False)
+    published_at = serializers.DateField()
 
 
 class PublicCalendarEventSerializer(serializers.ModelSerializer):

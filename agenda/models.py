@@ -1255,6 +1255,92 @@ class City(models.Model):
         super().save(*args, **kwargs)
 
 
+class CulturalNotice(models.Model):
+    """
+    Conteúdo cultural curado por administradores para o Portal Premium.
+    Segmentado por estado e, opcionalmente, por cidade.
+    """
+
+    CATEGORY_CHOICES = [
+        ("edital", "Edital"),
+        ("festival", "Festival"),
+        ("noticia", "Notícia"),
+        ("rouanet", "Lei Rouanet"),
+        ("aldir_blanc", "Aldir Blanc"),
+        ("premio", "Prêmio"),
+        ("other", "Outro"),
+    ]
+
+    title = models.CharField(max_length=220, help_text="Título do conteúdo")
+    summary = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Resumo curto para exibição no portal",
+    )
+    category = models.CharField(
+        max_length=20,
+        choices=CATEGORY_CHOICES,
+        default="edital",
+        help_text="Categoria principal do conteúdo",
+    )
+
+    state = models.CharField(max_length=2, help_text="UF alvo do conteúdo")
+    city = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Cidade alvo (opcional; vazio = conteúdo estadual)",
+    )
+
+    source_name = models.CharField(
+        max_length=120,
+        blank=True,
+        null=True,
+        help_text="Fonte do conteúdo (ex: Prefeitura, MinC, Secult)",
+    )
+    source_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="URL oficial para mais detalhes",
+    )
+    deadline_at = models.DateField(
+        blank=True,
+        null=True,
+        help_text="Data limite de inscrição (quando aplicável)",
+    )
+    event_date = models.DateField(
+        blank=True,
+        null=True,
+        help_text="Data do evento/festival (quando aplicável)",
+    )
+    published_at = models.DateField(default=timezone.localdate)
+    is_active = models.BooleanField(default=True)
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="cultural_notices_created",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-published_at", "-created_at"]
+        verbose_name = "Conteúdo Cultural Premium"
+        verbose_name_plural = "Conteúdos Culturais Premium"
+        indexes = [
+            models.Index(fields=["is_active", "state"]),
+            models.Index(fields=["is_active", "state", "city"]),
+            models.Index(fields=["category", "published_at"]),
+        ]
+
+    def __str__(self):
+        location = f"{self.city}, {self.state}" if self.city else self.state
+        return f"{self.title} ({location})"
+
+
 class ContactView(models.Model):
     """
     Registra quando um contratante visualiza o contato de um músico.

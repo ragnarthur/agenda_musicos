@@ -1,7 +1,15 @@
 # agenda/admin.py
 from django.contrib import admin
 
-from .models import Availability, Event, Instrument, LeaderAvailability, Musician, PwaAnalyticsEvent
+from .models import (
+    Availability,
+    CulturalNotice,
+    Event,
+    Instrument,
+    LeaderAvailability,
+    Musician,
+    PwaAnalyticsEvent,
+)
 
 
 @admin.register(Musician)
@@ -173,3 +181,36 @@ class PwaAnalyticsEventAdmin(admin.ModelAdmin):
         "created_at",
     ]
     ordering = ["-occurred_at"]
+
+
+@admin.register(CulturalNotice)
+class CulturalNoticeAdmin(admin.ModelAdmin):
+    list_display = [
+        "title",
+        "category",
+        "state",
+        "city",
+        "deadline_at",
+        "published_at",
+        "is_active",
+    ]
+    list_filter = ["category", "state", "is_active", "published_at"]
+    search_fields = ["title", "summary", "city", "state", "source_name"]
+    readonly_fields = ["created_by", "created_at", "updated_at"]
+    list_editable = ["is_active"]
+
+    fieldsets = (
+        ("Conteúdo", {"fields": ("title", "summary", "category")}),
+        ("Localidade", {"fields": ("state", "city")}),
+        ("Fonte e Datas", {"fields": ("source_name", "source_url", "deadline_at", "event_date")}),
+        ("Publicação", {"fields": ("published_at", "is_active")}),
+        (
+            "Auditoria",
+            {"fields": ("created_by", "created_at", "updated_at"), "classes": ("collapse",)},
+        ),
+    )
+
+    def save_model(self, request, obj, form, change):
+        if not obj.pk and not obj.created_by:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
