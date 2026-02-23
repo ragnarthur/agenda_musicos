@@ -376,9 +376,7 @@ const AdminUsers: React.FC = () => {
                 <AdminButton
                   variant={selectedUser.musician_is_premium ? 'secondary' : 'primary'}
                   size="sm"
-                  onClick={() =>
-                    handleSetPremium(selectedUser, !Boolean(selectedUser.musician_is_premium))
-                  }
+                  onClick={() => handleSetPremium(selectedUser, !selectedUser.musician_is_premium)}
                   disabled={
                     togglingPremium === selectedUser.id || !selectedUser.has_musician_profile
                   }
