@@ -145,11 +145,11 @@ const AdminUsers: React.FC = () => {
         )
       );
       if (selectedUser?.id === targetUser.id) {
-        setSelectedUser(prev => prev ? { ...prev, musician_is_premium: result.is_premium } : prev);
+        setSelectedUser(prev =>
+          prev ? { ...prev, musician_is_premium: result.is_premium } : prev
+        );
       }
-      showToast.success(
-        result.is_premium ? 'Premium ativado com sucesso.' : 'Premium revogado.'
-      );
+      showToast.success(result.is_premium ? 'Premium ativado com sucesso.' : 'Premium revogado.');
     } catch (error) {
       showToast.apiError(error);
     } finally {
@@ -377,8 +377,8 @@ const AdminUsers: React.FC = () => {
                   {togglingPremium === selectedUser.id
                     ? 'Aguarde...'
                     : selectedUser.musician_is_premium
-                    ? 'Revogar'
-                    : 'Ativar Premium'}
+                      ? 'Revogar'
+                      : 'Ativar Premium'}
                 </AdminButton>
               </div>
               {!selectedUser.musician_is_premium && (

@@ -78,9 +78,24 @@ function deadlineChip(deadline?: string) {
 // ---------------------------------------------------------------------------
 
 const MOCK_ITEMS: Partial<PortalItem>[] = [
-  { title: 'Edital de Apoio a Projetos Musicais 2025', category: 'edital', scope: 'estadual', state: 'MG' },
-  { title: 'Festival de Música de Câmara — Inscrições Abertas', category: 'festival', scope: 'municipal', state: 'MG' },
-  { title: 'Chamada Pública Lei Aldir Blanc — Fase 2', category: 'aldir_blanc', scope: 'municipal', state: 'MG' },
+  {
+    title: 'Edital de Apoio a Projetos Musicais 2025',
+    category: 'edital',
+    scope: 'estadual',
+    state: 'MG',
+  },
+  {
+    title: 'Festival de Música de Câmara — Inscrições Abertas',
+    category: 'festival',
+    scope: 'municipal',
+    state: 'MG',
+  },
+  {
+    title: 'Chamada Pública Lei Aldir Blanc — Fase 2',
+    category: 'aldir_blanc',
+    scope: 'municipal',
+    state: 'MG',
+  },
 ];
 
 function PremiumGate() {
@@ -109,10 +124,14 @@ function PremiumGate() {
           {MOCK_ITEMS.map((item, i) => (
             <div key={i} className="card p-4 rounded-xl">
               <div className="flex items-center gap-2 mb-2">
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${CATEGORY_COLORS[item.category!]}`}>
+                <span
+                  className={`text-xs font-medium px-2 py-0.5 rounded-full ${CATEGORY_COLORS[item.category!]}`}
+                >
                   {CATEGORY_LABELS[item.category!]}
                 </span>
-                <span className="text-xs text-gray-400">{item.scope && SCOPE_LABELS[item.scope]}</span>
+                <span className="text-xs text-gray-400">
+                  {item.scope && SCOPE_LABELS[item.scope]}
+                </span>
               </div>
               <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{item.title}</p>
               <p className="text-xs text-gray-500 mt-1">MG · Prazo: 30/06/2025</p>
@@ -140,7 +159,9 @@ function PortalCard({ item }: { item: PortalItem }) {
     >
       {/* Badges */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${CATEGORY_COLORS[item.category]}`}>
+        <span
+          className={`text-xs font-medium px-2 py-0.5 rounded-full ${CATEGORY_COLORS[item.category]}`}
+        >
           {CATEGORY_LABELS[item.category]}
         </span>
         <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
@@ -155,9 +176,7 @@ function PortalCard({ item }: { item: PortalItem }) {
 
       {/* Descrição */}
       {item.description && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-3">
-          {item.description}
-        </p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-3">{item.description}</p>
       )}
 
       {/* Rodapé */}
@@ -218,11 +237,13 @@ const PremiumPortalPage: React.FC = () => {
   const isPremium = Boolean(user?.is_premium);
   const [activeFilter, setActiveFilter] = useState('all');
 
-  const { data: items, isLoading, error } = useSWR(
-    isPremium ? '/premium/portal' : null,
-    () => premiumService.getPortal(),
-    { revalidateOnFocus: false }
-  );
+  const {
+    data: items,
+    isLoading,
+    error,
+  } = useSWR(isPremium ? '/premium/portal' : null, () => premiumService.getPortal(), {
+    revalidateOnFocus: false,
+  });
 
   const filtered = React.useMemo(() => {
     if (!items) return [];

@@ -43,6 +43,7 @@ from .password_views import (
     PasswordResetConfirmView,
     PasswordResetRequestView,
 )
+from .premium_views import premium_portal  # noqa: E402
 from .registration_views import (
     CheckEmailView,
     RegisterContractorView,
@@ -97,8 +98,6 @@ from .views import (
     LeaderAvailabilityViewSet,
     MusicianViewSet,
 )
-
-from .premium_views import premium_portal  # noqa: E402
 
 # Router do DRF gera automaticamente as URLs
 router = DefaultRouter()
