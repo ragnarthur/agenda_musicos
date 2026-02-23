@@ -9,6 +9,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
+from .external_integrations import fetch_portal_content
 from .models import CulturalNotice
 from .permissions import IsPremiumMusician
 from .serializers import CulturalNoticeSerializer, PremiumPortalItemSerializer
@@ -16,6 +17,48 @@ from .serializers import CulturalNoticeSerializer, PremiumPortalItemSerializer
 
 def _scope_label(notice: CulturalNotice) -> str:
     return "municipal" if notice.city else "estadual"
+
+
+def _normalize_state(value: str | None) -> str:
+    return (value or "").strip().upper()
+
+
+def _normalize_city(value: str | None) -> str | None:
+    city = (value or "").strip()
+    if not city:
+        return None
+    # Alguns cadastros vêm como "Cidade, UF"; usamos só a cidade.
+    if "," in city:
+        city = city.split(",", 1)[0].strip()
+    return city or None
+
+
+def _apply_base_ordering(queryset, city: str | None):
+    if city:
+        queryset = queryset.annotate(
+            location_rank=Case(
+                When(city__iexact=city, then=Value(0)),
+                When(Q(city__isnull=True) | Q(city__exact=""), then=Value(1)),
+                default=Value(2),
+                output_field=IntegerField(),
+            )
+        )
+    else:
+        queryset = queryset.annotate(
+            location_rank=Case(
+                When(Q(city__isnull=True) | Q(city__exact=""), then=Value(0)),
+                default=Value(1),
+                output_field=IntegerField(),
+            )
+        )
+
+    return queryset.annotate(
+        deadline_rank=Case(
+            When(deadline_at__isnull=True, then=Value(1)),
+            default=Value(0),
+            output_field=IntegerField(),
+        )
+    ).order_by("location_rank", "deadline_rank", "deadline_at", "-published_at", "-created_at")
 
 
 def _to_portal_item(notice: CulturalNotice) -> dict:
@@ -46,31 +89,39 @@ def premium_portal(request):
       - category: rouanet | aldir_blanc | festival | edital | premio | noticia | other
     """
     musician = request.user.musician_profile
-    state = musician.state or ""
-    city = musician.city or None
+    state = _normalize_state(musician.state)
+    city = _normalize_city(musician.city)
 
     if not state:
         return Response([])
 
-    queryset = CulturalNotice.objects.filter(is_active=True, state__iexact=state)
-    if city:
-        queryset = queryset.filter(Q(city__iexact=city) | Q(city__isnull=True) | Q(city__exact=""))
-    else:
-        queryset = queryset.filter(Q(city__isnull=True) | Q(city__exact=""))
-
     category = request.query_params.get("category")
+
+    base_queryset = CulturalNotice.objects.filter(is_active=True, state__iexact=state)
     if category:
-        queryset = queryset.filter(category=category)
+        base_queryset = base_queryset.filter(category=category)
 
-    queryset = queryset.annotate(
-        deadline_rank=Case(
-            When(deadline_at__isnull=True, then=Value(1)),
-            default=Value(0),
-            output_field=IntegerField(),
+    if city:
+        targeted_queryset = base_queryset.filter(
+            Q(city__iexact=city) | Q(city__isnull=True) | Q(city__exact="")
         )
-    ).order_by("deadline_rank", "deadline_at", "-published_at", "-created_at")
+    else:
+        targeted_queryset = base_queryset.filter(Q(city__isnull=True) | Q(city__exact=""))
 
+    queryset = targeted_queryset
+    # Fallback 1: sem conteúdo local/estadual, abre para conteúdos de outras cidades da mesma UF.
+    if not targeted_queryset.exists():
+        queryset = base_queryset
+
+    queryset = _apply_base_ordering(queryset, city)
     payload = [_to_portal_item(notice) for notice in queryset]
+
+    # Fallback 2: sem curadoria interna, usa fontes públicas externas.
+    if not payload:
+        payload = fetch_portal_content(state=state, city=city)
+        if category:
+            payload = [item for item in payload if item.get("category") == category]
+
     serializer = PremiumPortalItemSerializer(data=payload, many=True)
     serializer.is_valid(raise_exception=True)
     return Response(serializer.data)

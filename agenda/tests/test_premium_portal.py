@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.test import APITestCase
+from unittest.mock import patch
 
 from agenda.models import CulturalNotice, Musician
 
@@ -96,6 +97,52 @@ class PremiumPortalAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["title"], "Festival Estadual MG")
+
+    def test_category_filter_falls_back_to_same_state_other_cities(self):
+        self.client.force_authenticate(user=self.premium_user)
+        response = self.client.get("/api/premium/portal/?category=noticia")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["title"], "Conteúdo de Outra Cidade")
+
+    def test_city_with_suffix_still_matches_local_content(self):
+        self.premium_musician.city = "Belo Horizonte, MG"
+        self.premium_musician.save(update_fields=["city"])
+
+        self.client.force_authenticate(user=self.premium_user)
+        response = self.client.get("/api/premium/portal/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        titles = {item["title"] for item in response.data}
+        self.assertIn("Edital Municipal BH", titles)
+
+    @patch("agenda.premium_views.fetch_portal_content")
+    def test_uses_external_sources_when_admin_curated_content_is_empty(self, mock_fetch_portal):
+        CulturalNotice.objects.filter(state="MG").delete()
+        mock_fetch_portal.return_value = [
+            {
+                "source": "mapas_culturais",
+                "external_id": "opp_42",
+                "title": "Edital Externo MG",
+                "description": "Fonte pública",
+                "category": "edital",
+                "scope": "estadual",
+                "state": "MG",
+                "city": None,
+                "external_url": "https://example.com/oportunidade/42",
+                "deadline": None,
+                "event_date": None,
+                "published_at": "2026-02-01",
+            }
+        ]
+
+        self.client.force_authenticate(user=self.premium_user)
+        response = self.client.get("/api/premium/portal/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["title"], "Edital Externo MG")
+        mock_fetch_portal.assert_called_once_with(state="MG", city="Belo Horizonte")
 
 
 class AdminSetPremiumAPITest(APITestCase):
