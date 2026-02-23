@@ -1,7 +1,18 @@
 // pages/Dashboard.tsx
 import React, { useMemo, memo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Plus, Zap, User, CalendarCheck, Briefcase, Star } from 'lucide-react';
+import {
+  ChevronRight,
+  Plus,
+  Zap,
+  User,
+  CalendarCheck,
+  Briefcase,
+  Star,
+  Users,
+  MapPin,
+  Clock,
+} from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import useSWR from 'swr';
 import Layout from '../components/Layout/Layout';
@@ -78,6 +89,20 @@ const getEventDayLabel = (event: Event): string => {
     return dateStr;
   }
 };
+
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'Bom dia';
+  if (h < 18) return 'Boa tarde';
+  return 'Boa noite';
+}
+
+// Status dot color by event status field
+function statusDotColor(status?: string): string {
+  if (status === 'confirmed') return 'bg-emerald-500';
+  if (status === 'pending') return 'bg-amber-400';
+  return 'bg-slate-400 dark:bg-slate-600';
+}
 
 const itemVariants = {
   hidden: { opacity: 0, y: 6 },
@@ -163,6 +188,9 @@ const Dashboard: React.FC = memo(() => {
     return str.charAt(0).toUpperCase() + str.slice(1);
   }, []);
 
+  const firstName = user?.user?.first_name || user?.user?.username || 'Músico';
+  const nextEvent = sorted[0];
+
   if (loading) {
     return (
       <Layout>
@@ -184,34 +212,87 @@ const Dashboard: React.FC = memo(() => {
         <div className="pt-2 lg:grid lg:grid-cols-[1fr_296px] xl:grid-cols-[1fr_320px] lg:gap-6 lg:items-start">
           {/* ── Coluna esquerda (conteúdo action-first) ── */}
           <div className="page-stack min-w-0">
-            {/* Greeting */}
+            {/* ── Hero strip ── */}
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={prefersReducedMotion ? { duration: 0.2 } : { duration: 0.3 }}
+              className="rounded-2xl overflow-hidden"
             >
-              <p className="text-xs text-muted uppercase tracking-widest font-heading mb-1">
-                {greetingDate}
-              </p>
-              <h1 className="text-2xl sm:text-3xl font-heading font-bold text-gray-900 dark:text-white">
-                Olá, {user?.user?.first_name || user?.user?.username || 'Músico'}
-              </h1>
-
-              {/* Stats strip — mobile apenas */}
-              {stats && (
-                <div className="flex flex-wrap gap-2 mt-3 lg:hidden">
-                  <span className="text-xs bg-white/60 dark:bg-white/10 border border-gray-200/60 dark:border-white/10 rounded-full px-2.5 py-1 font-medium text-gray-700 dark:text-gray-300">
-                    {stats.total_events} eventos
-                  </span>
-                  {user?.average_rating != null && (
-                    <span className="flex items-center gap-1 text-xs bg-white/60 dark:bg-white/10 border border-gray-200/60 dark:border-white/10 rounded-full px-2.5 py-1 font-medium text-gray-700 dark:text-gray-300">
-                      <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
-                      {Number(user.average_rating).toFixed(1)}
+              {nextEvent ? (
+                /* Next event highlight */
+                <Link
+                  to={`/eventos/${nextEvent.id}`}
+                  className="block bg-indigo-600 dark:bg-indigo-700 p-4 sm:p-5 hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors"
+                >
+                  <p className="text-indigo-200 text-xs font-heading font-semibold uppercase tracking-widest mb-2">
+                    {getGreeting()}, {firstName} · próximo evento
+                  </p>
+                  <h2 className="text-white font-heading font-bold text-xl sm:text-2xl leading-tight truncate">
+                    {nextEvent.title}
+                  </h2>
+                  <div className="flex items-center gap-3 mt-2 flex-wrap">
+                    <span className="flex items-center gap-1 text-indigo-200 text-sm font-medium">
+                      <Clock className="h-3.5 w-3.5" />
+                      {getEventDayLabel(nextEvent)}
+                      {nextEvent.start_time ? ` · ${nextEvent.start_time.slice(0, 5)}h` : ''}
                     </span>
-                  )}
+                    {nextEvent.location && (
+                      <span className="flex items-center gap-1 text-indigo-200 text-sm truncate">
+                        <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                        {nextEvent.location}
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              ) : (
+                /* No events CTA */
+                <div className="bg-indigo-600 dark:bg-indigo-700 p-4 sm:p-5">
+                  <p className="text-indigo-200 text-xs font-heading font-semibold uppercase tracking-widest mb-1">
+                    {getGreeting()}, {firstName}
+                  </p>
+                  <p className="text-white font-heading font-bold text-lg sm:text-xl">
+                    Nenhum evento hoje
+                  </p>
+                  <Link
+                    to="/eventos/novo"
+                    className="inline-flex items-center gap-1.5 mt-3 bg-white/20 hover:bg-white/30 text-white rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Criar evento
+                  </Link>
                 </div>
               )}
+
+              {/* Date strip */}
+              <div className="bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 border-t-0 rounded-b-2xl px-4 py-2">
+                <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
+                  {greetingDate}
+                </p>
+              </div>
             </motion.div>
+
+            {/* Stats strip — mobile apenas */}
+            {stats && (
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={
+                  prefersReducedMotion ? { duration: 0.2 } : { delay: 0.04, duration: 0.25 }
+                }
+                className="flex flex-wrap gap-2 lg:hidden"
+              >
+                <span className="text-xs bg-white/70 dark:bg-white/8 border border-gray-200/60 dark:border-white/10 rounded-full px-2.5 py-1 font-medium text-gray-600 dark:text-gray-400">
+                  {stats.total_events} eventos
+                </span>
+                {user?.average_rating != null && (
+                  <span className="flex items-center gap-1 text-xs bg-white/70 dark:bg-white/8 border border-gray-200/60 dark:border-white/10 rounded-full px-2.5 py-1 font-medium text-gray-600 dark:text-gray-400">
+                    <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
+                    {Number(user.average_rating).toFixed(1)}
+                  </span>
+                )}
+              </motion.div>
+            )}
 
             {/* Agir Agora */}
             {hasActions && (
@@ -267,7 +348,7 @@ const Dashboard: React.FC = memo(() => {
               </motion.div>
             )}
 
-            {/* Hoje */}
+            {/* Hoje — timeline */}
             {todayEvents.length > 0 && (
               <motion.section
                 initial={{ opacity: 0, y: 8 }}
@@ -279,7 +360,7 @@ const Dashboard: React.FC = memo(() => {
                 <p className="text-xs font-heading font-semibold uppercase tracking-widest text-muted mb-3">
                   Hoje · {todayEvents.length}
                 </p>
-                <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                <div className="relative pl-4 border-l-2 border-indigo-500/40 space-y-0">
                   {todayEvents.map((event, i) => (
                     <motion.div
                       key={event.id}
@@ -287,7 +368,12 @@ const Dashboard: React.FC = memo(() => {
                       variants={!prefersReducedMotion ? itemVariants : undefined}
                       initial="hidden"
                       animate="visible"
+                      className="relative"
                     >
+                      {/* Timeline dot */}
+                      <span
+                        className={`absolute -left-[1.375rem] top-4 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-gray-900 ${statusDotColor((event as Event & { status?: string }).status)}`}
+                      />
                       <Link
                         to={`/eventos/${event.id}`}
                         className="flex items-center justify-between py-3 gap-3 hover:opacity-70 transition-opacity"
@@ -309,7 +395,7 @@ const Dashboard: React.FC = memo(() => {
               </motion.section>
             )}
 
-            {/* Próximos 7 dias */}
+            {/* Próximos 7 dias — timeline */}
             {next7DaysEvents.length > 0 && (
               <motion.section
                 initial={{ opacity: 0, y: 8 }}
@@ -329,7 +415,7 @@ const Dashboard: React.FC = memo(() => {
                     Ver todos
                   </Link>
                 </div>
-                <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                <div className="relative pl-4 border-l-2 border-indigo-200/60 dark:border-indigo-800/40 space-y-0">
                   {next7DaysEvents.map((event, i) => (
                     <motion.div
                       key={event.id}
@@ -337,7 +423,11 @@ const Dashboard: React.FC = memo(() => {
                       variants={!prefersReducedMotion ? itemVariants : undefined}
                       initial="hidden"
                       animate="visible"
+                      className="relative"
                     >
+                      <span
+                        className={`absolute -left-[1.375rem] top-4 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-gray-900 ${statusDotColor((event as Event & { status?: string }).status)}`}
+                      />
                       <Link
                         to={`/eventos/${event.id}`}
                         className="flex items-center justify-between py-3 gap-3 hover:opacity-70 transition-opacity"
@@ -373,7 +463,7 @@ const Dashboard: React.FC = memo(() => {
                 <p className="text-xs font-heading font-semibold uppercase tracking-widest text-muted mb-3">
                   Mais tarde
                 </p>
-                <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                <div className="relative pl-4 border-l-2 border-slate-200 dark:border-slate-800 space-y-0">
                   {laterEvents.map((event, i) => (
                     <motion.div
                       key={event.id}
@@ -381,7 +471,9 @@ const Dashboard: React.FC = memo(() => {
                       variants={!prefersReducedMotion ? itemVariants : undefined}
                       initial="hidden"
                       animate="visible"
+                      className="relative"
                     >
+                      <span className="absolute -left-[1.375rem] top-4 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-gray-900 bg-slate-300 dark:bg-slate-700" />
                       <Link
                         to={`/eventos/${event.id}`}
                         className="flex items-center justify-between py-3 gap-3 hover:opacity-70 transition-opacity"
@@ -419,18 +511,43 @@ const Dashboard: React.FC = memo(() => {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-center py-16"
+                className="text-center py-12"
               >
                 <p className="text-muted text-sm">Nenhum evento agendado.</p>
+              </motion.div>
+            )}
+
+            {/* Quick actions strip — only xs mobile, above FAB area */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={prefersReducedMotion ? { duration: 0.2 } : { delay: 0.26, duration: 0.3 }}
+              className="sm:hidden pb-2"
+            >
+              <div className="flex gap-2">
                 <Link
                   to="/eventos/novo"
-                  className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 text-white px-3 py-3.5 text-sm font-semibold min-h-[52px] hover:bg-indigo-700 transition-colors active:scale-98"
                 >
                   <Plus className="h-4 w-4" />
                   Criar Evento
                 </Link>
-              </motion.div>
-            )}
+                <Link
+                  to="/eventos"
+                  className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-white dark:bg-white/8 border border-gray-200/70 dark:border-white/10 text-gray-700 dark:text-gray-300 px-3 py-3.5 text-sm font-semibold min-h-[52px] hover:bg-gray-50 dark:hover:bg-white/12 transition-colors active:scale-98"
+                >
+                  <CalendarCheck className="h-4 w-4" />
+                  Agenda
+                </Link>
+                <Link
+                  to="/musicos"
+                  className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-white dark:bg-white/8 border border-gray-200/70 dark:border-white/10 text-gray-700 dark:text-gray-300 px-3 py-3.5 text-sm font-semibold min-h-[52px] hover:bg-gray-50 dark:hover:bg-white/12 transition-colors active:scale-98"
+                >
+                  <Users className="h-4 w-4" />
+                  Músicos
+                </Link>
+              </div>
+            </motion.div>
           </div>
 
           {/* ── Coluna direita — sidebar desktop ── */}
@@ -495,14 +612,14 @@ const Dashboard: React.FC = memo(() => {
                   Perfil
                 </Link>
                 <Link
-                  to="/disponibilidade"
+                  to="/disponibilidades"
                   className="flex items-center gap-2 rounded-xl border border-gray-200/60 dark:border-white/10 bg-white/60 dark:bg-white/5 px-3 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-white/10 transition-colors"
                 >
                   <CalendarCheck className="h-4 w-4 text-primary-500 flex-shrink-0" />
                   Disponível
                 </Link>
                 <Link
-                  to="/vagas"
+                  to="/marketplace"
                   className="flex items-center gap-2 rounded-xl border border-gray-200/60 dark:border-white/10 bg-white/60 dark:bg-white/5 px-3 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-white/10 transition-colors"
                 >
                   <Briefcase className="h-4 w-4 text-primary-500 flex-shrink-0" />
@@ -547,11 +664,11 @@ const Dashboard: React.FC = memo(() => {
           </aside>
         </div>
 
-        {/* FAB */}
-        <div className="fixed bottom-20 right-4 sm:bottom-8 sm:right-6 z-30 pb-safe">
+        {/* FAB — desktop only (mobile uses quick actions strip) */}
+        <div className="hidden sm:block fixed bottom-8 right-6 z-30 pb-safe">
           <Link
             to="/eventos/novo"
-            className="flex items-center justify-center w-12 h-12 rounded-full bg-primary-600 text-white shadow-lg hover:bg-primary-700 transition-colors"
+            className="flex items-center justify-center w-12 h-12 rounded-full bg-primary-600 text-white shadow-lg shadow-primary-600/30 ring-4 ring-white/20 hover:bg-primary-700 transition-colors"
             aria-label="Novo Evento"
           >
             <Plus className="h-5 w-5" />

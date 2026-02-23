@@ -61,7 +61,7 @@ describe('InstallBanner', () => {
       await vi.advanceTimersByTimeAsync(3000);
     });
 
-    expect(screen.getByText('Instalar GigFlow')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Instalar' })).toBeInTheDocument();
     expect(trackEvent).toHaveBeenCalledWith('pwa_install_banner_shown', { ios: false });
 
     await act(async () => {
@@ -93,7 +93,7 @@ describe('InstallBanner', () => {
       await vi.advanceTimersByTimeAsync(3000);
     });
 
-    expect(screen.getByText('Instalar GigFlow')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Instalar' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Depois' }));
 
     expect(dismissPrompt).toHaveBeenCalledTimes(1);

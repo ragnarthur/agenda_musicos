@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { LucideIcon } from 'lucide-react';
 
@@ -11,6 +11,35 @@ interface StatCardProps {
   iconColor?: string;
 }
 
+function easeOutCubic(t: number): number {
+  return 1 - Math.pow(1 - t, 3);
+}
+
+function useCountUp(target: number, duration = 800): number {
+  const [current, setCurrent] = useState(0);
+  const startRef = useRef<number | null>(null);
+  const rafRef = useRef<number>(0);
+
+  useEffect(() => {
+    startRef.current = null;
+
+    const animate = (timestamp: number) => {
+      if (startRef.current === null) startRef.current = timestamp;
+      const elapsed = timestamp - startRef.current;
+      const progress = Math.min(elapsed / duration, 1);
+      setCurrent(Math.round(easeOutCubic(progress) * target));
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    rafRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [target, duration]);
+
+  return current;
+}
+
 export const StatCard: React.FC<StatCardProps> = ({
   label,
   value,
@@ -19,6 +48,9 @@ export const StatCard: React.FC<StatCardProps> = ({
   icon: Icon,
   iconColor = 'text-primary-500',
 }) => {
+  const isNumeric = typeof value === 'number';
+  const displayValue = useCountUp(isNumeric ? value : 0);
+
   return (
     <motion.div
       className={`
@@ -50,14 +82,11 @@ export const StatCard: React.FC<StatCardProps> = ({
           </motion.div>
         )}
       </div>
-      <motion.p
+      <p
         className={`text-2xl sm:text-3xl font-bold break-words min-w-0 ${accent ? 'text-amber-600' : 'text-primary-600'}`}
-        initial={{ scale: 0.8 }}
-        animate={{ scale: 1 }}
-        transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
       >
-        {value}
-      </motion.p>
+        {isNumeric ? displayValue : value}
+      </p>
     </motion.div>
   );
 };

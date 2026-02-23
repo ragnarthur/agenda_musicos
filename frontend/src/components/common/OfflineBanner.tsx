@@ -1,5 +1,5 @@
 // components/common/OfflineBanner.tsx
-// Banner que aparece quando o usuário está offline
+// Toast compacto para status de conexão
 import { motion, AnimatePresence } from 'framer-motion';
 import { WifiOff, Wifi } from 'lucide-react';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
@@ -12,15 +12,20 @@ export default function OfflineBanner() {
       {!isOnline && (
         <motion.div
           key="offline"
-          initial={{ y: -100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -100, opacity: 0 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="fixed top-0 left-0 right-0 z-[100] bg-amber-500 text-amber-950 px-4 py-2 pt-safe"
+          initial={{ x: 80, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: 80, opacity: 0 }}
+          transition={{ type: 'spring', damping: 22, stiffness: 300 }}
+          className="fixed top-[calc(env(safe-area-inset-top)+12px)] right-3 sm:right-4 z-[100]"
         >
-          <div className="flex items-center justify-center gap-2 text-sm font-medium max-w-md mx-auto">
-            <WifiOff className="w-4 h-4" />
-            <span>Você está offline</span>
+          <div className="flex items-center gap-2 bg-amber-500 text-amber-950 rounded-full px-3.5 py-2 shadow-lg shadow-amber-500/30 text-sm font-medium">
+            <motion.div
+              animate={{ rotate: [0, -12, 12, -8, 8, 0] }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <WifiOff className="w-4 h-4 flex-shrink-0" />
+            </motion.div>
+            <span>Offline</span>
           </div>
         </motion.div>
       )}
@@ -28,15 +33,15 @@ export default function OfflineBanner() {
       {isOnline && wasOffline && (
         <motion.div
           key="online"
-          initial={{ y: -100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -100, opacity: 0 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="fixed top-0 left-0 right-0 z-[100] bg-emerald-500 text-white px-4 py-2 pt-safe"
+          initial={{ x: 80, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: 80, opacity: 0 }}
+          transition={{ type: 'spring', damping: 22, stiffness: 300 }}
+          className="fixed top-[calc(env(safe-area-inset-top)+12px)] right-3 sm:right-4 z-[100]"
         >
-          <div className="flex items-center justify-center gap-2 text-sm font-medium max-w-md mx-auto">
-            <Wifi className="w-4 h-4" />
-            <span>Conexão restaurada</span>
+          <div className="flex items-center gap-2 bg-emerald-500 text-white rounded-full px-3.5 py-2 shadow-lg shadow-emerald-500/30 text-sm font-medium">
+            <Wifi className="w-4 h-4 flex-shrink-0" />
+            <span>Conectado</span>
           </div>
         </motion.div>
       )}

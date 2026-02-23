@@ -1,7 +1,7 @@
 // components/common/InstallBanner.tsx
 // Banner para incentivar instalação do PWA
 import { useState, useEffect, useRef } from 'react';
-import { X, Download, Share } from 'lucide-react';
+import { X, Download, Share, Smartphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInstallPrompt } from '../../hooks/useInstallPrompt';
 import { haptics } from '../../hooks/useHaptics';
@@ -71,28 +71,32 @@ export default function InstallBanner() {
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-4 left-4 right-4 z-50 max-w-md mx-auto"
           >
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-2xl p-4 border border-white/10">
+            <div className="bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/40 p-4 border border-indigo-500/30">
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Download className="w-6 h-6 text-white" />
+                {/* App icon */}
+                <div className="flex-shrink-0 w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/30">
+                  <Smartphone className="w-7 h-7 text-white" />
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-white font-semibold text-sm">Instalar GigFlow</h3>
-                  <p className="text-white/80 text-xs mt-0.5 leading-relaxed">
-                    Adicione à tela inicial para acesso rápido e experiência de app nativo.
+                  <h3 className="font-heading font-semibold text-white text-sm leading-snug">
+                    Sua agenda, sempre no bolso
+                  </h3>
+                  <p className="text-slate-400 text-xs mt-0.5 leading-relaxed">
+                    Acesse compromissos e músicos sem internet.
                   </p>
 
                   <div className="flex gap-2 mt-3">
                     <button
                       onClick={handleInstall}
-                      className="flex-1 px-3 py-2 bg-white text-indigo-600 rounded-lg text-sm font-medium hover:bg-white/90 active:scale-95 transition-all min-h-[44px]"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-500 active:scale-95 transition-all min-h-[44px]"
                     >
+                      <Download className="w-3.5 h-3.5" />
                       {isIOS ? 'Como instalar' : 'Instalar'}
                     </button>
                     <button
                       onClick={handleDismiss}
-                      className="px-3 py-2 bg-white/10 text-white rounded-lg text-sm hover:bg-white/20 active:scale-95 transition-all min-h-[44px]"
+                      className="px-3 py-2 bg-white/8 text-slate-400 rounded-xl text-sm hover:bg-white/12 hover:text-white active:scale-95 transition-all min-h-[44px]"
                     >
                       Depois
                     </button>
@@ -101,10 +105,10 @@ export default function InstallBanner() {
 
                 <button
                   onClick={handleDismiss}
-                  className="flex-shrink-0 p-3 -m-2 text-white/60 hover:text-white transition-colors min-h-[44px] min-w-[44px]"
+                  className="flex-shrink-0 p-2 -mt-1 -mr-1 text-slate-500 hover:text-slate-300 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                   aria-label="Fechar"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -119,7 +123,7 @@ export default function InstallBanner() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end justify-center p-4"
+            className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-end justify-center p-4"
             onClick={() => setShowIOSInstructions(false)}
           >
             <motion.div
@@ -127,52 +131,51 @@ export default function InstallBanner() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="bg-white dark:bg-gray-800 rounded-t-3xl w-full max-w-md p-6 pb-safe"
+              className="bg-slate-900 border border-white/10 rounded-t-3xl w-full max-w-md p-6 pb-safe"
               onClick={e => e.stopPropagation()}
             >
-              <div className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-6" />
+              <div className="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-6" />
 
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-center">
-                Instalar no iPhone/iPad
+              <h3 className="font-heading text-lg font-bold text-white mb-1 text-center">
+                Instalar no iPhone / iPad
               </h3>
+              <p className="text-slate-400 text-xs text-center mb-5">
+                Adicione à tela inicial em 3 passos
+              </p>
 
               <ol className="space-y-4">
                 <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center text-sm font-medium">
+                  <span className="flex-shrink-0 w-6 h-6 bg-indigo-600/20 text-indigo-400 rounded-full flex items-center justify-center text-xs font-semibold border border-indigo-500/30">
                     1
                   </span>
-                  <div>
-                    <p className="text-gray-700 dark:text-gray-300 text-sm">
-                      Toque no botão <Share className="inline w-4 h-4 text-blue-500" /> de
-                      compartilhar na barra do Safari
-                    </p>
-                  </div>
+                  <p className="text-slate-300 text-sm pt-0.5">
+                    Toque no botão <Share className="inline w-4 h-4 text-blue-400" /> de
+                    compartilhar na barra do Safari
+                  </p>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center text-sm font-medium">
+                  <span className="flex-shrink-0 w-6 h-6 bg-indigo-600/20 text-indigo-400 rounded-full flex items-center justify-center text-xs font-semibold border border-indigo-500/30">
                     2
                   </span>
-                  <div>
-                    <p className="text-gray-700 dark:text-gray-300 text-sm">
-                      Role para baixo e toque em <strong>"Adicionar à Tela de Início"</strong>
-                    </p>
-                  </div>
+                  <p className="text-slate-300 text-sm pt-0.5">
+                    Role para baixo e toque em{' '}
+                    <strong className="text-white">"Adicionar à Tela de Início"</strong>
+                  </p>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center text-sm font-medium">
+                  <span className="flex-shrink-0 w-6 h-6 bg-indigo-600/20 text-indigo-400 rounded-full flex items-center justify-center text-xs font-semibold border border-indigo-500/30">
                     3
                   </span>
-                  <div>
-                    <p className="text-gray-700 dark:text-gray-300 text-sm">
-                      Toque em <strong>"Adicionar"</strong> no canto superior direito
-                    </p>
-                  </div>
+                  <p className="text-slate-300 text-sm pt-0.5">
+                    Toque em <strong className="text-white">"Adicionar"</strong> no canto superior
+                    direito
+                  </p>
                 </li>
               </ol>
 
               <button
                 onClick={() => setShowIOSInstructions(false)}
-                className="w-full mt-6 px-4 py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 active:scale-98 transition-all min-h-[48px]"
+                className="w-full mt-6 px-4 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-500 active:scale-98 transition-all min-h-[48px]"
               >
                 Entendi
               </button>

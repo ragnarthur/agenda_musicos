@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { server } from '../mocks/server';
 import { http, HttpResponse } from 'msw';
 import { renderWithProviders } from '../utils/test-utils';
@@ -19,10 +19,10 @@ describe('Setup Validation - MSW', () => {
     expect(typeof server.use).toBe('function');
   });
 
-  it('can render a simple component with providers', () => {
+  it('can render a simple component with providers', async () => {
     renderWithProviders(React.createElement(StatCard, { label: 'Test', value: 123 }));
     expect(screen.getByText('Test')).toBeInTheDocument();
-    expect(screen.getByText('123')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('123')).toBeInTheDocument(), { timeout: 2000 });
   });
 
   it('mocks can intercept requests', async () => {

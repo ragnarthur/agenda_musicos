@@ -59,11 +59,11 @@ const BottomNav: React.FC = () => {
 
   return (
     <nav
-      className={`md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/85 dark:bg-slate-950/95 backdrop-blur-xl border-t border-slate-200/70 dark:border-white/10 pb-safe-only transition-transform duration-300 shadow-lg shadow-slate-200/60 dark:shadow-black/30 ${
+      className={`md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 dark:bg-slate-950/95 backdrop-blur-xl border-t border-slate-200/70 dark:border-white/8 pb-safe-only transition-transform duration-300 ease-in-out shadow-lg shadow-slate-200/60 dark:shadow-black/40 ${
         isVisible ? 'translate-y-0' : 'translate-y-full'
       }`}
     >
-      <div className="flex items-center justify-around px-2 py-2">
+      <div className="flex items-center justify-around px-2 py-1.5">
         {navItems.map(item => {
           const Icon = item.icon;
           const isActive =
@@ -79,7 +79,7 @@ const BottomNav: React.FC = () => {
                 aria-label="Criar evento"
                 className="flex flex-col items-center justify-center -mt-4 min-h-[44px]"
               >
-                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/30 active:scale-95 transition-transform">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-b from-primary-500 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/40 ring-4 ring-white/20 dark:ring-slate-950/50 active:scale-95 transition-transform">
                   <Icon className="w-6 h-6 text-white" />
                 </div>
               </NavLink>
@@ -91,22 +91,37 @@ const BottomNav: React.FC = () => {
               key={item.to}
               to={item.to}
               aria-label={item.label}
-              className={`relative flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-2 ${
-                isActive
-                  ? 'text-primary-600 dark:text-primary-400'
-                  : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
-              }`}
+              className="relative flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1.5"
             >
+              {/* Active pill background */}
+              {isActive && (
+                <span className="absolute inset-x-1 inset-y-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/50" />
+              )}
+
               <Icon
-                className={`w-5 h-5 mb-0.5 ${isActive ? 'scale-110' : ''} transition-transform ${
+                className={`relative w-5 h-5 mb-0.5 transition-transform ${
+                  isActive
+                    ? 'scale-110 text-primary-600 dark:text-primary-400'
+                    : 'text-slate-400 dark:text-slate-500'
+                } ${
                   'isPremiumIcon' in item && item.isPremiumIcon && item.isPremium
                     ? 'text-yellow-400'
                     : ''
                 }`}
               />
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <span
+                className={`relative text-[10px] font-medium transition-colors ${
+                  isActive
+                    ? 'text-primary-600 dark:text-primary-400'
+                    : 'text-slate-500 dark:text-slate-400'
+                }`}
+              >
+                {item.label}
+              </span>
+
+              {/* iOS-style pill indicator */}
               {isActive && (
-                <span className="absolute bottom-1 w-1 h-1 rounded-full bg-primary-600 dark:bg-primary-400" />
+                <span className="absolute bottom-0.5 w-4 h-0.5 rounded-full bg-primary-600 dark:bg-primary-400" />
               )}
             </NavLink>
           );

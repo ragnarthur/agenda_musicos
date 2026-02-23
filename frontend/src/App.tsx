@@ -1,6 +1,6 @@
 // App.tsx
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CompanyAuthProvider, useCompanyAuth } from './contexts/CompanyAuthContext';
@@ -561,6 +561,19 @@ function AppRoutes() {
   );
 }
 
+const GlobalOverlays: React.FC = () => {
+  const location = useLocation();
+  const hideInstallBanner = location.pathname === '/';
+
+  return (
+    <>
+      <OfflineBanner />
+      <PwaUpdatePrompt />
+      {!hideInstallBanner && <InstallBanner />}
+    </>
+  );
+};
+
 function App() {
   return (
     <BrowserRouter>
@@ -582,9 +595,7 @@ function App() {
             <CompanyAuthProvider>
               <AdminAuthProvider>
                 <ErrorBoundary>
-                  <OfflineBanner />
-                  <PwaUpdatePrompt />
-                  <InstallBanner />
+                  <GlobalOverlays />
                   <AppRoutes />
                 </ErrorBoundary>
                 <AppToaster />

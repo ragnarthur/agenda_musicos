@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import React, { Suspense, lazy, useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ADMIN_ROUTES } from '../routes/adminRoutes';
 import {
@@ -14,14 +14,14 @@ import {
   Share,
   MoreVertical,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import OwlMascot from '../components/ui/OwlMascot';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import UserTypeToggle from '../components/navigation/UserTypeToggle';
 import CityDisplay from '../components/CityDisplay';
 import CityBadge from '../components/CityBadge';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { trackEvent } from '../utils/analytics';
 
 type TypewriterPhase = 'typing' | 'pausing' | 'deleting' | 'waiting';
 type UserType = 'musician' | 'contractor';
@@ -47,12 +47,32 @@ interface UserContent {
   };
 }
 
+const OwlMascotLazy = lazy(() => import('../components/ui/OwlMascot'));
+
+const MascotFallback: React.FC = () => (
+  <div className="h-48 w-48 sm:h-56 sm:w-56 rounded-3xl border border-white/15 bg-white/5 backdrop-blur-sm flex items-center justify-center shadow-xl shadow-slate-900/30">
+    <img
+      src="/icon-192.png"
+      alt="GigFlow"
+      width={140}
+      height={140}
+      className="h-24 w-24 sm:h-28 sm:w-28 object-contain"
+      loading="eager"
+      decoding="async"
+      fetchPriority="high"
+    />
+  </div>
+);
+
 const Landing: React.FC = () => {
   const navigate = useNavigate();
   const [userType, setUserType] = useState<UserType>('musician');
   const [showIOSModal, setShowIOSModal] = useState(false);
   const [showAndroidModal, setShowAndroidModal] = useState(false);
+  const [showAnimatedMascot, setShowAnimatedMascot] = useState(false);
   const { canInstall, isIOS, isMobile, promptInstall } = useInstallPrompt();
+  const prefersReducedMotion = useReducedMotion();
+  const hasTrackedInstallVisibleRef = useRef(false);
 
   usePageMeta({
     title: 'GigFlow - Encontre Músicos Profissionais',
@@ -60,14 +80,52 @@ const Landing: React.FC = () => {
       'Plataforma para encontrar e contratar músicos profissionais para seu evento. Gerencie agenda, eventos e conexões musicais.',
   });
 
-  const handleInstall = async () => {
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setShowAnimatedMascot(true);
+    }, 650);
+
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!canInstall || hasTrackedInstallVisibleRef.current) return;
+
+    hasTrackedInstallVisibleRef.current = true;
+    trackEvent('pwa_landing_install_visible', {
+      user_type: userType,
+      ios: isIOS,
+      mobile: isMobile,
+    });
+  }, [canInstall, isIOS, isMobile, userType]);
+
+  const handleInstall = async (placement: 'hero_strip' | 'mobile_fab') => {
+    trackEvent('pwa_landing_install_click', {
+      user_type: userType,
+      ios: isIOS,
+      mobile: isMobile,
+      placement,
+    });
+
     if (isIOS) {
+      trackEvent('pwa_landing_install_ios_instructions_opened', { user_type: userType, placement });
       setShowIOSModal(true);
     } else {
       // Tenta o prompt nativo primeiro
       const success = await promptInstall();
+      if (success) {
+        trackEvent('pwa_landing_install_native_success', {
+          user_type: userType,
+          ios: false,
+          placement,
+        });
+      }
       // Se não funcionou e é mobile, mostra instruções manuais
       if (!success && isMobile) {
+        trackEvent('pwa_landing_install_manual_android_opened', {
+          user_type: userType,
+          placement,
+        });
         setShowAndroidModal(true);
       }
     }
@@ -97,25 +155,25 @@ const Landing: React.FC = () => {
       ],
       features: [
         {
-          icon: <Calendar className="h-12 w-12" />,
+          icon: <Calendar className="h-6 w-6" />,
           title: 'Gestão de Agenda e Eventos',
           description:
             'Sistema completo de convites, propostas de datas, disponibilidade e confirmação de eventos. Organize sua carreira profissionalmente.',
         },
         {
-          icon: <Megaphone className="h-12 w-12" />,
+          icon: <Megaphone className="h-6 w-6" />,
           title: 'Marketplace de Oportunidades',
           description:
             'Divulgue vagas, encontre substitutos e descubra novas oportunidades de shows. Conecte-se com a comunidade musical.',
         },
         {
-          icon: <Users className="h-12 w-12" />,
+          icon: <Users className="h-6 w-6" />,
           title: 'Rede de Conexões Profissionais',
           description:
             'Networking inteligente para músicos. Indique colegas, acompanhe colaborações e construa relacionamentos profissionais.',
         },
         {
-          icon: <Award className="h-12 w-12" />,
+          icon: <Award className="h-6 w-6" />,
           title: 'Sistema de Badges e Conquistas',
           description:
             'Gamificação baseada em shows, avaliações e networking. Destaque-se profissionalmente e construa sua reputação.',
@@ -157,25 +215,25 @@ const Landing: React.FC = () => {
       ],
       features: [
         {
-          icon: <Search className="h-12 w-12" />,
+          icon: <Search className="h-6 w-6" />,
           title: 'Busca Avançada de Músicos',
           description:
             'Filtre por instrumento, cidade, avaliação, disponibilidade e muito mais. Encontre exatamente o talento que seu evento precisa.',
         },
         {
-          icon: <MessageSquare className="h-12 w-12" />,
+          icon: <MessageSquare className="h-6 w-6" />,
           title: 'Contato Direto pelo App',
           description:
             'Fale com músicos dentro do GigFlow. Negocie detalhes, tire dúvidas e feche contratações em uma plataforma só.',
         },
         {
-          icon: <Shield className="h-12 w-12" />,
+          icon: <Shield className="h-6 w-6" />,
           title: 'Músicos Verificados e Avaliados',
           description:
             'Todos os músicos passam por validação e têm histórico de avaliações. Contrate com total segurança e confiança.',
         },
         {
-          icon: <Briefcase className="h-12 w-12" />,
+          icon: <Briefcase className="h-6 w-6" />,
           title: 'Gestão Profissional de Eventos',
           description:
             'Organize todas as suas contratações em um só lugar. Histórico, feedbacks e muito mais.',
@@ -192,6 +250,7 @@ const Landing: React.FC = () => {
     }),
     []
   );
+
   const currentContent = useMemo(
     () => (userType === 'musician' ? musicianContent : contractorContent),
     [contractorContent, musicianContent, userType]
@@ -218,6 +277,10 @@ const Landing: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (prefersReducedMotion) {
+      return;
+    }
+
     const currentPhrase = heroPhrases[currentPhraseIndex];
 
     const runTypewriter = () => {
@@ -271,7 +334,19 @@ const Landing: React.FC = () => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [displayText, phase, currentPhraseIndex, heroPhrases, getTypingDelay, getDeletingDelay]);
+  }, [
+    displayText,
+    phase,
+    currentPhraseIndex,
+    heroPhrases,
+    getTypingDelay,
+    getDeletingDelay,
+    prefersReducedMotion,
+  ]);
+
+  const animatedHeroText = prefersReducedMotion
+    ? (heroPhrases[currentPhraseIndex] ?? '')
+    : displayText;
 
   // Admin keyboard shortcut: Ctrl+Shift+A or Cmd+Shift+A
   useEffect(() => {
@@ -289,11 +364,15 @@ const Landing: React.FC = () => {
 
   return (
     <FullscreenBackground enableBlueWaves>
-      <main id="main-content" className="relative z-10">
+      <main
+        id="main-content"
+        className="relative z-10 pb-[calc(env(safe-area-inset-bottom)+88px)] sm:pb-0"
+      >
         {/* Hero Section */}
-        <section className="container mx-auto px-4 py-20 text-center">
+        <section className="container mx-auto px-4 py-16 sm:py-20 text-center">
           {/* User Type Toggle */}
           <UserTypeToggle selected={userType} onChange={setUserType} />
+
           {/* Logo */}
           <motion.div
             className="flex justify-center mb-1"
@@ -301,9 +380,15 @@ const Landing: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="h-48 w-48 sm:h-56 sm:w-56">
-              <OwlMascot className="h-48 w-48 sm:h-56 sm:w-56" />
-            </div>
+            {showAnimatedMascot ? (
+              <Suspense fallback={<MascotFallback />}>
+                <div className="h-48 w-48 sm:h-56 sm:w-56">
+                  <OwlMascotLazy className="h-48 w-48 sm:h-56 sm:w-56" autoplay={false} />
+                </div>
+              </Suspense>
+            ) : (
+              <MascotFallback />
+            )}
           </motion.div>
           <CityDisplay />
 
@@ -354,33 +439,33 @@ const Landing: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <span className="relative">
+            <span className="relative" aria-live="polite" aria-atomic="true">
               {/* Texto digitado com efeito de gradiente sutil */}
               <span
                 className="bg-gradient-to-r from-white via-gray-200 to-white bg-clip-text"
                 style={{
                   display: 'inline-block',
-                  minWidth: displayText.length > 0 ? 'auto' : '0.5em',
+                  minWidth: animatedHeroText.length > 0 ? 'auto' : '0.5em',
                 }}
               >
-                {displayText}
+                {animatedHeroText}
               </span>
               {/* Cursor piscante estilo terminal */}
               <motion.span
                 className="inline-block w-[3px] h-[1.15em] bg-primary-400 ml-0.5 align-middle rounded-sm"
                 animate={{
-                  opacity: phase === 'pausing' ? [1, 0, 1] : 1,
-                  scaleY: phase === 'typing' ? [1, 1.1, 1] : 1,
+                  opacity: prefersReducedMotion ? 1 : phase === 'pausing' ? [1, 0, 1] : 1,
+                  scaleY: prefersReducedMotion ? 1 : phase === 'typing' ? [1, 1.1, 1] : 1,
                 }}
                 transition={{
                   opacity: {
                     duration: 0.8,
-                    repeat: Infinity,
+                    repeat: prefersReducedMotion ? 0 : Infinity,
                     ease: 'easeInOut',
                   },
                   scaleY: {
                     duration: 0.15,
-                    repeat: phase === 'typing' ? Infinity : 0,
+                    repeat: prefersReducedMotion ? 0 : phase === 'typing' ? Infinity : 0,
                   },
                 }}
                 style={{
@@ -394,7 +479,7 @@ const Landing: React.FC = () => {
           <AnimatePresence mode="wait">
             <motion.div
               key={userType}
-              className="flex flex-col sm:flex-row gap-4 justify-center"
+              className="flex flex-col sm:flex-row gap-3 justify-center"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -402,56 +487,103 @@ const Landing: React.FC = () => {
             >
               <Link
                 to={currentContent.primaryCTA.to}
-                className="px-6 py-3 sm:px-8 sm:py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-base sm:text-lg"
+                className="px-6 py-3.5 sm:px-8 sm:py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/35 hover:shadow-indigo-500/50 hover:shadow-xl transition-all text-base sm:text-lg"
               >
                 {currentContent.primaryCTA.text}
               </Link>
               <Link
                 to={currentContent.secondaryCTA.to}
-                className="px-6 py-3 sm:px-8 sm:py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border-2 border-white/30 hover:border-white/50 transition-all text-base sm:text-lg"
+                className="px-6 py-3.5 sm:px-8 sm:py-4 bg-white/10 hover:bg-white/18 text-white font-semibold rounded-xl border border-white/25 hover:border-white/40 transition-all text-base sm:text-lg"
               >
                 {currentContent.secondaryCTA.text}
               </Link>
             </motion.div>
           </AnimatePresence>
+
+          {/* Install strip */}
+          {canInstall && (
+            <>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6, duration: 0.4 }}
+                className="mt-5 hidden sm:flex justify-center"
+              >
+                <button
+                  onClick={() => {
+                    void handleInstall('hero_strip');
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white/8 hover:bg-white/14 text-white/70 hover:text-white rounded-full border border-white/15 text-sm font-medium transition-all min-h-[44px]"
+                >
+                  <Download className="h-4 w-4" />
+                  Instalar app
+                </button>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7, duration: 0.35 }}
+                className="sm:hidden fixed left-3 right-3 bottom-[calc(env(safe-area-inset-bottom)+10px)] z-40"
+              >
+                <button
+                  onClick={() => {
+                    void handleInstall('mobile_fab');
+                  }}
+                  className="w-full flex items-center justify-center gap-2 rounded-2xl border border-cyan-300/35 bg-cyan-500/20 text-cyan-100 min-h-[52px] px-4 py-3 text-sm font-semibold shadow-lg shadow-cyan-500/20 backdrop-blur-md active:scale-[0.99] transition-transform"
+                  aria-label="Instalar aplicativo"
+                >
+                  <Download className="h-4 w-4" />
+                  Instalar aplicativo
+                </button>
+              </motion.div>
+            </>
+          )}
         </section>
 
         {/* Features Section */}
         <section className="container mx-auto px-4 py-12 sm:py-16">
           <AnimatePresence mode="wait">
-            <motion.h2
+            <motion.div
               key={userType}
-              className="text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center mb-8 sm:mb-12"
+              className="text-center mb-10 sm:mb-14"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4 }}
             >
-              Por que escolher o GigFlow{userType === 'contractor' ? ' Contratantes' : ''}?
-            </motion.h2>
+              <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400 mb-2">
+                Recursos
+              </p>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">
+                Por que escolher o GigFlow{userType === 'contractor' ? ' Contratantes' : ''}?
+              </h2>
+            </motion.div>
           </AnimatePresence>
 
           <AnimatePresence mode="wait">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-4xl mx-auto">
               {currentContent.features.map((feature, index) => (
                 <FeatureCard
                   key={`${userType}-${index}`}
                   icon={feature.icon}
                   title={feature.title}
                   description={feature.description}
-                  delay={0.2 + index * 0.1}
+                  index={index}
+                  delay={0.15 + index * 0.08}
+                  reduceMotion={Boolean(prefersReducedMotion)}
                 />
               ))}
             </div>
           </AnimatePresence>
         </section>
 
-        {/* Social Proof (simples) */}
-        <section className="container mx-auto px-4 py-12 sm:py-16 text-center">
+        {/* Social Proof */}
+        <section className="container mx-auto px-4 py-10 sm:py-14 text-center">
           <AnimatePresence mode="wait">
             <motion.p
               key={userType}
-              className="text-xl sm:text-2xl text-gray-300 font-semibold"
+              className="text-lg sm:text-2xl text-gray-300 font-semibold"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -466,37 +598,24 @@ const Landing: React.FC = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6"
+            className="flex items-center justify-center gap-3 mt-6 flex-wrap"
           >
             <Link
               to="/nossos-musicos"
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-primary-300 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-indigo-300 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
             >
-              <Users className="h-5 w-5" />
-              <span>Conheça nossos músicos</span>
+              <Users className="h-4 w-4" />
+              <span className="text-sm font-medium">Conheça nossos músicos</span>
             </Link>
-            {canInstall && (
-              <motion.button
-                onClick={handleInstall}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-medium rounded-xl shadow-lg shadow-primary-500/25 transition-all duration-300"
-              >
-                <Download className="h-5 w-5" />
-                <span>Instalar App</span>
-              </motion.button>
-            )}
           </motion.div>
         </section>
 
         {/* Footer CTA */}
-        <section className="relative container mx-auto px-4 py-12 sm:py-16 text-center border-t border-white/10">
+        <section className="relative container mx-auto px-4 py-12 sm:py-16 text-center border-t border-white/8">
           <AnimatePresence mode="wait">
             <motion.h3
               key={userType}
-              className="text-2xl sm:text-3xl font-bold text-white mb-6"
+              className="text-2xl sm:text-3xl font-bold text-white mb-2"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -507,34 +626,35 @@ const Landing: React.FC = () => {
                 : 'Pronto para encontrar os melhores músicos?'}
             </motion.h3>
           </AnimatePresence>
+          <p className="text-gray-400 text-sm mb-8">Acesso gratuito para músicos selecionados.</p>
 
           <AnimatePresence mode="wait">
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
                 key={`primary-${userType}`}
                 to={currentContent.primaryCTA.to}
-                className="px-5 py-3 sm:px-8 sm:py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-base sm:text-lg"
+                className="px-6 py-3.5 sm:px-8 sm:py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/30 hover:shadow-indigo-500/50 transition-all text-base sm:text-lg"
               >
                 {currentContent.primaryCTA.text}
               </Link>
               <Link
                 key={`secondary-${userType}`}
                 to={currentContent.secondaryCTA.to}
-                className="px-5 py-3 sm:px-8 sm:py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border-2 border-white/30 hover:border-white/50 transition-all text-base sm:text-lg"
+                className="px-6 py-3.5 sm:px-8 sm:py-4 bg-white/10 hover:bg-white/18 text-white font-semibold rounded-xl border border-white/25 hover:border-white/40 transition-all text-base sm:text-lg"
               >
                 {currentContent.secondaryCTA.text}
               </Link>
             </div>
           </AnimatePresence>
 
-          <p className="text-gray-400 text-sm mt-8">
+          <p className="text-gray-500 text-xs mt-10">
             © 2026 GigFlow. Todos os direitos reservados.
           </p>
 
           {/* Admin access link - subtle */}
           <Link
             to={ADMIN_ROUTES.login}
-            className="absolute bottom-4 right-4 opacity-30 hover:opacity-100 transition-all duration-300 hover:scale-110 group"
+            className="absolute bottom-4 right-4 opacity-25 hover:opacity-100 transition-all duration-300 hover:scale-110 group"
             title="Acesso Administrativo"
           >
             <Shield className="h-5 w-5 text-gray-400 group-hover:text-amber-400 transition-colors" />
@@ -549,7 +669,7 @@ const Landing: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+            className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
             onClick={() => setShowIOSModal(false)}
           >
             <motion.div
@@ -557,49 +677,49 @@ const Landing: React.FC = () => {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-6 pb-safe"
+              className="bg-slate-900 border border-white/10 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-6 pb-safe"
               onClick={e => e.stopPropagation()}
             >
-              <div className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-6 sm:hidden" />
+              <div className="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-6 sm:hidden" />
 
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 text-center">
-                Instalar GigFlow
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400 text-sm text-center mb-6">
+              <h3 className="text-xl font-bold text-white mb-1 text-center">Instalar GigFlow</h3>
+              <p className="text-slate-400 text-sm text-center mb-6">
                 No iPhone/iPad, siga os passos abaixo:
               </p>
 
               <ol className="space-y-4">
                 <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-7 h-7 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full flex items-center justify-center text-sm font-bold">
+                  <span className="flex-shrink-0 w-7 h-7 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-full flex items-center justify-center text-xs font-bold">
                     1
                   </span>
-                  <p className="text-gray-700 dark:text-gray-300 text-sm pt-0.5">
-                    Toque no botão <Share className="inline w-4 h-4 text-blue-500 mx-1" />{' '}
-                    <strong>Compartilhar</strong> na barra do Safari
+                  <p className="text-slate-300 text-sm pt-0.5">
+                    Toque no botão <Share className="inline w-4 h-4 text-blue-400 mx-0.5" />{' '}
+                    <strong className="text-white">Compartilhar</strong> na barra do Safari
                   </p>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-7 h-7 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full flex items-center justify-center text-sm font-bold">
+                  <span className="flex-shrink-0 w-7 h-7 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-full flex items-center justify-center text-xs font-bold">
                     2
                   </span>
-                  <p className="text-gray-700 dark:text-gray-300 text-sm pt-0.5">
-                    Role para baixo e toque em <strong>"Adicionar à Tela de Início"</strong>
+                  <p className="text-slate-300 text-sm pt-0.5">
+                    Role para baixo e toque em{' '}
+                    <strong className="text-white">"Adicionar à Tela de Início"</strong>
                   </p>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-7 h-7 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full flex items-center justify-center text-sm font-bold">
+                  <span className="flex-shrink-0 w-7 h-7 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-full flex items-center justify-center text-xs font-bold">
                     3
                   </span>
-                  <p className="text-gray-700 dark:text-gray-300 text-sm pt-0.5">
-                    Toque em <strong>"Adicionar"</strong> no canto superior direito
+                  <p className="text-slate-300 text-sm pt-0.5">
+                    Toque em <strong className="text-white">"Adicionar"</strong> no canto superior
+                    direito
                   </p>
                 </li>
               </ol>
 
               <button
                 onClick={() => setShowIOSModal(false)}
-                className="w-full mt-6 px-4 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-medium transition-all min-h-[48px]"
+                className="w-full mt-6 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold transition-all min-h-[48px]"
               >
                 Entendi
               </button>
@@ -615,7 +735,7 @@ const Landing: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+            className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
             onClick={() => setShowAndroidModal(false)}
           >
             <motion.div
@@ -623,50 +743,49 @@ const Landing: React.FC = () => {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-6 pb-safe"
+              className="bg-slate-900 border border-white/10 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-6 pb-safe"
               onClick={e => e.stopPropagation()}
             >
-              <div className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-6 sm:hidden" />
+              <div className="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-6 sm:hidden" />
 
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 text-center">
-                Instalar GigFlow
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400 text-sm text-center mb-6">
+              <h3 className="text-xl font-bold text-white mb-1 text-center">Instalar GigFlow</h3>
+              <p className="text-slate-400 text-sm text-center mb-6">
                 No Android, siga os passos abaixo:
               </p>
 
               <ol className="space-y-4">
                 <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-7 h-7 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full flex items-center justify-center text-sm font-bold">
+                  <span className="flex-shrink-0 w-7 h-7 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-full flex items-center justify-center text-xs font-bold">
                     1
                   </span>
-                  <p className="text-gray-700 dark:text-gray-300 text-sm pt-0.5">
-                    Toque no menu <MoreVertical className="inline w-4 h-4 text-gray-500 mx-1" /> no
-                    canto superior direito do Chrome
+                  <p className="text-slate-300 text-sm pt-0.5">
+                    Toque no menu <MoreVertical className="inline w-4 h-4 text-slate-400 mx-0.5" />{' '}
+                    no canto superior direito do Chrome
                   </p>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-7 h-7 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full flex items-center justify-center text-sm font-bold">
+                  <span className="flex-shrink-0 w-7 h-7 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-full flex items-center justify-center text-xs font-bold">
                     2
                   </span>
-                  <p className="text-gray-700 dark:text-gray-300 text-sm pt-0.5">
-                    Toque em <strong>"Adicionar à tela inicial"</strong> ou{' '}
-                    <strong>"Instalar aplicativo"</strong>
+                  <p className="text-slate-300 text-sm pt-0.5">
+                    Toque em <strong className="text-white">"Adicionar à tela inicial"</strong> ou{' '}
+                    <strong className="text-white">"Instalar aplicativo"</strong>
                   </p>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-7 h-7 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full flex items-center justify-center text-sm font-bold">
+                  <span className="flex-shrink-0 w-7 h-7 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-full flex items-center justify-center text-xs font-bold">
                     3
                   </span>
-                  <p className="text-gray-700 dark:text-gray-300 text-sm pt-0.5">
-                    Confirme tocando em <strong>"Adicionar"</strong> ou <strong>"Instalar"</strong>
+                  <p className="text-slate-300 text-sm pt-0.5">
+                    Confirme tocando em <strong className="text-white">"Adicionar"</strong> ou{' '}
+                    <strong className="text-white">"Instalar"</strong>
                   </p>
                 </li>
               </ol>
 
               <button
                 onClick={() => setShowAndroidModal(false)}
-                className="w-full mt-6 px-4 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-medium transition-all min-h-[48px]"
+                className="w-full mt-6 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold transition-all min-h-[48px]"
               >
                 Entendi
               </button>
@@ -678,27 +797,47 @@ const Landing: React.FC = () => {
   );
 };
 
-// Componente FeatureCard
+// Componente FeatureCard — numerado, com accent border e icon container
 interface FeatureCardProps {
   icon: React.ReactNode;
   title: string;
   description: string;
+  index: number;
   delay: number;
+  reduceMotion?: boolean;
 }
 
-const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, delay }) => {
+const FeatureCard: React.FC<FeatureCardProps> = ({
+  icon,
+  title,
+  description,
+  index,
+  delay,
+  reduceMotion = false,
+}) => {
+  const num = String(index + 1).padStart(2, '0');
+
   return (
     <motion.div
-      className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:border-primary-500/50 transition-all"
-      initial={{ opacity: 0, y: 30 }}
+      className="relative bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/8 hover:border-indigo-500/40 hover:bg-white/8 transition-all group"
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay }}
-      whileHover={{ y: -5, boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}
+      transition={{ duration: 0.45, delay }}
+      whileHover={reduceMotion ? undefined : { y: -3, boxShadow: '0 16px 40px rgba(0,0,0,0.25)' }}
       key={`${title}-${delay}`}
     >
-      <div className="text-primary-400 mb-4">{icon}</div>
-      <h3 className="text-2xl font-bold text-white mb-3">{title}</h3>
-      <p className="text-gray-300 leading-relaxed">{description}</p>
+      {/* Number badge */}
+      <span className="absolute top-5 right-5 text-xs font-mono font-bold text-white/15 group-hover:text-indigo-400/40 transition-colors select-none">
+        {num}
+      </span>
+
+      {/* Icon */}
+      <div className="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/25 flex items-center justify-center text-indigo-400 mb-4 group-hover:bg-indigo-600/30 transition-colors">
+        {icon}
+      </div>
+
+      <h3 className="text-lg font-bold text-white mb-2 leading-snug">{title}</h3>
+      <p className="text-gray-400 text-sm leading-relaxed">{description}</p>
     </motion.div>
   );
 };

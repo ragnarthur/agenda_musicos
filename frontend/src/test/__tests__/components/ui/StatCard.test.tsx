@@ -1,16 +1,16 @@
 import React from 'react';
 import { describe, it, expect } from 'vitest';
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils/test-utils';
 import { StatCard } from '@/components/ui/StatCard';
 import { TrendingUp } from 'lucide-react';
 
 describe('StatCard', () => {
-  it('renders label and value correctly', () => {
+  it('renders label and value correctly', async () => {
     renderWithProviders(React.createElement(StatCard, { label: 'Eventos', value: 10 }));
 
     expect(screen.getByText('Eventos')).toBeInTheDocument();
-    expect(screen.getByText('10')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('10')).toBeInTheDocument(), { timeout: 2000 });
   });
 
   it('applies accent class when accent prop is true', () => {
