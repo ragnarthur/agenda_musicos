@@ -50,6 +50,7 @@ const Musicians = lazy(() => import('./pages/Musicians'));
 const MusicianProfile = lazy(() => import('./pages/MusicianProfile'));
 const LeaderAvailability = lazy(() => import('./pages/LeaderAvailability'));
 const Marketplace = lazy(() => import('./pages/Marketplace'));
+const PremiumPortalPage = lazy(() => import('./pages/PremiumPortalPage'));
 const Connections = lazy(() => import('./pages/Connections'));
 const RegisterInvite = lazy(() => import('./pages/RegisterInvite'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
@@ -366,6 +367,15 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Marketplace />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/portal-cultural"
+          element={
+            <ProtectedRoute>
+              <PremiumPortalPage />
             </ProtectedRoute>
           }
         />

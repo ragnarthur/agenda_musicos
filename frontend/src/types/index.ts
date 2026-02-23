@@ -36,9 +36,25 @@ export interface Musician {
   equipment_items?: EquipmentItem[];
   musical_genres?: string[];
   is_active: boolean;
+  is_premium?: boolean;
   average_rating?: number;
   total_ratings?: number;
   created_at: string;
+}
+
+export interface PortalItem {
+  source: 'salic' | 'mapas_culturais';
+  external_id: string;
+  title: string;
+  description: string;
+  category: 'rouanet' | 'aldir_blanc' | 'festival' | 'edital' | 'premio' | 'other';
+  scope: 'nacional' | 'estadual' | 'municipal';
+  state?: string;
+  city?: string;
+  external_url?: string;
+  deadline?: string;
+  event_date?: string;
+  published_at: string;
 }
 
 export interface MusicianUpdatePayload {

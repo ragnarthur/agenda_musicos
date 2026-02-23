@@ -68,3 +68,18 @@ class IsAppOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         # Donos podem modificar qualquer User
         return self.has_permission(request, view)
+
+
+class IsPremiumMusician(permissions.BasePermission):
+    """
+    Acesso restrito a músicos com is_premium=True.
+    Retorna 403 se autenticado mas não-premium; 401 se não autenticado.
+    """
+
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+        try:
+            return request.user.musician_profile.is_premium
+        except Exception:
+            return False

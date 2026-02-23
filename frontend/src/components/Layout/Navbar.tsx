@@ -15,6 +15,7 @@ import {
   UserCheck,
   Wallet,
   Shield,
+  Star,
   UserCog,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -40,6 +41,7 @@ const Navbar: React.FC = memo(() => {
   const { pendingMyResponse, pendingApproval } = useNotifications();
 
   const isStaff = Boolean(user?.user?.is_staff);
+  const isPremium = Boolean(user?.is_premium);
 
   const handleLogout = useCallback(async () => {
     await logout();
@@ -181,6 +183,11 @@ const Navbar: React.FC = memo(() => {
               label="Datas Disponíveis"
             />
             <AppNavLink to="/marketplace" icon={<Megaphone className="h-5 w-5" />} label="Vagas" />
+            <AppNavLink
+              to="/portal-cultural"
+              icon={<Star className={`h-5 w-5 ${isPremium ? 'text-yellow-400' : ''}`} />}
+              label="Portal Cultural"
+            />
             <div className="relative z-[60]" data-more-menu="desktop">
               <button
                 type="button"
@@ -383,6 +390,19 @@ const Navbar: React.FC = memo(() => {
                   >
                     <Wallet className="h-4 w-4" />
                     Valores e equipamentos
+                  </RouterNavLink>
+                  <RouterNavLink
+                    to="/portal-cultural"
+                    className={({ isActive }) =>
+                      `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                        isActive
+                          ? 'bg-yellow-500/10 text-yellow-900 dark:text-yellow-100'
+                          : 'text-slate-700 hover:bg-slate-900/5 dark:text-slate-200 dark:hover:bg-white/5'
+                      }`
+                    }
+                  >
+                    <Star className={`h-4 w-4 ${isPremium ? 'text-yellow-400' : ''}`} />
+                    Portal Cultural
                   </RouterNavLink>
                   {isStaff && (
                     <RouterNavLink

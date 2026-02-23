@@ -98,6 +98,8 @@ from .views import (
     MusicianViewSet,
 )
 
+from .premium_views import premium_portal  # noqa: E402
+
 # Router do DRF gera automaticamente as URLs
 router = DefaultRouter()
 router.register("musicians", MusicianViewSet, basename="musician")
@@ -426,6 +428,10 @@ urlpatterns = [
         public_request_status,
         name="public-request-status",
     ),
+    # =========================================================================
+    # Premium — Portal Cultural (apenas músicos com is_premium=True)
+    # =========================================================================
+    path("premium/portal/", premium_portal, name="premium-portal"),
     path("", include(router.urls)),
 ]
 

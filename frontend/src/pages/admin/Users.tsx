@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Trash2, Shield, Users, UserCheck, User as UserIcon } from 'lucide-react';
+import { Trash2, Shield, Star, Users, UserCheck, User as UserIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import {
   AdminHero,
@@ -29,6 +29,7 @@ const AdminUsers: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [currentPage, setCurrentPage] = useState(1);
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [togglingPremium, setTogglingPremium] = useState<number | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UsersListResponse[0] | null>(null);
   const [selectedUser, setSelectedUser] = useState<UsersListResponse[0] | null>(null);
@@ -134,6 +135,28 @@ const AdminUsers: React.FC = () => {
     });
   };
 
+  const handleTogglePremium = async (targetUser: UsersListResponse[0]) => {
+    try {
+      setTogglingPremium(targetUser.id);
+      const result = await adminService.togglePremium(targetUser.id);
+      setUsers(prev =>
+        prev.map(u =>
+          u.id === targetUser.id ? { ...u, musician_is_premium: result.is_premium } : u
+        )
+      );
+      if (selectedUser?.id === targetUser.id) {
+        setSelectedUser(prev => prev ? { ...prev, musician_is_premium: result.is_premium } : prev);
+      }
+      showToast.success(
+        result.is_premium ? 'Premium ativado com sucesso.' : 'Premium revogado.'
+      );
+    } catch (error) {
+      showToast.apiError(error);
+    } finally {
+      setTogglingPremium(null);
+    }
+  };
+
   const confirmDelete = async () => {
     if (!userToDelete) return;
 
@@ -228,6 +251,12 @@ const AdminUsers: React.FC = () => {
                       >
                         Detalhes
                       </AdminButton>
+                      {user.musician_is_premium && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-300">
+                          <Star className="h-3 w-3" />
+                          Premium
+                        </span>
+                      )}
                       {user.is_superuser && <AdminBadge status="planned" size="sm" />}
                       {user.is_staff && !user.is_superuser && (
                         <AdminBadge status="active" size="sm" />
@@ -321,6 +350,42 @@ const AdminUsers: React.FC = () => {
                   <span className="text-slate-500">Não</span>
                 )}
               </p>
+            </div>
+
+            {/* Portal Cultural Premium */}
+            <div className="pt-3 border-t border-slate-700">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Star
+                    className={`h-4 w-4 ${
+                      selectedUser.musician_is_premium ? 'text-yellow-400' : 'text-slate-500'
+                    }`}
+                  />
+                  <span className="text-sm text-slate-300">Portal Cultural Premium</span>
+                  {selectedUser.musician_is_premium ? (
+                    <span className="text-xs font-medium text-yellow-400">Ativo</span>
+                  ) : (
+                    <span className="text-xs text-slate-500">Inativo</span>
+                  )}
+                </div>
+                <AdminButton
+                  variant={selectedUser.musician_is_premium ? 'secondary' : 'primary'}
+                  size="sm"
+                  onClick={() => handleTogglePremium(selectedUser)}
+                  disabled={togglingPremium === selectedUser.id}
+                >
+                  {togglingPremium === selectedUser.id
+                    ? 'Aguarde...'
+                    : selectedUser.musician_is_premium
+                    ? 'Revogar'
+                    : 'Ativar Premium'}
+                </AdminButton>
+              </div>
+              {!selectedUser.musician_is_premium && (
+                <p className="text-xs text-slate-500 mt-1">
+                  Apenas músicos têm acesso ao Portal Cultural.
+                </p>
+              )}
             </div>
           </div>
         )}

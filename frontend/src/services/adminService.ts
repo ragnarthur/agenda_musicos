@@ -11,6 +11,7 @@ export interface AdminMeResponse {
   is_superuser: boolean;
   is_active: boolean;
   date_joined: string;
+  musician_is_premium?: boolean;
 }
 
 export type UsersListResponse = AdminMeResponse[];
@@ -28,5 +29,10 @@ export const adminService = {
 
   deleteUser: async (id: number): Promise<void> => {
     await api.delete(`/users/${id}/delete/`);
+  },
+
+  togglePremium: async (id: number): Promise<{ is_premium: boolean; musician_id: number }> => {
+    const response = await api.patch(`/admin/users/${id}/toggle-premium/`);
+    return response.data;
   },
 };

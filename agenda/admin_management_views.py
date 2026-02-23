@@ -573,3 +573,34 @@ def contact_views_stats(request):
             "daily_views": list(daily_views),
         }
     )
+
+
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def toggle_premium(request, pk):
+    """
+    Alterna o acesso premium de um músico.
+    Retorna { is_premium: bool, musician_id: int }.
+    """
+    user = User.objects.filter(pk=pk).first()
+    if not user:
+        return Response({"detail": "Usuário não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+    if not hasattr(user, "musician_profile"):
+        return Response(
+            {"detail": "Usuário não possui perfil de músico."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    musician = user.musician_profile
+    musician.is_premium = not musician.is_premium
+    musician.save(update_fields=["is_premium"])
+
+    logger.info(
+        "Admin %s %s premium para músico id=%s",
+        request.user.username,
+        "ativou" if musician.is_premium else "revogou",
+        musician.id,
+    )
+
+    return Response({"is_premium": musician.is_premium, "musician_id": musician.id})

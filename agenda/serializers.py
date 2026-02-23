@@ -102,12 +102,13 @@ class MusicianSerializer(serializers.ModelSerializer):
             "equipment_items",
             "public_email",
             "is_active",
+            "is_premium",
             "average_rating",
             "total_ratings",
             "created_at",
             "musical_genres",
         ]
-        read_only_fields = ["id", "average_rating", "total_ratings", "created_at"]
+        read_only_fields = ["id", "is_premium", "average_rating", "total_ratings", "created_at"]
 
     def get_full_name(self, obj) -> str:
         return obj.user.get_full_name() or obj.user.username

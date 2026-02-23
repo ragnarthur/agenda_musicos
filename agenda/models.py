@@ -300,6 +300,7 @@ class Musician(models.Model):
     )
     state = models.CharField(max_length=2, blank=True, null=True, help_text="UF (sigla do estado)")
     is_active = models.BooleanField(default=True)
+    is_premium = models.BooleanField(default=False, help_text="Acesso ao Portal Cultural Premium")
 
     # Campos de rating (agregados/cached)
     average_rating = models.DecimalField(

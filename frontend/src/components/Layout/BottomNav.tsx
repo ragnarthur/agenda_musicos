@@ -1,7 +1,7 @@
 // components/layout/BottomNav.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Calendar, User, Plus, Users } from 'lucide-react';
+import { Home, Calendar, User, Plus, Star, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 const BottomNav: React.FC = () => {
@@ -38,11 +38,20 @@ const BottomNav: React.FC = () => {
     return null;
   }
 
+  const isPremium = Boolean(user?.is_premium);
+
   const navItems = [
     { to: '/dashboard', icon: Home, label: 'Início' },
     { to: '/eventos', icon: Calendar, label: 'Eventos' },
     { to: '/eventos/novo', icon: Plus, label: 'Criar', isAction: true },
     { to: '/musicos', icon: Users, label: 'Músicos' },
+    {
+      to: '/portal-cultural',
+      icon: Star,
+      label: 'Portal',
+      isPremiumIcon: true,
+      isPremium,
+    },
   ];
   if (user?.id) {
     navItems.push({ to: `/musicos/${user.id}`, icon: User, label: 'Perfil' });
@@ -89,7 +98,11 @@ const BottomNav: React.FC = () => {
               }`}
             >
               <Icon
-                className={`w-5 h-5 mb-0.5 ${isActive ? 'scale-110' : ''} transition-transform`}
+                className={`w-5 h-5 mb-0.5 ${isActive ? 'scale-110' : ''} transition-transform ${
+                  'isPremiumIcon' in item && item.isPremiumIcon && item.isPremium
+                    ? 'text-yellow-400'
+                    : ''
+                }`}
               />
               <span className="text-[10px] font-medium">{item.label}</span>
               {isActive && (
