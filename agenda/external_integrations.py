@@ -8,6 +8,7 @@ Fontes:
 """
 
 import logging
+import unicodedata
 from datetime import datetime
 
 import requests
@@ -52,6 +53,58 @@ MAPAS_INSTANCES = {
 CACHE_TTL = 60 * 60 * 6  # 6 horas
 REQUEST_TIMEOUT = 12  # segundos
 
+FALLBACK_FEDERAL_ITEMS = [
+    {
+        "source": "curadoria_admin",
+        "external_id": "federal_pnab_faq",
+        "title": "PNAB — Perguntas Frequentes (Ministério da Cultura)",
+        "description": "Informações oficiais da Política Nacional Aldir Blanc (PNAB).",
+        "category": "aldir_blanc",
+        "scope": "nacional",
+        "state": None,
+        "city": None,
+        "external_url": "https://www.gov.br/cultura/pt-br/acesso-a-informacao/perguntas-frequentes/politica-nacional-aldir-blanc-pnab",
+        "deadline": None,
+        "event_date": None,
+    }
+]
+
+FALLBACK_STATE_ITEMS = {
+    "MG": [
+        {
+            "source": "curadoria_admin",
+            "external_id": "mg_pnab_editais",
+            "title": "Editais PNAB — Secult Minas Gerais",
+            "description": "Página oficial com editais e resultados da PNAB em Minas Gerais.",
+            "category": "aldir_blanc",
+            "scope": "estadual",
+            "state": "MG",
+            "city": None,
+            "external_url": "https://www.secult.mg.gov.br/editais/editais-pnab/editais-pnab",
+            "deadline": None,
+            "event_date": None,
+        }
+    ]
+}
+
+FALLBACK_CITY_ITEMS = {
+    ("MG", "monte carmelo"): [
+        {
+            "source": "curadoria_admin",
+            "external_id": "monte_carmelo_pnab_ciclo2",
+            "title": "PNAB - Política Nacional Aldir Blanc - Ciclo 2 (Monte Carmelo)",
+            "description": "Consulta pública e informações municipais da PNAB no site da Prefeitura de Monte Carmelo.",
+            "category": "aldir_blanc",
+            "scope": "municipal",
+            "state": "MG",
+            "city": "Monte Carmelo",
+            "external_url": "https://www.montecarmelo.mg.gov.br/pnab-ciclo-2",
+            "deadline": None,
+            "event_date": None,
+        }
+    ]
+}
+
 
 def fetch_portal_content(state: str, city: str | None) -> list[dict]:
     """
@@ -65,7 +118,10 @@ def fetch_portal_content(state: str, city: str | None) -> list[dict]:
     cache_key = f"portal_cultural_{state.upper()}_{(city or 'all').lower()}"
     cached = cache.get(cache_key)
     if cached is not None:
-        return cached
+        hydrated_cached = _ensure_scope_coverage(cached, state, city)
+        if hydrated_cached != cached:
+            cache.set(cache_key, hydrated_cached, CACHE_TTL)
+        return hydrated_cached
 
     results = []
 
@@ -99,6 +155,7 @@ def fetch_portal_content(state: str, city: str | None) -> list[dict]:
         return (deadline is None, deadline or "", published)
 
     unique.sort(key=sort_key)
+    unique = _ensure_scope_coverage(unique, state, city)
 
     cache.set(cache_key, unique, CACHE_TTL)
     return unique
@@ -318,3 +375,58 @@ def _guess_category_from_name(name: str) -> str:
     if any(w in name_lower for w in ["edital", "chamada", "seleção", "selecao"]):
         return "edital"
     return "edital"
+
+
+def _normalize_city_key(value: str | None) -> str:
+    if not value:
+        return ""
+    city = value.split(",", 1)[0].strip().lower()
+    city = unicodedata.normalize("NFKD", city)
+    city = "".join(ch for ch in city if not unicodedata.combining(ch))
+    return " ".join(city.split())
+
+
+def _fallback_items_for_location(state: str, city: str | None) -> list[dict]:
+    normalized_state = (state or "").strip().upper()
+    city_key = _normalize_city_key(city)
+
+    fallback_items: list[dict] = []
+    fallback_items.extend(FALLBACK_FEDERAL_ITEMS)
+    fallback_items.extend(FALLBACK_STATE_ITEMS.get(normalized_state, []))
+    fallback_items.extend(FALLBACK_CITY_ITEMS.get((normalized_state, city_key), []))
+
+    published_at = _today_str()
+    return [{**item, "published_at": published_at} for item in fallback_items]
+
+
+def _ensure_scope_coverage(items: list[dict], state: str, city: str | None) -> list[dict]:
+    """
+    Garante que o feed tenha cobertura mínima:
+      - nacional
+      - estadual
+      - municipal (quando existir fallback para a cidade)
+    """
+    fallback_items = _fallback_items_for_location(state, city)
+    if not items:
+        return fallback_items
+
+    merged = list(items)
+    seen_keys = {
+        (item.get("source"), item.get("external_id"))
+        for item in merged
+        if item.get("source") and item.get("external_id")
+    }
+    existing_scopes = {item.get("scope") for item in merged}
+
+    for fallback in fallback_items:
+        key = (fallback.get("source"), fallback.get("external_id"))
+        scope = fallback.get("scope")
+        if key in seen_keys:
+            continue
+        if scope in existing_scopes:
+            continue
+        merged.append(fallback)
+        seen_keys.add(key)
+        existing_scopes.add(scope)
+
+    return merged

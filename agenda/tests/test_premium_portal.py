@@ -117,6 +117,16 @@ class PremiumPortalAPITest(APITestCase):
         titles = {item["title"] for item in response.data}
         self.assertIn("Edital Municipal BH", titles)
 
+    def test_full_state_name_is_normalized_to_uf(self):
+        self.premium_musician.state = "Minas Gerais"
+        self.premium_musician.save(update_fields=["state"])
+
+        self.client.force_authenticate(user=self.premium_user)
+        response = self.client.get("/api/premium/portal/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        titles = {item["title"] for item in response.data}
+        self.assertIn("Festival Estadual MG", titles)
+
     @patch("agenda.premium_views.fetch_portal_content")
     def test_uses_external_sources_when_admin_curated_content_is_empty(self, mock_fetch_portal):
         CulturalNotice.objects.filter(state="MG").delete()

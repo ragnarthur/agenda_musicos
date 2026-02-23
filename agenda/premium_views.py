@@ -18,13 +18,46 @@ from .serializers import CulturalNoticeSerializer, PremiumPortalItemSerializer
 
 logger = logging.getLogger(__name__)
 
+STATE_NAME_TO_UF = {
+    "ACRE": "AC",
+    "ALAGOAS": "AL",
+    "AMAPA": "AP",
+    "AMAZONAS": "AM",
+    "BAHIA": "BA",
+    "CEARA": "CE",
+    "DISTRITO FEDERAL": "DF",
+    "ESPIRITO SANTO": "ES",
+    "GOIAS": "GO",
+    "MARANHAO": "MA",
+    "MATO GROSSO": "MT",
+    "MATO GROSSO DO SUL": "MS",
+    "MINAS GERAIS": "MG",
+    "PARA": "PA",
+    "PARAIBA": "PB",
+    "PARANA": "PR",
+    "PERNAMBUCO": "PE",
+    "PIAUI": "PI",
+    "RIO DE JANEIRO": "RJ",
+    "RIO GRANDE DO NORTE": "RN",
+    "RIO GRANDE DO SUL": "RS",
+    "RONDONIA": "RO",
+    "RORAIMA": "RR",
+    "SANTA CATARINA": "SC",
+    "SAO PAULO": "SP",
+    "SERGIPE": "SE",
+    "TOCANTINS": "TO",
+}
+
 
 def _scope_label(notice: CulturalNotice) -> str:
     return "municipal" if notice.city else "estadual"
 
 
 def _normalize_state(value: str | None) -> str:
-    return (value or "").strip().upper()
+    raw = (value or "").strip().upper()
+    if len(raw) == 2:
+        return raw
+    return STATE_NAME_TO_UF.get(raw, raw)
 
 
 def _normalize_city(value: str | None) -> str | None:
