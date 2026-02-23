@@ -145,6 +145,49 @@ class PremiumPortalAPITest(APITestCase):
         self.assertEqual(response.data[0]["title"], "Edital Externo MG")
         mock_fetch_portal.assert_called_once_with(state="MG", city="Belo Horizonte")
 
+    @patch("agenda.premium_views.fetch_portal_content")
+    def test_invalid_external_items_do_not_break_endpoint(self, mock_fetch_portal):
+        CulturalNotice.objects.filter(state="MG").delete()
+        mock_fetch_portal.return_value = [
+            {
+                # inválido: external_id em branco
+                "source": "salic",
+                "external_id": "",
+                "title": "Item inválido",
+                "description": "",
+                "category": "edital",
+                "scope": "estadual",
+                "state": "MG",
+                "city": None,
+                "external_url": None,
+                "deadline": None,
+                "event_date": None,
+                "published_at": "2026-02-01",
+            },
+            {
+                # válido
+                "source": "mapas_culturais",
+                "external_id": "opp_77",
+                "title": "Item válido",
+                "description": "ok",
+                "category": "edital",
+                "scope": "estadual",
+                "state": "MG",
+                "city": None,
+                "external_url": "https://example.com/oportunidade/77",
+                "deadline": None,
+                "event_date": None,
+                "published_at": "2026-02-02",
+            },
+        ]
+
+        self.client.force_authenticate(user=self.premium_user)
+        response = self.client.get("/api/premium/portal/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["title"], "Item válido")
+
 
 class AdminSetPremiumAPITest(APITestCase):
     def setUp(self):

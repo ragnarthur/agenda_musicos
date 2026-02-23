@@ -3,6 +3,8 @@
 Endpoints premium: conteúdo acessível apenas a músicos com is_premium=True.
 """
 
+import logging
+
 from django.db.models import Case, IntegerField, Q, Value, When
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -13,6 +15,8 @@ from .external_integrations import fetch_portal_content
 from .models import CulturalNotice
 from .permissions import IsPremiumMusician
 from .serializers import CulturalNoticeSerializer, PremiumPortalItemSerializer
+
+logger = logging.getLogger(__name__)
 
 
 def _scope_label(notice: CulturalNotice) -> str:
@@ -78,6 +82,23 @@ def _to_portal_item(notice: CulturalNotice) -> dict:
     }
 
 
+def _validate_portal_payload(payload: list[dict]) -> list[dict]:
+    """
+    Valida item a item para evitar 400 no endpoint inteiro quando uma fonte externa
+    retornar um registro malformado.
+    """
+    validated_items: list[dict] = []
+    for item in payload:
+        serializer = PremiumPortalItemSerializer(data=item)
+        if serializer.is_valid():
+            validated_items.append(serializer.data)
+            continue
+        logger.warning(
+            "Skipping invalid premium portal item: errors=%s item=%s", serializer.errors, item
+        )
+    return validated_items
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, IsPremiumMusician])
 def premium_portal(request):
@@ -122,9 +143,7 @@ def premium_portal(request):
         if category:
             payload = [item for item in payload if item.get("category") == category]
 
-    serializer = PremiumPortalItemSerializer(data=payload, many=True)
-    serializer.is_valid(raise_exception=True)
-    return Response(serializer.data)
+    return Response(_validate_portal_payload(payload))
 
 
 @api_view(["GET", "POST"])
