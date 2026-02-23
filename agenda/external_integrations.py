@@ -108,6 +108,7 @@ def fetch_portal_content(state: str, city: str | None) -> list[dict]:
 # SALIC API — Lei Rouanet
 # ---------------------------------------------------------------------------
 
+
 def _fetch_salic(state: str, city: str | None) -> list[dict]:
     """Busca propostas Lei Rouanet via SALIC API filtradas por UF/município."""
     params: dict = {
@@ -120,9 +121,7 @@ def _fetch_salic(state: str, city: str | None) -> list[dict]:
         params["municipio"] = city
 
     try:
-        resp = requests.get(
-            f"{SALIC_BASE}/propostas", params=params, timeout=REQUEST_TIMEOUT
-        )
+        resp = requests.get(f"{SALIC_BASE}/propostas", params=params, timeout=REQUEST_TIMEOUT)
         resp.raise_for_status()
         data = resp.json()
         items = data.get("_embedded", {}).get("propostas", [])
@@ -145,16 +144,14 @@ def _normalize_salic(item: dict) -> dict:
         "state": item.get("UfProjeto") or item.get("uf") or "",
         "city": item.get("CidadeProjeto") or item.get("municipio") or "",
         "external_url": (
-            f"https://salic.cultura.gov.br/autenticacao/index/visualizar/"
-            f"pronac/{pronac}" if pronac else None
+            f"https://salic.cultura.gov.br/autenticacao/index/visualizar/" f"pronac/{pronac}"
+            if pronac
+            else None
         ),
         "deadline": None,
-        "event_date": _parse_salic_date(
-            item.get("DtInicioExecucao") or item.get("data_inicio")
-        ),
-        "published_at": _parse_salic_date(
-            item.get("DtInicioExecucao") or item.get("data_inicio")
-        ) or _today_str(),
+        "event_date": _parse_salic_date(item.get("DtInicioExecucao") or item.get("data_inicio")),
+        "published_at": _parse_salic_date(item.get("DtInicioExecucao") or item.get("data_inicio"))
+        or _today_str(),
     }
 
 
@@ -181,6 +178,7 @@ def _parse_salic_date(value) -> str | None:
 # Mapas Culturais — Oportunidades/Editais
 # ---------------------------------------------------------------------------
 
+
 def _fetch_mapas_oportunidades(instance_key: str, state: str, city: str | None) -> list[dict]:
     """Busca oportunidades (editais/chamadas) em uma instância Mapas Culturais."""
     base_url = MAPAS_INSTANCES.get(instance_key, MAPAS_INSTANCES["default"])
@@ -200,7 +198,9 @@ def _fetch_mapas_oportunidades(instance_key: str, state: str, city: str | None) 
     except Exception as exc:
         logger.warning(
             "Mapas Culturais opportunity fetch failed instance=%s state=%s: %s",
-            instance_key, state, exc,
+            instance_key,
+            state,
+            exc,
         )
         return []
 
@@ -230,6 +230,7 @@ def _normalize_mapas_opportunity(item: dict, base_url: str) -> dict:
 # Mapas Culturais — Eventos (festivais)
 # ---------------------------------------------------------------------------
 
+
 def _fetch_mapas_eventos(instance_key: str, state: str, city: str | None) -> list[dict]:
     """Busca eventos culturais (festivais, shows públicos) em uma instância Mapas Culturais."""
     base_url = MAPAS_INSTANCES.get(instance_key, MAPAS_INSTANCES["default"])
@@ -250,7 +251,9 @@ def _fetch_mapas_eventos(instance_key: str, state: str, city: str | None) -> lis
     except Exception as exc:
         logger.warning(
             "Mapas Culturais event fetch failed instance=%s state=%s: %s",
-            instance_key, state, exc,
+            instance_key,
+            state,
+            exc,
         )
         return []
 
@@ -285,6 +288,7 @@ def _normalize_mapas_event(item: dict, base_url: str) -> dict:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _parse_mapas_date(value) -> str | None:
     if not value:
