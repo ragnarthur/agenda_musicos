@@ -324,6 +324,18 @@ class AdminCulturalNoticeCurationAPITest(APITestCase):
         self.assertEqual(new_notice.state, "MG")
         self.assertEqual(new_notice.category, "aldir_blanc")
 
+    def test_create_notice_rejects_invalid_state(self):
+        payload = {
+            "title": "Notícia com UF inválida",
+            "category": "noticia",
+            "state": "M",
+            "city": "Monte Carmelo",
+            "is_active": True,
+        }
+        response = self.client.post("/api/admin/cultural-notices/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("state", response.data)
+
 
 class AdminSetPremiumAPITest(APITestCase):
     def setUp(self):

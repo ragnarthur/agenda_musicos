@@ -2087,6 +2087,36 @@ class AdminUpdateSerializer(serializers.ModelSerializer):
 class CulturalNoticeSerializer(serializers.ModelSerializer):
     """Serializer completo para CRUD administrativo do conteúdo premium."""
 
+    BR_UF_CODES = {
+        "AC",
+        "AL",
+        "AP",
+        "AM",
+        "BA",
+        "CE",
+        "DF",
+        "ES",
+        "GO",
+        "MA",
+        "MT",
+        "MS",
+        "MG",
+        "PA",
+        "PB",
+        "PR",
+        "PE",
+        "PI",
+        "RJ",
+        "RN",
+        "RS",
+        "RO",
+        "RR",
+        "SC",
+        "SP",
+        "SE",
+        "TO",
+    }
+
     class Meta:
         model = CulturalNotice
         fields = [
@@ -2107,6 +2137,12 @@ class CulturalNoticeSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "created_by", "created_at", "updated_at"]
+
+    def validate_state(self, value: str) -> str:
+        normalized = (value or "").strip().upper()
+        if normalized not in self.BR_UF_CODES:
+            raise serializers.ValidationError("UF inválida. Use uma sigla oficial com 2 letras.")
+        return normalized
 
 
 class PremiumPortalItemSerializer(serializers.Serializer):

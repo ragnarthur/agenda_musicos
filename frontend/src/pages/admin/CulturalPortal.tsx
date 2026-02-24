@@ -39,6 +39,36 @@ const FORM_CATEGORY_OPTIONS: Array<{ value: PortalItem['category']; label: strin
   { value: 'other', label: 'Outro' },
 ];
 
+const VALID_UFS: string[] = [
+  'AC',
+  'AL',
+  'AP',
+  'AM',
+  'BA',
+  'CE',
+  'DF',
+  'ES',
+  'GO',
+  'MA',
+  'MT',
+  'MS',
+  'MG',
+  'PA',
+  'PB',
+  'PR',
+  'PE',
+  'PI',
+  'RJ',
+  'RN',
+  'RS',
+  'RO',
+  'RR',
+  'SC',
+  'SP',
+  'SE',
+  'TO',
+];
+
 const CATEGORY_OPTIONS: Array<{ value: 'all' | PortalItem['category']; label: string }> = [
   { value: 'all', label: 'Todas as categorias' },
   { value: 'edital', label: 'Editais' },
@@ -131,14 +161,23 @@ const CulturalPortal: React.FC = () => {
     setShowCreateModal(true);
   };
 
+  const normalizedCreateState = createForm.state.trim().toUpperCase();
+  const createStateIsValid =
+    normalizedCreateState.length === 2 && VALID_UFS.includes(normalizedCreateState);
+
   const handleCreate = async () => {
-    if (!createForm.title.trim() || !createForm.state.trim()) return;
+    if (!createForm.title.trim()) return;
+    if (!createStateIsValid) {
+      showToast.error('Informe uma UF válida com 2 letras (ex: MG, SP, RJ).');
+      return;
+    }
+
     try {
       setCreating(true);
-      const created = await adminService.createCulturalNotice({
+      await adminService.createCulturalNotice({
         title: createForm.title.trim(),
         category: createForm.category,
-        state: createForm.state.trim().toUpperCase(),
+        state: normalizedCreateState,
         city: createForm.city.trim() || null,
         summary: createForm.summary.trim() || null,
         source_name: createForm.source_name.trim() || null,
@@ -147,7 +186,6 @@ const CulturalPortal: React.FC = () => {
         event_date: createForm.event_date || null,
         is_active: true,
       });
-      setNotices(prev => [created, ...prev]);
       showToast.success('Notícia publicada com sucesso.');
       setShowCreateModal(false);
       setCreateForm({
@@ -161,6 +199,7 @@ const CulturalPortal: React.FC = () => {
         deadline_at: '',
         event_date: '',
       });
+      await loadNotices();
     } catch (error) {
       showToast.apiError(error);
     } finally {
@@ -573,7 +612,7 @@ const CulturalPortal: React.FC = () => {
               variant="primary"
               onClick={handleCreate}
               loading={creating}
-              disabled={!createForm.title.trim() || !createForm.state.trim()}
+              disabled={!createForm.title.trim() || !createStateIsValid}
             >
               Publicar
             </AdminButton>
@@ -659,6 +698,11 @@ const CulturalPortal: React.FC = () => {
                 }
                 placeholder="MG"
               />
+              {!createStateIsValid && createForm.state.trim().length > 0 && (
+                <p className="text-xs text-red-400 mt-1">
+                  UF inválida. Use sigla oficial (ex: MG).
+                </p>
+              )}
             </div>
             <div>
               <label className="admin-label">Cidade (opcional)</label>
