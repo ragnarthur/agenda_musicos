@@ -265,10 +265,7 @@ const Musicians: React.FC = () => {
           </div>
 
           {/* Filter bar */}
-          <div
-            className="card-contrast space-y-3"
-            data-cascade-ignore
-          >
+          <div className="card-contrast space-y-3" data-cascade-ignore>
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
               Use o mini-calendário para filtrar músicos disponíveis por data. Toque ou clique no
               mesmo dia novamente para limpar.
