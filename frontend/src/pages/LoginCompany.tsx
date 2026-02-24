@@ -112,10 +112,10 @@ export default function LoginCompany() {
       const buttonDiv = document.getElementById('google-signin-button');
       if (buttonDiv) {
         window.google.accounts.id.renderButton(buttonDiv, {
-          theme: 'outline',
+          theme: 'filled_black',
           size: 'large',
           text: 'signin_with',
-          width: '100%',
+          width: 400,
         });
       }
     };

@@ -154,10 +154,10 @@ export default function RegisterCompany() {
       const buttonDiv = document.getElementById('google-signin-button');
       if (buttonDiv) {
         window.google.accounts.id.renderButton(buttonDiv, {
-          theme: 'outline',
+          theme: 'filled_black',
           size: 'large',
           text: 'signup_with',
-          width: '100%',
+          width: 400,
         });
       }
     };

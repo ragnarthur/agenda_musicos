@@ -206,9 +206,9 @@ export default function MusicianRequest() {
       const buttonDiv = document.getElementById('google-signin-request');
       if (buttonDiv) {
         window.google.accounts.id.renderButton(buttonDiv, {
-          theme: 'outline',
+          theme: 'filled_black',
           size: 'large',
-          width: '100%',
+          width: 400,
         });
       }
     };
