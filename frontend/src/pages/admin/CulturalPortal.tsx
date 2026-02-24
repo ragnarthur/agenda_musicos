@@ -694,9 +694,7 @@ const CulturalPortal: React.FC = () => {
                   className="admin-input"
                   type="date"
                   value={createForm.deadline_at}
-                  onChange={e =>
-                    setCreateForm(prev => ({ ...prev, deadline_at: e.target.value }))
-                  }
+                  onChange={e => setCreateForm(prev => ({ ...prev, deadline_at: e.target.value }))}
                 />
               </div>
               <div>
@@ -705,9 +703,7 @@ const CulturalPortal: React.FC = () => {
                   className="admin-input"
                   type="date"
                   value={createForm.event_date}
-                  onChange={e =>
-                    setCreateForm(prev => ({ ...prev, event_date: e.target.value }))
-                  }
+                  onChange={e => setCreateForm(prev => ({ ...prev, event_date: e.target.value }))}
                 />
               </div>
             </div>
