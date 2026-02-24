@@ -161,6 +161,12 @@ function daysUntil(deadline?: string) {
   return Math.ceil((d.getTime() - today.getTime()) / 86400000);
 }
 
+function nearestDeadlineDays(item: PortalItem) {
+  const d = daysUntil(item.deadline);
+  if (d === null || d < 0) return Number.MAX_SAFE_INTEGER;
+  return d;
+}
+
 // ---------------------------------------------------------------------------
 // Gate — tela para usuários não-premium
 // ---------------------------------------------------------------------------
@@ -556,10 +562,24 @@ const PremiumPortalPage: React.FC = () => {
   const municipalItems = filtered.filter(item => item.scope === 'municipal');
   const estadualItems = filtered.filter(item => item.scope === 'estadual');
   const nacionalItems = filtered.filter(item => item.scope === 'nacional');
-  const urgentItemsCount = filtered.filter(item => {
+  const urgentItems = filtered.filter(item => {
     const d = daysUntil(item.deadline);
     return d !== null && d >= 0 && d <= 7;
-  }).length;
+  });
+  const urgentItemsCount = urgentItems.length;
+  const deadlineItems = filtered
+    .filter(item => item.deadline)
+    .sort((a, b) => nearestDeadlineDays(a) - nearestDeadlineDays(b));
+  const nextDeadlines = deadlineItems.slice(0, 5);
+  const officialLinks = filtered
+    .filter(item => item.external_url)
+    .slice(0, 6)
+    .map(item => ({
+      key: `${item.source}-${item.external_id}`,
+      title: item.title,
+      url: item.external_url as string,
+      source: SOURCE_LABELS[item.source],
+    }));
 
   const locationLabel = [user?.city, user?.state].filter(Boolean).join(' · ');
   const totalItems = items?.length ?? 0;
@@ -650,92 +670,230 @@ const PremiumPortalPage: React.FC = () => {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {featuredItem && (
-                    <section className="space-y-3">
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
-                          Agora na sua região
-                        </h2>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">
-                          Curadoria atualizada em tempo real
-                        </span>
-                      </div>
+                <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] gap-4 sm:gap-5">
+                  <div className="space-y-4">
+                    <section className="xl:hidden grid grid-cols-2 gap-2">
+                      <a
+                        href="#sec-destaque"
+                        className="rounded-xl border border-cyan-200/70 dark:border-cyan-700/40 bg-white/85 dark:bg-slate-900/60 p-3"
+                      >
+                        <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                          Destaques
+                        </p>
+                        <p className="text-lg font-black text-slate-900 dark:text-white mt-1">
+                          {heroItems.length}
+                        </p>
+                      </a>
+                      <a
+                        href="#sec-prazos"
+                        className="rounded-xl border border-red-200/70 dark:border-red-700/40 bg-red-50/70 dark:bg-red-950/20 p-3"
+                      >
+                        <p className="text-[11px] uppercase tracking-wide text-red-600 dark:text-red-300">
+                          Prazos críticos
+                        </p>
+                        <p className="text-lg font-black text-red-700 dark:text-red-200 mt-1">
+                          {urgentItemsCount}
+                        </p>
+                      </a>
+                    </section>
 
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
-                        <div className="rounded-xl border border-slate-200/70 dark:border-slate-700/50 bg-white/85 dark:bg-slate-900/65 p-3">
-                          <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                            Municipal
-                          </p>
-                          <p className="text-xl font-black text-slate-900 dark:text-white mt-1">
+                    {featuredItem && (
+                      <section id="sec-destaque" className="space-y-3 scroll-mt-24">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
+                            Agora na sua região
+                          </h2>
+                          <span className="text-xs text-slate-500 dark:text-slate-400">
+                            Curadoria atualizada em tempo real
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
+                          <div className="rounded-xl border border-slate-200/70 dark:border-slate-700/50 bg-white/85 dark:bg-slate-900/65 p-3">
+                            <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                              Municipal
+                            </p>
+                            <p className="text-xl font-black text-slate-900 dark:text-white mt-1">
+                              {municipalItems.length}
+                            </p>
+                          </div>
+                          <div className="rounded-xl border border-slate-200/70 dark:border-slate-700/50 bg-white/85 dark:bg-slate-900/65 p-3">
+                            <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                              Estadual
+                            </p>
+                            <p className="text-xl font-black text-slate-900 dark:text-white mt-1">
+                              {estadualItems.length}
+                            </p>
+                          </div>
+                          <div className="rounded-xl border border-slate-200/70 dark:border-slate-700/50 bg-white/85 dark:bg-slate-900/65 p-3">
+                            <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                              Federal
+                            </p>
+                            <p className="text-xl font-black text-slate-900 dark:text-white mt-1">
+                              {nacionalItems.length}
+                            </p>
+                          </div>
+                          <div className="rounded-xl border border-red-200/70 dark:border-red-700/40 bg-red-50/70 dark:bg-red-950/20 p-3">
+                            <p className="text-[11px] uppercase tracking-wide text-red-600 dark:text-red-300">
+                              Prazos críticos
+                            </p>
+                            <p className="text-xl font-black text-red-700 dark:text-red-200 mt-1">
+                              {urgentItemsCount}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 xl:grid-cols-[1.4fr_1fr] gap-3 sm:gap-4">
+                          <FeaturedPortalCard item={featuredItem} />
+                          {spotlightItems.length > 0 && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-3 sm:gap-4">
+                              {spotlightItems.map(item => (
+                                <CompactPortalCard
+                                  key={`${item.source}-${item.external_id}`}
+                                  item={item}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </section>
+                    )}
+
+                    <section id="sec-trilhas" className="space-y-3 scroll-mt-24">
+                      <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
+                        Trilhas por alcance
+                      </h3>
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+                        <ScopeLane scope="municipal" items={municipalItems} />
+                        <ScopeLane scope="estadual" items={estadualItems} />
+                        <ScopeLane scope="nacional" items={nacionalItems} />
+                      </div>
+                    </section>
+
+                    {feedItems.length > 0 && (
+                      <section className="space-y-3">
+                        <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
+                          Mais oportunidades e notícias
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                          {feedItems.map(item => (
+                            <PortalCard key={`${item.source}-${item.external_id}`} item={item} />
+                          ))}
+                        </div>
+                      </section>
+                    )}
+                  </div>
+
+                  <aside className="hidden xl:flex flex-col gap-4 sticky top-24 self-start">
+                    <section className="rounded-2xl border border-slate-200/70 dark:border-slate-700/50 bg-white/85 dark:bg-slate-900/65 p-4">
+                      <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                        Radar rápido
+                      </h3>
+                      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                        <div className="rounded-lg bg-slate-100/80 dark:bg-slate-800/70 p-2">
+                          <p className="text-slate-500 dark:text-slate-400">Municipal</p>
+                          <p className="font-bold text-slate-900 dark:text-white">
                             {municipalItems.length}
                           </p>
                         </div>
-                        <div className="rounded-xl border border-slate-200/70 dark:border-slate-700/50 bg-white/85 dark:bg-slate-900/65 p-3">
-                          <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                            Estadual
-                          </p>
-                          <p className="text-xl font-black text-slate-900 dark:text-white mt-1">
+                        <div className="rounded-lg bg-slate-100/80 dark:bg-slate-800/70 p-2">
+                          <p className="text-slate-500 dark:text-slate-400">Estadual</p>
+                          <p className="font-bold text-slate-900 dark:text-white">
                             {estadualItems.length}
                           </p>
                         </div>
-                        <div className="rounded-xl border border-slate-200/70 dark:border-slate-700/50 bg-white/85 dark:bg-slate-900/65 p-3">
-                          <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                            Federal
-                          </p>
-                          <p className="text-xl font-black text-slate-900 dark:text-white mt-1">
+                        <div className="rounded-lg bg-slate-100/80 dark:bg-slate-800/70 p-2">
+                          <p className="text-slate-500 dark:text-slate-400">Federal</p>
+                          <p className="font-bold text-slate-900 dark:text-white">
                             {nacionalItems.length}
                           </p>
                         </div>
-                        <div className="rounded-xl border border-red-200/70 dark:border-red-700/40 bg-red-50/70 dark:bg-red-950/20 p-3">
-                          <p className="text-[11px] uppercase tracking-wide text-red-600 dark:text-red-300">
-                            Prazos críticos
-                          </p>
-                          <p className="text-xl font-black text-red-700 dark:text-red-200 mt-1">
+                        <div className="rounded-lg bg-red-50 dark:bg-red-950/20 p-2">
+                          <p className="text-red-600 dark:text-red-300">Prazos críticos</p>
+                          <p className="font-bold text-red-700 dark:text-red-200">
                             {urgentItemsCount}
                           </p>
                         </div>
                       </div>
+                    </section>
 
-                      <div className="grid grid-cols-1 xl:grid-cols-[1.4fr_1fr] gap-3 sm:gap-4">
-                        <FeaturedPortalCard item={featuredItem} />
-                        {spotlightItems.length > 0 && (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-3 sm:gap-4">
-                            {spotlightItems.map(item => (
-                              <CompactPortalCard
-                                key={`${item.source}-${item.external_id}`}
-                                item={item}
-                              />
-                            ))}
-                          </div>
+                    <section
+                      id="sec-prazos"
+                      className="rounded-2xl border border-slate-200/70 dark:border-slate-700/50 bg-white/85 dark:bg-slate-900/65 p-4 scroll-mt-24"
+                    >
+                      <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                        Próximos prazos
+                      </h3>
+                      <div className="mt-3 space-y-2.5">
+                        {nextDeadlines.length === 0 ? (
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            Sem prazos registrados.
+                          </p>
+                        ) : (
+                          nextDeadlines.map(item =>
+                            item.external_url ? (
+                              <a
+                                key={`deadline-${item.source}-${item.external_id}`}
+                                href={item.external_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block rounded-xl border border-slate-200/70 dark:border-slate-700/60 p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                              >
+                                <p className="text-xs font-semibold text-slate-900 dark:text-white line-clamp-2">
+                                  {item.title}
+                                </p>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                                  {item.deadline && `Prazo: ${formatPortalDate(item.deadline)}`}
+                                </p>
+                              </a>
+                            ) : (
+                              <div
+                                key={`deadline-${item.source}-${item.external_id}`}
+                                className="rounded-xl border border-slate-200/70 dark:border-slate-700/60 p-2.5"
+                              >
+                                <p className="text-xs font-semibold text-slate-900 dark:text-white line-clamp-2">
+                                  {item.title}
+                                </p>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                                  {item.deadline && `Prazo: ${formatPortalDate(item.deadline)}`}
+                                </p>
+                              </div>
+                            )
+                          )
                         )}
                       </div>
                     </section>
-                  )}
 
-                  <section className="space-y-3">
-                    <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
-                      Trilhas por alcance
-                    </h3>
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
-                      <ScopeLane scope="municipal" items={municipalItems} />
-                      <ScopeLane scope="estadual" items={estadualItems} />
-                      <ScopeLane scope="nacional" items={nacionalItems} />
-                    </div>
-                  </section>
-
-                  {feedItems.length > 0 && (
-                    <section className="space-y-3">
-                      <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
-                        Mais oportunidades e notícias
+                    <section className="rounded-2xl border border-slate-200/70 dark:border-slate-700/50 bg-white/85 dark:bg-slate-900/65 p-4">
+                      <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                        Fontes oficiais
                       </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                        {feedItems.map(item => (
-                          <PortalCard key={`${item.source}-${item.external_id}`} item={item} />
-                        ))}
+                      <div className="mt-3 space-y-2">
+                        {officialLinks.length === 0 ? (
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            Sem links de referência no filtro atual.
+                          </p>
+                        ) : (
+                          officialLinks.map(link => (
+                            <a
+                              key={`official-${link.key}`}
+                              href={link.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block rounded-lg border border-slate-200/70 dark:border-slate-700/60 p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                            >
+                              <p className="text-xs font-semibold text-slate-900 dark:text-white line-clamp-2">
+                                {link.title}
+                              </p>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                                {link.source}
+                              </p>
+                            </a>
+                          ))
+                        )}
                       </div>
                     </section>
-                  )}
+                  </aside>
                 </div>
               )}
             </>
