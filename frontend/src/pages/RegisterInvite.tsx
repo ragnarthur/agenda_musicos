@@ -124,7 +124,7 @@ const RegisterInvite: React.FC = () => {
       const buttonDiv = document.getElementById('google-signin-invite');
       if (buttonDiv) {
         window.google.accounts.id.renderButton(buttonDiv, {
-          theme: 'filled_black',
+          theme: 'outline',
           size: 'large',
           text: 'signup_with',
           width: '100%',
