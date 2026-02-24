@@ -90,6 +90,16 @@ const CATEGORY_LABELS: Record<PortalItem['category'], string> = {
   other: 'Outro',
 };
 
+const PREVIEW_CATEGORY_CLASSES: Record<PortalItem['category'], string> = {
+  edital: 'bg-amber-500/20 text-amber-200',
+  festival: 'bg-fuchsia-500/20 text-fuchsia-200',
+  noticia: 'bg-indigo-500/20 text-indigo-200',
+  aldir_blanc: 'bg-emerald-500/20 text-emerald-200',
+  rouanet: 'bg-cyan-500/20 text-cyan-200',
+  premio: 'bg-yellow-500/20 text-yellow-200',
+  other: 'bg-slate-500/20 text-slate-200',
+};
+
 const SCOPE_LABELS: Record<PortalItem['scope'], string> = {
   nacional: 'Nacional',
   estadual: 'Estadual',
@@ -164,6 +174,10 @@ const CulturalPortal: React.FC = () => {
   const normalizedCreateState = createForm.state.trim().toUpperCase();
   const createStateIsValid =
     normalizedCreateState.length === 2 && VALID_UFS.includes(normalizedCreateState);
+  const previewScope: PortalItem['scope'] = createForm.city.trim() ? 'municipal' : 'estadual';
+  const previewLocation = [createForm.city.trim() || null, normalizedCreateState || 'UF']
+    .filter(Boolean)
+    .join(' · ');
 
   const handleCreate = async () => {
     if (!createForm.title.trim()) return;
@@ -677,6 +691,60 @@ const CulturalPortal: React.FC = () => {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950/60 p-4">
+            <p className="text-[11px] uppercase tracking-widest text-cyan-300 font-semibold mb-3">
+              Prévia no app
+            </p>
+            <div className="rounded-xl border border-cyan-400/30 bg-slate-900/60 p-3 space-y-2.5">
+              <div className="flex items-center flex-wrap gap-1.5">
+                <span
+                  className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${PREVIEW_CATEGORY_CLASSES[createForm.category]}`}
+                >
+                  {CATEGORY_LABELS[createForm.category]}
+                </span>
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white/10 text-slate-300">
+                  {SCOPE_LABELS[previewScope]}
+                </span>
+                <span className="ml-auto text-[11px] uppercase tracking-wide text-cyan-200">
+                  {createForm.source_name.trim() || 'Curadoria'}
+                </span>
+              </div>
+
+              <h4 className="text-sm font-bold text-white leading-snug">
+                {createForm.title.trim() || 'Título da notícia no portal cultural'}
+              </h4>
+
+              <p className="text-xs text-slate-300 line-clamp-3">
+                {createForm.summary.trim() ||
+                  'Resumo opcional para o músico entender rapidamente a oportunidade.'}
+              </p>
+
+              <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-300">
+                <span className="inline-flex items-center gap-1">
+                  <MapPin className="h-3.5 w-3.5" />
+                  {previewLocation}
+                </span>
+                {createForm.deadline_at && (
+                  <span className="px-2 py-0.5 rounded-full bg-red-500/20 text-red-200">
+                    Prazo: {formatDate(createForm.deadline_at)}
+                  </span>
+                )}
+                {!createForm.deadline_at && createForm.event_date && (
+                  <span className="px-2 py-0.5 rounded-full bg-slate-500/20 text-slate-200">
+                    Evento: {formatDate(createForm.event_date)}
+                  </span>
+                )}
+              </div>
+
+              {createForm.source_url.trim() && (
+                <div className="text-[11px] text-cyan-200 inline-flex items-center gap-1">
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Link oficial configurado
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Localidade */}

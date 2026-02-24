@@ -2,9 +2,12 @@
 import React, { useState } from 'react';
 import {
   ArrowUpRight,
+  Building2,
   CalendarClock,
   Clock3,
   ExternalLink,
+  Flame,
+  Globe,
   Lock,
   MapPin,
   Newspaper,
@@ -67,6 +70,37 @@ const SCOPE_LABELS: Record<PortalItem['scope'], string> = {
   municipal: 'Municipal',
 };
 
+const SCOPE_META: Record<
+  PortalItem['scope'],
+  {
+    label: string;
+    subtitle: string;
+    icon: React.ComponentType<{ className?: string }>;
+    containerClass: string;
+  }
+> = {
+  municipal: {
+    label: 'Municipal',
+    subtitle: 'O que é específico da sua cidade',
+    icon: MapPin,
+    containerClass:
+      'border-emerald-200/70 bg-emerald-50/60 dark:border-emerald-700/30 dark:bg-emerald-950/20',
+  },
+  estadual: {
+    label: 'Estadual',
+    subtitle: 'Oportunidades válidas no seu estado',
+    icon: Building2,
+    containerClass: 'border-cyan-200/70 bg-cyan-50/60 dark:border-cyan-700/30 dark:bg-cyan-950/20',
+  },
+  nacional: {
+    label: 'Federal',
+    subtitle: 'Programas e notícias de alcance nacional',
+    icon: Globe,
+    containerClass:
+      'border-violet-200/70 bg-violet-50/60 dark:border-violet-700/30 dark:bg-violet-950/20',
+  },
+};
+
 const FILTER_OPTIONS: { key: string; label: string }[] = [
   { key: 'all', label: 'Todos' },
   { key: 'rouanet', label: 'Rouanet' },
@@ -117,6 +151,14 @@ function deadlineChip(deadline?: string) {
 function formatPortalDate(value?: string) {
   if (!value) return null;
   return new Date(`${value}T00:00:00`).toLocaleDateString('pt-BR');
+}
+
+function daysUntil(deadline?: string) {
+  if (!deadline) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const d = new Date(`${deadline}T00:00:00`);
+  return Math.ceil((d.getTime() - today.getTime()) / 86400000);
 }
 
 // ---------------------------------------------------------------------------
@@ -366,6 +408,85 @@ function CompactPortalCard({ item }: { item: PortalItem }) {
   );
 }
 
+function ScopeLane({ scope, items }: { scope: PortalItem['scope']; items: PortalItem[] }) {
+  const meta = SCOPE_META[scope];
+  const ScopeIcon = meta.icon;
+
+  return (
+    <article className={`rounded-2xl border p-4 sm:p-5 ${meta.containerClass}`}>
+      <header className="flex items-start justify-between gap-2">
+        <div>
+          <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+            <ScopeIcon className="h-4 w-4" />
+            {meta.label}
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{meta.subtitle}</p>
+        </div>
+        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white/70 text-slate-600 dark:bg-slate-900/70 dark:text-slate-300">
+          {items.length}
+        </span>
+      </header>
+
+      {items.length === 0 ? (
+        <div className="mt-4 rounded-xl border border-dashed border-slate-300/60 dark:border-slate-700/60 p-3 text-xs text-slate-500 dark:text-slate-400">
+          Nenhum item nesta trilha no momento.
+        </div>
+      ) : (
+        <div className="mt-4 space-y-2.5">
+          {items.slice(0, 3).map(item => {
+            const urgency = daysUntil(item.deadline);
+            const baseClasses =
+              'block rounded-xl border border-slate-200/80 dark:border-slate-700/70 bg-white/75 dark:bg-slate-900/65 p-3 hover:shadow-sm transition-shadow';
+            const content = (
+              <>
+                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                  <span
+                    className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${CATEGORY_COLORS[item.category]}`}
+                  >
+                    {CATEGORY_LABELS[item.category]}
+                  </span>
+                  {urgency !== null && urgency >= 0 && urgency <= 10 && (
+                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 inline-flex items-center gap-1">
+                      <Flame className="h-3 w-3" />
+                      {urgency === 0 ? 'Último dia' : `${urgency} dia(s)`}
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-2">
+                  {item.title}
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">
+                  {formatPortalDate(item.published_at) ?? 'Sem data'}
+                </p>
+              </>
+            );
+
+            if (!item.external_url) {
+              return (
+                <div key={`${scope}-${item.source}-${item.external_id}`} className={baseClasses}>
+                  {content}
+                </div>
+              );
+            }
+
+            return (
+              <a
+                key={`${scope}-${item.source}-${item.external_id}`}
+                href={item.external_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={baseClasses}
+              >
+                {content}
+              </a>
+            );
+          })}
+        </div>
+      )}
+    </article>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Skeletons
 // ---------------------------------------------------------------------------
@@ -420,9 +541,25 @@ const PremiumPortalPage: React.FC = () => {
     });
   }, [items, activeFilter]);
 
-  const featuredItem = filtered[0];
-  const spotlightItems = filtered.slice(1, 3);
-  const feedItems = filtered.slice(3);
+  const heroItems = React.useMemo(() => {
+    if (filtered.length === 0) return [];
+    const localFirst = filtered.filter(item => item.scope !== 'nacional');
+    const base = localFirst.length > 0 ? localFirst : filtered;
+    return base.slice(0, 3);
+  }, [filtered]);
+
+  const featuredItem = heroItems[0];
+  const spotlightItems = heroItems.slice(1);
+  const heroKeys = new Set(heroItems.map(item => `${item.source}-${item.external_id}`));
+  const feedItems = filtered.filter(item => !heroKeys.has(`${item.source}-${item.external_id}`));
+
+  const municipalItems = filtered.filter(item => item.scope === 'municipal');
+  const estadualItems = filtered.filter(item => item.scope === 'estadual');
+  const nacionalItems = filtered.filter(item => item.scope === 'nacional');
+  const urgentItemsCount = filtered.filter(item => {
+    const d = daysUntil(item.deadline);
+    return d !== null && d >= 0 && d <= 7;
+  }).length;
 
   const locationLabel = [user?.city, user?.state].filter(Boolean).join(' · ');
   const totalItems = items?.length ?? 0;
@@ -516,14 +653,50 @@ const PremiumPortalPage: React.FC = () => {
                 <div className="space-y-4">
                   {featuredItem && (
                     <section className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
-                          Destaque da sua localidade
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
+                          Agora na sua região
                         </h2>
                         <span className="text-xs text-slate-500 dark:text-slate-400">
-                          Atualizado hoje
+                          Curadoria atualizada em tempo real
                         </span>
                       </div>
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
+                        <div className="rounded-xl border border-slate-200/70 dark:border-slate-700/50 bg-white/85 dark:bg-slate-900/65 p-3">
+                          <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                            Municipal
+                          </p>
+                          <p className="text-xl font-black text-slate-900 dark:text-white mt-1">
+                            {municipalItems.length}
+                          </p>
+                        </div>
+                        <div className="rounded-xl border border-slate-200/70 dark:border-slate-700/50 bg-white/85 dark:bg-slate-900/65 p-3">
+                          <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                            Estadual
+                          </p>
+                          <p className="text-xl font-black text-slate-900 dark:text-white mt-1">
+                            {estadualItems.length}
+                          </p>
+                        </div>
+                        <div className="rounded-xl border border-slate-200/70 dark:border-slate-700/50 bg-white/85 dark:bg-slate-900/65 p-3">
+                          <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                            Federal
+                          </p>
+                          <p className="text-xl font-black text-slate-900 dark:text-white mt-1">
+                            {nacionalItems.length}
+                          </p>
+                        </div>
+                        <div className="rounded-xl border border-red-200/70 dark:border-red-700/40 bg-red-50/70 dark:bg-red-950/20 p-3">
+                          <p className="text-[11px] uppercase tracking-wide text-red-600 dark:text-red-300">
+                            Prazos críticos
+                          </p>
+                          <p className="text-xl font-black text-red-700 dark:text-red-200 mt-1">
+                            {urgentItemsCount}
+                          </p>
+                        </div>
+                      </div>
+
                       <div className="grid grid-cols-1 xl:grid-cols-[1.4fr_1fr] gap-3 sm:gap-4">
                         <FeaturedPortalCard item={featuredItem} />
                         {spotlightItems.length > 0 && (
@@ -539,6 +712,17 @@ const PremiumPortalPage: React.FC = () => {
                       </div>
                     </section>
                   )}
+
+                  <section className="space-y-3">
+                    <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
+                      Trilhas por alcance
+                    </h3>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+                      <ScopeLane scope="municipal" items={municipalItems} />
+                      <ScopeLane scope="estadual" items={estadualItems} />
+                      <ScopeLane scope="nacional" items={nacionalItems} />
+                    </div>
+                  </section>
 
                   {feedItems.length > 0 && (
                     <section className="space-y-3">
