@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   ExternalLink,
   Globe2,
+  ImageIcon,
   MapPin,
   Newspaper,
   Plus,
@@ -123,6 +124,7 @@ const toPortalItem = (item: CulturalNoticeSuggestion): PortalItem => ({
   state: item.state,
   city: item.city,
   external_url: item.external_url,
+  thumbnail_url: item.thumbnail_url ?? null,
   deadline: item.deadline,
   event_date: item.event_date,
   published_at: item.published_at,
@@ -144,9 +146,11 @@ const CulturalPortal: React.FC = () => {
   // Create manual notice
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [loadingOgPreview, setLoadingOgPreview] = useState(false);
   const [createForm, setCreateForm] = useState<{
     title: string;
     source_url: string;
+    thumbnail_url: string;
     source_name: string;
     summary: string;
     category: PortalItem['category'];
@@ -157,6 +161,7 @@ const CulturalPortal: React.FC = () => {
   }>({
     title: '',
     source_url: '',
+    thumbnail_url: '',
     source_name: '',
     summary: '',
     category: 'noticia',
@@ -196,6 +201,7 @@ const CulturalPortal: React.FC = () => {
         summary: createForm.summary.trim() || null,
         source_name: createForm.source_name.trim() || null,
         source_url: createForm.source_url.trim() || null,
+        thumbnail_url: createForm.thumbnail_url.trim() || null,
         deadline_at: createForm.deadline_at || null,
         event_date: createForm.event_date || null,
         is_active: true,
@@ -205,6 +211,7 @@ const CulturalPortal: React.FC = () => {
       setCreateForm({
         title: '',
         source_url: '',
+        thumbnail_url: '',
         source_name: '',
         summary: '',
         category: 'noticia',
@@ -218,6 +225,33 @@ const CulturalPortal: React.FC = () => {
       showToast.apiError(error);
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleFetchOGPreview = async () => {
+    const sourceUrl = createForm.source_url.trim();
+    if (!sourceUrl) {
+      showToast.error('Informe uma URL para buscar metadados.');
+      return;
+    }
+    try {
+      setLoadingOgPreview(true);
+      const preview = await adminService.fetchOGPreview(sourceUrl);
+      setCreateForm(prev => ({
+        ...prev,
+        thumbnail_url: preview.image || prev.thumbnail_url,
+        title: prev.title.trim() ? prev.title : preview.title || '',
+        summary: prev.summary.trim() ? prev.summary : preview.description || '',
+      }));
+      if (!preview.image && !preview.title && !preview.description) {
+        showToast.error('Não foi possível extrair metadados dessa URL.');
+        return;
+      }
+      showToast.success('Metadados carregados da URL.');
+    } catch (error) {
+      showToast.apiError(error);
+    } finally {
+      setLoadingOgPreview(false);
     }
   };
 
@@ -556,7 +590,17 @@ const CulturalPortal: React.FC = () => {
                 className="rounded-2xl border border-white/10 bg-slate-900/60 p-4"
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
+                    {item.thumbnail_url && (
+                      <div className="mb-3 rounded-xl overflow-hidden border border-white/10 aspect-[16/6] sm:aspect-[16/5]">
+                        <img
+                          src={item.thumbnail_url}
+                          alt={item.title}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    )}
                     <div className="flex flex-wrap gap-1.5 mb-2">
                       <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-200">
                         {CATEGORY_LABELS[item.category]}
@@ -575,10 +619,25 @@ const CulturalPortal: React.FC = () => {
                     {item.summary && (
                       <p className="text-sm text-slate-300 mt-1 line-clamp-2">{item.summary}</p>
                     )}
-                    <p className="text-xs text-slate-400 mt-2">
-                      {[item.city, item.state].filter(Boolean).join(' · ')} · Publicado em{' '}
-                      {formatDate(item.published_at)}
-                    </p>
+                    <div className="text-xs text-slate-400 mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span>{[item.city, item.state].filter(Boolean).join(' · ')}</span>
+                      <span>•</span>
+                      <span>Publicado em {formatDate(item.published_at)}</span>
+                      {item.source_url && (
+                        <>
+                          <span>•</span>
+                          <a
+                            href={item.source_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-cyan-300 hover:text-cyan-200"
+                          >
+                            Fonte oficial
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex flex-wrap gap-2">
@@ -637,12 +696,35 @@ const CulturalPortal: React.FC = () => {
           {/* URL */}
           <div>
             <label className="admin-label">URL do link</label>
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+              <input
+                className="admin-input"
+                type="url"
+                value={createForm.source_url}
+                onChange={e => setCreateForm(prev => ({ ...prev, source_url: e.target.value }))}
+                placeholder="https://..."
+              />
+              <AdminButton
+                variant="secondary"
+                type="button"
+                onClick={handleFetchOGPreview}
+                loading={loadingOgPreview}
+                disabled={!createForm.source_url.trim()}
+                className="sm:self-end"
+              >
+                Buscar imagem
+              </AdminButton>
+            </div>
+          </div>
+
+          <div>
+            <label className="admin-label">URL da imagem de capa (opcional)</label>
             <input
               className="admin-input"
               type="url"
-              value={createForm.source_url}
-              onChange={e => setCreateForm(prev => ({ ...prev, source_url: e.target.value }))}
-              placeholder="https://..."
+              value={createForm.thumbnail_url}
+              onChange={e => setCreateForm(prev => ({ ...prev, thumbnail_url: e.target.value }))}
+              placeholder="https://.../capa.jpg"
             />
           </div>
 
@@ -698,6 +780,22 @@ const CulturalPortal: React.FC = () => {
               Prévia no app
             </p>
             <div className="rounded-xl border border-cyan-400/30 bg-slate-900/60 p-3 space-y-2.5">
+              <div className="relative rounded-lg overflow-hidden aspect-[16/7] border border-white/10 bg-gradient-to-br from-indigo-950 via-slate-900 to-cyan-950">
+                {createForm.thumbnail_url.trim() ? (
+                  <img
+                    src={createForm.thumbnail_url.trim()}
+                    alt="Prévia da capa"
+                    className="absolute inset-0 w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-cyan-200/70">
+                    <ImageIcon className="h-8 w-8" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
+              </div>
+
               <div className="flex items-center flex-wrap gap-1.5">
                 <span
                   className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${PREVIEW_CATEGORY_CLASSES[createForm.category]}`}

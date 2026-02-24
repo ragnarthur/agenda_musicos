@@ -4,7 +4,9 @@ Endpoints premium: conteúdo acessível apenas a músicos com is_premium=True.
 """
 
 import logging
+import re
 
+import requests as http_requests
 from django.db.models import Case, IntegerField, Q, Value, When
 from django.utils import timezone
 from rest_framework import status
@@ -115,6 +117,7 @@ def _to_portal_item(notice: CulturalNotice) -> dict:
         "state": notice.state,
         "city": notice.city,
         "external_url": notice.source_url,
+        "thumbnail_url": notice.thumbnail_url,
         "deadline": notice.deadline_at,
         "event_date": notice.event_date,
         "published_at": notice.published_at,
@@ -446,3 +449,64 @@ def admin_import_cultural_notice_suggestions(request):
         },
         status=response_status,
     )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def admin_og_preview(request):
+    """
+    Busca metadados Open Graph de uma URL externa para pré-preencher campos
+    do formulário de criação de notícia cultural.
+    GET /api/admin/cultural-notices/og-preview/?url=<encoded_url>
+    Retorna: {"image": str|None, "title": str|None, "description": str|None}
+    Falha silenciosa — nunca lança 5xx.
+    """
+    url = (request.query_params.get("url") or "").strip()
+    if not url:
+        return Response({"image": None, "title": None, "description": None})
+
+    def _extract(pattern: str, html: str) -> str | None:
+        m = re.search(pattern, html, re.IGNORECASE | re.DOTALL)
+        if m:
+            return m.group(1).strip()[:500] or None
+        return None
+
+    try:
+        resp = http_requests.get(
+            url,
+            timeout=5,
+            allow_redirects=True,
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 (compatible; GigFlow/1.0; +https://gigflowagenda.com.br)"
+                )
+            },
+        )
+        html = resp.text
+        image = _extract(
+            r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']', html
+        )
+        if not image:
+            image = _extract(
+                r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']', html
+            )
+        title = _extract(
+            r'<meta[^>]+property=["\']og:title["\'][^>]+content=["\']([^"\']+)["\']', html
+        )
+        if not title:
+            title = _extract(
+                r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:title["\']', html
+            )
+        if not title:
+            title = _extract(r"<title[^>]*>([^<]+)</title>", html)
+        description = _extract(
+            r'<meta[^>]+property=["\']og:description["\'][^>]+content=["\']([^"\']+)["\']', html
+        )
+        if not description:
+            description = _extract(
+                r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:description["\']', html
+            )
+        return Response({"image": image, "title": title, "description": description})
+    except Exception as exc:
+        logger.warning("[admin_og_preview] failed to fetch %s: %s", url, exc)
+        return Response({"image": None, "title": None, "description": None})

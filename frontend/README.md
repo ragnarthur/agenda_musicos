@@ -25,6 +25,13 @@ Certifique-se de que o backend Django esta rodando em http://localhost:8000
 - Lucide (icones)
 - PWA (vite-plugin-pwa)
 
+## Padrao Visual Atual
+
+- Portal Cultural Premium em layout magazine: `HeroCard` + grid de cards
+- Fallback visual por categoria quando nao ha imagem (gradientes tematicos)
+- Suporte a `thumbnail_url` em `PortalItem` para capa de noticia/edital
+- Curadoria admin com pre-visualizacao e preenchimento por metadados Open Graph
+
 ## Scripts
 
 ```bash

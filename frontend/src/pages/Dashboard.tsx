@@ -1,5 +1,5 @@
 // pages/Dashboard.tsx
-import React, { useMemo, memo, useCallback } from 'react';
+import React, { useMemo, memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ChevronRight,
@@ -113,6 +113,63 @@ const itemVariants = {
   }),
 };
 
+const CountUp: React.FC<{ value: number; duration?: number }> = ({ value, duration = 700 }) => {
+  const [display, setDisplay] = useState(0);
+  const previousValueRef = useRef(0);
+
+  useEffect(() => {
+    let raf = 0;
+    const start = performance.now();
+    const from = previousValueRef.current;
+    const to = value;
+
+    const step = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(Math.round(from + (to - from) * eased));
+      if (progress < 1) {
+        raf = requestAnimationFrame(step);
+      } else {
+        previousValueRef.current = to;
+      }
+    };
+
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [value, duration]);
+
+  return <>{display}</>;
+};
+
+const StatCard: React.FC<{
+  label: string;
+  value: number;
+  icon: React.ComponentType<{ className?: string }>;
+  accent?: 'indigo' | 'amber' | 'emerald';
+}> = ({ label, value, icon: Icon, accent = 'indigo' }) => {
+  const accentStyles: Record<string, string> = {
+    indigo: 'text-indigo-300 bg-indigo-500/20 border-indigo-400/20',
+    amber: 'text-amber-300 bg-amber-500/20 border-amber-400/20',
+    emerald: 'text-emerald-300 bg-emerald-500/20 border-emerald-400/20',
+  };
+
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] uppercase tracking-widest text-slate-400">{label}</p>
+        <span
+          className={`inline-flex h-7 w-7 items-center justify-center rounded-lg border ${accentStyles[accent]}`}
+        >
+          <Icon className="h-3.5 w-3.5" />
+        </span>
+      </div>
+      <p className="mt-2 text-2xl font-heading font-bold text-white leading-none">
+        <CountUp value={value} />
+      </p>
+    </div>
+  );
+};
+
 const Dashboard: React.FC = memo(() => {
   const { user } = useAuth();
   const prefersReducedMotion = useReducedMotion();
@@ -217,55 +274,63 @@ const Dashboard: React.FC = memo(() => {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={prefersReducedMotion ? { duration: 0.2 } : { duration: 0.3 }}
-              className="rounded-2xl overflow-hidden"
+              className="rounded-2xl overflow-hidden border border-indigo-300/20 bg-slate-900/60 relative"
             >
               {nextEvent ? (
                 /* Next event highlight */
                 <Link
                   to={`/eventos/${nextEvent.id}`}
-                  className="block bg-indigo-600 dark:bg-indigo-700 p-4 sm:p-5 hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors"
+                  className="block p-4 sm:p-5 transition-colors relative overflow-hidden"
                 >
-                  <p className="text-indigo-200 text-xs font-heading font-semibold uppercase tracking-widest mb-2">
-                    {getGreeting()}, {firstName} · próximo evento
-                  </p>
-                  <h2 className="text-white font-heading font-bold text-xl sm:text-2xl leading-tight truncate">
-                    {nextEvent.title}
-                  </h2>
-                  <div className="flex items-center gap-3 mt-2 flex-wrap">
-                    <span className="flex items-center gap-1 text-indigo-200 text-sm font-medium">
-                      <Clock className="h-3.5 w-3.5" />
-                      {getEventDayLabel(nextEvent)}
-                      {nextEvent.start_time ? ` · ${nextEvent.start_time.slice(0, 5)}h` : ''}
-                    </span>
-                    {nextEvent.location && (
-                      <span className="flex items-center gap-1 text-indigo-200 text-sm truncate">
-                        <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-                        {nextEvent.location}
+                  <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(129,140,248,0.35),transparent_44%),radial-gradient(circle_at_80%_10%,rgba(34,211,238,0.25),transparent_42%),linear-gradient(120deg,rgba(15,23,42,0.96),rgba(30,41,59,0.9))]" />
+                  <span className="pointer-events-none absolute inset-0 opacity-[0.08] [background-image:repeating-linear-gradient(0deg,rgba(255,255,255,0.5)_0px,rgba(255,255,255,0.5)_1px,transparent_1px,transparent_3px)]" />
+                  <div className="relative z-10">
+                    <p className="text-indigo-200 text-xs font-heading font-semibold uppercase tracking-widest mb-2">
+                      {getGreeting()}, {firstName} · próximo evento
+                    </p>
+                    <h2 className="text-white font-heading font-bold text-xl sm:text-2xl leading-tight truncate">
+                      {nextEvent.title}
+                    </h2>
+                    <div className="flex items-center gap-3 mt-2 flex-wrap">
+                      <span className="flex items-center gap-1 text-indigo-200 text-sm font-medium">
+                        <Clock className="h-3.5 w-3.5" />
+                        {getEventDayLabel(nextEvent)}
+                        {nextEvent.start_time ? ` · ${nextEvent.start_time.slice(0, 5)}h` : ''}
                       </span>
-                    )}
+                      {nextEvent.location && (
+                        <span className="flex items-center gap-1 text-indigo-200 text-sm truncate">
+                          <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                          {nextEvent.location}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </Link>
               ) : (
                 /* No events CTA */
-                <div className="bg-indigo-600 dark:bg-indigo-700 p-4 sm:p-5">
-                  <p className="text-indigo-200 text-xs font-heading font-semibold uppercase tracking-widest mb-1">
-                    {getGreeting()}, {firstName}
-                  </p>
-                  <p className="text-white font-heading font-bold text-lg sm:text-xl">
-                    Nenhum evento hoje
-                  </p>
-                  <Link
-                    to="/eventos/novo"
-                    className="inline-flex items-center gap-1.5 mt-3 bg-white/20 hover:bg-white/30 text-white rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    Criar evento
-                  </Link>
+                <div className="p-4 sm:p-5 relative overflow-hidden">
+                  <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_22%_25%,rgba(129,140,248,0.34),transparent_42%),linear-gradient(130deg,rgba(30,41,59,0.94),rgba(15,23,42,0.92))]" />
+                  <span className="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:repeating-linear-gradient(0deg,rgba(255,255,255,0.5)_0px,rgba(255,255,255,0.5)_1px,transparent_1px,transparent_3px)]" />
+                  <div className="relative z-10">
+                    <p className="text-indigo-200 text-xs font-heading font-semibold uppercase tracking-widest mb-1">
+                      {getGreeting()}, {firstName}
+                    </p>
+                    <p className="text-white font-heading font-bold text-lg sm:text-xl">
+                      Nenhum evento hoje
+                    </p>
+                    <Link
+                      to="/eventos/novo"
+                      className="inline-flex items-center gap-1.5 mt-3 bg-white/20 hover:bg-white/30 text-white rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Criar evento
+                    </Link>
+                  </div>
                 </div>
               )}
 
               {/* Date strip */}
-              <div className="bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 border-t-0 rounded-b-2xl px-4 py-2">
+              <div className="bg-indigo-950/30 border-t border-indigo-300/20 rounded-b-2xl px-4 py-2">
                 <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
                   {greetingDate}
                 </p>
@@ -368,6 +433,7 @@ const Dashboard: React.FC = memo(() => {
                       variants={!prefersReducedMotion ? itemVariants : undefined}
                       initial="hidden"
                       animate="visible"
+                      whileHover={prefersReducedMotion ? undefined : { x: 2 }}
                       className="relative"
                     >
                       {/* Timeline dot */}
@@ -423,6 +489,7 @@ const Dashboard: React.FC = memo(() => {
                       variants={!prefersReducedMotion ? itemVariants : undefined}
                       initial="hidden"
                       animate="visible"
+                      whileHover={prefersReducedMotion ? undefined : { x: 2 }}
                       className="relative"
                     >
                       <span
@@ -471,6 +538,7 @@ const Dashboard: React.FC = memo(() => {
                       variants={!prefersReducedMotion ? itemVariants : undefined}
                       initial="hidden"
                       animate="visible"
+                      whileHover={prefersReducedMotion ? undefined : { x: 2 }}
                       className="relative"
                     >
                       <span className="absolute -left-[1.375rem] top-4 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-gray-900 bg-slate-300 dark:bg-slate-700" />
@@ -560,27 +628,23 @@ const Dashboard: React.FC = memo(() => {
                 transition={
                   prefersReducedMotion ? { duration: 0.2 } : { delay: 0.08, duration: 0.3 }
                 }
-                className="rounded-2xl border border-gray-200/70 dark:border-white/10 bg-white/70 dark:bg-white/5 backdrop-blur p-4"
+                className="rounded-2xl border border-white/10 bg-slate-900/55 backdrop-blur p-4"
               >
                 <p className="text-xs font-heading font-semibold uppercase tracking-widest text-muted mb-4">
                   Seus números
                 </p>
-                <div className="grid grid-cols-2 gap-3 text-center">
-                  <div>
-                    <p className="text-2xl font-bold font-heading text-gray-900 dark:text-white leading-none">
-                      {stats.total_events}
-                    </p>
-                    <p className="text-xs text-muted mt-1">Eventos</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold font-heading text-gray-900 dark:text-white leading-none">
-                      {user?.total_ratings ?? 0}
-                    </p>
-                    <p className="text-xs text-muted mt-1">Avaliações</p>
-                  </div>
+                <div className="grid grid-cols-1 gap-2.5">
+                  <StatCard label="Eventos" value={stats.total_events ?? 0} icon={CalendarCheck} />
+                  <StatCard
+                    label="Avaliações"
+                    value={user?.total_ratings ?? 0}
+                    icon={Star}
+                    accent="amber"
+                  />
+                  <StatCard label="Pendências" value={totalActions} icon={Zap} accent="emerald" />
                 </div>
                 {user?.average_rating != null && (
-                  <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/10 flex items-center gap-1.5">
+                  <div className="mt-4 pt-3 border-t border-white/10 flex items-center gap-1.5">
                     <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
                     <span className="text-sm font-semibold text-gray-900 dark:text-white">
                       {Number(user.average_rating).toFixed(1)}

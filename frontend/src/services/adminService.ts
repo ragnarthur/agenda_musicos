@@ -27,6 +27,7 @@ export interface CulturalNoticeAdmin {
   city: string | null;
   source_name: string | null;
   source_url: string | null;
+  thumbnail_url: string | null;
   deadline_at: string | null;
   event_date: string | null;
   published_at: string;
@@ -66,10 +67,17 @@ export interface CulturalNoticePayload {
   city?: string | null;
   source_name?: string | null;
   source_url?: string | null;
+  thumbnail_url?: string | null;
   deadline_at?: string | null;
   event_date?: string | null;
   published_at?: string;
   is_active?: boolean;
+}
+
+export interface OGPreviewResult {
+  image: string | null;
+  title: string | null;
+  description: string | null;
 }
 
 export const adminService = {
@@ -151,6 +159,13 @@ export const adminService = {
       '/admin/cultural-notices/import-suggestions/',
       payload
     );
+    return response.data;
+  },
+
+  fetchOGPreview: async (url: string): Promise<OGPreviewResult> => {
+    const response = await api.get<OGPreviewResult>('/admin/cultural-notices/og-preview/', {
+      params: { url },
+    });
     return response.data;
   },
 };

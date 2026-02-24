@@ -1,8 +1,12 @@
 # 🎵 Agenda de Músicos - GigFlow
 
-**Versão:** Beta 0.0.1
+**Versão:** v1.3.0
 
 Sistema completo de gerenciamento de agenda para bandas e músicos.
+
+### Direção de Frontend
+
+- O frontend segue uma direção editorial musical (skill `frontend-design`) para manter consistência visual sem aparência genérica.
 
 ## 📋 Descrição
 
@@ -11,6 +15,7 @@ Aplicação web para gerenciar eventos, disponibilidade de músicos e convites e
 ## 🚀 Instalação Rápida
 
 ### Pré-requisitos
+
 - Ubuntu 20.04+ ou Debian 11+
 - Acesso root (sudo)
 - Git instalado
@@ -27,6 +32,7 @@ sudo ./setup.sh
 ```
 
 O script `setup.sh` irá automaticamente:
+
 - ✅ Instalar todas as dependências (Python, Node.js, PostgreSQL, Nginx, Supervisor)
 - ✅ Criar e configurar o banco de dados PostgreSQL
 - ✅ Configurar ambiente Python e instalar dependências
@@ -42,9 +48,11 @@ O script `setup.sh` irá automaticamente:
 Acesse: **http://<seu-servidor>:2030** (ou **http://localhost:2030** em ambiente local)
 
 **Credenciais de Login (dev/demo):**
+
 - Utilize os usuários seedados via `seed_users.py` ou crie novos usuários no Django Admin.
 
 **Admin Django:**
+
 - URL: http://<seu-servidor>:2030/admin/
 - Crie o superuser com `python manage.py createsuperuser`
 
@@ -57,6 +65,7 @@ Após iniciar o servidor, acesse:
 - **OpenAPI Schema (JSON)**: http://localhost:8000/api/schema/
 
 A documentação inclui:
+
 - Todos os endpoints disponíveis
 - Parâmetros de request/response
 - Autenticação JWT
@@ -64,6 +73,7 @@ A documentação inclui:
 - Teste interativo direto no navegador
 
 ### Notas rápidas de endpoints
+
 - `GET /api/check-email/?email=...` valida disponibilidade de email para cadastro.
 - `PATCH /api/musicians/avatar/` aceita uma URL (http/https) e salva o avatar no perfil do músico.
 
@@ -78,6 +88,7 @@ sudo ./update.sh
 ```
 
 O script `update.sh` irá:
+
 - ✅ Fazer pull do código atualizado
 - ✅ Instalar novas dependências (se houver)
 - ✅ Executar novas migrações
@@ -135,6 +146,7 @@ Frontend: http://localhost:5173
 ### Testes Automatizados
 
 **Frontend (Vitest + React Testing Library):**
+
 ```bash
 cd frontend
 
@@ -149,6 +161,7 @@ npm run test:coverage
 ```
 
 **Backend (Django):**
+
 ```bash
 # Rodar todos os testes
 python manage.py test
@@ -167,12 +180,14 @@ coverage html
 Dependências já estão em `requirements.txt` e são instaladas no build do Docker.
 
 Variáveis necessárias:
+
 - `GOOGLE_CLIENT_ID` (backend)
 - `VITE_GOOGLE_CLIENT_ID` (frontend)
 - `CORS_ALLOW_CREDENTIALS=True`
 - `CSRF_TRUSTED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173`
 
 Se estiver usando Docker (compose dev):
+
 ```bash
 export GOOGLE_CLIENT_ID=seu-client-id
 export VITE_GOOGLE_CLIENT_ID=seu-client-id
@@ -182,6 +197,7 @@ docker compose -f docker-compose.dev.yml up --build
 ## 📊 Funcionalidades
 
 ### Para Todos os Músicos
+
 - ✅ Login com autenticação JWT
 - ✅ Visualizar eventos
 - ✅ Criar propostas de eventos
@@ -190,13 +206,17 @@ docker compose -f docker-compose.dev.yml up --build
 - ✅ Visualizar perfis dos músicos
 - ✅ Sistema de badges e conquistas
 - ✅ Conexões entre músicos
+- ✅ Portal Cultural Premium com cards magazine, fallback por categoria e curadoria por localidade (cidade/UF)
+- ✅ Notícias com capa (`thumbnail_url`) e preenchimento automático por `og:image` no admin
 
 ### Convites e Confirmações
+
 - ✅ Responder convites pendentes
 - ✅ Confirmar participação ao marcar disponibilidade como "Disponível"
 - ✅ Notificações em tempo real
 
 ### Para Empresas
+
 - ✅ Cadastro de empresa
 - ✅ Busca de músicos por instrumento
 - ✅ Solicitações de contato
@@ -377,6 +397,7 @@ agenda-musicos/
 ### Pre-commit Hooks (Husky)
 
 Hooks configurados para rodar automaticamente antes de cada commit:
+
 - ✅ ESLint --fix (frontend)
 - ✅ Prettier --write (frontend)
 - ✅ Formatação automática de código
@@ -384,11 +405,13 @@ Hooks configurados para rodar automaticamente antes de cada commit:
 ### Formatação Automática
 
 **Python:**
+
 - **Black**: Formatação consistente (100 caracteres/linha)
 - **isort**: Organização de imports
 - **flake8**: Linting e verificação de estilo
 
 **TypeScript/JavaScript:**
+
 - **Prettier**: Formatação automática
 - **ESLint**: Análise estática de código
 
@@ -422,6 +445,7 @@ python manage.py test
 ```
 
 **Cobertura:**
+
 - Modelos (Musician, Event, Availability)
 - API endpoints
 - Permissões
@@ -436,6 +460,7 @@ npm run test:ci
 ```
 
 **Estrutura:**
+
 - `src/test/setup.ts` - Configuração e mocks
 - `src/test/example.test.tsx` - Exemplos de testes
 - Comandos: `test`, `test:ci`, `test:coverage`
@@ -454,6 +479,7 @@ npm run test:ci
 ## 🐛 Troubleshooting
 
 ### Backend não responde
+
 ```bash
 sudo supervisorctl status agenda-musicos
 sudo supervisorctl tail agenda-musicos stderr
@@ -461,6 +487,7 @@ sudo supervisorctl restart agenda-musicos
 ```
 
 ### Frontend não carrega
+
 ```bash
 ls -la /var/www/agenda-musicos/frontend/dist
 cd /var/www/agenda-musicos/frontend
@@ -469,15 +496,18 @@ sudo systemctl restart nginx
 ```
 
 ### 502 Bad Gateway
+
 - Verificar se backend está rodando: `sudo lsof -i :8005`
 - Reiniciar: `sudo supervisorctl restart agenda-musicos`
 
 ### CORS Error
+
 - Verificar `CORS_ORIGINS` em `/var/www/agenda-musicos/.env.docker`
 - Deve incluir: `http://45.237.131.177:2030`
 - Reiniciar após mudanças
 
 ### Testes Falhando
+
 ```bash
 # Frontend
 cd frontend
@@ -490,6 +520,7 @@ python manage.py test --verbosity=2
 ## 🎨 Tecnologias
 
 **Backend:**
+
 - Django 5.2
 - Django REST Framework 3.16
 - PostgreSQL 15
@@ -499,6 +530,7 @@ python manage.py test --verbosity=2
 - Google OAuth2
 
 **Frontend:**
+
 - React 19
 - TypeScript 5.9
 - Vite 7
@@ -508,12 +540,14 @@ python manage.py test --verbosity=2
 - Vitest + React Testing Library
 
 **Infraestrutura:**
+
 - Nginx (reverse proxy)
 - Supervisor (process manager)
 - Docker + Docker Compose
 - Ubuntu/Debian Linux
 
 **Tooling:**
+
 - Black, isort, flake8 (Python)
 - Prettier, ESLint (TypeScript)
 - Husky (git hooks)
@@ -522,19 +556,23 @@ python manage.py test --verbosity=2
 ## 📝 Convenções de Código
 
 ### Python
+
 - **Black**: 100 caracteres por linha
 - **isort**: Imports organizados (profile black)
 - **flake8**: Linting com max-line-length 100
 - Docstrings em português para manter consistência
 
 ### TypeScript
+
 - **Prettier**: Aspas simples, ponto-e-vírgula
 - **ESLint**: Regras React + TypeScript
 - Componentes: PascalCase
 - Hooks: camelCase com prefixo `use`
 
 ### Commits
+
 Seguindo Conventional Commits:
+
 - `feat:` - Nova funcionalidade
 - `fix:` - Correção de bug
 - `docs:` - Documentação
@@ -559,4 +597,4 @@ Este projeto é propriedade privada.
 ---
 
 **Desenvolvido com ❤️ para músicos**  
-*Última atualização: Janeiro 2026*
+_Última atualização: Janeiro 2026_

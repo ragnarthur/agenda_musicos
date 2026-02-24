@@ -52,6 +52,7 @@ export interface PortalItem {
   state?: string;
   city?: string;
   external_url?: string;
+  thumbnail_url?: string | null;
   deadline?: string;
   event_date?: string;
   published_at: string;

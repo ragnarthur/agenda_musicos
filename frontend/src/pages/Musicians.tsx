@@ -11,13 +11,16 @@ import {
   Calendar,
   Clock,
   ExternalLink,
+  Star,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Layout from '../components/Layout/Layout';
 import PullToRefresh from '../components/common/PullToRefresh';
+import InstrumentIcon from '../components/common/InstrumentIcon';
 import MiniDatePicker from '../components/musicians/MiniDatePicker';
+import EmptyState from '../components/ui/EmptyState';
 import { useMusiciansPaginated, useAvailabilitiesForDate } from '../hooks/useMusicians';
 import type { Musician, LeaderAvailability } from '../types';
 import {
@@ -262,7 +265,10 @@ const Musicians: React.FC = () => {
           </div>
 
           {/* Filter bar */}
-          <div className="card-contrast space-y-3" data-cascade-ignore>
+          <div
+            className="card-contrast space-y-3 sticky top-[calc(env(safe-area-inset-top)+56px)] z-20 backdrop-blur-xl"
+            data-cascade-ignore
+          >
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
               Use o mini-calendário para filtrar músicos disponíveis por data. Toque ou clique no
               mesmo dia novamente para limpar.
@@ -275,23 +281,34 @@ const Musicians: React.FC = () => {
               onClear={handleClearDate}
             />
 
-            {/* Instrument select (alternativa aos chips para reduzir poluicao visual e custo de render) */}
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="instrument-filter" className="text-xs font-medium text-gray-600">
-                Instrumento
-              </label>
-              <select
-                id="instrument-filter"
-                value={selectedInstrument}
-                onChange={event => handleInstrumentSelect(event.target.value)}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-primary-300 focus:ring-2 focus:ring-primary-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-              >
-                {INSTRUMENT_PILLS.map(option => (
-                  <option key={option.key} value={option.key}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-gray-600">Instrumentos</p>
+              <div className="overflow-x-auto pb-1 -mx-1 px-1">
+                <div className="flex items-center gap-2 min-w-max">
+                  {INSTRUMENT_PILLS.map(option => {
+                    const active = option.key === selectedInstrument;
+                    return (
+                      <button
+                        key={option.key}
+                        type="button"
+                        onClick={() => handleInstrumentSelect(option.key)}
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all whitespace-nowrap ${
+                          active
+                            ? 'border-indigo-300 bg-indigo-500/20 text-indigo-100 shadow-[0_0_22px_rgba(99,102,241,0.3)]'
+                            : 'border-white/15 bg-white/5 text-slate-300 hover:border-indigo-300/50 hover:text-indigo-100'
+                        }`}
+                      >
+                        {option.key === 'all' ? (
+                          <Users className="h-3.5 w-3.5" />
+                        ) : (
+                          <InstrumentIcon instrument={option.key} size={14} />
+                        )}
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
             {(selectedDate || selectedInstrument !== 'all') && (
               <button
@@ -329,21 +346,18 @@ const Musicians: React.FC = () => {
           {isLoaderActive ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
               {Array.from({ length: 6 }).map((_, idx) => (
-                <div key={`skeleton-${idx}`} className="card-contrast space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-full bg-gray-200 animate-pulse dark:bg-gray-700" />
-                    <div className="space-y-2 flex-1">
-                      <div className="h-4 w-32 rounded-full bg-gray-200 animate-pulse dark:bg-gray-700" />
-                      <div className="h-3 w-24 rounded-full bg-gray-200 animate-pulse dark:bg-gray-700" />
+                <div
+                  key={`skeleton-${idx}`}
+                  className="rounded-3xl overflow-hidden border border-white/10 bg-slate-900/55"
+                >
+                  <div className="aspect-square bg-slate-800/80 animate-pulse" />
+                  <div className="p-4 space-y-3">
+                    <div className="h-4 w-3/4 rounded-full bg-slate-700/70 animate-pulse" />
+                    <div className="h-3 w-1/2 rounded-full bg-slate-700/60 animate-pulse" />
+                    <div className="flex gap-2">
+                      <div className="h-6 w-20 rounded-full bg-slate-700/60 animate-pulse" />
+                      <div className="h-6 w-24 rounded-full bg-slate-700/60 animate-pulse" />
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="h-3 w-full rounded-full bg-gray-200 animate-pulse dark:bg-gray-700" />
-                    <div className="h-3 w-5/6 rounded-full bg-gray-200 animate-pulse dark:bg-gray-700" />
-                  </div>
-                  <div className="flex gap-2">
-                    <div className="h-6 w-20 rounded-full bg-gray-200 animate-pulse dark:bg-gray-700" />
-                    <div className="h-6 w-24 rounded-full bg-gray-200 animate-pulse dark:bg-gray-700" />
                   </div>
                 </div>
               ))}
@@ -363,16 +377,16 @@ const Musicians: React.FC = () => {
           ) : isDateFiltered ? (
             /* ── Availability mode ── */
             availabilities.length === 0 ? (
-              <div className="card-contrast text-center space-y-2">
-                <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-700 dark:text-gray-300 font-medium">
-                  Nenhum músico registrou disponibilidade para essa data
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {debouncedSearch
-                    ? 'Tente ajustar a busca ou remover o filtro de instrumento.'
-                    : 'Tente selecionar outra data ou remover o filtro de instrumento.'}
-                </p>
+              <div className="card-contrast">
+                <EmptyState
+                  icon={Calendar}
+                  title="Nenhum músico disponível nesta data"
+                  description={
+                    debouncedSearch
+                      ? 'Tente ajustar a busca ou remover o filtro de instrumento.'
+                      : 'Selecione outra data ou limpe os filtros para ampliar o resultado.'
+                  }
+                />
               </div>
             ) : (
               <motion.div
@@ -443,9 +457,12 @@ const Musicians: React.FC = () => {
               </motion.div>
             )
           ) : musicians.length === 0 ? (
-            <div className="card-contrast text-center">
-              <Users className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-600 dark:text-gray-400">Nenhum músico cadastrado</p>
+            <div className="card-contrast">
+              <EmptyState
+                icon={Users}
+                title="Nenhum músico encontrado"
+                description="Refine a busca ou troque os filtros de instrumento para expandir os resultados."
+              />
             </div>
           ) : (
             /* ── Normal paginated mode ── */
@@ -472,6 +489,16 @@ const Musicians: React.FC = () => {
                 const username = musician.instagram || musician.user?.username || '';
                 const contactEmail = musician.public_email || musician.user?.email || '';
                 const avatarUrl = musician.avatar_url;
+                const primaryInstrument = instrumentEntries[0]?.[1] ?? musician.instrument;
+                const primaryInstrumentLabel = getInstrumentLabel(primaryInstrument, musician);
+                const locationLabel =
+                  [musician.city, musician.state].filter(Boolean).join(' · ') ||
+                  'Localização não informada';
+                const rating =
+                  musician.average_rating != null
+                    ? Number(musician.average_rating).toFixed(1)
+                    : null;
+
                 return (
                   <motion.div
                     key={musician.id}
@@ -480,80 +507,88 @@ const Musicians: React.FC = () => {
                     whileTap={{ scale: 0.98 }}
                     className="group relative"
                   >
-                    <span className="pointer-events-none absolute -inset-px rounded-3xl bg-gradient-to-r from-primary-500/10 via-emerald-400/5 to-sky-400/10 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
+                    <span className="pointer-events-none absolute -inset-px rounded-3xl bg-gradient-to-r from-indigo-500/20 via-cyan-400/10 to-emerald-400/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
                     <Link
                       to={`/musicos/${musician.id}`}
-                      className="relative card-contrast hover:shadow-2xl transition-all block cursor-pointer overflow-hidden"
+                      className="relative block cursor-pointer overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 hover:border-indigo-300/40 hover:shadow-2xl hover:shadow-indigo-950/30 transition-all"
                     >
-                      <span className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
-                        <span className="absolute -left-1/2 top-0 h-full w-1/2 bg-gradient-to-r from-transparent via-white/15 to-transparent opacity-40 transition-transform duration-900 group-hover:translate-x-[180%]" />
-                      </span>
-                      {/* Header do Card */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="h-12 w-12 rounded-full overflow-hidden bg-primary-100 transition-transform duration-400 group-hover:-translate-y-0.5 group-hover:scale-105 flex items-center justify-center">
-                            {avatarUrl ? (
-                              <img
-                                src={avatarUrl}
-                                alt={musician.full_name}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <span className="text-2xl">{emoji}</span>
-                            )}
+                      <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-indigo-950 via-slate-900 to-cyan-950">
+                        {avatarUrl ? (
+                          <img
+                            src={avatarUrl}
+                            alt={musician.full_name}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-6xl">
+                            {emoji}
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900 flex items-center space-x-2">
-                              <span>{musician.full_name}</span>
-                            </h3>
-                            {username && (
-                              <p className="text-sm text-gray-600">@{username.replace('@', '')}</p>
-                            )}
-                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                        <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-black/45 border border-white/20 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur">
+                          <InstrumentIcon instrument={primaryInstrument} size={14} />
+                          {primaryInstrumentLabel}
                         </div>
+                        {rating && (
+                          <div className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-amber-400/90 text-amber-950 px-2.5 py-1 text-[11px] font-bold">
+                            <Star className="h-3.5 w-3.5 fill-amber-700 text-amber-700" />
+                            {rating}
+                          </div>
+                        )}
                       </div>
 
-                      {/* Informações */}
-                      <div className="space-y-3">
+                      <div className="p-4">
+                        <h3 className="font-semibold text-white leading-snug">
+                          {musician.full_name}
+                        </h3>
+                        <p className="text-sm text-slate-300 mt-1">
+                          {primaryInstrumentLabel} · {locationLabel}
+                        </p>
+
                         {musician.bio && (
-                          <div className="flex items-center space-x-2 text-gray-700">
-                            <Music className="h-4 w-4 text-primary-600 transition-transform duration-400 group-hover:scale-105" />
-                            <span className="text-sm font-medium">{musician.bio}</span>
-                          </div>
+                          <p className="text-sm text-slate-400 mt-2 line-clamp-2">{musician.bio}</p>
                         )}
 
-                        {musician.phone && (
-                          <div className="flex items-center space-x-2 text-gray-600">
-                            <Phone className="h-4 w-4 transition-transform duration-400 group-hover:scale-105" />
-                            <span className="text-sm">{musician.phone}</span>
-                          </div>
-                        )}
+                        <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-400">
+                          {username && (
+                            <span className="inline-flex items-center gap-1">
+                              <Instagram className="h-3.5 w-3.5" />@{username.replace('@', '')}
+                            </span>
+                          )}
+                          {musician.phone && (
+                            <span className="inline-flex items-center gap-1">
+                              <Phone className="h-3.5 w-3.5" />
+                              {musician.phone}
+                            </span>
+                          )}
+                          {contactEmail && (
+                            <span className="inline-flex items-center gap-1">
+                              <Mail className="h-3.5 w-3.5" />
+                              {contactEmail}
+                            </span>
+                          )}
+                          {!username && !musician.phone && !contactEmail && (
+                            <span className="text-slate-500">Perfil com contato via app</span>
+                          )}
+                        </div>
 
-                        {contactEmail && (
-                          <div className="flex items-center space-x-2 text-gray-600">
-                            <Mail className="h-4 w-4 transition-transform duration-400 group-hover:scale-105" />
-                            <span className="text-sm">{contactEmail}</span>
-                          </div>
-                        )}
+                        <div className="mt-3 flex flex-wrap gap-1.5">
+                          {instrumentEntries.slice(0, 4).map(([normalizedKey, rawInstrument]) => (
+                            <span
+                              key={normalizedKey}
+                              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-slate-300"
+                            >
+                              <InstrumentIcon instrument={rawInstrument} size={12} />
+                              {getInstrumentLabel(rawInstrument, musician)}
+                            </span>
+                          ))}
+                        </div>
 
-                        {musician.instagram && (
-                          <div className="flex items-center space-x-2 text-gray-600">
-                            <Instagram className="h-4 w-4 transition-transform duration-400 group-hover:scale-105" />
-                            <span className="text-sm">{musician.instagram}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Badges de Instrumentos */}
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {instrumentEntries.map(([normalizedKey, rawInstrument]) => (
-                          <span
-                            key={normalizedKey}
-                            className="status-chip default transition-transform duration-400 group-hover:-translate-y-0.5"
-                          >
-                            {getInstrumentLabel(rawInstrument, musician)}
+                        <div className="mt-3 pt-2 border-t border-white/10">
+                          <span className="text-xs text-indigo-300 font-medium group-hover:text-indigo-200">
+                            Ver perfil completo →
                           </span>
-                        ))}
+                        </div>
                       </div>
                     </Link>
                   </motion.div>

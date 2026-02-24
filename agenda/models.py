@@ -1311,6 +1311,11 @@ class CulturalNotice(models.Model):
         null=True,
         help_text="URL oficial para mais detalhes",
     )
+    thumbnail_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="URL da imagem de capa (og:image ou manual)",
+    )
     deadline_at = models.DateField(
         blank=True,
         null=True,

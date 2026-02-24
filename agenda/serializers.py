@@ -2128,6 +2128,7 @@ class CulturalNoticeSerializer(serializers.ModelSerializer):
             "city",
             "source_name",
             "source_url",
+            "thumbnail_url",
             "deadline_at",
             "event_date",
             "published_at",
@@ -2162,6 +2163,7 @@ class PremiumPortalItemSerializer(serializers.Serializer):
     state = serializers.CharField(allow_blank=True, allow_null=True, required=False)
     city = serializers.CharField(allow_blank=True, allow_null=True, required=False)
     external_url = serializers.CharField(allow_blank=True, allow_null=True, required=False)
+    thumbnail_url = serializers.URLField(allow_blank=True, allow_null=True, required=False)
     deadline = serializers.DateField(allow_null=True, required=False)
     event_date = serializers.DateField(allow_null=True, required=False)
     published_at = serializers.DateField()

@@ -47,6 +47,19 @@ interface UserContent {
   };
 }
 
+const TICKER_CITIES = [
+  'Monte Carmelo · MG',
+  'Uberlândia · MG',
+  'Belo Horizonte · MG',
+  'São Paulo · SP',
+  'Rio de Janeiro · RJ',
+  'Curitiba · PR',
+  'Florianópolis · SC',
+  'Goiânia · GO',
+  'Brasília · DF',
+  'Salvador · BA',
+];
+
 const OwlMascotLazy = lazy(() => import('../components/ui/OwlMascot'));
 
 const MascotFallback: React.FC = () => (
@@ -366,10 +379,19 @@ const Landing: React.FC = () => {
     <FullscreenBackground enableBlueWaves>
       <main
         id="main-content"
-        className="relative z-10 pb-[calc(env(safe-area-inset-bottom)+88px)] sm:pb-0"
+        className="relative z-10 pb-[calc(env(safe-area-inset-bottom)+88px)] sm:pb-0 overflow-hidden"
       >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 20% 20%, rgba(165,180,252,0.35), transparent 42%), radial-gradient(circle at 80% 15%, rgba(34,211,238,0.28), transparent 36%), repeating-linear-gradient(0deg, rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 1px, transparent 1px, transparent 3px)',
+          }}
+        />
+
         {/* Hero Section */}
-        <section className="container mx-auto px-4 py-16 sm:py-20 text-center">
+        <section className="container mx-auto px-4 py-16 sm:py-20 text-center relative">
           {/* User Type Toggle */}
           <UserTypeToggle selected={userType} onChange={setUserType} />
 
@@ -421,6 +443,19 @@ const Landing: React.FC = () => {
           </div>
 
           <AnimatePresence mode="wait">
+            <motion.h2
+              key={`hero-${userType}`}
+              className="text-3xl sm:text-4xl md:text-5xl font-heading font-black text-white tracking-tight leading-tight max-w-4xl mx-auto mb-4"
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -18 }}
+              transition={{ duration: 0.35 }}
+            >
+              {currentContent.hero}
+            </motion.h2>
+          </AnimatePresence>
+
+          <AnimatePresence mode="wait">
             <motion.div
               key={userType}
               className="text-base sm:text-xl md:text-2xl text-gray-300 mb-4 max-w-3xl mx-auto"
@@ -442,7 +477,7 @@ const Landing: React.FC = () => {
             <span className="relative" aria-live="polite" aria-atomic="true">
               {/* Texto digitado com efeito de gradiente sutil */}
               <span
-                className="bg-gradient-to-r from-white via-gray-200 to-white bg-clip-text"
+                className="bg-gradient-to-r from-indigo-200 via-indigo-300 to-cyan-200 bg-clip-text text-transparent"
                 style={{
                   display: 'inline-block',
                   minWidth: animatedHeroText.length > 0 ? 'auto' : '0.5em',
@@ -487,13 +522,13 @@ const Landing: React.FC = () => {
             >
               <Link
                 to={currentContent.primaryCTA.to}
-                className="px-6 py-3.5 sm:px-8 sm:py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/35 hover:shadow-indigo-500/50 hover:shadow-xl transition-all text-base sm:text-lg"
+                className="px-6 py-3.5 sm:px-8 sm:py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-[0_0_40px_rgba(99,102,241,0.4)] hover:shadow-[0_0_46px_rgba(99,102,241,0.55)] hover:-translate-y-0.5 transition-all text-base sm:text-lg"
               >
                 {currentContent.primaryCTA.text}
               </Link>
               <Link
                 to={currentContent.secondaryCTA.to}
-                className="px-6 py-3.5 sm:px-8 sm:py-4 bg-white/10 hover:bg-white/18 text-white font-semibold rounded-xl border border-white/25 hover:border-white/40 transition-all text-base sm:text-lg"
+                className="px-6 py-3.5 sm:px-8 sm:py-4 bg-white/10 hover:bg-white/18 text-white font-semibold rounded-xl border border-indigo-300/35 hover:border-indigo-200/55 shadow-[0_0_24px_rgba(129,140,248,0.18)] transition-all text-base sm:text-lg"
               >
                 {currentContent.secondaryCTA.text}
               </Link>
@@ -552,7 +587,7 @@ const Landing: React.FC = () => {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4 }}
             >
-              <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400 mb-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-indigo-300 mb-2">
                 Recursos
               </p>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">
@@ -594,6 +629,27 @@ const Landing: React.FC = () => {
                 : 'Centenas de contratantes já confiam no GigFlow'}
             </motion.p>
           </AnimatePresence>
+          <div className="mt-7 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm py-3 overflow-hidden">
+            <motion.div
+              initial={{ x: 0 }}
+              animate={{ x: ['0%', '-50%'] }}
+              transition={{
+                duration: 18,
+                repeat: Infinity,
+                ease: 'linear',
+              }}
+              className="flex items-center gap-6 w-max px-2"
+            >
+              {[...TICKER_CITIES, ...TICKER_CITIES].map((city, idx) => (
+                <span
+                  key={`${city}-${idx}`}
+                  className="text-xs sm:text-sm uppercase tracking-[0.18em] text-slate-300 whitespace-nowrap"
+                >
+                  {city}
+                </span>
+              ))}
+            </motion.div>
+          </div>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -611,7 +667,7 @@ const Landing: React.FC = () => {
         </section>
 
         {/* Footer CTA */}
-        <section className="relative container mx-auto px-4 py-12 sm:py-16 text-center border-t border-white/8">
+        <section className="relative container mx-auto px-4 py-12 sm:py-16 text-center border-t border-white/8 bg-gradient-to-b from-indigo-950/30 via-transparent to-transparent rounded-t-3xl">
           <AnimatePresence mode="wait">
             <motion.h3
               key={userType}
@@ -633,7 +689,7 @@ const Landing: React.FC = () => {
               <Link
                 key={`primary-${userType}`}
                 to={currentContent.primaryCTA.to}
-                className="px-6 py-3.5 sm:px-8 sm:py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/30 hover:shadow-indigo-500/50 transition-all text-base sm:text-lg"
+                className="px-6 py-3.5 sm:px-8 sm:py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-[0_0_38px_rgba(99,102,241,0.38)] hover:shadow-[0_0_46px_rgba(99,102,241,0.52)] transition-all text-base sm:text-lg"
               >
                 {currentContent.primaryCTA.text}
               </Link>
@@ -819,25 +875,30 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
 
   return (
     <motion.div
-      className="relative bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/8 hover:border-indigo-500/40 hover:bg-white/8 transition-all group"
+      className="relative bg-white/[0.03] backdrop-blur-md rounded-2xl p-6 border border-white/10 hover:border-indigo-400/60 hover:bg-white/[0.06] transition-all group overflow-hidden"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, delay }}
-      whileHover={reduceMotion ? undefined : { y: -3, boxShadow: '0 16px 40px rgba(0,0,0,0.25)' }}
+      whileHover={
+        reduceMotion ? undefined : { y: -4, boxShadow: '0 18px 44px rgba(79,70,229,0.25)' }
+      }
       key={`${title}-${delay}`}
     >
+      <span className="pointer-events-none absolute -inset-[1px] rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity bg-[linear-gradient(120deg,rgba(99,102,241,0.65),rgba(34,211,238,0.38),rgba(99,102,241,0.65))]" />
+      <span className="pointer-events-none absolute inset-[1px] rounded-2xl bg-slate-950/75" />
+
       {/* Number badge */}
-      <span className="absolute top-5 right-5 text-xs font-mono font-bold text-white/15 group-hover:text-indigo-400/40 transition-colors select-none">
+      <span className="absolute top-5 right-5 text-sm font-mono font-bold text-white/15 group-hover:text-indigo-300/60 transition-colors select-none">
         {num}
       </span>
 
       {/* Icon */}
-      <div className="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/25 flex items-center justify-center text-indigo-400 mb-4 group-hover:bg-indigo-600/30 transition-colors">
+      <div className="relative z-10 w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/25 flex items-center justify-center text-indigo-300 mb-4 group-hover:bg-indigo-600/35 transition-colors">
         {icon}
       </div>
 
-      <h3 className="text-lg font-bold text-white mb-2 leading-snug">{title}</h3>
-      <p className="text-gray-400 text-sm leading-relaxed">{description}</p>
+      <h3 className="relative z-10 text-lg font-bold text-white mb-2 leading-snug">{title}</h3>
+      <p className="relative z-10 text-gray-400 text-sm leading-relaxed">{description}</p>
     </motion.div>
   );
 };

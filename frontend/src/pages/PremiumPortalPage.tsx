@@ -5,11 +5,12 @@ import {
   Building2,
   CalendarClock,
   Clock3,
-  ExternalLink,
+  FileText,
   Flame,
   Globe,
   Lock,
   MapPin,
+  Music2,
   Newspaper,
   ScrollText,
   Sparkles,
@@ -46,16 +47,6 @@ const CATEGORY_COLORS: Record<PortalItem['category'], string> = {
   premio: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
   noticia: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300',
   other: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
-};
-
-const CATEGORY_CARD_STYLES: Record<PortalItem['category'], string> = {
-  rouanet: 'border-cyan-200/70 dark:border-cyan-700/40',
-  aldir_blanc: 'border-emerald-200/70 dark:border-emerald-700/40',
-  festival: 'border-fuchsia-200/70 dark:border-fuchsia-700/40',
-  edital: 'border-amber-200/70 dark:border-amber-700/40',
-  premio: 'border-yellow-200/70 dark:border-yellow-700/40',
-  noticia: 'border-indigo-200/70 dark:border-indigo-700/40',
-  other: 'border-slate-200/70 dark:border-slate-700/40',
 };
 
 const SOURCE_LABELS: Record<PortalItem['source'], string> = {
@@ -114,11 +105,35 @@ const FILTER_OPTIONS: { key: string; label: string }[] = [
 const FILTER_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   all: Sparkles,
   rouanet: ScrollText,
-  aldir_blanc: Sparkles,
+  aldir_blanc: Music2,
   festival: CalendarClock,
-  edital: ScrollText,
+  edital: FileText,
   premio: Trophy,
   noticia: Newspaper,
+};
+
+// Gradientes de fallback quando não há thumbnail_url
+const CATEGORY_GRADIENTS: Record<PortalItem['category'], string> = {
+  rouanet: 'from-cyan-900 via-cyan-800 to-cyan-700',
+  aldir_blanc: 'from-emerald-900 via-emerald-800 to-teal-700',
+  festival: 'from-fuchsia-900 via-fuchsia-800 to-purple-700',
+  edital: 'from-amber-900 via-amber-800 to-orange-700',
+  premio: 'from-yellow-800 via-yellow-700 to-amber-600',
+  noticia: 'from-indigo-900 via-indigo-800 to-violet-700',
+  other: 'from-slate-800 via-slate-700 to-slate-600',
+};
+
+const CATEGORY_ICON_COMPONENTS: Record<
+  PortalItem['category'],
+  React.ComponentType<{ className?: string }>
+> = {
+  rouanet: ScrollText,
+  aldir_blanc: Music2,
+  festival: CalendarClock,
+  edital: FileText,
+  premio: Trophy,
+  noticia: Newspaper,
+  other: Star,
 };
 
 function deadlineChip(deadline?: string) {
@@ -248,74 +263,122 @@ function PremiumGate() {
 }
 
 // ---------------------------------------------------------------------------
-// Card de item do portal
+// CoverArea — thumbnail ou gradiente de fallback por categoria
 // ---------------------------------------------------------------------------
 
-function PortalCard({ item }: { item: PortalItem }) {
+function CoverArea({
+  item,
+  aspectClass = 'aspect-video',
+}: {
+  item: PortalItem;
+  aspectClass?: string;
+}) {
+  const [imgError, setImgError] = useState(false);
+  const CategoryIcon = CATEGORY_ICON_COMPONENTS[item.category];
+  const gradient = CATEGORY_GRADIENTS[item.category];
+  const urgencyDays = daysUntil(item.deadline);
+  const showUrgency = urgencyDays !== null && urgencyDays >= 0 && urgencyDays <= 30;
+
+  return (
+    <div className={`relative overflow-hidden rounded-t-2xl ${aspectClass} bg-slate-800`}>
+      {item.thumbnail_url && !imgError ? (
+        <img
+          src={item.thumbnail_url}
+          alt={item.title}
+          loading="lazy"
+          onError={() => setImgError(true)}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      ) : (
+        <div
+          className={`absolute inset-0 bg-gradient-to-br ${gradient} flex items-center justify-center`}
+        >
+          <CategoryIcon className="w-10 h-10 text-white/25" />
+        </div>
+      )}
+      {/* Overlay gradiente para legibilidade */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+      {/* Urgência badge */}
+      {showUrgency && (
+        <span
+          className={`absolute top-2 right-2 text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+            urgencyDays! <= 7
+              ? 'bg-red-500 text-white shadow-lg shadow-red-500/40'
+              : 'bg-amber-400 text-amber-900'
+          }`}
+        >
+          <Flame className="w-2.5 h-2.5" />
+          {urgencyDays === 0 ? 'Último dia' : `${urgencyDays}d`}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Cards do portal
+// ---------------------------------------------------------------------------
+
+function PortalCard({ item, index = 0 }: { item: PortalItem; index?: number }) {
   const location = [item.city, item.state].filter(Boolean).join(' · ') || 'Nacional';
   const sourceLabel = SOURCE_LABELS[item.source];
-  const accentBorder = CATEGORY_CARD_STYLES[item.category];
+  const Wrapper = item.external_url ? 'a' : 'div';
+  const linkProps = item.external_url
+    ? { href: item.external_url, target: '_blank', rel: 'noopener noreferrer' }
+    : {};
 
   return (
     <motion.div
-      className={`rounded-2xl border bg-white/90 dark:bg-slate-900/65 backdrop-blur-sm p-4 sm:p-5 flex flex-col gap-3 shadow-sm hover:shadow-md transition-shadow ${accentBorder}`}
-      initial={{ opacity: 0, y: 10 }}
+      className="rounded-2xl overflow-hidden border border-slate-200/60 dark:border-white/8 bg-white dark:bg-slate-900/80 shadow-sm flex flex-col group"
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.22 }}
-      whileHover={{ y: -2 }}
+      transition={{ duration: 0.22, delay: index * 0.04 }}
+      whileHover={{ y: -4, scale: 1.01 }}
     >
-      {/* Badges */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <span
-          className={`text-xs font-medium px-2 py-0.5 rounded-full ${CATEGORY_COLORS[item.category]}`}
-        >
-          {CATEGORY_LABELS[item.category]}
-        </span>
-        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-          {SCOPE_LABELS[item.scope]}
-        </span>
-        <span className="ml-auto text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          {sourceLabel}
-        </span>
-      </div>
+      <CoverArea item={item} />
 
-      {/* Título */}
-      <h3 className="text-sm sm:text-[15px] font-bold text-gray-900 dark:text-white leading-snug tracking-tight">
-        {item.title}
-      </h3>
-
-      {/* Descrição */}
-      {item.description && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-3">{item.description}</p>
-      )}
-
-      {/* Rodapé */}
-      <div className="flex items-center justify-between flex-wrap gap-2 mt-auto">
-        <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-          <MapPin className="h-3 w-3" />
-          {location}
-        </div>
+      <Wrapper {...linkProps} className="flex flex-col flex-1 p-4 gap-2.5">
+        {/* Badges */}
         <div className="flex items-center gap-2 flex-wrap">
-          {deadlineChip(item.deadline)}
-          {item.event_date && !item.deadline && (
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {new Date(item.event_date + 'T00:00:00').toLocaleDateString('pt-BR')}
+          <span
+            className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${CATEGORY_COLORS[item.category]}`}
+          >
+            {CATEGORY_LABELS[item.category]}
+          </span>
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+            {SCOPE_LABELS[item.scope]}
+          </span>
+          <span className="ml-auto text-[10px] uppercase tracking-wider text-slate-400">
+            {sourceLabel}
+          </span>
+        </div>
+
+        {/* Título */}
+        <h3 className="text-sm sm:text-[15px] font-bold text-slate-900 dark:text-white leading-snug tracking-tight line-clamp-2">
+          {item.title}
+        </h3>
+
+        {/* Descrição */}
+        {item.description && (
+          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+            {item.description}
+          </p>
+        )}
+
+        {/* Rodapé */}
+        <div className="mt-auto pt-2 flex items-center justify-between gap-2 border-t border-slate-100 dark:border-white/6">
+          <span className="inline-flex items-center gap-1 text-[11px] text-slate-400">
+            <MapPin className="h-3 w-3" />
+            {location}
+          </span>
+          {item.external_url && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-500 transition-colors">
+              Saiba mais
+              <ArrowUpRight className="h-3 w-3" />
             </span>
           )}
         </div>
-      </div>
-
-      {item.external_url && (
-        <a
-          href={item.external_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-700 dark:text-cyan-300 hover:underline self-start"
-        >
-          Saiba mais
-          <ExternalLink className="h-3 w-3" />
-        </a>
-      )}
+      </Wrapper>
     </motion.div>
   );
 }
@@ -323,93 +386,110 @@ function PortalCard({ item }: { item: PortalItem }) {
 function FeaturedPortalCard({ item }: { item: PortalItem }) {
   const location = [item.city, item.state].filter(Boolean).join(' · ') || 'Nacional';
   const sourceLabel = SOURCE_LABELS[item.source];
+  const Wrapper = item.external_url ? 'a' : 'div';
+  const linkProps = item.external_url
+    ? { href: item.external_url, target: '_blank', rel: 'noopener noreferrer' }
+    : {};
 
   return (
     <motion.article
-      className="rounded-3xl border border-cyan-300/30 bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950 text-white p-5 sm:p-6 shadow-xl shadow-cyan-900/20"
+      className="rounded-2xl overflow-hidden border border-slate-200/60 dark:border-white/8 bg-white dark:bg-slate-900/80 shadow-lg flex flex-col group"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.24 }}
+      transition={{ duration: 0.28 }}
+      whileHover={{ y: -3 }}
     >
-      <div className="flex items-center gap-2 flex-wrap mb-3">
-        <span
-          className={`text-xs font-medium px-2 py-0.5 rounded-full ${CATEGORY_COLORS[item.category]}`}
-        >
-          {CATEGORY_LABELS[item.category]}
-        </span>
-        <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-slate-100">
-          {SCOPE_LABELS[item.scope]}
-        </span>
-        <span className="ml-auto text-[11px] uppercase tracking-wide text-cyan-200">
-          {sourceLabel}
-        </span>
-      </div>
+      <CoverArea item={item} aspectClass="aspect-[16/7] sm:aspect-[16/6]" />
 
-      <h2 className="text-lg sm:text-xl font-black leading-tight tracking-tight">{item.title}</h2>
-      {item.description && (
-        <p className="text-sm text-slate-200/90 mt-3 line-clamp-3 leading-relaxed">
-          {item.description}
-        </p>
-      )}
+      <Wrapper {...linkProps} className="flex flex-col p-5 sm:p-6 gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span
+            className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${CATEGORY_COLORS[item.category]}`}
+          >
+            {CATEGORY_LABELS[item.category]}
+          </span>
+          <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+            {SCOPE_LABELS[item.scope]}
+          </span>
+          <span className="ml-auto text-[11px] uppercase tracking-wider text-slate-400">
+            {sourceLabel}
+          </span>
+        </div>
 
-      <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-slate-200/90">
-        <span className="inline-flex items-center gap-1">
-          <MapPin className="h-3.5 w-3.5" />
-          {location}
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <Clock3 className="h-3.5 w-3.5" />
-          {formatPortalDate(item.published_at) ?? 'Sem data'}
-        </span>
-        {deadlineChip(item.deadline)}
-      </div>
+        <h2 className="text-lg sm:text-xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">
+          {item.title}
+        </h2>
 
-      {item.external_url && (
-        <a
-          href={item.external_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-cyan-200 hover:text-cyan-100 transition-colors"
-        >
-          Acessar fonte oficial
-          <ArrowUpRight className="h-4 w-4" />
-        </a>
-      )}
+        {item.description && (
+          <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+            {item.description}
+          </p>
+        )}
+
+        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400 pt-1 border-t border-slate-100 dark:border-white/6">
+          <span className="inline-flex items-center gap-1">
+            <MapPin className="h-3.5 w-3.5" />
+            {location}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Clock3 className="h-3.5 w-3.5" />
+            {formatPortalDate(item.published_at) ?? 'Sem data'}
+          </span>
+          {deadlineChip(item.deadline)}
+          {item.external_url && (
+            <span className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-500 transition-colors">
+              Acessar fonte oficial
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </span>
+          )}
+        </div>
+      </Wrapper>
     </motion.article>
   );
 }
 
 function CompactPortalCard({ item }: { item: PortalItem }) {
+  const Wrapper = item.external_url ? 'a' : 'div';
+  const linkProps = item.external_url
+    ? { href: item.external_url, target: '_blank', rel: 'noopener noreferrer' }
+    : {};
   return (
     <motion.div
-      className="rounded-2xl border border-slate-200/70 dark:border-slate-700/40 bg-white/85 dark:bg-slate-900/65 p-4"
+      className="rounded-2xl overflow-hidden border border-slate-200/60 dark:border-white/8 bg-white dark:bg-slate-900/80 flex flex-col group"
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22 }}
+      whileHover={{ y: -3 }}
     >
-      <div className="flex items-center gap-2 flex-wrap mb-2">
-        <span
-          className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${CATEGORY_COLORS[item.category]}`}
-        >
-          {CATEGORY_LABELS[item.category]}
-        </span>
-        <span className="text-[11px] text-slate-500 dark:text-slate-400">
-          {SCOPE_LABELS[item.scope]}
-        </span>
-      </div>
-
-      <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-snug">
-        {item.title}
-      </h3>
-      {item.description && (
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-2">
-          {item.description}
-        </p>
-      )}
-
-      <div className="mt-3 text-[11px] text-slate-500 dark:text-slate-400">
-        {formatPortalDate(item.published_at) ?? 'Sem data'}
-      </div>
+      <CoverArea item={item} aspectClass="aspect-[3/1]" />
+      <Wrapper {...linkProps} className="p-4">
+        <div className="flex items-center gap-2 flex-wrap mb-2">
+          <span
+            className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${CATEGORY_COLORS[item.category]}`}
+          >
+            {CATEGORY_LABELS[item.category]}
+          </span>
+          <span className="text-[11px] text-slate-500 dark:text-slate-400">
+            {SCOPE_LABELS[item.scope]}
+          </span>
+        </div>
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-snug line-clamp-2">
+          {item.title}
+        </h3>
+        {item.description && (
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 line-clamp-2">
+            {item.description}
+          </p>
+        )}
+        <div className="mt-3 flex items-center justify-between text-[11px] text-slate-400">
+          <span>{formatPortalDate(item.published_at) ?? 'Sem data'}</span>
+          {item.external_url && (
+            <span className="inline-flex items-center gap-1 text-indigo-500 font-semibold group-hover:text-indigo-400">
+              Ver <ArrowUpRight className="h-3 w-3" />
+            </span>
+          )}
+        </div>
+      </Wrapper>
     </motion.div>
   );
 }

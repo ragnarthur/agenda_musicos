@@ -48,6 +48,7 @@ from .premium_views import (  # noqa: E402
     admin_cultural_notice_suggestions,
     admin_cultural_notices,
     admin_import_cultural_notice_suggestions,
+    admin_og_preview,
     premium_portal,
 )
 from .registration_views import (
@@ -424,6 +425,11 @@ urlpatterns = [
         "admin/contact-views/stats/",
         contact_views_stats,
         name="admin-contact-views-stats",
+    ),
+    path(
+        "admin/cultural-notices/og-preview/",
+        admin_og_preview,
+        name="admin-cultural-notices-og-preview",
     ),
     path(
         "admin/cultural-notices/",

@@ -118,8 +118,9 @@ class PremiumPortalAPITest(APITestCase):
         self.assertIn("Edital Municipal BH", titles)
 
     def test_full_state_name_is_normalized_to_uf(self):
-        self.premium_musician.state = "Minas Gerais"
-        self.premium_musician.save(update_fields=["state"])
+        self.premium_musician.state = ""
+        self.premium_musician.city = "Belo Horizonte, Minas Gerais"
+        self.premium_musician.save(update_fields=["state", "city"])
 
         self.client.force_authenticate(user=self.premium_user)
         response = self.client.get("/api/premium/portal/")
