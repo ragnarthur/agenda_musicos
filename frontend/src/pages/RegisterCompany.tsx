@@ -154,7 +154,7 @@ export default function RegisterCompany() {
       const buttonDiv = document.getElementById('google-signin-button');
       if (buttonDiv) {
         window.google.accounts.id.renderButton(buttonDiv, {
-          theme: 'outline',
+          theme: 'filled_black',
           size: 'large',
           text: 'signup_with',
           width: '100%',
@@ -225,7 +225,7 @@ export default function RegisterCompany() {
               className={`flex justify-center items-center transition-opacity min-h-[44px] ${isGoogleLoading ? 'opacity-50 pointer-events-none' : ''}`}
             />
             {isGoogleLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
+              <div className="absolute inset-0 flex items-center justify-center bg-white/75 dark:bg-gray-800/75">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600" />
               </div>
             )}

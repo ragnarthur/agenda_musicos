@@ -206,7 +206,7 @@ export default function MusicianRequest() {
       const buttonDiv = document.getElementById('google-signin-request');
       if (buttonDiv) {
         window.google.accounts.id.renderButton(buttonDiv, {
-          theme: 'outline',
+          theme: 'filled_black',
           size: 'large',
           width: '100%',
         });
@@ -385,7 +385,7 @@ export default function MusicianRequest() {
                 <div className="w-full border-t border-gray-200" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">ou preencha o formulário</span>
+                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">ou preencha o formulário</span>
               </div>
             </div>
 
