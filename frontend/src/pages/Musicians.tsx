@@ -266,7 +266,7 @@ const Musicians: React.FC = () => {
 
           {/* Filter bar */}
           <div
-            className="card-contrast space-y-3 sticky top-[calc(env(safe-area-inset-top)+56px)] z-20 backdrop-blur-xl"
+            className="card-contrast space-y-3"
             data-cascade-ignore
           >
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-relaxed">

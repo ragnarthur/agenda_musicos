@@ -385,7 +385,9 @@ export default function MusicianRequest() {
                 <div className="w-full border-t border-gray-200" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">ou preencha o formulário</span>
+                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">
+                  ou preencha o formulário
+                </span>
               </div>
             </div>
 
