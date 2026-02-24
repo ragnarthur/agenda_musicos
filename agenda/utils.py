@@ -7,6 +7,80 @@ from datetime import timedelta
 
 from django.utils import timezone
 
+# ---------------------------------------------------------------------------
+# Normalização de UF
+# ---------------------------------------------------------------------------
+
+STATE_NAME_TO_UF: dict[str, str] = {
+    "ACRE": "AC",
+    "ALAGOAS": "AL",
+    "AMAPA": "AP",
+    "AMAZONAS": "AM",
+    "BAHIA": "BA",
+    "CEARA": "CE",
+    "DISTRITO FEDERAL": "DF",
+    "ESPIRITO SANTO": "ES",
+    "GOIAS": "GO",
+    "MARANHAO": "MA",
+    "MATO GROSSO": "MT",
+    "MATO GROSSO DO SUL": "MS",
+    "MINAS GERAIS": "MG",
+    "PARA": "PA",
+    "PARAIBA": "PB",
+    "PARANA": "PR",
+    "PERNAMBUCO": "PE",
+    "PIAUI": "PI",
+    "RIO DE JANEIRO": "RJ",
+    "RIO GRANDE DO NORTE": "RN",
+    "RIO GRANDE DO SUL": "RS",
+    "RONDONIA": "RO",
+    "RORAIMA": "RR",
+    "SANTA CATARINA": "SC",
+    "SAO PAULO": "SP",
+    "SERGIPE": "SE",
+    "TOCANTINS": "TO",
+}
+UF_CODES: frozenset[str] = frozenset(STATE_NAME_TO_UF.values())
+
+
+def normalize_uf(value: str | None) -> str:
+    """
+    Converte um estado (nome completo ou sigla) para a sigla de 2 letras.
+    Remove acentos básicos via substituição simples para comparação.
+    Retorna string vazia se não reconhecido.
+    """
+    import unicodedata
+
+    raw = (value or "").strip().upper().replace(".", "")
+    if not raw:
+        return ""
+
+    # Já é UF válida
+    if len(raw) == 2 and raw in UF_CODES:
+        return raw
+
+    # Remove acentos para comparar com o mapa
+    normalized = "".join(
+        c for c in unicodedata.normalize("NFD", raw) if unicodedata.category(c) != "Mn"
+    )
+    mapped = STATE_NAME_TO_UF.get(normalized)
+    if mapped:
+        return mapped
+
+    # Tenta extrair UF de strings como "Belo Horizonte, MG" ou "MG - Minas Gerais"
+    for separator in (",", "-", "/", "|"):
+        if separator not in normalized:
+            continue
+        parts = [p.strip() for p in normalized.split(separator) if p.strip()]
+        for part in reversed(parts):
+            if len(part) == 2 and part in UF_CODES:
+                return part
+            m = STATE_NAME_TO_UF.get(part)
+            if m:
+                return m
+
+    return ""
+
 
 def split_availability_with_events(availability, events, LeaderAvailabilityModel):
     """

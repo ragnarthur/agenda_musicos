@@ -333,6 +333,14 @@ class Musician(models.Model):
         labels = dict(self.INSTRUMENT_CHOICES)
         return labels.get(self.instrument, self.instrument)
 
+    def save(self, *args, **kwargs):
+        # Normaliza state para sigla de 2 letras antes de gravar
+        if self.state and len(self.state) > 2:
+            from .utils import normalize_uf
+
+            self.state = normalize_uf(self.state) or self.state[:2]
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.user.get_full_name() or self.user.username} - {self.get_instrument_label()}"
 

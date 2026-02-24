@@ -16,6 +16,7 @@ from .external_integrations import fetch_portal_content
 from .models import CulturalNotice
 from .permissions import IsPremiumMusician
 from .serializers import CulturalNoticeSerializer, PremiumPortalItemSerializer
+from .utils import normalize_uf
 
 logger = logging.getLogger(__name__)
 
@@ -25,63 +26,13 @@ SOURCE_LABELS = {
     "curadoria_admin": "Curadoria",
 }
 
-STATE_NAME_TO_UF = {
-    "ACRE": "AC",
-    "ALAGOAS": "AL",
-    "AMAPA": "AP",
-    "AMAZONAS": "AM",
-    "BAHIA": "BA",
-    "CEARA": "CE",
-    "DISTRITO FEDERAL": "DF",
-    "ESPIRITO SANTO": "ES",
-    "GOIAS": "GO",
-    "MARANHAO": "MA",
-    "MATO GROSSO": "MT",
-    "MATO GROSSO DO SUL": "MS",
-    "MINAS GERAIS": "MG",
-    "PARA": "PA",
-    "PARAIBA": "PB",
-    "PARANA": "PR",
-    "PERNAMBUCO": "PE",
-    "PIAUI": "PI",
-    "RIO DE JANEIRO": "RJ",
-    "RIO GRANDE DO NORTE": "RN",
-    "RIO GRANDE DO SUL": "RS",
-    "RONDONIA": "RO",
-    "RORAIMA": "RR",
-    "SANTA CATARINA": "SC",
-    "SAO PAULO": "SP",
-    "SERGIPE": "SE",
-    "TOCANTINS": "TO",
-}
-UF_CODES = set(STATE_NAME_TO_UF.values())
-
 
 def _scope_label(notice: CulturalNotice) -> str:
     return "municipal" if notice.city else "estadual"
 
 
 def _normalize_state(value: str | None) -> str:
-    raw = (value or "").strip().upper().replace(".", "")
-    if not raw:
-        return ""
-    if len(raw) == 2 and raw in UF_CODES:
-        return raw
-    mapped = STATE_NAME_TO_UF.get(raw)
-    if mapped:
-        return mapped
-
-    for separator in [",", "-", "/", "|"]:
-        if separator not in raw:
-            continue
-        parts = [part.strip() for part in raw.split(separator) if part.strip()]
-        for part in reversed(parts):
-            if len(part) == 2 and part in UF_CODES:
-                return part
-            mapped = STATE_NAME_TO_UF.get(part)
-            if mapped:
-                return mapped
-    return ""
+    return normalize_uf(value)
 
 
 def _normalize_city(value: str | None) -> str | None:
