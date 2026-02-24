@@ -6,6 +6,7 @@ import {
   Globe2,
   MapPin,
   Newspaper,
+  Plus,
   Sparkles,
   ToggleLeft,
   ToggleRight,
@@ -17,6 +18,7 @@ import {
   AdminEmptyState,
   AdminHero,
   AdminLoading,
+  AdminModal,
   AdminSearchBar,
 } from '../../components/admin';
 import {
@@ -26,6 +28,16 @@ import {
 } from '../../services/adminService';
 import type { PortalItem } from '../../types';
 import { showToast } from '../../utils/toast';
+
+const FORM_CATEGORY_OPTIONS: Array<{ value: PortalItem['category']; label: string }> = [
+  { value: 'noticia', label: 'Notícia' },
+  { value: 'edital', label: 'Edital' },
+  { value: 'festival', label: 'Festival' },
+  { value: 'aldir_blanc', label: 'Aldir Blanc' },
+  { value: 'rouanet', label: 'Lei Rouanet' },
+  { value: 'premio', label: 'Prêmio' },
+  { value: 'other', label: 'Outro' },
+];
 
 const CATEGORY_OPTIONS: Array<{ value: 'all' | PortalItem['category']; label: string }> = [
   { value: 'all', label: 'Todas as categorias' },
@@ -88,6 +100,73 @@ const CulturalPortal: React.FC = () => {
   const [publishing, setPublishing] = useState(false);
   const [suggestions, setSuggestions] = useState<CulturalNoticeSuggestion[]>([]);
   const [selectedSuggestionKeys, setSelectedSuggestionKeys] = useState<Set<string>>(new Set());
+
+  // Create manual notice
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createForm, setCreateForm] = useState<{
+    title: string;
+    source_url: string;
+    source_name: string;
+    summary: string;
+    category: PortalItem['category'];
+    state: string;
+    city: string;
+    deadline_at: string;
+    event_date: string;
+  }>({
+    title: '',
+    source_url: '',
+    source_name: '',
+    summary: '',
+    category: 'noticia',
+    state: stateFilter,
+    city: cityFilter,
+    deadline_at: '',
+    event_date: '',
+  });
+
+  const openCreateModal = () => {
+    setCreateForm(prev => ({ ...prev, state: stateFilter, city: cityFilter }));
+    setShowCreateModal(true);
+  };
+
+  const handleCreate = async () => {
+    if (!createForm.title.trim() || !createForm.state.trim()) return;
+    try {
+      setCreating(true);
+      const created = await adminService.createCulturalNotice({
+        title: createForm.title.trim(),
+        category: createForm.category,
+        state: createForm.state.trim().toUpperCase(),
+        city: createForm.city.trim() || null,
+        summary: createForm.summary.trim() || null,
+        source_name: createForm.source_name.trim() || null,
+        source_url: createForm.source_url.trim() || null,
+        deadline_at: createForm.deadline_at || null,
+        event_date: createForm.event_date || null,
+        is_active: true,
+      });
+      setNotices(prev => [created, ...prev]);
+      showToast.success('Notícia publicada com sucesso.');
+      setShowCreateModal(false);
+      setCreateForm({
+        title: '',
+        source_url: '',
+        source_name: '',
+        summary: '',
+        category: 'noticia',
+        state: stateFilter,
+        city: cityFilter,
+        deadline_at: '',
+        event_date: '',
+      });
+    } catch (error) {
+      showToast.apiError(error);
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const loadNotices = useCallback(async () => {
     try {
@@ -235,9 +314,14 @@ const CulturalPortal: React.FC = () => {
               Defina região e categoria para publicar somente o conteúdo relevante aos músicos.
             </p>
           </div>
-          <AdminButton variant="secondary" onClick={loadNotices}>
-            Atualizar lista
-          </AdminButton>
+          <div className="flex items-center gap-2">
+            <AdminButton variant="secondary" onClick={loadNotices}>
+              Atualizar lista
+            </AdminButton>
+            <AdminButton variant="primary" size="sm" icon={Plus} onClick={openCreateModal}>
+              Nova notícia
+            </AdminButton>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -473,6 +557,163 @@ const CulturalPortal: React.FC = () => {
           </div>
         )}
       </AdminCard>
+
+      {/* Modal: Nova Notícia Manual */}
+      <AdminModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="Nova notícia"
+        size="sm"
+        footer={
+          <div className="flex gap-2 justify-end">
+            <AdminButton variant="secondary" onClick={() => setShowCreateModal(false)}>
+              Cancelar
+            </AdminButton>
+            <AdminButton
+              variant="primary"
+              onClick={handleCreate}
+              loading={creating}
+              disabled={!createForm.title.trim() || !createForm.state.trim()}
+            >
+              Publicar
+            </AdminButton>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          {/* URL */}
+          <div>
+            <label className="admin-label">URL do link</label>
+            <input
+              className="admin-input"
+              type="url"
+              value={createForm.source_url}
+              onChange={e => setCreateForm(prev => ({ ...prev, source_url: e.target.value }))}
+              placeholder="https://..."
+            />
+          </div>
+
+          {/* Título */}
+          <div>
+            <label className="admin-label">
+              Título <span className="text-red-400">*</span>
+            </label>
+            <input
+              className="admin-input"
+              type="text"
+              value={createForm.title}
+              onChange={e => setCreateForm(prev => ({ ...prev, title: e.target.value }))}
+              placeholder="Ex: Edital de Apoio à Música Independente 2025"
+            />
+          </div>
+
+          {/* Resumo */}
+          <div>
+            <label className="admin-label">Resumo (opcional)</label>
+            <textarea
+              className="admin-input resize-none"
+              rows={2}
+              value={createForm.summary}
+              onChange={e => setCreateForm(prev => ({ ...prev, summary: e.target.value }))}
+              placeholder="Breve descrição para exibição no app..."
+            />
+          </div>
+
+          {/* Categoria */}
+          <div>
+            <label className="admin-label">Categoria</label>
+            <select
+              className="admin-select"
+              value={createForm.category}
+              onChange={e =>
+                setCreateForm(prev => ({
+                  ...prev,
+                  category: e.target.value as PortalItem['category'],
+                }))
+              }
+            >
+              {FORM_CATEGORY_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Localidade */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="admin-label">
+                UF <span className="text-red-400">*</span>
+              </label>
+              <input
+                className="admin-input"
+                type="text"
+                maxLength={2}
+                value={createForm.state}
+                onChange={e =>
+                  setCreateForm(prev => ({
+                    ...prev,
+                    state: e.target.value.toUpperCase().slice(0, 2),
+                  }))
+                }
+                placeholder="MG"
+              />
+            </div>
+            <div>
+              <label className="admin-label">Cidade (opcional)</label>
+              <input
+                className="admin-input"
+                type="text"
+                value={createForm.city}
+                onChange={e => setCreateForm(prev => ({ ...prev, city: e.target.value }))}
+                placeholder="Ex: Monte Carmelo"
+              />
+            </div>
+          </div>
+
+          {/* Fonte e datas */}
+          <div className="border-t border-white/10 pt-4 space-y-3">
+            <p className="text-xs text-slate-400 font-medium uppercase tracking-widest">
+              Mais detalhes (opcional)
+            </p>
+            <div>
+              <label className="admin-label">Nome da fonte</label>
+              <input
+                className="admin-input"
+                type="text"
+                value={createForm.source_name}
+                onChange={e => setCreateForm(prev => ({ ...prev, source_name: e.target.value }))}
+                placeholder="Ex: Prefeitura, MinC, Secult"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="admin-label">Prazo de inscrição</label>
+                <input
+                  className="admin-input"
+                  type="date"
+                  value={createForm.deadline_at}
+                  onChange={e =>
+                    setCreateForm(prev => ({ ...prev, deadline_at: e.target.value }))
+                  }
+                />
+              </div>
+              <div>
+                <label className="admin-label">Data do evento</label>
+                <input
+                  className="admin-input"
+                  type="date"
+                  value={createForm.event_date}
+                  onChange={e =>
+                    setCreateForm(prev => ({ ...prev, event_date: e.target.value }))
+                  }
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </AdminModal>
     </div>
   );
 };
