@@ -124,7 +124,7 @@ const RegisterInvite: React.FC = () => {
       const buttonDiv = document.getElementById('google-signin-invite');
       if (buttonDiv) {
         window.google.accounts.id.renderButton(buttonDiv, {
-          theme: 'filled_black',
+          theme: 'outline',
           size: 'large',
           text: 'signup_with',
           width: 400,
@@ -207,8 +207,8 @@ const RegisterInvite: React.FC = () => {
       contentClassName="flex items-center justify-center"
       enableBlueWaves
     >
-      <div className="max-w-4xl w-full grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-8">
+      <div className="max-w-4xl w-full grid gap-6 lg:max-w-6xl lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 lg:p-10">
           <div className="flex items-center gap-4 mb-6">
             <div className="h-14 w-14 rounded-full bg-amber-100 flex items-center justify-center">
               <CheckCircle className="h-7 w-7 text-amber-600" />

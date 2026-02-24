@@ -1,7 +1,7 @@
 // pages/Login.tsx
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LogIn, Eye, EyeOff } from 'lucide-react';
+import { LogIn, Eye, EyeOff, Calendar, Users, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { showToast } from '../utils/toast';
@@ -10,6 +10,24 @@ import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import { getMobileInputProps } from '../utils/mobileInputs';
 import { googleAuthService } from '../services/publicApi';
 import { getHttpErrorDetail, getHttpErrorStatus } from '../utils/httpError';
+
+const desktopFeatures = [
+  {
+    icon: Calendar,
+    title: 'Agenda Profissional',
+    desc: 'Gerencie shows e compromissos com praticidade',
+  },
+  {
+    icon: Users,
+    title: 'Conexão com Contratantes',
+    desc: 'Seja encontrado por quem precisa do seu talento',
+  },
+  {
+    icon: Zap,
+    title: 'Disponibilidade em Tempo Real',
+    desc: 'Indique quando você está livre e receba propostas',
+  },
+] as const;
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -45,7 +63,7 @@ const Login: React.FC = () => {
 
   const handleGoogleCallback = useCallback(
     async (response: { credential: string }) => {
-      if (isGoogleLoading) return; // Prevenir múltiplas chamadas
+      if (isGoogleLoading) return;
 
       setIsGoogleLoading(true);
       try {
@@ -118,7 +136,7 @@ const Login: React.FC = () => {
       const buttonDiv = document.getElementById('google-signin-button');
       if (buttonDiv) {
         window.google.accounts.id.renderButton(buttonDiv, {
-          theme: 'filled_black',
+          theme: 'outline',
           size: 'large',
           text: 'signin_with',
           width: 400,
@@ -142,169 +160,211 @@ const Login: React.FC = () => {
       contentClassName="flex items-center justify-center py-6 sm:py-10"
       enableBlueWaves
     >
-      <div className="w-full max-w-xl sm:max-w-2xl">
-        {/* Logo e Título */}
-        <div className="text-center mb-6">
-          <div className="flex justify-center mb-2">
-            <div className="h-24 w-24 sm:h-28 sm:w-28">
-              <OwlMascot className="h-24 w-24 sm:h-28 sm:w-28" />
+      <div className="w-full max-w-xl sm:max-w-2xl lg:max-w-5xl">
+        <div className="lg:grid lg:grid-cols-[1fr_1.1fr] lg:gap-10 lg:items-center">
+          {/* ── Desktop: left branding panel ── */}
+          <div className="hidden lg:flex lg:flex-col lg:py-6">
+            <div className="flex justify-start mb-5">
+              <OwlMascot className="h-24 w-24" />
+            </div>
+            <div className="flex items-center gap-3 mb-4">
+              <h1 className="logo-animated text-5xl font-bold leading-tight text-white drop-shadow-xl">
+                GigFlow
+              </h1>
+              <span className="rounded-full border border-amber-400/20 bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-500/10 px-2 py-0.5 font-light italic tracking-wider text-[12px] text-amber-100/80">
+                Beta
+              </span>
+            </div>
+            <p className="mb-10 text-lg font-medium leading-relaxed text-primary-100">
+              Plataforma profissional de agenda, disponibilidade e oportunidades para músicos
+            </p>
+            <div className="space-y-5">
+              {desktopFeatures.map(({ icon: Icon, title, desc }) => (
+                <div key={title} className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/15 backdrop-blur-sm">
+                    <Icon className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold leading-tight text-white">{title}</p>
+                    <p className="mt-0.5 text-sm leading-relaxed text-primary-200">{desc}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <h1 className="text-4xl sm:text-5xl font-bold text-white logo-animated drop-shadow-xl leading-tight">
-              GigFlow
-            </h1>
-            <span className="text-[12px] px-2 py-0.5 bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-500/10 text-amber-100/80 rounded-full border border-amber-400/20 font-light italic tracking-wider">
-              Beta
-            </span>
-          </div>
-          <motion.p
-            className="relative text-primary-50 font-medium text-sm sm:text-base tracking-wide"
-            initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-          >
-            Plataforma profissional de agenda, disponibilidade e oportunidades para músicos
-            <motion.span
-              aria-hidden
-              className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/35 to-transparent"
-              initial={{ x: 0, opacity: 0 }}
-              animate={{ x: '220%', opacity: 1 }}
-              transition={{ duration: 1.6, delay: 0.6, ease: 'easeOut' }}
-            />
-          </motion.p>
-        </div>
 
-        {/* Card de Login */}
-        <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Entrar</h2>
-
-          {/* Google Sign In */}
-          <div className="relative mb-6">
-            <div
-              id="google-signin-button"
-              className={`flex justify-center items-center transition-opacity min-h-[44px] ${isGoogleLoading ? 'opacity-50 pointer-events-none' : ''}`}
-            />
-            {isGoogleLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600" />
+          {/* ── Right: form column ── */}
+          <div>
+            {/* Mobile-only branding */}
+            <div className="mb-6 text-center lg:hidden">
+              <div className="mb-2 flex justify-center">
+                <div className="h-24 w-24 sm:h-28 sm:w-28">
+                  <OwlMascot className="h-24 w-24 sm:h-28 sm:w-28" />
+                </div>
               </div>
-            )}
-          </div>
-
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">ou entre com usuário</span>
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                {error}
+              <div className="mb-3 flex items-center justify-center gap-2">
+                <h1 className="logo-animated text-4xl font-bold leading-tight text-white drop-shadow-xl sm:text-5xl">
+                  GigFlow
+                </h1>
+                <span className="rounded-full border border-amber-400/20 bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-500/10 px-2 py-0.5 font-light italic tracking-wider text-[12px] text-amber-100/80">
+                  Beta
+                </span>
               </div>
-            )}
-
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                Usuário
-              </label>
-              <input
-                id="username"
-                type="text"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                className="input-field"
-                placeholder="Digite seu usuário"
-                required
-                autoFocus
-                {...getMobileInputProps('username')}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Senha
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="input-field pr-12"
-                  placeholder="Digite sua senha"
-                  required
-                  {...getMobileInputProps('current-password')}
+              <motion.p
+                className="relative text-sm font-medium tracking-wide text-primary-50 sm:text-base"
+                initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
+                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                transition={{ duration: 0.7, delay: 0.2 }}
+              >
+                Plataforma profissional de agenda, disponibilidade e oportunidades para músicos
+                <motion.span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/35 to-transparent"
+                  initial={{ x: 0, opacity: 0 }}
+                  animate={{ x: '220%', opacity: 1 }}
+                  transition={{ duration: 1.6, delay: 0.6, ease: 'easeOut' }}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(prev => !prev)}
-                  className="absolute inset-y-0 right-0 flex items-center justify-center w-12 h-12 sm:w-10 sm:h-10 text-gray-500 hover:text-gray-700 touch-manipulation"
-                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                >
-                  {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
-                </button>
+              </motion.p>
+            </div>
+
+            {/* Card de Login */}
+            <div className="rounded-2xl bg-white p-5 shadow-2xl sm:p-8 lg:p-10">
+              <h2 className="mb-6 text-center text-2xl font-bold text-gray-900">Entrar</h2>
+
+              {/* Google Sign In */}
+              <div className="relative mb-6">
+                <div
+                  id="google-signin-button"
+                  className={`flex min-h-[44px] items-center justify-center transition-opacity ${isGoogleLoading ? 'pointer-events-none opacity-50' : ''}`}
+                />
+                {isGoogleLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
+                    <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-indigo-600" />
+                  </div>
+                )}
               </div>
-              <div className="mt-2 flex items-center justify-between">
-                <label className="flex items-center gap-2 cursor-pointer">
+
+              <div className="relative mb-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="bg-white px-2 text-gray-500">ou entre com usuário</span>
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {error && (
+                  <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+                    {error}
+                  </div>
+                )}
+
+                <div>
+                  <label
+                    htmlFor="username"
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
+                    Usuário
+                  </label>
                   <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={e => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                    id="username"
+                    type="text"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                    className="input-field"
+                    placeholder="Digite seu usuário"
+                    required
+                    autoFocus
+                    {...getMobileInputProps('username')}
                   />
-                  <span className="text-xs text-gray-600">Permanecer conectado</span>
-                </label>
-                <Link
-                  to="/esqueci-senha"
-                  className="text-xs font-medium text-primary-600 hover:text-primary-700"
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
+                    Senha
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      className="input-field pr-12"
+                      placeholder="Digite sua senha"
+                      required
+                      {...getMobileInputProps('current-password')}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(prev => !prev)}
+                      className="absolute inset-y-0 right-0 flex h-12 w-12 items-center justify-center touch-manipulation text-gray-500 hover:text-gray-700 sm:h-10 sm:w-10"
+                      aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                    >
+                      {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+                    </button>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between">
+                    <label className="flex cursor-pointer items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={e => setRememberMe(e.target.checked)}
+                        className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                      />
+                      <span className="text-xs text-gray-600">Permanecer conectado</span>
+                    </label>
+                    <Link
+                      to="/esqueci-senha"
+                      className="text-xs font-medium text-primary-600 hover:text-primary-700"
+                    >
+                      Esqueceu sua senha?
+                    </Link>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn-primary flex w-full items-center justify-center space-x-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Esqueceu sua senha?
+                  {loading ? (
+                    <>
+                      <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
+                      <span>Entrando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <LogIn className="h-5 w-5" />
+                      <span>Entrar</span>
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <div className="mt-4 text-center text-sm text-gray-600">
+                Ainda não tem conta?{' '}
+                <Link
+                  to="/solicitar-acesso"
+                  className="font-medium text-primary-600 hover:text-primary-700"
+                >
+                  Solicitar Acesso
                 </Link>
               </div>
+
+              <div className="mt-2 text-center text-sm text-gray-600">
+                <Link to="/" className="font-medium text-primary-600 hover:text-primary-700">
+                  Voltar para a página inicial
+                </Link>
+              </div>
+
+              <div className="mt-6 text-center text-xs text-gray-500">
+                Powered by <span className="font-semibold text-primary-600">DXM Tech</span>
+              </div>
             </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full btn-primary flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>Entrando...</span>
-                </>
-              ) : (
-                <>
-                  <LogIn className="h-5 w-5" />
-                  <span>Entrar</span>
-                </>
-              )}
-            </button>
-          </form>
-
-          <div className="mt-4 text-center text-sm text-gray-600">
-            Ainda não tem conta?{' '}
-            <Link
-              to="/solicitar-acesso"
-              className="text-primary-600 hover:text-primary-700 font-medium"
-            >
-              Solicitar Acesso
-            </Link>
-          </div>
-
-          <div className="mt-2 text-center text-sm text-gray-600">
-            <Link to="/" className="text-primary-600 hover:text-primary-700 font-medium">
-              Voltar para a página inicial
-            </Link>
-          </div>
-
-          <div className="mt-6 text-center text-xs text-gray-500">
-            Powered by <span className="font-semibold text-primary-600">DXM Tech</span>
           </div>
         </div>
       </div>

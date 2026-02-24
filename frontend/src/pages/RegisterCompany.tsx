@@ -154,7 +154,7 @@ export default function RegisterCompany() {
       const buttonDiv = document.getElementById('google-signin-button');
       if (buttonDiv) {
         window.google.accounts.id.renderButton(buttonDiv, {
-          theme: 'filled_black',
+          theme: 'outline',
           size: 'large',
           text: 'signup_with',
           width: 400,
@@ -207,7 +207,7 @@ export default function RegisterCompany() {
   return (
     <FullscreenBackground>
       <div className="min-h-[100svh] flex items-center justify-center p-4 py-8">
-        <div className="max-w-lg w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-5 sm:p-8">
+        <div className="max-w-lg w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-5 sm:p-8 lg:max-w-2xl lg:p-12">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center mx-auto mb-4">
               <Building2 className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
