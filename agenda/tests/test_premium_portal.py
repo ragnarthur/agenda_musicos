@@ -198,6 +198,132 @@ class PremiumPortalAPITest(APITestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["title"], "Item válido")
 
+    @patch("agenda.premium_views.fetch_portal_content")
+    def test_infers_state_from_city_when_state_is_blank(self, mock_fetch_portal):
+        self.premium_musician.state = ""
+        self.premium_musician.city = "Belo Horizonte, MG"
+        self.premium_musician.save(update_fields=["state", "city"])
+
+        self.client.force_authenticate(user=self.premium_user)
+        response = self.client.get("/api/premium/portal/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        titles = {item["title"] for item in response.data}
+        self.assertIn("Edital Municipal BH", titles)
+        mock_fetch_portal.assert_not_called()
+
+
+class AdminCulturalNoticeCurationAPITest(APITestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(
+            username="curation_admin",
+            email="curation@test.com",
+            password="senha12345",
+        )
+        self.client.force_authenticate(user=self.admin)
+
+    @patch("agenda.premium_views.fetch_portal_content")
+    def test_suggestions_marks_existing_notice(self, mock_fetch_portal):
+        existing = CulturalNotice.objects.create(
+            title="PNAB Monte Carmelo",
+            summary="Conteúdo local",
+            category="aldir_blanc",
+            state="MG",
+            city="Monte Carmelo",
+            source_url="https://www.montecarmelo.mg.gov.br/pnab-ciclo-2",
+            is_active=True,
+        )
+        mock_fetch_portal.return_value = [
+            {
+                "source": "curadoria_admin",
+                "external_id": "monte_carmelo_pnab",
+                "title": "PNAB Monte Carmelo",
+                "description": "Consulta pública municipal",
+                "category": "aldir_blanc",
+                "scope": "municipal",
+                "state": "MG",
+                "city": "Monte Carmelo",
+                "external_url": "https://www.montecarmelo.mg.gov.br/pnab-ciclo-2",
+                "deadline": None,
+                "event_date": None,
+                "published_at": "2026-02-15",
+            }
+        ]
+
+        response = self.client.get(
+            "/api/admin/cultural-notices/suggestions/?state=MG&city=Monte%20Carmelo"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["total"], 1)
+        self.assertTrue(response.data["items"][0]["already_published"])
+        self.assertEqual(response.data["items"][0]["matched_notice_id"], existing.id)
+
+    def test_import_suggestions_creates_and_updates_notices(self):
+        existing = CulturalNotice.objects.create(
+            title="Festival de Inverno MG",
+            summary="Versão antiga",
+            category="festival",
+            state="MG",
+            city=None,
+            source_url="https://secult.mg.gov.br/festival-inverno",
+            is_active=False,
+        )
+
+        payload = {
+            "state": "MG",
+            "city": "Monte Carmelo",
+            "items": [
+                {
+                    "source": "curadoria_admin",
+                    "external_id": "festival_mg_2026",
+                    "title": "Festival de Inverno MG",
+                    "description": "Programação oficial 2026",
+                    "category": "festival",
+                    "scope": "estadual",
+                    "state": "MG",
+                    "city": None,
+                    "external_url": "https://secult.mg.gov.br/festival-inverno",
+                    "deadline": None,
+                    "event_date": "2026-07-15",
+                    "published_at": "2026-02-10",
+                },
+                {
+                    "source": "mapas_culturais",
+                    "external_id": "pnab_monte_carmelo_01",
+                    "title": "PNAB Monte Carmelo - Chamamento",
+                    "description": "Inscrições abertas para agentes culturais",
+                    "category": "aldir_blanc",
+                    "scope": "municipal",
+                    "state": "MG",
+                    "city": "Monte Carmelo",
+                    "external_url": "https://www.montecarmelo.mg.gov.br/pnab-ciclo-2",
+                    "deadline": "2026-03-30",
+                    "event_date": None,
+                    "published_at": "2026-02-14",
+                },
+            ],
+        }
+
+        response = self.client.post(
+            "/api/admin/cultural-notices/import-suggestions/",
+            payload,
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["created"], 1)
+        self.assertEqual(response.data["updated"], 1)
+
+        existing.refresh_from_db()
+        self.assertTrue(existing.is_active)
+        self.assertEqual(existing.summary, "Programação oficial 2026")
+
+        new_notice = CulturalNotice.objects.get(title="PNAB Monte Carmelo - Chamamento")
+        self.assertEqual(new_notice.city, "Monte Carmelo")
+        self.assertEqual(new_notice.state, "MG")
+        self.assertEqual(new_notice.category, "aldir_blanc")
+
 
 class AdminSetPremiumAPITest(APITestCase):
     def setUp(self):

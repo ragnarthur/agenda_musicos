@@ -36,6 +36,9 @@ const AdminUsers = lazy(() =>
 const AdminOrganizations = lazy(() =>
   import('./pages/admin/AdminBundle').then(module => ({ default: module.AdminOrganizations }))
 );
+const AdminCulturalPortal = lazy(() =>
+  import('./pages/admin/AdminBundle').then(module => ({ default: module.AdminCulturalPortal }))
+);
 const AdminAlertsTest = lazy(() => import('./pages/admin/AlertsTest'));
 const StatusPage = lazy(() => import('./components/StatusPage'));
 const Login = lazy(() => import('./pages/Login'));
@@ -535,6 +538,7 @@ function AppRoutes() {
           <Route path={ADMIN_CHILD_ROUTES.requests} element={<AdminRequests />} />
           <Route path={ADMIN_CHILD_ROUTES.requestsDetail} element={<AdminRequests />} />
           <Route path={ADMIN_CHILD_ROUTES.bookingAudit} element={<BookingAudit />} />
+          <Route path={ADMIN_CHILD_ROUTES.culturalPortal} element={<AdminCulturalPortal />} />
           <Route path={ADMIN_CHILD_ROUTES.cities} element={<AdminCities />} />
           <Route path={ADMIN_CHILD_ROUTES.citiesDetail} element={<AdminCities />} />
           <Route path={ADMIN_CHILD_ROUTES.users} element={<AdminUsers />} />

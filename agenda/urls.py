@@ -45,7 +45,9 @@ from .password_views import (
 )
 from .premium_views import (  # noqa: E402
     admin_cultural_notice_detail,
+    admin_cultural_notice_suggestions,
     admin_cultural_notices,
+    admin_import_cultural_notice_suggestions,
     premium_portal,
 )
 from .registration_views import (
@@ -432,6 +434,16 @@ urlpatterns = [
         "admin/cultural-notices/<int:notice_id>/",
         admin_cultural_notice_detail,
         name="admin-cultural-notice-detail",
+    ),
+    path(
+        "admin/cultural-notices/suggestions/",
+        admin_cultural_notice_suggestions,
+        name="admin-cultural-notice-suggestions",
+    ),
+    path(
+        "admin/cultural-notices/import-suggestions/",
+        admin_import_cultural_notice_suggestions,
+        name="admin-cultural-notice-import-suggestions",
     ),
     # =========================================================================
     # Public Status Page

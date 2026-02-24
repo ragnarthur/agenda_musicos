@@ -1,4 +1,12 @@
-import { Building2, LayoutDashboard, MapPin, UserPlus, Users, ClipboardList } from 'lucide-react';
+import {
+  Building2,
+  ClipboardList,
+  LayoutDashboard,
+  MapPin,
+  Newspaper,
+  UserPlus,
+  Users,
+} from 'lucide-react';
 
 export const ADMIN_ROUTES = {
   base: '/admin',
@@ -8,6 +16,7 @@ export const ADMIN_ROUTES = {
   requests: '/admin/solicitacoes',
   requestsDetail: (id: string | number) => `/admin/solicitacoes/${id}`,
   bookingAudit: '/admin/auditoria-reservas',
+  culturalPortal: '/admin/portal-cultural',
   cities: '/admin/cidades',
   citiesDetail: (state: string, city: string) =>
     `/admin/cidades/${encodeURIComponent(state)}/${encodeURIComponent(city)}`,
@@ -23,6 +32,7 @@ export const ADMIN_CHILD_ROUTES = {
   requests: 'solicitacoes',
   requestsDetail: 'solicitacoes/:id',
   bookingAudit: 'auditoria-reservas',
+  culturalPortal: 'portal-cultural',
   cities: 'cidades',
   citiesDetail: 'cidades/:state/:city',
   users: 'usuarios',
@@ -48,6 +58,11 @@ export const adminNavItems = [
     path: ADMIN_ROUTES.bookingAudit,
   },
   {
+    icon: Newspaper,
+    label: 'Portal Cultural',
+    path: ADMIN_ROUTES.culturalPortal,
+  },
+  {
     icon: UserPlus,
     label: 'Usuários',
     path: ADMIN_ROUTES.users,
@@ -68,6 +83,7 @@ export const adminRouteLabels: Record<string, string> = {
   [ADMIN_ROUTES.dashboard]: 'Dashboard',
   [ADMIN_ROUTES.alertsTest]: 'Teste de Alertas',
   [ADMIN_ROUTES.requests]: 'Solicitações',
+  [ADMIN_ROUTES.culturalPortal]: 'Portal Cultural',
   [ADMIN_ROUTES.users]: 'Usuários',
   [ADMIN_ROUTES.organizations]: 'Contratantes',
   [ADMIN_ROUTES.cities]: 'Cidades',

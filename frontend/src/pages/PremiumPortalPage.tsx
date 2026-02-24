@@ -1,7 +1,9 @@
 // pages/PremiumPortalPage.tsx
 import React, { useState } from 'react';
 import {
+  ArrowUpRight,
   CalendarClock,
+  Clock3,
   ExternalLink,
   Lock,
   MapPin,
@@ -110,6 +112,11 @@ function deadlineChip(deadline?: string) {
       Prazo: {d.toLocaleDateString('pt-BR')}
     </span>
   );
+}
+
+function formatPortalDate(value?: string) {
+  if (!value) return null;
+  return new Date(`${value}T00:00:00`).toLocaleDateString('pt-BR');
 }
 
 // ---------------------------------------------------------------------------
@@ -265,6 +272,100 @@ function PortalCard({ item }: { item: PortalItem }) {
   );
 }
 
+function FeaturedPortalCard({ item }: { item: PortalItem }) {
+  const location = [item.city, item.state].filter(Boolean).join(' · ') || 'Nacional';
+  const sourceLabel = SOURCE_LABELS[item.source];
+
+  return (
+    <motion.article
+      className="rounded-3xl border border-cyan-300/30 bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950 text-white p-5 sm:p-6 shadow-xl shadow-cyan-900/20"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.24 }}
+    >
+      <div className="flex items-center gap-2 flex-wrap mb-3">
+        <span
+          className={`text-xs font-medium px-2 py-0.5 rounded-full ${CATEGORY_COLORS[item.category]}`}
+        >
+          {CATEGORY_LABELS[item.category]}
+        </span>
+        <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-slate-100">
+          {SCOPE_LABELS[item.scope]}
+        </span>
+        <span className="ml-auto text-[11px] uppercase tracking-wide text-cyan-200">
+          {sourceLabel}
+        </span>
+      </div>
+
+      <h2 className="text-lg sm:text-xl font-black leading-tight tracking-tight">{item.title}</h2>
+      {item.description && (
+        <p className="text-sm text-slate-200/90 mt-3 line-clamp-3 leading-relaxed">
+          {item.description}
+        </p>
+      )}
+
+      <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-slate-200/90">
+        <span className="inline-flex items-center gap-1">
+          <MapPin className="h-3.5 w-3.5" />
+          {location}
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <Clock3 className="h-3.5 w-3.5" />
+          {formatPortalDate(item.published_at) ?? 'Sem data'}
+        </span>
+        {deadlineChip(item.deadline)}
+      </div>
+
+      {item.external_url && (
+        <a
+          href={item.external_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-cyan-200 hover:text-cyan-100 transition-colors"
+        >
+          Acessar fonte oficial
+          <ArrowUpRight className="h-4 w-4" />
+        </a>
+      )}
+    </motion.article>
+  );
+}
+
+function CompactPortalCard({ item }: { item: PortalItem }) {
+  return (
+    <motion.div
+      className="rounded-2xl border border-slate-200/70 dark:border-slate-700/40 bg-white/85 dark:bg-slate-900/65 p-4"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22 }}
+    >
+      <div className="flex items-center gap-2 flex-wrap mb-2">
+        <span
+          className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${CATEGORY_COLORS[item.category]}`}
+        >
+          {CATEGORY_LABELS[item.category]}
+        </span>
+        <span className="text-[11px] text-slate-500 dark:text-slate-400">
+          {SCOPE_LABELS[item.scope]}
+        </span>
+      </div>
+
+      <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-snug">
+        {item.title}
+      </h3>
+      {item.description && (
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-2">
+          {item.description}
+        </p>
+      )}
+
+      <div className="mt-3 text-[11px] text-slate-500 dark:text-slate-400">
+        {formatPortalDate(item.published_at) ?? 'Sem data'}
+      </div>
+    </motion.div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Skeletons
 // ---------------------------------------------------------------------------
@@ -302,9 +403,26 @@ const PremiumPortalPage: React.FC = () => {
 
   const filtered = React.useMemo(() => {
     if (!items) return [];
-    if (activeFilter === 'all') return items;
-    return items.filter(item => item.category === activeFilter);
+    const base =
+      activeFilter === 'all' ? [...items] : items.filter(item => item.category === activeFilter);
+    return base.sort((a, b) => {
+      const aDeadline = a.deadline
+        ? new Date(`${a.deadline}T00:00:00`).getTime()
+        : Number.MAX_SAFE_INTEGER;
+      const bDeadline = b.deadline
+        ? new Date(`${b.deadline}T00:00:00`).getTime()
+        : Number.MAX_SAFE_INTEGER;
+      if (aDeadline !== bDeadline) return aDeadline - bDeadline;
+      return (
+        new Date(`${b.published_at}T00:00:00`).getTime() -
+        new Date(`${a.published_at}T00:00:00`).getTime()
+      );
+    });
   }, [items, activeFilter]);
+
+  const featuredItem = filtered[0];
+  const spotlightItems = filtered.slice(1, 3);
+  const feedItems = filtered.slice(3);
 
   const locationLabel = [user?.city, user?.state].filter(Boolean).join(' · ');
   const totalItems = items?.length ?? 0;
@@ -395,10 +513,45 @@ const PremiumPortalPage: React.FC = () => {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  {filtered.map(item => (
-                    <PortalCard key={`${item.source}-${item.external_id}`} item={item} />
-                  ))}
+                <div className="space-y-4">
+                  {featuredItem && (
+                    <section className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
+                          Destaque da sua localidade
+                        </h2>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                          Atualizado hoje
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 xl:grid-cols-[1.4fr_1fr] gap-3 sm:gap-4">
+                        <FeaturedPortalCard item={featuredItem} />
+                        {spotlightItems.length > 0 && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-3 sm:gap-4">
+                            {spotlightItems.map(item => (
+                              <CompactPortalCard
+                                key={`${item.source}-${item.external_id}`}
+                                item={item}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </section>
+                  )}
+
+                  {feedItems.length > 0 && (
+                    <section className="space-y-3">
+                      <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
+                        Mais oportunidades e notícias
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        {feedItems.map(item => (
+                          <PortalCard key={`${item.source}-${item.external_id}`} item={item} />
+                        ))}
+                      </div>
+                    </section>
+                  )}
                 </div>
               )}
             </>

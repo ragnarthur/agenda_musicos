@@ -113,7 +113,8 @@ def fetch_portal_content(state: str, city: str | None) -> list[dict]:
     Sempre retorna lista (vazia em caso de falha total).
     """
     if not state:
-        return []
+        published_at = _today_str()
+        return [{**item, "published_at": published_at} for item in FALLBACK_FEDERAL_ITEMS]
 
     cache_key = f"portal_cultural_{state.upper()}_{(city or 'all').lower()}"
     cached = cache.get(cache_key)
