@@ -249,6 +249,26 @@ const AdminUsers: React.FC = () => {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
+                      {user.has_musician_profile ? (
+                        <AdminButton
+                          variant={user.musician_is_premium ? 'secondary' : 'success'}
+                          size="sm"
+                          icon={Star}
+                          onClick={() => handleSetPremium(user, user.musician_is_premium !== true)}
+                          loading={togglingPremium === user.id}
+                          className={
+                            user.musician_is_premium
+                              ? 'border border-yellow-400/45 text-yellow-200 bg-yellow-500/15 hover:bg-yellow-500/25 shadow-[0_0_18px_rgba(250,204,21,0.22)]'
+                              : 'shadow-[0_0_16px_rgba(16,185,129,0.2)]'
+                          }
+                        >
+                          {user.musician_is_premium ? 'Revogar Premium' : 'Tornar Premium'}
+                        </AdminButton>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-700/40 text-slate-300 border border-slate-600/40">
+                          Sem perfil de músico
+                        </span>
+                      )}
                       <AdminButton
                         variant="ghost"
                         size="sm"
@@ -256,10 +276,16 @@ const AdminUsers: React.FC = () => {
                       >
                         Detalhes
                       </AdminButton>
-                      {user.has_musician_profile && user.musician_is_premium && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-300">
+                      {user.has_musician_profile && (
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                            user.musician_is_premium
+                              ? 'bg-yellow-500/20 text-yellow-300'
+                              : 'bg-slate-500/20 text-slate-300'
+                          }`}
+                        >
                           <Star className="h-3 w-3" />
-                          Premium
+                          {user.musician_is_premium ? 'Premium ativo' : 'Premium inativo'}
                         </span>
                       )}
                       {user.is_superuser && <AdminBadge status="planned" size="sm" />}
@@ -359,7 +385,7 @@ const AdminUsers: React.FC = () => {
 
             {/* Portal Cultural Premium */}
             <div className="pt-3 border-t border-slate-700">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <Star
                     className={`h-4 w-4 ${
@@ -373,20 +399,11 @@ const AdminUsers: React.FC = () => {
                     <span className="text-xs text-slate-500">Inativo</span>
                   )}
                 </div>
-                <AdminButton
-                  variant={selectedUser.musician_is_premium ? 'secondary' : 'primary'}
-                  size="sm"
-                  onClick={() => handleSetPremium(selectedUser, !selectedUser.musician_is_premium)}
-                  disabled={
-                    togglingPremium === selectedUser.id || !selectedUser.has_musician_profile
-                  }
-                >
-                  {togglingPremium === selectedUser.id
-                    ? 'Aguarde...'
-                    : selectedUser.musician_is_premium
-                      ? 'Revogar'
-                      : 'Ativar Premium'}
-                </AdminButton>
+                {selectedUser.has_musician_profile ? (
+                  <span className="text-xs text-slate-400">
+                    Gerencie no botão destacado da lista de usuários.
+                  </span>
+                ) : null}
               </div>
               {!selectedUser.has_musician_profile && (
                 <p className="text-xs text-slate-500 mt-1">

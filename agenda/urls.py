@@ -17,6 +17,8 @@ from .admin_management_views import (
     list_contractors,
     list_organizations,
     reset_admin_password,
+    set_premium,
+    toggle_premium,
     update_admin_user,
 )
 from .admin_views import (
@@ -407,6 +409,16 @@ urlpatterns = [
         "admin/users/<int:pk>/reset-password/",
         reset_admin_password,
         name="admin-users-reset-password",
+    ),
+    path(
+        "admin/users/<int:pk>/set-premium/",
+        set_premium,
+        name="admin-users-set-premium",
+    ),
+    path(
+        "admin/users/<int:pk>/toggle-premium/",
+        toggle_premium,
+        name="admin-users-toggle-premium",
     ),
     path(
         "users/<int:pk>/delete/",
