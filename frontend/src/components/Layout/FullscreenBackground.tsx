@@ -23,7 +23,7 @@ const FullscreenBackground: React.FC<FullscreenBackgroundProps> = ({
       {/* Scrim para garantir contraste no modo claro e manter legibilidade (especialmente com texto branco). */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-slate-950/70 via-slate-950/45 to-slate-950/70 dark:from-slate-950/55 dark:via-slate-950/30 dark:to-slate-950/55"
+        className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_20%_18%,rgba(129,140,248,0.25),transparent_44%),radial-gradient(circle_at_82%_16%,rgba(34,211,238,0.18),transparent_42%),linear-gradient(180deg,rgba(2,6,23,0.78),rgba(2,6,23,0.58),rgba(2,6,23,0.8))]"
       />
       <div className={`relative z-10 min-h-[100svh] ${contentClassName}`}>{children}</div>
     </div>

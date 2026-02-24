@@ -8,8 +8,8 @@ export default {
         xs: '375px', // iPhone SE and small mobile devices
       },
       fontFamily: {
-        sans: ['DM Sans', 'system-ui', 'sans-serif'],
-        heading: ['Syne', 'system-ui', 'sans-serif'],
+        sans: ['Public Sans', 'system-ui', 'sans-serif'],
+        heading: ['Manrope', 'system-ui', 'sans-serif'],
       },
       spacing: {
         'safe-top': 'env(safe-area-inset-top)',

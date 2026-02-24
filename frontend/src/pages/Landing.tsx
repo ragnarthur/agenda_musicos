@@ -146,10 +146,10 @@ const Landing: React.FC = () => {
 
   const musicianContent = useMemo<UserContent>(
     () => ({
-      hero: 'Sua Carreira Musical Organizada',
-      subtitle: 'Agenda inteligente para shows, networking e oportunidades profissionais',
+      hero: 'Gestão profissional da sua carreira musical',
+      subtitle: 'Planeje shows, organize contatos e acompanhe oportunidades em um único lugar',
       phrases: [
-        'Sua Carreira Musical Organizada',
+        'Gestão profissional da sua carreira musical',
         'Agenda inteligente para shows',
         'Conexões com outros músicos',
         'Eventos profissionalmente gerenciados',
@@ -206,10 +206,10 @@ const Landing: React.FC = () => {
 
   const contractorContent = useMemo<UserContent>(
     () => ({
-      hero: 'Encontre os Melhores Músicos',
-      subtitle: 'Contrate talentos musicais profissionais para seus eventos',
+      hero: 'Contrate músicos com critério profissional',
+      subtitle: 'Encontre talentos verificados para eventos, casas e projetos culturais',
       phrases: [
-        'Encontre os Melhores Músicos',
+        'Contrate músicos com critério profissional',
         'Talentos musicais profissionais',
         'Contrate com confiança',
         'Músicos verificados e avaliados',
@@ -445,7 +445,7 @@ const Landing: React.FC = () => {
           <AnimatePresence mode="wait">
             <motion.h2
               key={`hero-${userType}`}
-              className="text-3xl sm:text-4xl md:text-5xl font-heading font-black text-white tracking-tight leading-tight max-w-4xl mx-auto mb-4"
+              className="text-[clamp(1.95rem,4vw,3.4rem)] font-heading font-semibold text-white tracking-[-0.02em] leading-[1.08] max-w-3xl mx-auto mb-4"
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -18 }}
