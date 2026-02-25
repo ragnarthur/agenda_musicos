@@ -433,10 +433,15 @@ const Landing: React.FC = () => {
               GigFlow
               <motion.span
                 aria-hidden
-                className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/35 to-transparent"
-                initial={{ x: 0, opacity: 0 }}
-                animate={{ x: '220%', opacity: 1 }}
-                transition={{ duration: 1.6, delay: 0.6, ease: 'easeOut' }}
+                className="pointer-events-none absolute -left-[40%] inset-y-[-20%] h-[140%] w-[35%] skew-x-[-15deg] bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                animate={{ x: ['0%', '420%'], opacity: [0, 1, 1, 0] }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatDelay: 4,
+                  ease: 'easeInOut',
+                  times: [0, 0.15, 0.85, 1],
+                }}
               />
             </motion.h1>
             <motion.span
