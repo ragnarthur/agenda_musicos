@@ -404,8 +404,11 @@ const Landing: React.FC = () => {
           >
             {showAnimatedMascot ? (
               <Suspense fallback={<MascotFallback />}>
-                <div className="h-48 w-48 sm:h-56 sm:w-56">
-                  <OwlMascotLazy className="h-48 w-48 sm:h-56 sm:w-56" autoplay={false} />
+                <div className="h-56 w-56 sm:h-64 sm:w-64 md:h-72 md:w-72">
+                  <OwlMascotLazy
+                    className="h-56 w-56 sm:h-64 sm:w-64 md:h-72 md:w-72"
+                    autoplay={false}
+                  />
                 </div>
               </Suspense>
             ) : (
@@ -422,12 +425,19 @@ const Landing: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <motion.h1
-              className="relative z-20 text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-white pb-1 md:pb-2 leading-tight logo-animated"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              className="relative z-20 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white pb-1 md:pb-2 leading-tight logo-animated"
+              initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              transition={{ duration: 0.8, delay: 0.2 }}
             >
               GigFlow
+              <motion.span
+                aria-hidden
+                className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/35 to-transparent"
+                initial={{ x: 0, opacity: 0 }}
+                animate={{ x: '220%', opacity: 1 }}
+                transition={{ duration: 1.6, delay: 0.6, ease: 'easeOut' }}
+              />
             </motion.h1>
             <motion.span
               className="text-[14px] md:text-[16px] px-2 py-0.5 bg-gradient-to-r from-amber-500/8 via-amber-400/12 to-amber-500/8 text-amber-100/70 rounded-full border border-amber-400/15 font-light italic tracking-wider"
