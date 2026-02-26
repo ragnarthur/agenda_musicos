@@ -309,7 +309,8 @@ jobs:
       - name: Run local flow scripts (advisory)
         run: |
           failed=0
-          for script in test_complete_flow.py test_trial_direct.py test_auth.py test_restore_availability.py; do
+          # test_restore_availability.py foi legado e nao participa mais do fluxo atual.
+          for script in test_complete_flow.py test_trial_direct.py test_auth.py; do
             if ! python "$script"; then
               echo "::warning::${script} falhou (advisory)."
               failed=1

@@ -17,6 +17,20 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from agenda.models import Musician
 
 
+def resolve_role_icon(musician):
+    """
+    Resolve ícone de papel sem depender de métodos legados.
+    Mantém compatibilidade caso um helper `is_leader()` exista no futuro.
+    """
+    is_leader_method = getattr(musician, "is_leader", None)
+    if callable(is_leader_method):
+        try:
+            return "👑" if is_leader_method() else "♪"
+        except Exception:
+            pass
+    return "👑" if getattr(musician, "role", "") == "leader" else "♪"
+
+
 def test_user_authentication(username, password):
     """Testa autenticação de um usuário"""
     print(f'\n{"="*60}')
@@ -37,7 +51,7 @@ def test_user_authentication(username, password):
     # Verificar perfil de músico
     try:
         musician = user.musician_profile
-        role_icon = "👑" if musician.is_leader() else "♪"
+        role_icon = resolve_role_icon(musician)
         print(f"  {role_icon} Instrumento: {musician.get_instrument_label()}")
         print(f"  Papel: {musician.get_role_display()}")
     except Musician.DoesNotExist:

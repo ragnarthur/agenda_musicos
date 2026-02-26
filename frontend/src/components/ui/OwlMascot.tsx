@@ -13,6 +13,10 @@ const OwlMascot: React.FC<OwlMascotProps> = memo(({ className, autoplay = true }
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    if (import.meta.env.MODE === 'test') {
+      return;
+    }
+
     // Dynamic import para não incluir no bundle principal
     let isMounted = true;
 

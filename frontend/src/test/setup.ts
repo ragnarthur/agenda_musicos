@@ -3,6 +3,8 @@ import { cleanup } from '@testing-library/react';
 import { afterEach, vi, beforeAll, afterAll } from 'vitest';
 import { server } from './mocks/server';
 
+vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'test-google-client-id');
+
 // Vitest nao carrega o plugin do PWA (virtual modules). Mock para nao quebrar suites.
 vi.mock('virtual:pwa-register', () => ({
   registerSW: () => async () => undefined,
@@ -84,7 +86,11 @@ Object.defineProperty(window, 'sessionStorage', {
   writable: true,
 });
 
-vi.stubGlobal('import', { meta: { env: { DEV: true, VITE_API_URL: '/api' } } });
+vi.stubGlobal('import', {
+  meta: {
+    env: { DEV: true, VITE_API_URL: '/api', VITE_GOOGLE_CLIENT_ID: 'test-google-client-id' },
+  },
+});
 
 Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
   value: vi.fn(() => ({

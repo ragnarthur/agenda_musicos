@@ -81,6 +81,15 @@ export const handlers = [
     return HttpResponse.json(musicianBadges);
   }),
 
+  http.get(`${API_URL}/musicians/:id/public_calendar/`, () => {
+    return HttpResponse.json({
+      events: [],
+      availabilities: [],
+      is_owner: false,
+      days_ahead: 90,
+    });
+  }),
+
   // Event endpoints
   http.get(`${API_URL}/events/`, ({ request }) => {
     const url = new URL(request.url);
@@ -321,6 +330,20 @@ export const handlers = [
   }),
 
   // Badge endpoints
+  http.get(`${API_URL}/badges/`, () => {
+    return HttpResponse.json({
+      earned: mockBadges.map(badge => ({
+        id: badge.id,
+        slug: badge.slug,
+        name: badge.name,
+        description: badge.description ?? null,
+        icon: badge.icon ?? null,
+        awarded_at: badge.awarded_at ?? new Date().toISOString(),
+      })),
+      available: [],
+    });
+  }),
+
   http.get(`${API_URL}/musicians/:id/badges/progress/`, () => {
     return HttpResponse.json({
       total_badges: 5,
@@ -370,6 +393,10 @@ export const handlers = [
       previous: null,
       results: filteredGigs,
     });
+  }),
+
+  http.get(`${API_URL}/marketplace/applications/`, () => {
+    return HttpResponse.json([]);
   }),
 
   http.post(`${API_URL}/marketplace/gigs/:id/apply/`, async ({ params, request }) => {
