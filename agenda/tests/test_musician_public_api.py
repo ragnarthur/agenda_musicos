@@ -57,27 +57,25 @@ class MusicianListByCityTest(APITestCase):
     """GET /api/musicians/public-by-city/?city=&state="""
 
     def setUp(self):
-        _make_musician("musico_bh_1", city="Belo Horizonte", state="MG", instrument="guitar")
-        _make_musician("musico_bh_2", city="Belo Horizonte", state="MG", instrument="drums")
-        _make_musician("musico_sp_1", city="São Paulo", state="SP", instrument="guitar")
-        _make_musician("musico_bh_inativo", city="Belo Horizonte", state="MG", is_active=False)
+        self.bh1 = _make_musician("musico_bh_1", city="Belo Horizonte", state="MG", instrument="guitar")
+        self.bh2 = _make_musician("musico_bh_2", city="Belo Horizonte", state="MG", instrument="drums")
+        self.sp1 = _make_musician("musico_sp_1", city="São Paulo", state="SP", instrument="guitar")
+        self.bh_inativo = _make_musician("musico_bh_inativo", city="Belo Horizonte", state="MG", is_active=False)
 
     def test_list_by_city_returns_only_active(self):
         resp = self.client.get("/api/musicians/public-by-city/?city=Belo Horizonte&state=MG")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         results = resp.data.get("results", resp.data)
-        # Inativo não aparece
-        usernames = [r["user"]["username"] for r in results]
-        self.assertNotIn("musico_bh_inativo", usernames)
-        # Ativos de BH aparecem
-        self.assertIn("musico_bh_1", usernames)
-        self.assertIn("musico_bh_2", usernames)
+        ids = [r["id"] for r in results]
+        self.assertNotIn(self.bh_inativo.id, ids)
+        self.assertIn(self.bh1.id, ids)
+        self.assertIn(self.bh2.id, ids)
 
     def test_list_by_city_does_not_include_other_state(self):
         resp = self.client.get("/api/musicians/public-by-city/?city=Belo Horizonte&state=MG")
         results = resp.data.get("results", resp.data)
-        usernames = [r["user"]["username"] for r in results]
-        self.assertNotIn("musico_sp_1", usernames)
+        ids = [r["id"] for r in results]
+        self.assertNotIn(self.sp1.id, ids)
 
     def test_missing_city_param_returns_400(self):
         resp = self.client.get("/api/musicians/public-by-city/?state=MG")
@@ -93,18 +91,18 @@ class MusicianListByCityTest(APITestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         results = resp.data.get("results", resp.data)
-        usernames = [r["user"]["username"] for r in results]
-        self.assertIn("musico_bh_2", usernames)
-        self.assertNotIn("musico_bh_1", usernames)
+        ids = [r["id"] for r in results]
+        self.assertIn(self.bh2.id, ids)
+        self.assertNotIn(self.bh1.id, ids)
 
 
 class MusicianListAllPublicTest(APITestCase):
     """GET /api/musicians/all/"""
 
     def setUp(self):
-        _make_musician("musico_all_1", city="Fortaleza", state="CE")
-        _make_musician("musico_all_2", city="Salvador", state="BA")
-        _make_musician("musico_all_inativo", is_active=False)
+        self.m1 = _make_musician("musico_all_1", city="Fortaleza", state="CE")
+        self.m2 = _make_musician("musico_all_2", city="Salvador", state="BA")
+        self.inativo = _make_musician("musico_all_inativo", is_active=False)
 
     def test_returns_200_without_auth(self):
         resp = self.client.get("/api/musicians/all/")
@@ -113,16 +111,16 @@ class MusicianListAllPublicTest(APITestCase):
     def test_inactive_musicians_excluded(self):
         resp = self.client.get("/api/musicians/all/")
         data = resp.data if isinstance(resp.data, list) else resp.data.get("results", [])
-        usernames = [r["user"]["username"] for r in data]
-        self.assertNotIn("musico_all_inativo", usernames)
+        ids = [r["id"] for r in data]
+        self.assertNotIn(self.inativo.id, ids)
 
     def test_search_by_city(self):
         resp = self.client.get("/api/musicians/all/?city=Fortaleza&state=CE")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.data if isinstance(resp.data, list) else resp.data.get("results", [])
-        usernames = [r["user"]["username"] for r in data]
-        self.assertIn("musico_all_1", usernames)
-        self.assertNotIn("musico_all_2", usernames)
+        ids = [r["id"] for r in data]
+        self.assertIn(self.m1.id, ids)
+        self.assertNotIn(self.m2.id, ids)
 
 
 class MusicianGenresEndpointTest(APITestCase):
