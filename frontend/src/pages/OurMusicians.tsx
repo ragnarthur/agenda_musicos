@@ -97,9 +97,7 @@ export default function OurMusicians() {
         search ? { key: 'search' as const, label: 'Busca', value: search } : null,
         city ? { key: 'city' as const, label: 'Cidade', value: city } : null,
         state ? { key: 'state' as const, label: 'Estado', value: state } : null,
-        instrument
-          ? { key: 'instrument' as const, label: 'Instrumento', value: instrument }
-          : null,
+        instrument ? { key: 'instrument' as const, label: 'Instrumento', value: instrument } : null,
         minRating
           ? {
               key: 'minRating' as const,
@@ -207,7 +205,9 @@ export default function OurMusicians() {
             </div>
             <div className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-left">
               <p className="text-xs uppercase tracking-widest text-slate-300/80">Resposta</p>
-              <p className="text-xl font-bold text-white">{loading ? 'Buscando…' : 'Instantânea'}</p>
+              <p className="text-xl font-bold text-white">
+                {loading ? 'Buscando…' : 'Instantânea'}
+              </p>
             </div>
           </div>
         </div>
@@ -265,9 +265,7 @@ export default function OurMusicians() {
           {showFilters && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-200 mb-1">
-                  Estado
-                </label>
+                <label className="block text-sm font-medium text-slate-200 mb-1">Estado</label>
                 <select
                   value={state}
                   onChange={e => setState(e.target.value)}
@@ -283,9 +281,7 @@ export default function OurMusicians() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-200 mb-1">
-                  Cidade
-                </label>
+                <label className="block text-sm font-medium text-slate-200 mb-1">Cidade</label>
                 <input
                   type="text"
                   value={city}
@@ -296,9 +292,7 @@ export default function OurMusicians() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-200 mb-1">
-                  Instrumento
-                </label>
+                <label className="block text-sm font-medium text-slate-200 mb-1">Instrumento</label>
                 <input
                   type="text"
                   value={instrument}
@@ -335,7 +329,9 @@ export default function OurMusicians() {
                   onClick={() => removeFilter(filter.key)}
                   className="inline-flex items-center gap-1 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-3 py-1 text-xs font-medium text-cyan-100 hover:bg-cyan-400/20 transition-colors"
                 >
-                  <span>{filter.label}: {filter.value}</span>
+                  <span>
+                    {filter.label}: {filter.value}
+                  </span>
                   <X className="w-3 h-3" />
                 </button>
               ))}
@@ -374,9 +370,7 @@ export default function OurMusicians() {
           <div className="text-center py-14 rounded-2xl border border-white/10 bg-white/5">
             <Users className="w-16 h-16 mx-auto mb-4 text-slate-300/80" />
             <p className="text-xl text-white">Nenhum músico encontrado</p>
-            <p className="text-sm text-slate-300/80 mt-2">
-              Tente ajustar os filtros de busca
-            </p>
+            <p className="text-sm text-slate-300/80 mt-2">Tente ajustar os filtros de busca</p>
             {activeFilters.length > 0 ? (
               <button
                 onClick={clearAllFilters}
@@ -467,9 +461,7 @@ export default function OurMusicians() {
                               </span>
                             ))}
                             {extraCount > 0 && (
-                              <span className="text-slate-300/70">
-                                +{extraCount}
-                              </span>
+                              <span className="text-slate-300/70">+{extraCount}</span>
                             )}
                           </>
                         )}

@@ -437,7 +437,9 @@ export default function ContractorQuoteDetail() {
                         {proposal.status_display}
                       </span>
                     </div>
-                    <span className="text-xs text-muted">{formatDateTime(proposal.created_at)}</span>
+                    <span className="text-xs text-muted">
+                      {formatDateTime(proposal.created_at)}
+                    </span>
                   </div>
 
                   {/* Value highlight */}

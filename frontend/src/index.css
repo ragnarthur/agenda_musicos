@@ -1985,26 +1985,25 @@
   width: 45%;
   height: 45%;
   border-radius: 50%;
-  background: radial-gradient(
-    circle at 60% 60%,
-    rgba(6, 182, 212, 0.10) 0%,
-    transparent 65%
-  );
+  background: radial-gradient(circle at 60% 60%, rgba(6, 182, 212, 0.1) 0%, transparent 65%);
   filter: blur(60px);
   animation: contractorGlowBreathe 12s ease-in-out infinite reverse;
 }
 
 .dark .contractor-glow-2 {
-  background: radial-gradient(
-    circle at 60% 60%,
-    rgba(6, 182, 212, 0.20) 0%,
-    transparent 65%
-  );
+  background: radial-gradient(circle at 60% 60%, rgba(6, 182, 212, 0.2) 0%, transparent 65%);
 }
 
 @keyframes contractorGlowBreathe {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50%       { transform: scale(1.12); opacity: 0.75; }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 0.75;
+  }
 }
 
 @media (max-width: 768px) {
@@ -2039,12 +2038,7 @@
 
 .dark .musician-bg {
   /* Dark: preto com tinte quente — palco às 22h */
-  background: radial-gradient(
-    ellipse 120% 80% at 65% 0%,
-    #1c1018 0%,
-    #100d0c 50%,
-    #0e0c10 100%
-  );
+  background: radial-gradient(ellipse 120% 80% at 65% 0%, #1c1018 0%, #100d0c 50%, #0e0c10 100%);
 }
 
 /* Key light — âmbar dourado, topo direito (luz principal do palco) */
@@ -2085,7 +2079,7 @@
   border-radius: 50%;
   background: radial-gradient(
     circle at 45% 38%,
-    rgba(236, 72, 153, 0.10) 0%,
+    rgba(236, 72, 153, 0.1) 0%,
     rgba(168, 85, 247, 0.07) 45%,
     transparent 68%
   );
@@ -2111,11 +2105,7 @@
   width: 55%;
   height: 55%;
   border-radius: 50%;
-  background: radial-gradient(
-    circle at 50% 65%,
-    rgba(6, 182, 212, 0.07) 0%,
-    transparent 62%
-  );
+  background: radial-gradient(circle at 50% 65%, rgba(6, 182, 212, 0.07) 0%, transparent 62%);
   filter: blur(70px);
   animation: musicianLightBreathe 20s ease-in-out infinite;
   transform-origin: 50% 65%;
@@ -2131,9 +2121,19 @@
 }
 
 @keyframes musicianLightBreathe {
-  0%, 100% { transform: scale(1);    opacity: 1;    }
-  33%       { transform: scale(1.08); opacity: 0.85; }
-  66%       { transform: scale(0.96); opacity: 1.0;  }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  33% {
+    transform: scale(1.08);
+    opacity: 0.85;
+  }
+  66% {
+    transform: scale(0.96);
+    opacity: 1;
+  }
 }
 
 @media (max-width: 768px) {

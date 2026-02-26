@@ -214,7 +214,6 @@ export default function ContractorNewRequest() {
           className="max-w-xl"
         >
           <form onSubmit={handleSubmit} className="space-y-8">
-
             {/* Section 01 — Músico */}
             <div>
               <SectionHeader number="01" label="Músico" />
@@ -404,7 +403,11 @@ export default function ContractorNewRequest() {
                   </FormField>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField id="venue_name" label="Local/Venue" icon={<MapPin className="w-4 h-4" />}>
+                  <FormField
+                    id="venue_name"
+                    label="Local/Venue"
+                    icon={<MapPin className="w-4 h-4" />}
+                  >
                     <input
                       id="venue_name"
                       type="text"
