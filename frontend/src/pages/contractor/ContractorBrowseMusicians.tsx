@@ -61,7 +61,6 @@ export default function ContractorBrowseMusicians() {
         setAvailableGenres(genres);
       })
       .catch(() => {
-        // Fallback: mostra a lista fixa caso a API ainda não esteja disponível
         if (!active) return;
         setAvailableGenres([]);
       });
@@ -110,7 +109,7 @@ export default function ContractorBrowseMusicians() {
       stars.push(
         <Star
           key={i}
-          className={`w-3.5 h-3.5 ${i <= Math.round(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`}
+          className={`w-3 h-3 ${i <= Math.round(rating) ? 'fill-amber-400 text-amber-400' : 'text-gray-200 dark:text-gray-700'}`}
         />
       );
     }
@@ -121,18 +120,27 @@ export default function ContractorBrowseMusicians() {
     <ContractorLayout>
       <div className="page-stack">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={prefersReducedMotion ? { duration: 0.2 } : { duration: 0.3 }}
+        >
+          <h1 className="text-2xl sm:text-3xl font-heading font-bold text-gray-900 dark:text-white">
             Buscar Músicos
           </h1>
           <p className="text-sm text-muted mt-1">Encontre músicos profissionais para seu evento</p>
-        </div>
+        </motion.div>
 
         {/* Filters */}
-        <div className="card-contrast">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={prefersReducedMotion ? { duration: 0.2 } : { delay: 0.05, duration: 0.3 }}
+          className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-4 shadow-sm"
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
                 value={search}
@@ -143,7 +151,7 @@ export default function ContractorBrowseMusicians() {
             </div>
 
             <div className="relative">
-              <Music className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Music className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
               <select
                 value={genre}
                 onChange={e => setGenre(e.target.value)}
@@ -161,19 +169,24 @@ export default function ContractorBrowseMusicians() {
 
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 min-h-[44px]"
+            className="flex items-center gap-1.5 text-xs font-heading font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors min-h-[44px]"
           >
-            <Filter className="w-4 h-4" />
+            <Filter className="w-3.5 h-3.5" />
             Filtros avançados
             <ChevronDown
-              className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`}
+              className={`w-3.5 h-3.5 transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`}
             />
           </button>
 
           {showFilters && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              transition={{ duration: 0.2 }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-100 dark:border-slate-800"
+            >
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-xs font-heading font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1.5">
                   Estado
                 </label>
                 <select
@@ -190,7 +203,7 @@ export default function ContractorBrowseMusicians() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-xs font-heading font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1.5">
                   Cidade
                 </label>
                 <input
@@ -202,7 +215,7 @@ export default function ContractorBrowseMusicians() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-xs font-heading font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1.5">
                   Instrumento
                 </label>
                 <input
@@ -214,7 +227,7 @@ export default function ContractorBrowseMusicians() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-xs font-heading font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1.5">
                   Avaliação Mínima
                 </label>
                 <select
@@ -228,32 +241,38 @@ export default function ContractorBrowseMusicians() {
                   <option value="4.5">4.5+ estrelas</option>
                 </select>
               </div>
-            </div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
 
         {/* Results */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-80 w-full rounded-2xl" />
+              <Skeleton key={i} className="h-72 w-full rounded-2xl" />
             ))}
           </div>
         ) : musicians.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Users className="w-16 h-16 text-gray-400 dark:text-gray-600 mb-4" />
-            <p className="text-lg font-semibold text-gray-900 dark:text-white">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center justify-center py-16 text-center"
+          >
+            <div className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-slate-800 flex items-center justify-center mb-4">
+              <Users className="w-8 h-8 text-gray-400 dark:text-gray-600" />
+            </div>
+            <p className="text-base font-heading font-semibold text-gray-900 dark:text-white">
               Nenhum músico encontrado
             </p>
             <p className="text-sm text-muted mt-1">Tente ajustar os filtros de busca</p>
-          </div>
+          </motion.div>
         ) : (
           <>
-            <p className="text-sm text-muted">
+            <p className="text-xs font-heading font-semibold uppercase tracking-widest text-muted">
               {musicians.length} músico{musicians.length !== 1 ? 's' : ''} encontrado
               {musicians.length !== 1 ? 's' : ''}
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
               {musicians.map((musician, index) => {
                 const normalizedInstruments = Array.from(
                   new Set(
@@ -277,10 +296,10 @@ export default function ContractorBrowseMusicians() {
                       delay: prefersReducedMotion ? 0 : Math.min(index * 0.04, 0.4),
                       duration: 0.3,
                     }}
-                    className="card-contrast overflow-hidden hover:shadow-xl transition-all"
+                    className="rounded-2xl overflow-hidden border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
                   >
                     {/* Avatar */}
-                    <div className="aspect-[4/3] bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center -mx-4 sm:-mx-6 -mt-4 sm:-mt-6">
+                    <div className="aspect-[4/3] bg-gradient-to-br from-indigo-500 to-purple-600 overflow-hidden">
                       {musician.avatar_url ? (
                         <img
                           src={musician.avatar_url}
@@ -289,67 +308,82 @@ export default function ContractorBrowseMusicians() {
                           loading="lazy"
                         />
                       ) : (
-                        <Music className="w-14 h-14 text-white/50" />
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Music className="w-12 h-12 text-white/40" />
+                        </div>
                       )}
                     </div>
 
                     {/* Info */}
-                    <div className="pt-4">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
+                    <div className="p-4">
+                      <h3 className="text-base font-heading font-bold text-gray-900 dark:text-white truncate">
                         {musician.full_name}
                       </h3>
 
-                      <div className="flex items-center gap-1 text-sm text-muted mt-1 flex-wrap">
-                        <Music className="w-4 h-4" />
+                      {/* Instruments */}
+                      <div className="flex flex-wrap gap-1.5 mt-2">
                         {primaryInstrument && (
-                          <span>{formatInstrumentLabel(primaryInstrument)}</span>
+                          <span className="text-xs bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 px-2 py-0.5 rounded-full font-medium">
+                            {formatInstrumentLabel(primaryInstrument)}
+                          </span>
                         )}
                         {secondaryInstruments.slice(0, 2).map((inst, idx) => (
-                          <span key={idx} className="text-gray-400">
-                            {idx === 0 ? ' · ' : ', '}
+                          <span
+                            key={idx}
+                            className="text-xs bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full"
+                          >
                             {formatInstrumentLabel(inst)}
                           </span>
                         ))}
                         {secondaryInstruments.length > 2 && (
-                          <span className="text-gray-400">+{secondaryInstruments.length - 2}</span>
+                          <span className="text-xs text-muted">
+                            +{secondaryInstruments.length - 2}
+                          </span>
                         )}
                       </div>
 
+                      {/* Location */}
                       {musician.city && musician.state && (
-                        <div className="flex items-center gap-1 text-sm text-muted mt-1">
-                          <MapPin className="w-3.5 h-3.5" />
-                          {musician.city} - {musician.state}
+                        <div className="flex items-center gap-1 text-xs text-muted mt-2">
+                          <MapPin className="w-3 h-3 flex-shrink-0" />
+                          {musician.city} — {musician.state}
                         </div>
                       )}
 
+                      {/* Rating */}
                       {musician.average_rating > 0 && (
-                        <div className="flex items-center gap-1 mt-2">
-                          {renderStars(musician.average_rating)}
-                          <span className="text-xs text-muted ml-1">
-                            ({musician.total_ratings})
+                        <div className="flex items-center gap-1.5 mt-2">
+                          <div className="flex items-center gap-0.5">
+                            {renderStars(musician.average_rating)}
+                          </div>
+                          <span className="text-xs text-muted">
+                            {musician.average_rating.toFixed(1)} ({musician.total_ratings})
                           </span>
                         </div>
                       )}
 
+                      {/* Bio */}
                       {musician.bio && (
-                        <p className="text-sm text-muted line-clamp-2 mt-2">{musician.bio}</p>
+                        <p className="text-xs text-muted line-clamp-2 mt-2 leading-relaxed">
+                          {musician.bio}
+                        </p>
                       )}
 
                       {/* Actions */}
                       <div className="flex gap-2 mt-4">
                         <Link
                           to={`${CONTRACTOR_ROUTES.newRequest}?musician=${musician.id}`}
-                          className="flex-1 btn-primary text-sm flex items-center justify-center gap-1.5 min-h-[44px]"
+                          className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-sm font-semibold flex items-center justify-center gap-1.5 py-2.5 rounded-xl transition-all min-h-[44px]"
                         >
-                          <Calendar className="w-4 h-4" />
+                          <Calendar className="w-3.5 h-3.5" />
                           Solicitar
                         </Link>
                         <Link
                           to={`/musico/${musician.id}`}
-                          className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors min-h-[44px]"
+                          className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors min-h-[44px]"
+                          aria-label="Ver perfil"
                         >
                           <Eye className="w-4 h-4" />
-                          Perfil
                         </Link>
                       </div>
                     </div>

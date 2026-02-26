@@ -77,8 +77,8 @@ export default function ContractorDashboard() {
     return (
       <ContractorLayout>
         <div className="page-stack py-6">
-          <Skeleton className="h-8 w-40" />
-          <Skeleton className="h-4 w-56" />
+          <Skeleton className="h-5 w-44" />
+          <Skeleton className="h-10 w-56" />
           <Skeleton className="h-28 w-full rounded-2xl" />
           <Skeleton className="h-20 w-full" />
           <Skeleton className="h-20 w-full" />
@@ -97,10 +97,10 @@ export default function ContractorDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={prefersReducedMotion ? { duration: 0.2 } : { duration: 0.3 }}
           >
-            <p className="text-xs text-muted uppercase tracking-widest font-heading mb-1">
+            <p className="text-xs font-heading font-semibold uppercase tracking-[0.18em] text-muted mb-1">
               {greetingDate}
             </p>
-            <h1 className="text-2xl sm:text-3xl font-heading font-bold text-gray-900 dark:text-white">
+            <h1 className="text-3xl sm:text-4xl font-heading font-bold text-gray-900 dark:text-white">
               Olá, {organization?.name || 'Contratante'}
             </h1>
           </motion.div>
@@ -113,33 +113,35 @@ export default function ContractorDashboard() {
               transition={prefersReducedMotion ? { duration: 0.2 } : { delay: 0.06, duration: 0.3 }}
             >
               <div className="rounded-2xl bg-amber-50 dark:bg-amber-950/25 border border-amber-200 dark:border-amber-800/50 overflow-hidden">
-                <div className="flex items-center gap-2 px-4 pt-4 pb-2">
+                <div className="flex items-center gap-2 px-4 pt-4 pb-2.5">
                   <Clock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                  <span className="text-xs font-heading font-semibold uppercase tracking-widest text-amber-700 dark:text-amber-400">
+                  <span className="text-xs font-heading font-semibold uppercase tracking-[0.15em] text-amber-700 dark:text-amber-400">
                     Aguardando resposta · {pendingRequests.length}
                   </span>
                 </div>
 
-                {pendingRequests.map(request => (
-                  <Link
-                    key={request.id}
-                    to={CONTRACTOR_ROUTES.requestDetail(request.id)}
-                    className="flex items-center justify-between px-4 py-3 border-t border-amber-100 dark:border-amber-900/50 hover:bg-amber-100/60 dark:hover:bg-amber-900/30 transition-colors"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                        {request.musician_name}
-                      </p>
-                      <p className="text-xs text-muted">
-                        {request.event_type}
-                        {request.event_date
-                          ? ` · ${new Date(request.event_date).toLocaleDateString('pt-BR')}`
-                          : ''}
-                      </p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted flex-shrink-0 ml-2" />
-                  </Link>
-                ))}
+                <div className="divide-y divide-amber-100 dark:divide-amber-900/40">
+                  {pendingRequests.map(request => (
+                    <Link
+                      key={request.id}
+                      to={CONTRACTOR_ROUTES.requestDetail(request.id)}
+                      className="flex items-center justify-between px-4 py-3.5 hover:bg-amber-100/60 dark:hover:bg-amber-900/20 transition-colors"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-heading font-semibold text-gray-900 dark:text-white truncate">
+                          {request.musician_name}
+                        </p>
+                        <p className="text-xs text-muted mt-0.5">
+                          {request.event_type}
+                          {request.event_date
+                            ? ` · ${new Date(request.event_date).toLocaleDateString('pt-BR')}`
+                            : ''}
+                        </p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-amber-500 dark:text-amber-400 flex-shrink-0 ml-2" />
+                    </Link>
+                  ))}
+                </div>
               </div>
             </motion.div>
           )}
@@ -152,19 +154,19 @@ export default function ContractorDashboard() {
               transition={prefersReducedMotion ? { duration: 0.2 } : { delay: 0.1, duration: 0.3 }}
             >
               <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-heading font-semibold uppercase tracking-widest text-muted">
+                <p className="text-xs font-heading font-semibold uppercase tracking-[0.15em] text-muted">
                   Respondidos recentemente
                 </p>
                 {requests.length > 3 && (
                   <Link
                     to={CONTRACTOR_ROUTES.requests}
-                    className="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline"
+                    className="text-xs font-heading font-semibold text-primary-600 dark:text-primary-400 hover:underline"
                   >
                     Ver todos
                   </Link>
                 )}
               </div>
-              <div className="divide-y divide-gray-100 dark:divide-gray-800">
+              <div className="divide-y divide-gray-100 dark:divide-slate-800">
                 {respondedRequests.map((request, i) => (
                   <motion.div
                     key={request.id}
@@ -177,19 +179,19 @@ export default function ContractorDashboard() {
                   >
                     <Link
                       to={CONTRACTOR_ROUTES.requestDetail(request.id)}
-                      className="flex items-center justify-between py-3 gap-3 hover:opacity-70 transition-opacity"
+                      className="flex items-center justify-between py-3 gap-3 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800/50 px-2 -mx-2 transition-colors"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                        <p className="text-sm font-heading font-semibold text-gray-900 dark:text-white truncate">
                           {request.musician_name}
                         </p>
-                        <p className="text-xs text-muted truncate">
+                        <p className="text-xs text-muted truncate mt-0.5">
                           {request.event_type}
                           {request.location_city ? ` · ${request.location_city}` : ''}
                         </p>
                       </div>
                       <span
-                        className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${getStatusColor(request.status)}`}
+                        className={`text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap flex-shrink-0 ${getStatusColor(request.status)}`}
                       >
                         {request.status_display}
                       </span>
@@ -223,14 +225,14 @@ export default function ContractorDashboard() {
           >
             <Link
               to={CONTRACTOR_ROUTES.browseMusicians}
-              className="inline-flex items-center gap-2 rounded-full bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors min-h-[44px]"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 rounded-full font-heading font-semibold text-sm shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/25 transition-all min-h-[44px]"
             >
               <Search className="h-4 w-4" />
               Buscar Músicos
             </Link>
             <Link
               to={CONTRACTOR_ROUTES.newRequest}
-              className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700 px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors min-h-[44px]"
+              className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700 px-5 py-2.5 text-sm font-heading font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors min-h-[44px]"
             >
               <PlusCircle className="h-4 w-4" />
               Novo Pedido

@@ -5,11 +5,11 @@ import {
   Calendar,
   MapPin,
   Clock,
-  MessageSquare,
   CheckCircle,
   XCircle,
   Trash2,
   DollarSign,
+  Building2,
 } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { quoteRequestService, type QuoteRequest, type QuoteProposal } from '../services/publicApi';
@@ -42,7 +42,7 @@ const getStatusColor = (status: string) => {
 const getProposalStatusIcon = (status: string) => {
   switch (status) {
     case 'sent':
-      return <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />;
+      return <Clock className="w-4 h-4 text-blue-500 dark:text-blue-400" />;
     case 'accepted':
       return <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />;
     case 'declined':
@@ -222,9 +222,9 @@ export default function ContractorQuoteDetail() {
     return (
       <ContractorLayout>
         <div className="page-stack">
-          <Skeleton className="h-8 w-40 rounded-lg" />
-          <Skeleton className="h-48 w-full rounded-2xl" />
-          <Skeleton className="h-32 w-full rounded-2xl" />
+          <Skeleton className="h-5 w-36 rounded-lg" />
+          <Skeleton className="h-52 w-full rounded-2xl" />
+          <Skeleton className="h-36 w-full rounded-2xl" />
         </div>
       </ContractorLayout>
     );
@@ -236,10 +236,10 @@ export default function ContractorQuoteDetail() {
         <div className="page-stack">
           <Link
             to={CONTRACTOR_ROUTES.requests}
-            className="inline-flex items-center gap-2 text-sm text-muted hover:text-gray-900 dark:hover:text-white transition-colors min-h-[44px]"
+            className="inline-flex items-center gap-1.5 text-xs font-heading font-semibold uppercase tracking-widest text-muted hover:text-gray-900 dark:hover:text-white transition-colors min-h-[44px]"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Voltar para pedidos
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Pedidos
           </Link>
           <div className="text-center py-12">
             <p className="text-gray-500 dark:text-gray-400">Pedido não encontrado</p>
@@ -252,17 +252,18 @@ export default function ContractorQuoteDetail() {
   return (
     <ContractorLayout>
       <div className="page-stack">
+        {/* Back */}
         <Link
           to={CONTRACTOR_ROUTES.requests}
-          className="inline-flex items-center gap-2 text-sm text-muted hover:text-gray-900 dark:hover:text-white transition-colors min-h-[44px]"
+          className="inline-flex items-center gap-1.5 text-xs font-heading font-semibold uppercase tracking-widest text-muted hover:text-gray-900 dark:hover:text-white transition-colors min-h-[44px]"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Voltar para pedidos
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Pedidos
         </Link>
 
         {/* Quote Header */}
         <motion.div
-          className="card-contrast"
+          className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-5 shadow-sm"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={
@@ -271,9 +272,9 @@ export default function ContractorQuoteDetail() {
               : { type: 'spring', stiffness: 120, damping: 18 }
           }
         >
-          <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="flex items-start justify-between gap-3 mb-5">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-xl sm:text-2xl font-heading font-bold text-gray-900 dark:text-white">
                 {quote.event_type}
               </h1>
               <p className="text-sm text-muted mt-1">
@@ -287,34 +288,55 @@ export default function ContractorQuoteDetail() {
               </p>
             </div>
             <span
-              className={`text-xs px-3 py-1.5 rounded-full font-medium ${getStatusColor(quote.status)}`}
+              className={`text-xs px-3 py-1.5 rounded-full font-medium whitespace-nowrap flex-shrink-0 ${getStatusColor(quote.status)}`}
             >
               {quote.status_display}
             </span>
           </div>
 
-          <div className="flex flex-wrap gap-4 text-sm text-muted">
+          {/* Event details grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {quote.event_date && (
-              <span className="flex items-center gap-1.5">
-                <Calendar className="w-4 h-4" />
-                {formatDate(quote.event_date)}
-              </span>
+              <div>
+                <p className="text-xs font-heading font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">
+                  Data
+                </p>
+                <div className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
+                  <Calendar className="w-3.5 h-3.5 text-muted flex-shrink-0" />
+                  {formatDate(quote.event_date)}
+                </div>
+              </div>
             )}
-            <span className="flex items-center gap-1.5">
-              <MapPin className="w-4 h-4" />
-              {quote.location_city} - {quote.location_state}
-            </span>
+            <div>
+              <p className="text-xs font-heading font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">
+                Local
+              </p>
+              <div className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
+                <MapPin className="w-3.5 h-3.5 text-muted flex-shrink-0" />
+                {quote.location_city} — {quote.location_state}
+              </div>
+            </div>
             {quote.venue_name && (
-              <span className="flex items-center gap-1.5">
-                <MessageSquare className="w-4 h-4" />
-                {quote.venue_name}
-              </span>
+              <div>
+                <p className="text-xs font-heading font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">
+                  Venue
+                </p>
+                <div className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
+                  <Building2 className="w-3.5 h-3.5 text-muted flex-shrink-0" />
+                  {quote.venue_name}
+                </div>
+              </div>
             )}
             {quote.duration_hours && (
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4" />
-                {quote.duration_hours}h
-              </span>
+              <div>
+                <p className="text-xs font-heading font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">
+                  Duração
+                </p>
+                <div className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
+                  <Clock className="w-3.5 h-3.5 text-muted flex-shrink-0" />
+                  {quote.duration_hours}h
+                </div>
+              </div>
             )}
           </div>
         </motion.div>
@@ -322,15 +344,17 @@ export default function ContractorQuoteDetail() {
         {/* Notes */}
         {quote.notes && (
           <motion.div
-            className="card"
-            initial={{ opacity: 0, y: 16 }}
+            className="bg-gray-50 dark:bg-slate-900/60 border border-gray-100 dark:border-slate-800 rounded-xl p-4"
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={prefersReducedMotion ? { duration: 0.3 } : { delay: 0.05, duration: 0.4 }}
+            transition={prefersReducedMotion ? { duration: 0.3 } : { delay: 0.05, duration: 0.35 }}
           >
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
+            <p className="text-xs font-heading font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2">
               Sobre o evento
-            </h2>
-            <p className="text-sm text-muted whitespace-pre-wrap">{quote.notes}</p>
+            </p>
+            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+              {quote.notes}
+            </p>
           </motion.div>
         )}
 
@@ -338,20 +362,20 @@ export default function ContractorQuoteDetail() {
         {quote.status === 'reserved' && (
           <motion.div
             className="rounded-2xl border border-green-200 dark:border-green-800/50 bg-green-50 dark:bg-green-900/20 p-5"
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
           >
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-semibold text-green-800 dark:text-green-300">
+                <h3 className="text-base font-heading font-semibold text-green-800 dark:text-green-300">
                   Proposta aceita!
                 </h3>
-                <p className="text-sm text-green-700 dark:text-green-400 mt-1">
+                <p className="text-sm text-green-700 dark:text-green-400 mt-0.5">
                   Aguardando confirmação do músico
                 </p>
               </div>
-              <CheckCircle className="w-8 h-8 text-green-500" />
+              <CheckCircle className="w-9 h-9 text-green-500 flex-shrink-0" />
             </div>
           </motion.div>
         )}
@@ -360,23 +384,108 @@ export default function ContractorQuoteDetail() {
         {quote.status === 'confirmed' && (
           <motion.div
             className="rounded-2xl border border-indigo-200 dark:border-indigo-800/50 bg-indigo-50 dark:bg-indigo-900/20 p-5"
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
           >
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-semibold text-indigo-800 dark:text-indigo-300">
+                <h3 className="text-base font-heading font-semibold text-indigo-800 dark:text-indigo-300">
                   Evento confirmado!
                 </h3>
-                <p className="text-sm text-indigo-700 dark:text-indigo-400 mt-1">
+                <p className="text-sm text-indigo-700 dark:text-indigo-400 mt-0.5">
                   O músico confirmou presença no evento
                 </p>
               </div>
-              <CheckCircle className="w-8 h-8 text-indigo-500" />
+              <CheckCircle className="w-9 h-9 text-indigo-500 flex-shrink-0" />
             </div>
           </motion.div>
         )}
+
+        {/* Proposals */}
+        <motion.div
+          className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-5 shadow-sm"
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={prefersReducedMotion ? { duration: 0.3 } : { delay: 0.1, duration: 0.35 }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-heading font-bold text-gray-900 dark:text-white">
+              Propostas recebidas
+            </h2>
+            {proposals.length > 0 && (
+              <span className="text-xs font-heading font-semibold uppercase tracking-widest text-muted">
+                {proposals.length}
+              </span>
+            )}
+          </div>
+
+          {proposals.length === 0 ? (
+            <p className="text-sm text-muted text-center py-8">Nenhuma proposta recebida ainda</p>
+          ) : (
+            <div className="space-y-4">
+              {proposals.map(proposal => (
+                <div
+                  key={proposal.id}
+                  className="border border-gray-100 dark:border-slate-800 rounded-xl p-4 bg-gray-50 dark:bg-slate-900/50"
+                >
+                  {/* Proposal Header */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      {getProposalStatusIcon(proposal.status)}
+                      <span className="text-sm font-heading font-semibold text-gray-900 dark:text-white">
+                        {proposal.status_display}
+                      </span>
+                    </div>
+                    <span className="text-xs text-muted">{formatDateTime(proposal.created_at)}</span>
+                  </div>
+
+                  {/* Value highlight */}
+                  {proposal.proposed_value && (
+                    <div className="flex items-baseline gap-1.5 mb-3">
+                      <DollarSign className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 mb-0.5" />
+                      <span className="text-2xl font-heading font-bold text-green-700 dark:text-green-400">
+                        {formatCurrency(proposal.proposed_value)}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Message */}
+                  <p className="text-sm text-muted leading-relaxed mb-3">{proposal.message}</p>
+
+                  {/* Valid until */}
+                  {proposal.valid_until && (
+                    <div className="flex items-center gap-1.5 text-xs text-muted mb-3">
+                      <Clock className="w-3.5 h-3.5" />
+                      Válido até {formatDate(proposal.valid_until)}
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  {proposal.status === 'sent' &&
+                    (quote.status === 'pending' || quote.status === 'responded') && (
+                      <div className="flex gap-2 pt-1">
+                        <button
+                          onClick={() => handleAcceptProposal(proposal.id)}
+                          className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-sm font-semibold flex items-center justify-center gap-1.5 py-2.5 rounded-xl transition-all min-h-[44px]"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          Aceitar
+                        </button>
+                        <button
+                          onClick={() => handleDeclineProposal(proposal.id)}
+                          className="flex-1 px-4 py-2 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-300 text-sm font-medium rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center justify-center gap-1.5 min-h-[44px]"
+                        >
+                          <XCircle className="w-4 h-4" />
+                          Recusar
+                        </button>
+                      </div>
+                    )}
+                </div>
+              ))}
+            </div>
+          )}
+        </motion.div>
 
         {/* Cancel Buttons */}
         {(quote.status === 'pending' || quote.status === 'responded') && (
@@ -398,79 +507,6 @@ export default function ContractorQuoteDetail() {
             Cancelar Reserva
           </button>
         )}
-
-        {/* Proposals */}
-        <motion.div
-          className="card-contrast"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={prefersReducedMotion ? { duration: 0.3 } : { delay: 0.1, duration: 0.4 }}
-        >
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Propostas recebidas
-          </h2>
-          {proposals.length === 0 ? (
-            <p className="text-sm text-muted text-center py-6">Nenhuma proposta recebida ainda</p>
-          ) : (
-            <div className="space-y-4">
-              {proposals.map(proposal => (
-                <div
-                  key={proposal.id}
-                  className="border border-gray-200 dark:border-gray-700 rounded-xl p-4"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      {getProposalStatusIcon(proposal.status)}
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        {proposal.status_display}
-                      </span>
-                    </div>
-                    <span className="text-xs text-muted">
-                      {formatDateTime(proposal.created_at)}
-                    </span>
-                  </div>
-
-                  <p className="text-sm text-muted mb-3">{proposal.message}</p>
-
-                  <div className="flex flex-wrap gap-4 text-sm">
-                    {proposal.proposed_value && (
-                      <span className="flex items-center gap-1.5 text-green-700 dark:text-green-400 font-medium">
-                        <DollarSign className="w-4 h-4" />
-                        {formatCurrency(proposal.proposed_value)}
-                      </span>
-                    )}
-                    {proposal.valid_until && (
-                      <span className="flex items-center gap-1.5 text-muted">
-                        <Clock className="w-4 h-4" />
-                        Válido até {formatDate(proposal.valid_until)}
-                      </span>
-                    )}
-                  </div>
-
-                  {proposal.status === 'sent' &&
-                    (quote.status === 'pending' || quote.status === 'responded') && (
-                      <div className="flex gap-2 mt-4">
-                        <button
-                          onClick={() => handleAcceptProposal(proposal.id)}
-                          className="flex-1 btn-primary text-sm flex items-center justify-center gap-1.5 min-h-[44px]"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                          Aceitar
-                        </button>
-                        <button
-                          onClick={() => handleDeclineProposal(proposal.id)}
-                          className="flex-1 px-4 py-2 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-300 text-sm font-medium rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center justify-center gap-1.5 min-h-[44px]"
-                        >
-                          <XCircle className="w-4 h-4" />
-                          Recusar
-                        </button>
-                      </div>
-                    )}
-                </div>
-              ))}
-            </div>
-          )}
-        </motion.div>
       </div>
 
       {/* Confirm Modal */}
