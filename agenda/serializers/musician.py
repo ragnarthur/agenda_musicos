@@ -4,8 +4,8 @@ from rest_framework import serializers
 
 from ..models import Instrument, Musician
 from ..validators import sanitize_string
-from .utils import normalize_genre_value
 from .user import UserSerializer
+from .utils import normalize_genre_value
 
 
 class MusicianSerializer(serializers.ModelSerializer):
