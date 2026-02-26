@@ -57,10 +57,16 @@ class MusicianListByCityTest(APITestCase):
     """GET /api/musicians/public-by-city/?city=&state="""
 
     def setUp(self):
-        self.bh1 = _make_musician("musico_bh_1", city="Belo Horizonte", state="MG", instrument="guitar")
-        self.bh2 = _make_musician("musico_bh_2", city="Belo Horizonte", state="MG", instrument="drums")
+        self.bh1 = _make_musician(
+            "musico_bh_1", city="Belo Horizonte", state="MG", instrument="guitar"
+        )
+        self.bh2 = _make_musician(
+            "musico_bh_2", city="Belo Horizonte", state="MG", instrument="drums"
+        )
         self.sp1 = _make_musician("musico_sp_1", city="São Paulo", state="SP", instrument="guitar")
-        self.bh_inativo = _make_musician("musico_bh_inativo", city="Belo Horizonte", state="MG", is_active=False)
+        self.bh_inativo = _make_musician(
+            "musico_bh_inativo", city="Belo Horizonte", state="MG", is_active=False
+        )
 
     def test_list_by_city_returns_only_active(self):
         resp = self.client.get("/api/musicians/public-by-city/?city=Belo Horizonte&state=MG")
