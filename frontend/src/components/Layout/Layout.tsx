@@ -3,7 +3,6 @@ import React, { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import BottomNav from './BottomNav';
-import AnimatedBackground from './AnimatedBackground';
 import AppVersionMessage from '../common/AppVersionMessage';
 
 interface LayoutProps {
@@ -47,10 +46,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, [location.pathname, location.search]);
 
   return (
-    <div className="relative min-h-[100svh] bg-gradient-to-b from-slate-100 via-slate-50 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      {/* Aqui eu deixo o fundo estático pra economizar GPU no mobile, mas sem perder identidade */}
-      {/* As partículas ficam só nas telas-chave (login/landing/cadastro). */}
-      <AnimatedBackground enableBlueWaves enableParticles={false} />
+    <div className="relative min-h-[100svh]">
+      {/* Musician background: warm stage lighting (key / fill / back) */}
+      <div className="musician-bg" aria-hidden="true">
+        <div className="musician-light-key" />
+        <div className="musician-light-fill" />
+        <div className="musician-light-back" />
+      </div>
+
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary-600 focus:text-white focus:rounded-lg focus:shadow-lg"
