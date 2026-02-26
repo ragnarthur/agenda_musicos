@@ -1920,3 +1920,108 @@
     @apply hover:scale-100 hover:translate-y-0;
   }
 }
+
+/* ── Contractor Background System ────────────────────────────────────────── */
+
+.contractor-bg {
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  overflow: hidden;
+  contain: layout style paint;
+}
+
+.dark .contractor-bg {
+  background: linear-gradient(160deg, #080c1a 0%, #0d1225 55%, #0a0f1e 100%);
+}
+
+/* Dot grid — fades toward bottom via mask */
+.contractor-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(99, 102, 241, 0.18) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 100%);
+}
+
+.dark .contractor-grid {
+  background-image: radial-gradient(circle, rgba(99, 102, 241, 0.28) 1px, transparent 1px);
+}
+
+/* Primary glow — spotlight upper-left */
+.contractor-glow {
+  position: absolute;
+  top: -15%;
+  left: -10%;
+  width: 65%;
+  height: 65%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 40% 40%,
+    rgba(99, 102, 241, 0.22) 0%,
+    rgba(139, 92, 246, 0.12) 40%,
+    transparent 70%
+  );
+  filter: blur(48px);
+  animation: contractorGlowBreathe 9s ease-in-out infinite;
+  transform-origin: 40% 40%;
+}
+
+.dark .contractor-glow {
+  background: radial-gradient(
+    circle at 40% 40%,
+    rgba(99, 102, 241, 0.45) 0%,
+    rgba(139, 92, 246, 0.25) 40%,
+    transparent 70%
+  );
+}
+
+/* Secondary glow — subtle accent lower-right */
+.contractor-glow-2 {
+  position: absolute;
+  bottom: -10%;
+  right: -8%;
+  width: 45%;
+  height: 45%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 60% 60%,
+    rgba(6, 182, 212, 0.10) 0%,
+    transparent 65%
+  );
+  filter: blur(60px);
+  animation: contractorGlowBreathe 12s ease-in-out infinite reverse;
+}
+
+.dark .contractor-glow-2 {
+  background: radial-gradient(
+    circle at 60% 60%,
+    rgba(6, 182, 212, 0.20) 0%,
+    transparent 65%
+  );
+}
+
+@keyframes contractorGlowBreathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.12); opacity: 0.75; }
+}
+
+@media (max-width: 768px) {
+  .contractor-glow {
+    width: 90%;
+    height: 50%;
+    filter: blur(36px);
+  }
+
+  .contractor-glow-2 {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contractor-glow,
+  .contractor-glow-2 {
+    animation: none;
+  }
+}
