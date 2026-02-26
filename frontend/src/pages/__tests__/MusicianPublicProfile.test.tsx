@@ -92,7 +92,7 @@ describe('MusicianPublicProfile', () => {
     ).toBeInTheDocument();
   });
 
-  it('redireciona para cadastro de contratante quando não autenticada', async () => {
+  it('redireciona para login de contratante quando não autenticada', async () => {
     getPublicProfileMock.mockResolvedValue(mockMusician);
     listSponsorsMock.mockResolvedValue([]);
 
@@ -101,6 +101,6 @@ describe('MusicianPublicProfile', () => {
     const button = await screen.findByRole('button', { name: 'Solicitar Orçamento' });
     fireEvent.click(button);
 
-    expect(navigateMock).toHaveBeenCalledWith('/contratante/cadastro');
+    expect(navigateMock).toHaveBeenCalledWith('/contratante/login');
   });
 });

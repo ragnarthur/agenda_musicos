@@ -187,8 +187,9 @@ const MusicianPublicProfile: React.FC = () => {
     if (isCompanyAuth) {
       setShowContactModal(true);
     } else {
-      // Redirect to contractor registration
-      navigate('/contratante/cadastro');
+      // Salva rota atual para retornar após autenticar como contratante.
+      sessionStorage.setItem('returnTo', window.location.pathname + window.location.search);
+      navigate('/contratante/login');
     }
   };
 

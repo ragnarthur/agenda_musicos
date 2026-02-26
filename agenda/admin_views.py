@@ -274,10 +274,10 @@ def get_quote_request_audit(request, request_id):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated, IsAdminUser])
 def admin_cancel_booking(request, request_id):
-    """Admin cancela uma reserva"""
+    """Admin cancela uma reserva a partir do ID do pedido."""
     from .models import Booking
 
-    booking = get_object_or_404(Booking, id=request_id)
+    booking = get_object_or_404(Booking, request_id=request_id)
     reason = request.data.get("admin_reason", "")
 
     if booking.status in ["completed", "cancelled"]:
@@ -287,7 +287,8 @@ def admin_cancel_booking(request, request_id):
         )
 
     booking.status = "cancelled"
-    booking.save(update_fields=["status"])
+    booking.cancel_reason = reason
+    booking.save(update_fields=["status", "cancel_reason"])
 
     booking.request.status = "cancelled"
     booking.request.save(update_fields=["status", "updated_at"])

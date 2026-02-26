@@ -57,6 +57,11 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
 
         if (!hasActiveSession && !rememberMe) {
           // Navegador foi fechado e reaberto sem "Permanecer conectado" - força novo login
+          try {
+            await contractorService.logout();
+          } catch {
+            // Ignora erro de logout se não houver sessão/cookies válidos.
+          }
           if (isMounted) {
             setOrganization(null);
             clearStoredAccessToken();
@@ -166,6 +171,10 @@ export const CompanyAuthProvider: React.FC<CompanyAuthProviderProps> = ({ childr
         }
       });
     }
+
+    void contractorService.logout().catch(error => {
+      console.warn('Erro ao finalizar sessão no backend:', error);
+    });
 
     // Limpar sessionStorage e preferência de "Permanecer conectado"
     sessionStorage.removeItem(SESSION_KEY);

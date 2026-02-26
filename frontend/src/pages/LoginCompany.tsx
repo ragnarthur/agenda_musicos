@@ -16,6 +16,18 @@ interface LoginForm {
   password: string;
 }
 
+const CONTRACTOR_DEFAULT_ROUTE = '/contratante/dashboard';
+
+const consumeReturnToRoute = (): string => {
+  const returnTo = sessionStorage.getItem('returnTo');
+  sessionStorage.removeItem('returnTo');
+
+  if (!returnTo) return CONTRACTOR_DEFAULT_ROUTE;
+  if (!returnTo.startsWith('/')) return CONTRACTOR_DEFAULT_ROUTE;
+  if (returnTo.startsWith('/admin')) return CONTRACTOR_DEFAULT_ROUTE;
+  return returnTo;
+};
+
 export default function LoginCompany() {
   const navigate = useNavigate();
   const { login, setSession } = useCompanyAuth();
@@ -35,7 +47,7 @@ export default function LoginCompany() {
     try {
       await login(data.email, data.password, rememberMe);
       toast.success('Login realizado com sucesso!');
-      navigate('/contratante/dashboard');
+      navigate(consumeReturnToRoute(), { replace: true });
     } catch (error: unknown) {
       const err = error as { response?: { data?: { detail?: string } } };
       toast.error(err.response?.data?.detail || 'Credenciais inválidas');
@@ -63,7 +75,7 @@ export default function LoginCompany() {
             rememberMe
           );
           toast.success('Login realizado!');
-          navigate('/contratante/dashboard');
+          navigate(consumeReturnToRoute(), { replace: true });
         } else {
           toast.error('Esta conta não é de contratante');
         }

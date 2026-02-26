@@ -1171,8 +1171,8 @@ def cancel_quote_request(request, request_id):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def cancel_booking(request, request_id):
-    """Cancela uma reserva (contratante ou músico)"""
-    booking = get_object_or_404(Booking, id=request_id)
+    """Cancela uma reserva (contratante ou músico) a partir do ID do pedido."""
+    booking = get_object_or_404(Booking, request_id=request_id)
     quote_request = booking.request
 
     is_contractor = (

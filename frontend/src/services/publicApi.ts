@@ -583,6 +583,12 @@ export const contractorService = {
     return response.data;
   },
 
+  // Logout de contratante (limpa cookies HttpOnly no backend)
+  logout: async (): Promise<{ detail: string }> => {
+    const response = await api.post('/token/logout/');
+    return response.data;
+  },
+
   // Dashboard
   getDashboard: async (): Promise<ContractorDashboard> => {
     const response = await api.get('/contractor/dashboard/');
