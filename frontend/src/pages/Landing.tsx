@@ -63,13 +63,13 @@ const TICKER_CITIES = [
 const OwlMascotLazy = lazy(() => import('../components/ui/OwlMascot'));
 
 const MascotFallback: React.FC = () => (
-  <div className="h-48 w-48 sm:h-56 sm:w-56 rounded-3xl border border-white/15 bg-white/5 backdrop-blur-sm flex items-center justify-center shadow-xl shadow-slate-900/30">
+  <div className="h-52 w-52 sm:h-60 sm:w-60 rounded-3xl border border-white/15 bg-white/5 backdrop-blur-sm flex items-center justify-center shadow-xl shadow-slate-900/30">
     <img
       src="/icon-192.png"
       alt="GigFlow"
       width={140}
       height={140}
-      className="h-24 w-24 sm:h-28 sm:w-28 object-contain"
+      className="h-28 w-28 sm:h-32 sm:w-32 object-contain"
       loading="eager"
       decoding="async"
       fetchPriority="high"
@@ -404,9 +404,9 @@ const Landing: React.FC = () => {
           >
             {showAnimatedMascot ? (
               <Suspense fallback={<MascotFallback />}>
-                <div className="h-56 w-56 sm:h-64 sm:w-64 md:h-72 md:w-72">
+                <div className="h-60 w-60 sm:h-[17rem] sm:w-[17rem] md:h-[19rem] md:w-[19rem]">
                   <OwlMascotLazy
-                    className="h-56 w-56 sm:h-64 sm:w-64 md:h-72 md:w-72"
+                    className="h-60 w-60 sm:h-[17rem] sm:w-[17rem] md:h-[19rem] md:w-[19rem]"
                     autoplay={false}
                   />
                 </div>
@@ -425,7 +425,7 @@ const Landing: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <motion.h1
-              className="relative z-20 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white pb-1 md:pb-2 leading-tight logo-animated"
+              className="relative z-20 overflow-visible text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white pb-2 md:pb-3 leading-[1.12] logo-animated"
               initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
               animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
               transition={{ duration: 0.8, delay: 0.2 }}

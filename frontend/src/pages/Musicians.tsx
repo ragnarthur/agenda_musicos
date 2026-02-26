@@ -279,7 +279,7 @@ const Musicians: React.FC = () => {
             />
 
             <div className="space-y-1.5">
-              <p className="text-xs font-medium text-gray-600">Instrumentos</p>
+              <p className="text-xs font-medium text-gray-600 dark:text-slate-300">Instrumentos</p>
               <div className="overflow-x-auto pb-1 -mx-1 px-1">
                 <div className="flex items-center gap-2 min-w-max">
                   {INSTRUMENT_PILLS.map(option => {
@@ -291,8 +291,8 @@ const Musicians: React.FC = () => {
                         onClick={() => handleInstrumentSelect(option.key)}
                         className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all whitespace-nowrap ${
                           active
-                            ? 'border-indigo-300 bg-indigo-500/20 text-indigo-100 shadow-[0_0_22px_rgba(99,102,241,0.3)]'
-                            : 'border-white/15 bg-white/5 text-slate-300 hover:border-indigo-300/50 hover:text-indigo-100'
+                            ? 'border-sky-300/90 bg-sky-50 text-sky-900 shadow-[0_8px_22px_rgba(14,116,144,0.18)] dark:border-indigo-300 dark:bg-indigo-500/20 dark:text-indigo-100 dark:shadow-[0_0_22px_rgba(99,102,241,0.3)]'
+                            : 'border-slate-300 bg-white/90 text-slate-700 hover:border-sky-300 hover:bg-sky-50 hover:text-sky-800 dark:border-white/15 dark:bg-white/5 dark:text-slate-300 dark:hover:border-indigo-300/50 dark:hover:text-indigo-100'
                         }`}
                       >
                         {option.key === 'all' ? (

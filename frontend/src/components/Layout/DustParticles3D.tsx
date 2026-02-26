@@ -14,6 +14,7 @@ type Particle = {
 const DustParticles3D: React.FC = memo(() => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const isLowPower = useLowPowerMode();
+  const isDarkThemeRef = useRef(true);
 
   useEffect(() => {
     if (isLowPower) return undefined;
@@ -32,6 +33,18 @@ const DustParticles3D: React.FC = memo(() => {
     let isVisible = !document.hidden;
     const particles: Particle[] = [];
     const MAX_DPR = 1.5;
+    const rootElement = document.documentElement;
+
+    const syncTheme = () => {
+      isDarkThemeRef.current = rootElement.classList.contains('dark');
+    };
+
+    syncTheme();
+
+    const themeObserver = new MutationObserver(() => {
+      syncTheme();
+    });
+    themeObserver.observe(rootElement, { attributes: true, attributeFilter: ['class'] });
 
     const resetArea = () => {
       width = window.innerWidth;
@@ -50,15 +63,15 @@ const DustParticles3D: React.FC = memo(() => {
       resetArea();
       particles.length = 0;
 
-      // Mobile: partículas menores e mais rápidas
+      // Mobile: partículas visíveis, ainda leves
       if (isSmallScreen) {
-        const featherCount = 8;
+        const featherCount = 14;
         for (let i = 0; i < featherCount; i += 1) {
           particles.push({
             x: Math.random() * width,
             y: Math.random() * height,
             z: 0.3,
-            size: 0.6,
+            size: 0.75,
             speed: 8,
             sway: 14,
             phase: Math.random() * Math.PI * 2,
@@ -67,11 +80,11 @@ const DustParticles3D: React.FC = memo(() => {
         return;
       }
 
-      // Desktop: sistema completo de partículas (otimizado para 25 partículas)
+      // Desktop: densidade maior para melhorar leitura visual em light/dark
       const density = {
-        min: 20,
-        max: 25,
-        factor: 0.00002,
+        min: 30,
+        max: 42,
+        factor: 0.000028,
       };
       const count = Math.min(
         density.max,
@@ -84,7 +97,7 @@ const DustParticles3D: React.FC = memo(() => {
           x: Math.random() * width,
           y: Math.random() * height,
           z: depth,
-          size: 0.5 + depth * 0.7,
+          size: 0.6 + depth * 0.9,
           speed: 12 + depth * 24,
           sway: 18 + depth * 28,
           phase: Math.random() * Math.PI * 2,
@@ -130,10 +143,11 @@ const DustParticles3D: React.FC = memo(() => {
 
       const delta = isSmallScreen ? 0.025 : Math.min(0.04, (time - lastTime) / 1000);
       lastTime = time;
+      const isDarkTheme = isDarkThemeRef.current;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, width, height);
-      ctx.globalCompositeOperation = isSmallScreen ? 'source-over' : 'lighter';
+      ctx.globalCompositeOperation = isDarkTheme && !isSmallScreen ? 'lighter' : 'source-over';
 
       particles.forEach(particle => {
         if (isSmallScreen) {
@@ -154,9 +168,9 @@ const DustParticles3D: React.FC = memo(() => {
           if (particle.y > height + margin) particle.y = -margin;
 
           // Ponto menor e brilhante
-          ctx.shadowBlur = 4;
-          ctx.shadowColor = 'rgba(200, 220, 255, 0.35)';
-          ctx.fillStyle = 'rgba(220, 235, 255, 0.45)';
+          ctx.shadowBlur = isDarkTheme ? 5 : 6;
+          ctx.shadowColor = isDarkTheme ? 'rgba(200, 220, 255, 0.42)' : 'rgba(14, 116, 144, 0.34)';
+          ctx.fillStyle = isDarkTheme ? 'rgba(220, 235, 255, 0.52)' : 'rgba(37, 99, 235, 0.4)';
           ctx.beginPath();
           ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
           ctx.fill();
@@ -185,11 +199,16 @@ const DustParticles3D: React.FC = memo(() => {
           const depth = particle.z;
           const scale = 0.65 + depth * 0.7;
           const size = particle.size * scale;
-          const alpha = 0.25 + depth * 0.35;
+          const darkAlpha = 0.28 + depth * 0.38;
+          const lightAlpha = 0.24 + depth * 0.32;
 
-          ctx.shadowBlur = 12 + depth * 20;
-          ctx.shadowColor = `rgba(255, 255, 255, ${alpha * 1.1})`;
-          ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+          ctx.shadowBlur = 14 + depth * 22;
+          ctx.shadowColor = isDarkTheme
+            ? `rgba(255, 255, 255, ${darkAlpha * 1.1})`
+            : `rgba(14, 116, 144, ${lightAlpha * 1.18})`;
+          ctx.fillStyle = isDarkTheme
+            ? `rgba(255, 255, 255, ${darkAlpha})`
+            : `rgba(37, 99, 235, ${lightAlpha})`;
           ctx.beginPath();
           ctx.arc(particle.x, particle.y, size, 0, Math.PI * 2);
           ctx.fill();
@@ -208,6 +227,7 @@ const DustParticles3D: React.FC = memo(() => {
       stopAnimation();
       window.removeEventListener('resize', handleResize);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      themeObserver.disconnect();
     };
   }, [isLowPower]);
 

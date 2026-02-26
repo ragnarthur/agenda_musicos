@@ -158,10 +158,19 @@ export default function OurMusicians() {
   };
 
   return (
-    <div className="min-h-[100svh] bg-[radial-gradient(circle_at_20%_0%,rgba(59,130,246,0.2)_0,rgba(2,6,23,0)_35%),radial-gradient(circle_at_80%_0%,rgba(56,189,248,0.16)_0,rgba(2,6,23,0)_42%),linear-gradient(180deg,#020617_0%,#0b1328_55%,#111c35_100%)]">
+    <div className="relative min-h-[100svh] overflow-x-clip bg-[#040816]">
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_-20%,rgba(45,212,191,0.2)_0%,rgba(4,8,22,0)_55%),radial-gradient(90%_65%_at_100%_10%,rgba(56,189,248,0.14)_0%,rgba(4,8,22,0)_60%),radial-gradient(90%_65%_at_0%_15%,rgba(59,130,246,0.14)_0%,rgba(4,8,22,0)_62%),linear-gradient(180deg,#030712_0%,#071226_44%,#0a1d38_100%)]" />
+        <div className="absolute -top-36 left-1/2 h-[28rem] w-[78rem] -translate-x-1/2 rounded-full bg-cyan-300/10 blur-3xl" />
+        <div className="absolute top-20 -left-32 h-80 w-80 rounded-full bg-blue-400/20 blur-3xl" />
+        <div className="absolute top-24 -right-40 h-[26rem] w-[26rem] rounded-full bg-sky-300/15 blur-3xl" />
+        <div className="absolute inset-0 opacity-[0.17] [background-image:linear-gradient(rgba(148,163,184,0.18)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.14)_1px,transparent_1px)] [background-size:96px_96px] [mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.75),transparent_75%)]" />
+      </div>
+
       {/* Hero Section */}
-      <div className="relative overflow-hidden border-b border-white/10">
-        <div className="pointer-events-none absolute inset-0 opacity-20 [background:linear-gradient(90deg,transparent_0,transparent_49%,rgba(148,163,184,.2)_49%,rgba(148,163,184,.2)_51%,transparent_51%,transparent_100%),linear-gradient(transparent_0,transparent_49%,rgba(148,163,184,.2)_49%,rgba(148,163,184,.2)_51%,transparent_51%,transparent_100%)] [background-size:40px_40px]" />
+      <div className="relative z-10 overflow-hidden border-b border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/50 to-transparent" />
+        <div className="pointer-events-none absolute -bottom-32 left-1/2 h-64 w-[70rem] -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
           <div className="flex items-center justify-between gap-3 mb-10">
             <Link
@@ -214,7 +223,7 @@ export default function OurMusicians() {
       </div>
 
       {/* Filtros */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 shadow-2xl shadow-black/30">
           <div className="flex items-center justify-between gap-3 mb-4">
             <button
@@ -232,7 +241,7 @@ export default function OurMusicians() {
             {activeFilters.length > 0 && (
               <button
                 onClick={clearAllFilters}
-                className="inline-flex items-center gap-1 rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-sm text-slate-100 hover:bg-white/10 transition-colors"
+                className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white/90 px-3 py-1.5 text-sm text-slate-700 hover:border-sky-300 hover:bg-sky-50 hover:text-sky-800 transition-colors dark:border-white/20 dark:bg-white/5 dark:text-slate-100 dark:hover:bg-white/10"
               >
                 <X className="w-4 h-4" />
                 Limpar tudo
@@ -327,7 +336,7 @@ export default function OurMusicians() {
                 <button
                   key={filter.key}
                   onClick={() => removeFilter(filter.key)}
-                  className="inline-flex items-center gap-1 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-3 py-1 text-xs font-medium text-cyan-100 hover:bg-cyan-400/20 transition-colors"
+                  className="inline-flex items-center gap-1 rounded-full border border-sky-300/90 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-900 shadow-[0_8px_22px_rgba(14,116,144,0.18)] hover:border-sky-400 hover:bg-sky-100 transition-colors dark:border-cyan-300/30 dark:bg-cyan-400/10 dark:text-cyan-100 dark:shadow-none dark:hover:bg-cyan-400/20"
                 >
                   <span>
                     {filter.label}: {filter.value}
@@ -348,7 +357,7 @@ export default function OurMusicians() {
       </div>
 
       {/* Lista de músicos */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {Array.from({ length: 8 }).map((_, index) => (

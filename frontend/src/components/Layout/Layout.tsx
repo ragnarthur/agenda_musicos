@@ -49,9 +49,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className="relative min-h-[100svh]">
       {/* Musician background: warm stage lighting (key / fill / back) */}
       <div className="musician-bg" aria-hidden="true">
+        <div className="musician-grid" />
         <div className="musician-light-key" />
         <div className="musician-light-fill" />
         <div className="musician-light-back" />
+        <div className="musician-vignette" />
       </div>
 
       <a
