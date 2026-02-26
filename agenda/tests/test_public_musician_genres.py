@@ -1,5 +1,6 @@
 # agenda/tests/test_public_musician_genres.py
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -8,6 +9,7 @@ from agenda.models import Musician
 
 class PublicMusicianGenresTest(APITestCase):
     def setUp(self):
+        cache.clear()
         u1 = User.objects.create_user(username="m1", email="m1@test.com", password="senha12345")
         u2 = User.objects.create_user(username="m2", email="m2@test.com", password="senha12345")
         self.m1 = Musician.objects.create(

@@ -668,8 +668,8 @@ class ContractorTokenObtainPairView(CookieTokenMixin, APIView):
 
         if not hasattr(user, "contractor_profile"):
             return Response(
-                {"detail": "Esta conta não está associada a um contratante."},
-                status=status.HTTP_403_FORBIDDEN,
+                {"detail": "Credenciais inválidas."},
+                status=status.HTTP_401_UNAUTHORIZED,
             )
 
         contractor = user.contractor_profile
