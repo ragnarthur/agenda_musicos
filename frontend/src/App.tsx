@@ -52,7 +52,7 @@ const Approvals = lazy(() => import('./pages/Approvals'));
 const Musicians = lazy(() => import('./pages/Musicians'));
 const MusicianProfile = lazy(() => import('./pages/MusicianProfile'));
 const LeaderAvailability = lazy(() => import('./pages/LeaderAvailability'));
-const Marketplace = lazy(() => import('./pages/Marketplace'));
+const Marketplace = lazy(() => import('./pages/marketplace/Marketplace'));
 const PremiumPortalPage = lazy(() => import('./pages/PremiumPortalPage'));
 const Connections = lazy(() => import('./pages/Connections'));
 const RegisterInvite = lazy(() => import('./pages/RegisterInvite'));
