@@ -197,8 +197,16 @@ export interface MusicianPublic {
   full_name: string;
   instrument: string;
   instruments: string[];
+  artist_type: 'solo' | 'dupla' | 'banda';
+  stage_name?: string | null;
   musical_genres: string[];
   bio: string | null;
+  portfolio_videos?: Array<{
+    url: string;
+    provider: 'youtube' | 'vimeo';
+    video_id: string;
+    embed_url: string;
+  }>;
   city: string | null;
   state: string | null;
   avatar_url: string | null;

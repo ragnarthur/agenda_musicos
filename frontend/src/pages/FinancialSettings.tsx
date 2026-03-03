@@ -38,6 +38,7 @@ const DEFAULT_EQUIPMENTS: EquipmentRow[] = [
   { name: 'Mesa de som', price: '' },
   { name: 'Microfones', price: '' },
 ];
+const MAX_PORTFOLIO_VIDEOS = 3;
 
 const parseDecimal = (value: string): number | null => {
   if (!value) return null;
@@ -96,6 +97,9 @@ const FinancialSettings: React.FC = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [bio, setBio] = useState('');
+  const [portfolioVideoUrls, setPortfolioVideoUrls] = useState<string[]>(
+    Array(MAX_PORTFOLIO_VIDEOS).fill('')
+  );
   const [baseFee, setBaseFee] = useState('');
   const [travelFee, setTravelFee] = useState('');
   const [equipmentRows, setEquipmentRows] = useState<EquipmentRow[]>(DEFAULT_EQUIPMENTS);
@@ -132,6 +136,15 @@ const FinancialSettings: React.FC = () => {
     setSelectedInstruments(normalizedList);
     setPrimaryInstrument(mainInstrument);
     setSelectedGenres(musician.musical_genres || []);
+
+    const urls = (musician.portfolio_videos || [])
+      .map(video => video?.url || '')
+      .filter(url => !!url)
+      .slice(0, MAX_PORTFOLIO_VIDEOS);
+    const paddedUrls = Array(MAX_PORTFOLIO_VIDEOS)
+      .fill('')
+      .map((_, idx) => urls[idx] || '');
+    setPortfolioVideoUrls(paddedUrls);
   }, []);
 
   const loadProfile = useCallback(async () => {
@@ -213,6 +226,10 @@ const FinancialSettings: React.FC = () => {
     return match?.display_name || formatInstrumentLabel(instrumentName);
   };
 
+  const handlePortfolioVideoChange = (index: number, value: string) => {
+    setPortfolioVideoUrls(prev => prev.map((url, idx) => (idx === index ? value : url)));
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setSaving(true);
@@ -234,6 +251,7 @@ const FinancialSettings: React.FC = () => {
       first_name: normalizedFirstName,
       last_name: normalizedLastName,
       bio: sanitizeOptionalText(bio, 350) ?? '',
+      portfolio_videos: portfolioVideoUrls.map(url => url.trim()).filter(Boolean),
       base_fee: parseDecimal(baseFee),
       travel_fee_per_km: parseDecimal(travelFee),
       equipment_items: equipmentRows
@@ -383,6 +401,44 @@ const FinancialSettings: React.FC = () => {
                 className="w-full rounded-lg bg-white/85 border border-slate-200 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/30 text-slate-900 placeholder:text-slate-400 px-4 py-3 resize-none dark:bg-slate-900/50 dark:border-slate-700 dark:focus:border-emerald-400 dark:text-slate-100 dark:placeholder:text-slate-500"
               />
               <p className="text-xs text-subtle mt-1">{bio.length}/350 caracteres</p>
+            </div>
+          </div>
+
+          {/* Vídeos de portfólio */}
+          <div className="surface-card rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <FileText className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                  Vídeos do portfólio
+                </h2>
+                <p className="text-muted text-sm">
+                  Adicione até 3 links do YouTube/Vimeo. O primeiro aparece em destaque no perfil.
+                </p>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {portfolioVideoUrls.map((url, idx) => (
+                <div key={idx}>
+                  <label className="text-xs font-semibold text-slate-700 mb-2 block dark:text-slate-300">
+                    Link do vídeo {idx + 1}
+                  </label>
+                  <input
+                    type="url"
+                    value={url}
+                    onChange={event => handlePortfolioVideoChange(idx, event.target.value)}
+                    className="w-full rounded-lg bg-white/85 border border-slate-200 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/30 text-slate-900 placeholder:text-slate-400 px-4 py-3 dark:bg-slate-900/50 dark:border-slate-700 dark:focus:border-emerald-400 dark:text-slate-100 dark:placeholder:text-slate-500"
+                    placeholder={
+                      idx === 0
+                        ? 'https://www.youtube.com/watch?v=...'
+                        : 'https://vimeo.com/...'
+                    }
+                  />
+                </div>
+              ))}
+              <p className="text-xs text-subtle">
+                Links aceitos: YouTube e Vimeo. Deixe em branco os campos que não usar.
+              </p>
             </div>
           </div>
 

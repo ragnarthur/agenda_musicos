@@ -306,6 +306,11 @@ class Musician(models.Model):
     equipment_items = models.JSONField(
         default=list, blank=True, help_text="Lista de equipamentos/serviços com valores"
     )
+    portfolio_videos = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Vídeos de portfólio (YouTube/Vimeo) para exibição no perfil",
+    )
     # Gêneros musicais
     musical_genres = models.JSONField(
         default=list,

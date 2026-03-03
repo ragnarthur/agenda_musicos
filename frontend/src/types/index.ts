@@ -16,6 +16,13 @@ export interface EquipmentItem {
   price: number | string | null;
 }
 
+export interface PortfolioVideo {
+  url: string;
+  provider: 'youtube' | 'vimeo';
+  video_id: string;
+  embed_url: string;
+}
+
 export interface Musician {
   id: number;
   user: User;
@@ -36,6 +43,7 @@ export interface Musician {
   base_fee?: number | string | null;
   travel_fee_per_km?: number | string | null;
   equipment_items?: EquipmentItem[];
+  portfolio_videos?: PortfolioVideo[];
   musical_genres?: string[];
   is_active: boolean;
   is_premium?: boolean;
@@ -74,6 +82,7 @@ export interface MusicianUpdatePayload {
   base_fee?: number | string | null;
   travel_fee_per_km?: number | string | null;
   equipment_items?: EquipmentItem[];
+  portfolio_videos?: string[];
   musical_genres?: string[];
 }
 

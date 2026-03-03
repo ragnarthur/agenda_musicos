@@ -3,6 +3,7 @@
 ViewSet para gerenciamento de músicos.
 """
 
+from django.core.cache import cache
 from django.db.models import Case, Count, IntegerField, Q, When
 from django.utils import timezone
 from rest_framework import status, viewsets
@@ -106,6 +107,7 @@ class MusicianViewSet(viewsets.ReadOnlyModelViewSet):
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()
+            cache.delete(f"musician_public_{musician.id}")
             output = MusicianSerializer(musician, context={"request": request})
             return Response(output.data)
 

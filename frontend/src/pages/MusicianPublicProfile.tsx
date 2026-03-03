@@ -1,6 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Star, MapPin, Music, Building2, UserPlus, X, FileText } from 'lucide-react';
+import {
+  ArrowLeft,
+  Star,
+  MapPin,
+  Music,
+  Building2,
+  UserPlus,
+  X,
+  FileText,
+  Video,
+} from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import Loading from '../components/common/Loading';
@@ -417,6 +427,41 @@ const MusicianPublicProfile: React.FC = () => {
                 <div className="mt-6 p-4 bg-white/5 rounded-xl">
                   <h2 className="text-lg font-semibold text-white mb-2">Sobre</h2>
                   <p className="text-gray-300 whitespace-pre-wrap">{musician.bio}</p>
+                </div>
+              )}
+
+              {musician.portfolio_videos && musician.portfolio_videos.length > 0 && (
+                <div className="mt-6 p-4 bg-white/5 rounded-xl">
+                  <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                    <Video className="h-5 w-5 text-red-400" />
+                    Vídeo de portfólio
+                  </h2>
+                  <div className="aspect-video rounded-xl overflow-hidden border border-white/10">
+                    <iframe
+                      src={musician.portfolio_videos[0].embed_url}
+                      title={`Vídeo de ${musician.full_name}`}
+                      className="w-full h-full"
+                      loading="lazy"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      referrerPolicy="strict-origin-when-cross-origin"
+                      allowFullScreen
+                    />
+                  </div>
+                  {musician.portfolio_videos.length > 1 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {musician.portfolio_videos.slice(1).map(video => (
+                        <a
+                          key={`${video.provider}-${video.video_id}`}
+                          href={video.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs px-3 py-1.5 rounded-full bg-white/10 text-gray-200 border border-white/20"
+                        >
+                          Mais vídeo ({video.provider === 'youtube' ? 'YouTube' : 'Vimeo'})
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 

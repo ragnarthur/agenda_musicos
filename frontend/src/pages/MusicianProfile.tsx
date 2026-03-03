@@ -13,6 +13,7 @@ import {
   Settings,
   UserPlus,
   Disc3,
+  Video,
 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import Skeleton, { SkeletonText } from '../components/common/Skeleton';
@@ -331,6 +332,54 @@ const MusicianProfile: React.FC = () => {
               uploadingCover={uploadingCover}
             />
           </div>
+
+          {(musician.bio || (musician.portfolio_videos && musician.portfolio_videos.length > 0)) && (
+            <div className="space-y-6 mb-6">
+              {musician.bio && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Mini-bio</h2>
+                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                    {musician.bio}
+                  </p>
+                </div>
+              )}
+
+              {musician.portfolio_videos && musician.portfolio_videos.length > 0 && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <Video className="h-5 w-5 text-red-500" />
+                    Vídeo de portfólio
+                  </h2>
+                  <div className="aspect-video rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <iframe
+                      src={musician.portfolio_videos[0].embed_url}
+                      title={`Vídeo de ${musician.full_name}`}
+                      className="w-full h-full"
+                      loading="lazy"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      referrerPolicy="strict-origin-when-cross-origin"
+                      allowFullScreen
+                    />
+                  </div>
+                  {musician.portfolio_videos.length > 1 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {musician.portfolio_videos.slice(1).map(video => (
+                        <a
+                          key={`${video.provider}-${video.video_id}`}
+                          href={video.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs px-3 py-1.5 rounded-full bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700/50"
+                        >
+                          Ver mais vídeo ({video.provider === 'youtube' ? 'YouTube' : 'Vimeo'})
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {isOwnProfile && (
             <ImageCropModal

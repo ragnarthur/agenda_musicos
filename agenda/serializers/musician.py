@@ -1,4 +1,6 @@
+import re
 from decimal import Decimal, InvalidOperation
+from urllib.parse import parse_qs, urlparse
 
 from rest_framework import serializers
 
@@ -6,6 +8,99 @@ from ..models import Instrument, Musician
 from ..validators import sanitize_string
 from .user import UserSerializer
 from .utils import normalize_genre_value
+
+YOUTUBE_VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
+VIMEO_VIDEO_ID_RE = re.compile(r"^\d{6,12}$")
+
+
+def _extract_video_info(url_value):
+    raw_url = sanitize_string(url_value, max_length=500, allow_empty=False)
+    parsed = urlparse(raw_url)
+
+    if parsed.scheme not in {"http", "https"}:
+        raise serializers.ValidationError("URL inválida. Use links YouTube/Vimeo com http(s).")
+
+    host = (parsed.netloc or "").lower().replace("www.", "")
+    path = (parsed.path or "").strip("/")
+    provider = None
+    video_id = None
+
+    if host in {"youtube.com", "m.youtube.com"}:
+        if path == "watch":
+            video_id = parse_qs(parsed.query).get("v", [""])[0]
+        elif path.startswith("shorts/"):
+            video_id = path.split("/", 1)[1]
+        elif path.startswith("embed/"):
+            video_id = path.split("/", 1)[1]
+        provider = "youtube"
+    elif host == "youtu.be":
+        video_id = path.split("/", 1)[0]
+        provider = "youtube"
+    elif host in {"vimeo.com", "player.vimeo.com"}:
+        segments = [segment for segment in path.split("/") if segment]
+        if segments and segments[0] == "video" and len(segments) > 1:
+            video_id = segments[1]
+        elif segments:
+            video_id = segments[0]
+        provider = "vimeo"
+
+    if provider == "youtube":
+        if not YOUTUBE_VIDEO_ID_RE.match(video_id or ""):
+            raise serializers.ValidationError("Link do YouTube inválido.")
+        return {
+            "url": f"https://www.youtube.com/watch?v={video_id}",
+            "provider": "youtube",
+            "video_id": video_id,
+            "embed_url": f"https://www.youtube.com/embed/{video_id}?rel=0",
+        }
+
+    if provider == "vimeo":
+        if not VIMEO_VIDEO_ID_RE.match(video_id or ""):
+            raise serializers.ValidationError("Link do Vimeo inválido.")
+        return {
+            "url": f"https://vimeo.com/{video_id}",
+            "provider": "vimeo",
+            "video_id": video_id,
+            "embed_url": f"https://player.vimeo.com/video/{video_id}",
+        }
+
+    raise serializers.ValidationError("Use apenas links de vídeo do YouTube ou Vimeo.")
+
+
+def _sanitize_portfolio_videos(raw_videos):
+    if raw_videos in [None, ""]:
+        return []
+    if not isinstance(raw_videos, list):
+        raise serializers.ValidationError({"portfolio_videos": "Envie uma lista de vídeos."})
+    if len(raw_videos) > 3:
+        raise serializers.ValidationError({"portfolio_videos": "Máximo de 3 vídeos no portfólio."})
+
+    cleaned = []
+    seen = set()
+    for idx, raw_item in enumerate(raw_videos):
+        try:
+            if isinstance(raw_item, str):
+                video = _extract_video_info(raw_item)
+            elif isinstance(raw_item, dict):
+                video = _extract_video_info(raw_item.get("url"))
+            else:
+                raise serializers.ValidationError("Formato inválido.")
+        except serializers.ValidationError as exc:
+            detail = exc.detail
+            message = detail[0] if isinstance(detail, list) and detail else detail
+            raise serializers.ValidationError(
+                {"portfolio_videos": f"Vídeo #{idx + 1}: {message}"}
+            ) from exc
+
+        dedupe_key = f"{video['provider']}:{video['video_id']}"
+        if dedupe_key in seen:
+            raise serializers.ValidationError(
+                {"portfolio_videos": f"Vídeo #{idx + 1}: link duplicado no portfólio."}
+            )
+        seen.add(dedupe_key)
+        cleaned.append(video)
+
+    return cleaned
 
 
 class MusicianSerializer(serializers.ModelSerializer):
@@ -38,6 +133,7 @@ class MusicianSerializer(serializers.ModelSerializer):
             "base_fee",
             "travel_fee_per_km",
             "equipment_items",
+            "portfolio_videos",
             "public_email",
             "is_active",
             "is_premium",
@@ -102,6 +198,7 @@ class MusicianUpdateSerializer(serializers.ModelSerializer):
             "base_fee",
             "travel_fee_per_km",
             "equipment_items",
+            "portfolio_videos",
             "musical_genres",
         ]
 
@@ -272,6 +369,9 @@ class MusicianUpdateSerializer(serializers.ModelSerializer):
                 if g and isinstance(g, str)
             ]
 
+        if "portfolio_videos" in attrs:
+            attrs["portfolio_videos"] = _sanitize_portfolio_videos(attrs.get("portfolio_videos"))
+
         current_instance = self.instance
         artist_type = attrs.get(
             "artist_type", current_instance.artist_type if current_instance else "solo"
@@ -391,6 +491,7 @@ class MusicianPublicSerializer(serializers.ModelSerializer):
             "average_rating",
             "total_ratings",
             "musical_genres",
+            "portfolio_videos",
         ]
 
     def get_full_name(self, obj):
