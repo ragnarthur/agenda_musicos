@@ -53,7 +53,10 @@ export const handlers = [
   }),
 
   http.patch(`${API_URL}/musicians/me/`, async ({ request }) => {
-    const updatedMusician = { ...mockMusicians[0], ...(await request.json()) };
+    const updatedMusician = {
+      ...mockMusicians[0],
+      ...((await request.json()) as Record<string, unknown>),
+    };
     return HttpResponse.json(updatedMusician);
   }),
 
@@ -166,7 +169,7 @@ export const handlers = [
   }),
 
   http.post(`${API_URL}/events/`, async ({ request }) => {
-    const newEvent = await request.json();
+    const newEvent = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json({
       ...newEvent,
       id: mockEvents.length + 1,
@@ -180,7 +183,7 @@ export const handlers = [
 
   http.put(`${API_URL}/events/:id/`, async ({ params, request }) => {
     const eventId = Number(params.id);
-    const updatedData = await request.json();
+    const updatedData = (await request.json()) as Record<string, unknown>;
     const eventIndex = mockEvents.findIndex(e => e.id === eventId);
 
     if (eventIndex === -1) {
@@ -220,7 +223,10 @@ export const handlers = [
 
   http.post(`${API_URL}/events/:id/set_availability/`, async ({ params, request }) => {
     const eventId = Number(params.id);
-    const { response, notes } = await request.json();
+    const { response, notes } = (await request.json()) as {
+      response: Availability['response'];
+      notes?: string;
+    };
     const event = mockEvents.find(e => e.id === eventId);
 
     if (!event) {
@@ -247,7 +253,7 @@ export const handlers = [
   }),
 
   http.post(`${API_URL}/events/preview_conflicts/`, async ({ request }) => {
-    const { event_date } = await request.json();
+    const { event_date } = (await request.json()) as { event_date: string };
 
     const conflicts = mockEvents.filter(e => {
       if (e.event_date !== event_date) return false;
@@ -292,7 +298,7 @@ export const handlers = [
   }),
 
   http.post(`${API_URL}/instruments/create_custom/`, async ({ request }) => {
-    const { display_name } = await request.json();
+    const { display_name } = (await request.json()) as { display_name: string };
     const newInstrument: Instrument = {
       id: mockInstruments.length + 100,
       name: display_name.toLowerCase().replace(/[^a-z0-9]/g, ''),
@@ -309,7 +315,7 @@ export const handlers = [
   }),
 
   http.post(`${API_URL}/connections/`, async ({ request }) => {
-    const newConnection = await request.json();
+    const newConnection = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json({
       ...newConnection,
       id: mockConnections.length + 1,
@@ -401,7 +407,10 @@ export const handlers = [
 
   http.post(`${API_URL}/marketplace/gigs/:id/apply/`, async ({ params, request }) => {
     const gigId = Number(params.id);
-    const { cover_letter, expected_fee } = await request.json();
+    const { cover_letter, expected_fee } = (await request.json()) as {
+      cover_letter?: string;
+      expected_fee?: string;
+    };
     const gig = mockGigs.find(g => g.id === gigId);
 
     if (!gig) {
@@ -417,13 +426,14 @@ export const handlers = [
       expected_fee,
       status: 'pending',
       created_at: new Date().toISOString(),
+      chat_message_count: 0,
     };
 
     return HttpResponse.json(application);
   }),
 
   http.post(`${API_URL}/marketplace/gigs/`, async ({ request }) => {
-    const newGig = await request.json();
+    const newGig = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json({
       ...newGig,
       id: mockGigs.length + 1,

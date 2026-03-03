@@ -42,7 +42,9 @@ def _sanitize_formation_members(raw_members):
         name = sanitize_string(member.get("name"), max_length=150, allow_empty=False)
         instrument = sanitize_string(member.get("instrument"), max_length=100, allow_empty=False)
         role = sanitize_string(member.get("role"), max_length=80, allow_empty=True)
-        email = sanitize_string(member.get("email"), max_length=150, allow_empty=True, to_lower=True)
+        email = sanitize_string(
+            member.get("email"), max_length=150, allow_empty=True, to_lower=True
+        )
 
         if email:
             try:
@@ -296,7 +298,9 @@ class MusicianRequestSerializer(serializers.ModelSerializer):
         )
         if self.instance is None or has_artist_fields:
             artist_payload = {
-                "artist_type": attrs.get("artist_type", getattr(self.instance, "artist_type", "solo")),
+                "artist_type": attrs.get(
+                    "artist_type", getattr(self.instance, "artist_type", "solo")
+                ),
                 "stage_name": attrs.get("stage_name", getattr(self.instance, "stage_name", "")),
                 "formation_members": attrs.get(
                     "formation_members", getattr(self.instance, "formation_members", [])

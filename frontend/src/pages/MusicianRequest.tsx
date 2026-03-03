@@ -171,11 +171,7 @@ export default function MusicianRequest() {
     });
   };
 
-  const updateFormationMember = (
-    index: number,
-    field: keyof FormationMember,
-    value: string
-  ) => {
+  const updateFormationMember = (index: number, field: keyof FormationMember, value: string) => {
     setFormationMembers(prev =>
       prev.map((member, memberIndex) =>
         memberIndex === index ? { ...member, [field]: value } : member
@@ -733,9 +729,7 @@ export default function MusicianRequest() {
                               <input
                                 type="text"
                                 value={member.name}
-                                onChange={e =>
-                                  updateFormationMember(index, 'name', e.target.value)
-                                }
+                                onChange={e => updateFormationMember(index, 'name', e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white text-sm"
                                 placeholder="Nome do integrante"
                               />
@@ -751,9 +745,7 @@ export default function MusicianRequest() {
                               <input
                                 type="text"
                                 value={member.role}
-                                onChange={e =>
-                                  updateFormationMember(index, 'role', e.target.value)
-                                }
+                                onChange={e => updateFormationMember(index, 'role', e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white text-sm"
                                 placeholder="Função (opcional)"
                               />
