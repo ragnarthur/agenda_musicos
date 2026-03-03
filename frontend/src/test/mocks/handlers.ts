@@ -13,6 +13,9 @@ import {
   mockConnections,
   mockBadges,
   mockGigs,
+  mockMusicianRequestSolo,
+  mockMusicianRequestDupla,
+  mockMusicianRequestBanda,
 } from './data';
 
 const API_URL = 'http://localhost:8000/api';
@@ -445,5 +448,44 @@ export const handlers = [
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     });
+  }),
+
+  // Musician request endpoints (artist_type feature)
+  http.post(`${API_URL}/musician-request/`, async () => {
+    return HttpResponse.json(
+      { id: 999, message: 'Solicitação enviada com sucesso!' },
+      { status: 201 }
+    );
+  }),
+
+  http.get(`${API_URL}/validate-invite-token/`, ({ request }) => {
+    const url = new URL(request.url);
+    const token = url.searchParams.get('token');
+    if (token === 'mock-invite-token-banda') {
+      return HttpResponse.json({
+        valid: true,
+        email: mockMusicianRequestBanda.email,
+        full_name: mockMusicianRequestBanda.full_name,
+        phone: mockMusicianRequestBanda.phone,
+        instrument: mockMusicianRequestBanda.instrument,
+        instruments: mockMusicianRequestBanda.instruments,
+        artist_type: mockMusicianRequestBanda.artist_type,
+        stage_name: mockMusicianRequestBanda.stage_name,
+        formation_members: mockMusicianRequestBanda.formation_members,
+        bio: mockMusicianRequestBanda.bio,
+        city: mockMusicianRequestBanda.city,
+        state: mockMusicianRequestBanda.state,
+        instagram: mockMusicianRequestBanda.instagram,
+      });
+    }
+    return HttpResponse.json({ detail: 'Token inválido' }, { status: 404 });
+  }),
+
+  http.get(`${API_URL}/admin/musician-requests/`, () => {
+    return HttpResponse.json([
+      mockMusicianRequestSolo,
+      mockMusicianRequestDupla,
+      mockMusicianRequestBanda,
+    ]);
   }),
 ];

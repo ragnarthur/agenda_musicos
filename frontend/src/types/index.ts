@@ -22,6 +22,8 @@ export interface Musician {
   full_name: string;
   instrument: 'vocal' | 'guitar' | 'bass' | 'drums' | 'keyboard' | 'percussion' | string;
   instruments?: string[];
+  artist_type?: 'solo' | 'dupla' | 'banda';
+  stage_name?: string | null;
   bio?: string;
   phone?: string;
   instagram?: string;

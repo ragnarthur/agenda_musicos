@@ -12,9 +12,11 @@ Verifica que:
 """
 
 from django.contrib.auth.models import User
+from django.core.cache.backends.locmem import LocMemCache
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
+from rest_framework.throttling import SimpleRateThrottle
 
 from agenda.models import ContactView, ContractorProfile, Musician
 
@@ -179,6 +181,17 @@ class MusicianContactEndpointTest(APITestCase):
 
 class ContractorRegistrationTest(APITestCase):
     """Testa registro de contratante."""
+
+    def setUp(self):
+        # Substitui o cache dos throttles por LocMemCache isolado
+        # (SimpleRateThrottle.cache é capturado no import; @override_settings não funciona)
+        self._original_throttle_cache = SimpleRateThrottle.cache
+        _test_cache = LocMemCache("contractor-reg-test", {})
+        _test_cache.clear()
+        SimpleRateThrottle.cache = _test_cache
+
+    def tearDown(self):
+        SimpleRateThrottle.cache = self._original_throttle_cache
 
     def test_register_contractor_success(self):
         """Registro com dados válidos cria contratante."""

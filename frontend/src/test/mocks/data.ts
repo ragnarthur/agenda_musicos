@@ -8,6 +8,7 @@ import type {
   MusicianBadge,
   MarketplaceGig,
 } from '../../types';
+import type { MusicianRequest } from '../../services/publicApi';
 
 export const mockUser: User = {
   id: 1,
@@ -399,3 +400,90 @@ export const mockGigs: MarketplaceGig[] = [
     updated_at: '2024-01-20T10:00:00Z',
   },
 ];
+
+// ---------------------------------------------------------------------------
+// Mock MusicianRequests (artist_type feature)
+// ---------------------------------------------------------------------------
+
+export const mockMusicianRequestSolo: MusicianRequest = {
+  id: 101,
+  email: 'solo@test.com',
+  full_name: 'Carlos Solo',
+  phone: '11999999901',
+  instrument: 'guitar',
+  instruments: ['guitar'],
+  artist_type: 'solo',
+  stage_name: null,
+  formation_members: [],
+  musical_genres: ['rock'],
+  bio: null,
+  city: 'São Paulo',
+  state: 'SP',
+  instagram: null,
+  status: 'pending',
+  status_display: 'Pendente',
+  admin_notes: null,
+  reviewed_by: null,
+  reviewed_by_name: null,
+  reviewed_at: null,
+  created_at: '2024-03-01T10:00:00Z',
+  updated_at: '2024-03-01T10:00:00Z',
+};
+
+export const mockMusicianRequestDupla: MusicianRequest = {
+  id: 102,
+  email: 'dupla@test.com',
+  full_name: 'Ana Santos',
+  phone: '11999999902',
+  instrument: 'vocal',
+  instruments: ['vocal'],
+  artist_type: 'dupla',
+  stage_name: 'Os Dois',
+  formation_members: [
+    { name: 'Carlos Silva', instrument: 'violão', role: '', email: '' },
+  ],
+  musical_genres: ['mpb'],
+  bio: 'Dupla de MPB',
+  city: 'Rio de Janeiro',
+  state: 'RJ',
+  instagram: '@osdois',
+  status: 'pending',
+  status_display: 'Pendente',
+  admin_notes: null,
+  reviewed_by: null,
+  reviewed_by_name: null,
+  reviewed_at: null,
+  created_at: '2024-03-02T10:00:00Z',
+  updated_at: '2024-03-02T10:00:00Z',
+};
+
+export const mockMusicianRequestBanda: MusicianRequest = {
+  id: 103,
+  email: 'banda@test.com',
+  full_name: 'Pedro Lima',
+  phone: '11999999903',
+  instrument: 'drums',
+  instruments: ['drums'],
+  artist_type: 'banda',
+  stage_name: 'A Banda',
+  formation_members: [
+    { name: 'Lucas Moura', instrument: 'guitarra', role: 'guitarrista', email: 'lucas@banda.com' },
+    { name: 'Mariana Luz', instrument: 'baixo', role: 'baixista', email: '' },
+  ],
+  musical_genres: ['rock', 'blues'],
+  bio: 'Banda de rock',
+  city: 'Belo Horizonte',
+  state: 'MG',
+  instagram: '@abanda',
+  status: 'approved',
+  status_display: 'Aprovado',
+  admin_notes: 'Aprovado pelo admin',
+  reviewed_by: 1,
+  reviewed_by_name: 'Admin User',
+  reviewed_at: '2024-03-03T10:00:00Z',
+  invite_token: 'mock-invite-token-banda',
+  invite_expires_at: '2024-03-10T10:00:00Z',
+  invite_used: false,
+  created_at: '2024-03-02T10:00:00Z',
+  updated_at: '2024-03-03T10:00:00Z',
+};
