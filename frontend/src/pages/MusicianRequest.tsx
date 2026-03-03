@@ -603,7 +603,6 @@ export default function MusicianRequest() {
         <div className="min-h-[100svh] flex items-center justify-center p-4 py-8">
           <div className="w-full max-w-lg lg:max-w-5xl">
             <div className="lg:grid lg:grid-cols-[1fr_1.2fr] lg:gap-10 lg:items-start">
-
               {/* ── Desktop: left branding panel ── */}
               <div className="hidden lg:flex lg:flex-col lg:py-6">
                 <div className="mb-6 flex items-center gap-4">
@@ -702,7 +701,6 @@ export default function MusicianRequest() {
                 </div>
 
                 <div className="rounded-2xl bg-white p-5 shadow-xl dark:bg-gray-800 sm:p-8 lg:p-10">
-
                   {/* ── Stepper (mobile + desktop inside card) ── */}
                   <div className="flex items-center mb-8">
                     {WIZARD_STEPS.map((step, i) => (
@@ -717,11 +715,7 @@ export default function MusicianRequest() {
                                   : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
                             }`}
                           >
-                            {currentStep > step.id ? (
-                              <Check className="w-4 h-4" />
-                            ) : (
-                              step.id
-                            )}
+                            {currentStep > step.id ? <Check className="w-4 h-4" /> : step.id}
                           </div>
                           <span className="mt-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 hidden sm:block whitespace-nowrap">
                             {step.label}
@@ -741,7 +735,6 @@ export default function MusicianRequest() {
                   </div>
 
                   <form onSubmit={handleSubmit(onSubmit)}>
-
                     {/* ══════════════════════════════════════════
                         ETAPA 1 — IDENTIDADE
                     ══════════════════════════════════════════ */}
@@ -886,7 +879,6 @@ export default function MusicianRequest() {
                     ══════════════════════════════════════════ */}
                     {currentStep === 2 && (
                       <div className={`space-y-5 ${stepAnimClass}`}>
-
                         {/* Instrumento Principal */}
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -1032,9 +1024,7 @@ export default function MusicianRequest() {
                           </label>
                           <div
                             className={`flex flex-wrap gap-2 rounded-lg transition-all duration-200 ${
-                              genreError
-                                ? 'ring-2 ring-red-400 p-2 genre-error-shake'
-                                : ''
+                              genreError ? 'ring-2 ring-red-400 p-2 genre-error-shake' : ''
                             }`}
                           >
                             {MUSICAL_GENRES.map(genre => (
@@ -1088,7 +1078,6 @@ export default function MusicianRequest() {
                     ══════════════════════════════════════════ */}
                     {currentStep === 3 && (
                       <div className={`space-y-5 ${stepAnimClass}`}>
-
                         {/* Nome artístico da formação (dupla/banda) */}
                         {artistType !== 'solo' && (
                           <div className="animate-fade-in">
@@ -1198,9 +1187,7 @@ export default function MusicianRequest() {
                             {artistType === 'dupla' && formationMembers.length === 0 && (
                               <button
                                 type="button"
-                                onClick={() =>
-                                  setFormationMembers([createEmptyFormationMember()])
-                                }
+                                onClick={() => setFormationMembers([createEmptyFormationMember()])}
                                 className="w-full rounded-xl border border-dashed border-indigo-300 px-3 py-3 text-sm text-indigo-600 hover:bg-indigo-50 dark:border-indigo-500/50 dark:hover:bg-indigo-500/10 min-h-[44px]"
                               >
                                 Adicionar integrante da dupla
@@ -1317,10 +1304,7 @@ export default function MusicianRequest() {
 
                   <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
                     Já tem uma conta?{' '}
-                    <Link
-                      to="/login"
-                      className="text-indigo-600 hover:text-indigo-700 font-medium"
-                    >
+                    <Link to="/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
                       Faça login
                     </Link>
                   </p>

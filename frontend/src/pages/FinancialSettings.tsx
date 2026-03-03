@@ -429,9 +429,7 @@ const FinancialSettings: React.FC = () => {
                     onChange={event => handlePortfolioVideoChange(idx, event.target.value)}
                     className="w-full rounded-lg bg-white/85 border border-slate-200 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/30 text-slate-900 placeholder:text-slate-400 px-4 py-3 dark:bg-slate-900/50 dark:border-slate-700 dark:focus:border-emerald-400 dark:text-slate-100 dark:placeholder:text-slate-500"
                     placeholder={
-                      idx === 0
-                        ? 'https://www.youtube.com/watch?v=...'
-                        : 'https://vimeo.com/...'
+                      idx === 0 ? 'https://www.youtube.com/watch?v=...' : 'https://vimeo.com/...'
                     }
                   />
                 </div>

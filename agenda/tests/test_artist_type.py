@@ -492,9 +492,7 @@ class MusicianRequestAdminAPITest(APITestCase):
 
     def test_approve_dupla_request(self):
         self.client.force_authenticate(user=self.staff_user)
-        resp = self.client.post(
-            f"/api/admin/musician-requests/{self.dupla_request.id}/approve/"
-        )
+        resp = self.client.post(f"/api/admin/musician-requests/{self.dupla_request.id}/approve/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.dupla_request.refresh_from_db()
         self.assertEqual(self.dupla_request.status, "approved")

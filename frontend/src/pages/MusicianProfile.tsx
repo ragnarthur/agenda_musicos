@@ -333,7 +333,8 @@ const MusicianProfile: React.FC = () => {
             />
           </div>
 
-          {(musician.bio || (musician.portfolio_videos && musician.portfolio_videos.length > 0)) && (
+          {(musician.bio ||
+            (musician.portfolio_videos && musician.portfolio_videos.length > 0)) && (
             <div className="space-y-6 mb-6">
               {musician.bio && (
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-colors duration-200">

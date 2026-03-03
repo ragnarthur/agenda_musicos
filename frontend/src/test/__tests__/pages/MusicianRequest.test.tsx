@@ -25,9 +25,7 @@ async function advanceToStep2() {
   });
   fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
   await waitFor(() =>
-    expect(
-      screen.getByPlaceholderText('Ex: Guitarra, Vocal, Bateria...')
-    ).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Ex: Guitarra, Vocal, Bateria...')).toBeInTheDocument()
   );
 }
 
@@ -57,9 +55,7 @@ async function advanceToStep3(artistType: 'solo' | 'dupla' | 'banda' = 'solo') {
   if (firstGenrePill) fireEvent.click(firstGenrePill);
 
   fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
-  await waitFor(() =>
-    expect(screen.getByPlaceholderText('Sua cidade')).toBeInTheDocument()
-  );
+  await waitFor(() => expect(screen.getByPlaceholderText('Sua cidade')).toBeInTheDocument());
 }
 
 describe('MusicianRequest Page — Wizard', () => {
@@ -136,9 +132,7 @@ describe('MusicianRequest Page — Wizard', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
     await waitFor(() =>
-      expect(
-        screen.getByText(/selecione pelo menos 1 gênero musical/i)
-      ).toBeInTheDocument()
+      expect(screen.getByText(/selecione pelo menos 1 gênero musical/i)).toBeInTheDocument()
     );
   });
 

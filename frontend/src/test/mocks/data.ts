@@ -439,9 +439,7 @@ export const mockMusicianRequestDupla: MusicianRequest = {
   instruments: ['vocal'],
   artist_type: 'dupla',
   stage_name: 'Os Dois',
-  formation_members: [
-    { name: 'Carlos Silva', instrument: 'violão', role: '', email: '' },
-  ],
+  formation_members: [{ name: 'Carlos Silva', instrument: 'violão', role: '', email: '' }],
   musical_genres: ['mpb'],
   bio: 'Dupla de MPB',
   city: 'Rio de Janeiro',
