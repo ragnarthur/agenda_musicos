@@ -564,6 +564,8 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
                     instagram=musician_request.instagram or "",
                     instrument=musician_request.instrument,
                     instruments=instruments,
+                    artist_type=musician_request.artist_type or "solo",
+                    stage_name=musician_request.stage_name or "",
                     bio=musician_request.bio or "",
                     city=musician_request.city,
                     state=musician_request.state,
@@ -582,8 +584,13 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
                     musician.avatar = avatar_file
                     musician.save(update_fields=["avatar"])
 
-                # Cria organização pessoal com nome único
-                base_org_name = f"Org de {username}"
+                # Cria organização pessoal/banda com nome único
+                is_group = musician_request.artist_type in {"dupla", "banda"}
+                base_org_name = (
+                    (musician_request.stage_name or "").strip()
+                    if is_group and (musician_request.stage_name or "").strip()
+                    else f"Org de {username}"
+                )
                 org_name = base_org_name
                 counter = 2
                 while Organization.objects.filter(name=org_name).exists():
@@ -600,6 +607,9 @@ class GoogleRegisterMusicianView(CookieTokenMixin, APIView):
                     organization=org,
                     defaults={"role": "owner", "status": "active"},
                 )
+
+                musician.organization = org
+                musician.save(update_fields=["organization"])
 
                 # Marca convite como usado
                 musician_request.mark_invite_used()

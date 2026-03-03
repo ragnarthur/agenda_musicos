@@ -1,3 +1,5 @@
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.validators import validate_email
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
@@ -11,6 +13,90 @@ from ..models import (
 )
 from ..validators import sanitize_string
 from .utils import normalize_genre_value
+
+ARTIST_TYPES = {"solo", "dupla", "banda"}
+
+
+def _sanitize_artist_type(raw_value):
+    value = sanitize_string(raw_value, max_length=20, allow_empty=False, to_lower=True)
+    if value not in ARTIST_TYPES:
+        raise serializers.ValidationError(
+            {"artist_type": "Tipo de artista inválido. Use solo, dupla ou banda."}
+        )
+    return value
+
+
+def _sanitize_formation_members(raw_members):
+    if not isinstance(raw_members, list):
+        raise serializers.ValidationError(
+            {"formation_members": "Integrantes devem ser enviados como lista."}
+        )
+
+    cleaned_members = []
+    for idx, member in enumerate(raw_members):
+        if not isinstance(member, dict):
+            raise serializers.ValidationError(
+                {"formation_members": f"Integrante #{idx + 1} deve ser um objeto."}
+            )
+
+        name = sanitize_string(member.get("name"), max_length=150, allow_empty=False)
+        instrument = sanitize_string(member.get("instrument"), max_length=100, allow_empty=False)
+        role = sanitize_string(member.get("role"), max_length=80, allow_empty=True)
+        email = sanitize_string(member.get("email"), max_length=150, allow_empty=True, to_lower=True)
+
+        if email:
+            try:
+                validate_email(email)
+            except DjangoValidationError:
+                raise serializers.ValidationError(
+                    {"formation_members": f"Email inválido para integrante #{idx + 1}."}
+                )
+
+        cleaned_members.append(
+            {
+                "name": name,
+                "instrument": instrument,
+                "role": role or "",
+                "email": email or "",
+            }
+        )
+
+    return cleaned_members
+
+
+def _apply_artist_rules(attrs):
+    artist_type = attrs.get("artist_type", "solo")
+    stage_name = sanitize_string(attrs.get("stage_name"), max_length=150, allow_empty=True)
+    formation_members = _sanitize_formation_members(attrs.get("formation_members") or [])
+
+    if artist_type == "solo":
+        attrs["stage_name"] = stage_name or ""
+        attrs["formation_members"] = []
+        return attrs
+
+    if not stage_name:
+        raise serializers.ValidationError(
+            {"stage_name": "Nome artístico é obrigatório para dupla/banda."}
+        )
+
+    if artist_type == "dupla" and len(formation_members) != 1:
+        raise serializers.ValidationError(
+            {"formation_members": "Dupla deve ter exatamente 1 integrante adicional."}
+        )
+
+    if artist_type == "banda":
+        if len(formation_members) < 2:
+            raise serializers.ValidationError(
+                {"formation_members": "Banda deve ter ao menos 2 integrantes adicionais."}
+            )
+        if len(formation_members) > 11:
+            raise serializers.ValidationError(
+                {"formation_members": "Banda permite no máximo 11 integrantes adicionais."}
+            )
+
+    attrs["stage_name"] = stage_name
+    attrs["formation_members"] = formation_members
+    return attrs
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -120,6 +206,9 @@ class MusicianRequestSerializer(serializers.ModelSerializer):
             "phone",
             "instrument",
             "instruments",
+            "artist_type",
+            "stage_name",
+            "formation_members",
             "bio",
             "city",
             "state",
@@ -170,6 +259,16 @@ class MusicianRequestSerializer(serializers.ModelSerializer):
             attrs["instrument"] = sanitize_string(
                 attrs["instrument"], max_length=100, allow_empty=False
             )
+        if "artist_type" in attrs:
+            attrs["artist_type"] = _sanitize_artist_type(attrs["artist_type"])
+        elif self.instance is None:
+            attrs["artist_type"] = "solo"
+        if "stage_name" in attrs:
+            attrs["stage_name"] = sanitize_string(
+                attrs.get("stage_name"), max_length=150, allow_empty=True
+            )
+        if "formation_members" in attrs:
+            attrs["formation_members"] = _sanitize_formation_members(attrs.get("formation_members"))
         if "bio" in attrs:
             attrs["bio"] = sanitize_string(attrs.get("bio"), max_length=500, allow_empty=True)
         if "city" in attrs:
@@ -192,6 +291,21 @@ class MusicianRequestSerializer(serializers.ModelSerializer):
                 for g in genres[:5]
                 if g and isinstance(g, str)
             ]
+        has_artist_fields = any(
+            field in attrs for field in ("artist_type", "stage_name", "formation_members")
+        )
+        if self.instance is None or has_artist_fields:
+            artist_payload = {
+                "artist_type": attrs.get("artist_type", getattr(self.instance, "artist_type", "solo")),
+                "stage_name": attrs.get("stage_name", getattr(self.instance, "stage_name", "")),
+                "formation_members": attrs.get(
+                    "formation_members", getattr(self.instance, "formation_members", [])
+                ),
+            }
+            normalized_artist_payload = _apply_artist_rules(artist_payload)
+            attrs["artist_type"] = normalized_artist_payload["artist_type"]
+            attrs["stage_name"] = normalized_artist_payload["stage_name"]
+            attrs["formation_members"] = normalized_artist_payload["formation_members"]
         return attrs
 
 
@@ -224,6 +338,9 @@ class MusicianRequestCreateSerializer(serializers.ModelSerializer):
             "phone",
             "instrument",
             "instruments",
+            "artist_type",
+            "stage_name",
+            "formation_members",
             "bio",
             "city",
             "state",
@@ -251,6 +368,16 @@ class MusicianRequestCreateSerializer(serializers.ModelSerializer):
             attrs["instrument"] = sanitize_string(
                 attrs["instrument"], max_length=100, allow_empty=False
             )
+        if "artist_type" in attrs:
+            attrs["artist_type"] = _sanitize_artist_type(attrs["artist_type"])
+        else:
+            attrs["artist_type"] = "solo"
+        if "stage_name" in attrs:
+            attrs["stage_name"] = sanitize_string(
+                attrs.get("stage_name"), max_length=150, allow_empty=True
+            )
+        if "formation_members" in attrs:
+            attrs["formation_members"] = _sanitize_formation_members(attrs.get("formation_members"))
         if "bio" in attrs:
             attrs["bio"] = sanitize_string(attrs.get("bio"), max_length=500, allow_empty=True)
         if "city" in attrs:
@@ -273,6 +400,7 @@ class MusicianRequestCreateSerializer(serializers.ModelSerializer):
                 for g in genres[:5]
                 if g and isinstance(g, str)
             ]
+        attrs = _apply_artist_rules(attrs)
         return attrs
 
 
@@ -291,6 +419,9 @@ class MusicianRequestAdminSerializer(serializers.ModelSerializer):
             "phone",
             "instrument",
             "instruments",
+            "artist_type",
+            "stage_name",
+            "formation_members",
             "bio",
             "city",
             "state",
@@ -315,6 +446,9 @@ class MusicianRequestAdminSerializer(serializers.ModelSerializer):
             "phone",
             "instrument",
             "instruments",
+            "artist_type",
+            "stage_name",
+            "formation_members",
             "bio",
             "city",
             "state",

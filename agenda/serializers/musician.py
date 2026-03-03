@@ -25,6 +25,8 @@ class MusicianSerializer(serializers.ModelSerializer):
             "full_name",
             "instrument",
             "instruments",
+            "artist_type",
+            "stage_name",
             "bio",
             "phone",
             "instagram",
@@ -89,6 +91,8 @@ class MusicianUpdateSerializer(serializers.ModelSerializer):
             "last_name",
             "instrument",
             "instruments",
+            "artist_type",
+            "stage_name",
             "bio",
             "phone",
             "instagram",
@@ -188,6 +192,21 @@ class MusicianUpdateSerializer(serializers.ModelSerializer):
                 attrs.get("instrument"), max_length=50, allow_empty=False, to_lower=True
             )
 
+        if "artist_type" in attrs:
+            artist_type = sanitize_string(
+                attrs.get("artist_type"), max_length=20, allow_empty=False, to_lower=True
+            )
+            if artist_type not in {"solo", "dupla", "banda"}:
+                raise serializers.ValidationError(
+                    {"artist_type": "Tipo inválido. Use solo, dupla ou banda."}
+                )
+            attrs["artist_type"] = artist_type
+
+        if "stage_name" in attrs:
+            attrs["stage_name"] = sanitize_string(
+                attrs.get("stage_name"), max_length=150, allow_empty=True
+            )
+
         if "instruments" in attrs:
             instruments_raw = attrs.get("instruments") or []
             if not isinstance(instruments_raw, list):
@@ -252,6 +271,21 @@ class MusicianUpdateSerializer(serializers.ModelSerializer):
                 for g in genres[:5]
                 if g and isinstance(g, str)
             ]
+
+        current_instance = self.instance
+        artist_type = attrs.get(
+            "artist_type", current_instance.artist_type if current_instance else "solo"
+        )
+        stage_name = attrs.get("stage_name")
+        if stage_name is None:
+            stage_name = current_instance.stage_name if current_instance else ""
+
+        if artist_type == "solo":
+            attrs["stage_name"] = stage_name or ""
+        elif not (stage_name or "").strip():
+            raise serializers.ValidationError(
+                {"stage_name": "Nome artístico é obrigatório para dupla/banda."}
+            )
 
         return attrs
 
@@ -347,6 +381,8 @@ class MusicianPublicSerializer(serializers.ModelSerializer):
             "full_name",
             "instrument",
             "instruments",
+            "artist_type",
+            "stage_name",
             "bio",
             "city",
             "state",

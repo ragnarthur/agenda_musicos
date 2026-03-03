@@ -4,7 +4,19 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
-import { Music, Send, CheckCircle, Search, Check, Disc3, Calendar, Star } from 'lucide-react';
+import {
+  Music,
+  Send,
+  CheckCircle,
+  Search,
+  Check,
+  Disc3,
+  Calendar,
+  Star,
+  Users,
+  Plus,
+  Trash2,
+} from 'lucide-react';
 import {
   musicianRequestService,
   googleAuthService,
@@ -74,6 +86,22 @@ const styles = `
   }
 `;
 
+type ArtistType = 'solo' | 'dupla' | 'banda';
+
+type FormationMember = {
+  name: string;
+  instrument: string;
+  role: string;
+  email: string;
+};
+
+const createEmptyFormationMember = (): FormationMember => ({
+  name: '',
+  instrument: '',
+  role: '',
+  email: '',
+});
+
 export default function MusicianRequest() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -86,6 +114,8 @@ export default function MusicianRequest() {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customInstrumentName, setCustomInstrumentName] = useState('');
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [artistType, setArtistType] = useState<ArtistType>('solo');
+  const [formationMembers, setFormationMembers] = useState<FormationMember[]>([]);
   const { instruments, loading: loadingInstruments, createCustomInstrument } = useInstruments();
   const googleCallbackRef = useRef<(response: { credential: string }) => void>(() => {});
   const appliedGooglePrefillRef = useRef(false);
@@ -96,13 +126,69 @@ export default function MusicianRequest() {
     formState: { errors },
     setValue,
     watch,
-  } = useForm<MusicianRequestCreate>();
+  } = useForm<MusicianRequestCreate>({
+    defaultValues: {
+      artist_type: 'solo',
+      formation_members: [],
+    },
+  });
 
   const watchedPhone = watch('phone');
+
+  useEffect(() => {
+    register('artist_type');
+    register('formation_members');
+  }, [register]);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatPhone(e.target.value);
     setValue('phone', formatted);
+  };
+
+  const handleArtistTypeChange = (value: ArtistType) => {
+    setArtistType(value);
+
+    if (value === 'solo') {
+      setFormationMembers([]);
+      setValue('stage_name', '', { shouldValidate: true });
+      return;
+    }
+
+    if (value === 'dupla') {
+      setFormationMembers(prev => {
+        const first = prev[0] || createEmptyFormationMember();
+        return [first];
+      });
+      return;
+    }
+
+    setFormationMembers(prev => {
+      const next = [...prev];
+      while (next.length < 2) {
+        next.push(createEmptyFormationMember());
+      }
+      return next;
+    });
+  };
+
+  const updateFormationMember = (
+    index: number,
+    field: keyof FormationMember,
+    value: string
+  ) => {
+    setFormationMembers(prev =>
+      prev.map((member, memberIndex) =>
+        memberIndex === index ? { ...member, [field]: value } : member
+      )
+    );
+  };
+
+  const addFormationMember = () => {
+    setFormationMembers(prev => [...prev, createEmptyFormationMember()]);
+  };
+
+  const removeFormationMember = (index: number) => {
+    setFormationMembers(prev => prev.filter((_, memberIndex) => memberIndex !== index));
   };
 
   // Filtrar instrumentos com base na busca
@@ -175,6 +261,14 @@ export default function MusicianRequest() {
   useEffect(() => {
     setValue('musical_genres', selectedGenres, { shouldValidate: true });
   }, [selectedGenres, setValue]);
+
+  useEffect(() => {
+    setValue('artist_type', artistType, { shouldValidate: true });
+  }, [artistType, setValue]);
+
+  useEffect(() => {
+    setValue('formation_members', formationMembers, { shouldValidate: true });
+  }, [formationMembers, setValue]);
 
   // Carregar Google Sign-In
   useEffect(() => {
@@ -296,6 +390,15 @@ export default function MusicianRequest() {
   googleCallbackRef.current = handleGoogleCallback;
 
   const onSubmit = async (data: MusicianRequestCreate) => {
+    const normalizedFormationMembers = formationMembers
+      .map(member => ({
+        name: member.name.trim(),
+        instrument: member.instrument.trim(),
+        role: member.role.trim(),
+        email: member.email.trim().toLowerCase(),
+      }))
+      .filter(member => member.name || member.instrument || member.role || member.email);
+
     // Validação adicional de instrumentos
     if (isMultiInstrumentalist && selectedInstruments.length === 0) {
       toast.error('Selecione pelo menos um instrumento');
@@ -307,10 +410,33 @@ export default function MusicianRequest() {
       return;
     }
 
+    if (artistType !== 'solo' && !data.stage_name?.trim()) {
+      toast.error('Informe o nome artístico da formação');
+      return;
+    }
+
+    if (artistType === 'dupla' && normalizedFormationMembers.length !== 1) {
+      toast.error('Dupla deve ter exatamente 1 integrante adicional');
+      return;
+    }
+
+    if (artistType === 'banda' && normalizedFormationMembers.length < 2) {
+      toast.error('Banda deve ter pelo menos 2 integrantes adicionais');
+      return;
+    }
+
+    if (normalizedFormationMembers.some(member => !member.name || !member.instrument)) {
+      toast.error('Preencha nome e instrumento de todos os integrantes');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await musicianRequestService.create({
         ...data,
+        artist_type: artistType,
+        stage_name: artistType === 'solo' ? '' : data.stage_name?.trim(),
+        formation_members: artistType === 'solo' ? [] : normalizedFormationMembers,
         instruments: selectedInstruments,
         musical_genres: selectedGenres,
       });
@@ -503,6 +629,158 @@ export default function MusicianRequest() {
                         <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
                       )}
                     </div>
+
+                    {/* Tipo de Cadastro */}
+                    <div className="animate-fade-in">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Tipo de Cadastro *
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {(
+                          [
+                            { value: 'solo' as const, label: 'Solo' },
+                            { value: 'dupla' as const, label: 'Dupla' },
+                            { value: 'banda' as const, label: 'Banda' },
+                          ] as const
+                        ).map(option => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => handleArtistTypeChange(option.value)}
+                            className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+                              artistType === option.value
+                                ? 'border-indigo-600 bg-indigo-600 text-white'
+                                : 'border-gray-300 bg-white text-gray-700 hover:border-indigo-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300'
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        {artistType === 'solo'
+                          ? 'Cadastro individual.'
+                          : artistType === 'dupla'
+                            ? 'Cadastro de formação com 2 integrantes.'
+                            : 'Cadastro de formação com 3+ integrantes.'}
+                      </p>
+                    </div>
+
+                    {/* Nome artístico da formação */}
+                    {artistType !== 'solo' && (
+                      <div className="animate-fade-in">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Nome Artístico da Formação *
+                        </label>
+                        <input
+                          type="text"
+                          inputMode="text"
+                          {...register('stage_name', {
+                            required: 'Nome artístico é obrigatório para dupla/banda',
+                          })}
+                          className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white transition-all duration-200 focus:shadow-lg"
+                          placeholder="Ex: João & Pedro ou Banda X"
+                        />
+                        {errors.stage_name && (
+                          <p className="mt-1 text-sm text-red-600">{errors.stage_name.message}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Integrantes da formação */}
+                    {artistType !== 'solo' && (
+                      <div className="space-y-3 animate-fade-in">
+                        <div className="flex items-center justify-between">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <span className="inline-flex items-center gap-1">
+                              <Users className="h-4 w-4 text-indigo-500" />
+                              Integrantes adicionais
+                            </span>
+                          </label>
+                          {artistType === 'banda' && (
+                            <button
+                              type="button"
+                              onClick={addFormationMember}
+                              className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700"
+                            >
+                              <Plus className="h-3.5 w-3.5" />
+                              Adicionar
+                            </button>
+                          )}
+                        </div>
+
+                        {formationMembers.map((member, index) => (
+                          <div
+                            key={`${artistType}-member-${index}`}
+                            className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-600 dark:bg-gray-700/30"
+                          >
+                            <div className="mb-2 flex items-center justify-between">
+                              <p className="text-xs font-semibold text-gray-600 dark:text-gray-300">
+                                Integrante {index + 2}
+                              </p>
+                              {artistType === 'banda' && formationMembers.length > 2 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeFormationMember(index)}
+                                  className="text-red-500 hover:text-red-600"
+                                  aria-label="Remover integrante"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                              <input
+                                type="text"
+                                value={member.name}
+                                onChange={e =>
+                                  updateFormationMember(index, 'name', e.target.value)
+                                }
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white text-sm"
+                                placeholder="Nome do integrante"
+                              />
+                              <input
+                                type="text"
+                                value={member.instrument}
+                                onChange={e =>
+                                  updateFormationMember(index, 'instrument', e.target.value)
+                                }
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white text-sm"
+                                placeholder="Instrumento"
+                              />
+                              <input
+                                type="text"
+                                value={member.role}
+                                onChange={e =>
+                                  updateFormationMember(index, 'role', e.target.value)
+                                }
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white text-sm"
+                                placeholder="Função (opcional)"
+                              />
+                              <input
+                                type="email"
+                                value={member.email}
+                                onChange={e =>
+                                  updateFormationMember(index, 'email', e.target.value)
+                                }
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white text-sm"
+                                placeholder="Email (opcional)"
+                              />
+                            </div>
+                          </div>
+                        ))}
+
+                        {artistType === 'dupla' && formationMembers.length === 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setFormationMembers([createEmptyFormationMember()])}
+                            className="w-full rounded-lg border border-dashed border-indigo-300 px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 dark:border-indigo-500/50 dark:hover:bg-indigo-500/10"
+                          >
+                            Adicionar integrante da dupla
+                          </button>
+                        )}
+                      </div>
+                    )}
 
                     {/* Instrumento Principal */}
                     <div className="animate-fade-in">

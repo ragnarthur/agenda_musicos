@@ -13,6 +13,14 @@ export interface MusicianRequest {
   phone: string;
   instrument: string;
   instruments: string[];
+  artist_type: 'solo' | 'dupla' | 'banda';
+  stage_name?: string | null;
+  formation_members?: Array<{
+    name: string;
+    instrument: string;
+    role?: string;
+    email?: string;
+  }>;
   musical_genres: string[];
   bio: string | null;
   city: string;
@@ -37,6 +45,14 @@ export interface MusicianRequestCreate {
   phone: string;
   instrument: string;
   instruments?: string[];
+  artist_type?: 'solo' | 'dupla' | 'banda';
+  stage_name?: string;
+  formation_members?: Array<{
+    name: string;
+    instrument: string;
+    role?: string;
+    email?: string;
+  }>;
   musical_genres?: string[];
   bio?: string;
   city: string;
@@ -213,6 +229,14 @@ export interface InviteValidation {
   phone: string;
   instrument: string;
   instruments: string[];
+  artist_type: 'solo' | 'dupla' | 'banda';
+  stage_name?: string | null;
+  formation_members?: Array<{
+    name: string;
+    instrument: string;
+    role?: string;
+    email?: string;
+  }>;
   bio: string | null;
   city: string;
   state: string;

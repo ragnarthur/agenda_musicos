@@ -229,6 +229,11 @@ class Musician(models.Model):
     ROLE_CHOICES = [
         ("member", "Membro"),
     ]
+    ARTIST_TYPE_CHOICES = [
+        ("solo", "Solo"),
+        ("dupla", "Dupla"),
+        ("banda", "Banda"),
+    ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="musician_profile")
     name_changes_month = models.DateField(
@@ -250,6 +255,18 @@ class Musician(models.Model):
         default=list,
         blank=True,
         help_text="Lista de instrumentos (multi-instrumentista)",
+    )
+    artist_type = models.CharField(
+        max_length=20,
+        choices=ARTIST_TYPE_CHOICES,
+        default="solo",
+        help_text="Tipo de artista/cadastro (solo, dupla ou banda)",
+    )
+    stage_name = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        help_text="Nome artístico da dupla/banda",
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="member")
     bio = models.TextField(blank=True, null=True)
@@ -941,6 +958,11 @@ class MusicianRequest(models.Model):
         ("approved", "Aprovado"),
         ("rejected", "Rejeitado"),
     ]
+    ARTIST_TYPE_CHOICES = [
+        ("solo", "Solo"),
+        ("dupla", "Dupla"),
+        ("banda", "Banda"),
+    ]
 
     # Dados básicos
     email = models.EmailField(unique=True)
@@ -950,6 +972,23 @@ class MusicianRequest(models.Model):
     # Dados musicais
     instrument = models.CharField(max_length=100, help_text="Instrumento principal")
     instruments = models.JSONField(default=list, blank=True, help_text="Lista de instrumentos")
+    artist_type = models.CharField(
+        max_length=20,
+        choices=ARTIST_TYPE_CHOICES,
+        default="solo",
+        help_text="Tipo de artista/cadastro (solo, dupla ou banda)",
+    )
+    stage_name = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        help_text="Nome artístico da dupla/banda",
+    )
+    formation_members = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Integrantes adicionais da dupla/banda",
+    )
     musical_genres = models.JSONField(
         default=list,
         blank=True,

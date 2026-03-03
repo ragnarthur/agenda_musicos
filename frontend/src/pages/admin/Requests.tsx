@@ -23,6 +23,12 @@ type FilterType = 'pending' | 'approved' | 'rejected' | 'all';
 type SortField = 'name' | 'created_at' | 'status';
 type SortOrder = 'asc' | 'desc';
 
+const artistTypeLabel: Record<'solo' | 'dupla' | 'banda', string> = {
+  solo: 'Solo',
+  dupla: 'Dupla',
+  banda: 'Banda',
+};
+
 const filterTabs = [
   { key: 'pending', label: 'Pendentes' },
   { key: 'approved', label: 'Aprovados' },
@@ -223,6 +229,7 @@ const Requests: React.FC = () => {
       if (!term) return true;
       return (
         request.full_name.toLowerCase().includes(term) ||
+        (request.stage_name || '').toLowerCase().includes(term) ||
         request.email.toLowerCase().includes(term) ||
         request.city.toLowerCase().includes(term) ||
         request.instrument.toLowerCase().includes(term)
@@ -344,6 +351,11 @@ const Requests: React.FC = () => {
                     <span className="flex items-center gap-2">
                       <Music2 className="h-4 w-4 flex-shrink-0" />
                       {request.instrument}
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <Music2 className="h-4 w-4 flex-shrink-0" />
+                      {artistTypeLabel[request.artist_type]}
+                      {request.stage_name ? ` • ${request.stage_name}` : ''}
                     </span>
                     <span className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 flex-shrink-0" />
@@ -468,6 +480,24 @@ const Requests: React.FC = () => {
               <div>
                 <strong className="text-white">Instrumento:</strong> {selectedRequest.instrument}
               </div>
+              <div>
+                <strong className="text-white">Tipo de cadastro:</strong>{' '}
+                {artistTypeLabel[selectedRequest.artist_type]}
+              </div>
+              {selectedRequest.stage_name && (
+                <div>
+                  <strong className="text-white">Nome artístico:</strong>{' '}
+                  {selectedRequest.stage_name}
+                </div>
+              )}
+              {!!selectedRequest.formation_members?.length && (
+                <div>
+                  <strong className="text-white">Integrantes adicionais:</strong>{' '}
+                  {selectedRequest.formation_members
+                    .map(member => `${member.name} (${member.instrument})`)
+                    .join(', ')}
+                </div>
+              )}
               <div>
                 <strong className="text-white">Cidade:</strong> {selectedRequest.city},{' '}
                 {selectedRequest.state}

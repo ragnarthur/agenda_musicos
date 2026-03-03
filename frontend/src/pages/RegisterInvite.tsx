@@ -30,6 +30,14 @@ const RegisterInvite: React.FC = () => {
     phone: string;
     instrument: string;
     instruments: string[];
+    artist_type: 'solo' | 'dupla' | 'banda';
+    stage_name?: string | null;
+    formation_members?: Array<{
+      name: string;
+      instrument: string;
+      role?: string;
+      email?: string;
+    }>;
     bio: string | null;
     city: string;
     state: string;
@@ -226,7 +234,7 @@ const RegisterInvite: React.FC = () => {
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-700">
               <Music2 className="h-4 w-4 text-amber-500" />
-              {inviteData.full_name} • {inviteData.instrument}
+              {inviteData.stage_name || inviteData.full_name} • {inviteData.instrument}
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-700">
               <MapPin className="h-4 w-4 text-amber-500" />
