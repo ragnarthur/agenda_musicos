@@ -14,6 +14,8 @@ export interface AdminMeResponse {
   date_joined: string;
   has_musician_profile?: boolean;
   musician_is_premium?: boolean;
+  musician_artist_type?: 'solo' | 'dupla' | 'banda' | null;
+  musician_stage_name?: string | null;
 }
 
 export type UsersListResponse = AdminMeResponse[];

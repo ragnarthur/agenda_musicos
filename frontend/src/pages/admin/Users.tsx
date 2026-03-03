@@ -19,6 +19,18 @@ import { ADMIN_ROUTES } from '../../routes/adminRoutes';
 import { adminService, type UsersListResponse } from '../../services/adminService';
 
 const ITEMS_PER_PAGE = 10;
+const artistTypeLabel: Record<'solo' | 'dupla' | 'banda', string> = {
+  solo: 'Solo',
+  dupla: 'Dupla',
+  banda: 'Banda',
+};
+
+const getDisplayName = (user: UsersListResponse[0]) => {
+  const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+  if (fullName) return fullName;
+  if (user.musician_stage_name) return user.musician_stage_name;
+  return user.username;
+};
 
 const AdminUsers: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -97,11 +109,17 @@ const AdminUsers: React.FC = () => {
       const firstName = user.first_name || '';
       const lastName = user.last_name || '';
       const fullName = `${firstName} ${lastName}`.trim();
+      const stageName = user.musician_stage_name || '';
+      const artistTypeLabelValue = user.musician_artist_type
+        ? artistTypeLabel[user.musician_artist_type]
+        : '';
 
       return (
         username.toLowerCase().includes(searchLower) ||
         email.toLowerCase().includes(searchLower) ||
-        fullName.toLowerCase().includes(searchLower)
+        fullName.toLowerCase().includes(searchLower) ||
+        stageName.toLowerCase().includes(searchLower) ||
+        artistTypeLabelValue.toLowerCase().includes(searchLower)
       );
     });
   }, [users, searchTerm]);
@@ -239,12 +257,18 @@ const AdminUsers: React.FC = () => {
                         <UserIcon className="text-indigo-400 w-6 h-6" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-white">
-                          {user.first_name} {user.last_name}
-                        </h3>
+                        <h3 className="font-semibold text-white">{getDisplayName(user)}</h3>
                         <p className="text-sm text-slate-400">
                           @{user.username} &middot; {user.email}
                         </p>
+                        {user.has_musician_profile && (
+                          <p className="text-xs text-slate-500">
+                            {user.musician_artist_type
+                              ? artistTypeLabel[user.musician_artist_type]
+                              : 'Solo'}
+                            {user.musician_stage_name ? ` • ${user.musician_stage_name}` : ''}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -329,7 +353,9 @@ const AdminUsers: React.FC = () => {
         }}
         onConfirm={confirmDelete}
         title="Deletar Usuário"
-        message={`Tem certeza que deseja deletar ${userToDelete?.first_name} ${userToDelete?.last_name}? Esta ação não pode ser desfeita. Todos os dados do usuário serão permanentemente removidos.`}
+        message={`Tem certeza que deseja deletar ${
+          userToDelete ? getDisplayName(userToDelete) : 'este usuário'
+        }? Esta ação não pode ser desfeita. Todos os dados do usuário serão permanentemente removidos.`}
         confirmLabel="Deletar"
         variant="danger"
         loading={deleting !== null}
@@ -354,9 +380,7 @@ const AdminUsers: React.FC = () => {
                 <UserIcon className="text-indigo-400 w-7 h-7" />
               </div>
               <div>
-                <h3 className="font-semibold text-white text-lg">
-                  {selectedUser.first_name} {selectedUser.last_name}
-                </h3>
+                <h3 className="font-semibold text-white text-lg">{getDisplayName(selectedUser)}</h3>
                 <p className="text-sm text-slate-400">@{selectedUser.username}</p>
               </div>
             </div>
@@ -365,6 +389,20 @@ const AdminUsers: React.FC = () => {
               <p>
                 <strong className="text-white">Email:</strong> {selectedUser.email}
               </p>
+              {selectedUser.has_musician_profile && (
+                <p>
+                  <strong className="text-white">Tipo de artista:</strong>{' '}
+                  {selectedUser.musician_artist_type
+                    ? artistTypeLabel[selectedUser.musician_artist_type]
+                    : 'Solo'}
+                </p>
+              )}
+              {selectedUser.has_musician_profile && selectedUser.musician_stage_name && (
+                <p>
+                  <strong className="text-white">Nome artístico:</strong>{' '}
+                  {selectedUser.musician_stage_name}
+                </p>
+              )}
               <p>
                 <strong className="text-white">Staff:</strong>{' '}
                 {selectedUser.is_staff ? (

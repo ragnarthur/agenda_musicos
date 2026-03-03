@@ -39,8 +39,19 @@ def _sanitize_formation_members(raw_members):
                 {"formation_members": f"Integrante #{idx + 1} deve ser um objeto."}
             )
 
-        name = sanitize_string(member.get("name"), max_length=150, allow_empty=False)
-        instrument = sanitize_string(member.get("instrument"), max_length=100, allow_empty=False)
+        raw_name = member.get("name")
+        if not raw_name or not str(raw_name).strip():
+            raise serializers.ValidationError(
+                {"formation_members": f"Nome é obrigatório para o integrante #{idx + 1}."}
+            )
+        name = sanitize_string(raw_name, max_length=150, allow_empty=False)
+
+        raw_instrument = member.get("instrument")
+        if not raw_instrument or not str(raw_instrument).strip():
+            raise serializers.ValidationError(
+                {"formation_members": f"Instrumento é obrigatório para o integrante #{idx + 1}."}
+            )
+        instrument = sanitize_string(raw_instrument, max_length=100, allow_empty=False)
         role = sanitize_string(member.get("role"), max_length=80, allow_empty=True)
         email = sanitize_string(
             member.get("email"), max_length=150, allow_empty=True, to_lower=True
@@ -651,6 +662,8 @@ class AdminUserSerializer(serializers.ModelSerializer):
 
     musician_is_premium = serializers.SerializerMethodField()
     has_musician_profile = serializers.SerializerMethodField()
+    musician_artist_type = serializers.SerializerMethodField()
+    musician_stage_name = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -666,6 +679,8 @@ class AdminUserSerializer(serializers.ModelSerializer):
             "date_joined",
             "musician_is_premium",
             "has_musician_profile",
+            "musician_artist_type",
+            "musician_stage_name",
         ]
         read_only_fields = ["id", "date_joined"]
 
@@ -677,6 +692,18 @@ class AdminUserSerializer(serializers.ModelSerializer):
 
     def get_has_musician_profile(self, obj) -> bool:
         return hasattr(obj, "musician_profile")
+
+    def get_musician_artist_type(self, obj) -> str | None:
+        try:
+            return obj.musician_profile.artist_type
+        except Exception:
+            return None
+
+    def get_musician_stage_name(self, obj) -> str | None:
+        try:
+            return obj.musician_profile.stage_name or None
+        except Exception:
+            return None
 
 
 class AdminCreateSerializer(serializers.ModelSerializer):

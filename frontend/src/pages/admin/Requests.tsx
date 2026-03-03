@@ -43,7 +43,7 @@ const Requests: React.FC = () => {
   const [requests, setRequests] = useState<MusicianRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterType>(
-    (searchParams.get('status') as FilterType) || 'pending'
+    (searchParams.get('status') as FilterType) || 'all'
   );
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [selectedRequest, setSelectedRequest] = useState<MusicianRequest | null>(null);
@@ -82,7 +82,7 @@ const Requests: React.FC = () => {
 
   useEffect(() => {
     const params: Record<string, string> = {};
-    if (filter && filter !== 'pending') params.status = filter;
+    if (filter && filter !== 'all') params.status = filter;
     if (searchTerm) params.q = searchTerm;
     if (sortField && sortField !== 'created_at') params.sort = sortField;
     if (sortOrder && sortOrder !== 'desc') params.order = sortOrder;
