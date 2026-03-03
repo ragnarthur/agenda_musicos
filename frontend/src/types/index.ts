@@ -243,6 +243,14 @@ export interface RatingInput {
   comment?: string;
 }
 
+export interface Instrument {
+  id: number;
+  name: string;
+  display_name: string;
+  type: 'predefined' | 'official' | 'community';
+  usage_count: number;
+}
+
 // Marketplace - vagas e candidaturas de músicos freelancers
 export type GigStatus = 'open' | 'in_review' | 'hired' | 'closed' | 'cancelled';
 
