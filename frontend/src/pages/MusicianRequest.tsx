@@ -460,7 +460,7 @@ export default function MusicianRequest() {
   // Wizard navigation
   const goToNextStep = async () => {
     if (currentStep === 1) {
-      const valid = await trigger(['full_name', 'email', 'phone']);
+      const valid = await trigger(['full_name', 'email']);
       if (!valid) return;
       setStepDirection('forward');
       setCurrentStep(2);

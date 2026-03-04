@@ -101,6 +101,6 @@ describe('MusicianPublicProfile', () => {
     const button = await screen.findByRole('button', { name: 'Solicitar Orçamento' });
     fireEvent.click(button);
 
-    expect(navigateMock).toHaveBeenCalledWith('/contratante/login');
+    expect(navigateMock).toHaveBeenCalledWith(expect.stringContaining('/contratante/cadastro'));
   });
 });

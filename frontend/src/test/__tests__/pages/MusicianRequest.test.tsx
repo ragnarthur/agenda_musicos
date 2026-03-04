@@ -20,9 +20,6 @@ async function advanceToStep2() {
   fireEvent.change(screen.getByPlaceholderText('seu@email.com'), {
     target: { value: 'joao@teste.com' },
   });
-  fireEvent.change(screen.getByPlaceholderText('(00) 00000-0000'), {
-    target: { value: '11999999999' },
-  });
   fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
   await waitFor(() =>
     expect(screen.getByPlaceholderText('Ex: Guitarra, Vocal, Bateria...')).toBeInTheDocument()
@@ -88,11 +85,10 @@ describe('MusicianRequest Page — Wizard', () => {
     expect(soloBtn).toHaveClass('bg-indigo-50');
   });
 
-  it('step 1 shows nome, email and telefone fields', () => {
+  it('step 1 shows nome and email fields', () => {
     renderPage();
     expect(screen.getByPlaceholderText('Seu nome completo')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('seu@email.com')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('(00) 00000-0000')).toBeInTheDocument();
   });
 
   it('step 1 does NOT show formation fields', () => {
