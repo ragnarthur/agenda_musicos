@@ -1,7 +1,7 @@
 // pages/LoginCompany.tsx
 // Login específico para contratantes
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff, LogIn, Music, Briefcase, Star } from 'lucide-react';
@@ -30,6 +30,7 @@ const consumeReturnToRoute = (): string => {
 
 export default function LoginCompany() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login, setSession } = useCompanyAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -41,6 +42,15 @@ export default function LoginCompany() {
     handleSubmit,
     formState: { errors },
   } = useForm<LoginForm>();
+
+  // Persiste ?next= no sessionStorage para que consumeReturnToRoute funcione
+  // mesmo após redirecionamentos OAuth (que perdem query params)
+  useEffect(() => {
+    const next = searchParams.get('next');
+    if (next && next.startsWith('/') && !next.startsWith('/admin')) {
+      sessionStorage.setItem('returnTo', next);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onSubmit = async (data: LoginForm) => {
     setIsSubmitting(true);

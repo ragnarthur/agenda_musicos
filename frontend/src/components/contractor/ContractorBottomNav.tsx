@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { contractorNavItems } from '../../routes/contractorRoutes';
+import { contractorNavItems, CONTRACTOR_ROUTES } from '../../routes/contractorRoutes';
+import { useCompanyAuth } from '../../contexts/CompanyAuthContext';
 
 const ContractorBottomNav: React.FC = () => {
   const location = useLocation();
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollYRef = useRef(0);
+  const { isAuthenticated: isCompanyAuth } = useCompanyAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -46,7 +48,7 @@ const ContractorBottomNav: React.FC = () => {
             return (
               <NavLink
                 key={item.path}
-                to={item.path}
+                to={isCompanyAuth ? item.path : CONTRACTOR_ROUTES.register}
                 aria-label={item.label}
                 className="flex flex-col items-center justify-center -mt-4 min-h-[44px]"
               >

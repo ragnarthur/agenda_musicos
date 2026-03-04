@@ -31,8 +31,6 @@ import { MUSICAL_GENRES } from '../config/genres';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import { showToast } from '../utils/toast';
 import { useInstruments } from '../hooks/useInstruments';
-import { formatPhone } from '../utils/formatting';
-import { getMobileInputProps } from '../utils/mobileInputs';
 
 // Animações CSS
 const styles = `
@@ -201,7 +199,6 @@ export default function MusicianRequest() {
     handleSubmit,
     formState: { errors },
     setValue,
-    watch,
     trigger,
   } = useForm<MusicianRequestCreate>({
     defaultValues: {
@@ -210,18 +207,10 @@ export default function MusicianRequest() {
     },
   });
 
-  const watchedPhone = watch('phone');
-
   useEffect(() => {
     register('artist_type');
     register('formation_members');
-    register('phone', { required: 'Telefone é obrigatório' });
   }, [register]);
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhone(e.target.value);
-    setValue('phone', formatted, { shouldValidate: true });
-  };
 
   const handleArtistTypeChange = (value: ArtistType) => {
     setArtistType(value);
@@ -794,26 +783,6 @@ export default function MusicianRequest() {
                           />
                           {errors.email && (
                             <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-                          )}
-                        </div>
-
-                        {/* Telefone */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Telefone/WhatsApp <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type="tel"
-                            inputMode="tel"
-                            value={watchedPhone || ''}
-                            onChange={handlePhoneChange}
-                            maxLength={15}
-                            {...getMobileInputProps('tel')}
-                            className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white transition-all duration-200 focus:shadow-lg min-h-[44px]"
-                            placeholder="(00) 00000-0000"
-                          />
-                          {errors.phone && (
-                            <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
                           )}
                         </div>
 

@@ -475,14 +475,7 @@ function AppRoutes() {
             </ContractorProtectedRoute>
           }
         />
-        <Route
-          path="/contratante/musicos"
-          element={
-            <ContractorProtectedRoute>
-              <ContractorBrowseMusicians />
-            </ContractorProtectedRoute>
-          }
-        />
+        <Route path="/contratante/musicos" element={<ContractorBrowseMusicians />} />
         <Route
           path="/contratante/novo-pedido"
           element={

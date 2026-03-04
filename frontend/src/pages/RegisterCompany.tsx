@@ -1,7 +1,7 @@
 // pages/RegisterCompany.tsx
 // Cadastro de contratante (gratuito, sem aprovação)
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { Building2, CheckCircle, Eye, EyeOff, Users, Star } from 'lucide-react';
@@ -17,8 +17,20 @@ import { useCompanyAuth } from '../contexts/CompanyAuthContext';
 import { formatPhone } from '../utils/formatting';
 import { getMobileInputProps } from '../utils/mobileInputs';
 
+const CONTRACTOR_DEFAULT_ROUTE = '/contratante/dashboard';
+
+const consumeReturnToRoute = (): string => {
+  const returnTo = sessionStorage.getItem('returnTo');
+  sessionStorage.removeItem('returnTo');
+  if (!returnTo) return CONTRACTOR_DEFAULT_ROUTE;
+  if (!returnTo.startsWith('/')) return CONTRACTOR_DEFAULT_ROUTE;
+  if (returnTo.startsWith('/admin')) return CONTRACTOR_DEFAULT_ROUTE;
+  return returnTo;
+};
+
 export default function RegisterCompany() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { setSession } = useCompanyAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -38,6 +50,14 @@ export default function RegisterCompany() {
     setValue,
     watch,
   } = useForm<ContractorRegisterData & { confirm_password: string }>();
+
+  // Persiste ?next= no sessionStorage para que o login subsequente redirecione corretamente
+  useEffect(() => {
+    const next = searchParams.get('next');
+    if (next && next.startsWith('/') && !next.startsWith('/admin')) {
+      sessionStorage.setItem('returnTo', next);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const watchedPhone = watch('phone');
 
@@ -102,7 +122,7 @@ export default function RegisterCompany() {
             organization: result.contractor as ContractorProfile,
           });
           toast.success('Login realizado!');
-          navigate('/contratante/dashboard');
+          navigate(consumeReturnToRoute(), { replace: true });
         } else {
           toast.error('Esta conta Google não é de contratante');
         }

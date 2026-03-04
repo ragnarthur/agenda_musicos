@@ -197,9 +197,14 @@ const MusicianPublicProfile: React.FC = () => {
     if (isCompanyAuth) {
       setShowContactModal(true);
     } else {
-      // Salva rota atual para retornar após autenticar como contratante.
-      sessionStorage.setItem('returnTo', window.location.pathname + window.location.search);
-      navigate('/contratante/login');
+      // Redireciona para cadastro com ?next= apontando para o formulário de pedido
+      // pré-selecionando este músico. O fluxo de registro/login persiste o ?next=
+      // no sessionStorage e redireciona o usuário após autenticar.
+      navigate(
+        `/contratante/cadastro?next=${encodeURIComponent(
+          `/contratante/novo-pedido?musician=${id}`
+        )}`
+      );
     }
   };
 

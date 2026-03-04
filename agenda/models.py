@@ -972,7 +972,7 @@ class MusicianRequest(models.Model):
     # Dados básicos
     email = models.EmailField(unique=True)
     full_name = models.CharField(max_length=150)
-    phone = models.CharField(max_length=20)
+    phone = models.CharField(max_length=20, blank=True, default="")
 
     # Dados musicais
     instrument = models.CharField(max_length=100, help_text="Instrumento principal")

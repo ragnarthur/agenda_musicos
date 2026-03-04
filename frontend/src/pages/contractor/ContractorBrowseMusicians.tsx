@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Search,
   MapPin,
@@ -24,6 +24,7 @@ import { MUSICAL_GENRES, getGenreLabel } from '../../config/genres';
 import { formatInstrumentLabel, normalizeInstrumentKey } from '../../utils/formatting';
 import { CONTRACTOR_ROUTES } from '../../routes/contractorRoutes';
 import { showToast } from '../../utils/toast';
+import { useCompanyAuth } from '../../contexts/CompanyAuthContext';
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -36,6 +37,8 @@ function useDebounce<T>(value: T, delay: number): T {
 
 export default function ContractorBrowseMusicians() {
   const prefersReducedMotion = useReducedMotion();
+  const { isAuthenticated: isCompanyAuth } = useCompanyAuth();
+  const navigate = useNavigate();
   const [musicians, setMusicians] = useState<MusicianPublic[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -130,6 +133,29 @@ export default function ContractorBrowseMusicians() {
           </h1>
           <p className="text-sm text-muted mt-1">Encontre músicos profissionais para seu evento</p>
         </motion.div>
+
+        {/* Banner para visitantes sem cadastro */}
+        {!isCompanyAuth && (
+          <div className="rounded-xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm text-indigo-700 dark:text-indigo-300">
+              Explore os músicos à vontade. Para solicitar um orçamento,{' '}
+              <Link
+                to={CONTRACTOR_ROUTES.register}
+                className="font-semibold underline underline-offset-2"
+              >
+                crie uma conta gratuita
+              </Link>{' '}
+              ou{' '}
+              <Link
+                to={CONTRACTOR_ROUTES.login}
+                className="font-semibold underline underline-offset-2"
+              >
+                faça login
+              </Link>
+              .
+            </p>
+          </div>
+        )}
 
         {/* Filters */}
         <motion.div
@@ -371,13 +397,23 @@ export default function ContractorBrowseMusicians() {
 
                       {/* Actions */}
                       <div className="flex gap-2 mt-4">
-                        <Link
-                          to={`${CONTRACTOR_ROUTES.newRequest}?musician=${musician.id}`}
+                        <button
+                          onClick={() => {
+                            if (isCompanyAuth) {
+                              navigate(`${CONTRACTOR_ROUTES.newRequest}?musician=${musician.id}`);
+                            } else {
+                              navigate(
+                                `${CONTRACTOR_ROUTES.register}?next=${encodeURIComponent(
+                                  `${CONTRACTOR_ROUTES.newRequest}?musician=${musician.id}`
+                                )}`
+                              );
+                            }
+                          }}
                           className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-sm font-semibold flex items-center justify-center gap-1.5 py-2.5 rounded-xl transition-all min-h-[44px]"
                         >
                           <Calendar className="w-3.5 h-3.5" />
-                          Solicitar
-                        </Link>
+                          {isCompanyAuth ? 'Solicitar' : 'Contratar'}
+                        </button>
                         <Link
                           to={`/musico/${musician.id}`}
                           className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors min-h-[44px]"
