@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Calendar, MapPin, Clock, FileText, Music, X, Send } from 'lucide-react';
+import { AlertTriangle, Calendar, MapPin, Clock, FileText, Music, X, Send } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import ContractorLayout from '../../components/contractor/ContractorLayout';
 import FormField from '../../components/form/FormField';
@@ -15,6 +15,7 @@ import { BRAZILIAN_STATES } from '../../config/cities';
 import { MUSICAL_GENRES, getGenreLabel } from '../../config/genres';
 import { CONTRACTOR_ROUTES } from '../../routes/contractorRoutes';
 import { showToast } from '../../utils/toast';
+import { useCompanyAuth } from '../../contexts/CompanyAuthContext';
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -44,6 +45,9 @@ export default function ContractorNewRequest() {
   const [searchParams] = useSearchParams();
   const musicianIdParam = searchParams.get('musician');
   const prefersReducedMotion = useReducedMotion();
+  const { organization } = useCompanyAuth();
+
+  const profileComplete = Boolean(organization?.city && organization?.state && organization?.phone);
 
   // Form state
   const [selectedMusician, setSelectedMusician] = useState<MusicianPublic | null>(null);
@@ -152,6 +156,19 @@ export default function ContractorNewRequest() {
         showToast.error('Preencha todos os campos obrigatórios');
         return;
       }
+      if (!profileComplete) {
+        showToast.error('Complete seu perfil antes de enviar pedidos');
+        navigate(CONTRACTOR_ROUTES.profile);
+        return;
+      }
+      if (!venueName) {
+        showToast.error('Informe o local/venue do evento');
+        return;
+      }
+      if (!durationHours) {
+        showToast.error('Informe a duração do evento em horas');
+        return;
+      }
 
       setSubmitting(true);
       try {
@@ -161,8 +178,8 @@ export default function ContractorNewRequest() {
           event_type: eventType,
           location_state: locationState,
           location_city: locationCity,
-          venue_name: venueName || undefined,
-          duration_hours: durationHours ? Number(durationHours) : undefined,
+          venue_name: venueName,
+          duration_hours: Number(durationHours),
           notes: notes || undefined,
         });
         showToast.success('Pedido enviado com sucesso!');
@@ -183,6 +200,7 @@ export default function ContractorNewRequest() {
       durationHours,
       notes,
       navigate,
+      profileComplete,
     ]
   );
 
@@ -214,6 +232,28 @@ export default function ContractorNewRequest() {
           className="max-w-xl"
         >
           <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Banner: perfil incompleto */}
+            {!profileComplete && (
+              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                    Complete seu perfil para enviar pedidos
+                  </p>
+                  <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+                    Informe cidade, estado e telefone no seu perfil.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => navigate(CONTRACTOR_ROUTES.profile)}
+                    className="mt-2 text-xs font-medium text-amber-800 dark:text-amber-300 underline"
+                  >
+                    Completar perfil →
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Section 01 — Músico */}
             <div>
               <SectionHeader number="01" label="Músico" />
@@ -405,7 +445,7 @@ export default function ContractorNewRequest() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     id="venue_name"
-                    label="Local/Venue"
+                    label="Local/Venue *"
                     icon={<MapPin className="w-4 h-4" />}
                   >
                     <input
@@ -415,11 +455,12 @@ export default function ContractorNewRequest() {
                       onChange={e => setVenueName(e.target.value)}
                       placeholder="Ex: Salão de Festas..."
                       className="input-field pl-10"
+                      required
                     />
                   </FormField>
                   <FormField
                     id="duration_hours"
-                    label="Duração (horas)"
+                    label="Duração (horas) *"
                     icon={<Clock className="w-4 h-4" />}
                   >
                     <input
@@ -431,6 +472,7 @@ export default function ContractorNewRequest() {
                       min="1"
                       max="24"
                       className="input-field pl-10"
+                      required
                     />
                   </FormField>
                 </div>
@@ -455,7 +497,7 @@ export default function ContractorNewRequest() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={submitting || !selectedMusician}
+              disabled={submitting || !selectedMusician || !profileComplete}
               className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-heading font-semibold py-4 rounded-xl flex items-center justify-center gap-2.5 transition-all shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 min-h-[56px] text-base"
             >
               {submitting ? (

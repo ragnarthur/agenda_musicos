@@ -73,8 +73,8 @@ class ContractorRegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(min_length=8, write_only=True)
     phone = serializers.CharField(max_length=20, required=False, allow_blank=True)
-    city = serializers.CharField(max_length=100)
-    state = serializers.CharField(max_length=2)
+    city = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    state = serializers.CharField(max_length=2, required=False, allow_blank=True)
 
     def validate_email(self, value):
         from django.contrib.auth.models import User
@@ -87,8 +87,10 @@ class ContractorRegisterSerializer(serializers.Serializer):
         attrs["name"] = sanitize_string(attrs["name"], max_length=150, allow_empty=False)
         if "phone" in attrs:
             attrs["phone"] = sanitize_string(attrs.get("phone"), max_length=20, allow_empty=True)
-        attrs["city"] = sanitize_string(attrs["city"], max_length=100, allow_empty=False)
-        attrs["state"] = sanitize_string(
-            attrs["state"], max_length=2, allow_empty=False, to_upper=True
-        )
+        if attrs.get("city"):
+            attrs["city"] = sanitize_string(attrs["city"], max_length=100, allow_empty=True)
+        if attrs.get("state"):
+            attrs["state"] = sanitize_string(
+                attrs["state"], max_length=2, allow_empty=True, to_upper=True
+            )
         return attrs

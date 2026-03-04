@@ -226,8 +226,8 @@ export interface ContractorRegisterData {
   email: string;
   password: string;
   phone?: string;
-  city: string;
-  state: string;
+  city?: string;
+  state?: string;
 }
 
 export interface InviteValidation {

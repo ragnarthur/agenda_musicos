@@ -11,11 +11,8 @@ import {
   type ContractorRegisterData,
   type ContractorProfile,
 } from '../services/publicApi';
-import { BRAZILIAN_STATES } from '../config/cities';
 import FullscreenBackground from '../components/Layout/FullscreenBackground';
 import { useCompanyAuth } from '../contexts/CompanyAuthContext';
-import { formatPhone } from '../utils/formatting';
-import { getMobileInputProps } from '../utils/mobileInputs';
 
 const CONTRACTOR_DEFAULT_ROUTE = '/contratante/dashboard';
 
@@ -47,8 +44,6 @@ export default function RegisterCompany() {
     register,
     handleSubmit,
     formState: { errors },
-    setValue,
-    watch,
   } = useForm<ContractorRegisterData & { confirm_password: string }>();
 
   // Persiste ?next= no sessionStorage para que o login subsequente redirecione corretamente
@@ -58,13 +53,6 @@ export default function RegisterCompany() {
       sessionStorage.setItem('returnTo', next);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const watchedPhone = watch('phone');
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhone(e.target.value);
-    setValue('phone', formatted);
-  };
 
   const onSubmit = async (data: ContractorRegisterData & { confirm_password: string }) => {
     if (data.password !== data.confirm_password) {
@@ -421,60 +409,6 @@ export default function RegisterCompany() {
                       </div>
                     </>
                   )}
-
-                  {/* Telefone */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Telefone
-                    </label>
-                    <input
-                      type="tel"
-                      inputMode="tel"
-                      value={watchedPhone || ''}
-                      onChange={handlePhoneChange}
-                      maxLength={15}
-                      {...getMobileInputProps('tel')}
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-                      placeholder="(00) 00000-0000"
-                    />
-                  </div>
-
-                  {/* Cidade e Estado */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Cidade *
-                      </label>
-                      <input
-                        type="text"
-                        {...register('city', { required: 'Cidade é obrigatória' })}
-                        className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-                        placeholder="Sua cidade"
-                      />
-                      {errors.city && (
-                        <p className="mt-1 text-sm text-red-600">{errors.city.message}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Estado *
-                      </label>
-                      <select
-                        {...register('state', { required: 'Estado é obrigatório' })}
-                        className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-                      >
-                        <option value="">UF</option>
-                        {BRAZILIAN_STATES.map(s => (
-                          <option key={s.value} value={s.value}>
-                            {s.value}
-                          </option>
-                        ))}
-                      </select>
-                      {errors.state && (
-                        <p className="mt-1 text-sm text-red-600">{errors.state.message}</p>
-                      )}
-                    </div>
-                  </div>
 
                   {/* Submit */}
                   <button

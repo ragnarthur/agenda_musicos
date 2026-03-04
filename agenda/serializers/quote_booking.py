@@ -43,6 +43,9 @@ class QuoteRequestSerializer(serializers.ModelSerializer):
 class QuoteRequestCreateSerializer(serializers.ModelSerializer):
     """Criação de pedido de orçamento (contratante)."""
 
+    venue_name = serializers.CharField(max_length=150)
+    duration_hours = serializers.IntegerField(min_value=1, max_value=24)
+
     class Meta:
         model = QuoteRequest
         fields = [
@@ -76,10 +79,9 @@ class QuoteRequestCreateSerializer(serializers.ModelSerializer):
         attrs["location_state"] = sanitize_string(
             attrs["location_state"], max_length=2, allow_empty=False, to_upper=True
         )
-        if "venue_name" in attrs:
-            attrs["venue_name"] = sanitize_string(
-                attrs.get("venue_name"), max_length=150, allow_empty=True
-            )
+        attrs["venue_name"] = sanitize_string(
+            attrs["venue_name"], max_length=150, allow_empty=False
+        )
         if "notes" in attrs:
             attrs["notes"] = sanitize_string(attrs.get("notes"), max_length=2000, allow_empty=True)
         return attrs
