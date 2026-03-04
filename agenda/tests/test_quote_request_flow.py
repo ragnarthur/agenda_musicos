@@ -70,6 +70,7 @@ class QuoteRequestHappyPathTest(APITestCase):
             "event_type": "Casamento",
             "location_city": "Belo Horizonte",
             "location_state": "MG",
+            "venue_name": "Salão de Festas",
             "duration_hours": 4,
         }
         resp = self.client.post("/api/quotes/", payload, format="json")
