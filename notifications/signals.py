@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 # Guarda status anterior do evento para detectar mudancas
 _event_previous_status = {}
+_event_previous_dates = {}
 
 
 def _format_relative_day(event_date):
@@ -58,6 +59,7 @@ def store_previous_event_status(sender, instance, **kwargs):
         try:
             old = Event.objects.get(pk=instance.pk)
             _event_previous_status[instance.pk] = old.status
+            _event_previous_dates[instance.pk] = old.event_date
         except Event.DoesNotExist:
             pass
 
@@ -332,4 +334,76 @@ def notify_on_event_cancelled(sender, instance, created, **kwargs):
             performed_by=None,
             action="notification",
             description=f"Aviso de cancelamento enviado via Telegram para {telegram_sent} {label}.",
+        )
+
+
+@receiver(post_save, sender=Event)
+def notify_on_event_date_changed(sender, instance, created, **kwargs):
+    """
+    Notifica musicos quando a data do evento e alterada.
+    Dispara para musicos com response='pending' ou 'available'.
+    """
+    if created:
+        return
+
+    previous_date = _event_previous_dates.pop(instance.pk, None)
+    if previous_date is None or previous_date == instance.event_date:
+        return  # Data nao mudou
+
+    from notifications.models import NotificationType
+    from notifications.services.base import notification_service
+
+    frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
+    event_url = f"{frontend_url}/eventos/{instance.id}"
+
+    old_date_str = previous_date.strftime("%d/%m/%Y")
+    new_date_str = instance.event_date.strftime("%d/%m/%Y")
+    start_time = instance.start_time.strftime("%H:%M") if instance.start_time else "--:--"
+    relative = _format_relative_day(instance.event_date)
+    date_label = f"{new_date_str} ({relative})" if relative else new_date_str
+
+    title = f"Data alterada: {instance.title}"
+    body = (
+        f"A data do evento foi alterada.\n\n"
+        f"\U0001f4c5 Data anterior: {old_date_str}\n"
+        f"\U0001f4c5 Nova data: {date_label}\n"
+        f" \u2022 Horario: {start_time}\n"
+        f" \u2022 Local: {instance.location}\n\n"
+        f"Verifique sua disponibilidade no app."
+    )
+
+    telegram_sent = 0
+    for availability in instance.availabilities.filter(response__in=["pending", "available"]):
+        user = availability.musician.user
+
+        if instance.created_by and user == instance.created_by:
+            continue
+
+        try:
+            result = notification_service.send_notification(
+                user=user,
+                notification_type=NotificationType.EVENT_DATE_CHANGED,
+                title=title,
+                body=body,
+                data={
+                    "content_type": "event",
+                    "object_id": instance.id,
+                    "url": event_url,
+                    "old_date": old_date_str,
+                    "new_date": new_date_str,
+                },
+            )
+            if result.success and result.channel == "telegram":
+                telegram_sent += 1
+            logger.info(f"Notificacao de data alterada enviada para {user.username}")
+        except Exception as e:
+            logger.error(f"Erro ao notificar {user.username}: {e}")
+
+    if telegram_sent:
+        label = "musico" if telegram_sent == 1 else "musicos"
+        EventLog.objects.create(
+            event=instance,
+            performed_by=None,
+            action="notification",
+            description=f"Aviso de alteracao de data enviado via Telegram para {telegram_sent} {label}.",
         )

@@ -202,6 +202,7 @@ class NotificationService:
             NotificationType.EVENT_REMINDER: prefs.notify_event_reminders,
             NotificationType.EVENT_CONFIRMED: prefs.notify_event_confirmations,
             NotificationType.EVENT_CANCELLED: prefs.notify_event_confirmations,
+            NotificationType.EVENT_DATE_CHANGED: prefs.notify_event_confirmations,
             NotificationType.AVAILABILITY_RESPONSE: prefs.notify_availability_responses,
             # Quote Request types
             NotificationType.QUOTE_REQUEST_NEW: prefs.notify_quote_requests,

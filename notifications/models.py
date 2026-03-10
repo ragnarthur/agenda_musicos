@@ -15,6 +15,7 @@ class NotificationType(models.TextChoices):
     EVENT_REMINDER = "event_reminder", "Lembrete de Evento"
     EVENT_CONFIRMED = "event_confirmed", "Evento Confirmado"
     EVENT_CANCELLED = "event_cancelled", "Evento Cancelado"
+    EVENT_DATE_CHANGED = "event_date_changed", "Data do Evento Alterada"
     AVAILABILITY_RESPONSE = "availability_response", "Resposta de Disponibilidade"
     # Quote Request types
     QUOTE_REQUEST_NEW = "quote_request_new", "Novo Pedido de Orçamento"
